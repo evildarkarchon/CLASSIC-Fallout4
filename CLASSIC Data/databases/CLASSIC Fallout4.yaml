@@ -208,7 +208,14 @@ Crashgen_Registry:
             all:
               - plugin_any: [bakascrapheap.dll]
               - not:
-                plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll, addictol.dll]
+                plugin_any:
+                  [
+                    x-cell-fo4.dll,
+                    x-cell-og.dll,
+                    x-cell-ng2.dll,
+                    x-cell-ae.dll,
+                    addictol.dll,
+                  ]
           expect:
             equals: false
           messages:
@@ -225,12 +232,11 @@ Crashgen_Registry:
         - id: bakascrapheap_redundant_addictol
           when:
             plugin_any: [bakascrapheap.dll]
-          expect:
-            equals: false
-          messages:
-            fail: "The Baka ScrapHeap Mod is installed, but is redundant with Addictol"
+          action:
+            kind: notice
+            severity: error
+            message: "The Baka ScrapHeap Mod is installed, but is redundant with Addictol"
             fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with Addictol."
-          severity: error
       checks: []
   default:
     display_section: ""
