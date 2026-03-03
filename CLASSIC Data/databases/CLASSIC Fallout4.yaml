@@ -60,7 +60,12 @@ Crashgen_Registry:
             key: Achievements
             type: bool
           when:
-            plugin_any: [achievements.dll, unlimitedsurvivalmode.dll, achievementsmodsenablerloader.dll]
+            plugin_any:
+              [
+                achievements.dll,
+                unlimitedsurvivalmode.dll,
+                achievementsmodsenablerloader.dll,
+              ]
           expect:
             equals: false
           messages:
@@ -74,13 +79,14 @@ Crashgen_Registry:
             key: MemoryManager
             type: bool
           when:
-            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+            plugin_any:
+              [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
           expect:
             equals: false
           messages:
-            fail: "X-Cell/Addictol is installed, but MemoryManager parameter is set to TRUE"
-            fix: "Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell/Addictol."
-            pass: "Memory Manager parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+            fail: "X-Cell is installed, but MemoryManager parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell."
+            pass: "Memory Manager parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
           severity: warning
         - id: havok_xcell
           target:
@@ -88,13 +94,14 @@ Crashgen_Registry:
             key: HavokMemorySystem
             type: bool
           when:
-            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+            plugin_any:
+              [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
           expect:
             equals: false
           messages:
-            fail: "X-Cell/Addictol is installed, but HavokMemorySystem parameter is set to TRUE"
-            fix: "Open {crashgen_name}'s TOML file and change HavokMemorySystem to FALSE, this prevents conflicts with X-Cell/Addictol."
-            pass: "Havok Memory System parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+            fail: "X-Cell is installed, but HavokMemorySystem parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change HavokMemorySystem to FALSE, this prevents conflicts with X-Cell."
+            pass: "Havok Memory System parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
           severity: warning
         - id: bstexture_xcell
           target:
@@ -102,13 +109,14 @@ Crashgen_Registry:
             key: BSTextureStreamerLocalHeap
             type: bool
           when:
-            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+            plugin_any:
+              [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
           expect:
             equals: false
           messages:
-            fail: "X-Cell/Addictol is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE"
-            fix: "Open {crashgen_name}'s TOML file and change BSTextureStreamerLocalHeap to FALSE, this prevents conflicts with X-Cell/Addictol."
-            pass: "BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+            fail: "X-Cell is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change BSTextureStreamerLocalHeap to FALSE, this prevents conflicts with X-Cell."
+            pass: "BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
           severity: warning
         - id: scaleform_xcell
           target:
@@ -116,13 +124,14 @@ Crashgen_Registry:
             key: ScaleformAllocator
             type: bool
           when:
-            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+            plugin_any:
+              [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
           expect:
             equals: false
           messages:
-            fail: "X-Cell/Addictol is installed, but ScaleformAllocator parameter is set to TRUE"
-            fix: "Open {crashgen_name}'s TOML file and change ScaleformAllocator to FALSE, this prevents conflicts with X-Cell/Addictol."
-            pass: "Scaleform Allocator parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+            fail: "X-Cell is installed, but ScaleformAllocator parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change ScaleformAllocator to FALSE, this prevents conflicts with X-Cell."
+            pass: "Scaleform Allocator parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
           severity: warning
         - id: smallblock_xcell
           target:
@@ -130,13 +139,14 @@ Crashgen_Registry:
             key: SmallBlockAllocator
             type: bool
           when:
-            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+            plugin_any:
+              [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
           expect:
             equals: false
           messages:
-            fail: "X-Cell/Addictol is installed, but SmallBlockAllocator parameter is set to TRUE"
-            fix: "Open {crashgen_name}'s TOML file and change SmallBlockAllocator to FALSE, this prevents conflicts with X-Cell/Addictol."
-            pass: "Small Block Allocator parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+            fail: "X-Cell is installed, but SmallBlockAllocator parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change SmallBlockAllocator to FALSE, this prevents conflicts with X-Cell."
+            pass: "Small Block Allocator parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!"
           severity: warning
         - id: archive_limit
           target:
@@ -175,8 +185,30 @@ Crashgen_Registry:
             all:
               - plugin_any: [bakascrapheap.dll]
               - any:
-                  - plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+                  - plugin_any:
+                      [
+                        x-cell-fo4.dll,
+                        x-cell-og.dll,
+                        x-cell-ng2.dll,
+                        x-cell-ae.dll,
+                      ]
                   - plugin_any: [addictol.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell/Addictol"
+            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell/Addictol."
+          severity: error
+        - id: bakascrapheap_redundant_buffout
+          target:
+            section: Patches
+            key: MemoryManager
+            type: bool
+          when:
+            all:
+              - plugin_any: [bakascrapheap.dll]
+              - not:
+                plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll, addictol.dll]
           expect:
             equals: false
           messages:
@@ -190,13 +222,15 @@ Crashgen_Registry:
     settings_rules_version: 1
     settings_rules:
       preflight:
-        - id: addictol_scaffold_notice
+        - id: bakascrapheap_redundant_addictol
           when:
-            plugin_any: [addictol.dll]
-          action:
-            kind: notice
-            severity: info
-            message: "Addictol detected - using Addictol TOML checks scaffold (rules pending)."
+            plugin_any: [bakascrapheap.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "The Baka ScrapHeap Mod is installed, but is redundant with Addictol"
+            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with Addictol."
+          severity: error
       checks: []
   default:
     display_section: ""
