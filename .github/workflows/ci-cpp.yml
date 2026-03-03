@@ -56,15 +56,17 @@ jobs:
             ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-cpp-cli-
 
-      - name: Install vcpkg
+      - name: Cache vcpkg root
+        uses: actions/cache@v4
+        with:
+          path: ~\vcpkg
+          key: ${{ runner.os }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-root-
+
+      - name: Set up vcpkg (resilient)
         shell: pwsh
-        run: |
-          $vcpkgRoot = "$env:USERPROFILE\vcpkg"
-          if (-not (Test-Path $vcpkgRoot)) {
-            git clone https://github.com/microsoft/vcpkg "$vcpkgRoot"
-          }
-          & "$vcpkgRoot\bootstrap-vcpkg.bat"
-          "VCPKG_ROOT=$vcpkgRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
 
       - name: Build and test CLI
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
@@ -132,6 +134,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-cpp-gui-
+
+      - name: Cache vcpkg root
+        uses: actions/cache@v4
+        with:
+          path: ~\vcpkg
+          key: ${{ runner.os }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-root-
+
+      - name: Set up vcpkg (resilient)
+        shell: pwsh
+        run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
 
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test
