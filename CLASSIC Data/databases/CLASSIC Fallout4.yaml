@@ -209,6 +209,15 @@ Crashgen_Registry:
     settings_rules_version: 1
     settings_rules:
       preflight:
+        - id: buffout_addictol_incompatible
+          when:
+            all:
+              - plugin_any: [addictol.dll]
+              - plugin_any: [buffout4.dll]
+          action:
+            kind: notice_and_skip_remaining
+            severity: warning
+            message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes."
         - id: bakascrapheap_redundant_addictol
           when:
             plugin_any: [bakascrapheap.dll]
