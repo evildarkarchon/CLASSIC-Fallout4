@@ -325,3 +325,4 @@ qt.conf
 *.pyinstaller
 .coverage.*
 build-debug/
+.opencode/
