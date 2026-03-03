@@ -42,7 +42,7 @@ export const scanlogConfigCases = [
   {
     id: "fallout4-non-vr-defaults",
     game: "Fallout4",
-    vrMode: false,
+    gameVersion: "auto",
     expected: {
       crashgenName: "",
       xseAcronym: "",
@@ -54,7 +54,7 @@ export const scanlogConfigCases = [
   {
     id: "fallout4-vr-defaults",
     game: "Fallout4",
-    vrMode: true,
+    gameVersion: "VR",
     expected: {
       crashgenName: "",
       xseAcronym: "",

@@ -398,11 +398,8 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
         let checks = parse_string_list_field(name, "checks", &entry_yaml["checks"]);
         let settings_rules_version =
             parse_version_field(name, &entry_yaml["settings_rules_version"]);
-        let settings_rules = parse_settings_rules(
-            name,
-            settings_rules_version,
-            &entry_yaml["settings_rules"],
-        );
+        let settings_rules =
+            parse_settings_rules(name, settings_rules_version, &entry_yaml["settings_rules"]);
 
         result.insert(
             name.to_string(),
@@ -427,6 +424,24 @@ fn normalize_registry_key(value: &str) -> String {
         .collect()
 }
 
+fn is_vr_selected_game_version(selected_game_version: &str) -> bool {
+    selected_game_version.eq_ignore_ascii_case("VR")
+}
+
+fn selected_non_vr_short_name(selected_game_version: &str) -> Option<&'static str> {
+    let normalized: String = selected_game_version
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .map(|ch| ch.to_ascii_lowercase())
+        .collect();
+    match normalized.as_str() {
+        "original" | "og" => Some("OG"),
+        "nextgen" | "ng" => Some("NG"),
+        "anniversaryedition" | "anniversary" | "ae" => Some("AE"),
+        _ => None,
+    }
+}
+
 fn main_root_matches_registry_info(main_root_name: &str, info: &VersionInfo) -> bool {
     let normalized_root = normalize_registry_key(main_root_name);
     !normalized_root.is_empty()
@@ -438,12 +453,32 @@ fn main_root_matches_registry_info(main_root_name: &str, info: &VersionInfo) -> 
 ///
 /// This prefers explicit defaults from `unknown_version_handling.defaults` and
 /// falls back to the highest-priority registry entry that matches `Main_Root_Name`.
-fn resolve_registry_version_info(main_root_name: &str, vr_mode: bool) -> Option<VersionInfo> {
+pub fn resolve_registry_version_info(
+    main_root_name: &str,
+    selected_game_version: &str,
+) -> Option<VersionInfo> {
     if main_root_name.trim().is_empty() {
         return None;
     }
 
     let registry = get_version_registry();
+    let is_vr_mode = is_vr_selected_game_version(selected_game_version);
+    let selected_short_name = if is_vr_mode {
+        None
+    } else {
+        selected_non_vr_short_name(selected_game_version)
+    };
+
+    // Explicit non-VR mode selection should prefer matching short_name first.
+    if let Some(short_name) = selected_short_name
+        && let Some(info) = registry.get_all().into_iter().find(|info| {
+            !info.is_vr
+                && info.short_name.eq_ignore_ascii_case(short_name)
+                && main_root_matches_registry_info(main_root_name, info)
+        })
+    {
+        return Some((*info).clone());
+    }
 
     // Prefer explicit defaults from registry config (accepting both compact and spaced names).
     let mut default_keys = Vec::new();
@@ -455,7 +490,7 @@ fn resolve_registry_version_info(main_root_name: &str, vr_mode: bool) -> Option<
         if key_base.is_empty() {
             continue;
         }
-        if vr_mode {
+        if is_vr_mode {
             default_keys.push(format!("{key_base}VR"));
         }
         default_keys.push(key_base.to_string());
@@ -464,7 +499,7 @@ fn resolve_registry_version_info(main_root_name: &str, vr_mode: bool) -> Option<
     for key in &default_keys {
         if let Some(default_id) = registry.unknown_version_handling().get_default(key)
             && let Some(info) = registry.get_by_id(default_id)
-            && info.is_vr == vr_mode
+            && info.is_vr == is_vr_mode
             && main_root_matches_registry_info(main_root_name, info)
         {
             return Some(info.clone());
@@ -475,60 +510,19 @@ fn resolve_registry_version_info(main_root_name: &str, vr_mode: bool) -> Option<
     registry
         .get_all()
         .into_iter()
-        .find(|info| info.is_vr == vr_mode && main_root_matches_registry_info(main_root_name, info))
+        .find(|info| {
+            info.is_vr == is_vr_mode && main_root_matches_registry_info(main_root_name, info)
+        })
         .map(|info| (*info).clone())
 }
 
 /// Format registry `GameVersion` using legacy 3-part style when build is 0.
-fn format_registry_game_version(version: &RegistryGameVersion) -> String {
+pub fn format_registry_game_version(version: &RegistryGameVersion) -> String {
     if version.build == 0 {
         format!("{}.{}.{}", version.major, version.minor, version.patch)
     } else {
         version.to_string()
     }
-}
-
-/// Resolve baseline (`game_version`) and newer (`game_version_new`) values.
-///
-/// For Fallout 4 non-VR, this preserves legacy semantics:
-/// - `game_version` => OG
-/// - `game_version_new` => NG
-///
-/// Otherwise both values fall back to the same resolved registry entry.
-fn resolve_registry_game_versions(
-    main_root_name: &str,
-    vr_mode: bool,
-    fallback_info: &Option<VersionInfo>,
-) -> (Option<String>, Option<String>) {
-    let fallback = fallback_info
-        .as_ref()
-        .map(|info| format_registry_game_version(&info.version));
-
-    let is_fallout4 = normalize_registry_key(main_root_name) == "fallout4"
-        || fallback_info
-            .as_ref()
-            .is_some_and(|info| normalize_registry_key(&info.game) == "fallout4");
-
-    if is_fallout4 && !vr_mode {
-        let registry = get_version_registry();
-        let game_key = fallback_info
-            .as_ref()
-            .map_or("Fallout4", |info| info.game.as_str());
-        let game_versions = registry.get_all_for_game(game_key, Some(false));
-
-        let og = game_versions
-            .iter()
-            .find(|info| info.short_name.eq_ignore_ascii_case("OG"))
-            .map(|info| format_registry_game_version(&info.version));
-        let ng = game_versions
-            .iter()
-            .find(|info| info.short_name.eq_ignore_ascii_case("NG"))
-            .map(|info| format_registry_game_version(&info.version));
-
-        return (og.or_else(|| fallback.clone()), ng.or(fallback));
-    }
-
-    (fallback.clone(), fallback)
 }
 
 fn get_crashgen_registry_entry<'a>(
@@ -787,8 +781,6 @@ Crashgen_Registry:
 /// * `autoscan_text` - A `String` defining the text used in the "autoscan" UI component.
 ///
 /// * `game_version` - A `String` holding the current game version.
-/// * `game_version_new` - A `String` indicating a newer version of the game, if available.
-///
 /// # Version Registry Migration
 ///
 /// VR-specific static metadata fields (`crashgen_name_vr`, `crashgen_latest_vr`,
@@ -882,10 +874,6 @@ pub struct YamlDataCore {
     ///
     /// Loaded from `Game_Info.GameVersion` or backfilled from Version Registry metadata.
     pub game_version: String,
-    /// Newer version of the game, if available.
-    ///
-    /// Loaded from `Game_Info.GameVersionNEW` or backfilled from Version Registry metadata.
-    pub game_version_new: String,
 
     // Game root names
     /// Main root name for the game (from `Game_Info.Main_Root_Name`)
@@ -926,7 +914,7 @@ impl YamlDataCore {
         game_data: &Yaml,
         ignore_data: &Yaml,
         game: &str,
-        vr_mode: bool,
+        selected_game_version: &str,
     ) -> Self {
         let yaml_ops = YamlOperations::new();
 
@@ -984,7 +972,6 @@ impl YamlDataCore {
             game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
             game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
-            game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
 
             // Ignore YAML values
             ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{game}")),
@@ -993,13 +980,18 @@ impl YamlDataCore {
             crashgen_registry: parse_crashgen_registry(game_data),
         };
 
-        data.apply_metadata_fallbacks(vr_mode, crashgen_ignore_is_configured);
+        data.apply_metadata_fallbacks(selected_game_version, crashgen_ignore_is_configured);
         data
     }
 
-    fn apply_metadata_fallbacks(&mut self, vr_mode: bool, crashgen_ignore_is_configured: bool) {
+    fn apply_metadata_fallbacks(
+        &mut self,
+        selected_game_version: &str,
+        crashgen_ignore_is_configured: bool,
+    ) {
         if !self.game_root_name.trim().is_empty() {
-            let registry_info = resolve_registry_version_info(&self.game_root_name, vr_mode);
+            let registry_info =
+                resolve_registry_version_info(&self.game_root_name, selected_game_version);
             let registry_crashgen = registry_info
                 .as_ref()
                 .and_then(|info| info.crashgen_versions.first());
@@ -1030,17 +1022,12 @@ impl YamlDataCore {
                 self.xse_acronym = acronym.to_string();
             }
 
-            let (registry_game_version, registry_game_version_new) =
-                resolve_registry_game_versions(&self.game_root_name, vr_mode, &registry_info);
             if self.game_version.trim().is_empty()
-                && let Some(version) = registry_game_version
+                && let Some(version) = registry_info
+                    .as_ref()
+                    .map(|info| format_registry_game_version(&info.version))
             {
                 self.game_version = version;
-            }
-            if self.game_version_new.trim().is_empty()
-                && let Some(version_new) = registry_game_version_new
-            {
-                self.game_version_new = version_new;
             }
         }
 
@@ -1058,7 +1045,8 @@ impl YamlDataCore {
     /// # Arguments
     /// * `yaml_dirs` - Vector of directories containing YAML files (main, game, ignore)
     /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-    /// * `vr_mode` - Whether to load VR-specific configuration
+    /// * `selected_game_version` - Selected game version mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
     ///
     /// # Returns
     /// * `Ok(YamlDataCore)` - Successfully loaded configuration
@@ -1070,7 +1058,7 @@ impl YamlDataCore {
     pub async fn load_from_yaml_files(
         yaml_dirs: Vec<PathBuf>,
         game: String,
-        vr_mode: bool,
+        selected_game_version: String,
     ) -> Result<Self, ConfigError> {
         // Resolve paths based on input size
         let (main_yaml, game_yaml, ignore_yaml) = if yaml_dirs.len() == 2 {
@@ -1162,7 +1150,7 @@ impl YamlDataCore {
             game_data,
             ignore_data,
             &game,
-            vr_mode,
+            &selected_game_version,
         ))
     }
 
@@ -1177,7 +1165,8 @@ impl YamlDataCore {
     /// * `game_content` - Content of the game-specific YAML configuration file
     /// * `ignore_content` - Content of the ignore list YAML configuration file
     /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-    /// * `vr_mode` - Whether to load VR-specific configuration
+    /// * `selected_game_version` - Selected game version mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
     ///
     /// # Returns
     ///
@@ -1209,7 +1198,7 @@ impl YamlDataCore {
     ///     game_yaml,
     ///     ignore_yaml,
     ///     "Fallout4".to_string(),
-    ///     false,
+    ///     "auto".to_string(),
     /// ).unwrap();
     /// ```
     pub fn from_yaml_content(
@@ -1217,7 +1206,7 @@ impl YamlDataCore {
         game_content: &str,
         ignore_content: &str,
         game: String,
-        vr_mode: bool,
+        selected_game_version: String,
     ) -> Result<Self, ConfigError> {
         // Parse YAML contents using yaml-rust2
         let main_docs =
@@ -1252,7 +1241,7 @@ impl YamlDataCore {
             game_data,
             ignore_data,
             &game,
-            vr_mode,
+            &selected_game_version,
         ))
     }
 }
@@ -1379,6 +1368,23 @@ Crashgen_Registry:
 "#
     }
 
+    /// Production-shaped Fallout 4 YAML where Game_Info has compact Main_Root_Name.
+    fn minimal_game_yaml_main_root_only_compact() -> &'static str {
+        r#"
+Game_Info:
+  Main_Root_Name: "Fallout4"
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys:
+      - "BuffoutSpecificIgnore"
+    checks: []
+  default:
+    ignore_keys:
+      - "DefaultIgnore"
+    checks: []
+"#
+    }
+
     /// Minimal valid ignore YAML content for testing
     fn minimal_ignore_yaml() -> &'static str {
         r#"
@@ -1401,7 +1407,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_ok(), "Should successfully parse valid YAML");
@@ -1416,7 +1422,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1434,14 +1440,13 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
         // Game YAML values
         assert_eq!(config.xse_acronym, "F4SE");
         assert_eq!(config.game_version, "1.10.163");
-        assert_eq!(config.game_version_new, "1.10.984");
         assert_eq!(config.crashgen_latest_og, "4.0.0");
         assert_eq!(config.classic_game_hints, vec!["Hint 1", "Hint 2"]);
         assert_eq!(config.warn_noplugins, "No plugins found!");
@@ -1463,7 +1468,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1477,7 +1482,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1492,7 +1497,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1518,7 +1523,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1549,14 +1554,13 @@ CLASSIC_Ignore_Skyrim:
     }
 
     #[test]
-    fn test_from_yaml_content_vr_mode_ignored() {
-        // vr_mode parameter is ignored; VR metadata is now in Version Registry
+    fn test_from_yaml_content_auto_game_version_uses_game_info_values() {
         let config = YamlDataCore::from_yaml_content(
             minimal_main_yaml(),
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1576,7 +1580,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1590,14 +1594,15 @@ CLASSIC_Ignore_Skyrim:
     }
 
     #[test]
-    fn test_vr_mode_parameter_does_not_affect_loading() {
-        // Loading with vr_mode=true should produce identical results to vr_mode=false
+    fn test_selected_game_version_parameter_does_not_affect_explicit_game_info_values() {
+        // This fixture explicitly defines Game_Info values, so mode selection
+        // should not change extracted crashgen metadata.
         let config_og = YamlDataCore::from_yaml_content(
             minimal_main_yaml(),
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1606,7 +1611,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            true,
+            "VR".to_string(),
         )
         .unwrap();
 
@@ -1622,7 +1627,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Skyrim".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1639,7 +1644,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1648,7 +1653,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Skyrim".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1670,7 +1675,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_err());
@@ -1693,7 +1698,7 @@ CLASSIC_Ignore_Skyrim:
             invalid_yaml,
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_err());
@@ -1716,7 +1721,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             invalid_yaml,
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_err());
@@ -1739,7 +1744,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_err());
@@ -1762,7 +1767,7 @@ CLASSIC_Ignore_Skyrim:
             empty_yaml,
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_err());
@@ -1779,7 +1784,7 @@ CLASSIC_Ignore_Skyrim:
             minimal_game_yaml(),
             empty_yaml,
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_err());
@@ -1805,7 +1810,7 @@ different_game: []
             sparse_game,
             sparse_ignore,
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         );
 
         assert!(result.is_ok());
@@ -1823,7 +1828,7 @@ different_game: []
             minimal_game_yaml_main_root_only(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1835,10 +1840,91 @@ different_game: []
         assert!(!config.crashgen_latest_og.is_empty());
         assert!(!config.xse_acronym.is_empty());
         assert!(!config.game_version.is_empty());
-        assert!(!config.game_version_new.is_empty());
 
         // Legacy ignore fallback comes from Crashgen_Registry when Game_Info.CRASHGEN_Ignore is absent.
         assert_eq!(config.crashgen_ignore, vec!["BuffoutSpecificIgnore"]);
+    }
+
+    #[test]
+    fn test_from_yaml_content_registry_fallback_matches_for_spaced_and_compact_main_root_names() {
+        let spaced_config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .unwrap();
+        let compact_config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only_compact(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .unwrap();
+
+        assert_eq!(spaced_config.crashgen_name, compact_config.crashgen_name);
+        assert_eq!(
+            spaced_config.crashgen_latest_og,
+            compact_config.crashgen_latest_og
+        );
+        assert_eq!(spaced_config.xse_acronym, compact_config.xse_acronym);
+        assert_eq!(spaced_config.game_version, compact_config.game_version);
+        assert_eq!(
+            spaced_config.crashgen_ignore,
+            compact_config.crashgen_ignore
+        );
+    }
+
+    #[test]
+    fn test_from_yaml_content_registry_selected_mode_resolves_expected_versions() {
+        let original = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "Original".to_string(),
+        )
+        .unwrap();
+        let next_gen = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "NextGen".to_string(),
+        )
+        .unwrap();
+        let anniversary = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "AnniversaryEdition".to_string(),
+        )
+        .unwrap();
+        let anniversary_alias = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "AE".to_string(),
+        )
+        .unwrap();
+        let vr = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "VR".to_string(),
+        )
+        .unwrap();
+
+        assert_eq!(original.game_version, "1.10.163");
+        assert_eq!(next_gen.game_version, "1.10.984");
+        assert_eq!(anniversary.game_version, "1.11.191");
+        assert_eq!(anniversary_alias.game_version, anniversary.game_version);
+        assert_eq!(vr.game_version, "1.2.72");
     }
 
     #[test]
@@ -1864,7 +1950,7 @@ Crashgen_Registry:
             game_yaml,
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -1898,8 +1984,12 @@ Crashgen_Registry:
         // Use the 2-element API (root_dir, data_dir)
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_ok(), "Load failed: {:?}", result.err());
         let config = result.unwrap();
@@ -1932,8 +2022,12 @@ Crashgen_Registry:
         // Use the 3-element API
         let yaml_dirs = vec![main_dir, game_dir, ignore_dir];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_ok(), "Load failed: {:?}", result.err());
         let config = result.unwrap();
@@ -1945,8 +2039,12 @@ Crashgen_Registry:
         // Provide only 1 directory (invalid)
         let yaml_dirs = vec![PathBuf::from("/some/path")];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -1963,8 +2061,12 @@ Crashgen_Registry:
             PathBuf::from("/d"),
         ];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -1991,8 +2093,12 @@ Crashgen_Registry:
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -2015,8 +2121,12 @@ Crashgen_Registry:
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -2039,8 +2149,12 @@ Crashgen_Registry:
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -2075,8 +2189,12 @@ CLASSIC_Ignore_TestGame:
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "TestGame".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "TestGame".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_ok());
         let config = result.unwrap();
@@ -2107,8 +2225,12 @@ CLASSIC_Ignore_TestGame:
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
+        let result = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await;
 
         assert!(result.is_ok());
         let config = result.unwrap();
@@ -2128,7 +2250,7 @@ CLASSIC_Ignore_TestGame:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 
@@ -2146,7 +2268,7 @@ CLASSIC_Ignore_TestGame:
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false,
+            "auto".to_string(),
         )
         .unwrap();
 

@@ -113,16 +113,15 @@ impl PyAddressLibInfo {
 /// Validates Address Library installation for F4SE/SKSE plugins.
 ///
 /// Example:
-///     >>> # Simplest usage (defaults to Original version, non-VR)
+///     >>> # Simplest usage (defaults to Original mode)
 ///     >>> checker = XseChecker("/path/to/plugins")
 ///     >>> result = checker.check()
 ///     >>> message = checker.validate()
 ///     >>> print(message)
 ///     >>>
-///     >>> # Or specify VR mode and game version explicitly
+///     >>> # Or specify game version explicitly
 ///     >>> checker = XseChecker(
 ///     ...     "/path/to/plugins",
-///     ...     is_vr_mode=False,
 ///     ...     game_version=GameVersion.NextGen
 ///     ... )
 #[pyclass(name = "XseChecker")]
@@ -130,21 +129,30 @@ pub struct PyXseChecker {
     inner: XseChecker,
 }
 
+fn to_core_game_version(game_version: PyGameVersion) -> GameVersion {
+    match game_version {
+        PyGameVersion::Null => GameVersion::Null,
+        PyGameVersion::Original => GameVersion::Original,
+        PyGameVersion::NextGen => GameVersion::NextGen,
+        PyGameVersion::AnniversaryEdition => GameVersion::AnniversaryEdition,
+        PyGameVersion::Vr => GameVersion::Vr,
+    }
+}
+
+fn is_vr_game_version(version: GameVersion) -> bool {
+    matches!(version, GameVersion::Vr)
+}
+
 #[pymethods]
 impl PyXseChecker {
     #[new]
-    #[pyo3(signature = (plugins_path, is_vr_mode=false, game_version=PyGameVersion::Original))]
-    fn new(plugins_path: PathBuf, is_vr_mode: bool, game_version: PyGameVersion) -> PyResult<Self> {
-        let version = match game_version {
-            PyGameVersion::Null => GameVersion::Null,
-            PyGameVersion::Original => GameVersion::Original,
-            PyGameVersion::NextGen => GameVersion::NextGen,
-            PyGameVersion::AnniversaryEdition => GameVersion::AnniversaryEdition,
-            PyGameVersion::Vr => GameVersion::Vr,
-        };
+    #[pyo3(signature = (plugins_path, game_version=PyGameVersion::Original))]
+    fn new(plugins_path: PathBuf, game_version: PyGameVersion) -> PyResult<Self> {
+        let version = to_core_game_version(game_version);
+        let use_vr_mode = is_vr_game_version(version);
 
         let checker =
-            XseChecker::new(plugins_path, is_vr_mode, version).map_err(crate::to_pyerr)?;
+            XseChecker::new(plugins_path, use_vr_mode, version).map_err(crate::to_pyerr)?;
 
         Ok(Self { inner: checker })
     }
@@ -180,19 +188,14 @@ impl PyXseChecker {
 ///
 /// Args:
 ///     plugins_path: Path to F4SE/SKSE plugins directory
-///     is_vr_mode: Whether the game is running in VR mode
 ///     game_version: Detected game version
 ///
 /// Returns:
 ///     Formatted validation message
 #[pyfunction]
-#[pyo3(signature = (plugins_path, is_vr_mode, game_version))]
-pub fn check_xse_plugins(
-    plugins_path: PathBuf,
-    is_vr_mode: bool,
-    game_version: PyGameVersion,
-) -> PyResult<String> {
-    let checker = PyXseChecker::new(plugins_path, is_vr_mode, game_version)?;
+#[pyo3(signature = (plugins_path, game_version))]
+pub fn check_xse_plugins(plugins_path: PathBuf, game_version: PyGameVersion) -> PyResult<String> {
+    let checker = PyXseChecker::new(plugins_path, game_version)?;
     Ok(checker.validate())
 }
 

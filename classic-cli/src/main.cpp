@@ -52,7 +52,11 @@ int main(int argc, char* argv[]) {
 
     // Print banner
     std::string mode_suffix;
-    if (args.vr_mode)      mode_suffix += " VR";
+    if (args.game_version == "VR") {
+        mode_suffix += " VR";
+    } else if (args.game_version != "auto") {
+        mode_suffix += " " + args.game_version;
+    }
     if (args.fcx_mode)     mode_suffix += " [FCX]";
 
     fmt::print("CLASSIC v9.0.0 - Crash Log Scanner ({}{})\n\n",

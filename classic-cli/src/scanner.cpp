@@ -108,16 +108,22 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
+static bool is_vr_game_version(const std::string& game_version) {
+    return game_version == "VR";
+}
+
 static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDirs& dirs) {
     // Mirror Python: read Docs_Folder_XSE from CLASSIC <Game> Local.yaml.
-    // Key path is VR-aware: Game_Info.* or GameVR_Info.*
+    // Key path depends on selected game version mode.
     fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
 
     try {
         auto yaml = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*yaml, local_yaml.string());
 
-        std::string key_path = args.vr_mode ? "GameVR_Info.Docs_Folder_XSE" : "Game_Info.Docs_Folder_XSE";
+        std::string key_path = is_vr_game_version(args.game_version)
+            ? "GameVR_Info.Docs_Folder_XSE"
+            : "Game_Info.Docs_Folder_XSE";
         auto xse_path = classic::yaml::yaml_ops_get_string(*yaml, key_path, "");
         return std::string(xse_path.data(), xse_path.size());
     } catch (const rust::Error&) {
@@ -132,7 +138,7 @@ static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDi
 static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
                             std::chrono::steady_clock::time_point total_start) {
     // Build scan config from YAML
-    auto config = classic::scanner::build_full_scan_config(dirs.root, dirs.data, args.game, args.vr_mode,
+    auto config = classic::scanner::build_full_scan_config(dirs.root, dirs.data, args.game, args.game_version,
                                                            args.show_fid_values, args.fcx_mode, args.simplify_logs);
 
     // Create orchestrator
@@ -142,7 +148,8 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
     // Mirrors Python's _crashlogs_get_files_rust():
     //   base_folder  = cwd (where "Crash Logs/" subdirectory is managed)
     //   custom_folder = --scan-path (searched directly, in addition to Crash Logs)
-    //   xse_folder = Game{VR}_Info.Docs_Folder_XSE from CLASSIC <Game> Local.yaml
+    //   xse_folder = Game_Info.Docs_Folder_XSE or GameVR_Info.Docs_Folder_XSE
+    //                based on selected game version mode.
     std::error_code ec;
     std::string base_dir = fs::current_path(ec).string();
     std::string custom_dir = args.scan_path; // empty string = no custom folder

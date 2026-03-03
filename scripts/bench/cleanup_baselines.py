@@ -85,7 +85,7 @@ def find_baselines(criterion_dir: Path) -> list[tuple[datetime, Path]]:
     return baselines
 
 
-def format_size(size_bytes: int) -> str:
+def format_size(size_bytes: int | float) -> str:
     """Format bytes into human-readable size.
 
     Args:

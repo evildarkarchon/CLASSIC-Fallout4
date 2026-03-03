@@ -324,3 +324,4 @@ qt.conf
 !classic-gui/**/qt.conf
 *.pyinstaller
 .coverage.*
+build-debug/

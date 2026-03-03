@@ -109,7 +109,7 @@ describe("YamlData construction", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(data).toBeDefined();
     expect(data.classicVersion).toBe("7.31.0");
@@ -121,7 +121,7 @@ describe("YamlData construction", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(data).toBeDefined();
     expect(data.classicVersion).toBe("7.31.0");
@@ -134,14 +134,14 @@ describe("YamlData construction", () => {
         GAME_YAML,
         IGNORE_YAML,
         "Fallout4",
-        false,
+        "auto",
       ),
     ).toThrow();
   });
 
   test("fromYamlContent throws on empty document", () => {
     expect(() =>
-      YamlData.fromYamlContent("", GAME_YAML, IGNORE_YAML, "Fallout4", false),
+      YamlData.fromYamlContent("", GAME_YAML, IGNORE_YAML, "Fallout4", "auto"),
     ).toThrow();
   });
 
@@ -151,7 +151,7 @@ describe("YamlData construction", () => {
       GAME_YAML_MAIN_ROOT_ONLY,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
 
     expect(data.crashgenName.length).toBeGreaterThan(0);
@@ -174,7 +174,7 @@ describe("YamlData main YAML properties", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
   });
 
@@ -213,7 +213,7 @@ describe("YamlData game properties", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
   });
 
@@ -225,15 +225,12 @@ describe("YamlData game properties", () => {
     expect(data.gameVersion).toBe("1.10.163");
   });
 
-  test("gameVersionNew returns correct version", () => {
-    expect(data.gameVersionNew).toBe("1.10.984");
-  });
-
   test("crashgenLatestOg returns correct version", () => {
     expect(data.crashgenLatestOg).toBe("4.0.0");
   });
 
-  test("does not expose deprecated VR YAML metadata fields", () => {
+  test("does not expose deprecated VR and split-version YAML fields", () => {
+    expect((data as unknown as Record<string, unknown>).gameVersionNew).toBeUndefined();
     expect((data as unknown as Record<string, unknown>).gameVersionVr).toBeUndefined();
     expect((data as unknown as Record<string, unknown>).crashgenLatestVr).toBeUndefined();
   });
@@ -262,7 +259,7 @@ describe("YamlData ignore lists", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(data.ignoreList).toEqual(["IgnoreItem1", "IgnoreItem2"]);
   });
@@ -273,7 +270,7 @@ describe("YamlData ignore lists", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Skyrim",
-      false,
+      "auto",
     );
     expect(data.ignoreList).toEqual(["SkyrimIgnore1"]);
   });
@@ -284,7 +281,7 @@ describe("YamlData ignore lists", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(data.gameIgnorePlugins).toEqual(["Unofficial*.esp"]);
   });
@@ -295,7 +292,7 @@ describe("YamlData ignore lists", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(data.gameIgnoreRecords).toEqual(["RecordType1"]);
   });
@@ -315,7 +312,7 @@ describe("YamlData suspect patterns", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
   });
 
@@ -350,7 +347,7 @@ describe("YamlData mod databases", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
   });
 
@@ -394,7 +391,7 @@ describe("YamlData VR mode", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      true,
+      "VR",
     );
     // VR-specific static metadata is no longer sourced from YAML.
     // YamlData exposes shared config, while version-specific metadata now
@@ -410,7 +407,7 @@ describe("YamlData VR mode", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(data.getCrashgenName()).toBe("crash-og");
     expect(data.crashgenName).toBe("crash-og");
@@ -428,7 +425,7 @@ describe("YamlData toString", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     const str = data.toString();
     expect(typeof str).toBe("string");
@@ -452,7 +449,7 @@ describe("YamlData missing keys", () => {
       sparseGame,
       sparseIgnore,
       "Fallout4",
-      false,
+      "auto",
     );
 
     expect(data.classicVersion).toBe("");
@@ -477,7 +474,6 @@ describe("ClassicConfigJs construction", () => {
     expect(config.moveUnsolvedLogs).toBe(false);
     expect(config.simplifyLogs).toBe(false);
     expect(config.updateCheck).toBe(true);
-    expect(config.vrMode).toBe(false);
     expect(config.gameVersion).toBe("auto");
     expect(config.updateSource).toBe("github");
     expect(config.autoSwitchToResults).toBe(true);
@@ -533,12 +529,6 @@ describe("ClassicConfigJs feature flags", () => {
     expect(config.updateCheck).toBe(true);
     config.updateCheck = false;
     expect(config.updateCheck).toBe(false);
-  });
-
-  test("vrMode getter/setter", () => {
-    const config = new ClassicConfigJs();
-    config.vrMode = true;
-    expect(config.vrMode).toBe(true);
   });
 
   test("gameVersion getter/setter", () => {

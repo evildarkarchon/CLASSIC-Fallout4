@@ -22,14 +22,14 @@ fn yaml_data_load(
     yaml_dir_root: &str,
     yaml_dir_data: &str,
     game: &str,
-    vr_mode: bool,
+    game_version: &str,
 ) -> Result<Box<YamlData>, String> {
     let dirs = vec![PathBuf::from(yaml_dir_root), PathBuf::from(yaml_dir_data)];
     let inner = get_runtime()
         .block_on(YamlDataCore::load_from_yaml_files(
             dirs,
             game.to_string(),
-            vr_mode,
+            game_version.to_string(),
         ))
         .map_err(|e| format!("{e}"))?;
     Ok(Box::new(YamlData { inner }))
@@ -71,10 +71,6 @@ fn yaml_data_autoscan_text(data: &YamlData) -> &str {
 
 fn yaml_data_game_version(data: &YamlData) -> &str {
     &data.inner.game_version
-}
-
-fn yaml_data_game_version_new(data: &YamlData) -> &str {
-    &data.inner.game_version_new
 }
 
 fn yaml_data_game_root_name_field(data: &YamlData) -> &str {
@@ -195,7 +191,7 @@ mod ffi {
             yaml_dir_root: &str,
             yaml_dir_data: &str,
             game: &str,
-            vr_mode: bool,
+            game_version: &str,
         ) -> Result<Box<YamlData>>;
 
         // String getters
@@ -208,7 +204,6 @@ mod ffi {
         fn yaml_data_xse_acronym(data: &YamlData) -> &str;
         fn yaml_data_autoscan_text(data: &YamlData) -> &str;
         fn yaml_data_game_version(data: &YamlData) -> &str;
-        fn yaml_data_game_version_new(data: &YamlData) -> &str;
         fn yaml_data_game_root_name_field(data: &YamlData) -> &str;
 
         // Accessors
@@ -254,7 +249,7 @@ mod tests {
             "nonexistent_root_dir",
             "nonexistent_data_dir",
             "Fallout4",
-            false,
+            "auto",
         );
         assert!(result.is_err());
     }
@@ -264,7 +259,7 @@ mod tests {
         let root_dir = "J:\\CLASSIC-Fallout4";
         let data_dir = "J:\\CLASSIC-Fallout4\\ClassicLib";
 
-        let result = yaml_data_load(root_dir, data_dir, "Fallout4", false);
+        let result = yaml_data_load(root_dir, data_dir, "Fallout4", "auto");
         if let Ok(data) = result {
             assert!(!yaml_data_classic_version(&data).is_empty());
             assert!(!yaml_data_xse_acronym(&data).is_empty());
@@ -282,12 +277,12 @@ mod tests {
     }
 
     #[test]
-    fn test_yaml_data_vr_mode() {
+    fn test_yaml_data_game_version_mode() {
         let root_dir = "J:\\CLASSIC-Fallout4";
         let data_dir = "J:\\CLASSIC-Fallout4\\ClassicLib";
 
-        let result_og = yaml_data_load(root_dir, data_dir, "Fallout4", false);
-        let result_vr = yaml_data_load(root_dir, data_dir, "Fallout4", true);
+        let result_og = yaml_data_load(root_dir, data_dir, "Fallout4", "auto");
+        let result_vr = yaml_data_load(root_dir, data_dir, "Fallout4", "VR");
 
         if let (Ok(og), Ok(vr)) = (result_og, result_vr) {
             let og_root = yaml_data_get_game_root_name(&og);
@@ -335,7 +330,7 @@ CLASSIC_Ignore_Fallout4: []
 
         let root_dir = temp.path().to_string_lossy().to_string();
         let data_dir_str = data_dir.to_string_lossy().to_string();
-        let data = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", false)
+        let data = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto")
             .expect("yaml_data_load should succeed");
 
         assert!(!yaml_data_get_crashgen_name(&data).is_empty());

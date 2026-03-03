@@ -112,7 +112,7 @@ private:
     QString m_dataDir;
     bool m_updateCheckOnStartup = true;
     bool m_autoSwitchToResultsAfterScan = true;
-    bool m_scanVrMode = false;
+    QString m_gameVersion = QStringLiteral("auto");
     bool m_showFormIdValues = false;
     bool m_fcxMode = false;
     bool m_simplifyLogs = false;

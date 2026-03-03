@@ -46,14 +46,14 @@ describe("Tier-1 drift regression pack", () => {
       PARITY_GAME_YAML,
       PARITY_IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     const nullOptions = createAnalysisConfigFromYamlContent(
       PARITY_MAIN_YAML,
       PARITY_GAME_YAML,
       PARITY_IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
       null,
     );
     const emptyOptions = createAnalysisConfigFromYamlContent(
@@ -61,7 +61,7 @@ describe("Tier-1 drift regression pack", () => {
       PARITY_GAME_YAML,
       PARITY_IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
       {},
     );
 

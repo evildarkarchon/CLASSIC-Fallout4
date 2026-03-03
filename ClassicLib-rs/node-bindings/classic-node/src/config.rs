@@ -37,7 +37,7 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
 /// suspect patterns, ignore lists, version info, and UI text. It is immutable
 /// after creation and thread-safe.
 ///
-/// Construct via `new YamlData(yamlDirs, game, vrMode)` or the static
+/// Construct via `new YamlData(yamlDirs, game, gameVersion)` or the static
 /// `YamlData.fromYamlContent(...)` method for testing.
 #[napi]
 pub struct YamlData {
@@ -51,13 +51,14 @@ impl YamlData {
     /// @param yamlDirs - Array of directory paths containing YAML files.
     ///   Either 2 elements `[rootDir, dataDir]` or 3 elements `[mainDir, gameDir, ignoreDir]`.
     /// @param game - Game identifier (e.g., "Fallout4", "Skyrim").
-    /// @param vrMode - Whether to load VR-specific configuration.
+    /// @param gameVersion - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR").
     /// @throws on I/O errors, parse errors, or invalid input.
     #[napi(constructor)]
-    pub fn new(yaml_dirs: Vec<String>, game: String, vr_mode: bool) -> Result<Self> {
+    pub fn new(yaml_dirs: Vec<String>, game: String, game_version: String) -> Result<Self> {
         let dirs: Vec<PathBuf> = yaml_dirs.into_iter().map(PathBuf::from).collect();
         let inner = get_runtime()
-            .block_on(async { YamlDataCore::load_from_yaml_files(dirs, game, vr_mode).await })
+            .block_on(async { YamlDataCore::load_from_yaml_files(dirs, game, game_version).await })
             .map_err(to_napi_err)?;
         Ok(Self { inner })
     }
@@ -68,7 +69,8 @@ impl YamlData {
     /// @param gameContent - Content of the game-specific YAML configuration file.
     /// @param ignoreContent - Content of the ignore list YAML configuration file.
     /// @param game - Game identifier (e.g., "Fallout4", "Skyrim").
-    /// @param vrMode - Whether to load VR-specific configuration.
+    /// @param gameVersion - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR").
     /// @throws on parse errors or empty documents.
     #[napi(factory)]
     pub fn from_yaml_content(
@@ -76,14 +78,14 @@ impl YamlData {
         game_content: String,
         ignore_content: String,
         game: String,
-        vr_mode: bool,
+        game_version: String,
     ) -> Result<Self> {
         let inner = YamlDataCore::from_yaml_content(
             &main_content,
             &game_content,
             &ignore_content,
             game,
-            vr_mode,
+            game_version,
         )
         .map_err(to_napi_err)?;
         Ok(Self { inner })
@@ -318,12 +320,6 @@ impl YamlData {
     #[napi(getter)]
     pub fn game_version(&self) -> String {
         self.inner.game_version.clone()
-    }
-
-    /// Newer game version string (if available).
-    #[napi(getter)]
-    pub fn game_version_new(&self) -> String {
-        self.inner.game_version_new.clone()
     }
 
     // ========================================================================
@@ -600,19 +596,8 @@ impl ClassicConfigJs {
         self.inner.update_check = value;
     }
 
-    /// Whether VR mode is enabled (legacy; prefer gameVersion).
-    #[napi(getter)]
-    pub fn vr_mode(&self) -> bool {
-        self.inner.vr_mode
-    }
-
-    /// Set VR mode.
-    #[napi(setter)]
-    pub fn set_vr_mode(&mut self, value: bool) {
-        self.inner.vr_mode = value;
-    }
-
-    /// Game version selection: "auto", "Original", "NextGen", or "VR".
+    /// Game version selection:
+    /// "auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR".
     #[napi(getter)]
     pub fn game_version(&self) -> String {
         self.inner.game_version.clone()
@@ -760,9 +745,15 @@ pub fn create_yaml_data_from_content(
     game_content: String,
     ignore_content: String,
     game: String,
-    vr_mode: bool,
+    game_version: String,
 ) -> Result<YamlData> {
-    YamlData::from_yaml_content(main_content, game_content, ignore_content, game, vr_mode)
+    YamlData::from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        game_version,
+    )
 }
 
 /// Create a new ClassicConfig with default values (convenience free function).

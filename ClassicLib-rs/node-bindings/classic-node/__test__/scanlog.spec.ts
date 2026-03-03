@@ -128,19 +128,19 @@ describe("Scanlog bindings", () => {
   });
 
   test("createAnalysisConfig returns a config object", () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     expect(config).toBeDefined();
     expect(config.game).toBe("Fallout4");
-    expect(config.vrMode).toBe(false);
+    expect(config.gameVersion).toBe("auto");
   });
 
   test("createAnalysisConfig accepts VR mode", () => {
-    const config = createAnalysisConfig("Fallout4", true);
-    expect(config.vrMode).toBe(true);
+    const config = createAnalysisConfig("Fallout4", "VR");
+    expect(config.gameVersion).toBe("VR");
   });
 
   test("createAnalysisConfig has correct default values", () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     expect(config.crashgenName).toBe("");
     expect(config.xseAcronym).toBe("");
     expect(config.classicVersion).toBe("CLASSIC");
@@ -154,10 +154,10 @@ describe("Scanlog bindings", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(config.game).toBe("Fallout4");
-    expect(config.vrMode).toBe(false);
+    expect(config.gameVersion).toBe("auto");
     expect(config.crashgenName).toBe("Buffout 4");
     expect(config.xseAcronym).toBe("F4SE");
     expect(config.classicVersion).toBe("9.0.0");
@@ -169,7 +169,7 @@ describe("Scanlog bindings", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
       {
         fcxMode: true,
         simplifyLogs: true,
@@ -186,7 +186,7 @@ describe("Scanlog bindings", () => {
 
 describe("processLog", () => {
   test("processLog rejects for a non-existent file", async () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     try {
       await processLog("Z:\\nonexistent\\crash.log", config);
       // If it doesn't throw, the result should indicate failure
@@ -207,13 +207,13 @@ describe("processLog", () => {
 
 describe("processLogsBatch", () => {
   test("processLogsBatch returns empty array for empty input", async () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     const results = await processLogsBatch([], config);
     expect(results).toEqual([]);
   });
 
   test("processLogsBatch handles non-existent files gracefully", async () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     const results = await processLogsBatch(
       ["Z:\\nonexistent\\a.log", "Z:\\nonexistent\\b.log"],
       config,
@@ -235,7 +235,7 @@ describe("YAML-backed analysis entry points", () => {
         GAME_YAML,
         IGNORE_YAML,
         "Fallout4",
-        false,
+        "auto",
       );
       expect(true).toBe(false);
     } catch (err: unknown) {
@@ -253,7 +253,7 @@ describe("YAML-backed analysis entry points", () => {
         GAME_YAML,
         IGNORE_YAML,
         "Fallout4",
-        false,
+        "auto",
       );
       expect(true).toBe(false);
     } catch (err: unknown) {
@@ -270,7 +270,7 @@ describe("YAML-backed analysis entry points", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(results).toEqual([]);
   });
@@ -282,7 +282,7 @@ describe("YAML-backed analysis entry points", () => {
       GAME_YAML,
       IGNORE_YAML,
       "Fallout4",
-      false,
+      "auto",
     );
     expect(results.length).toBe(2);
     for (const result of results) {

@@ -17,7 +17,7 @@ namespace {
 rust::String resolveXseFolderFromLocalYaml(
     const QString& yamlData,
     const QString& game,
-    bool vrMode)
+    const QString& gameVersion)
 {
     const QString localYamlPath = QDir(yamlData).filePath(
         QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
@@ -26,7 +26,7 @@ rust::String resolveXseFolderFromLocalYaml(
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
 
-        const char* keyPath = vrMode
+        const char* keyPath = gameVersion.compare(QStringLiteral("VR"), Qt::CaseInsensitive) == 0
             ? "GameVR_Info.Docs_Folder_XSE"
             : "Game_Info.Docs_Folder_XSE";
         auto xsePath = classic::yaml::yaml_ops_get_string(*ops, keyPath, "");
@@ -56,7 +56,7 @@ ScanController::ScanController(SignalHub* signalHub,
 void ScanController::startScan(const QString& yamlRoot,
                                 const QString& yamlData,
                                 const QString& game,
-                                bool vrMode,
+                                const QString& gameVersion,
                                 bool showFormIdValues,
                                 bool fcxMode,
                                 bool simplifyLogs,
@@ -74,7 +74,7 @@ void ScanController::startScan(const QString& yamlRoot,
     QStringList logPathsList;
     try {
         auto baseDir = QDir::currentPath();
-        auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, vrMode);
+        auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
         auto collector = classic::files::log_collector_new(
             classic::toRustString(baseDir),
             xseFolder,
@@ -125,8 +125,8 @@ void ScanController::startScan(const QString& yamlRoot,
     }
 
     // Start the worker thread and invoke doScan once the thread is running
-    connect(thread, &QThread::started, worker, [worker, logPathsList, yamlRoot, yamlData, game, vrMode, showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs, maxConcurrentScans]() {
-        worker->doScan(logPathsList, yamlRoot, yamlData, game, vrMode, showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs, maxConcurrentScans);
+    connect(thread, &QThread::started, worker, [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs, maxConcurrentScans]() {
+        worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs, maxConcurrentScans);
     });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);

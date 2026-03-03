@@ -37,7 +37,6 @@ impl PyPluginAnalyzer {
     /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout4", "Crash Logger")
     /// * `game_version` - Base game version string (default: empty)
     /// * `game_version_vr` - VR version string if applicable (default: empty)
-    /// * `game_version_new` - Next-gen/updated version string if applicable (default: empty)
     ///
     /// # Returns
     ///
@@ -58,19 +57,17 @@ impl PyPluginAnalyzer {
     ///     ignore_list=["MyCustomPlugin.esp"],
     ///     crashgen_name="Buffout4",
     ///     game_version="1.10.163",
-    ///     game_version_vr="1.2.72",
-    ///     game_version_new="1.10.980"
+    ///     game_version_vr="1.2.72"
     /// )
     /// ```
     #[new]
-    #[pyo3(signature = (game_ignore_plugins, ignore_list, crashgen_name, game_version="".to_string(), game_version_vr="".to_string(), game_version_new="".to_string()))]
+    #[pyo3(signature = (game_ignore_plugins, ignore_list, crashgen_name, game_version="".to_string(), game_version_vr="".to_string()))]
     pub fn new(
         game_ignore_plugins: Vec<String>,
         ignore_list: Vec<String>,
         crashgen_name: String,
         game_version: String,
         game_version_vr: String,
-        game_version_new: String,
     ) -> PyResult<Self> {
         let inner = PluginAnalyzer::new(
             game_ignore_plugins,
@@ -78,7 +75,6 @@ impl PyPluginAnalyzer {
             crashgen_name,
             game_version,
             game_version_vr,
-            game_version_new,
         )
         .map_err(crate::to_pyerr)?;
         Ok(Self { inner })

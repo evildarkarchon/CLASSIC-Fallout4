@@ -5,8 +5,8 @@
 
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::setup::{
-    SetupCheckConfig, SetupCheckResults, migrate_vr_setting, needs_path_detection,
-    resolve_effective_game_version, run_combined_checks,
+    SetupCheckConfig, SetupCheckResults, needs_path_detection, resolve_effective_game_version,
+    run_combined_checks,
 };
 use classic_shared::without_gil;
 use pyo3::prelude::*;
@@ -164,28 +164,24 @@ fn run_setup_checks(py: Python<'_>, config: &PySetupCheckConfig) -> PySetupCheck
     convert_results(results)
 }
 
-/// Migrate legacy VR Mode setting to Game Version format.
+/// Normalize a Game Version setting value.
 ///
 /// Args:
 ///     game_version: Current Game Version setting value (or None)
-///     legacy_vr_mode: Legacy VR Mode boolean (or None)
 ///
 /// Returns:
-///     Resolved game version string, or None if neither setting is configured
+///     Resolved game version string, or None if no game version is provided
 ///
 /// Example:
-///     >>> migrate_vr_setting_py(None, True)
+///     >>> migrate_vr_setting_py("VR")
 ///     'VR'
-///     >>> migrate_vr_setting_py("Original", True)
+///     >>> migrate_vr_setting_py("Original")
 ///     'Original'
 #[pyfunction]
 #[pyo3(name = "migrate_vr_setting")]
-#[pyo3(signature = (game_version=None, legacy_vr_mode=None))]
-fn migrate_vr_setting_py(
-    game_version: Option<&str>,
-    legacy_vr_mode: Option<bool>,
-) -> Option<String> {
-    migrate_vr_setting(game_version, legacy_vr_mode)
+#[pyo3(signature = (game_version=None))]
+fn migrate_vr_setting_py(game_version: Option<&str>) -> Option<String> {
+    game_version.map(|version| resolve_effective_game_version(Some(version)).to_string())
 }
 
 /// Resolve the effective game version from a raw setting value.
@@ -197,7 +193,7 @@ fn migrate_vr_setting_py(
 ///     game_version: Raw Game Version setting value (or None)
 ///
 /// Returns:
-///     One of: "Original", "NextGen", "VR", or "auto"
+///     One of: "Original", "NextGen", "AnniversaryEdition", "VR", or "auto"
 ///
 /// Example:
 ///     >>> resolve_effective_game_version_py("VR")

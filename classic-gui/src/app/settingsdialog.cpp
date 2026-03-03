@@ -1,30 +1,30 @@
 #include "settingsdialog.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QFormLayout>
-#include <QGroupBox>
-#include <QFileDialog>
 #include <QApplication>
-#include <QMessageBox>
 #include <QDir>
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QMessageBox>
+#include <QVBoxLayout>
+
 
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
 #include "widgets/toggleswitch.h"
 
-#include "rust/cxx.h"
-#include "classic_cxx_bridge/yaml.h"
-#include "classic_cxx_bridge/update.h"
 #include "classic_cxx_bridge/registry.h"
+#include "classic_cxx_bridge/update.h"
+#include "classic_cxx_bridge/yaml.h"
+#include "rust/cxx.h"
+
 
 // ── Construction ───────────────────────────────────────────────────
 
-SettingsDialog::SettingsDialog(const QString& dataDir,
-                               SignalHub* signalHub,
-                               QWidget* parent)
+SettingsDialog::SettingsDialog(const QString& dataDir, SignalHub* signalHub, QWidget* parent)
     : QDialog(parent)
     , m_dataDir(dataDir)
     , m_signalHub(signalHub)
@@ -87,12 +87,8 @@ void SettingsDialog::setupGeneralTab(QTabWidget* tabs)
     layout->setSpacing(8);
 
     m_comboGameVersion = new QComboBox();
-    m_comboGameVersion->addItems({
-        QStringLiteral("Auto"),
-        QStringLiteral("Original"),
-        QStringLiteral("NextGen"),
-        QStringLiteral("VR")
-    });
+    m_comboGameVersion->addItems({QStringLiteral("Auto"), QStringLiteral("Original"), QStringLiteral("NextGen"),
+                                  QStringLiteral("AnniversaryEdition"), QStringLiteral("VR")});
     layout->addRow(QStringLiteral("Game Version:"), m_comboGameVersion);
 
     // Keep startup update behavior in General so it's easy to find.
@@ -195,9 +191,8 @@ void SettingsDialog::setupPathsTab(QTabWidget* tabs)
         auto* group = new QGroupBox(QStringLiteral("Additional FormID Databases"));
         auto* groupLayout = new QVBoxLayout(group);
 
-        auto* helpLabel = new QLabel(
-            QStringLiteral("The built-in database is always included.\n"
-                           "Add extra databases here if needed."));
+        auto* helpLabel = new QLabel(QStringLiteral("The built-in database is always included.\n"
+                                                    "Add extra databases here if needed."));
         helpLabel->setWordWrap(true);
         groupLayout->addWidget(helpLabel);
 
@@ -229,8 +224,7 @@ void SettingsDialog::setupUpdatesTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
-    auto* startupHint = new QLabel(
-        QStringLiteral("Startup update checks are configured in the General tab."));
+    auto* startupHint = new QLabel(QStringLiteral("Startup update checks are configured in the General tab."));
     startupHint->setWordWrap(true);
     layout->addWidget(startupHint);
 
@@ -255,7 +249,8 @@ void SettingsDialog::setupUpdatesTab(QTabWidget* tabs)
 
 void SettingsDialog::loadSettings()
 {
-    if (m_dataDir.isEmpty()) return;
+    if (m_dataDir.isEmpty())
+        return;
 
     QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
@@ -263,13 +258,18 @@ void SettingsDialog::loadSettings()
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         // General - Game Version
-        auto gameVersion = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Game Version", "auto");
+        auto gameVersion = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
         QString gv = classic::toQString(gameVersion);
-        if (gv == QStringLiteral("Original")) m_comboGameVersion->setCurrentIndex(1);
-        else if (gv == QStringLiteral("NextGen")) m_comboGameVersion->setCurrentIndex(2);
-        else if (gv == QStringLiteral("VR")) m_comboGameVersion->setCurrentIndex(3);
-        else m_comboGameVersion->setCurrentIndex(0); // Auto
+        if (gv == QStringLiteral("Original"))
+            m_comboGameVersion->setCurrentIndex(1);
+        else if (gv == QStringLiteral("NextGen"))
+            m_comboGameVersion->setCurrentIndex(2);
+        else if (gv == QStringLiteral("AnniversaryEdition") || gv == QStringLiteral("AE"))
+            m_comboGameVersion->setCurrentIndex(3);
+        else if (gv == QStringLiteral("VR"))
+            m_comboGameVersion->setCurrentIndex(4);
+        else
+            m_comboGameVersion->setCurrentIndex(0); // Auto
 
         // Scanning booleans
         auto getBool = [&](const char* key) -> bool {
@@ -284,23 +284,21 @@ void SettingsDialog::loadSettings()
         m_chkAutoSwitchAfterScan->setChecked(getBool("CLASSIC_Settings.Auto Switch After Scan"));
 
         // Max Concurrent Scans
-        auto maxScans = classic::yaml::yaml_ops_get_setting_value(
-            *ops, "CLASSIC_Settings.Max Concurrent Scans");
+        auto maxScans = classic::yaml::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Max Concurrent Scans");
         if (maxScans.value_type == "integer") {
             bool ok = false;
             int val = QString::fromStdString(std::string(maxScans.value)).toInt(&ok);
-            if (ok) m_spinMaxConcurrentScans->setValue(val);
+            if (ok)
+                m_spinMaxConcurrentScans->setValue(val);
         }
 
         // Paths - Game Folder + INI Folder
-        auto gameFolder = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Game Folder Path", "");
+        auto gameFolder = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
         if (!gameFolder.empty() && m_editGameFolder) {
             m_editGameFolder->setText(classic::toQString(gameFolder));
         }
 
-        auto iniFolder = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.INI Folder Path", "");
+        auto iniFolder = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
         if (!iniFolder.empty()) {
             m_editIniFolder->setText(classic::toQString(iniFolder));
         }
@@ -327,7 +325,8 @@ void SettingsDialog::loadSettings()
 
 void SettingsDialog::saveSettings()
 {
-    if (m_dataDir.isEmpty()) return;
+    if (m_dataDir.isEmpty())
+        return;
 
     QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
@@ -335,41 +334,34 @@ void SettingsDialog::saveSettings()
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         // General - Game Version
-        static const char* gameVersionStrings[] = {"auto", "Original", "NextGen", "VR"};
+        static const char* gameVersionStrings[] = {"auto", "Original", "NextGen", "AnniversaryEdition", "VR"};
         int idx = m_comboGameVersion->currentIndex();
-        if (idx >= 0 && idx <= 3) {
-            classic::yaml::yaml_ops_set_string_setting(
-                *ops, "CLASSIC_Settings.Game Version", gameVersionStrings[idx]);
+        if (idx >= 0 && idx <= 4) {
+            classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Version", gameVersionStrings[idx]);
         }
 
         // Scanning booleans
-        classic::yaml::yaml_ops_set_bool_setting(
-            *ops, "CLASSIC_Settings.FCX Mode", m_chkFcxMode->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(
-            *ops, "CLASSIC_Settings.Simplify Logs", m_chkSimplifyLogs->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(
-            *ops, "CLASSIC_Settings.Show FormID Values", m_chkShowFormIdValues->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(
-            *ops, "CLASSIC_Settings.Move Unsolved Logs", m_chkMoveUnsolvedLogs->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(
-            *ops, "CLASSIC_Settings.Auto Switch After Scan", m_chkAutoSwitchAfterScan->isChecked());
+        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.FCX Mode", m_chkFcxMode->isChecked());
+        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Simplify Logs",
+                                                 m_chkSimplifyLogs->isChecked());
+        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Show FormID Values",
+                                                 m_chkShowFormIdValues->isChecked());
+        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Move Unsolved Logs",
+                                                 m_chkMoveUnsolvedLogs->isChecked());
+        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Auto Switch After Scan",
+                                                 m_chkAutoSwitchAfterScan->isChecked());
 
         // Max Concurrent Scans
-        classic::yaml::yaml_ops_set_integer_setting(
-            *ops, "CLASSIC_Settings.Max Concurrent Scans",
-            static_cast<int64_t>(m_spinMaxConcurrentScans->value()));
+        classic::yaml::yaml_ops_set_integer_setting(*ops, "CLASSIC_Settings.Max Concurrent Scans",
+                                                    static_cast<int64_t>(m_spinMaxConcurrentScans->value()));
 
         // Paths - Game Folder + INI Folder
         auto gameText = m_editGameFolder ? QDir::cleanPath(m_editGameFolder->text().trimmed()) : QString();
-        classic::yaml::yaml_ops_set_string_setting(
-            *ops, "CLASSIC_Settings.Game Folder Path",
-            std::string(gameText.toUtf8().constData()));
+        classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
+                                                   std::string(gameText.toUtf8().constData()));
 
-        auto gameExePath = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Game EXE Path", "");
-        QString exePath = gameExePath.empty()
-            ? QString()
-            : QDir::cleanPath(classic::toQString(gameExePath).trimmed());
+        auto gameExePath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
+        QString exePath = gameExePath.empty() ? QString() : QDir::cleanPath(classic::toQString(gameExePath).trimmed());
 
         bool shouldResetExePath = false;
         if (!gameText.isEmpty()) {
@@ -385,15 +377,13 @@ void SettingsDialog::saveSettings()
 
         if (shouldResetExePath) {
             const QString defaultExe = QDir::cleanPath(gameText + QStringLiteral("/Fallout4.exe"));
-            classic::yaml::yaml_ops_set_string_setting(
-                *ops, "CLASSIC_Settings.Game EXE Path",
-                std::string(defaultExe.toUtf8().constData()));
+            classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
+                                                       std::string(defaultExe.toUtf8().constData()));
         }
 
         auto iniText = m_editIniFolder->text();
-        classic::yaml::yaml_ops_set_string_setting(
-            *ops, "CLASSIC_Settings.INI Folder Path",
-            std::string(iniText.toUtf8().constData()));
+        classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
+                                                   std::string(iniText.toUtf8().constData()));
 
         // FormID Databases (game-specific key)
         auto game = classic::registry::registry_get_game();
@@ -406,46 +396,44 @@ void SettingsDialog::saveSettings()
         classic::yaml::yaml_ops_set_vec_setting(*ops, dbKey, std::move(dbVec));
 
         // Updates
-        classic::yaml::yaml_ops_set_bool_setting(
-            *ops, "CLASSIC_Settings.Update Check", m_chkUpdateCheck->isChecked());
+        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Update Check", m_chkUpdateCheck->isChecked());
 
         // Save to disk
         classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
     } catch (const std::exception& e) {
         QMessageBox::warning(this, QStringLiteral("Settings Error"),
-            QStringLiteral("Failed to save settings: ") + QString::fromUtf8(e.what()));
+                             QStringLiteral("Failed to save settings: ") + QString::fromUtf8(e.what()));
     } catch (...) {
         QMessageBox::warning(this, QStringLiteral("Settings Error"),
-            QStringLiteral("Failed to save settings: unknown error"));
+                             QStringLiteral("Failed to save settings: unknown error"));
     }
 }
 
 void SettingsDialog::resetToDefaults()
 {
-    auto result = QMessageBox::question(
-        this,
-        QStringLiteral("Reset to Defaults"),
-        QStringLiteral("Are you sure you want to reset all settings to their defaults?"),
-        QMessageBox::Yes | QMessageBox::No,
-        QMessageBox::No);
+    auto result =
+        QMessageBox::question(this, QStringLiteral("Reset to Defaults"),
+                              QStringLiteral("Are you sure you want to reset all settings to their defaults?"),
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
-    if (result != QMessageBox::Yes) return;
+    if (result != QMessageBox::Yes)
+        return;
 
     // Reset widgets to default values (no YAML write until OK)
-    m_comboGameVersion->setCurrentIndex(0);  // Auto
+    m_comboGameVersion->setCurrentIndex(0); // Auto
     m_chkFcxMode->setChecked(false);
     m_chkSimplifyLogs->setChecked(false);
     m_chkShowFormIdValues->setChecked(false);
     m_chkMoveUnsolvedLogs->setChecked(false);
-    m_chkAutoSwitchAfterScan->setChecked(true);  // default is true
+    m_chkAutoSwitchAfterScan->setChecked(true); // default is true
     m_spinMaxConcurrentScans->setValue(0);
     if (m_editGameFolder) {
         m_editGameFolder->clear();
     }
     m_editIniFolder->clear();
     m_listFormIdDbs->clear();
-    m_chkUpdateCheck->setChecked(true);  // default is true
+    m_chkUpdateCheck->setChecked(true); // default is true
     m_lblUpdateStatus->clear();
 }
 
@@ -454,10 +442,7 @@ void SettingsDialog::resetToDefaults()
 void SettingsDialog::onBrowseGameFolder()
 {
     const QString initial = m_editGameFolder ? m_editGameFolder->text() : QString();
-    QString dir = QFileDialog::getExistingDirectory(
-        this,
-        QStringLiteral("Select Game Folder"),
-        initial);
+    QString dir = QFileDialog::getExistingDirectory(this, QStringLiteral("Select Game Folder"), initial);
     if (!dir.isEmpty() && m_editGameFolder) {
         m_editGameFolder->setText(dir);
     }
@@ -472,10 +457,7 @@ void SettingsDialog::onResetGameFolder()
 
 void SettingsDialog::onBrowseIniFolder()
 {
-    QString dir = QFileDialog::getExistingDirectory(
-        this,
-        QStringLiteral("Select INI Folder"),
-        m_editIniFolder->text());
+    QString dir = QFileDialog::getExistingDirectory(this, QStringLiteral("Select INI Folder"), m_editIniFolder->text());
     if (!dir.isEmpty()) {
         m_editIniFolder->setText(dir);
     }
@@ -488,11 +470,8 @@ void SettingsDialog::onResetIniFolder()
 
 void SettingsDialog::onAddFormIdDb()
 {
-    QString file = QFileDialog::getOpenFileName(
-        this,
-        QStringLiteral("Select FormID Database"),
-        QString(),
-        QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
+    QString file = QFileDialog::getOpenFileName(this, QStringLiteral("Select FormID Database"), QString(),
+                                                QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
     if (!file.isEmpty()) {
         m_listFormIdDbs->addItem(file);
     }
@@ -513,21 +492,19 @@ void SettingsDialog::onCheckForUpdates()
 
     try {
         const QString currentVersion = QApplication::applicationVersion();
-        auto result = classic::update::github_check_for_updates(
-            "evildarkarchon", "CLASSIC-Fallout4", classic::toRustString(currentVersion));
+        auto result = classic::update::github_check_for_updates("evildarkarchon", "CLASSIC-Fallout4",
+                                                                classic::toRustString(currentVersion));
 
         if (!result.error_message.empty()) {
-            m_lblUpdateStatus->setText(
-                QStringLiteral("Error: ") + classic::toQString(result.error_message));
+            m_lblUpdateStatus->setText(QStringLiteral("Error: ") + classic::toQString(result.error_message));
         } else if (result.has_update) {
-            m_lblUpdateStatus->setText(
-                QStringLiteral("Update available: v") + classic::toQString(result.latest_version));
+            m_lblUpdateStatus->setText(QStringLiteral("Update available: v") +
+                                       classic::toQString(result.latest_version));
         } else {
             m_lblUpdateStatus->setText(QStringLiteral("You are up to date."));
         }
     } catch (const std::exception& e) {
-        m_lblUpdateStatus->setText(
-            QStringLiteral("Update check failed: ") + QString::fromUtf8(e.what()));
+        m_lblUpdateStatus->setText(QStringLiteral("Update check failed: ") + QString::fromUtf8(e.what()));
     } catch (...) {
         m_lblUpdateStatus->setText(QStringLiteral("Update check failed: unknown error"));
     }

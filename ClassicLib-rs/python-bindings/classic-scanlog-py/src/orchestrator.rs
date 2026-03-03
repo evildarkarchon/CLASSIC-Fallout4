@@ -157,7 +157,6 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
         game_mods_solu: extract_indexmap_str_attr(yamldata, "game_mods_solu"),
         autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
         game_version: extract_string_attr(yamldata, "game_version"),
-        game_version_new: extract_string_attr(yamldata, "game_version_new"),
         game_root_name: extract_string_attr(yamldata, "game_root_name"),
         crashgen_registry,
     }
@@ -249,11 +248,12 @@ impl PyAnalysisConfig {
     ///
     /// # Arguments
     /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-    /// * `vr_mode` - Whether to use VR-specific configuration
+    /// * `game_version` - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
     #[new]
-    pub fn new(game: String, vr_mode: bool) -> Self {
+    pub fn new(game: String, game_version: String) -> Self {
         Self {
-            inner: AnalysisConfig::new(game, vr_mode),
+            inner: AnalysisConfig::new(game, game_version),
         }
     }
 
@@ -265,7 +265,8 @@ impl PyAnalysisConfig {
     /// # Arguments
     /// * `yamldata` - YamlData object from classic_config module
     /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-    /// * `vr_mode` - Whether VR mode is active
+    /// * `game_version` - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
     /// * `show_formid_values` - Whether to show FormID values (default: false)
     /// * `fcx_mode` - Whether FCX mode is enabled (default: false)
     /// * `simplify_logs` - Whether to simplify logs (default: false)
@@ -273,11 +274,11 @@ impl PyAnalysisConfig {
     /// # Returns
     /// Configured AnalysisConfig instance
     #[staticmethod]
-    #[pyo3(signature = (yamldata, game, vr_mode, show_formid_values=false, fcx_mode=false, simplify_logs=false))]
+    #[pyo3(signature = (yamldata, game, game_version, show_formid_values=false, fcx_mode=false, simplify_logs=false))]
     pub fn from_yamldata(
         yamldata: &Bound<'_, pyo3::types::PyAny>,
         game: String,
-        vr_mode: bool,
+        game_version: String,
         show_formid_values: bool,
         fcx_mode: bool,
         simplify_logs: bool,
@@ -286,7 +287,7 @@ impl PyAnalysisConfig {
         let config = build_analysis_config_from_yaml(
             &yaml_core,
             &game,
-            vr_mode,
+            &game_version,
             show_formid_values,
             fcx_mode,
             simplify_logs,
@@ -305,18 +306,6 @@ impl PyAnalysisConfig {
     #[setter]
     pub fn set_game(&mut self, value: String) {
         self.inner.game = value;
-    }
-
-    /// Get whether VR mode is enabled
-    #[getter]
-    pub fn vr_mode(&self) -> bool {
-        self.inner.vr_mode
-    }
-
-    /// Set whether VR mode is enabled
-    #[setter]
-    pub fn set_vr_mode(&mut self, value: bool) {
-        self.inner.vr_mode = value;
     }
 
     /// Get the crash generator name
@@ -365,18 +354,6 @@ impl PyAnalysisConfig {
     #[setter]
     pub fn set_game_version_vr(&mut self, value: String) {
         self.inner.game_version_vr = value;
-    }
-
-    /// Get the new/updated game version
-    #[getter]
-    pub fn game_version_new(&self) -> String {
-        self.inner.game_version_new.clone()
-    }
-
-    /// Set the new/updated game version
-    #[setter]
-    pub fn set_game_version_new(&mut self, value: String) {
-        self.inner.game_version_new = value;
     }
 
     /// Get the XSE (script extender) acronym

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-02-26T00:44:49.305025+00:00",
+  "generated_at_utc": "2026-03-03T02:18:54.984663+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -45,12 +45,36 @@
       "signature": "export declare class ClassicConfigJs {"
     },
     {
+      "export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_CACHE_CLEANUP_INTERVAL: number"
+    },
+    {
+      "export": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_CACHE_CLEANUP_THRESHOLD: number"
+    },
+    {
       "export": "DEFAULT_CACHE_TTL",
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export const DEFAULT_CACHE_TTL: number"
+    },
+    {
+      "export": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_QUERY_CACHE_CAPACITY: number"
     },
     {
       "export": "DocsPathFinder",
@@ -197,6 +221,14 @@
       "signature": "export interface JsCheckResult {"
     },
     {
+      "export": "JsCheckRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCheckRule {"
+    },
+    {
       "export": "JsCheckType",
       "kind": "const_enum",
       "owner_module": "aux",
@@ -253,12 +285,28 @@
       "signature": "export interface JsCrashgenConfig {"
     },
     {
+      "export": "JsCrashgenRegistryEntry",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenRegistryEntry {"
+    },
+    {
       "export": "JsCrashgenReport",
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenReport {"
+    },
+    {
+      "export": "JsCrashgenSettingsRules",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenSettingsRules {"
     },
     {
       "export": "JsCrashgenVersionInfo",
@@ -355,6 +403,14 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsEnbValidationResult {"
+    },
+    {
+      "export": "JsExpectedValue",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsExpectedValue {"
     },
     {
       "export": "JsFallout4Version",
@@ -637,6 +693,38 @@
       "signature": "export interface JsPoolStatistics {"
     },
     {
+      "export": "JsPreflightAction",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPreflightAction {"
+    },
+    {
+      "export": "JsPreflightRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPreflightRule {"
+    },
+    {
+      "export": "JsRuleMessages",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsRuleMessages {"
+    },
+    {
+      "export": "JsRuleTarget",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsRuleTarget {"
+    },
+    {
       "export": "JsTomlConfigIssue",
       "kind": "interface",
       "owner_module": "config",
@@ -914,6 +1002,15 @@
       "arity": 2
     },
     {
+      "export": "checkCrashgenConfigWithRules",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenConfigWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenCheckResult",
+      "arity": 3
+    },
+    {
       "export": "checkCrashgenFull",
       "kind": "function",
       "owner_module": "version_registry",
@@ -921,6 +1018,15 @@
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenFull(pluginsPath: string, crashgenName: string): JsCrashgenReport",
       "arity": 2
+    },
+    {
+      "export": "checkCrashgenFullWithRules",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenFullWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenReport",
+      "arity": 3
     },
     {
       "export": "checkCrashgenVersionStatus",
@@ -982,8 +1088,8 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function checkXsePlugins(pluginsPath: string, isVrMode: boolean, gameVersion: string): string",
-      "arity": 3
+      "signature": "export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string",
+      "arity": 2
     },
     {
       "export": "clearAllMetrics",
@@ -1036,7 +1142,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function createAnalysisConfig(game: string, vrMode: boolean): JsAnalysisConfig",
+      "signature": "export declare function createAnalysisConfig(game: string, gameVersion: string): JsAnalysisConfig",
       "arity": 2
     },
     {
@@ -1045,7 +1151,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, vrMode: boolean, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
+      "signature": "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
       "arity": 6
     },
     {
@@ -1099,7 +1205,7 @@
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function createYamlDataFromContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, vrMode: boolean): YamlData",
+      "signature": "export declare function createYamlDataFromContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string): YamlData",
       "arity": 5
     },
     {
@@ -1418,12 +1524,39 @@
       "arity": 1
     },
     {
+      "export": "getDefaultCacheCleanupInterval",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultCacheCleanupInterval(): number",
+      "arity": 0
+    },
+    {
+      "export": "getDefaultCacheCleanupThreshold",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultCacheCleanupThreshold(): number",
+      "arity": 0
+    },
+    {
       "export": "getDefaultCacheTtl",
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getDefaultCacheTtl(): number",
+      "arity": 0
+    },
+    {
+      "export": "getDefaultQueryCacheCapacity",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultQueryCacheCapacity(): number",
       "arity": 0
     },
     {
@@ -1891,8 +2024,8 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function migrateVrSetting(gameVersion?: string | undefined | null, vrMode?: boolean | undefined | null): string | null",
-      "arity": 2
+      "signature": "export declare function migrateVrSetting(gameVersion?: string | undefined | null): string | null",
+      "arity": 1
     },
     {
       "export": "needsPathDetection",
@@ -2017,7 +2150,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, vrMode: boolean, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>",
+      "signature": "export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>",
       "arity": 7
     },
     {
@@ -2035,7 +2168,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, vrMode: boolean, options?: JsAnalysisBuildOptions | undefined | null): Promise<Array<JsAnalysisResult>>",
+      "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<Array<JsAnalysisResult>>",
       "arity": 7
     },
     {

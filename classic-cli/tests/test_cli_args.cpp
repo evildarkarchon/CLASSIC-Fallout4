@@ -29,7 +29,7 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
     CliArgs args = parse_args(ab.argc(), ab.argv());
 
     REQUIRE(args.game == "Fallout4");
-    REQUIRE(args.vr_mode == false);
+    REQUIRE(args.game_version == "auto");
     REQUIRE(args.fcx_mode == false);
     REQUIRE(args.show_fid_values == false);
     REQUIRE(args.simplify_logs == false);
@@ -57,10 +57,10 @@ TEST_CASE("CliArgs game selection", "[cli_args]") {
 }
 
 TEST_CASE("CliArgs boolean flags", "[cli_args]") {
-    SECTION("--vr enables VR mode") {
-        ArgvBuilder ab({"classic-cli", "--vr"});
+    SECTION("--game-version sets version mode") {
+        ArgvBuilder ab({"classic-cli", "--game-version", "VR"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
-        REQUIRE(args.vr_mode == true);
+        REQUIRE(args.game_version == "VR");
     }
 
     SECTION("--fcx-mode enables FCX") {
@@ -105,14 +105,14 @@ TEST_CASE("CliArgs scan-path and max-concurrent", "[cli_args]") {
 TEST_CASE("CliArgs combined flags", "[cli_args]") {
     ArgvBuilder ab({"classic-cli",
                     "--game", "Skyrim",
-                    "--vr",
+                    "--game-version", "VR",
                     "--fcx-mode",
                     "--scan-path", "/tmp/crashes",
                     "--max-concurrent", "4"});
     CliArgs args = parse_args(ab.argc(), ab.argv());
 
     REQUIRE(args.game == "Skyrim");
-    REQUIRE(args.vr_mode == true);
+    REQUIRE(args.game_version == "VR");
     REQUIRE(args.fcx_mode == true);
     REQUIRE(args.scan_path == "/tmp/crashes");
     REQUIRE(args.max_concurrent == 4);

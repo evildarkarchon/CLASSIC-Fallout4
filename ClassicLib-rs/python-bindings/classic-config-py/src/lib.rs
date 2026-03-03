@@ -239,12 +239,17 @@ pub struct PyYamlData {
 #[pymethods]
 impl PyYamlData {
     #[new]
-    #[pyo3(signature = (yaml_dirs, game, vr_mode))]
-    fn new(py: Python<'_>, yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
+    #[pyo3(signature = (yaml_dirs, game, game_version))]
+    fn new(
+        py: Python<'_>,
+        yaml_dirs: Vec<PathBuf>,
+        game: String,
+        game_version: String,
+    ) -> PyResult<Self> {
         // Call pure Rust core using shared runtime, releasing GIL during blocking I/O
         let core = without_gil(py, || {
             get_runtime().block_on(async {
-                YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await
+                YamlDataCore::load_from_yaml_files(yaml_dirs, game, game_version).await
             })
         })
         .map_err(PyConfigError)
@@ -263,7 +268,8 @@ impl PyYamlData {
     ///     game_content: Content of the game-specific YAML configuration file
     ///     ignore_content: Content of the ignore list YAML configuration file
     ///     game: Game identifier (e.g., "Fallout4", "Skyrim")
-    ///     vr_mode: Whether to load VR-specific configuration
+    ///     game_version: Selected mode
+    ///         ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
     ///
     /// Returns:
     ///     YamlData instance with parsed configuration
@@ -277,14 +283,14 @@ impl PyYamlData {
         game_content: String,
         ignore_content: String,
         game: String,
-        vr_mode: bool,
+        game_version: String,
     ) -> PyResult<Self> {
         let inner = YamlDataCore::from_yaml_content(
             &main_content,
             &game_content,
             &ignore_content,
             game,
-            vr_mode,
+            game_version,
         )
         .map_err(PyConfigError)
         .map_pyerr()?;
@@ -523,11 +529,6 @@ impl PyYamlData {
         self.inner.game_version.clone()
     }
 
-    #[getter]
-    fn game_version_new(&self) -> String {
-        self.inner.game_version_new.clone()
-    }
-
     // ========================================================================
     // Game Root Names
     // ========================================================================
@@ -559,14 +560,14 @@ impl PyYamlData {
 /// This is a convenience function for Python code that wants to
 /// use a functional style instead of instantiating the class.
 #[pyfunction]
-#[pyo3(signature = (yaml_dirs, game, vr_mode))]
+#[pyo3(signature = (yaml_dirs, game, game_version))]
 pub fn create_yamldata(
     py: Python<'_>,
     yaml_dirs: Vec<PathBuf>,
     game: String,
-    vr_mode: bool,
+    game_version: String,
 ) -> PyResult<PyYamlData> {
-    PyYamlData::new(py, yaml_dirs, game, vr_mode)
+    PyYamlData::new(py, yaml_dirs, game, game_version)
 }
 
 /// Clear the global YAML cache

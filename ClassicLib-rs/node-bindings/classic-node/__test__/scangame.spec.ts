@@ -566,8 +566,8 @@ describe("JsXseChecker", () => {
     expect(checker).toBeDefined();
   });
 
-  test("constructor creates instance with VR mode and version", () => {
-    const checker = new JsXseChecker(tempDir, true, "Vr");
+  test("constructor creates instance with VR version", () => {
+    const checker = new JsXseChecker(tempDir, "Vr");
     expect(checker).toBeDefined();
   });
 
@@ -578,40 +578,40 @@ describe("JsXseChecker", () => {
   });
 
   test("check returns NotFound for empty plugins directory", () => {
-    const checker = new JsXseChecker(tempDir, false, "Original");
+    const checker = new JsXseChecker(tempDir, "Original");
     const result = checker.check();
     expect(result).toBe("NotFound");
   });
 
   test("check returns VersionNotDetected for Null version", () => {
-    const checker = new JsXseChecker(tempDir, false, "Null");
+    const checker = new JsXseChecker(tempDir, "Null");
     const result = checker.check();
     expect(result).toBe("VersionNotDetected");
   });
 
   test("check returns CorrectVersion when OG address lib exists (non-VR)", () => {
     writeFileSync(join(tempDir, "version-1-10-163-0.bin"), "fake");
-    const checker = new JsXseChecker(tempDir, false, "Original");
+    const checker = new JsXseChecker(tempDir, "Original");
     const result = checker.check();
     expect(result).toBe("CorrectVersion");
   });
 
   test("check returns WrongVersion when VR lib exists in non-VR mode", () => {
     writeFileSync(join(tempDir, "version-1-2-72-0.csv"), "fake");
-    const checker = new JsXseChecker(tempDir, false, "Original");
+    const checker = new JsXseChecker(tempDir, "Original");
     const result = checker.check();
     expect(result).toBe("WrongVersion");
   });
 
   test("check returns CorrectVersion for VR lib in VR mode", () => {
     writeFileSync(join(tempDir, "version-1-2-72-0.csv"), "fake");
-    const checker = new JsXseChecker(tempDir, true, "Vr");
+    const checker = new JsXseChecker(tempDir, "Vr");
     const result = checker.check();
     expect(result).toBe("CorrectVersion");
   });
 
   test("validate returns formatted message string", () => {
-    const checker = new JsXseChecker(tempDir, false, "Original");
+    const checker = new JsXseChecker(tempDir, "Original");
     const message = checker.validate();
     expect(typeof message).toBe("string");
     expect(message.length).toBeGreaterThan(0);
@@ -621,7 +621,7 @@ describe("JsXseChecker", () => {
 
   test("validate returns correct version message", () => {
     writeFileSync(join(tempDir, "version-1-10-163-0.bin"), "fake");
-    const checker = new JsXseChecker(tempDir, false, "Original");
+    const checker = new JsXseChecker(tempDir, "Original");
     const message = checker.validate();
     expect(message).toContain("correct version");
   });
@@ -651,6 +651,11 @@ describe("getAddressLibInfo", () => {
     expect(info.filename).toBe("version-1-11-191-0.bin");
   });
 
+  test("returns info for AE alias", () => {
+    const info = getAddressLibInfo("AE");
+    expect(info.filename).toBe("version-1-11-191-0.bin");
+  });
+
   test("returns Original info for unknown version string", () => {
     const info = getAddressLibInfo("UnknownVersion");
     // Falls back to Original
@@ -660,14 +665,14 @@ describe("getAddressLibInfo", () => {
 
 describe("checkXsePlugins convenience function", () => {
   test("returns formatted message for empty directory", () => {
-    const message = checkXsePlugins(tempDir, false, "Original");
+    const message = checkXsePlugins(tempDir, "Original");
     expect(typeof message).toBe("string");
     expect(message).toContain("not found");
   });
 
   test("throws for non-existent path", () => {
     expect(() =>
-      checkXsePlugins(join(tempDir, "nonexistent"), false, "Original")
+      checkXsePlugins(join(tempDir, "nonexistent"), "Original")
     ).toThrow();
   });
 });
@@ -852,34 +857,24 @@ describe("scanModInis", () => {
 // ============================================================================
 
 describe("migrateVrSetting", () => {
-  test("new setting (Original) takes precedence over legacy VR", () => {
-    const result = migrateVrSetting("Original", true);
+  test("preserves explicit original mode", () => {
+    const result = migrateVrSetting("Original");
     expect(result).toBe("Original");
   });
 
-  test("legacy VR migration when new setting is absent", () => {
-    const result = migrateVrSetting(null, true);
-    expect(result).toBe("VR");
-  });
-
-  test("legacy VR migration when new setting is auto", () => {
-    const result = migrateVrSetting("auto", true);
-    expect(result).toBe("VR");
-  });
-
-  test("returns null when neither setting is configured", () => {
-    const result = migrateVrSetting(null, null);
+  test("returns null when no setting is provided", () => {
+    const result = migrateVrSetting(null);
     expect(result).toBeNull();
   });
 
-  test("returns null when only legacy false is set", () => {
-    const result = migrateVrSetting(null, false);
-    expect(result).toBeNull();
-  });
-
-  test("preserves auto when legacy is false", () => {
-    const result = migrateVrSetting("auto", false);
+  test("preserves auto mode", () => {
+    const result = migrateVrSetting("auto");
     expect(result).toBe("auto");
+  });
+
+  test("normalizes AE alias to AnniversaryEdition", () => {
+    const result = migrateVrSetting("AE");
+    expect(result).toBe("AnniversaryEdition");
   });
 });
 
@@ -898,6 +893,10 @@ describe("resolveEffectiveGameVersion", () => {
 
   test("returns NextGen for NextGen", () => {
     expect(resolveEffectiveGameVersion("NextGen")).toBe("NextGen");
+  });
+
+  test("returns AnniversaryEdition for AE alias", () => {
+    expect(resolveEffectiveGameVersion("AE")).toBe("AnniversaryEdition");
   });
 
   test("returns auto for unknown value", () => {

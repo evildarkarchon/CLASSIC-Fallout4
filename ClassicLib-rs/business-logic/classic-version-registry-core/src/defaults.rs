@@ -595,7 +595,7 @@ pub fn get_default_versions() -> HashMap<String, VersionInfo> {
 /// Get default unknown version handling configuration.
 pub fn get_default_unknown_handling() -> UnknownVersionHandling {
     let mut defaults = HashMap::new();
-    defaults.insert("Fallout4".to_string(), "FO4_NG".to_string());
+    defaults.insert("Fallout4".to_string(), "FO4_AE".to_string());
     defaults.insert("Fallout4VR".to_string(), "FO4_VR".to_string());
 
     UnknownVersionHandling::new(
@@ -792,7 +792,7 @@ mod tests {
         let handling = get_default_unknown_handling();
 
         assert_eq!(handling.strategy, UnknownVersionStrategy::NearestMatch);
-        assert_eq!(handling.get_default("Fallout4"), Some("FO4_NG"));
+        assert_eq!(handling.get_default("Fallout4"), Some("FO4_AE"));
         assert_eq!(handling.get_default("Fallout4VR"), Some("FO4_VR"));
     }
 

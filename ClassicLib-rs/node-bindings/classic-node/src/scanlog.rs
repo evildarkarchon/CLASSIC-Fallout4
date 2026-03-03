@@ -44,8 +44,9 @@ fn is_settings_header_marker(line: &str) -> bool {
 pub struct JsAnalysisConfig {
     /// Game name (e.g., "Fallout4")
     pub game: String,
-    /// VR mode enabled
-    pub vr_mode: bool,
+    /// Selected game-version mode
+    /// ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
+    pub game_version: String,
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
     /// XSE acronym (e.g., "F4SE")
@@ -120,10 +121,10 @@ pub struct JsLogSegments {
 /// Returns a JavaScript object with the configuration fields.
 /// Modify the returned object's properties before passing to analysis functions.
 #[napi]
-pub fn create_analysis_config(game: String, vr_mode: bool) -> JsAnalysisConfig {
+pub fn create_analysis_config(game: String, game_version: String) -> JsAnalysisConfig {
     JsAnalysisConfig {
         game,
-        vr_mode,
+        game_version,
         crashgen_name: String::new(),
         xse_acronym: String::new(),
         classic_version: "CLASSIC".to_string(),
@@ -153,7 +154,7 @@ fn build_core_config_from_yaml_content(
     game_content: String,
     ignore_content: String,
     game: String,
-    vr_mode: bool,
+    selected_game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<(orchestrator::AnalysisConfig, YamlDataCore)> {
     let (show_formid_values, fcx_mode, simplify_logs, remove_list) = resolve_build_options(options);
@@ -162,14 +163,14 @@ fn build_core_config_from_yaml_content(
         &game_content,
         &ignore_content,
         game.clone(),
-        vr_mode,
+        selected_game_version.clone(),
     )
     .map_err(to_napi_err)?;
 
     let config = orchestrator::build_analysis_config_from_yaml(
         &yaml,
         &game,
-        vr_mode,
+        &selected_game_version,
         show_formid_values,
         fcx_mode,
         simplify_logs,
@@ -186,7 +187,7 @@ pub fn create_analysis_config_from_yaml_content(
     game_content: String,
     ignore_content: String,
     game: String,
-    vr_mode: bool,
+    game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisConfig> {
     let (core_config, yaml) = build_core_config_from_yaml_content(
@@ -194,13 +195,13 @@ pub fn create_analysis_config_from_yaml_content(
         game_content,
         ignore_content,
         game,
-        vr_mode,
+        game_version.clone(),
         options,
     )?;
 
     Ok(JsAnalysisConfig {
         game: core_config.game,
-        vr_mode: core_config.vr_mode,
+        game_version,
         crashgen_name: core_config.crashgen_name,
         xse_acronym: core_config.xse_acronym,
         classic_version: core_config.classic_version,
@@ -234,7 +235,7 @@ pub async fn process_log_with_yaml_content(
     game_content: String,
     ignore_content: String,
     game: String,
-    vr_mode: bool,
+    game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisResult> {
     let (core_config, _) = build_core_config_from_yaml_content(
@@ -242,7 +243,7 @@ pub async fn process_log_with_yaml_content(
         game_content,
         ignore_content,
         game,
-        vr_mode,
+        game_version,
         options,
     )?;
     let handle = classic_shared_core::get_runtime().handle().clone();
@@ -271,7 +272,7 @@ pub async fn process_logs_batch_with_yaml_content(
     game_content: String,
     ignore_content: String,
     game: String,
-    vr_mode: bool,
+    game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
     let (core_config, _) = build_core_config_from_yaml_content(
@@ -279,7 +280,7 @@ pub async fn process_logs_batch_with_yaml_content(
         game_content,
         ignore_content,
         game,
-        vr_mode,
+        game_version,
         options,
     )?;
     let handle = classic_shared_core::get_runtime().handle().clone();
@@ -507,7 +508,8 @@ pub fn detect_crash_pattern(content: String) -> Option<String> {
 /// This is an internal helper used when passing config to the orchestrator.
 /// Not exported to JavaScript.
 pub(crate) fn _js_config_to_core(config: &JsAnalysisConfig) -> orchestrator::AnalysisConfig {
-    let mut core_config = orchestrator::AnalysisConfig::new(config.game.clone(), config.vr_mode);
+    let mut core_config =
+        orchestrator::AnalysisConfig::new(config.game.clone(), config.game_version.clone());
     core_config.crashgen_name = config.crashgen_name.clone();
     core_config.xse_acronym = config.xse_acronym.clone();
     core_config.classic_version = config.classic_version.clone();

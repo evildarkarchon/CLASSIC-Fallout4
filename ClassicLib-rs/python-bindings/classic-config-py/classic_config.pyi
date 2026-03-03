@@ -42,7 +42,7 @@ class YamlData:
     """
 
     def __init__(
-        self, yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool
+        self, yaml_dirs: Sequence[str | Path], game: str, game_version: str
     ) -> None:
         """Create a new YamlData instance by loading all YAML configuration files.
 
@@ -50,7 +50,8 @@ class YamlData:
             yaml_dirs: List of directories containing YAML configuration files.
                       Accepts both string paths and pathlib.Path objects.
             game: Game name (e.g., "Fallout4", "Skyrim")
-            vr_mode: Whether to load VR-specific configuration
+            game_version: Selected mode
+                ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
 
         Raises:
             FileNotFoundError: If required YAML files are missing
@@ -59,11 +60,11 @@ class YamlData:
         Example:
             >>> from pathlib import Path
             >>> # Using Path objects
-            >>> yaml_data = YamlData([Path("YAML/Main")], "Fallout4", False)
+            >>> yaml_data = YamlData([Path("YAML/Main")], "Fallout4", "auto")
             >>> # Using strings
-            >>> yaml_data = YamlData(["YAML/Main"], "Fallout4", False)
+            >>> yaml_data = YamlData(["YAML/Main"], "Fallout4", "auto")
             >>> # Mixed
-            >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", False)
+            >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", "auto")
 
         """
 
@@ -73,7 +74,7 @@ class YamlData:
         game_content: str,
         ignore_content: str,
         game: str,
-        vr_mode: bool,
+        game_version: str,
     ) -> YamlData:
         """Create YamlData from YAML content strings (for testing without file I/O).
 
@@ -85,7 +86,8 @@ class YamlData:
             game_content: Content of the game-specific YAML configuration file
             ignore_content: Content of the ignore list YAML configuration file
             game: Game identifier (e.g., "Fallout4", "Skyrim")
-            vr_mode: Whether to load VR-specific configuration
+            game_version: Selected mode
+                ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
 
         Returns:
             YamlData instance with parsed configuration
@@ -106,7 +108,7 @@ class YamlData:
             ... CLASSIC_Ignore_Fallout4: []
             ... '''
             >>> config = YamlData.from_yaml_content(
-            ...     main_yaml, game_yaml, ignore_yaml, "Fallout4", False
+            ...     main_yaml, game_yaml, ignore_yaml, "Fallout4", "auto"
             ... )
 
         """
@@ -124,10 +126,6 @@ class YamlData:
     @property
     def game_version(self) -> str:
         """Current game version string."""
-
-    @property
-    def game_version_new(self) -> str:
-        """Latest available game version string."""
 
     # Crash generator settings
     @property
@@ -328,7 +326,7 @@ def clear_yaml_cache() -> None:
     """
 
 def create_yamldata(
-    yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool
+    yaml_dirs: Sequence[str | Path], game: str, game_version: str
 ) -> YamlData:
     """Create via factory create a YamlData instance.
 
@@ -339,7 +337,7 @@ def create_yamldata(
         yaml_dirs: List of directories containing YAML configuration files.
                   Accepts both string paths and pathlib.Path objects.
         game: Game name (e.g., "Fallout4", "Skyrim")
-        vr_mode: Whether to load VR-specific configuration
+        game_version: Selected mode ("auto", "Original", "NextGen", "VR")
 
     Returns:
         Configured YamlData instance with all YAML data loaded
@@ -352,7 +350,7 @@ def create_yamldata(
         >>> from classic_config import create_yamldata
         >>> from pathlib import Path
         >>> # Now this won't cause type errors:
-        >>> yaml_data = create_yamldata([Path("YAML/Main")], "Fallout4", False)
+        >>> yaml_data = create_yamldata([Path("YAML/Main")], "Fallout4", "auto")
         >>> print(yaml_data.classic_version)
         '8.0.0'
 

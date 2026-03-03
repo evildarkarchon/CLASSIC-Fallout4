@@ -45,8 +45,11 @@ pub struct AnalysisConfig {
     /// Game name (e.g., "Fallout4")
     pub game: String,
 
-    /// VR mode enabled
-    pub vr_mode: bool,
+    /// Selected game-version mode state (derived from caller input).
+    ///
+    /// This is intentionally not exposed publicly; public callers configure
+    /// mode via `game_version` selection APIs.
+    is_vr_mode: bool,
 
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
@@ -62,9 +65,6 @@ pub struct AnalysisConfig {
 
     /// Game version for VR variant (if applicable)
     pub game_version_vr: String,
-
-    /// New/updated game version (for compatibility checks)
-    pub game_version_new: String,
 
     /// XSE acronym (e.g., "F4SE")
     pub xse_acronym: String,
@@ -124,14 +124,16 @@ pub struct AnalysisConfig {
 impl AnalysisConfig {
     /// Creates a new analysis configuration with default values for all optional fields.
     ///
-    /// This constructor initializes an `AnalysisConfig` with the specified game and VR mode,
+    /// This constructor initializes an `AnalysisConfig` with the specified game and selected
+    /// game-version mode,
     /// setting all other fields (crash generator info, game versions, ignore lists, pattern dictionaries,
     /// mod databases) to empty defaults. These fields should be populated before analysis begins.
     ///
     /// # Arguments
     ///
     /// * `game` - The game name (e.g., "Fallout4", "Skyrim")
-    /// * `vr_mode` - Whether VR mode is enabled for this game
+    /// * `selected_game_version` - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR")
     ///
     /// # Returns
     ///
@@ -143,7 +145,7 @@ impl AnalysisConfig {
     /// use classic_scanlog_core::AnalysisConfig;
     ///
     /// // Create configuration for Fallout 4 (non-VR)
-    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     ///
     /// // Populate with additional configuration
     /// config.crashgen_name = "Buffout 4".to_string();
@@ -153,16 +155,15 @@ impl AnalysisConfig {
     /// // Add ignore lists
     /// config.ignore_plugins = vec!["Fallout4.esm".to_string()];
     /// ```
-    pub fn new(game: String, vr_mode: bool) -> Self {
+    pub fn new(game: String, selected_game_version: String) -> Self {
         Self {
             game,
-            vr_mode,
+            is_vr_mode: selected_game_version.eq_ignore_ascii_case("VR"),
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
             crashgen_latest_vr: String::new(),
             game_version: String::new(),
             game_version_vr: String::new(),
-            game_version_new: String::new(),
             xse_acronym: String::new(),
             game_root_name: String::new(),
             classic_version: "CLASSIC".to_string(),
@@ -185,96 +186,20 @@ impl AnalysisConfig {
             crashgen_registry: CrashgenRegistry::default(),
         }
     }
-}
 
-/// Resolve registry-backed static metadata for a game/mode pair.
-///
-/// This prefers explicit defaults from `unknown_version_handling.defaults` and
-/// falls back to highest-priority registry entry for `(game, vr_mode)`.
-fn resolve_registry_version_info(
-    game: &str,
-    vr_mode: bool,
-) -> Option<classic_version_registry_core::VersionInfo> {
-    let registry = get_version_registry();
-
-    // Prefer explicit defaults from registry config.
-    let mut default_keys = Vec::new();
-    if vr_mode {
-        default_keys.push(format!("{game}VR"));
+    #[must_use]
+    fn is_vr_mode(&self) -> bool {
+        self.is_vr_mode
     }
-    default_keys.push(game.to_string());
-
-    for key in &default_keys {
-        if let Some(default_id) = registry.unknown_version_handling().get_default(key)
-            && let Some(info) = registry.get_by_id(default_id)
-            && info.game == game
-            && info.is_vr == vr_mode
-        {
-            return Some(info.clone());
-        }
-    }
-
-    // Fallback: highest-priority entry for this game/mode.
-    registry
-        .get_all_for_game(game, Some(vr_mode))
-        .first()
-        .map(|info| (*info).clone())
-}
-
-/// Format registry `GameVersion` using legacy 3-part style when build is 0.
-///
-/// CLASSIC historically stores configured game versions as `major.minor.patch`.
-/// Keeping this format preserves string-based comparisons in plugin-limit logic.
-fn format_registry_game_version(version: &RegistryGameVersion) -> String {
-    if version.build == 0 {
-        format!("{}.{}.{}", version.major, version.minor, version.patch)
-    } else {
-        version.to_string()
-    }
-}
-
-/// Resolve baseline (`game_version`) and newer (`game_version_new`) version strings.
-///
-/// For non-VR Fallout 4, this preserves legacy semantics:
-/// - `game_version` => OG (`short_name = "OG"`)
-/// - `game_version_new` => NG (`short_name = "NG"`)
-///
-/// For all other modes/games, both values fall back to the resolved registry entry.
-fn resolve_registry_game_versions(
-    game: &str,
-    vr_mode: bool,
-    fallback_info: &Option<classic_version_registry_core::VersionInfo>,
-) -> (Option<String>, Option<String>) {
-    let fallback = fallback_info
-        .as_ref()
-        .map(|info| format_registry_game_version(&info.version));
-
-    if game == "Fallout4" && !vr_mode {
-        let registry = get_version_registry();
-        let game_versions = registry.get_all_for_game(game, Some(false));
-
-        let og = game_versions
-            .iter()
-            .find(|info| info.short_name.eq_ignore_ascii_case("OG"))
-            .map(|info| format_registry_game_version(&info.version));
-        let ng = game_versions
-            .iter()
-            .find(|info| info.short_name.eq_ignore_ascii_case("NG"))
-            .map(|info| format_registry_game_version(&info.version));
-
-        return (og.or_else(|| fallback.clone()), ng.or(fallback));
-    }
-
-    (fallback.clone(), fallback)
 }
 
 /// Resolve VR game version string for a game from Version Registry.
 ///
 /// This is used to preserve plugin-limit matching behavior where callers may
 /// provide a VR game version string directly (e.g., "1.2.72" for Fallout 4 VR).
-fn resolve_registry_game_version_vr(game: &str) -> Option<String> {
-    resolve_registry_version_info(game, true)
-        .map(|info| format_registry_game_version(&info.version))
+fn resolve_registry_game_version_vr(registry_game_id: &str) -> Option<String> {
+    classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
+        .map(|info| classic_config_core::format_registry_game_version(&info.version))
 }
 
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
@@ -287,7 +212,8 @@ fn resolve_registry_game_version_vr(game: &str) -> Option<String> {
 ///
 /// * `yaml` - Reference to the loaded YAML configuration data
 /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-/// * `vr_mode` - Whether VR mode is active for this analysis
+/// * `selected_game_version` - Selected mode
+///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR")
 /// * `show_formid_values` - Whether to include FormID value lookups in reports
 /// * `fcx_mode` - Whether FCX (enhanced analysis) mode is enabled
 /// * `simplify_logs` - Whether to remove specified strings from crash logs
@@ -295,16 +221,20 @@ fn resolve_registry_game_version_vr(game: &str) -> Option<String> {
 pub fn build_analysis_config_from_yaml(
     yaml: &classic_config_core::YamlDataCore,
     game: &str,
-    vr_mode: bool,
+    selected_game_version: &str,
     show_formid_values: bool,
     fcx_mode: bool,
     simplify_logs: bool,
     remove_list: Vec<String>,
 ) -> AnalysisConfig {
-    let registry_info = resolve_registry_version_info(game, vr_mode);
-    let (registry_game_version, registry_game_version_new) =
-        resolve_registry_game_versions(game, vr_mode, &registry_info);
-    let game_version_vr = resolve_registry_game_version_vr(game).unwrap_or_default();
+    let is_vr_mode = selected_game_version.eq_ignore_ascii_case("VR");
+    let registry_game_id = match yaml.get_game_root_name().trim() {
+        "" => game,
+        root_name => root_name,
+    };
+    let registry_info =
+        classic_config_core::resolve_registry_version_info(registry_game_id, selected_game_version);
+    let game_version_vr = resolve_registry_game_version_vr(registry_game_id).unwrap_or_default();
     let registry_crashgen = registry_info
         .as_ref()
         .and_then(|info| info.crashgen_versions.first());
@@ -326,18 +256,19 @@ pub fn build_analysis_config_from_yaml(
         .filter(|acronym| !acronym.is_empty())
         .unwrap_or(yaml.xse_acronym.as_str())
         .to_string();
-    let game_version = registry_game_version.unwrap_or(yaml.game_version.clone());
-    let game_version_new = registry_game_version_new.unwrap_or(yaml.game_version_new.clone());
+    let game_version = registry_info
+        .as_ref()
+        .map(|info| classic_config_core::format_registry_game_version(&info.version))
+        .unwrap_or_else(|| yaml.game_version.clone());
 
     AnalysisConfig {
         game: game.to_string(),
-        vr_mode,
+        is_vr_mode,
         crashgen_name,
         crashgen_latest,
         crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
         game_version,
         game_version_vr,
-        game_version_new,
         xse_acronym,
         game_root_name: yaml.get_game_root_name().to_string(),
         classic_version: yaml.classic_version.clone(),
@@ -676,7 +607,7 @@ impl OrchestratorCore {
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// // Create configuration
-    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// config.crashgen_name = "Buffout 4".to_string();
     /// config.game_version = "1.10.163".to_string();
     ///
@@ -697,7 +628,6 @@ impl OrchestratorCore {
                 config.crashgen_name.clone(),
                 config.game_version.clone(),
                 config.game_version_vr.clone(),
-                config.game_version_new.clone(),
             )?)
         } else {
             None
@@ -780,7 +710,7 @@ impl OrchestratorCore {
     /// use std::time::Duration;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let db_pool = DatabasePool::new(Some(10), Duration::from_secs(300), "Fallout4".to_string());
     ///
     /// let orchestrator = OrchestratorCore::new(config)?
@@ -928,7 +858,7 @@ impl OrchestratorCore {
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// let result = orchestrator.process_log("crash-2024-01-01.log".to_string()).await?;
@@ -1417,7 +1347,7 @@ impl OrchestratorCore {
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// let logs = vec![
@@ -1495,13 +1425,13 @@ impl OrchestratorCore {
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// // Access configuration after creation
     /// let config_ref = orchestrator.config();
     /// println!("Analyzing game: {}", config_ref.game);
-    /// println!("VR mode: {}", config_ref.vr_mode);
+    /// println!("Configured game: {}", config_ref.game);
     /// # Ok(())
     /// # }
     /// ```
@@ -1727,7 +1657,7 @@ impl OrchestratorCore {
         let match_result = registry.match_version(
             &detected_game_version,
             &self.config.game,
-            self.config.vr_mode,
+            self.config.is_vr_mode(),
         );
 
         let valid_versions: Vec<&str> = match match_result.version_info {
@@ -1896,7 +1826,7 @@ impl OrchestratorCore {
     /// use std::path::PathBuf;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// let reports = vec![
@@ -2014,7 +1944,6 @@ mod tests {
             game_mods_solu: IndexMap::new(),
             autoscan_text: String::new(),
             game_version: String::new(),
-            game_version_new: String::new(),
             game_root_name: "Fallout4".to_string(),
             crashgen_registry: std::collections::HashMap::new(),
         }
@@ -2027,7 +1956,7 @@ mod tests {
         let config = build_analysis_config_from_yaml(
             &yaml,
             "Fallout4",
-            false,
+            "auto",
             false,
             false,
             false,
@@ -2044,7 +1973,6 @@ mod tests {
         yaml.crashgen_latest_og.clear();
         yaml.xse_acronym.clear();
         yaml.game_version.clear();
-        yaml.game_version_new.clear();
         yaml.crashgen_registry.insert(
             "Buffout 4".to_string(),
             classic_config_core::CrashgenEntryRaw {
@@ -2069,7 +1997,7 @@ mod tests {
         let config = build_analysis_config_from_yaml(
             &yaml,
             "Fallout4",
-            false,
+            "auto",
             false,
             false,
             false,
@@ -2079,11 +2007,8 @@ mod tests {
         assert_eq!(config.crashgen_name, "Buffout 4");
         assert!(!config.crashgen_latest.is_empty());
         assert_eq!(config.xse_acronym, "F4SE");
-        // Keep OG and NG split for plugin-limit behavior:
-        // - game_version must represent Original (1.10.163)
-        // - game_version_new must represent NextGen (1.10.984)
-        assert_eq!(config.game_version, "1.10.163");
-        assert_eq!(config.game_version_new, "1.10.984");
+        // Auto mode resolves to the configured registry default for Fallout4.
+        assert_eq!(config.game_version, "1.11.191");
         assert_eq!(config.game_version_vr, "1.2.72");
         assert!(
             !config
@@ -2095,6 +2020,73 @@ mod tests {
     }
 
     #[test]
+    fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_name() {
+        let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+        yaml.game_root_name = "Fallout 4".to_string();
+        yaml.crashgen_name.clear();
+        yaml.crashgen_latest_og.clear();
+        yaml.xse_acronym.clear();
+        yaml.game_version.clear();
+
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout 4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(config.crashgen_name, "Buffout 4");
+        assert_eq!(config.game_version, "1.11.191");
+        assert_eq!(config.game_version_vr, "1.2.72");
+    }
+
+    #[test]
+    fn build_analysis_config_resolves_identical_metadata_for_spaced_and_compact_names() {
+        let mut compact_yaml = make_yaml_data("CLASSIC v9.0.0");
+        compact_yaml.crashgen_name.clear();
+        compact_yaml.crashgen_latest_og.clear();
+        compact_yaml.xse_acronym.clear();
+        compact_yaml.game_version.clear();
+
+        let mut spaced_yaml = compact_yaml.clone();
+        spaced_yaml.game_root_name = "Fallout 4".to_string();
+
+        let compact_config = build_analysis_config_from_yaml(
+            &compact_yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+        let spaced_config = build_analysis_config_from_yaml(
+            &spaced_yaml,
+            "Fallout 4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(spaced_config.crashgen_name, compact_config.crashgen_name);
+        assert_eq!(
+            spaced_config.crashgen_latest,
+            compact_config.crashgen_latest
+        );
+        assert_eq!(spaced_config.xse_acronym, compact_config.xse_acronym);
+        assert_eq!(spaced_config.game_version, compact_config.game_version);
+        assert_eq!(
+            spaced_config.game_version_vr,
+            compact_config.game_version_vr
+        );
+    }
+
+    #[test]
     fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
         let mut yaml = make_yaml_data("CLASSIC v9.0.0");
         yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
@@ -2102,7 +2094,7 @@ mod tests {
         let config = build_analysis_config_from_yaml(
             &yaml,
             "Fallout4",
-            false,
+            "auto",
             false,
             false,
             false,
@@ -2121,7 +2113,7 @@ mod tests {
 
     #[test]
     fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
-        let config = AnalysisConfig::new("Fallout4".to_string(), false);
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
         let orchestrator = OrchestratorCore::new(config).unwrap();
 
         let (_parsed, status) = orchestrator.check_crashgen_version_for_detected_game(
@@ -2134,7 +2126,7 @@ mod tests {
 
     #[test]
     fn detect_incomplete_log_slice_matches_named_segment_semantics() {
-        let config = AnalysisConfig::new("Fallout4".to_string(), false);
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
         let orchestrator = OrchestratorCore::new(config).unwrap();
 
         // One plugin line should be considered complete by both APIs.

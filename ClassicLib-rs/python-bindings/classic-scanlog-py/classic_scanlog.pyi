@@ -458,7 +458,6 @@ class PluginAnalyzer:
         crashgen_name: str,
         game_version: str = "",
         game_version_vr: str = "",
-        game_version_new: str = "",
     ) -> None:
         """Create plugin analyzer.
 
@@ -468,7 +467,6 @@ class PluginAnalyzer:
             crashgen_name: Name of the crash generator (e.g., "Buffout4", "Crash Logger")
             game_version: Base game version string (default: empty)
             game_version_vr: VR version string if applicable (default: empty)
-            game_version_new: Next-gen/updated version string if applicable (default: empty)
 
         """
 
@@ -821,13 +819,11 @@ class AnalysisConfig:
     """
 
     game: str
-    vr_mode: bool
     crashgen_name: str
     crashgen_latest: str
     crashgen_latest_vr: str  # VR version of crashgen
     game_version: str
     game_version_vr: str
-    game_version_new: str
     xse_acronym: str
     game_root_name: str  # Root name (e.g., "Fallout4")
     classic_version: str  # CLASSIC version string
@@ -849,12 +845,13 @@ class AnalysisConfig:
     classic_records_list: list[str]  # Named records to scan
     crashgen_ignore: list[str]  # Settings to ignore during validation
 
-    def __init__(self, game: str, vr_mode: bool = False) -> None:
+    def __init__(self, game: str, game_version: str = "auto") -> None:
         """Create analysis config.
 
         Args:
             game: Game name (e.g., "Fallout4", "Skyrim")
-            vr_mode: Whether VR mode is enabled (default: False)
+            game_version: Selected mode
+                ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
 
         """
 
@@ -862,7 +859,7 @@ class AnalysisConfig:
     def from_yamldata(
         yamldata: Any,
         game: str,
-        vr_mode: bool,
+        game_version: str,
         show_formid_values: bool = False,
         fcx_mode: bool = False,
         simplify_logs: bool = False,
@@ -870,13 +867,13 @@ class AnalysisConfig:
         """Create AnalysisConfig from YamlData.
 
         Converts a YamlData object (from classic_config) into an
-        AnalysisConfig for use with Orchestrator. Uses VR-aware field
-        selection based on the vr_mode parameter.
+        AnalysisConfig for use with Orchestrator using the selected game version mode.
 
         Args:
             yamldata: YamlData object from classic_config module
             game: Game identifier (e.g., "Fallout4", "Skyrim")
-            vr_mode: Whether VR mode is active
+            game_version: Selected mode
+                ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
             show_formid_values: Whether to show FormID values (default: False)
             fcx_mode: Whether FCX mode is enabled (default: False)
             simplify_logs: Whether to simplify logs (default: False)
@@ -887,8 +884,8 @@ class AnalysisConfig:
         Example:
             >>> from classic_config import YamlData
             >>> from classic_scanlog import AnalysisConfig
-            >>> yamldata = YamlData([...], "Fallout4", False)
-            >>> config = AnalysisConfig.from_yamldata(yamldata, "Fallout4", False)
+            >>> yamldata = YamlData([...], "Fallout4", "auto")
+            >>> config = AnalysisConfig.from_yamldata(yamldata, "Fallout4", "auto")
 
         """
 

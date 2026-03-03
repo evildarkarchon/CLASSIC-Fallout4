@@ -1,0 +1,7 @@
+{
+    "exclude": [
+        "deprecated",
+        "**/node_modules",
+        "**/examples"
+    ]
+}

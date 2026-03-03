@@ -35,7 +35,7 @@ fn build_full_scan_config(
     yaml_dir_root: &str,
     yaml_dir_data: &str,
     game: &str,
-    vr_mode: bool,
+    game_version: &str,
     show_formid_values: bool,
     fcx_mode: bool,
     simplify_logs: bool,
@@ -45,7 +45,7 @@ fn build_full_scan_config(
         .block_on(YamlDataCore::load_from_yaml_files(
             dirs,
             game.to_string(),
-            vr_mode,
+            game_version.to_string(),
         ))
         .map_err(|e| format!("{e}"))?;
 
@@ -53,7 +53,7 @@ fn build_full_scan_config(
     let config = build_analysis_config_from_yaml(
         &yaml,
         game,
-        vr_mode,
+        game_version,
         show_formid_values,
         fcx_mode,
         simplify_logs,
@@ -93,11 +93,11 @@ fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String
 
 fn orchestrator_new_minimal(
     game: &str,
-    vr_mode: bool,
+    game_version: &str,
     crashgen_name: &str,
     xse_acronym: &str,
 ) -> Result<Box<Orchestrator>, String> {
-    let mut config = AnalysisConfig::new(game.to_string(), vr_mode);
+    let mut config = AnalysisConfig::new(game.to_string(), game_version.to_string());
     config.crashgen_name = crashgen_name.to_string();
     config.xse_acronym = xse_acronym.to_string();
     let orch = OrchestratorCore::new(config).map_err(|e| format!("{e}"))?;
@@ -467,7 +467,7 @@ mod ffi {
             yaml_dir_root: &str,
             yaml_dir_data: &str,
             game: &str,
-            vr_mode: bool,
+            game_version: &str,
             show_formid_values: bool,
             fcx_mode: bool,
             simplify_logs: bool,
@@ -477,7 +477,7 @@ mod ffi {
         fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>>;
         fn orchestrator_new_minimal(
             game: &str,
-            vr_mode: bool,
+            game_version: &str,
             crashgen_name: &str,
             xse_acronym: &str,
         ) -> Result<Box<Orchestrator>>;
@@ -518,7 +518,7 @@ mod tests {
 
     #[test]
     fn test_orchestrator_new_minimal() {
-        let result = orchestrator_new_minimal("Fallout4", false, "Buffout 4", "F4SE");
+        let result = orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE");
         assert!(result.is_ok());
     }
 
@@ -547,7 +547,7 @@ mod tests {
             "nonexistent_root",
             "nonexistent_data",
             "Fallout4",
-            false,
+            "auto",
             false,
             false,
             false,

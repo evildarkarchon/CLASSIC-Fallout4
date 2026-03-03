@@ -769,7 +769,7 @@ void MainWindow::loadSettings()
 {
     m_updateCheckOnStartup = true;
     m_autoSwitchToResultsAfterScan = true;
-    m_scanVrMode = false;
+    m_gameVersion = QStringLiteral("auto");
     m_showFormIdValues = false;
     m_fcxMode = false;
     m_simplifyLogs = false;
@@ -836,7 +836,7 @@ void MainWindow::loadSettings()
 
         auto gameVersion = classic::yaml::yaml_ops_get_string(
             *ops, "CLASSIC_Settings.Game Version", "auto");
-        m_scanVrMode = (gameVersion == "VR");
+        m_gameVersion = classic::toQString(gameVersion);
 
         m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
         m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
@@ -1538,7 +1538,7 @@ void MainWindow::onScanCrashLogs()
         m_dataRoot,
         m_dataDir,
         QStringLiteral("Fallout4"),
-        m_scanVrMode,
+        m_gameVersion,
         m_showFormIdValues,
         m_fcxMode,
         m_simplifyLogs,

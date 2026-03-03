@@ -1,20 +1,23 @@
-# Engineering Handoff Map
+# Phase 1 Engineering Handoff Map
 
-- Generated: `2026-02-26T00:44:49.305404+00:00`
-- Total gaps handed off: **83**
+- Generated: `2026-03-03T02:18:54.985132+00:00`
+- Total gaps handed off: **99**
 
 ## Squad A (scanlog/config)
 
 ### `config`
 
-- Total gaps: **13**
+- Total gaps: **19**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **13**
+- Tier 2 gaps: **19**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `ConfigError` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenEntryRaw` | `-` |
+| `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_INTERVAL` |
+| `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` |
+| `node_unmapped` | `tier2` | `-` | `DEFAULT_QUERY_CACHE_CAPACITY` |
 | `node_unmapped` | `tier2` | `-` | `JsAnalysisConfig` |
 | `node_unmapped` | `tier2` | `-` | `JsConfigDuplicateDetector` |
 | `node_unmapped` | `tier2` | `-` | `JsConfigIssue` |
@@ -25,6 +28,9 @@
 | `node_unmapped` | `tier2` | `-` | `JsTomlConfigIssue` |
 | `node_unmapped` | `tier2` | `-` | `JsXseConfig` |
 | `node_unmapped` | `tier2` | `-` | `detectConfigDuplicates` |
+| `node_unmapped` | `tier2` | `-` | `getDefaultCacheCleanupInterval` |
+| `node_unmapped` | `tier2` | `-` | `getDefaultCacheCleanupThreshold` |
+| `node_unmapped` | `tier2` | `-` | `getDefaultQueryCacheCapacity` |
 | `node_unmapped` | `tier2` | `-` | `needsPathDetection` |
 
 ### `scanlog`
@@ -108,4 +114,30 @@
 
 ## Squad B (version-registry/aux)
 
-- No gaps assigned.
+### `aux`
+
+- Total gaps: **6**
+- Tier 1 gaps: **0**
+- Tier 2 gaps: **6**
+
+| Gap Type | Tier | Rust Symbol | Node Export |
+|---|---|---|---|
+| `node_unmapped` | `tier2` | `-` | `JsCheckRule` |
+| `node_unmapped` | `tier2` | `-` | `JsExpectedValue` |
+| `node_unmapped` | `tier2` | `-` | `JsPreflightAction` |
+| `node_unmapped` | `tier2` | `-` | `JsPreflightRule` |
+| `node_unmapped` | `tier2` | `-` | `JsRuleMessages` |
+| `node_unmapped` | `tier2` | `-` | `JsRuleTarget` |
+
+### `version_registry`
+
+- Total gaps: **4**
+- Tier 1 gaps: **0**
+- Tier 2 gaps: **4**
+
+| Gap Type | Tier | Rust Symbol | Node Export |
+|---|---|---|---|
+| `node_unmapped` | `tier2` | `-` | `JsCrashgenRegistryEntry` |
+| `node_unmapped` | `tier2` | `-` | `JsCrashgenSettingsRules` |
+| `node_unmapped` | `tier2` | `-` | `checkCrashgenConfigWithRules` |
+| `node_unmapped` | `tier2` | `-` | `checkCrashgenFullWithRules` |

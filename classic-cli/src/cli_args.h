@@ -6,7 +6,7 @@
 /// Parsed CLI arguments, mirroring Python's CLASSIC_ScanLogs.py argparse.
 struct CliArgs {
     std::string game = "Fallout4";
-    bool vr_mode = false;
+    std::string game_version = "auto";
     bool fcx_mode = false;
     bool show_fid_values = false;
     bool simplify_logs = false;

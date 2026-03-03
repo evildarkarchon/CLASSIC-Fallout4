@@ -51,16 +51,16 @@ test("loads native binding in Node runtime", () => {
 });
 
 test("runs Tier-1 sync APIs in Node runtime", () => {
-  const config = classic.createAnalysisConfig("Fallout4", false);
+  const config = classic.createAnalysisConfig("Fallout4", "auto");
   assert.equal(config.game, "Fallout4");
-  assert.equal(config.vrMode, false);
+  assert.equal(config.gameVersion, "auto");
 
   const fromYaml = classic.createAnalysisConfigFromYamlContent(
     MAIN_YAML,
     GAME_YAML,
     IGNORE_YAML,
     "Fallout4",
-    false,
+    "auto",
   );
   assert.equal(fromYaml.crashgenName, "Buffout 4");
   assert.equal(fromYaml.xseAcronym, "F4SE");
@@ -276,7 +276,7 @@ test("runs Tier-1 async API in Node runtime", async () => {
     GAME_YAML,
     IGNORE_YAML,
     "Fallout4",
-    false,
+    "auto",
   );
   assert.deepEqual(results, []);
 });

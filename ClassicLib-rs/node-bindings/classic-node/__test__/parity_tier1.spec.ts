@@ -104,9 +104,9 @@ describe("Tier-1 parity fixture suites", () => {
   describe("scanlog parity", () => {
     for (const fixture of scanlogConfigCases) {
       test(`createAnalysisConfig parity: ${fixture.id}`, () => {
-        const config = createAnalysisConfig(fixture.game, fixture.vrMode);
+        const config = createAnalysisConfig(fixture.game, fixture.gameVersion);
         expect(config.game).toBe(fixture.game);
-        expect(config.vrMode).toBe(fixture.vrMode);
+        expect(config.gameVersion).toBe(fixture.gameVersion);
         expect(config.crashgenName).toBe(fixture.expected.crashgenName);
         expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
         expect(config.classicVersion).toBe(fixture.expected.classicVersion);
@@ -122,11 +122,11 @@ describe("Tier-1 parity fixture suites", () => {
           PARITY_GAME_YAML,
           PARITY_IGNORE_YAML,
           "Fallout4",
-          false,
+          "auto",
           fixture.options,
         );
         expect(config.game).toBe("Fallout4");
-        expect(config.vrMode).toBe(false);
+        expect(config.gameVersion).toBe("auto");
         expect(config.crashgenName).toBe(fixture.expected.crashgenName);
         expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
         expect(config.classicVersion).toBe(fixture.expected.classicVersion);
@@ -143,7 +143,7 @@ describe("Tier-1 parity fixture suites", () => {
           PARITY_GAME_YAML,
           PARITY_IGNORE_YAML,
           "Fallout4",
-          false,
+          "auto",
         );
         expect(true).toBe(false);
       } catch (err: unknown) {
@@ -159,14 +159,16 @@ describe("Tier-1 parity fixture suites", () => {
         PARITY_GAME_YAML,
         PARITY_IGNORE_YAML,
         "Fallout4",
-        false,
+        "auto",
       );
       expect(data.classicVersion).toBe("9.0.0");
       expect(data.xseAcronym).toBe("F4SE");
       expect(data.crashgenName).toBe("Buffout 4");
       expect(data.ignoreList).toEqual(["IgnoreItem1"]);
       expect(data.gameVersion).toBe("1.10.163");
-      expect(data.gameVersionNew).toBe("1.10.984");
+      expect(
+        (data as unknown as Record<string, unknown>).gameVersionNew,
+      ).toBeUndefined();
     });
 
     for (const fixture of configSourceCases) {
@@ -189,7 +191,7 @@ describe("Tier-1 parity fixture suites", () => {
           PARITY_GAME_YAML,
           PARITY_IGNORE_YAML,
           "Fallout4",
-          false,
+          "auto",
         );
         expect(true).toBe(false);
       } catch (err: unknown) {

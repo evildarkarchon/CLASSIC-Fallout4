@@ -9,7 +9,7 @@ private slots:
     void scan_worker_forwards_runtime_flags_to_rust_config();
     void scan_controller_forwards_flags_to_worker();
     void mainwindow_forwards_scan_flags_to_controller();
-    void mainwindow_forwards_vr_mode_to_scan_controller();
+    void mainwindow_forwards_game_version_to_scan_controller();
     void scan_worker_handles_move_unsolved_and_max_concurrent_settings();
     void scan_worker_uses_progress_enabled_batch_api();
     void scan_worker_defaults_to_batch_for_multi_log_scans();
@@ -29,12 +29,16 @@ void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-
-    const QRegularExpression callRegex(
-        QStringLiteral(
-            R"(build_full_scan_config\((?:.|\n)*?vrMode,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs\s*\))"));
-    QVERIFY2(callRegex.match(sourceText).hasMatch(),
-             "ScanWorker should forward scan flags to build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("build_full_scan_config(")),
+             "ScanWorker should call build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
+             "ScanWorker should forward gameVersion to build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("showFormIdValues")),
+             "ScanWorker should forward showFormIdValues to build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("fcxMode")),
+             "ScanWorker should forward fcxMode to build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("simplifyLogs")),
+             "ScanWorker should forward simplifyLogs to build_full_scan_config()");
 }
 
 void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
@@ -48,7 +52,7 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
 
     const QRegularExpression lambdaRegex(
         QStringLiteral(
-            R"(worker->doScan\((?:.|\n)*?vrMode,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*maxConcurrentScans\s*\))"));
+            R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*maxConcurrentScans\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass scan settings through to ScanWorker::doScan()");
 }
@@ -69,7 +73,7 @@ void ScanSettingsWiringTests::mainwindow_forwards_scan_flags_to_controller()
              "MainWindow should forward loaded scan settings to ScanController::startScan()");
 }
 
-void ScanSettingsWiringTests::mainwindow_forwards_vr_mode_to_scan_controller()
+void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_scan_controller()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
     QFile file(sourcePath);
@@ -80,9 +84,9 @@ void ScanSettingsWiringTests::mainwindow_forwards_vr_mode_to_scan_controller()
 
     const QRegularExpression callRegex(
         QStringLiteral(
-            R"(m_scanController->startScan\((?:.|\n)*?m_scanVrMode,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
+            R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
-             "MainWindow should forward VR mode and all scan settings to ScanController::startScan()");
+             "MainWindow should forward game version and all scan settings to ScanController::startScan()");
 }
 
 void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurrent_settings()

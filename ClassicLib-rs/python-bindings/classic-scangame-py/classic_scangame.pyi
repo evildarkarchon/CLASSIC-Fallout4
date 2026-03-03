@@ -749,16 +749,15 @@ class XseChecker:
     """Validates Address Library installation for F4SE/SKSE plugins.
 
     Example:
-        >>> # Simplest usage (defaults to Original version, non-VR)
+        >>> # Simplest usage (defaults to Original mode)
         >>> checker = XseChecker(Path("/path/to/plugins"))
         >>> result = checker.check()
         >>> message = checker.validate()
         >>> print(message)
         >>>
-        >>> # Or specify VR mode and game version explicitly
+        >>> # Or specify game version explicitly
         >>> checker = XseChecker(
         ...     Path("/path/to/plugins"),
-        ...     is_vr_mode=False,
         ...     game_version=GameVersion.NextGen
         ... )
 
@@ -767,14 +766,12 @@ class XseChecker:
     def __init__(
         self,
         plugins_path: Path,
-        is_vr_mode: bool = False,
         game_version: GameVersion = ...,
     ) -> None:
         """Create a new XseChecker instance.
 
         Args:
             plugins_path: Path to plugins directory.
-            is_vr_mode: Whether game is in VR mode.
             game_version: Game version enum (uses Original if not specified).
 
         """
@@ -795,14 +792,11 @@ class XseChecker:
 
         """
 
-def check_xse_plugins(
-    plugins_path: Path, is_vr_mode: bool, game_version: GameVersion
-) -> str:
+def check_xse_plugins(plugins_path: Path, game_version: GameVersion) -> str:
     """Provide convenience wrapper to validate XSE plugins without creating checker instance.
 
     Args:
         plugins_path: Path to F4SE/SKSE plugins directory.
-        is_vr_mode: Whether the game is running in VR mode.
         game_version: Detected game version.
 
     Returns:
@@ -1202,10 +1196,8 @@ class SetupCheckResults:
 def run_setup_checks(config: SetupCheckConfig) -> SetupCheckResults:
     """Run combined setup checks."""
 
-def migrate_vr_setting(
-    game_version: str | None = ..., legacy_vr_mode: bool | None = ...
-) -> str | None:
-    """Migrate legacy VR mode setting to Game Version value."""
+def migrate_vr_setting(game_version: str | None = ...) -> str | None:
+    """Normalize Game Version to a canonical mode value."""
 
 def resolve_effective_game_version(game_version: str | None = ...) -> str:
     """Resolve effective game version from raw setting."""
