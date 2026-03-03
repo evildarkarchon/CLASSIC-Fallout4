@@ -114,6 +114,17 @@ Use the build scripts instead of raw CMake commands so VS Dev Shell is initializ
 
 ---
 
+## CI
+
+GitHub Actions workflows:
+
+- `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest`
+- `ci-rust.yml` - Rust format/lint/build/test
+- `ci-typescript.yml` - Node bindings parity gates + Bun/Node runtime tests
+- `benchmarks.yml` - benchmark/performance pipeline
+
+---
+
 ## Repository layout
 
 - `classic-cli/` — C++ command-line scanner

@@ -165,9 +165,10 @@ Maintain a single shared Tokio runtime from Rust core/runtime facilities. Do not
 
 Current primary CI workflows:
 
-1. **`ci-rust.yml`** — Rust format/lint/build/test
-2. **`ci-typescript.yml`** — Node binding parity gates + Bun/Node runtime tests
-3. **`benchmarks.yml`** — benchmark/performance pipeline
+1. **`ci-cpp.yml`** - C++ CLI/GUI build and test pipeline
+2. **`ci-rust.yml`** - Rust format/lint/build/test
+3. **`ci-typescript.yml`** - Node binding parity gates + Bun/Node runtime tests
+4. **`benchmarks.yml`** - benchmark/performance pipeline
 
 The legacy Python CI workflow has been retired from the active pipeline as part of Python deprecation.
 
