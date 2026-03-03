@@ -43,16 +43,6 @@ Crashgen_Registry:
             kind: notice_and_skip_remaining
             severity: warning
             message: "{crashgen_name} and Addictol are incompatible, remove one to avoid crashes."
-            fix: "Skipping {crashgen_name} TOML settings checks."
-        - id: addictol_skip
-          when:
-            all:
-              - plugin_any: [addictol.dll]
-              - not: { plugin_any: [buffout4.dll] }
-          action:
-            kind: notice_and_skip_remaining
-            severity: info
-            message: "Addictol detected - skipping {crashgen_name} TOML settings checks."
         - id: bakascrapheap_redundant
           when:
             all:
