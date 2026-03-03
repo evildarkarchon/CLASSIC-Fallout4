@@ -10,6 +10,9 @@ use classic_crashgen_settings_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
     PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
 };
+use classic_version_registry_core::{
+    GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
+};
 use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
 use std::collections::HashMap;
@@ -326,7 +329,11 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
         })
     }
 
-    fn parse_settings_rules(entry_name: &str, field_yaml: &Yaml) -> Option<CrashgenSettingsRules> {
+    fn parse_settings_rules(
+        entry_name: &str,
+        settings_rules_version: Option<u32>,
+        field_yaml: &Yaml,
+    ) -> Option<CrashgenSettingsRules> {
         let Some(map) = field_yaml.as_hash() else {
             if !matches!(field_yaml, Yaml::BadValue) {
                 log::debug!(
@@ -353,7 +360,7 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
             .unwrap_or_default();
 
         Some(CrashgenSettingsRules {
-            version: 1,
+            version: settings_rules_version.unwrap_or(1),
             preflight,
             checks,
         })
@@ -391,7 +398,11 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
         let checks = parse_string_list_field(name, "checks", &entry_yaml["checks"]);
         let settings_rules_version =
             parse_version_field(name, &entry_yaml["settings_rules_version"]);
-        let settings_rules = parse_settings_rules(name, &entry_yaml["settings_rules"]);
+        let settings_rules = parse_settings_rules(
+            name,
+            settings_rules_version,
+            &entry_yaml["settings_rules"],
+        );
 
         result.insert(
             name.to_string(),
@@ -406,6 +417,139 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
     }
 
     result
+}
+
+fn normalize_registry_key(value: &str) -> String {
+    value
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .map(|ch| ch.to_ascii_lowercase())
+        .collect()
+}
+
+fn main_root_matches_registry_info(main_root_name: &str, info: &VersionInfo) -> bool {
+    let normalized_root = normalize_registry_key(main_root_name);
+    !normalized_root.is_empty()
+        && (normalize_registry_key(&info.game) == normalized_root
+            || normalize_registry_key(&info.docs_name) == normalized_root)
+}
+
+/// Resolve registry-backed static metadata for a Main_Root_Name / mode pair.
+///
+/// This prefers explicit defaults from `unknown_version_handling.defaults` and
+/// falls back to the highest-priority registry entry that matches `Main_Root_Name`.
+fn resolve_registry_version_info(main_root_name: &str, vr_mode: bool) -> Option<VersionInfo> {
+    if main_root_name.trim().is_empty() {
+        return None;
+    }
+
+    let registry = get_version_registry();
+
+    // Prefer explicit defaults from registry config (accepting both compact and spaced names).
+    let mut default_keys = Vec::new();
+    let compact_name: String = main_root_name
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .collect();
+    for key_base in [main_root_name.trim(), compact_name.as_str()] {
+        if key_base.is_empty() {
+            continue;
+        }
+        if vr_mode {
+            default_keys.push(format!("{key_base}VR"));
+        }
+        default_keys.push(key_base.to_string());
+    }
+
+    for key in &default_keys {
+        if let Some(default_id) = registry.unknown_version_handling().get_default(key)
+            && let Some(info) = registry.get_by_id(default_id)
+            && info.is_vr == vr_mode
+            && main_root_matches_registry_info(main_root_name, info)
+        {
+            return Some(info.clone());
+        }
+    }
+
+    // Fallback: highest-priority registry entry that matches this root name/mode.
+    registry
+        .get_all()
+        .into_iter()
+        .find(|info| info.is_vr == vr_mode && main_root_matches_registry_info(main_root_name, info))
+        .map(|info| (*info).clone())
+}
+
+/// Format registry `GameVersion` using legacy 3-part style when build is 0.
+fn format_registry_game_version(version: &RegistryGameVersion) -> String {
+    if version.build == 0 {
+        format!("{}.{}.{}", version.major, version.minor, version.patch)
+    } else {
+        version.to_string()
+    }
+}
+
+/// Resolve baseline (`game_version`) and newer (`game_version_new`) values.
+///
+/// For Fallout 4 non-VR, this preserves legacy semantics:
+/// - `game_version` => OG
+/// - `game_version_new` => NG
+///
+/// Otherwise both values fall back to the same resolved registry entry.
+fn resolve_registry_game_versions(
+    main_root_name: &str,
+    vr_mode: bool,
+    fallback_info: &Option<VersionInfo>,
+) -> (Option<String>, Option<String>) {
+    let fallback = fallback_info
+        .as_ref()
+        .map(|info| format_registry_game_version(&info.version));
+
+    let is_fallout4 = normalize_registry_key(main_root_name) == "fallout4"
+        || fallback_info
+            .as_ref()
+            .is_some_and(|info| normalize_registry_key(&info.game) == "fallout4");
+
+    if is_fallout4 && !vr_mode {
+        let registry = get_version_registry();
+        let game_key = fallback_info
+            .as_ref()
+            .map_or("Fallout4", |info| info.game.as_str());
+        let game_versions = registry.get_all_for_game(game_key, Some(false));
+
+        let og = game_versions
+            .iter()
+            .find(|info| info.short_name.eq_ignore_ascii_case("OG"))
+            .map(|info| format_registry_game_version(&info.version));
+        let ng = game_versions
+            .iter()
+            .find(|info| info.short_name.eq_ignore_ascii_case("NG"))
+            .map(|info| format_registry_game_version(&info.version));
+
+        return (og.or_else(|| fallback.clone()), ng.or(fallback));
+    }
+
+    (fallback.clone(), fallback)
+}
+
+fn get_crashgen_registry_entry<'a>(
+    crashgen_registry: &'a HashMap<String, CrashgenEntryRaw>,
+    entry_name: &str,
+) -> Option<&'a CrashgenEntryRaw> {
+    crashgen_registry.get(entry_name).or_else(|| {
+        crashgen_registry
+            .iter()
+            .find(|(name, _)| name.eq_ignore_ascii_case(entry_name))
+            .map(|(_, entry)| entry)
+    })
+}
+
+fn resolve_crashgen_ignore_fallback(
+    crashgen_registry: &HashMap<String, CrashgenEntryRaw>,
+    selected_crashgen: &str,
+) -> Option<Vec<String>> {
+    get_crashgen_registry_entry(crashgen_registry, selected_crashgen)
+        .or_else(|| get_crashgen_registry_entry(crashgen_registry, "default"))
+        .map(|entry| entry.ignore_keys.clone())
 }
 
 #[cfg(test)]
@@ -533,7 +677,7 @@ Crashgen_Registry:
             r#"
 Crashgen_Registry:
   crash-og:
-    settings_rules_version: 1
+    settings_rules_version: 2
     settings_rules:
       preflight:
         - id: addictol_skip
@@ -563,14 +707,45 @@ Crashgen_Registry:
 
         let registry = parse_crashgen_registry(&game_data);
         let entry = registry.get("crash-og").expect("missing crash-og entry");
-        assert_eq!(entry.settings_rules_version, Some(1));
+        assert_eq!(entry.settings_rules_version, Some(2));
         let rules = entry
             .settings_rules
             .as_ref()
             .expect("expected parsed settings rules");
+        assert_eq!(rules.version, 2);
         assert_eq!(rules.preflight.len(), 1);
         assert_eq!(rules.checks.len(), 1);
         assert_eq!(rules.checks[0].target.key, "Achievements");
+    }
+
+    #[test]
+    fn test_parse_crashgen_registry_settings_rules_default_version_when_missing() {
+        let game_data = parse_yaml_document(
+            r#"
+Crashgen_Registry:
+  crash-og:
+    settings_rules:
+      preflight:
+        - id: addictol_skip
+          when:
+            plugin_any: ["addictol.dll"]
+          action:
+            kind: notice_and_skip_remaining
+            severity: info
+            message: "skip"
+"#,
+        );
+
+        let registry = parse_crashgen_registry(&game_data);
+        let entry = registry.get("crash-og").expect("missing crash-og entry");
+        assert_eq!(entry.settings_rules_version, None);
+        let rules = entry
+            .settings_rules
+            .as_ref()
+            .expect("expected parsed settings rules");
+        assert_eq!(rules.version, 1);
+        assert_eq!(rules.preflight.len(), 1);
+        assert!(rules.checks.is_empty());
     }
 }
 
@@ -645,11 +820,17 @@ pub struct YamlDataCore {
     pub classic_version_date: String,
 
     // Crashgen configuration
-    /// Identifier for the crash generation configuration (from Game_Info)
+    /// Identifier for the crash generation configuration.
+    ///
+    /// Loaded from `Game_Info.CRASHGEN_LogName` when present, otherwise
+    /// backfilled from Version Registry metadata using `Game_Info.Main_Root_Name`.
     pub crashgen_name: String,
     /// Latest original generation crash identifier
     pub crashgen_latest_og: String,
-    /// Items to be ignored during crash generation (from Game_Info)
+    /// Items to be ignored during crash generation.
+    ///
+    /// Loaded from `Game_Info.CRASHGEN_Ignore` when present. If missing, this
+    /// falls back to `Crashgen_Registry.<selected|default>.ignore_keys`.
     pub crashgen_ignore: Vec<String>,
 
     // Warnings
@@ -659,7 +840,9 @@ pub struct YamlDataCore {
     pub warn_outdated: String,
 
     // XSE configuration
-    /// Acronym for the XSE (XML Scripting Engine) configuration setting
+    /// Acronym for the XSE (XML Scripting Engine) configuration setting.
+    ///
+    /// Loaded from `Game_Info.XSE_Acronym` or backfilled from Version Registry metadata.
     pub xse_acronym: String,
 
     // Ignore lists
@@ -695,13 +878,17 @@ pub struct YamlDataCore {
     pub autoscan_text: String,
 
     // Game versions (stored as strings)
-    /// Current game version
+    /// Current game version.
+    ///
+    /// Loaded from `Game_Info.GameVersion` or backfilled from Version Registry metadata.
     pub game_version: String,
-    /// Newer version of the game, if available
+    /// Newer version of the game, if available.
+    ///
+    /// Loaded from `Game_Info.GameVersionNEW` or backfilled from Version Registry metadata.
     pub game_version_new: String,
 
     // Game root names
-    /// Main root name for the game (from Game_Info.Main_Root_Name)
+    /// Main root name for the game (from `Game_Info.Main_Root_Name`)
     pub game_root_name: String,
 
     /// Per-crashgen settings registry loaded from `Crashgen_Registry` in the game YAML.
@@ -715,16 +902,14 @@ pub struct YamlDataCore {
 impl YamlDataCore {
     /// Get crash generator name.
     ///
-    /// Returns the crashgen log name from `Game_Info.CRASHGEN_LogName`.
-    /// VR-specific crashgen names are now provided by the Version Registry.
+    /// Returns the crashgen log name from YAML, with Version Registry fallback.
     pub fn get_crashgen_name(&self) -> &str {
         &self.crashgen_name
     }
 
     /// Get crash generator ignore list.
     ///
-    /// Returns the crashgen ignore list from `Game_Info.CRASHGEN_Ignore`.
-    /// VR-specific ignore lists are now provided by the Version Registry.
+    /// Returns the crashgen ignore list from YAML or `Crashgen_Registry` fallback.
     pub fn get_crashgen_ignore(&self) -> &[String] {
         &self.crashgen_ignore
     }
@@ -732,9 +917,140 @@ impl YamlDataCore {
     /// Get game root name.
     ///
     /// Returns the main root name from `Game_Info.Main_Root_Name`.
-    /// VR-specific root names are now provided by the Version Registry.
     pub fn get_game_root_name(&self) -> &str {
         &self.game_root_name
+    }
+
+    fn build_from_yaml_documents(
+        main_data: &Yaml,
+        game_data: &Yaml,
+        ignore_data: &Yaml,
+        game: &str,
+        vr_mode: bool,
+    ) -> Self {
+        let yaml_ops = YamlOperations::new();
+
+        let crashgen_ignore_is_configured = yaml_ops
+            .get_setting(game_data, "Game_Info.CRASHGEN_Ignore")
+            .is_some();
+
+        let mut data = Self {
+            // Main YAML values
+            classic_version: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version", ""),
+            classic_version_date: yaml_ops.get_string_value(
+                main_data,
+                "CLASSIC_Info.version_date",
+                "",
+            ),
+            classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
+            autoscan_text: yaml_ops.get_string_value(
+                main_data,
+                &format!("CLASSIC_Interface.autoscan_text_{game}"),
+                "",
+            ),
+
+            // Game YAML values
+            classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
+
+            // Crashgen config (from Game_Info first; registry fallback is applied after extraction)
+            crashgen_name: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LogName", ""),
+            crashgen_ignore: yaml_ops.get_vec_value(game_data, "Game_Info.CRASHGEN_Ignore"),
+            game_root_name: yaml_ops.get_string_value(game_data, "Game_Info.Main_Root_Name", ""),
+
+            crashgen_latest_og: yaml_ops.get_string_value(
+                game_data,
+                "Game_Info.CRASHGEN_LatestVer",
+                "",
+            ),
+            warn_noplugins: yaml_ops.get_string_value(
+                game_data,
+                "Warnings_CRASHGEN.Warn_NOPlugins",
+                "",
+            ),
+            warn_outdated: yaml_ops.get_string_value(
+                game_data,
+                "Warnings_CRASHGEN.Warn_Outdated",
+                "",
+            ),
+            xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
+            game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
+            game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
+            suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
+            suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
+            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
+            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
+            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
+            game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
+            game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
+            game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
+            game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
+
+            // Ignore YAML values
+            ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{game}")),
+
+            // Per-crashgen registry (game YAML)
+            crashgen_registry: parse_crashgen_registry(game_data),
+        };
+
+        data.apply_metadata_fallbacks(vr_mode, crashgen_ignore_is_configured);
+        data
+    }
+
+    fn apply_metadata_fallbacks(&mut self, vr_mode: bool, crashgen_ignore_is_configured: bool) {
+        if !self.game_root_name.trim().is_empty() {
+            let registry_info = resolve_registry_version_info(&self.game_root_name, vr_mode);
+            let registry_crashgen = registry_info
+                .as_ref()
+                .and_then(|info| info.crashgen_versions.first());
+
+            if self.crashgen_name.trim().is_empty()
+                && let Some(name) = registry_crashgen
+                    .map(|config| config.name.as_str())
+                    .filter(|name| !name.is_empty())
+            {
+                self.crashgen_name = name.to_string();
+            }
+
+            if self.crashgen_latest_og.trim().is_empty()
+                && let Some(version) = registry_crashgen
+                    .map(|config| config.version.as_str())
+                    .filter(|version| !version.is_empty())
+            {
+                self.crashgen_latest_og = version.to_string();
+            }
+
+            if self.xse_acronym.trim().is_empty()
+                && let Some(acronym) = registry_info
+                    .as_ref()
+                    .and_then(|info| info.xse.as_ref())
+                    .map(|xse| xse.acronym.as_str())
+                    .filter(|acronym| !acronym.is_empty())
+            {
+                self.xse_acronym = acronym.to_string();
+            }
+
+            let (registry_game_version, registry_game_version_new) =
+                resolve_registry_game_versions(&self.game_root_name, vr_mode, &registry_info);
+            if self.game_version.trim().is_empty()
+                && let Some(version) = registry_game_version
+            {
+                self.game_version = version;
+            }
+            if self.game_version_new.trim().is_empty()
+                && let Some(version_new) = registry_game_version_new
+            {
+                self.game_version_new = version_new;
+            }
+        }
+
+        if !crashgen_ignore_is_configured
+            && self.crashgen_ignore.is_empty()
+            && let Some(ignore) =
+                resolve_crashgen_ignore_fallback(&self.crashgen_registry, &self.crashgen_name)
+        {
+            self.crashgen_ignore = ignore;
+        }
     }
 
     /// Load all configuration from YAML files in parallel (pure Rust)
@@ -841,76 +1157,13 @@ impl YamlDataCore {
             .first()
             .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
 
-        // Create YamlOperations instance for using helper methods
-        let yaml_ops = YamlOperations::new();
-
-        // Extract values using helper functions from YamlOperations
-        // NOTE: vr_mode parameter is kept in signature for API compatibility
-        // but is no longer used. VR-specific metadata is now in the Version Registry.
-        let _ = vr_mode;
-
-        // Build the configuration struct.
-        // All values come from Game_Info (not GameVR_Info, which has been deprecated).
-        // VR-specific static metadata (crashgen names, game root names, version strings)
-        // is now provided by the Version Registry.
-        Ok(Self {
-            // Main YAML values
-            classic_version: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version", ""),
-            classic_version_date: yaml_ops.get_string_value(
-                main_data,
-                "CLASSIC_Info.version_date",
-                "",
-            ),
-            classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
-            autoscan_text: yaml_ops.get_string_value(
-                main_data,
-                &format!("CLASSIC_Interface.autoscan_text_{}", game),
-                "",
-            ),
-
-            // Game YAML values
-            classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
-
-            // Crashgen config (from Game_Info only; VR equivalents now in Version Registry)
-            crashgen_name: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LogName", ""),
-            crashgen_ignore: yaml_ops.get_vec_value(game_data, "Game_Info.CRASHGEN_Ignore"),
-            game_root_name: yaml_ops.get_string_value(game_data, "Game_Info.Main_Root_Name", ""),
-
-            crashgen_latest_og: yaml_ops.get_string_value(
-                game_data,
-                "Game_Info.CRASHGEN_LatestVer",
-                "",
-            ),
-            warn_noplugins: yaml_ops.get_string_value(
-                game_data,
-                "Warnings_CRASHGEN.Warn_NOPlugins",
-                "",
-            ),
-            warn_outdated: yaml_ops.get_string_value(
-                game_data,
-                "Warnings_CRASHGEN.Warn_Outdated",
-                "",
-            ),
-            xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
-            game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
-            game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
-            suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
-            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
-            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
-            game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
-            game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
-            game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
-            game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
-            game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
-
-            // Ignore YAML values
-            ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
-
-            // Per-crashgen registry (game YAML)
-            crashgen_registry: parse_crashgen_registry(game_data),
-        })
+        Ok(Self::build_from_yaml_documents(
+            main_data,
+            game_data,
+            ignore_data,
+            &game,
+            vr_mode,
+        ))
     }
 
     /// Create YamlData from YAML content strings (for testing without file I/O).
@@ -994,76 +1247,13 @@ impl YamlDataCore {
             .first()
             .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
 
-        // Create YamlOperations instance for using helper methods
-        let yaml_ops = YamlOperations::new();
-
-        // Extract values using helper functions from YamlOperations
-        // NOTE: vr_mode parameter is kept in signature for API compatibility
-        // but is no longer used. VR-specific metadata is now in the Version Registry.
-        let _ = vr_mode;
-
-        // Build the configuration struct.
-        // All values come from Game_Info (not GameVR_Info, which has been deprecated).
-        // VR-specific static metadata (crashgen names, game root names, version strings)
-        // is now provided by the Version Registry.
-        Ok(Self {
-            // Main YAML values
-            classic_version: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version", ""),
-            classic_version_date: yaml_ops.get_string_value(
-                main_data,
-                "CLASSIC_Info.version_date",
-                "",
-            ),
-            classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
-            autoscan_text: yaml_ops.get_string_value(
-                main_data,
-                &format!("CLASSIC_Interface.autoscan_text_{}", game),
-                "",
-            ),
-
-            // Game YAML values
-            classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
-
-            // Crashgen config (from Game_Info only; VR equivalents now in Version Registry)
-            crashgen_name: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LogName", ""),
-            crashgen_ignore: yaml_ops.get_vec_value(game_data, "Game_Info.CRASHGEN_Ignore"),
-            game_root_name: yaml_ops.get_string_value(game_data, "Game_Info.Main_Root_Name", ""),
-
-            crashgen_latest_og: yaml_ops.get_string_value(
-                game_data,
-                "Game_Info.CRASHGEN_LatestVer",
-                "",
-            ),
-            warn_noplugins: yaml_ops.get_string_value(
-                game_data,
-                "Warnings_CRASHGEN.Warn_NOPlugins",
-                "",
-            ),
-            warn_outdated: yaml_ops.get_string_value(
-                game_data,
-                "Warnings_CRASHGEN.Warn_Outdated",
-                "",
-            ),
-            xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
-            game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
-            game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
-            suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
-            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
-            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
-            game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
-            game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
-            game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
-            game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
-            game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
-
-            // Ignore YAML values
-            ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
-
-            // Per-crashgen registry (game YAML)
-            crashgen_registry: parse_crashgen_registry(game_data),
-        })
+        Ok(Self::build_from_yaml_documents(
+            main_data,
+            game_data,
+            ignore_data,
+            &game,
+            vr_mode,
+        ))
     }
 }
 
@@ -1169,6 +1359,23 @@ Mods_OPC2:
   OpcMod: "OPC2 mod"
 Mods_SOLU:
   SoluMod: "Solution mod"
+"#
+    }
+
+    /// Production-shaped Fallout 4 YAML where Game_Info only has Main_Root_Name.
+    fn minimal_game_yaml_main_root_only() -> &'static str {
+        r#"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys:
+      - "BuffoutSpecificIgnore"
+    checks: []
+  default:
+    ignore_keys:
+      - "DefaultIgnore"
+    checks: []
 "#
     }
 
@@ -1607,6 +1814,64 @@ different_game: []
         assert_eq!(config.classic_version, "");
         assert!(config.classic_records_list.is_empty());
         assert!(config.ignore_list.is_empty());
+    }
+
+    #[test]
+    fn test_from_yaml_content_falls_back_to_registry_metadata_when_game_info_is_minimal() {
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml_main_root_only(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            false,
+        )
+        .unwrap();
+
+        // Main root name is still sourced from YAML.
+        assert_eq!(config.game_root_name, "Fallout 4");
+
+        // These fields should be backfilled from version registry metadata.
+        assert!(!config.crashgen_name.is_empty());
+        assert!(!config.crashgen_latest_og.is_empty());
+        assert!(!config.xse_acronym.is_empty());
+        assert!(!config.game_version.is_empty());
+        assert!(!config.game_version_new.is_empty());
+
+        // Legacy ignore fallback comes from Crashgen_Registry when Game_Info.CRASHGEN_Ignore is absent.
+        assert_eq!(config.crashgen_ignore, vec!["BuffoutSpecificIgnore"]);
+    }
+
+    #[test]
+    fn test_from_yaml_content_respects_explicit_empty_crashgen_ignore() {
+        let game_yaml = r#"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+  CRASHGEN_LogName: "Buffout 4"
+  CRASHGEN_Ignore: []
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys:
+      - "BuffoutSpecificIgnore"
+    checks: []
+  default:
+    ignore_keys:
+      - "DefaultIgnore"
+    checks: []
+"#;
+
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            false,
+        )
+        .unwrap();
+
+        assert!(
+            config.crashgen_ignore.is_empty(),
+            "explicit empty CRASHGEN_Ignore must not be replaced by registry fallback"
+        );
     }
 
     // ============================================================

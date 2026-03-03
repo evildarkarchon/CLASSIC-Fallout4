@@ -80,6 +80,20 @@ CLASSIC_Ignore_Skyrim:
   - "SkyrimIgnore1"
 `;
 
+const GAME_YAML_MAIN_ROOT_ONLY = `
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys:
+      - "BuffoutSpecificIgnore"
+    checks: []
+  default:
+    ignore_keys:
+      - "DefaultIgnore"
+    checks: []
+`;
+
 // ============================================================================
 // YamlData: Construction
 // ============================================================================
@@ -129,6 +143,20 @@ describe("YamlData construction", () => {
     expect(() =>
       YamlData.fromYamlContent("", GAME_YAML, IGNORE_YAML, "Fallout4", false),
     ).toThrow();
+  });
+
+  test("fromYamlContent keeps metadata non-empty when Game_Info only has Main_Root_Name", () => {
+    const data = YamlData.fromYamlContent(
+      MAIN_YAML,
+      GAME_YAML_MAIN_ROOT_ONLY,
+      IGNORE_YAML,
+      "Fallout4",
+      false,
+    );
+
+    expect(data.crashgenName.length).toBeGreaterThan(0);
+    expect(data.xseAcronym.length).toBeGreaterThan(0);
+    expect(data.gameVersion.length).toBeGreaterThan(0);
   });
 });
 

@@ -17,6 +17,7 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # YAML operations (provides YamlOperations with helpers)
 classic-yaml-core = { path = "../classic-yaml-core" }
 classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
+classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }

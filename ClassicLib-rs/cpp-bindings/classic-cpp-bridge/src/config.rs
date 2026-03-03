@@ -246,6 +246,7 @@ mod ffi {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_yaml_data_load_invalid_dirs() {
@@ -294,5 +295,54 @@ mod tests {
             assert!(!og_root.is_empty());
             assert!(!vr_root.is_empty());
         }
+    }
+
+    #[test]
+    fn test_yaml_data_accessors_fallback_when_game_info_is_minimal() {
+        let temp = tempdir().expect("failed to create temp dir");
+        let data_dir = temp.path().join("CLASSIC Data");
+        let db_dir = data_dir.join("databases");
+        std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
+
+        let main_yaml = r#"
+CLASSIC_Info:
+  version: "7.31.0"
+  version_date: "2024-01-15"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Autoscan Fallout 4"
+"#;
+        let game_yaml = r#"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys:
+      - "BuffoutSpecificIgnore"
+    checks: []
+  default:
+    ignore_keys:
+      - "DefaultIgnore"
+    checks: []
+"#;
+        let ignore_yaml = r#"
+CLASSIC_Ignore_Fallout4: []
+"#;
+
+        std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).expect("write main yaml");
+        std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).expect("write game yaml");
+        std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml)
+            .expect("write ignore yaml");
+
+        let root_dir = temp.path().to_string_lossy().to_string();
+        let data_dir_str = data_dir.to_string_lossy().to_string();
+        let data = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", false)
+            .expect("yaml_data_load should succeed");
+
+        assert!(!yaml_data_get_crashgen_name(&data).is_empty());
+        assert_eq!(
+            yaml_data_get_crashgen_ignore(&data),
+            vec!["BuffoutSpecificIgnore".to_string()]
+        );
+        assert!(!yaml_data_game_version(&data).is_empty());
     }
 }
