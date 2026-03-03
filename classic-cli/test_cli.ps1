@@ -14,22 +14,28 @@
 .EXAMPLE
     .\test_cli.ps1
     .\test_cli.ps1 -BuildDir build-debug
+    .\test_cli.ps1 -TestDataDir "D:\fixtures\classic-logs"
+    .\test_cli.ps1 -MaxLogs 10
     .\test_cli.ps1 -Verbose
 #>
 
 [CmdletBinding()]
 param(
-    [string]$BuildDir = "build"
+    [string]$BuildDir = "build",
+    [string]$TestDataDir,
+    [ValidateRange(0, 500)]
+    [int]$MaxLogs = 25
 )
 
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ExePath = Join-Path $ScriptDir "$BuildDir\classic-cli.exe"
-$TestDataDir = Join-Path $ScriptDir "test_data"
 # Project root where "CLASSIC Data/" lives (needed for YAML config loading)
 $ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..")).Path
 $ClassicDataDir = Join-Path $ProjectRoot "CLASSIC Data"
+$LegacyTestDataDir = Join-Path $ScriptDir "test_data"
+$SubmoduleTestDataDir = Join-Path $ProjectRoot "sample_logs\FO4"
 
 # ── Preflight checks ─────────────────────────────────────────────
 
@@ -39,25 +45,81 @@ if (-not (Test-Path $ExePath)) {
     exit 1
 }
 
-if (-not (Test-Path $TestDataDir)) {
-    Write-Host "ERROR: test_data directory not found at: $TestDataDir" -ForegroundColor Red
-    exit 1
-}
-
 if (-not (Test-Path $ClassicDataDir)) {
     Write-Host "ERROR: CLASSIC Data directory not found at: $ClassicDataDir" -ForegroundColor Red
     exit 1
 }
 
-$TestLogs = Get-ChildItem -Path $TestDataDir -Filter "crash-*.log"
-if ($TestLogs.Count -eq 0) {
-    Write-Host "ERROR: No test crash logs found in: $TestDataDir" -ForegroundColor Red
+function Resolve-TestData {
+    param(
+        [string]$ExplicitDir,
+        [string]$LegacyDir,
+        [string]$SubmoduleDir
+    )
+
+    $candidates = @()
+    if ($ExplicitDir) {
+        $candidates += @{ Label = "explicit -TestDataDir"; Path = $ExplicitDir }
+    }
+    $candidates += @{ Label = "legacy classic-cli/test_data"; Path = $LegacyDir }
+    $candidates += @{ Label = "sample_logs submodule"; Path = $SubmoduleDir }
+
+    $diagnostics = @()
+
+    foreach ($candidate in $candidates) {
+        $path = $candidate.Path
+        if (-not (Test-Path $path)) {
+            $diagnostics += "  - $($candidate.Label): missing ($path)"
+            continue
+        }
+
+        $logs = Get-ChildItem -Path $path -Filter "crash-*.log" -File -ErrorAction SilentlyContinue |
+        Sort-Object Name
+        if ($logs.Count -eq 0) {
+            $diagnostics += "  - $($candidate.Label): no crash-*.log files ($path)"
+            continue
+        }
+
+        return @{
+            Path  = (Resolve-Path $path).Path
+            Label = $candidate.Label
+            Logs  = $logs
+        }
+    }
+
+    return @{
+        Path        = $null
+        Label       = $null
+        Logs        = @()
+        Diagnostics = $diagnostics
+    }
+}
+
+$resolvedTestData = Resolve-TestData -ExplicitDir $TestDataDir -LegacyDir $LegacyTestDataDir -SubmoduleDir $SubmoduleTestDataDir
+if (-not $resolvedTestData.Path) {
+    Write-Host "ERROR: Could not find integration test data." -ForegroundColor Red
+    foreach ($line in $resolvedTestData.Diagnostics) {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    Write-Host "Tip: initialize submodules (git submodule update --init --recursive) or pass -TestDataDir." -ForegroundColor Yellow
     exit 1
+}
+
+$TestDataDir = $resolvedTestData.Path
+$AllTestLogs = $resolvedTestData.Logs
+$TestLogs = if ($MaxLogs -gt 0 -and $AllTestLogs.Count -gt $MaxLogs) {
+    $AllTestLogs | Select-Object -First $MaxLogs
+}
+else {
+    $AllTestLogs
 }
 
 Write-Host "`n=== CLASSIC CLI Integration Tests ===" -ForegroundColor Cyan
 Write-Host "Executable:   $ExePath" -ForegroundColor DarkGray
-Write-Host "Test data:    $TestDataDir ($($TestLogs.Count) logs)" -ForegroundColor DarkGray
+Write-Host "Test data:    $TestDataDir ($($AllTestLogs.Count) logs, source: $($resolvedTestData.Label))" -ForegroundColor DarkGray
+if ($MaxLogs -gt 0 -and $AllTestLogs.Count -gt $MaxLogs) {
+    Write-Host "Log limit:    Using first $($TestLogs.Count) logs (sorted by filename) due to -MaxLogs $MaxLogs" -ForegroundColor DarkGray
+}
 Write-Host "Project root: $ProjectRoot" -ForegroundColor DarkGray
 Write-Host ""
 

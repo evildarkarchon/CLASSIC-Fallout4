@@ -20,6 +20,8 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

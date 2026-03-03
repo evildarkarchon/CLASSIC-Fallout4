@@ -87,6 +87,14 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
 ```
 
+CLI integration tests use crash-log fixtures from `sample_logs/FO4` (git submodule). Initialize submodules before running tests:
+
+```powershell
+git submodule update --init --recursive
+```
+
+Alternatively, run integration tests with an explicit fixture path via `classic-cli/test_cli.ps1 -TestDataDir <path>`.
+
 ---
 
 ## Development quick reference
