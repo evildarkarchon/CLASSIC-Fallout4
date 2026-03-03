@@ -9,6 +9,7 @@ private slots:
     void main_tab_minimum_geometry_constant_matches_default_layout();
     void tab_bar_configuration_is_responsive_for_narrow_windows();
     void custom_folder_handlers_refresh_results_directories();
+    void entering_results_tab_forces_report_reload();
     void crash_scan_status_bar_tracks_scan_statistics();
     void first_run_path_detection_treats_invalid_directories_as_unresolved();
     void manual_path_dialog_validates_before_accepting();
@@ -22,8 +23,7 @@ void MainWindowGeometryTests::main_tab_minimum_geometry_constant_matches_default
              qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
 
     const QString headerText = QString::fromUtf8(file.readAll());
-    const QRegularExpression entryRegex(
-        QStringLiteral(R"(\{\s*(\d+)\s*,\s*(\d+)\s*\},\s*//\s*Main Options)"));
+    const QRegularExpression entryRegex(QStringLiteral(R"(\{\s*(\d+)\s*,\s*(\d+)\s*\},\s*//\s*Main Options)"));
     const QRegularExpressionMatch match = entryRegex.match(headerText);
     QVERIFY2(match.hasMatch(), "Main Options tab minimum geometry entry not found");
 
@@ -62,23 +62,48 @@ void MainWindowGeometryTests::custom_folder_handlers_refresh_results_directories
             return {};
         }
 
-        const qsizetype nextFunction = sourceText.indexOf(
-            QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
         const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
         return sourceText.mid(start, end - start);
     };
 
     const QString browseBody = extractFunctionBody(QStringLiteral("onBrowseCustom()"));
     QVERIFY2(!browseBody.isEmpty(), "Could not locate MainWindow::onBrowseCustom()");
-    QVERIFY2(
-        browseBody.contains(QStringLiteral("initResultsReportDir();")),
-        "onBrowseCustom should refresh Results report directories after updating custom path");
+    QVERIFY2(browseBody.contains(QStringLiteral("initResultsReportDir();")),
+             "onBrowseCustom should refresh Results report directories after updating custom path");
 
     const QString editedBody = extractFunctionBody(QStringLiteral("onCustomFolderEdited()"));
     QVERIFY2(!editedBody.isEmpty(), "Could not locate MainWindow::onCustomFolderEdited()");
-    QVERIFY2(
-        editedBody.contains(QStringLiteral("initResultsReportDir();")),
-        "onCustomFolderEdited should refresh Results report directories after updating custom path");
+    QVERIFY2(editedBody.contains(QStringLiteral("initResultsReportDir();")),
+             "onCustomFolderEdited should refresh Results report directories after updating custom path");
+}
+
+void MainWindowGeometryTests::entering_results_tab_forces_report_reload()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const auto extractFunctionBody = [&](const QString& signature) -> QString {
+        const QString marker = QStringLiteral("void MainWindow::") + signature;
+        const qsizetype start = sourceText.indexOf(marker);
+        if (start < 0) {
+            return {};
+        }
+
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+        return sourceText.mid(start, end - start);
+    };
+
+    const QString body = extractFunctionBody(QStringLiteral("onTabChanged(int index)"));
+    QVERIFY2(!body.isEmpty(), "Could not locate MainWindow::onTabChanged(int index)");
+    QVERIFY2(body.contains(QStringLiteral("index == (TAB_COUNT - 1)")),
+             "onTabChanged should gate forced refresh on the Results tab index");
+    QVERIFY2(body.contains(QStringLiteral("m_resultsController->refreshReports();")),
+             "onTabChanged should force a Results report reload when entering the Results tab");
 }
 
 void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()

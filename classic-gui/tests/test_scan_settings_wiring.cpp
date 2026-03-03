@@ -17,6 +17,7 @@ private slots:
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
+    void controllers_emit_global_scan_started_signal_on_scan_start();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
 };
@@ -50,9 +51,8 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    const QRegularExpression lambdaRegex(
-        QStringLiteral(
-            R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*maxConcurrentScans\s*\))"));
+    const QRegularExpression lambdaRegex(QStringLiteral(
+        R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*maxConcurrentScans\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass scan settings through to ScanWorker::doScan()");
 }
@@ -66,9 +66,8 @@ void ScanSettingsWiringTests::mainwindow_forwards_scan_flags_to_controller()
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    const QRegularExpression callRegex(
-        QStringLiteral(
-            R"(m_scanController->startScan\((?:.|\n)*?m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs\s*,(?:.|\n)*?\))"));
+    const QRegularExpression callRegex(QStringLiteral(
+        R"(m_scanController->startScan\((?:.|\n)*?m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs\s*,(?:.|\n)*?\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should forward loaded scan settings to ScanController::startScan()");
 }
@@ -82,9 +81,8 @@ void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_scan_controlle
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    const QRegularExpression callRegex(
-        QStringLiteral(
-            R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
+    const QRegularExpression callRegex(QStringLiteral(
+        R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should forward game version and all scan settings to ScanController::startScan()");
 }
@@ -157,8 +155,7 @@ void ScanSettingsWiringTests::mainwindow_blocks_game_files_scan_when_paths_unres
             return {};
         }
 
-        const qsizetype nextFunction = sourceText.indexOf(
-            QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
         const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
         return sourceText.mid(start, end - start);
     };
@@ -187,8 +184,7 @@ void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled
             return {};
         }
 
-        const qsizetype nextFunction = sourceText.indexOf(
-            QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
         const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
         return sourceText.mid(start, end - start);
     };
@@ -198,8 +194,9 @@ void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled
 
     const QRegularExpression guardRegex(QStringLiteral(
         R"(if\s*\(m_fcxMode\)\s*\{(?:.|\n)*?loadValidatedGameAndDocsPaths\(&gamePath,\s*&docsPath\)(?:.|\n)*?FCX mode requires valid game and INI folder paths(?:.|\n)*?return;)"));
-    QVERIFY2(guardRegex.match(body).hasMatch(),
-             "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
+    QVERIFY2(
+        guardRegex.match(body).hasMatch(),
+        "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
 }
 
 void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_selected_root()
@@ -217,8 +214,7 @@ void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_sele
             return {};
         }
 
-        const qsizetype nextFunction = sourceText.indexOf(
-            QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
         const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
         return sourceText.mid(start, end - start);
     };
@@ -233,6 +229,26 @@ void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_sele
              "MainWindow should clear stale executable paths outside the selected game root");
     QVERIFY2(body.contains(QStringLiteral("gameRoot + QStringLiteral(\"/Fallout4.exe\")")),
              "MainWindow should fall back to selected game root executable after stale path reset");
+}
+
+void ScanSettingsWiringTests::controllers_emit_global_scan_started_signal_on_scan_start()
+{
+    const QString scanControllerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile scanControllerFile(scanControllerPath);
+    QVERIFY2(scanControllerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(scanControllerPath)));
+    const QString scanControllerSource = QString::fromUtf8(scanControllerFile.readAll());
+    QVERIFY2(scanControllerSource.contains(QStringLiteral("emit m_signalHub->scanStarted();")),
+             "ScanController should emit SignalHub::scanStarted() when a crash scan begins");
+
+    const QString gameFilesControllerPath =
+        QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/gamefilescontroller.cpp");
+    QFile gameFilesControllerFile(gameFilesControllerPath);
+    QVERIFY2(gameFilesControllerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(gameFilesControllerPath)));
+    const QString gameFilesControllerSource = QString::fromUtf8(gameFilesControllerFile.readAll());
+    QVERIFY2(gameFilesControllerSource.contains(QStringLiteral("emit m_signalHub->scanStarted();")),
+             "GameFilesController should emit SignalHub::scanStarted() when a game-files scan begins");
 }
 
 void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()
@@ -266,8 +282,8 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
             return {};
         }
 
-        const qsizetype nextFunction = sourceText.indexOf(
-            QStringLiteral("\nvoid SettingsDialog::"), start + marker.size());
+        const qsizetype nextFunction =
+            sourceText.indexOf(QStringLiteral("\nvoid SettingsDialog::"), start + marker.size());
         const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
         return sourceText.mid(start, end - start);
     };
