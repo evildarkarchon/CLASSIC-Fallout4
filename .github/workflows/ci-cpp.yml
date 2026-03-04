@@ -154,8 +154,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-archives-gui-
 
+      - name: GUI test preflight diagnostics
+        shell: pwsh
+        run: |
+          cmake --version
+          ctest --version
+          Write-Host "QT_QPA_PLATFORM=$env:QT_QPA_PLATFORM"
+
       - name: Build and test GUI
-        run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test
+        run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test -TestTimeoutSec 600
 
       - name: Upload GUI diagnostics
         if: failure()

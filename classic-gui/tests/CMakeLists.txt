@@ -4,6 +4,9 @@ if(NOT Qt6Test_FOUND)
     return()
 endif()
 
+set(CLASSIC_GUI_TEST_TIMEOUT_SECONDS 600 CACHE STRING
+    "Timeout (seconds) for classic-gui CTest tests")
+
 function(add_classic_gui_qt_test target)
     add_executable(${target}
         ${ARGN}
@@ -24,9 +27,12 @@ function(add_classic_gui_qt_test target)
 
     add_test(NAME ${target} COMMAND ${target})
     set(_qt_bin_dir "${Qt6_DIR}/../../../bin")
+    set(_qt_plugins_dir "${Qt6_DIR}/../../../plugins")
+    set(_qt_platforms_dir "${_qt_plugins_dir}/platforms")
     set_tests_properties(${target} PROPERTIES
-        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_PLUGIN_PATH=${_qt_plugins_dir};QT_QPA_PLATFORM_PLUGIN_PATH=${_qt_platforms_dir}"
         ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${_qt_bin_dir}"
+        TIMEOUT ${CLASSIC_GUI_TEST_TIMEOUT_SECONDS}
     )
 endfunction()
 
