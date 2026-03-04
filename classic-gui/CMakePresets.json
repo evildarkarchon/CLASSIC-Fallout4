@@ -1,19 +1,22 @@
 {
-    "version": 3,
+    "version": 6,
     "configurePresets": [
         {
             "name": "default",
-            "displayName": "Default (System Qt + Ninja)",
+            "displayName": "Default (vcpkg Qt6 + Ninja)",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_PREFIX_PATH": "C:/Qt/6.10.2/msvc2022_64"
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "FILEPATH",
+                    "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                }
             }
         },
         {
             "name": "debug",
-            "displayName": "Debug (System Qt + Ninja)",
+            "displayName": "Debug (vcpkg Qt6 + Ninja)",
             "inherits": "default",
             "binaryDir": "${sourceDir}/build-debug",
             "cacheVariables": {
@@ -22,8 +25,8 @@
         },
         {
             "name": "ci",
-            "displayName": "CI (install-qt-action provides Qt)",
-            "generator": "Ninja",
+            "displayName": "CI (vcpkg Qt6 + Ninja)",
+            "inherits": "default",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
@@ -31,7 +34,7 @@
         },
         {
             "name": "ci-debug",
-            "displayName": "CI Debug (install-qt-action provides Qt)",
+            "displayName": "CI Debug (vcpkg Qt6 + Ninja)",
             "inherits": "ci",
             "binaryDir": "${sourceDir}/build-debug",
             "cacheVariables": {

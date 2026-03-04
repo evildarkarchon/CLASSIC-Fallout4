@@ -9,7 +9,6 @@ on:
 env:
   RUST_BACKTRACE: 1
   CARGO_TERM_COLOR: always
-  QT_VERSION: "6.10.2"
 
 jobs:
   cli-tests:
@@ -87,7 +86,7 @@ jobs:
   gui-tests:
     name: GUI Tests
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       RUST_BACKTRACE: full
       QT_QPA_PLATFORM: offscreen
@@ -101,14 +100,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          target: desktop
-          arch: win64_msvc2022_64
-          cache: true
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -146,6 +137,22 @@ jobs:
       - name: Set up vcpkg (resilient)
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
+
+      - name: Cache GUI vcpkg installed
+        uses: actions/cache@v4
+        with:
+          path: classic-gui/vcpkg_installed
+          key: ${{ runner.os }}-vcpkg-installed-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-installed-gui-
+
+      - name: Cache GUI vcpkg archives
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\vcpkg\archives
+          key: ${{ runner.os }}-vcpkg-archives-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-archives-gui-
 
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test

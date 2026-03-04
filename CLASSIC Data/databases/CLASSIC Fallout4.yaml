@@ -55,12 +55,11 @@ Crashgen_Registry:
                         x-cell-ng2.dll,
                         x-cell-ae.dll,
                       ]
-                  - plugin_any: [addictol.dll]
           action:
             kind: issue
             severity: error
-            message: "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell/Addictol"
-            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell/Addictol."
+            message: "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell"
+            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell."
         - id: bakascrapheap_redundant_buffout
           when:
             all:
