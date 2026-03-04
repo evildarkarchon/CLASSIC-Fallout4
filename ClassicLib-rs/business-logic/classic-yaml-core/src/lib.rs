@@ -142,8 +142,8 @@ use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::SystemTime;
 use thiserror::Error;
 use tracing::trace;
@@ -1495,9 +1495,9 @@ mod merge;
 pub use merge::merge_keys;
 
 #[cfg(test)]
+#[serial_test::serial]
 mod tests {
     use super::*;
-    use serial_test::serial;
     use std::fs;
     use std::io::Write;
     use std::sync::Arc;
@@ -1881,7 +1881,6 @@ nested:
     }
 
     #[test]
-    #[serial]
     fn test_cache_stats_empty() {
         clear_global_yaml_cache();
 
@@ -1924,7 +1923,6 @@ nested:
     }
 
     #[test]
-    #[serial]
     fn test_clear_cache() {
         // Clear cache at start to prevent pollution from other serial tests
         clear_global_yaml_cache();
@@ -1953,7 +1951,6 @@ nested:
     }
 
     #[test]
-    #[serial]
     fn test_clear_global_yaml_cache_function() {
         // Clear cache at start to prevent pollution from other serial tests
         clear_global_yaml_cache();
@@ -2873,7 +2870,6 @@ list:
     // ============================================================================
 
     #[test]
-    #[serial]
     fn test_cache_stats_function() {
         clear_global_yaml_cache();
         reset_cache_stats();
@@ -2887,7 +2883,6 @@ list:
     }
 
     #[test]
-    #[serial]
     fn test_cache_stats_after_operations() {
         clear_global_yaml_cache();
         reset_cache_stats();
@@ -2919,7 +2914,6 @@ list:
     }
 
     #[test]
-    #[serial]
     fn test_reset_cache_stats_function() {
         clear_global_yaml_cache();
         reset_cache_stats();
