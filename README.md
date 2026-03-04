@@ -11,7 +11,9 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 - **Business logic:** `ClassicLib-rs/` (Rust workspace)
 - **C++ ↔ Rust bridge:** `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
 
-The previous Python implementation has been moved to **`deprecated/`** and is no longer the primary runtime path.
+The previous Python runtime entrypoints/orchestration have been moved to **`deprecated/`** and are no longer the primary runtime path.
+
+Maintained Python integration bindings remain under **`ClassicLib-rs/python-bindings/`** for supported integration scenarios.
 
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
