@@ -130,7 +130,9 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
             alias_name_inner: str | None = None
             symbol_expr = part
             if " as " in part:
-                symbol_expr, alias_name_inner = [piece.strip() for piece in part.split(" as ", 1)]
+                symbol_expr, alias_name_inner = [
+                    piece.strip() for piece in part.split(" as ", 1)
+                ]
 
             if symbol_expr == "self":
                 source_path = prefix
@@ -146,7 +148,9 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
         alias_name_outer: str | None = None
         symbol_expr = part
         if " as " in part:
-            symbol_expr, alias_name_outer = [piece.strip() for piece in part.split(" as ", 1)]
+            symbol_expr, alias_name_outer = [
+                piece.strip() for piece in part.split(" as ", 1)
+            ]
         export_name = alias_name_outer or symbol_expr.split("::")[-1]
         expanded.append((export_name, symbol_expr))
 
@@ -166,31 +170,37 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
             symbol = match.group(1)
             if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
                 continue
-            entries.append({
-                "symbol": symbol,
-                "kind": "module",
-                "crate": crate_name,
-                "owner_module": owner_module,
-                "source_file": rel_path,
-                "source_decl": match.group(0).strip(),
-                "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-            })
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": "module",
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": rel_path,
+                    "source_decl": match.group(0).strip(),
+                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                }
+            )
 
-        for match in re.finditer(r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content):
+        for match in re.finditer(
+            r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
+        ):
             symbol = match.group(1)
             if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
                 continue
             arity = count_top_level_params(match.group(2))
-            entries.append({
-                "symbol": symbol,
-                "kind": "function",
-                "arity": arity,
-                "crate": crate_name,
-                "owner_module": owner_module,
-                "source_file": rel_path,
-                "source_decl": match.group(0).strip(),
-                "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-            })
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": "function",
+                    "arity": arity,
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": rel_path,
+                    "source_decl": match.group(0).strip(),
+                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                }
+            )
 
         for match in re.finditer(
             r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
@@ -200,31 +210,37 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
             symbol = match.group(2)
             if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
                 continue
-            entries.append({
-                "symbol": symbol,
-                "kind": kind,
-                "crate": crate_name,
-                "owner_module": owner_module,
-                "source_file": rel_path,
-                "source_decl": match.group(0).strip(),
-                "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-            })
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": kind,
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": rel_path,
+                    "source_decl": match.group(0).strip(),
+                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                }
+            )
 
-        for match in re.finditer(r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL):
+        for match in re.finditer(
+            r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
+        ):
             use_body = match.group(1)
             for symbol, source_expr in expand_pub_use_statement(use_body):
                 if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
                     continue
-                entries.append({
-                    "symbol": symbol,
-                    "kind": "reexport",
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": f"pub use {normalize_whitespace(use_body)};",
-                    "source_expr": source_expr,
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-                })
+                entries.append(
+                    {
+                        "symbol": symbol,
+                        "kind": "reexport",
+                        "crate": crate_name,
+                        "owner_module": owner_module,
+                        "source_file": rel_path,
+                        "source_decl": f"pub use {normalize_whitespace(use_body)};",
+                        "source_expr": source_expr,
+                        "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    }
+                )
 
     entries.sort(key=operator.itemgetter("crate", "symbol", "kind"))
     return {
@@ -269,7 +285,9 @@ def parse_node_surface(
     seen: set[tuple[str, str]] = set()
 
     class_re = re.compile(r"^export\s+declare\s+class\s+([A-Za-z0-9_]+)")
-    function_re = re.compile(r"^export\s+declare\s+function\s+([A-Za-z0-9_]+)\((.*)\)\s*:\s*(.+)$")
+    function_re = re.compile(
+        r"^export\s+declare\s+function\s+([A-Za-z0-9_]+)\((.*)\)\s*:\s*(.+)$"
+    )
     const_enum_re = re.compile(r"^export\s+declare\s+const\s+enum\s+([A-Za-z0-9_]+)")
     interface_re = re.compile(r"^export\s+interface\s+([A-Za-z0-9_]+)")
     type_re = re.compile(r"^export\s+type\s+([A-Za-z0-9_]+)\s*=")
@@ -338,7 +356,9 @@ def parse_node_surface(
     }
 
 
-def build_lookup(items: list[dict[str, Any]], key_field: str) -> dict[str, dict[str, Any]]:
+def build_lookup(
+    items: list[dict[str, Any]], key_field: str
+) -> dict[str, dict[str, Any]]:
     """Build a name lookup dictionary from manifest entries."""
     lookup: dict[str, dict[str, Any]] = {}
     for item in items:
@@ -387,7 +407,9 @@ def generate_diff_report(
             reason = f"Node export '{node_export}' not found in index.d.ts."
         elif expected_kind and node_item["kind"] != expected_kind:
             status = "signature_mismatch"
-            reason = f"Expected Node kind '{expected_kind}', found '{node_item['kind']}'."
+            reason = (
+                f"Expected Node kind '{expected_kind}', found '{node_item['kind']}'."
+            )
         elif expected_arity is not None and node_item.get("arity") != expected_arity:
             status = "signature_mismatch"
             reason = f"Expected Node arity {expected_arity}, found {node_item.get('arity', 'n/a')}."
@@ -410,54 +432,62 @@ def generate_diff_report(
         contract_results.append(contract_row)
 
         if status != "matched":
-            gaps.append({
-                "gap_type": f"tier1_{status}",
-                "tier": "tier1",
-                "owner_module": owner_module,
-                "squad": SQUAD_BY_OWNER[owner_module],
-                "rust_symbol": rust_symbol,
-                "node_export": node_export,
-                "reason": reason,
-            })
+            gaps.append(
+                {
+                    "gap_type": f"tier1_{status}",
+                    "tier": "tier1",
+                    "owner_module": owner_module,
+                    "squad": SQUAD_BY_OWNER[owner_module],
+                    "rust_symbol": rust_symbol,
+                    "node_export": node_export,
+                    "reason": reason,
+                }
+            )
 
     for rust_item in rust_symbols:
         symbol = rust_item["symbol"]
         if symbol in tier1_rust_symbols:
             continue
         owner_module = rust_item["owner_module"]
-        gaps.append({
-            "gap_type": "rust_unmapped",
-            "tier": "tier2",
-            "owner_module": owner_module,
-            "squad": SQUAD_BY_OWNER[owner_module],
-            "rust_symbol": symbol,
-            "node_export": None,
-            "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-            "crate": rust_item["crate"],
-            "kind": rust_item["kind"],
-        })
+        gaps.append(
+            {
+                "gap_type": "rust_unmapped",
+                "tier": "tier2",
+                "owner_module": owner_module,
+                "squad": SQUAD_BY_OWNER[owner_module],
+                "rust_symbol": symbol,
+                "node_export": None,
+                "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+                "crate": rust_item["crate"],
+                "kind": rust_item["kind"],
+            }
+        )
 
     for node_item in node_exports:
         export_name = node_item["export"]
         if export_name in tier1_node_exports:
             continue
         owner_module = node_item["owner_module"]
-        gaps.append({
-            "gap_type": "node_unmapped",
-            "tier": "tier2",
-            "owner_module": owner_module,
-            "squad": SQUAD_BY_OWNER[owner_module],
-            "rust_symbol": None,
-            "node_export": export_name,
-            "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-            "kind": node_item["kind"],
-        })
+        gaps.append(
+            {
+                "gap_type": "node_unmapped",
+                "tier": "tier2",
+                "owner_module": owner_module,
+                "squad": SQUAD_BY_OWNER[owner_module],
+                "rust_symbol": None,
+                "node_export": export_name,
+                "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+                "kind": node_item["kind"],
+            }
+        )
 
     status_counts: dict[str, int] = defaultdict(int)
     for row in contract_results:
         status_counts[row["status"]] += 1
 
-    gap_counts_by_owner_tier: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    gap_counts_by_owner_tier: dict[str, dict[str, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
     for gap in gaps:
         gap_counts_by_owner_tier[gap["owner_module"]][gap["tier"]] += 1
 
@@ -477,7 +507,10 @@ def generate_diff_report(
         "summary": summary,
         "contract_results": contract_results,
         "gaps": gaps,
-        "gap_counts_by_owner_tier": {owner: dict(tier_counts) for owner, tier_counts in gap_counts_by_owner_tier.items()},
+        "gap_counts_by_owner_tier": {
+            owner: dict(tier_counts)
+            for owner, tier_counts in gap_counts_by_owner_tier.items()
+        },
     }
 
 
@@ -485,53 +518,73 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
     """Render a concise Markdown parity diff summary."""
     summary = diff_report["summary"]
     lines: list[str] = []
-    lines.extend((
-        "# Rust↔Node Parity Diff Baseline (Phase 1)",
-        "",
-        f"- Generated: `{diff_report['generated_at_utc']}`",
-        f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**",
-        f"- Tier-1 matched: **{summary['tier1_matched']}**",
-        f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
-        f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
-        f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
-        f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
-        "",
-        "## Tier-1 Contract Evaluation",
-        "",
-        "| ID | Owner Module | Rust Symbol | Node Export | Status |",
-        "|---|---|---|---|---|",
-    ))
+    lines.extend(
+        (
+            "# Rust<->Node Parity Diff Baseline (Phase 1)",
+            "",
+            f"- Generated: `{diff_report['generated_at_utc']}`",
+            f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**",
+            f"- Tier-1 matched: **{summary['tier1_matched']}**",
+            f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
+            f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
+            f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+            f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
+            "",
+            "## Tier-1 Contract Evaluation",
+            "",
+            "| ID | Owner Module | Rust Symbol | Node Export | Status |",
+            "|---|---|---|---|---|",
+        )
+    )
     for row in diff_report["contract_results"]:
-        lines.append(f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['node_export']}` | `{row['status']}` |")
+        lines.append(
+            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['node_export']}` | `{row['status']}` |"
+        )
 
-    lines.extend(("", "## Gap Counts By Owner/Tier", "", "| Owner Module | Tier 1 Gaps | Tier 2 Gaps |", "|---|---:|---:|"))
+    lines.extend(
+        (
+            "",
+            "## Gap Counts By Owner/Tier",
+            "",
+            "| Owner Module | Tier 1 Gaps | Tier 2 Gaps |",
+            "|---|---:|---:|",
+        )
+    )
     for owner in ("scanlog", "config", "version_registry", "aux"):
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
-        lines.append(f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |")
+        lines.append(
+            f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |"
+        )
 
-    lines.extend((
-        "",
-        "Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.",
-        "",
-    ))
+    lines.extend(
+        (
+            "",
+            "Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.",
+            "",
+        )
+    )
     return "\n".join(lines)
 
 
 def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
     """Render the engineering handoff map for module squads."""
     gaps = diff_report["gaps"]
-    by_squad_module: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    by_squad_module: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
     for gap in gaps:
         by_squad_module[gap["squad"]][gap["owner_module"]].append(gap)
 
     lines: list[str] = []
-    lines.extend((
-        "# Phase 1 Engineering Handoff Map",
-        "",
-        f"- Generated: `{diff_report['generated_at_utc']}`",
-        f"- Total gaps handed off: **{len(gaps)}**",
-        "",
-    ))
+    lines.extend(
+        (
+            "# Phase 1 Engineering Handoff Map",
+            "",
+            f"- Generated: `{diff_report['generated_at_utc']}`",
+            f"- Total gaps handed off: **{len(gaps)}**",
+            "",
+        )
+    )
 
     for squad in ("Squad A (scanlog/config)", "Squad B (version-registry/aux)"):
         lines.extend((f"## {squad}", ""))
@@ -544,16 +597,18 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
             module_gaps = module_map[owner_module]
             tier1_count = sum(1 for gap in module_gaps if gap["tier"] == "tier1")
             tier2_count = sum(1 for gap in module_gaps if gap["tier"] == "tier2")
-            lines.extend((
-                f"### `{owner_module}`",
-                "",
-                f"- Total gaps: **{len(module_gaps)}**",
-                f"- Tier 1 gaps: **{tier1_count}**",
-                f"- Tier 2 gaps: **{tier2_count}**",
-                "",
-                "| Gap Type | Tier | Rust Symbol | Node Export |",
-                "|---|---|---|---|",
-            ))
+            lines.extend(
+                (
+                    f"### `{owner_module}`",
+                    "",
+                    f"- Total gaps: **{len(module_gaps)}**",
+                    f"- Tier 1 gaps: **{tier1_count}**",
+                    f"- Tier 2 gaps: **{tier2_count}**",
+                    "",
+                    "| Gap Type | Tier | Rust Symbol | Node Export |",
+                    "|---|---|---|---|",
+                )
+            )
             for gap in module_gaps:
                 lines.append(
                     f"| `{gap['gap_type']}` | `{gap['tier']}` | `{gap.get('rust_symbol') or '-'}` | `{gap.get('node_export') or '-'}` |"
@@ -566,12 +621,16 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     """Write JSON with stable formatting."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> int:
     """CLI entrypoint."""
-    parser = argparse.ArgumentParser(description="Generate Rust/Node API surfaces and parity diff artifacts.")
+    parser = argparse.ArgumentParser(
+        description="Generate Rust/Node API surfaces and parity diff artifacts."
+    )
     parser.add_argument(
         "--repo-root",
         default=str(Path(__file__).resolve().parents[2]),
@@ -602,7 +661,9 @@ def main() -> int:
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
     tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
-    tier1_owner_map = {mapping["nodeExport"]: mapping["ownerModule"] for mapping in tier1_mappings}
+    tier1_owner_map = {
+        mapping["nodeExport"]: mapping["ownerModule"] for mapping in tier1_mappings
+    }
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     node_manifest = parse_node_surface(
@@ -616,8 +677,12 @@ def main() -> int:
     write_json(output_dir / "rust_api_surface.json", rust_manifest)
     write_json(output_dir / "node_api_surface.json", node_manifest)
     write_json(output_dir / "parity_diff_report.json", diff_report)
-    (output_dir / "parity_diff_report.md").write_text(render_diff_markdown(diff_report), encoding="utf-8")
-    (output_dir / "handoff_map.md").write_text(render_handoff_markdown(diff_report), encoding="utf-8")
+    (output_dir / "parity_diff_report.md").write_text(
+        render_diff_markdown(diff_report), encoding="utf-8"
+    )
+    (output_dir / "handoff_map.md").write_text(
+        render_handoff_markdown(diff_report), encoding="utf-8"
+    )
 
     print("Phase 1 parity baseline generated:")
     print(f"- {output_dir / 'rust_api_surface.json'}")

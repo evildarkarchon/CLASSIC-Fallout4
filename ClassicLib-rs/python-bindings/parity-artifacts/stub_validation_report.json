@@ -1,0 +1,9 @@
+{
+  "rust_dir": "ClassicLib-rs",
+  "total_crates": 3,
+  "crates_passed": 3,
+  "total_errors": 0,
+  "total_warnings": 0,
+  "errors": [],
+  "warnings": []
+}

@@ -218,11 +218,13 @@ class StubValidator:
         stub_file = crate_path / f"{stub_name}.pyi"
 
         if not lib_rs.exists():
-            self.errors.append(f"❌ {crate_name}: lib.rs not found at {lib_rs}")
+            self.errors.append(f"[ERROR] {crate_name}: lib.rs not found at {lib_rs}")
             return (1, 0)
 
         if not stub_file.exists():
-            self.errors.append(f"❌ {crate_name}: Stub file not found at {stub_file}")
+            self.errors.append(
+                f"[ERROR] {crate_name}: Stub file not found at {stub_file}"
+            )
             return (1, 0)
 
         rust_content = lib_rs.read_text(encoding="utf-8")
@@ -238,7 +240,7 @@ class StubValidator:
         missing_classes = rust_classes - stub_classes
         if missing_classes:
             self.errors.append(
-                f"❌ {crate_name}: Missing classes in stub: {missing_classes}"
+                f"[ERROR] {crate_name}: Missing classes in stub: {missing_classes}"
             )
             errors += len(missing_classes)
 
@@ -249,7 +251,7 @@ class StubValidator:
         missing_functions = rust_functions - stub_functions
         if missing_functions:
             self.errors.append(
-                f"❌ {crate_name}: Missing functions in stub: {missing_functions}"
+                f"[ERROR] {crate_name}: Missing functions in stub: {missing_functions}"
             )
             errors += len(missing_functions)
 
@@ -261,7 +263,7 @@ class StubValidator:
             missing_methods = rust_methods - stub_methods
             if missing_methods:
                 self.warnings.append(
-                    f"⚠️  {crate_name}: Class '{class_name}' missing methods: {missing_methods}"
+                    f"[WARN] {crate_name}: Class '{class_name}' missing methods: {missing_methods}"
                 )
                 warnings += len(missing_methods)
 
@@ -269,7 +271,7 @@ class StubValidator:
         if errors == 0 and warnings == 0:
             self.success_count += 1
             if self.verbose:
-                print(f"✅ {crate_name}: All checks passed")
+                print(f"[OK] {crate_name}: All checks passed")
 
         return (errors, warnings)
 
@@ -306,7 +308,7 @@ class StubValidator:
         bindings_dir = rust_dir / "python-bindings"
 
         if not bindings_dir.exists():
-            print(f"❌ Error: python-bindings directory not found at {bindings_dir}")
+            print(f"[ERROR] python-bindings directory not found at {bindings_dir}")
             report = {
                 "rust_dir": str(rust_dir),
                 "total_crates": 0,
@@ -340,7 +342,7 @@ class StubValidator:
             ]
 
         if not crates:
-            print(f"❌ Error: No Python binding crates found in {bindings_dir}")
+            print(f"[ERROR] No Python binding crates found in {bindings_dir}")
             report = {
                 "rust_dir": str(rust_dir),
                 "total_crates": 0,
@@ -352,7 +354,7 @@ class StubValidator:
             }
             return (False, report)
 
-        print(f"🔍 Validating {len(crates)} Python binding crates...\n")
+        print(f"[INFO] Validating {len(crates)} Python binding crates...\n")
 
         total_errors = 0
         total_warnings = 0
@@ -365,21 +367,21 @@ class StubValidator:
 
         # Print summary
         print("\n" + "=" * 70)
-        print("📊 VALIDATION SUMMARY")
+        print("VALIDATION SUMMARY")
         print("=" * 70)
-        print(f"✅ Crates passed: {self.success_count}/{self.total_count}")
-        print(f"❌ Total errors: {total_errors}")
-        print(f"⚠️  Total warnings: {total_warnings}")
+        print(f"[OK] Crates passed: {self.success_count}/{self.total_count}")
+        print(f"[ERROR] Total errors: {total_errors}")
+        print(f"[WARN] Total warnings: {total_warnings}")
 
         # Print all errors
         if self.errors:
-            print("\n❌ ERRORS:")
+            print("\n[ERROR] ERRORS:")
             for error in self.errors:
                 print(f"  {error}")
 
         # Print all warnings
         if self.warnings:
-            print("\n⚠️  WARNINGS:")
+            print("\n[WARN] WARNINGS:")
             for warning in self.warnings:
                 print(f"  {warning}")
 
@@ -388,7 +390,7 @@ class StubValidator:
         report = self.build_report(total_errors, total_warnings, rust_dir)
         success = total_errors == 0 and (not fail_on_warnings or total_warnings == 0)
         if fail_on_warnings and total_warnings > 0 and total_errors == 0:
-            print("\n❌ Failing due to --fail-on-warnings.")
+            print("\n[ERROR] Failing due to --fail-on-warnings.")
         return (success, report)
 
 
