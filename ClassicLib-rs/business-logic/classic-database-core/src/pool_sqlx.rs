@@ -15,7 +15,7 @@ use futures::future::join_all;
 use log::{debug, error, info, warn};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions, SqliteSynchronous};
 use sqlx::{Row, SqlitePool};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -64,10 +64,12 @@ pub const MIN_CACHE_CLEANUP_INTERVAL_SECS: u64 = 1;
 /// Maximum allowed proactive cleanup interval in seconds.
 pub const MAX_CACHE_CLEANUP_INTERVAL_SECS: u64 = 300;
 
-/// Type alias for batch query results: Vec of (formid, plugin, entry) tuples.
-type BatchQueryResult = Result<Vec<(String, String, String)>, DatabaseError>;
 const STABLE_BATCH_BUCKETS: [usize; 8] = [8, 16, 32, 64, 128, 256, 512, 1024];
 const MAX_STABLE_BATCH_BUCKET: usize = 1024;
+const BULK_EVICTION_MIN_CAPACITY: usize = 4_096;
+const BULK_EVICTION_DIVISOR: usize = 16;
+const BULK_EVICTION_MIN_BATCH: usize = 256;
+const BULK_EVICTION_MAX_BATCH: usize = 4_096;
 
 /// Represents various errors that can occur when working with a database.
 #[derive(Debug, Error)]
@@ -258,8 +260,8 @@ pub struct DatabasePool {
     pools: Arc<DashMap<PathBuf, SqlitePool>>,
     /// Query result cache with TTL-based expiration
     query_cache: Arc<DashMap<CacheKey, CacheEntry>>,
-    /// Reusable query templates keyed by (table, stable bucket size)
-    query_template_cache: Arc<DashMap<(String, usize), String>>,
+    /// Reusable query templates keyed by (table, stable bucket size, collation mode)
+    query_template_cache: Arc<DashMap<(String, usize, bool), String>>,
     /// Maximum number of entries allowed in query cache
     cache_capacity: Arc<AtomicUsize>,
     /// Number of lookup operations before cleanup is considered
@@ -476,10 +478,44 @@ impl DatabasePool {
         Ok(())
     }
 
+    fn preferred_eviction_target(capacity: usize) -> usize {
+        if capacity < BULK_EVICTION_MIN_CAPACITY {
+            return capacity;
+        }
+
+        let bulk_window = (capacity / BULK_EVICTION_DIVISOR)
+            .clamp(BULK_EVICTION_MIN_BATCH, BULK_EVICTION_MAX_BATCH);
+        capacity.saturating_sub(bulk_window)
+    }
+
     fn insert_with_eviction(&self, cache_key: CacheKey, value: String, cache_ttl: Duration) {
         self.query_cache
             .insert(cache_key, CacheEntry::new(value, cache_ttl));
-        self.evict_to_capacity();
+
+        let capacity = self.cache_capacity.load(Ordering::Relaxed);
+        if self.query_cache.len() <= capacity {
+            return;
+        }
+
+        self.evict_to_target(Self::preferred_eviction_target(capacity));
+    }
+
+    fn insert_many_with_eviction(&self, entries: Vec<(CacheKey, String)>, cache_ttl: Duration) {
+        if entries.is_empty() {
+            return;
+        }
+
+        for (cache_key, value) in entries {
+            self.query_cache
+                .insert(cache_key, CacheEntry::new(value, cache_ttl));
+        }
+
+        let capacity = self.cache_capacity.load(Ordering::Relaxed);
+        if self.query_cache.len() <= capacity {
+            return;
+        }
+
+        self.evict_to_target(Self::preferred_eviction_target(capacity));
     }
 
     fn record_elapsed_ns(total: &AtomicU64, max: &AtomicU64, elapsed: Duration) {
@@ -489,66 +525,61 @@ impl DatabasePool {
     }
 
     fn evict_to_capacity(&self) {
+        let capacity = self.cache_capacity.load(Ordering::Relaxed);
+        self.evict_to_target(capacity);
+    }
+
+    fn evict_to_target(&self, target_size: usize) {
+        if self.query_cache.len() <= target_size {
+            return;
+        }
+
         let maintenance_start = Instant::now();
-        let mut performed_work = false;
         let mut total_evicted = 0_u64;
 
-        loop {
-            let capacity = self.cache_capacity.load(Ordering::Relaxed);
-            if self.query_cache.len() <= capacity {
+        // Policy step 1: purge expired entries first in one pass.
+        let before_expired_clear = self.query_cache.len();
+        self.query_cache.retain(|_, value| !value.is_expired());
+        let after_expired_clear = self.query_cache.len();
+        total_evicted = total_evicted
+            .saturating_add(before_expired_clear.saturating_sub(after_expired_clear) as u64);
+
+        // Policy step 2: if still over target, evict oldest entries in bulk.
+        while self.query_cache.len() > target_size {
+            let overflow_count = self.query_cache.len().saturating_sub(target_size);
+            if overflow_count == 0 {
                 break;
             }
-            performed_work = true;
 
-            // Policy step 1: always purge expired entries first.
-            let expired_keys: Vec<CacheKey> = self
+            // Tie-break by cache key for deterministic behavior.
+            let mut eviction_candidates: Vec<(Instant, CacheKey)> = self
                 .query_cache
                 .iter()
-                .filter(|entry| entry.value().is_expired())
-                .map(|entry| entry.key().clone())
+                .map(|entry| (entry.value().created_at, entry.key().clone()))
                 .collect();
 
-            if !expired_keys.is_empty() {
-                let mut expired_removed = 0_u64;
-                for key in expired_keys {
-                    if self.query_cache.remove(&key).is_some() {
-                        expired_removed += 1;
-                    }
-                    if self.query_cache.len() <= capacity {
-                        break;
-                    }
-                }
-                total_evicted += expired_removed;
-                continue;
+            if eviction_candidates.is_empty() {
+                break;
             }
 
-            // Policy step 2: if still over cap, evict the oldest entry.
-            // Tie-break by cache key for deterministic behavior.
-            let mut oldest_candidate: Option<(Instant, CacheKey)> = None;
-            for entry in self.query_cache.iter() {
-                let candidate = (entry.value().created_at, entry.key().clone());
-                match &oldest_candidate {
-                    None => oldest_candidate = Some(candidate),
-                    Some((oldest_at, oldest_key)) => {
-                        if candidate.0 < *oldest_at
-                            || (candidate.0 == *oldest_at
-                                && candidate.1.tie_break_key() < oldest_key.tie_break_key())
-                        {
-                            oldest_candidate = Some(candidate);
-                        }
-                    }
+            eviction_candidates.sort_unstable_by(|(left_at, left_key), (right_at, right_key)| {
+                left_at
+                    .cmp(right_at)
+                    .then_with(|| left_key.tie_break_key().cmp(&right_key.tie_break_key()))
+            });
+
+            let mut removed_in_pass = 0_u64;
+            for (_, key) in eviction_candidates.into_iter().take(overflow_count) {
+                if self.query_cache.remove(&key).is_some() {
+                    removed_in_pass += 1;
                 }
             }
 
-            let Some((_, oldest_key)) = oldest_candidate else {
-                break;
-            };
-
-            if self.query_cache.remove(&oldest_key).is_some() {
-                total_evicted += 1;
-            } else {
+            if removed_in_pass == 0 {
                 break;
             }
+
+            total_evicted = total_evicted.saturating_add(removed_in_pass);
         }
 
         if total_evicted > 0 {
@@ -556,13 +587,11 @@ impl DatabasePool {
                 .fetch_add(total_evicted, Ordering::Relaxed);
         }
 
-        if performed_work {
-            Self::record_elapsed_ns(
-                &self.stat_eviction_elapsed_total_ns,
-                &self.stat_eviction_elapsed_max_ns,
-                maintenance_start.elapsed(),
-            );
-        }
+        Self::record_elapsed_ns(
+            &self.stat_eviction_elapsed_total_ns,
+            &self.stat_eviction_elapsed_max_ns,
+            maintenance_start.elapsed(),
+        );
     }
 
     fn maybe_run_proactive_cleanup(&self, operation_count: u64) {
@@ -723,40 +752,51 @@ impl DatabasePool {
         self.stat_cache_misses.fetch_add(1, Ordering::Relaxed);
         self.stat_total_queries.fetch_add(1, Ordering::Relaxed);
 
-        // Query databases using sqlx (TRUE ASYNC - no spawn_blocking!)
-        let query_str = format!(
+        // Query databases using sqlx (TRUE ASYNC - no spawn_blocking!).
+        // Stage 1: exact-case plugin match for full composite-index utilization.
+        // Stage 2: case-insensitive fallback for compatibility with mismatched plugin casing.
+        let exact_query = format!(
+            "SELECT entry FROM {} WHERE formid=? AND plugin=?",
+            game_table
+        );
+        let nocase_query = format!(
             "SELECT entry FROM {} WHERE formid=? AND plugin=? COLLATE nocase",
             game_table
         );
 
-        for entry in self.pools.iter() {
-            let db_path = entry.key().clone();
-            let pool = entry.value();
+        for (query_label, query) in [("exact", &exact_query), ("nocase", &nocase_query)] {
+            for entry in self.pools.iter() {
+                let db_path = entry.key().clone();
+                let pool = entry.value();
 
-            // TRUE ASYNC QUERY - no blocking!
-            match sqlx::query(&query_str)
-                .bind(formid)
-                .bind(plugin)
-                .fetch_optional(pool)
-                .await
-            {
-                Ok(Some(row)) => {
-                    let value: String = row.try_get(0)?;
-                    let cache_ttl = *self.cache_ttl.read().unwrap_or_else(|poisoned| {
-                        warn!("cache_ttl lock was poisoned - recovering");
-                        poisoned.into_inner()
-                    });
-                    self.insert_with_eviction(cache_key.clone(), value.clone(), cache_ttl);
-                    debug!("Found FormID {} in database {:?}", formid, db_path);
-                    return Ok(Some(value));
-                }
-                Ok(None) => {
-                    // Not found in this database, try next one
-                    continue;
-                }
-                Err(e) => {
-                    error!("Query error in {:?}: {}", db_path, e);
-                    continue;
+                // TRUE ASYNC QUERY - no blocking!
+                match sqlx::query(query)
+                    .bind(formid)
+                    .bind(plugin)
+                    .fetch_optional(pool)
+                    .await
+                {
+                    Ok(Some(row)) => {
+                        let value: String = row.try_get(0)?;
+                        let cache_ttl = *self.cache_ttl.read().unwrap_or_else(|poisoned| {
+                            warn!("cache_ttl lock was poisoned - recovering");
+                            poisoned.into_inner()
+                        });
+                        self.insert_with_eviction(cache_key.clone(), value.clone(), cache_ttl);
+                        debug!(
+                            "Found FormID {} in database {:?} via {} query",
+                            formid, db_path, query_label
+                        );
+                        return Ok(Some(value));
+                    }
+                    Ok(None) => {
+                        // Not found in this database, try next one
+                        continue;
+                    }
+                    Err(e) => {
+                        error!("Query error in {:?} ({}) : {}", db_path, query_label, e);
+                        continue;
+                    }
                 }
             }
         }
@@ -776,7 +816,7 @@ impl DatabasePool {
     ///
     /// # Returns
     /// A SQL query string using UNION ALL pattern
-    fn build_union_all_query(game_table: &str, batch_len: usize) -> String {
+    fn build_union_all_query(game_table: &str, batch_len: usize, case_insensitive: bool) -> String {
         if batch_len == 0 {
             return String::new();
         }
@@ -795,7 +835,10 @@ impl DatabasePool {
             }
             query.push_str("SELECT formid, plugin, entry FROM ");
             query.push_str(game_table);
-            query.push_str(" WHERE formid=? AND plugin=? COLLATE nocase");
+            query.push_str(" WHERE formid=? AND plugin=?");
+            if case_insensitive {
+                query.push_str(" COLLATE nocase");
+            }
         }
 
         query
@@ -838,14 +881,19 @@ impl DatabasePool {
         padded
     }
 
-    fn get_or_build_stable_query_template(&self, game_table: &str, bucket_len: usize) -> String {
-        let template_key = (game_table.to_string(), bucket_len);
+    fn get_or_build_stable_query_template(
+        &self,
+        game_table: &str,
+        bucket_len: usize,
+        case_insensitive: bool,
+    ) -> String {
+        let template_key = (game_table.to_string(), bucket_len, case_insensitive);
 
         if let Some(existing) = self.query_template_cache.get(&template_key) {
             return existing.clone();
         }
 
-        let template = Self::build_union_all_query(game_table, bucket_len);
+        let template = Self::build_union_all_query(game_table, bucket_len, case_insensitive);
         self.query_template_cache
             .insert(template_key, template.clone());
         template
@@ -872,6 +920,103 @@ impl DatabasePool {
         };
 
         bucket_counter.fetch_add(1, Ordering::Relaxed);
+    }
+
+    async fn execute_parallel_batch_query(
+        &self,
+        query: &str,
+        bindings: &[(String, String)],
+    ) -> Vec<(String, String, String)> {
+        // Collect all pools for parallel querying
+        let pool_entries: Vec<_> = self.pools.iter().collect();
+
+        // Create futures for parallel database queries
+        let query_futures: Vec<_> = pool_entries
+            .iter()
+            .map(|entry| {
+                let db_path = entry.key().clone();
+                let pool = entry.value().clone();
+                let query_clone = query.to_string();
+                let bindings_clone = bindings.to_vec();
+
+                async move {
+                    // Build query with bindings
+                    let mut sqlx_query = sqlx::query(&query_clone);
+                    for (formid, plugin) in &bindings_clone {
+                        sqlx_query = sqlx_query.bind(formid).bind(plugin);
+                    }
+
+                    // Execute async query
+                    match sqlx_query.fetch_all(&pool).await {
+                        Ok(rows) => {
+                            let mut batch_results = Vec::with_capacity(rows.len());
+                            for row in rows {
+                                if let (Ok(formid), Ok(plugin), Ok(entry_val)) = (
+                                    row.try_get::<String, _>(0),
+                                    row.try_get::<String, _>(1),
+                                    row.try_get::<String, _>(2),
+                                ) {
+                                    batch_results.push((formid, plugin, entry_val));
+                                }
+                            }
+                            batch_results
+                        }
+                        Err(e) => {
+                            error!("Batch query error in {:?}: {}", db_path, e);
+                            Vec::new() // Return empty on error, don't fail entire batch
+                        }
+                    }
+                }
+            })
+            .collect();
+
+        let mut merged_results = Vec::new();
+        for mut per_db_results in join_all(query_futures).await {
+            merged_results.append(&mut per_db_results);
+        }
+
+        merged_results
+    }
+
+    fn merge_batch_rows(
+        game_table: &str,
+        rows: Vec<(String, String, String)>,
+        original_key_lookup: &HashMap<(String, String), Vec<(String, String)>>,
+        resolved_lookup_keys: &mut HashSet<(String, String)>,
+        cache_inserts: &mut Vec<(CacheKey, String)>,
+        results: &mut HashMap<String, String>,
+    ) {
+        for (db_formid, db_plugin, entry) in rows {
+            // Look up all original caller's keys using case-insensitive match
+            let lookup_key = (db_formid.clone(), CacheKey::normalize_plugin(&db_plugin));
+            let original_pairs = match original_key_lookup.get(&lookup_key) {
+                Some(pairs) => pairs,
+                None => {
+                    // Should not happen, but log and skip if it does
+                    warn!(
+                        "No original key found for database result: {}:{}",
+                        db_formid, db_plugin
+                    );
+                    continue;
+                }
+            };
+
+            resolved_lookup_keys.insert(lookup_key.clone());
+            cache_inserts.push((
+                CacheKey::new(game_table, &db_formid, &db_plugin),
+                entry.clone(),
+            ));
+
+            // Insert result for ALL original keys that normalized to this lookup key
+            for original_pair in original_pairs {
+                let result_key = format!("{}:{}", original_pair.0, original_pair.1);
+
+                // Only insert if not already found (first match wins)
+                if let std::collections::hash_map::Entry::Vacant(e) = results.entry(result_key) {
+                    e.insert(entry.clone());
+                }
+            }
+        }
     }
 
     /// Batch lookup for FormID entries with optimized parallel queries.
@@ -976,101 +1121,75 @@ impl DatabasePool {
             let padded_batch = Self::pad_batch_to_bucket(batch, bucket_len);
             self.record_stable_shape_selection(bucket_len, bucket_len.saturating_sub(batch.len()));
 
-            // Build/reuse optimized UNION ALL query for a stable bucket shape.
-            let query = self.get_or_build_stable_query_template(&game_table, bucket_len);
-
-            // Collect all pools for parallel querying
-            let pool_entries: Vec<_> = self.pools.iter().collect();
-
-            // Create futures for parallel database queries
-            let query_futures: Vec<_> = pool_entries
+            // Stage 1: exact-case query to fully leverage (formid, plugin) index shape.
+            let exact_query =
+                self.get_or_build_stable_query_template(&game_table, bucket_len, false);
+            let exact_bindings: Vec<(String, String)> = padded_batch
                 .iter()
-                .map(|entry| {
-                    let db_path = entry.key().clone();
-                    let pool = entry.value().clone();
-                    let query_clone = query.clone();
-                    let batch_clone: Vec<(String, String)> = padded_batch
+                .map(|(formid, plugin, _)| (formid.clone(), plugin.clone()))
+                .collect();
+            let exact_rows = self
+                .execute_parallel_batch_query(&exact_query, &exact_bindings)
+                .await;
+
+            let mut resolved_lookup_keys: HashSet<(String, String)> = HashSet::new();
+            let mut cache_inserts: Vec<(CacheKey, String)> = Vec::new();
+            Self::merge_batch_rows(
+                &game_table,
+                exact_rows,
+                &original_key_lookup,
+                &mut resolved_lookup_keys,
+                &mut cache_inserts,
+                &mut results,
+            );
+
+            // Stage 2: case-insensitive fallback only for unresolved keys.
+            // This preserves behavior while avoiding COLLATE NOCASE for the fast-path.
+            if resolved_lookup_keys.len() < original_key_lookup.len() {
+                let unresolved_pairs: Vec<(String, String, String)> = original_key_lookup
+                    .iter()
+                    .filter(|(lookup_key, _)| !resolved_lookup_keys.contains(*lookup_key))
+                    .filter_map(|((formid, normalized_plugin), originals)| {
+                        originals.first().map(|(_, plugin)| {
+                            (formid.clone(), plugin.clone(), normalized_plugin.clone())
+                        })
+                    })
+                    .collect();
+
+                if !unresolved_pairs.is_empty() {
+                    let fallback_bucket_len =
+                        Self::select_stable_bucket_len(unresolved_pairs.len());
+                    let padded_fallback =
+                        Self::pad_batch_to_bucket(&unresolved_pairs, fallback_bucket_len);
+                    self.record_stable_shape_selection(
+                        fallback_bucket_len,
+                        fallback_bucket_len.saturating_sub(unresolved_pairs.len()),
+                    );
+
+                    let fallback_query = self.get_or_build_stable_query_template(
+                        &game_table,
+                        fallback_bucket_len,
+                        true,
+                    );
+                    let fallback_bindings: Vec<(String, String)> = padded_fallback
                         .iter()
                         .map(|(formid, plugin, _)| (formid.clone(), plugin.clone()))
                         .collect();
-
-                    async move {
-                        // Build query with bindings
-                        let mut sqlx_query = sqlx::query(&query_clone);
-                        for (formid, plugin) in &batch_clone {
-                            sqlx_query = sqlx_query.bind(formid).bind(plugin);
-                        }
-
-                        // Execute async query
-                        match sqlx_query.fetch_all(&pool).await {
-                            Ok(rows) => {
-                                let mut batch_results = Vec::with_capacity(rows.len());
-                                for row in rows {
-                                    if let (Ok(formid), Ok(plugin), Ok(entry_val)) = (
-                                        row.try_get::<String, _>(0),
-                                        row.try_get::<String, _>(1),
-                                        row.try_get::<String, _>(2),
-                                    ) {
-                                        batch_results.push((formid, plugin, entry_val));
-                                    }
-                                }
-                                Ok(batch_results)
-                            }
-                            Err(e) => {
-                                error!("Batch query error in {:?}: {}", db_path, e);
-                                Ok(Vec::new()) // Return empty on error, don't fail entire batch
-                            }
-                        }
-                    }
-                })
-                .collect();
-
-            // Execute all database queries in parallel
-            let all_results: Vec<BatchQueryResult> = join_all(query_futures).await;
-
-            // Merge results from all databases
-            for db_result in all_results {
-                match db_result {
-                    Ok(entries) => {
-                        for (db_formid, db_plugin, entry) in entries {
-                            // Look up all original caller's keys using case-insensitive match
-                            let lookup_key =
-                                (db_formid.clone(), CacheKey::normalize_plugin(&db_plugin));
-                            let original_pairs = match original_key_lookup.get(&lookup_key) {
-                                Some(pairs) => pairs,
-                                None => {
-                                    // Should not happen, but log and skip if it does
-                                    warn!(
-                                        "No original key found for database result: {}:{}",
-                                        db_formid, db_plugin
-                                    );
-                                    continue;
-                                }
-                            };
-
-                            let cache_key = CacheKey::new(&game_table, &db_formid, &db_plugin);
-
-                            // Cache the result once using the normalized key
-                            self.insert_with_eviction(cache_key, entry.clone(), cache_ttl);
-
-                            // Insert result for ALL original keys that normalized to this lookup key
-                            for original_pair in original_pairs {
-                                let result_key = format!("{}:{}", original_pair.0, original_pair.1);
-
-                                // Only insert if not already found (first match wins)
-                                if let std::collections::hash_map::Entry::Vacant(e) =
-                                    results.entry(result_key)
-                                {
-                                    e.insert(entry.clone());
-                                }
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        warn!("Database query batch failed: {}", e);
-                    }
+                    let fallback_rows = self
+                        .execute_parallel_batch_query(&fallback_query, &fallback_bindings)
+                        .await;
+                    Self::merge_batch_rows(
+                        &game_table,
+                        fallback_rows,
+                        &original_key_lookup,
+                        &mut resolved_lookup_keys,
+                        &mut cache_inserts,
+                        &mut results,
+                    );
                 }
             }
+
+            self.insert_many_with_eviction(cache_inserts, cache_ttl);
         }
 
         info!(
@@ -1129,6 +1248,14 @@ impl DatabasePool {
         if let Ok(mut t) = self.cache_ttl.write() {
             *t = ttl;
         }
+    }
+
+    /// Get the current cache time-to-live duration.
+    pub fn get_cache_ttl(&self) -> Duration {
+        *self.cache_ttl.read().unwrap_or_else(|poisoned| {
+            warn!("cache_ttl lock was poisoned - recovering");
+            poisoned.into_inner()
+        })
     }
 
     /// Get the maximum number of cache entries allowed.
@@ -2046,6 +2173,11 @@ mod tests {
 
         // Change TTL to very short
         pool.set_cache_ttl(Duration::from_millis(10));
+        assert_eq!(
+            pool.get_cache_ttl(),
+            Duration::from_millis(10),
+            "get_cache_ttl should reflect updated value"
+        );
 
         // Lookup to populate cache
         let _ = pool.get_entry("TTLTEST1", "Ttl.esp", None).await;
@@ -2475,25 +2607,33 @@ mod tests {
     #[test]
     fn test_build_union_all_query() {
         // Empty batch
-        let query_empty = DatabasePool::build_union_all_query("TestTable", 0);
+        let query_empty = DatabasePool::build_union_all_query("TestTable", 0, false);
         assert!(
             query_empty.is_empty(),
             "Empty batch should produce empty query"
         );
 
         // Single item
-        let query_single = DatabasePool::build_union_all_query("Fallout4", 1);
+        let query_single = DatabasePool::build_union_all_query("Fallout4", 1, false);
         assert!(query_single.contains("SELECT formid, plugin, entry FROM Fallout4"));
         assert!(
             !query_single.contains("UNION ALL"),
             "Single item should not have UNION ALL"
         );
+        assert!(
+            !query_single.contains("COLLATE nocase"),
+            "Exact-case template should not include nocase collation"
+        );
 
         // Multiple items
-        let query_multi = DatabasePool::build_union_all_query("Skyrim", 3);
+        let query_multi = DatabasePool::build_union_all_query("Skyrim", 3, true);
         let union_count = query_multi.matches("UNION ALL").count();
         assert_eq!(union_count, 2, "3 items should have 2 UNION ALL clauses");
         assert!(query_multi.contains("SELECT formid, plugin, entry FROM Skyrim"));
+        assert!(
+            query_multi.contains("COLLATE nocase"),
+            "Case-insensitive template should include nocase collation"
+        );
     }
 
     #[test]
@@ -2560,19 +2700,24 @@ mod tests {
     #[test]
     fn test_query_template_reuse_by_bucket_and_table() {
         let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestTable".to_string());
-        let first = pool.get_or_build_stable_query_template("Fallout4", 16);
-        let second = pool.get_or_build_stable_query_template("Fallout4", 16);
-        let third = pool.get_or_build_stable_query_template("Skyrim", 16);
+        let first = pool.get_or_build_stable_query_template("Fallout4", 16, false);
+        let second = pool.get_or_build_stable_query_template("Fallout4", 16, false);
+        let third = pool.get_or_build_stable_query_template("Skyrim", 16, false);
+        let fourth = pool.get_or_build_stable_query_template("Fallout4", 16, true);
 
         assert_eq!(first, second, "same table + bucket should reuse query text");
         assert_ne!(
             first, third,
             "different table should produce different query text"
         );
+        assert_ne!(
+            first, fourth,
+            "different collation mode should produce different query text"
+        );
         assert_eq!(
             pool.query_template_cache.len(),
-            2,
-            "cache should contain one template per (table, bucket)"
+            3,
+            "cache should contain one template per (table, bucket, collation mode)"
         );
     }
 
@@ -2699,6 +2844,12 @@ mod tests {
             assert!(MIN_CACHE_CLEANUP_INTERVAL_SECS < DEFAULT_CACHE_CLEANUP_INTERVAL_SECS);
         const _: () =
             assert!(DEFAULT_CACHE_CLEANUP_INTERVAL_SECS < MAX_CACHE_CLEANUP_INTERVAL_SECS);
+    }
+
+    #[test]
+    fn test_preferred_eviction_target_for_large_capacity() {
+        assert_eq!(DatabasePool::preferred_eviction_target(2048), 2048);
+        assert_eq!(DatabasePool::preferred_eviction_target(30_000), 28_125);
     }
 
     // =========================================================================

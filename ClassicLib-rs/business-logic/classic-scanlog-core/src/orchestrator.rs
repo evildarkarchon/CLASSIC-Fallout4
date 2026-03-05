@@ -570,11 +570,38 @@ pub struct OrchestratorCore {
 impl OrchestratorCore {
     /// Build a settings validator from `AnalysisConfig`.
     fn settings_validator_from_config(config: &AnalysisConfig) -> SettingsValidator {
-        let entry = config
-            .crashgen_registry
-            .lookup(&config.crashgen_name)
-            .clone();
-        SettingsValidator::new(config.crashgen_name.clone(), entry)
+        Self::settings_validator_for_crashgen(config, &config.crashgen_name)
+    }
+
+    /// Build a settings validator for a specific crashgen name.
+    fn settings_validator_for_crashgen(
+        config: &AnalysisConfig,
+        crashgen_name: &str,
+    ) -> SettingsValidator {
+        let entry = config.crashgen_registry.lookup(crashgen_name).clone();
+        SettingsValidator::new(crashgen_name.to_string(), entry)
+    }
+
+    /// Resolve the effective crashgen name for settings validation for a single log.
+    fn resolve_effective_crashgen_name(
+        &self,
+        crashgen_version_str: &str,
+        xse_modules: &HashSet<String>,
+    ) -> String {
+        if crashgen_version_str
+            .to_ascii_lowercase()
+            .contains("addictol")
+        {
+            return "Addictol".to_string();
+        }
+
+        let has_addictol = xse_modules.contains("addictol.dll");
+        let has_buffout = xse_modules.contains("buffout4.dll");
+        if has_addictol && !has_buffout {
+            return "Addictol".to_string();
+        }
+
+        self.config.crashgen_name.clone()
     }
 
     /// Creates a new crash log analysis orchestrator with the specified configuration.
@@ -966,6 +993,16 @@ impl OrchestratorCore {
             Some(status)
         };
 
+        let crashgen_version = {
+            let parsed = crashgen_version_gen(&crashgen_version_str);
+            if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
+                None
+            } else {
+                Some(parsed.to_tuple())
+            }
+        };
+        let config_layout = self.derive_scanlog_config_layout(&detected_game_version_str);
+
         // Generate error section
         composer.add(report_gen.generate_error_section_with_status(
             &main_error,
@@ -1117,12 +1154,24 @@ impl OrchestratorCore {
         };
 
         // Add settings validation section
+        let settings_validator = if !crashgen_settings.is_empty() {
+            let effective_crashgen_name = self
+                .resolve_effective_crashgen_name(&crashgen_version_str, &xse_modules_for_settings);
+            if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
+                self.settings_validator.clone()
+            } else {
+                Self::settings_validator_for_crashgen(&self.config, &effective_crashgen_name)
+            }
+        } else {
+            self.settings_validator.clone()
+        };
+
         if !crashgen_settings.is_empty()
-            && let Ok(settings_fragments) = self.settings_validator.scan_all_settings(
+            && let Ok(settings_fragments) = settings_validator.scan_all_settings(
                 &crashgen_settings,
                 &xse_modules_for_settings,
-                None,
-                classic_crashgen_settings_core::ConfigLayout::Unknown,
+                crashgen_version,
+                config_layout,
             )
             && !settings_fragments.is_empty()
         {
@@ -1685,6 +1734,20 @@ impl OrchestratorCore {
         Some(RegistryGameVersion::new(major, minor, patch, 0))
     }
 
+    fn derive_scanlog_config_layout(
+        &self,
+        detected_game_version_str: &str,
+    ) -> classic_crashgen_settings_core::ConfigLayout {
+        if self
+            .parse_detected_game_version(detected_game_version_str)
+            .is_some()
+        {
+            classic_crashgen_settings_core::ConfigLayout::Og
+        } else {
+            classic_crashgen_settings_core::ConfigLayout::Unknown
+        }
+    }
+
     /// Checks if the game is running FOLON (Fallout: London) based on plugins.
     ///
     /// # Arguments
@@ -2122,6 +2185,169 @@ mod tests {
         );
 
         assert_eq!(status, crate::version::CrashgenVersionStatus::Valid);
+    }
+
+    #[test]
+    fn resolve_effective_crashgen_name_prefers_addictol_header() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let xse_modules = HashSet::new();
+        let resolved = orchestrator
+            .resolve_effective_crashgen_name("Addictol v1.0.0 Feb 16 2026 08:02:06", &xse_modules);
+
+        assert_eq!(resolved, "Addictol");
+    }
+
+    #[test]
+    fn resolve_effective_crashgen_name_uses_module_fallback_when_header_missing() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("addictol.dll".to_string());
+        let resolved = orchestrator.resolve_effective_crashgen_name("", &xse_modules);
+
+        assert_eq!(resolved, "Addictol");
+    }
+
+    #[test]
+    fn resolve_effective_crashgen_name_falls_back_for_ambiguous_modules() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("addictol.dll".to_string());
+        xse_modules.insert("buffout4.dll".to_string());
+        let resolved = orchestrator.resolve_effective_crashgen_name("", &xse_modules);
+
+        assert_eq!(resolved, "Buffout 4");
+    }
+
+    #[test]
+    fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
+        use classic_crashgen_settings_core::{
+            CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
+            RuleSeverity,
+        };
+
+        let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> =
+            HashMap::new();
+        raw_registry.insert(
+            "Buffout 4".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Compatibility]".to_string(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+        raw_registry.insert(
+            "Addictol".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Patches]".to_string(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: Some(1),
+                settings_rules: Some(CrashgenSettingsRules {
+                    version: 1,
+                    preflight: vec![PreflightRule {
+                        id: "addictol_active".to_string(),
+                        when: Predicate::Always,
+                        action: PreflightAction {
+                            kind: PreflightActionKind::Notice,
+                            severity: RuleSeverity::Info,
+                            message: "Addictol rules active".to_string(),
+                            fix: None,
+                        },
+                    }],
+                    checks: vec![],
+                }),
+            },
+        );
+        raw_registry.insert(
+            "default".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: String::new(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        config.crashgen_registry = build_crashgen_registry(&raw_registry);
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("addictol.dll".to_string());
+        let effective_name = orchestrator
+            .resolve_effective_crashgen_name("Addictol v1.0.0 Feb 16 2026 08:02:06", &xse_modules);
+        assert_eq!(effective_name, "Addictol");
+
+        let validator = OrchestratorCore::settings_validator_for_crashgen(
+            &orchestrator.config,
+            &effective_name,
+        );
+        let fragments = validator
+            .scan_all_settings(
+                &HashMap::new(),
+                &xse_modules,
+                None,
+                classic_crashgen_settings_core::ConfigLayout::Unknown,
+            )
+            .unwrap();
+        let all_lines: Vec<String> = fragments
+            .iter()
+            .flat_map(crate::report::ReportFragment::to_list)
+            .collect();
+
+        assert!(
+            all_lines
+                .iter()
+                .any(|line| line.contains("Addictol rules active"))
+        );
+        assert!(
+            !all_lines
+                .iter()
+                .any(|line| line.contains("scaffold (rules pending)"))
+        );
+    }
+
+    #[test]
+    fn derive_config_layout_returns_og_for_valid_non_vr_version() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let layout = orchestrator.derive_scanlog_config_layout("Fallout 4 v1.10.163");
+        assert_eq!(layout, classic_crashgen_settings_core::ConfigLayout::Og);
+    }
+
+    #[test]
+    fn derive_config_layout_returns_og_for_valid_vr_version() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "VR".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let layout = orchestrator.derive_scanlog_config_layout("Fallout 4 VR v1.2.72");
+        assert_eq!(layout, classic_crashgen_settings_core::ConfigLayout::Og);
+    }
+
+    #[test]
+    fn derive_config_layout_returns_unknown_for_invalid_header_version() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let layout = orchestrator.derive_scanlog_config_layout("not a valid version line");
+        assert_eq!(
+            layout,
+            classic_crashgen_settings_core::ConfigLayout::Unknown
+        );
     }
 
     #[test]

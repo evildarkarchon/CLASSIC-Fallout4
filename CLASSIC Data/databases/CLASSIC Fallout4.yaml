@@ -179,7 +179,7 @@ Crashgen_Registry:
             key: ArchiveLimit
             type: bool
           when:
-            config_layout_is: og
+            crashgen_version_lt: "1.30.0"
           expect:
             equals: false
           messages:

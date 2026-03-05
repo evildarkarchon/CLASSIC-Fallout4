@@ -14,7 +14,7 @@ use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
 use crate::report::ReportFragment;
 use classic_crashgen_settings_core::{
-    ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
+    evaluate_rules, ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity,
 };
 use log::warn;
 use std::collections::{HashMap, HashSet};
@@ -68,8 +68,27 @@ impl SettingsValidator {
             let evaluation = evaluate_rules(rules, &context);
 
             let mut fragments = Vec::new();
+            let mut covered_achievements = false;
+            let mut covered_memory = false;
+            let mut covered_archive = false;
+            let mut covered_looksmenu = false;
+
             for outcome in evaluation.outcomes {
                 let mut lines = Vec::new();
+                if let Some(setting) = outcome.setting.as_deref() {
+                    match setting {
+                        "Achievements" => covered_achievements = true,
+                        "MemoryManager"
+                        | "HavokMemorySystem"
+                        | "BSTextureStreamerLocalHeap"
+                        | "ScaleformAllocator"
+                        | "SmallBlockAllocator" => covered_memory = true,
+                        "ArchiveLimit" => covered_archive = true,
+                        "F4EE" => covered_looksmenu = true,
+                        _ => {}
+                    }
+                }
+
                 match outcome.kind {
                     OutcomeKind::Issue => {
                         lines.push(format!("# ❌ CAUTION : {} # \n", outcome.message));
@@ -99,6 +118,56 @@ impl SettingsValidator {
                     }
                 }
                 fragments.push(ReportFragment::from_lines(lines));
+            }
+
+            if evaluation.skip_remaining {
+                return Ok(fragments);
+            }
+
+            if !covered_achievements {
+                let achievements_fragment =
+                    self.scan_buffout_achievements_setting(xse_modules.clone(), crashgen)?;
+                if !achievements_fragment.is_empty() {
+                    fragments.push(achievements_fragment);
+                }
+            }
+
+            if !covered_memory {
+                let has_xcell = [
+                    "x-cell-fo4.dll",
+                    "x-cell-og.dll",
+                    "x-cell-ng2.dll",
+                    "x-cell-ae.dll",
+                ]
+                .iter()
+                .any(|dll| xse_modules.contains(*dll));
+                let has_old_xcell = false;
+                let has_baka_scrapheap = xse_modules.contains("bakascrapheap.dll");
+                let memory_fragment = self.scan_buffout_memorymanagement_settings(
+                    crashgen,
+                    has_xcell,
+                    has_old_xcell,
+                    has_baka_scrapheap,
+                )?;
+                if !memory_fragment.is_empty() {
+                    fragments.push(memory_fragment);
+                }
+            }
+
+            if !covered_archive {
+                let archive_fragment =
+                    self.scan_archivelimit_setting(crashgen, crashgen_version)?;
+                if !archive_fragment.is_empty() {
+                    fragments.push(archive_fragment);
+                }
+            }
+
+            if !covered_looksmenu {
+                let looksmenu_fragment =
+                    self.scan_buffout_looksmenu_setting(crashgen, xse_modules.clone())?;
+                if !looksmenu_fragment.is_empty() {
+                    fragments.push(looksmenu_fragment);
+                }
             }
 
             return Ok(fragments);
@@ -549,8 +618,9 @@ mod tests {
     use super::*;
     use crate::crashgen_registry::{CheckId, CrashgenEntry};
     use classic_crashgen_settings_core::{
-        CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, RuleMessages,
-        RuleSeverity, RuleTarget, TargetValueType,
+        CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
+        PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget,
+        TargetValueType,
     };
 
     fn make_buffout_entry() -> CrashgenEntry {
@@ -909,10 +979,270 @@ mod tests {
             .unwrap();
         assert!(!fragments.is_empty());
         let lines = fragments[0].to_list();
-        assert!(
-            lines
-                .iter()
-                .any(|line| line.contains("Achievements should be disabled"))
-        );
+        assert!(lines
+            .iter()
+            .any(|line| line.contains("Achievements should be disabled")));
+    }
+
+    #[test]
+    fn test_scan_all_settings_rules_fallback_restores_missing_success_lines() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![
+                CheckId::Achievements,
+                CheckId::MemoryManagement,
+                CheckId::ArchiveLimit,
+                CheckId::LooksMenu,
+            ],
+            settings_rules: Some(CrashgenSettingsRules {
+                version: 1,
+                preflight: vec![],
+                checks: vec![
+                    CheckRule {
+                        id: "achievements_conflict".to_string(),
+                        target: RuleTarget {
+                            section: "Patches".to_string(),
+                            key: "Achievements".to_string(),
+                            value_type: TargetValueType::Bool,
+                        },
+                        when: Predicate::PluginAny(vec!["achievements.dll".to_string()]),
+                        expect: ExpectedValue::Bool(false),
+                        messages: RuleMessages {
+                            fail: "Achievements fail".to_string(),
+                            fix: None,
+                            pass: Some("Achievements pass".to_string()),
+                        },
+                        severity: RuleSeverity::Warning,
+                    },
+                    CheckRule {
+                        id: "memory_manager_xcell".to_string(),
+                        target: RuleTarget {
+                            section: "Patches".to_string(),
+                            key: "MemoryManager".to_string(),
+                            value_type: TargetValueType::Bool,
+                        },
+                        when: Predicate::PluginAny(vec!["x-cell-fo4.dll".to_string()]),
+                        expect: ExpectedValue::Bool(false),
+                        messages: RuleMessages {
+                            fail: "Memory fail".to_string(),
+                            fix: None,
+                            pass: Some("Memory pass".to_string()),
+                        },
+                        severity: RuleSeverity::Warning,
+                    },
+                    CheckRule {
+                        id: "archive_limit".to_string(),
+                        target: RuleTarget {
+                            section: "Patches".to_string(),
+                            key: "ArchiveLimit".to_string(),
+                            value_type: TargetValueType::Bool,
+                        },
+                        when: Predicate::CrashgenVersionLt((1, 30, 0)),
+                        expect: ExpectedValue::Bool(false),
+                        messages: RuleMessages {
+                            fail: "Archive fail".to_string(),
+                            fix: None,
+                            pass: Some("Archive pass".to_string()),
+                        },
+                        severity: RuleSeverity::Warning,
+                    },
+                    CheckRule {
+                        id: "looksmenu_f4ee".to_string(),
+                        target: RuleTarget {
+                            section: "Compatibility".to_string(),
+                            key: "F4EE".to_string(),
+                            value_type: TargetValueType::Bool,
+                        },
+                        when: Predicate::PluginAny(vec!["f4ee.dll".to_string()]),
+                        expect: ExpectedValue::Bool(true),
+                        messages: RuleMessages {
+                            fail: "LooksMenu fail".to_string(),
+                            fix: None,
+                            pass: Some("LooksMenu pass".to_string()),
+                        },
+                        severity: RuleSeverity::Warning,
+                    },
+                ],
+            }),
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        crashgen.insert("MemoryManager".to_string(), "true".to_string());
+        crashgen.insert("ArchiveLimit".to_string(), "false".to_string());
+        crashgen.insert("F4EE".to_string(), "true".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("f4ee.dll".to_string());
+
+        let fragments = validator
+            .scan_all_settings(&crashgen, &xse, Some((1, 28, 6)), ConfigLayout::Unknown)
+            .unwrap();
+        let all_lines: Vec<String> = fragments.iter().flat_map(ReportFragment::to_list).collect();
+
+        assert!(all_lines
+            .iter()
+            .any(|line| line.contains("Achievements parameter is correctly configured")));
+        assert!(all_lines
+            .iter()
+            .any(|line| line.contains("Memory Manager parameter is correctly configured")));
+        assert!(all_lines.iter().any(|line| line.contains("Archive pass")));
+        assert!(all_lines.iter().any(|line| line.contains("LooksMenu pass")));
+    }
+
+    #[test]
+    fn test_scan_all_settings_rules_and_fallback_do_not_duplicate_results() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![CheckId::Achievements],
+            settings_rules: Some(CrashgenSettingsRules {
+                version: 1,
+                preflight: vec![],
+                checks: vec![CheckRule {
+                    id: "achievements_conflict".to_string(),
+                    target: RuleTarget {
+                        section: "Patches".to_string(),
+                        key: "Achievements".to_string(),
+                        value_type: TargetValueType::Bool,
+                    },
+                    when: Predicate::PluginAny(vec!["achievements.dll".to_string()]),
+                    expect: ExpectedValue::Bool(false),
+                    messages: RuleMessages {
+                        fail: "YAML achievements fail".to_string(),
+                        fix: None,
+                        pass: Some("YAML achievements pass".to_string()),
+                    },
+                    severity: RuleSeverity::Warning,
+                }],
+            }),
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "false".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("achievements.dll".to_string());
+
+        let fragments = validator
+            .scan_all_settings(&crashgen, &xse, Some((1, 28, 6)), ConfigLayout::Unknown)
+            .unwrap();
+        let all_lines: Vec<String> = fragments.iter().flat_map(ReportFragment::to_list).collect();
+
+        assert!(all_lines
+            .iter()
+            .any(|line| line.contains("YAML achievements pass")));
+        assert!(!all_lines
+            .iter()
+            .any(|line| line.contains("Achievements parameter is correctly configured")));
+    }
+
+    #[test]
+    fn test_scan_all_settings_preflight_skip_remaining_prevents_fallback() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![
+                CheckId::Achievements,
+                CheckId::MemoryManagement,
+                CheckId::ArchiveLimit,
+                CheckId::LooksMenu,
+            ],
+            settings_rules: Some(CrashgenSettingsRules {
+                version: 1,
+                preflight: vec![PreflightRule {
+                    id: "skip_all".to_string(),
+                    when: Predicate::Always,
+                    action: PreflightAction {
+                        kind: PreflightActionKind::NoticeAndSkipRemaining,
+                        severity: RuleSeverity::Warning,
+                        message: "skip remaining".to_string(),
+                        fix: None,
+                    },
+                }],
+                checks: vec![],
+            }),
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        crashgen.insert("MemoryManager".to_string(), "true".to_string());
+        crashgen.insert("ArchiveLimit".to_string(), "false".to_string());
+        crashgen.insert("F4EE".to_string(), "true".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("f4ee.dll".to_string());
+
+        let fragments = validator
+            .scan_all_settings(&crashgen, &xse, Some((1, 28, 6)), ConfigLayout::Unknown)
+            .unwrap();
+        let all_lines: Vec<String> = fragments.iter().flat_map(ReportFragment::to_list).collect();
+
+        assert!(all_lines.iter().any(|line| line.contains("skip remaining")));
+        assert!(!all_lines
+            .iter()
+            .any(|line| line.contains("Achievements parameter is correctly configured")));
+        assert!(!all_lines
+            .iter()
+            .any(|line| line.contains("Memory Manager parameter is correctly configured")));
+        assert!(!all_lines
+            .iter()
+            .any(|line| line.contains("ArchiveLimit parameter is correctly configured")));
+    }
+
+    #[test]
+    fn test_archive_limit_rule_uses_crashgen_version_gate() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![CheckId::ArchiveLimit],
+            settings_rules: Some(CrashgenSettingsRules {
+                version: 1,
+                preflight: vec![],
+                checks: vec![CheckRule {
+                    id: "archive_limit".to_string(),
+                    target: RuleTarget {
+                        section: "Patches".to_string(),
+                        key: "ArchiveLimit".to_string(),
+                        value_type: TargetValueType::Bool,
+                    },
+                    when: Predicate::CrashgenVersionLt((1, 30, 0)),
+                    expect: ExpectedValue::Bool(false),
+                    messages: RuleMessages {
+                        fail: "Archive fail".to_string(),
+                        fix: None,
+                        pass: Some("Archive pass".to_string()),
+                    },
+                    severity: RuleSeverity::Warning,
+                }],
+            }),
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("ArchiveLimit".to_string(), "false".to_string());
+        let xse = HashSet::new();
+
+        let lt_boundary = validator
+            .scan_all_settings(&crashgen, &xse, Some((1, 29, 9)), ConfigLayout::Unknown)
+            .unwrap();
+        let lt_lines: Vec<String> = lt_boundary
+            .iter()
+            .flat_map(ReportFragment::to_list)
+            .collect();
+        assert!(lt_lines.iter().any(|line| line.contains("Archive pass")));
+
+        let at_boundary = validator
+            .scan_all_settings(&crashgen, &xse, Some((1, 30, 0)), ConfigLayout::Unknown)
+            .unwrap();
+        let at_lines: Vec<String> = at_boundary
+            .iter()
+            .flat_map(ReportFragment::to_list)
+            .collect();
+        assert!(!at_lines.iter().any(|line| line.contains("Archive pass")));
     }
 }
