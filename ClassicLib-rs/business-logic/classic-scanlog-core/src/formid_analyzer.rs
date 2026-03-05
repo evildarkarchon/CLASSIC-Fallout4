@@ -20,7 +20,7 @@ static FORMID_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
 
 /// Default bounded batch size for FormID value lookups.
-const FORMID_BATCH_LOOKUP_SIZE: usize = 100;
+const FORMID_BATCH_LOOKUP_SIZE: usize = 128;
 
 /// Core FormID analyzer - pure Rust implementation (NO PyO3)
 pub struct FormIDAnalyzerCore {

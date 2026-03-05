@@ -38,7 +38,7 @@ pub const BATCH_CACHE_TTL_SECS: u64 = 1800;
 pub const MAX_CACHE_TTL_SECS: u64 = 3600;
 
 /// Default maximum number of entries allowed in query cache.
-pub const DEFAULT_QUERY_CACHE_CAPACITY: usize = 10_000;
+pub const DEFAULT_QUERY_CACHE_CAPACITY: usize = 20_000;
 
 /// Minimum allowed query cache capacity.
 pub const MIN_QUERY_CACHE_CAPACITY: usize = 1;
@@ -47,7 +47,7 @@ pub const MIN_QUERY_CACHE_CAPACITY: usize = 1;
 pub const MAX_QUERY_CACHE_CAPACITY: usize = 1_000_000;
 
 /// Default number of lookup operations before proactive cleanup is considered.
-pub const DEFAULT_CACHE_CLEANUP_OP_THRESHOLD: u64 = 256;
+pub const DEFAULT_CACHE_CLEANUP_OP_THRESHOLD: u64 = 2048;
 
 /// Minimum allowed cleanup operation threshold.
 pub const MIN_CACHE_CLEANUP_OP_THRESHOLD: u64 = 1;
@@ -56,7 +56,7 @@ pub const MIN_CACHE_CLEANUP_OP_THRESHOLD: u64 = 1;
 pub const MAX_CACHE_CLEANUP_OP_THRESHOLD: u64 = 100_000;
 
 /// Default minimum cleanup interval in seconds.
-pub const DEFAULT_CACHE_CLEANUP_INTERVAL_SECS: u64 = 5;
+pub const DEFAULT_CACHE_CLEANUP_INTERVAL_SECS: u64 = 30;
 
 /// Minimum allowed proactive cleanup interval in seconds.
 pub const MIN_CACHE_CLEANUP_INTERVAL_SECS: u64 = 1;
@@ -199,6 +199,14 @@ pub struct PoolStatistics {
     pub cleanup_runs: u64,
     /// Total number of expired entries removed by proactive cleanup
     pub cleanup_removed: u64,
+    /// Total elapsed nanoseconds spent running proactive cleanup sweeps
+    pub cleanup_elapsed_total_ns: u64,
+    /// Maximum elapsed nanoseconds observed for a single proactive cleanup run
+    pub cleanup_elapsed_max_ns: u64,
+    /// Total elapsed nanoseconds spent in eviction maintenance
+    pub eviction_elapsed_total_ns: u64,
+    /// Maximum elapsed nanoseconds observed for a single eviction maintenance pass
+    pub eviction_elapsed_max_ns: u64,
     /// Configured global connection budget (set via constructor/set_max_connections)
     pub configured_connection_budget: u64,
     /// Effective global budget applied to active pools after low-budget clamp
@@ -284,6 +292,14 @@ pub struct DatabasePool {
     stat_cleanup_runs: Arc<AtomicU64>,
     /// Number of entries removed by proactive cleanup
     stat_cleanup_removed: Arc<AtomicU64>,
+    /// Total elapsed nanoseconds spent running proactive cleanup sweeps
+    stat_cleanup_elapsed_total_ns: Arc<AtomicU64>,
+    /// Maximum elapsed nanoseconds observed for a single proactive cleanup run
+    stat_cleanup_elapsed_max_ns: Arc<AtomicU64>,
+    /// Total elapsed nanoseconds spent in eviction maintenance
+    stat_eviction_elapsed_total_ns: Arc<AtomicU64>,
+    /// Maximum elapsed nanoseconds observed for a single eviction maintenance pass
+    stat_eviction_elapsed_max_ns: Arc<AtomicU64>,
     /// Number of stable-shape bucket selections in batch path
     stat_stable_shape_selections: Arc<AtomicU64>,
     /// Number of padded pair slots used to satisfy stable shapes
@@ -466,7 +482,15 @@ impl DatabasePool {
         self.evict_to_capacity();
     }
 
+    fn record_elapsed_ns(total: &AtomicU64, max: &AtomicU64, elapsed: Duration) {
+        let elapsed_ns = elapsed.as_nanos().min(u64::MAX as u128) as u64;
+        total.fetch_add(elapsed_ns, Ordering::Relaxed);
+        max.fetch_max(elapsed_ns, Ordering::Relaxed);
+    }
+
     fn evict_to_capacity(&self) {
+        let maintenance_start = Instant::now();
+        let mut performed_work = false;
         let mut total_evicted = 0_u64;
 
         loop {
@@ -474,6 +498,7 @@ impl DatabasePool {
             if self.query_cache.len() <= capacity {
                 break;
             }
+            performed_work = true;
 
             // Policy step 1: always purge expired entries first.
             let expired_keys: Vec<CacheKey> = self
@@ -530,6 +555,14 @@ impl DatabasePool {
             self.stat_cache_evictions
                 .fetch_add(total_evicted, Ordering::Relaxed);
         }
+
+        if performed_work {
+            Self::record_elapsed_ns(
+                &self.stat_eviction_elapsed_total_ns,
+                &self.stat_eviction_elapsed_max_ns,
+                maintenance_start.elapsed(),
+            );
+        }
     }
 
     fn maybe_run_proactive_cleanup(&self, operation_count: u64) {
@@ -563,7 +596,13 @@ impl DatabasePool {
             return;
         }
 
+        let cleanup_start = Instant::now();
         let removed = self.clear_cache(true) as u64;
+        Self::record_elapsed_ns(
+            &self.stat_cleanup_elapsed_total_ns,
+            &self.stat_cleanup_elapsed_max_ns,
+            cleanup_start.elapsed(),
+        );
         self.stat_cleanup_runs.fetch_add(1, Ordering::Relaxed);
         self.stat_cleanup_removed
             .fetch_add(removed, Ordering::Relaxed);
@@ -605,6 +644,10 @@ impl DatabasePool {
             stat_cache_evictions: Arc::new(AtomicU64::new(0)),
             stat_cleanup_runs: Arc::new(AtomicU64::new(0)),
             stat_cleanup_removed: Arc::new(AtomicU64::new(0)),
+            stat_cleanup_elapsed_total_ns: Arc::new(AtomicU64::new(0)),
+            stat_cleanup_elapsed_max_ns: Arc::new(AtomicU64::new(0)),
+            stat_eviction_elapsed_total_ns: Arc::new(AtomicU64::new(0)),
+            stat_eviction_elapsed_max_ns: Arc::new(AtomicU64::new(0)),
             stat_stable_shape_selections: Arc::new(AtomicU64::new(0)),
             stat_stable_shape_padding_pairs: Arc::new(AtomicU64::new(0)),
             stat_stable_shape_bucket_8: Arc::new(AtomicU64::new(0)),
@@ -1215,6 +1258,10 @@ impl DatabasePool {
             cache_evictions: self.stat_cache_evictions.load(Ordering::Relaxed),
             cleanup_runs: self.stat_cleanup_runs.load(Ordering::Relaxed),
             cleanup_removed: self.stat_cleanup_removed.load(Ordering::Relaxed),
+            cleanup_elapsed_total_ns: self.stat_cleanup_elapsed_total_ns.load(Ordering::Relaxed),
+            cleanup_elapsed_max_ns: self.stat_cleanup_elapsed_max_ns.load(Ordering::Relaxed),
+            eviction_elapsed_total_ns: self.stat_eviction_elapsed_total_ns.load(Ordering::Relaxed),
+            eviction_elapsed_max_ns: self.stat_eviction_elapsed_max_ns.load(Ordering::Relaxed),
             configured_connection_budget: configured_budget,
             effective_connection_budget,
             active_pool_count,
@@ -1254,6 +1301,11 @@ impl DatabasePool {
         // Capture current stats before closing for logging
         let active_before = self.stat_active_connections.load(Ordering::Relaxed);
         let total_queries = self.stat_total_queries.load(Ordering::Relaxed);
+        let cleanup_runs = self.stat_cleanup_runs.load(Ordering::Relaxed);
+        let cleanup_ns_total = self.stat_cleanup_elapsed_total_ns.load(Ordering::Relaxed);
+        let cleanup_ns_max = self.stat_cleanup_elapsed_max_ns.load(Ordering::Relaxed);
+        let eviction_ns_total = self.stat_eviction_elapsed_total_ns.load(Ordering::Relaxed);
+        let eviction_ns_max = self.stat_eviction_elapsed_max_ns.load(Ordering::Relaxed);
 
         info!(
             "Closing all database connections: {} pool(s), {} cached queries, {} active connection(s)",
@@ -1285,6 +1337,14 @@ impl DatabasePool {
         info!(
             "Database pool closed successfully. Total queries processed: {}",
             total_queries
+        );
+        info!(
+            "Database maintenance timings: cleanup_runs={}, cleanup_total_ms={:.3}, cleanup_max_ms={:.3}, eviction_total_ms={:.3}, eviction_max_ms={:.3}",
+            cleanup_runs,
+            cleanup_ns_total as f64 / 1_000_000.0,
+            cleanup_ns_max as f64 / 1_000_000.0,
+            eviction_ns_total as f64 / 1_000_000.0,
+            eviction_ns_max as f64 / 1_000_000.0
         );
 
         Ok(())
@@ -1595,6 +1655,10 @@ mod tests {
             stats.cleanup_removed, 0,
             "Initial cleanup removed should be 0"
         );
+        assert_eq!(stats.cleanup_elapsed_total_ns, 0);
+        assert_eq!(stats.cleanup_elapsed_max_ns, 0);
+        assert_eq!(stats.eviction_elapsed_total_ns, 0);
+        assert_eq!(stats.eviction_elapsed_max_ns, 0);
 
         // Perform a query
         let _ = pool.get_entry("AABBCCDD", "Stats.esp", None).await;
@@ -2124,6 +2188,14 @@ mod tests {
             stats_after.cleanup_removed >= 2,
             "Cleanup should remove expired entries"
         );
+        assert!(
+            stats_after.cleanup_elapsed_total_ns > 0,
+            "Cleanup timing should be recorded when proactive cleanup runs"
+        );
+        assert!(
+            stats_after.cleanup_elapsed_max_ns > 0,
+            "Cleanup max timing should be recorded when proactive cleanup runs"
+        );
     }
 
     // =========================================================================
@@ -2611,10 +2683,10 @@ mod tests {
         );
         assert_eq!(BATCH_CACHE_TTL_SECS, 1800, "Batch TTL should be 30 minutes");
         assert_eq!(MAX_CACHE_TTL_SECS, 3600, "Max TTL should be 60 minutes");
-        assert_eq!(DEFAULT_QUERY_CACHE_CAPACITY, 10_000);
+        assert_eq!(DEFAULT_QUERY_CACHE_CAPACITY, 20_000);
         assert_eq!(MIN_QUERY_CACHE_CAPACITY, 1);
-        assert_eq!(DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, 256);
-        assert_eq!(DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, 5);
+        assert_eq!(DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, 2048);
+        assert_eq!(DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, 30);
 
         // Verify ordering (compile-time assertions)
         const _: () = assert!(DEFAULT_CACHE_TTL_SECS < BATCH_CACHE_TTL_SECS);
@@ -2662,6 +2734,10 @@ mod tests {
         assert_eq!(stats.cache_evictions, 0);
         assert_eq!(stats.cleanup_runs, 0);
         assert_eq!(stats.cleanup_removed, 0);
+        assert_eq!(stats.cleanup_elapsed_total_ns, 0);
+        assert_eq!(stats.cleanup_elapsed_max_ns, 0);
+        assert_eq!(stats.eviction_elapsed_total_ns, 0);
+        assert_eq!(stats.eviction_elapsed_max_ns, 0);
         assert_eq!(stats.configured_connection_budget, 0);
         assert_eq!(stats.effective_connection_budget, 0);
         assert_eq!(stats.active_pool_count, 0);

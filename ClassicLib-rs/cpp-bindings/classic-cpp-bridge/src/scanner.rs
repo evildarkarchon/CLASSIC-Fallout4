@@ -29,6 +29,16 @@ pub struct Orchestrator {
     inner: OrchestratorCore,
 }
 
+const SHORT_SCAN_CACHE_CAPACITY: usize = 30_000;
+const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
+const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
+
+fn apply_short_scan_db_profile(pool: &DatabasePool) {
+    pool.set_cache_capacity(SHORT_SCAN_CACHE_CAPACITY);
+    pool.set_cache_cleanup_threshold(SHORT_SCAN_CLEANUP_THRESHOLD);
+    pool.set_cache_cleanup_interval(Duration::from_secs(SHORT_SCAN_CLEANUP_INTERVAL_SECS));
+}
+
 // ── Config construction ─────────────────────────────────────────────
 
 fn build_full_scan_config(
@@ -79,6 +89,7 @@ fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String
             Duration::from_secs(300),
             config.inner.game.clone(),
         ));
+        apply_short_scan_db_profile(&pool);
 
         get_runtime()
             .block_on(pool.initialize(config.db_paths.clone()))
@@ -623,6 +634,22 @@ mod tests {
         assert!(dto.success);
         assert_eq!(dto.report_lines, vec!["line1"]);
         assert!(dto.error_message.is_empty());
+    }
+
+    #[test]
+    fn test_apply_short_scan_db_profile_sets_pool_knobs() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "Fallout4".to_string());
+        apply_short_scan_db_profile(&pool);
+
+        assert_eq!(pool.get_cache_capacity(), SHORT_SCAN_CACHE_CAPACITY);
+        assert_eq!(
+            pool.get_cache_cleanup_threshold(),
+            SHORT_SCAN_CLEANUP_THRESHOLD
+        );
+        assert_eq!(
+            pool.get_cache_cleanup_interval(),
+            Duration::from_secs(SHORT_SCAN_CLEANUP_INTERVAL_SECS)
+        );
     }
 
     // ── Papyrus bridge tests ──────────────────────────────────────

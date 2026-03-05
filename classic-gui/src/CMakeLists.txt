@@ -162,7 +162,7 @@ if(EXISTS "${CLASSIC_DATA_DIR}/games")
     )
 endif()
 
-# Qt deploy — run windeployqt directly on the installed exe.
+# Qt deploy — run windeployqt directly inside the install prefix.
 # Unlike qt_generate_deploy_app_script() which forces a bin/ subdirectory,
 # calling windeployqt on the installed exe keeps a portable layout while
 # placing plugin/translations assets under Qt6/ via explicit output dirs.
@@ -171,12 +171,15 @@ find_program(WINDEPLOYQT_EXECUTABLE windeployqt
 )
 if(WINDEPLOYQT_EXECUTABLE)
     install(CODE "
+        # Use paths relative to CMAKE_INSTALL_PREFIX so deployment works for
+        # both absolute and relative --prefix values.
         execute_process(
             COMMAND \"${WINDEPLOYQT_EXECUTABLE}\"
-                --plugindir \"\${CMAKE_INSTALL_PREFIX}/Qt6/plugins\"
-                --translationdir \"\${CMAKE_INSTALL_PREFIX}/Qt6/translations\"
-                \"\${CMAKE_INSTALL_PREFIX}/CLASSIC.exe\"
+                --plugindir \"Qt6/plugins\"
+                --translationdir \"Qt6/translations\"
+                \"CLASSIC.exe\"
             WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
+            COMMAND_ERROR_IS_FATAL ANY
         )
 
         # Remove legacy root-level plugin/translations folders left by older
@@ -196,4 +199,45 @@ if(WINDEPLOYQT_EXECUTABLE)
             endif()
         endif()
     ")
+
+    # vcpkg builds Qt against additional runtime DLLs (zlib/pcre/libpng/md4c
+    # and double-conversion) that windeployqt does not copy in this setup.
+    # Install them explicitly so CLASSIC.exe is portable on clean systems.
+    if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+        install(CODE "
+            set(_classic_vcpkg_bin \"${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\")
+            set(_classic_qt_runtime_dlls
+                double-conversion.dll
+                md4c.dll
+            )
+
+            if(\"\${CMAKE_INSTALL_CONFIG_NAME}\" STREQUAL \"Debug\")
+                set(_classic_vcpkg_bin \"${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/bin\")
+                list(APPEND _classic_qt_runtime_dlls
+                    libpng16d.dll
+                    pcre2-16d.dll
+                    zlibd1.dll
+                )
+            else()
+                list(APPEND _classic_qt_runtime_dlls
+                    libpng16.dll
+                    pcre2-16.dll
+                    zlib1.dll
+                )
+            endif()
+
+            foreach(_dll IN LISTS _classic_qt_runtime_dlls)
+                set(_source \"\${_classic_vcpkg_bin}/\${_dll}\")
+                if(EXISTS \"\${_source}\")
+                    file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}\" TYPE FILE FILES \"\${_source}\")
+                else()
+                    message(WARNING \"Expected Qt runtime dependency not found: \${_source}\")
+                endif()
+            endforeach()
+        ")
+    else()
+        message(WARNING "VCPKG runtime paths are undefined; some Qt dependency DLLs may be missing from install output.")
+    endif()
+else()
+    message(WARNING "windeployqt was not found; install output will miss required Qt runtime files.")
 endif()

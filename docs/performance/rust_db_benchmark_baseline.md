@@ -198,9 +198,9 @@ For follow-up Rust DB optimization work:
 
 #### Safe defaults for long-running scans
 
-- `cache_capacity`: `10_000` entries.
-- `cleanup_threshold`: `256` lookup operations.
-- `cleanup_interval_seconds`: `5` seconds.
+- `cache_capacity`: `20_000` entries.
+- `cleanup_threshold`: `2048` lookup operations.
+- `cleanup_interval_seconds`: `30` seconds.
 
 These defaults cap memory growth while avoiding over-aggressive cleanup churn in hot paths.
 
