@@ -1,0 +1,99 @@
+name: CI - Python Bindings
+
+on:
+  push:
+    branches: [main, classic-next, develop, classic-9]
+  pull_request:
+    branches: [main, classic-next, develop, classic-9]
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  parity-gates:
+    name: Python Parity Gates
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run Tier-1 Python parity gate
+        run: python tools/python_api_parity/check_parity_gate.py --repo-root .
+
+      - name: Run Python stub validation gate
+        run: python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+
+      - name: Upload parity diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-parity-diagnostics
+          path: ClassicLib-rs/python-bindings/parity-artifacts/
+          if-no-files-found: warn
+          retention-days: 7
+
+  build-and-test:
+    name: Python Bindings Build + Smoke Tests
+    needs: [parity-gates]
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-python-
+
+      - name: Create uv virtual environment
+        run: uv venv
+
+      - name: Install Python build and test dependencies
+        run: uv pip install maturin pytest
+
+      - name: Build and install required Python bindings
+        shell: pwsh
+        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
+
+      - name: Run Python bindings smoke tests
+        run: uv run python -m pytest ClassicLib-rs/python-bindings/tests -q

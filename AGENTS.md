@@ -68,6 +68,17 @@ bun run test:bun
 bun run test:node
 ```
 
+### Python Bindings (PyO3)
+
+```powershell
+uv venv
+uv pip install maturin pytest
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
+uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+```
+
 ---
 
 ## Testing
@@ -168,7 +179,8 @@ Current primary CI workflows:
 1. **`ci-cpp.yml`** - C++ CLI/GUI build and test pipeline
 2. **`ci-rust.yml`** - Rust format/lint/build/test
 3. **`ci-typescript.yml`** - Node binding parity gates + Bun/Node runtime tests
-4. **`benchmarks.yml`** - benchmark/performance pipeline
+4. **`ci-python-bindings.yml`** - Python binding parity gates + smoke tests
+5. **`benchmarks.yml`** - benchmark/performance pipeline
 
 The legacy Python CI workflow has been retired from the active pipeline as part of Python deprecation.
 
@@ -200,6 +212,30 @@ Checklist:
 Release gate policy:
 
 - Do not tag a release unless Tier-1 parity gate passes and `index.d.ts` freshness gate passes in CI.
+
+---
+
+## Python API Parity Contributor Checklist
+
+When changing Rust APIs that are exposed through Python bindings, parity updates are required in the same PR.
+
+Trigger paths (minimum):
+
+- `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`
+- `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`
+- `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
+- `ClassicLib-rs/python-bindings/*-py/src/`
+- `ClassicLib-rs/python-bindings/*-py/*.pyi`
+
+Checklist:
+
+1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/python_api_parity/governance/tier2_backlog_and_governance.md`.
+2. If promoting to Tier-1, update `docs/implementation/python_api_parity/baseline/parity_contract.json`.
+3. Run local gates:
+   - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
+   - `python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
+   - `uv run python -m pytest ClassicLib-rs/python-bindings/tests -q`
+4. Confirm `ci-python-bindings.yml` jobs pass before merge.
 
 ---
 

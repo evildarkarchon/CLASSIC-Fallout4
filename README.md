@@ -131,6 +131,7 @@ GitHub Actions workflows:
 - `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest`
 - `ci-rust.yml` - Rust format/lint/build/test
 - `ci-typescript.yml` - Node bindings parity gates + Bun/Node runtime tests
+- `ci-python-bindings.yml` - Python bindings parity gates + smoke tests
 - `benchmarks.yml` - benchmark/performance pipeline
 
 ---

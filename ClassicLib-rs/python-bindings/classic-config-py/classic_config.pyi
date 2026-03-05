@@ -113,6 +113,9 @@ class YamlData:
 
         """
 
+    def __repr__(self) -> str:
+        """Return a compact representation for debugging."""
+
     # CLASSIC version information
     @property
     def classic_version(self) -> str:

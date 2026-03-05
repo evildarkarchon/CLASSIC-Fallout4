@@ -1,0 +1,606 @@
+#!/usr/bin/env python3
+"""Generate Rust<->Python parity baseline artifacts for Python bindings."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import operator
+import re
+from collections import defaultdict
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+RUST_TARGET_CRATES: dict[str, str] = {
+    "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+    "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+}
+
+RUST_OWNER_BY_CRATE: dict[str, str] = {
+    "classic-scanlog-core": "scanlog",
+    "classic-config-core": "config",
+    "classic-version-registry-core": "version_registry",
+}
+
+PYTHON_TARGET_MODULES: dict[str, str] = {
+    "classic_scanlog": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+    "classic_config": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+    "classic_version_registry": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
+    "classic_pybridge": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
+}
+
+PYTHON_OWNER_BY_MODULE: dict[str, str] = {
+    "classic_scanlog": "scanlog",
+    "classic_config": "config",
+    "classic_version_registry": "version_registry",
+    "classic_pybridge": "aux",
+}
+
+SQUAD_BY_OWNER: dict[str, str] = {
+    "scanlog": "Squad A (scanlog/config)",
+    "config": "Squad A (scanlog/config)",
+    "version_registry": "Squad B (version-registry/aux)",
+    "aux": "Squad B (version-registry/aux)",
+}
+
+
+def count_top_level_params(params: str) -> int:
+    """Count top-level function parameters in a signature parameter string."""
+    candidate = params.strip()
+    if not candidate:
+        return 0
+
+    items: list[str] = []
+    current: list[str] = []
+    depth_pairs = {"(": ")", "[": "]", "{": "}", "<": ">"}
+    closing = set(depth_pairs.values())
+    opening = set(depth_pairs.keys())
+    stack: list[str] = []
+
+    for ch in candidate:
+        if ch in opening:
+            stack.append(depth_pairs[ch])
+        elif ch in closing and stack and ch == stack[-1]:
+            stack.pop()
+
+        if ch == "," and not stack:
+            items.append("".join(current).strip())
+            current = []
+            continue
+        current.append(ch)
+
+    tail = "".join(current).strip()
+    if tail:
+        items.append(tail)
+
+    filtered = [item for item in items if item and item not in {"/", "*"}]
+    return len(filtered)
+
+
+def normalize_whitespace(value: str) -> str:
+    """Collapse consecutive whitespace to a single space."""
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
+    """Expand a Rust `pub use` statement into export names and source paths."""
+    statement = normalize_whitespace(body).rstrip(";")
+    if not statement:
+        return []
+
+    expanded: list[tuple[str, str]] = []
+
+    def split_parts(chunk: str) -> list[str]:
+        return [part.strip() for part in chunk.split(",") if part.strip()]
+
+    if "{" in statement and "}" in statement:
+        prefix, remainder = statement.split("{", 1)
+        inner = remainder.rsplit("}", 1)[0]
+        prefix = prefix.strip().removesuffix("::")
+
+        for part in split_parts(inner):
+            alias_name: str | None = None
+            symbol_expr = part
+            if " as " in part:
+                symbol_expr, alias_name = [
+                    piece.strip() for piece in part.split(" as ", 1)
+                ]
+
+            if symbol_expr == "self":
+                source_path = prefix
+                export_name = alias_name or prefix.split("::")[-1]
+            else:
+                source_path = f"{prefix}::{symbol_expr}" if prefix else symbol_expr
+                export_name = alias_name or symbol_expr.split("::")[-1]
+
+            expanded.append((export_name, source_path))
+        return expanded
+
+    for part in split_parts(statement):
+        alias_name: str | None = None
+        symbol_expr = part
+        if " as " in part:
+            symbol_expr, alias_name = [piece.strip() for piece in part.split(" as ", 1)]
+        export_name = alias_name or symbol_expr.split("::")[-1]
+        expanded.append((export_name, symbol_expr))
+
+    return expanded
+
+
+def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[str, Any]:
+    """Extract Rust symbols from target crate `lib.rs` files."""
+    entries: list[dict[str, Any]] = []
+
+    for crate_name, rel_path in RUST_TARGET_CRATES.items():
+        source_path = repo_root / rel_path
+        content = source_path.read_text(encoding="utf-8")
+        owner_module = RUST_OWNER_BY_CRATE[crate_name]
+
+        for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
+            symbol = match.group(1)
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": "module",
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": rel_path,
+                    "source_decl": match.group(0).strip(),
+                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                }
+            )
+
+        for match in re.finditer(
+            r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
+        ):
+            symbol = match.group(1)
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": "function",
+                    "arity": count_top_level_params(match.group(2)),
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": rel_path,
+                    "source_decl": match.group(0).strip(),
+                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                }
+            )
+
+        for match in re.finditer(
+            r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
+            content,
+        ):
+            kind = match.group(1)
+            symbol = match.group(2)
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": kind,
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": rel_path,
+                    "source_decl": match.group(0).strip(),
+                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                }
+            )
+
+        for match in re.finditer(
+            r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
+        ):
+            use_body = match.group(1)
+            for symbol, source_expr in expand_pub_use_statement(use_body):
+                entries.append(
+                    {
+                        "symbol": symbol,
+                        "kind": "reexport",
+                        "crate": crate_name,
+                        "owner_module": owner_module,
+                        "source_file": rel_path,
+                        "source_decl": f"pub use {normalize_whitespace(use_body)};",
+                        "source_expr": source_expr,
+                        "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    }
+                )
+
+    entries.sort(key=operator.itemgetter("crate", "symbol", "kind"))
+    return {
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "scope": {
+            "target_crates": list(RUST_TARGET_CRATES.keys()),
+            "source_files": list(RUST_TARGET_CRATES.values()),
+        },
+        "symbols": entries,
+    }
+
+
+def _collect_signature(lines: list[str], start_idx: int) -> tuple[str, int]:
+    """Collect a top-level function signature across multiple lines."""
+    signature_parts: list[str] = []
+    idx = start_idx
+    paren_depth = 0
+    seen_open = False
+
+    while idx < len(lines):
+        piece = lines[idx].strip()
+        if not piece:
+            idx += 1
+            continue
+        signature_parts.append(piece)
+
+        for ch in piece:
+            if ch == "(":
+                seen_open = True
+                paren_depth += 1
+            elif ch == ")" and paren_depth > 0:
+                paren_depth -= 1
+
+        if seen_open and paren_depth == 0 and ":" in piece:
+            break
+        idx += 1
+
+    return (" ".join(signature_parts), idx)
+
+
+def parse_python_surface(
+    repo_root: Path, tier1_python_exports: set[str]
+) -> dict[str, Any]:
+    """Extract public class and top-level function exports from target `.pyi` files."""
+    exports: list[dict[str, Any]] = []
+
+    class_re = re.compile(r"^class\s+([A-Za-z0-9_]+)\b")
+    def_re = re.compile(r"^(?:async\s+)?def\s+([A-Za-z0-9_]+)\s*\(")
+
+    for module_name, rel_path in PYTHON_TARGET_MODULES.items():
+        path = repo_root / rel_path
+        owner_module = PYTHON_OWNER_BY_MODULE[module_name]
+        lines = path.read_text(encoding="utf-8").splitlines()
+
+        idx = 0
+        while idx < len(lines):
+            line = lines[idx]
+            stripped = line.strip()
+
+            if line.startswith("class "):
+                match = class_re.match(stripped)
+                if match:
+                    export_name = match.group(1)
+                    exports.append(
+                        {
+                            "module": module_name,
+                            "export": export_name,
+                            "kind": "class",
+                            "owner_module": owner_module,
+                            "tier": "tier1"
+                            if export_name in tier1_python_exports
+                            else "tier2",
+                            "source_file": rel_path,
+                            "signature": stripped,
+                        }
+                    )
+                idx += 1
+                continue
+
+            if line.startswith("def ") or line.startswith("async def "):
+                signature, end_idx = _collect_signature(lines, idx)
+                match = re.match(
+                    r"^(?:async\s+)?def\s+([A-Za-z0-9_]+)\s*\((.*)\)", signature
+                )
+                if match:
+                    export_name = match.group(1)
+                    params = match.group(2)
+                    exports.append(
+                        {
+                            "module": module_name,
+                            "export": export_name,
+                            "kind": "function",
+                            "arity": count_top_level_params(params),
+                            "owner_module": owner_module,
+                            "tier": "tier1"
+                            if export_name in tier1_python_exports
+                            else "tier2",
+                            "source_file": rel_path,
+                            "signature": signature,
+                        }
+                    )
+                idx = end_idx + 1
+                continue
+
+            idx += 1
+
+    exports.sort(key=operator.itemgetter("module", "export", "kind"))
+    return {
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "scope": {
+            "target_modules": list(PYTHON_TARGET_MODULES.keys()),
+            "source_files": list(PYTHON_TARGET_MODULES.values()),
+        },
+        "exports": exports,
+    }
+
+
+def build_lookup(
+    items: list[dict[str, Any]], key_field: str
+) -> dict[str, dict[str, Any]]:
+    """Build single-key lookup from manifest entries."""
+    lookup: dict[str, dict[str, Any]] = {}
+    for item in items:
+        key = item[key_field]
+        if key not in lookup:
+            lookup[key] = item
+    return lookup
+
+
+def build_python_lookup(
+    items: list[dict[str, Any]],
+) -> dict[tuple[str, str], dict[str, Any]]:
+    """Build `(module, export)` lookup for Python exports."""
+    lookup: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in items:
+        key = (item["module"], item["export"])
+        if key not in lookup:
+            lookup[key] = item
+    return lookup
+
+
+def generate_diff_report(
+    contract: dict[str, Any],
+    rust_manifest: dict[str, Any],
+    python_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    """Generate contract status rows and parity gap inventory."""
+    tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
+    rust_symbols: list[dict[str, Any]] = rust_manifest["symbols"]
+    python_exports: list[dict[str, Any]] = python_manifest["exports"]
+
+    rust_lookup = build_lookup(rust_symbols, "symbol")
+    python_lookup = build_python_lookup(python_exports)
+
+    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
+    tier1_python_pairs = {
+        (mapping["pythonModule"], mapping["pythonExport"]) for mapping in tier1_mappings
+    }
+
+    contract_results: list[dict[str, Any]] = []
+    gaps: list[dict[str, Any]] = []
+
+    for mapping in tier1_mappings:
+        rust_symbol = mapping["rustSymbol"]
+        python_module = mapping["pythonModule"]
+        python_export = mapping["pythonExport"]
+        expected_kind = mapping.get("pythonKind")
+        expected_arity = mapping.get("pythonArity")
+        owner_module = mapping["ownerModule"]
+
+        rust_item = rust_lookup.get(rust_symbol)
+        py_item = python_lookup.get((python_module, python_export))
+        status = "matched"
+        reason = ""
+
+        if rust_item is None:
+            status = "missing_rust"
+            reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."
+        elif py_item is None:
+            status = "missing_python"
+            reason = f"Python export '{python_module}.{python_export}' not found in target .pyi surfaces."
+        elif expected_kind and py_item["kind"] != expected_kind:
+            status = "signature_mismatch"
+            reason = (
+                f"Expected Python kind '{expected_kind}', found '{py_item['kind']}'."
+            )
+        elif expected_arity is not None and py_item.get("arity") != expected_arity:
+            status = "signature_mismatch"
+            reason = f"Expected Python arity {expected_arity}, found {py_item.get('arity', 'n/a')}."
+
+        row = {
+            "id": mapping["id"],
+            "tier": mapping["tier"],
+            "owner_module": owner_module,
+            "squad": SQUAD_BY_OWNER[owner_module],
+            "rust_symbol": rust_symbol,
+            "python_module": python_module,
+            "python_export": python_export,
+            "status": status,
+            "expected_python_kind": expected_kind,
+            "actual_python_kind": py_item["kind"] if py_item else None,
+            "expected_python_arity": expected_arity,
+            "actual_python_arity": py_item.get("arity") if py_item else None,
+        }
+        if reason:
+            row["reason"] = reason
+        contract_results.append(row)
+
+        if status != "matched":
+            gaps.append(
+                {
+                    "gap_type": f"tier1_{status}",
+                    "tier": "tier1",
+                    "owner_module": owner_module,
+                    "squad": SQUAD_BY_OWNER[owner_module],
+                    "rust_symbol": rust_symbol,
+                    "python_module": python_module,
+                    "python_export": python_export,
+                    "reason": reason,
+                }
+            )
+
+    for rust_item in rust_symbols:
+        symbol = rust_item["symbol"]
+        if symbol in tier1_rust_symbols:
+            continue
+        gaps.append(
+            {
+                "gap_type": "rust_unmapped",
+                "tier": "tier2",
+                "owner_module": rust_item["owner_module"],
+                "squad": SQUAD_BY_OWNER[rust_item["owner_module"]],
+                "rust_symbol": symbol,
+                "python_module": None,
+                "python_export": None,
+                "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+                "crate": rust_item["crate"],
+                "kind": rust_item["kind"],
+            }
+        )
+
+    for py_item in python_exports:
+        pair = (py_item["module"], py_item["export"])
+        if pair in tier1_python_pairs:
+            continue
+        gaps.append(
+            {
+                "gap_type": "python_unmapped",
+                "tier": "tier2",
+                "owner_module": py_item["owner_module"],
+                "squad": SQUAD_BY_OWNER[py_item["owner_module"]],
+                "rust_symbol": None,
+                "python_module": py_item["module"],
+                "python_export": py_item["export"],
+                "reason": "Python export is outside Tier-1 mapping scope (deferred).",
+                "kind": py_item["kind"],
+            }
+        )
+
+    status_counts: dict[str, int] = defaultdict(int)
+    for row in contract_results:
+        status_counts[row["status"]] += 1
+
+    gap_counts_by_owner_tier: dict[str, dict[str, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
+    for gap in gaps:
+        gap_counts_by_owner_tier[gap["owner_module"]][gap["tier"]] += 1
+
+    summary = {
+        "tier1_contract_total": len(contract_results),
+        "tier1_matched": status_counts.get("matched", 0),
+        "tier1_missing_rust": status_counts.get("missing_rust", 0),
+        "tier1_missing_python": status_counts.get("missing_python", 0),
+        "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
+        "total_gaps": len(gaps),
+        "tier1_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier1"),
+        "tier2_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier2"),
+    }
+
+    return {
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "summary": summary,
+        "contract_results": contract_results,
+        "gaps": gaps,
+        "gap_counts_by_owner_tier": {
+            owner: dict(tier_counts)
+            for owner, tier_counts in gap_counts_by_owner_tier.items()
+        },
+    }
+
+
+def render_diff_markdown(diff_report: dict[str, Any]) -> str:
+    """Render concise markdown summary of parity results."""
+    summary = diff_report["summary"]
+    lines: list[str] = []
+    lines.extend(
+        (
+            "# Rust<->Python Parity Diff Baseline",
+            "",
+            f"- Generated: `{diff_report['generated_at_utc']}`",
+            f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**",
+            f"- Tier-1 matched: **{summary['tier1_matched']}**",
+            f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
+            f"- Tier-1 missing Python: **{summary['tier1_missing_python']}**",
+            f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+            f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
+            "",
+            "## Tier-1 Contract Evaluation",
+            "",
+            "| ID | Owner Module | Rust Symbol | Python Export | Status |",
+            "|---|---|---|---|---|",
+        )
+    )
+    for row in diff_report["contract_results"]:
+        lines.append(
+            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['python_module']}.{row['python_export']}` | `{row['status']}` |"
+        )
+
+    lines.extend(
+        (
+            "",
+            "## Gap Counts By Owner/Tier",
+            "",
+            "| Owner Module | Tier 1 Gaps | Tier 2 Gaps |",
+            "|---|---:|---:|",
+        )
+    )
+    for owner in ("scanlog", "config", "version_registry", "aux"):
+        tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
+        lines.append(
+            f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |"
+        )
+
+    lines.extend(
+        ("", "Detailed per-gap diagnostics are in `parity_diff_report.json`.", "")
+    )
+    return "\n".join(lines)
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    """Write JSON with stable formatting."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
+
+
+def main() -> int:
+    """CLI entrypoint."""
+    parser = argparse.ArgumentParser(
+        description="Generate Rust/Python API parity baseline artifacts."
+    )
+    parser.add_argument(
+        "--repo-root",
+        default=str(Path(__file__).resolve().parents[2]),
+        help="Repository root path.",
+    )
+    parser.add_argument(
+        "--contract",
+        default="docs/implementation/python_api_parity/baseline/parity_contract.json",
+        help="Path to parity contract JSON, relative to repo root.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="docs/implementation/python_api_parity/baseline",
+        help="Directory for generated output files, relative to repo root.",
+    )
+    args = parser.parse_args()
+
+    repo_root = Path(args.repo_root).resolve()
+    contract_path = repo_root / args.contract
+    output_dir = repo_root / args.output_dir
+
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
+    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
+    tier1_python_exports = {mapping["pythonExport"] for mapping in tier1_mappings}
+
+    rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
+    python_manifest = parse_python_surface(repo_root, tier1_python_exports)
+    diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
+
+    write_json(output_dir / "rust_api_surface.json", rust_manifest)
+    write_json(output_dir / "python_api_surface.json", python_manifest)
+    write_json(output_dir / "parity_diff_report.json", diff_report)
+    (output_dir / "parity_diff_report.md").write_text(
+        render_diff_markdown(diff_report), encoding="utf-8"
+    )
+
+    print("Python parity baseline generated:")
+    print(f"- {output_dir / 'rust_api_surface.json'}")
+    print(f"- {output_dir / 'python_api_surface.json'}")
+    print(f"- {output_dir / 'parity_diff_report.json'}")
+    print(f"- {output_dir / 'parity_diff_report.md'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -39,6 +39,8 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
   - Rust format/lint/build/test jobs
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml)
   - Node binding parity gate and Bun/Node runtime tests
+- [`ci-python-bindings.yml`](../../.github/workflows/ci-python-bindings.yml)
+  - Python binding parity gate, stub validation, and smoke tests
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml)
   - benchmark regression checks
 
@@ -60,7 +62,14 @@ bun run test:node
 
 ### Python bindings (`ClassicLib-rs/python-bindings`)
 
-Treat as maintained **integration** surfaces. Validate against the relevant Rust crates and binding-specific checks when working in that area.
+```powershell
+uv venv
+uv pip install maturin pytest
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
+uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+```
 
 ---
 
@@ -96,6 +105,7 @@ Do not assume Python runtime/orchestration tests under `deprecated/` are part of
 - [ ] Ran relevant C++ wrapper script tests (`classic-cli` / `classic-gui`)
 - [ ] Ran Rust format/lint/tests for touched crates
 - [ ] Ran Node parity/runtime checks if Node-exposed APIs changed
+- [ ] Ran Python parity/stub/runtime checks if Python-exposed APIs changed
 - [ ] Updated docs when architecture/build/test behavior changed
 
 Canonical policy reference: [`AGENTS.md`](../../AGENTS.md).

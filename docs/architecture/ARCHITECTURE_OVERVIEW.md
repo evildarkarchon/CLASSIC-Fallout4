@@ -117,6 +117,17 @@ bun run test:bun
 bun run test:node
 ```
 
+### Python bindings (when API/bindings change)
+
+```powershell
+uv venv
+uv pip install maturin pytest
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
+uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+```
+
 ---
 
 ## CI Workflow Mapping
@@ -124,6 +135,7 @@ bun run test:node
 - [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test pipeline
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): Rust format/lint/build/test
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity and runtime tests
+- [`ci-python-bindings.yml`](../../.github/workflows/ci-python-bindings.yml): Python parity and runtime smoke tests
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml): benchmark regression gates
 
 ---
