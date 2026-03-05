@@ -216,7 +216,7 @@ Crashgen_Registry:
           action:
             kind: notice_and_skip_remaining
             severity: warning
-            message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes."
+            message: "{crashgen_name} and another crash log generator are incompatible, remove one to avoid crashes."
         - id: bakascrapheap_redundant_addictol
           when:
             plugin_any: [bakascrapheap.dll]
@@ -282,14 +282,14 @@ Backup XSE: # BACKUP FOR SCRIPT EXTENDER
 
 Game_Hints:
   - "Random Hint: [Ctrl] + [F] is a handy-dandy key combination. You should use it more often. Please."
-  - "Random Hint: Patrolling the Buffout 4 Nexus Page almost makes you wish this joke was more overused."
+  - "Random Hint: Patrolling the crash log generator Nexus page almost makes you wish this joke was more overused."
   - "Random Hint: Buffout crash logs are generated in your Documents/My Games/Fallout4/F4SE(VR) folder by default."
   - "Random Hint: You have a crash log where the auto scan could not find any solutions? Feel free to send it to me."
   - "Random Hint: 20% of all crashes are caused by Classic Holstered Weapons mod. 80% of all statistics are made up."
   - "Random Hint: If you do not use Profile Specific INIs, consider disabling this option in your MO2 Profile settings."
   - "Random Hint: Spending 5 morbillion hours asking for help can save you from 5 minutes of reading the documentation."
   - "Random Hint: When necessary, make sure that crashes are consistent or repeatable, since in rare cases they are not."
-  - "Random Hint: Revisit both Buffout 4 Crash Article and CLASSIC Nexus Page from time to time in case there are updates."
+  - "Random Hint: Revisit both Fallout 4 Crash Article and CLASSIC Nexus Page from time to time in case there are updates."
   - "Random Hint: When posting crash logs, it is helpful to mention the last thing you were doing before the crash happened."
 
 Default_CustomINI:
@@ -343,12 +343,12 @@ Default_FIDMods:
 Warnings_CRASHGEN:
   Warn_TOML_Achievements: |
     ❌ CAUTION : Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements parameter is set to TRUE #
-    FIX: Open *Buffout4.toml* and change Achievements parameter to FALSE, this prevents conflicts with Buffout 4.
+    FIX: Open *Buffout4.toml* and change Achievements parameter to FALSE, this prevents conflicts with your crash log generator.
     -----
 
   Warn_TOML__Memory: |
     ❌ CAUTION : Baka ScrapHeap is installed, but MemoryManager parameter is set to TRUE
-    FIX: Open *Buffout4.toml* and change MemoryManager parameter to FALSE, this prevents conflicts with Buffout 4.
+    FIX: Open *Buffout4.toml* and change MemoryManager parameter to FALSE, this prevents conflicts with your crash log generator.
     -----
 
   Warn_TOML__F4EE: |
@@ -357,19 +357,19 @@ Warnings_CRASHGEN:
     -----
 
   Warn_Outdated: |
-    # [!] CAUTION : YOUR BUFFOUT 4 VERSION MIGHT BE OUT OF DATE, UPDATE BO4 IF NECESSARY #
+    # [!] CAUTION : YOUR CRASH LOG GENERATOR VERSION MIGHT BE OUT OF DATE, UPDATE IT IF NECESSARY #
       Original Buffout Version: https://www.nexusmods.com/fallout4/mods/47359
       Buffout VR / NG Version: https://www.nexusmods.com/fallout4/mods/64880
-      Buffout 4 Guide: https://www.nexusmods.com/fallout4/articles/3115
+      Fallout 4 Crash Article: https://www.nexusmods.com/fallout4/articles/3115
 
   Warn_Missing: |
-    # [!] CAUTION : SOME BUFFOUT 4 FILES MIGHT BE MISSING OR HAVE BEEN INCORRECTLY INSTALLED #
+    # [!] CAUTION : SOME CRASH LOG GENERATOR FILES MIGHT BE MISSING OR HAVE BEEN INCORRECTLY INSTALLED #
       Original Buffout Version: https://www.nexusmods.com/fallout4/mods/47359
       Buffout VR / NG Version: https://www.nexusmods.com/fallout4/mods/64880
-      Buffout 4 Guide: https://www.nexusmods.com/fallout4/articles/3115
+      Fallout 4 Crash Article: https://www.nexusmods.com/fallout4/articles/3115
 
   Warn_NOPlugins: |
-    * [!] NOTICE : BUFFOUT 4 WAS NOT ABLE TO LOAD THE PLUGIN LIST FOR THIS CRASH LOG! *
+    * [!] NOTICE : YOUR CRASH LOG GENERATOR WAS NOT ABLE TO LOAD THE PLUGIN LIST FOR THIS CRASH LOG! *
       CLASSIC cannot perform the full scan. Provide or scan a different crash log
       OR copy-paste your *loadorder.txt* into your main CLASSIC folder.
 

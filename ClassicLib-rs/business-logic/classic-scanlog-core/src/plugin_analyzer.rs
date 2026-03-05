@@ -429,6 +429,20 @@ impl PluginAnalyzer {
         segment_callstack_lower: Vec<String>,
         crashlog_plugins_lower: HashSet<String>,
     ) -> Result<Vec<String>> {
+        self.plugin_match_with_crashgen_name(
+            segment_callstack_lower,
+            crashlog_plugins_lower,
+            &self.crashgen_name,
+        )
+    }
+
+    /// Like [`Self::plugin_match`] but allows overriding the crashgen label used in report text.
+    pub fn plugin_match_with_crashgen_name(
+        &self,
+        segment_callstack_lower: Vec<String>,
+        crashlog_plugins_lower: HashSet<String>,
+        crashgen_name: &str,
+    ) -> Result<Vec<String>> {
         let mut lines = Vec::new();
 
         // Pre-filter call stack lines
@@ -466,7 +480,7 @@ impl PluginAnalyzer {
             }
 
             lines.push("\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n".to_string());
-            lines.push(format!("These Plugins were caught by {} and some of them might be responsible for this crash.\n", self.crashgen_name));
+            lines.push(format!("These Plugins were caught by {} and some of them might be responsible for this crash.\n", crashgen_name));
             lines.push("You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n".to_string());
         } else {
             lines.push("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n".to_string());
@@ -1004,6 +1018,30 @@ mod tests {
         let result = analyzer.plugin_match(callstack, plugins).unwrap();
         let output = result.join("");
         assert!(output.contains("COULDN'T FIND"));
+    }
+
+    #[test]
+    fn test_plugin_match_with_crashgen_name_override_uses_effective_name() {
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.10.163vr".to_string(),
+        )
+        .unwrap();
+
+        let callstack = vec!["Function call from mymod.esp".to_string()];
+        let mut plugins = HashSet::new();
+        plugins.insert("mymod.esp".to_string());
+
+        let result = analyzer
+            .plugin_match_with_crashgen_name(callstack, plugins, "Addictol")
+            .unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("caught by Addictol"));
+        assert!(!output.contains("caught by Buffout 4"));
     }
 
     // ============================================

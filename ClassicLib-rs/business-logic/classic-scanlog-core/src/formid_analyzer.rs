@@ -250,8 +250,19 @@ impl FormIDAnalyzerCore {
     /// ```
     pub async fn formid_match(
         &self,
-        mut formids_matches: Vec<String>, // Optimization 1.2: Make mutable for in-place sort
+        formids_matches: Vec<String>,
         crashlog_plugins: &IndexMap<String, String>,
+    ) -> Result<Vec<String>> {
+        self.formid_match_with_crashgen_name(formids_matches, crashlog_plugins, &self.crashgen_name)
+            .await
+    }
+
+    /// Like [`Self::formid_match`] but allows overriding the crashgen label used in report text.
+    pub async fn formid_match_with_crashgen_name(
+        &self,
+        mut formids_matches: Vec<String>,
+        crashlog_plugins: &IndexMap<String, String>,
+        crashgen_name: &str,
     ) -> Result<Vec<String>> {
         if formids_matches.is_empty() {
             return Ok(vec![
@@ -359,7 +370,7 @@ impl FormIDAnalyzerCore {
         lines.extend(vec![
             "\n[Last number counts how many times each Form ID shows up in the crash log.]\n".to_string(),
             format!("These Form IDs were caught by {} and some of them might be related to this crash.\n",
-                    self.crashgen_name),
+                    crashgen_name),
             "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n".to_string(),
         ]);
 
@@ -1003,5 +1014,22 @@ mod tests {
             rows.iter().any(|row| row.contains("Entry 129")),
             "Expected resolved output for the last candidate"
         );
+    }
+
+    #[tokio::test]
+    async fn formid_match_with_crashgen_name_override_uses_effective_name() {
+        let analyzer = build_test_analyzer(None, false);
+        let formids = vec!["Form ID: 01123456".to_string()];
+        let mut crashlog_plugins = IndexMap::new();
+        crashlog_plugins.insert("TestMod.esp".to_string(), "01".to_string());
+
+        let lines = analyzer
+            .formid_match_with_crashgen_name(formids, &crashlog_plugins, "Addictol")
+            .await
+            .expect("formid_match should succeed");
+        let output = lines.join("");
+
+        assert!(output.contains("caught by Addictol"));
+        assert!(!output.contains("caught by Buffout 4"));
     }
 }

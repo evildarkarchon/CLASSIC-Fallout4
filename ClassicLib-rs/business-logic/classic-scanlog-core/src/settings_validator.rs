@@ -14,7 +14,7 @@ use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
 use crate::report::ReportFragment;
 use classic_crashgen_settings_core::{
-    evaluate_rules, ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity,
+    ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
 };
 use log::warn;
 use std::collections::{HashMap, HashSet};
@@ -193,7 +193,7 @@ impl SettingsValidator {
                         "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
                         self.crashgen_name
                     ),
-                    "  Running Addictol TOML checks scaffold instead of Buffout checks.\n\n-----\n"
+                    "  Running Addictol TOML checks scaffold instead of default crashgen checks.\n\n-----\n"
                         .to_string(),
                 ]));
             }
@@ -979,9 +979,11 @@ mod tests {
             .unwrap();
         assert!(!fragments.is_empty());
         let lines = fragments[0].to_list();
-        assert!(lines
-            .iter()
-            .any(|line| line.contains("Achievements should be disabled")));
+        assert!(
+            lines
+                .iter()
+                .any(|line| line.contains("Achievements should be disabled"))
+        );
     }
 
     #[test]
@@ -1082,12 +1084,16 @@ mod tests {
             .unwrap();
         let all_lines: Vec<String> = fragments.iter().flat_map(ReportFragment::to_list).collect();
 
-        assert!(all_lines
-            .iter()
-            .any(|line| line.contains("Achievements parameter is correctly configured")));
-        assert!(all_lines
-            .iter()
-            .any(|line| line.contains("Memory Manager parameter is correctly configured")));
+        assert!(
+            all_lines
+                .iter()
+                .any(|line| line.contains("Achievements parameter is correctly configured"))
+        );
+        assert!(
+            all_lines
+                .iter()
+                .any(|line| line.contains("Memory Manager parameter is correctly configured"))
+        );
         assert!(all_lines.iter().any(|line| line.contains("Archive pass")));
         assert!(all_lines.iter().any(|line| line.contains("LooksMenu pass")));
     }
@@ -1132,12 +1138,16 @@ mod tests {
             .unwrap();
         let all_lines: Vec<String> = fragments.iter().flat_map(ReportFragment::to_list).collect();
 
-        assert!(all_lines
-            .iter()
-            .any(|line| line.contains("YAML achievements pass")));
-        assert!(!all_lines
-            .iter()
-            .any(|line| line.contains("Achievements parameter is correctly configured")));
+        assert!(
+            all_lines
+                .iter()
+                .any(|line| line.contains("YAML achievements pass"))
+        );
+        assert!(
+            !all_lines
+                .iter()
+                .any(|line| line.contains("Achievements parameter is correctly configured"))
+        );
     }
 
     #[test]
@@ -1183,15 +1193,21 @@ mod tests {
         let all_lines: Vec<String> = fragments.iter().flat_map(ReportFragment::to_list).collect();
 
         assert!(all_lines.iter().any(|line| line.contains("skip remaining")));
-        assert!(!all_lines
-            .iter()
-            .any(|line| line.contains("Achievements parameter is correctly configured")));
-        assert!(!all_lines
-            .iter()
-            .any(|line| line.contains("Memory Manager parameter is correctly configured")));
-        assert!(!all_lines
-            .iter()
-            .any(|line| line.contains("ArchiveLimit parameter is correctly configured")));
+        assert!(
+            !all_lines
+                .iter()
+                .any(|line| line.contains("Achievements parameter is correctly configured"))
+        );
+        assert!(
+            !all_lines
+                .iter()
+                .any(|line| line.contains("Memory Manager parameter is correctly configured"))
+        );
+        assert!(
+            !all_lines
+                .iter()
+                .any(|line| line.contains("ArchiveLimit parameter is correctly configured"))
+        );
     }
 
     #[test]

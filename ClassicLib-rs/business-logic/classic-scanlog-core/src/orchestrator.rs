@@ -924,8 +924,7 @@ impl OrchestratorCore {
         // Parse log into named segments using anchor-first segmentation (task 4.1)
         let segments = self.parser.parse_all_sections_arc(&lines);
 
-        // Create ReportGenerator and ReportComposer for proper formatting
-        let report_gen = self.create_report_generator();
+        // Create ReportComposer for proper formatting
         let mut composer = ReportComposer::new();
 
         // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP.
@@ -941,6 +940,21 @@ impl OrchestratorCore {
         .flat_map(|segment_lines| segment_lines.iter().cloned())
         .collect();
 
+        // Extract XSE modules for settings validation.
+        // Combine MODULES + XSE_MODULES to preserve backward compatibility.
+        let combined_modules: Vec<Arc<str>> = {
+            let mods = segments
+                .get(segment_key::MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            let xse = segments
+                .get(segment_key::XSE_MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            mods.iter().chain(xse.iter()).cloned().collect()
+        };
+        let xse_modules_for_settings: HashSet<String> = extract_module_names(&combined_modules);
+
         // Statistics
         let mut formid_count = 0;
         let mut plugin_count = 0;
@@ -951,9 +965,6 @@ impl OrchestratorCore {
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or(&log_path);
-
-        // Generate header
-        composer.add(report_gen.generate_header(crashlog_filename));
 
         // Extract header info (crashgen version, main error) from the raw processed lines
         // We use processed_lines because header is in the first ~20 lines before segmentation
@@ -967,6 +978,15 @@ impl OrchestratorCore {
             .get("crashgen_version")
             .cloned()
             .unwrap_or_default();
+
+        let effective_crashgen_name =
+            self.resolve_effective_crashgen_name(&crashgen_version_str, &xse_modules_for_settings);
+
+        // Create ReportGenerator for this log using effective crashgen name.
+        let report_gen = self.create_report_generator_with_crashgen_name(&effective_crashgen_name);
+
+        // Generate header
+        composer.add(report_gen.generate_header(crashlog_filename));
 
         // Get detected game version from header info (used for list-based version validation)
         let detected_game_version_str =
@@ -1103,22 +1123,6 @@ impl OrchestratorCore {
         };
         composer.add(fcx_handler.get_fcx_messages());
 
-        // Extract XSE modules for settings validation (tasks 4.5).
-        // Combine MODULES + XSE_MODULES to preserve backward compat (in the old
-        // segmentation both DLLs and XSE plugins were in one combined segment).
-        let combined_modules: Vec<Arc<str>> = {
-            let mods = segments
-                .get(segment_key::MODULES)
-                .map(Vec::as_slice)
-                .unwrap_or_default();
-            let xse = segments
-                .get(segment_key::XSE_MODULES)
-                .map(Vec::as_slice)
-                .unwrap_or_default();
-            mods.iter().chain(xse.iter()).cloned().collect()
-        };
-        let xse_modules_for_settings: HashSet<String> = extract_module_names(&combined_modules);
-
         // Parse crashgen settings from settings segment (task 4.2)
         // Format: "key: value" (TOML-like with colon separator)
         // Skip section headers like [Compatibility], [Crashlog], [Fixes], etc.
@@ -1155,8 +1159,6 @@ impl OrchestratorCore {
 
         // Add settings validation section
         let settings_validator = if !crashgen_settings.is_empty() {
-            let effective_crashgen_name = self
-                .resolve_effective_crashgen_name(&crashgen_version_str, &xse_modules_for_settings);
             if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
                 self.settings_validator.clone()
             } else {
@@ -1292,9 +1294,11 @@ impl OrchestratorCore {
                         plugins.keys().map(|k| k.to_lowercase()).collect();
 
                     // Call plugin_match to find plugins in crash stack
-                    if let Ok(plugin_match_lines) =
-                        analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
-                    {
+                    if let Ok(plugin_match_lines) = analyzer.plugin_match_with_crashgen_name(
+                        segment_callstack_lower,
+                        crashlog_plugins_lower,
+                        &effective_crashgen_name,
+                    ) {
                         // Add the header and the plugin match results
                         composer.add(report_gen.generate_plugin_suspect_header());
                         composer.add(ReportFragment::from_lines(plugin_match_lines));
@@ -1322,7 +1326,7 @@ impl OrchestratorCore {
 
                 let formid_report_lines = self
                     .formid_analyzer
-                    .formid_match(formids, plugins_ref)
+                    .formid_match_with_crashgen_name(formids, plugins_ref, &effective_crashgen_name)
                     .await?;
 
                 composer.add(report_gen.generate_formid_section_header());
@@ -1336,7 +1340,11 @@ impl OrchestratorCore {
                 let callstack_lines: Vec<String> =
                     combined_crash_data.iter().map(|s| s.to_string()).collect();
 
-                let (record_report, _matches) = record_scanner.scan_named_records(&callstack_lines);
+                let (record_report, _matches) = record_scanner
+                    .scan_named_records_with_crashgen_name(
+                        &callstack_lines,
+                        &effective_crashgen_name,
+                    );
                 if !record_report.is_empty() {
                     composer.add(report_gen.generate_record_section_header());
                     composer.add(ReportFragment::from_lines(record_report));
@@ -1630,6 +1638,17 @@ impl OrchestratorCore {
         ReportGenerator::with_config(
             self.config.classic_version.clone(),
             self.config.crashgen_name.clone(),
+        )
+    }
+
+    /// Creates a ReportGenerator configured with an explicit crashgen name.
+    pub fn create_report_generator_with_crashgen_name(
+        &self,
+        crashgen_name: &str,
+    ) -> ReportGenerator {
+        ReportGenerator::with_config(
+            self.config.classic_version.clone(),
+            crashgen_name.to_string(),
         )
     }
 
@@ -2225,6 +2244,24 @@ mod tests {
         let resolved = orchestrator.resolve_effective_crashgen_name("", &xse_modules);
 
         assert_eq!(resolved, "Buffout 4");
+    }
+
+    #[test]
+    fn create_report_generator_with_crashgen_name_updates_error_section_label() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let report_gen = orchestrator.create_report_generator_with_crashgen_name("Addictol");
+        let fragment = report_gen.generate_error_section_with_status(
+            "Unhandled exception",
+            "Addictol v1.0.0",
+            Some(crate::version::CrashgenVersionStatus::Valid),
+        );
+        let text = fragment.to_list().join("");
+
+        assert!(text.contains("Detected Addictol Version"));
+        assert!(text.contains("valid version of Addictol"));
+        assert!(!text.contains("Detected Buffout 4 Version"));
     }
 
     #[test]
