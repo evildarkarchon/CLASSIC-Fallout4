@@ -76,7 +76,7 @@ jobs:
             exit 1
           }
 
-      - name: Run Tier-1 parity gate
+      - name: Run Tier-1 parity and runtime coverage gate
         working-directory: ClassicLib-rs/node-bindings/classic-node
         run: bun run parity:gate
 
@@ -84,7 +84,7 @@ jobs:
         working-directory: ClassicLib-rs/node-bindings/classic-node
         run: bun run dts:freshness:check
 
-      - name: Upload parity diagnostics
+      - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:

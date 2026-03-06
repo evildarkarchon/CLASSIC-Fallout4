@@ -202,12 +202,17 @@ Checklist:
 
 1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/node_api_parity/governance/tier2_backlog_and_governance.md`.
 2. If promoting to Tier-1, update `docs/implementation/node_api_parity/baseline/parity_contract.json`.
-3. Regenerate and commit `ClassicLib-rs/node-bindings/classic-node/index.d.ts`.
-4. Run from `ClassicLib-rs/node-bindings/classic-node`:
+3. Update `ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` for any new runtime-verified or deferred coverage surface.
+4. Refresh and commit:
+   - `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
+   - `docs/implementation/node_api_parity/baseline/runtime_coverage_summary.json`
+   - `docs/implementation/node_api_parity/baseline/runtime_coverage_summary.md`
+   - `docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json`
+5. Run from `ClassicLib-rs/node-bindings/classic-node`:
    - `bun run parity:gate:local`
    - `bun run test:bun`
    - `bun run test:node`
-5. Confirm `ci-typescript.yml` parity jobs pass before merge.
+6. Confirm `ci-typescript.yml` parity jobs pass before merge.
 
 Release gate policy:
 
@@ -231,11 +236,17 @@ Checklist:
 
 1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/python_api_parity/governance/tier2_backlog_and_governance.md`.
 2. If promoting to Tier-1, update `docs/implementation/python_api_parity/baseline/parity_contract.json`.
-3. Run local gates:
+3. Update `ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json` for any new runtime-verified or deferred coverage surface.
+4. Refresh and commit:
+   - `docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json`
+   - `docs/implementation/python_api_parity/baseline/runtime_coverage_summary.md`
+   - `docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json`
+   - `docs/implementation/python_api_parity/governance/tier2_wave_manifest.json`
+5. Run local gates:
    - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
    - `python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
    - `uv run python -m pytest ClassicLib-rs/python-bindings/tests -q`
-4. Confirm `ci-python-bindings.yml` jobs pass before merge.
+6. Confirm `ci-python-bindings.yml` jobs pass before merge.
 
 ---
 

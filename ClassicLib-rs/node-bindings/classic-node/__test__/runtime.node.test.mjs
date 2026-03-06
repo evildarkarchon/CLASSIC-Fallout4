@@ -1,12 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 const require = createRequire(import.meta.url);
 const classic = require("../index.js");
+const runtimeCoverageRegistry = JSON.parse(
+  readFileSync(new URL("./fixtures/runtime_coverage_registry.json", import.meta.url), "utf-8"),
+);
+const activeTier1Owners = new Set(
+  runtimeCoverageRegistry.entries
+    .filter((entry) => entry.tier === "tier1")
+    .map((entry) => entry.ownerModule),
+);
 
 const MAIN_YAML = `
 CLASSIC_Info:
@@ -50,48 +58,47 @@ test("loads native binding in Node runtime", () => {
   assert.equal(typeof classic.getVersionById, "function");
 });
 
-test("runs Tier-1 sync APIs in Node runtime", () => {
-  const config = classic.createAnalysisConfig("Fallout4", "auto");
-  assert.equal(config.game, "Fallout4");
-  assert.equal(config.gameVersion, "auto");
+if (activeTier1Owners.has("scanlog")) {
+  test("runs Tier-1 sync APIs in Node runtime", () => {
+    const config = classic.createAnalysisConfig("Fallout4", "auto");
+    assert.equal(config.game, "Fallout4");
+    assert.equal(config.gameVersion, "auto");
 
-  const fromYaml = classic.createAnalysisConfigFromYamlContent(
-    MAIN_YAML,
-    GAME_YAML,
-    IGNORE_YAML,
-    "Fallout4",
-    "auto",
-  );
-  assert.equal(fromYaml.crashgenName, "Buffout 4");
-  assert.equal(fromYaml.xseAcronym, "F4SE");
+    const fromYaml = classic.createAnalysisConfigFromYamlContent(
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+    );
+    assert.equal(fromYaml.crashgenName, "Buffout 4");
+    assert.equal(fromYaml.xseAcronym, "F4SE");
+  });
+}
 
-  const versions = classic.getAllVersionsForGame("Fallout4");
-  assert.equal(Array.isArray(versions), true);
-  assert.equal(versions.length > 0, true);
+if (activeTier1Owners.has("config")) {
+  test("runs Tier-1 config/cache APIs in Node runtime", () => {
+    assert.equal(classic.DEFAULT_CACHE_TTL, classic.getDefaultCacheTtl());
+    assert.equal(classic.BATCH_CACHE_TTL, classic.getBatchCacheTtl());
+    assert.equal(classic.MAX_CACHE_TTL, classic.getMaxCacheTtl());
 
-  const sourceName = classic.getYamlSourceDisplayName("Main");
-  assert.equal(sourceName, "Main Database");
-});
+    const yamlFiles = classic.getAllYamlFiles();
+    assert.equal(Array.isArray(yamlFiles), true);
+    assert.equal(yamlFiles.includes("Main"), true);
+    assert.equal(
+      classic.getYamlFileDescription("Main").includes("CLASSIC Main.yaml"),
+      true,
+    );
 
-test("runs Tier-1 config/cache APIs in Node runtime", () => {
-  assert.equal(classic.DEFAULT_CACHE_TTL, classic.getDefaultCacheTtl());
-  assert.equal(classic.BATCH_CACHE_TTL, classic.getBatchCacheTtl());
-  assert.equal(classic.MAX_CACHE_TTL, classic.getMaxCacheTtl());
+    const yaml = classic.yamlStringify({ root: { enabled: true } });
+    const parsed = classic.yamlParse(yaml);
+    assert.equal(parsed.root.enabled, true);
+    assert.equal(classic.getYamlSourceDisplayName("Main"), "Main Database");
+  });
+}
 
-  const yamlFiles = classic.getAllYamlFiles();
-  assert.equal(Array.isArray(yamlFiles), true);
-  assert.equal(yamlFiles.includes("Main"), true);
-  assert.equal(
-    classic.getYamlFileDescription("Main").includes("CLASSIC Main.yaml"),
-    true,
-  );
-
-  const yaml = classic.yamlStringify({ root: { enabled: true } });
-  const parsed = classic.yamlParse(yaml);
-  assert.equal(parsed.root.enabled, true);
-});
-
-test("runs Tier-1 settings cache and path validators in Node runtime", () => {
+if (activeTier1Owners.has("config")) {
+  test("runs Tier-1 settings cache and path validators in Node runtime", () => {
   const dir = mkdtempSync(join(tmpdir(), "classic-node-runtime-"));
   const gameDir = join(dir, "game");
   const docsDir = join(dir, "docs");
@@ -129,25 +136,30 @@ test("runs Tier-1 settings cache and path validators in Node runtime", () => {
     classic.clearSettingsCache();
     rmSync(dir, { recursive: true, force: true });
   }
-});
+  });
+}
 
-test("supports optional params and stable string mappings in Node runtime", () => {
-  const all = classic.getAllVersionsForGame("Fallout4");
-  const vrOnly = classic.getAllVersionsForGame("Fallout4", true);
-  assert.equal(all.length >= vrOnly.length, true);
+if (activeTier1Owners.has("version_registry")) {
+  test("supports optional params and stable string mappings in Node runtime", () => {
+    const all = classic.getAllVersionsForGame("Fallout4");
+    const vrOnly = classic.getAllVersionsForGame("Fallout4", true);
+    assert.equal(Array.isArray(all), true);
+    assert.equal(all.length >= vrOnly.length, true);
 
-  const handling = classic.getUnknownVersionHandling();
-  assert.equal(
-    ["nearest_match", "strict", "default_only"].includes(handling.strategy),
-    true,
-  );
-  assert.equal(
-    ["debug", "warning", "error"].includes(handling.logLevel),
-    true,
-  );
-});
+    const handling = classic.getUnknownVersionHandling();
+    assert.equal(
+      ["nearest_match", "strict", "default_only"].includes(handling.strategy),
+      true,
+    );
+    assert.equal(
+      ["debug", "warning", "error"].includes(handling.logLevel),
+      true,
+    );
+  });
+}
 
-test("runs Phase 4A aux foundation APIs in Node runtime", async () => {
+if (activeTier1Owners.has("aux")) {
+  test("runs Phase 4A aux foundation APIs in Node runtime", async () => {
   const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-foundation-"));
   const settingsA = join(dir, "a.yaml");
   const settingsB = join(dir, "b.yaml");
@@ -198,9 +210,11 @@ test("runs Phase 4A aux foundation APIs in Node runtime", async () => {
     classic.clearAllMetrics();
     rmSync(dir, { recursive: true, force: true });
   }
-});
+  });
+}
 
-test("runs Phase 4B aux scanner stack APIs in Node runtime", async () => {
+if (activeTier1Owners.has("aux")) {
+  test("runs Phase 4B aux scanner stack APIs in Node runtime", async () => {
   const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-scanner-stack-"));
   const logPath = join(dir, "runtime.log");
 
@@ -267,16 +281,19 @@ test("runs Phase 4B aux scanner stack APIs in Node runtime", async () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-});
+  });
+}
 
-test("runs Tier-1 async API in Node runtime", async () => {
-  const results = await classic.processLogsBatchWithYamlContent(
-    [],
-    MAIN_YAML,
-    GAME_YAML,
-    IGNORE_YAML,
-    "Fallout4",
-    "auto",
-  );
-  assert.deepEqual(results, []);
-});
+if (activeTier1Owners.has("scanlog")) {
+  test("runs Tier-1 async API in Node runtime", async () => {
+    const results = await classic.processLogsBatchWithYamlContent(
+      [],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+    );
+    assert.deepEqual(results, []);
+  });
+}

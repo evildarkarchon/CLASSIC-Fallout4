@@ -93,6 +93,15 @@ import {
   configSourceCases,
   versionRegistryCases,
 } from "./fixtures/tier1_parity.fixtures";
+import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
+
+const THIS_SUITE =
+  "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts";
+const activeCoverageCases = new Set(
+  getRuntimeCoverageEntries(THIS_SUITE)
+    .map((entry) => entry.testCaseId)
+    .filter((testCaseId): testCaseId is string => Boolean(testCaseId)),
+);
 
 function expectErrorWithMessage(err: unknown): void {
   expect(err).toBeDefined();
@@ -101,58 +110,61 @@ function expectErrorWithMessage(err: unknown): void {
 }
 
 describe("Tier-1 parity fixture suites", () => {
-  describe("scanlog parity", () => {
-    for (const fixture of scanlogConfigCases) {
-      test(`createAnalysisConfig parity: ${fixture.id}`, () => {
-        const config = createAnalysisConfig(fixture.game, fixture.gameVersion);
-        expect(config.game).toBe(fixture.game);
-        expect(config.gameVersion).toBe(fixture.gameVersion);
-        expect(config.crashgenName).toBe(fixture.expected.crashgenName);
-        expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
-        expect(config.classicVersion).toBe(fixture.expected.classicVersion);
-        expect(config.fcxMode).toBe(fixture.expected.fcxMode);
-        expect(config.simplifyLogs).toBe(fixture.expected.simplifyLogs);
-      });
-    }
-
-    for (const fixture of scanlogYamlOptionsCases) {
-      test(`createAnalysisConfigFromYamlContent parity: ${fixture.id}`, () => {
-        const config = createAnalysisConfigFromYamlContent(
-          PARITY_MAIN_YAML,
-          PARITY_GAME_YAML,
-          PARITY_IGNORE_YAML,
-          "Fallout4",
-          "auto",
-          fixture.options,
-        );
-        expect(config.game).toBe("Fallout4");
-        expect(config.gameVersion).toBe("auto");
-        expect(config.crashgenName).toBe(fixture.expected.crashgenName);
-        expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
-        expect(config.classicVersion).toBe(fixture.expected.classicVersion);
-        expect(config.fcxMode).toBe(fixture.expected.fcxMode);
-        expect(config.simplifyLogs).toBe(fixture.expected.simplifyLogs);
-      });
-    }
-
-    test("processLogWithYamlContent keeps stable reject semantics for missing file", async () => {
-      try {
-        await processLogWithYamlContent(
-          scanlogErrorCase.missingLogPath,
-          PARITY_MAIN_YAML,
-          PARITY_GAME_YAML,
-          PARITY_IGNORE_YAML,
-          "Fallout4",
-          "auto",
-        );
-        expect(true).toBe(false);
-      } catch (err: unknown) {
-        expectErrorWithMessage(err);
+  if (activeCoverageCases.has("scanlog-tier1-parity")) {
+    describe("scanlog parity", () => {
+      for (const fixture of scanlogConfigCases) {
+        test(`createAnalysisConfig parity: ${fixture.id}`, () => {
+          const config = createAnalysisConfig(fixture.game, fixture.gameVersion);
+          expect(config.game).toBe(fixture.game);
+          expect(config.gameVersion).toBe(fixture.gameVersion);
+          expect(config.crashgenName).toBe(fixture.expected.crashgenName);
+          expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
+          expect(config.classicVersion).toBe(fixture.expected.classicVersion);
+          expect(config.fcxMode).toBe(fixture.expected.fcxMode);
+          expect(config.simplifyLogs).toBe(fixture.expected.simplifyLogs);
+        });
       }
-    });
-  });
 
-  describe("config parity", () => {
+      for (const fixture of scanlogYamlOptionsCases) {
+        test(`createAnalysisConfigFromYamlContent parity: ${fixture.id}`, () => {
+          const config = createAnalysisConfigFromYamlContent(
+            PARITY_MAIN_YAML,
+            PARITY_GAME_YAML,
+            PARITY_IGNORE_YAML,
+            "Fallout4",
+            "auto",
+            fixture.options,
+          );
+          expect(config.game).toBe("Fallout4");
+          expect(config.gameVersion).toBe("auto");
+          expect(config.crashgenName).toBe(fixture.expected.crashgenName);
+          expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
+          expect(config.classicVersion).toBe(fixture.expected.classicVersion);
+          expect(config.fcxMode).toBe(fixture.expected.fcxMode);
+          expect(config.simplifyLogs).toBe(fixture.expected.simplifyLogs);
+        });
+      }
+
+      test("processLogWithYamlContent keeps stable reject semantics for missing file", async () => {
+        try {
+          await processLogWithYamlContent(
+            scanlogErrorCase.missingLogPath,
+            PARITY_MAIN_YAML,
+            PARITY_GAME_YAML,
+            PARITY_IGNORE_YAML,
+            "Fallout4",
+            "auto",
+          );
+          expect(true).toBe(false);
+        } catch (err: unknown) {
+          expectErrorWithMessage(err);
+        }
+      });
+    });
+  }
+
+  if (activeCoverageCases.has("config-tier1-parity")) {
+    describe("config parity", () => {
     test("createYamlDataFromContent returns stable Tier-1 fields", () => {
       const data = createYamlDataFromContent(
         PARITY_MAIN_YAML,
@@ -288,9 +300,11 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-  });
+    });
+  }
 
-  describe("aux foundation parity", () => {
+  if (activeCoverageCases.has("aux-tier1-parity")) {
+    describe("aux foundation parity", () => {
     test("shared runtime/path/metrics APIs keep stable callable shape", () => {
       const normalized = normalizePath(".");
       expect(typeof normalized).toBe("string");
@@ -358,9 +372,11 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-  });
+    });
+  }
 
-  describe("aux scanner stack parity", () => {
+  if (activeCoverageCases.has("aux-tier1-parity")) {
+    describe("aux scanner stack parity", () => {
     test("database/resource/xse/web/update APIs keep stable callable shape", async () => {
       const pool = new JsDatabasePool("Fallout4");
       expect(pool.getGameTable()).toBe("Fallout4");
@@ -418,9 +434,11 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-  });
+    });
+  }
 
-  describe("version registry parity", () => {
+  if (activeCoverageCases.has("version-registry-tier1-parity")) {
+    describe("version registry parity", () => {
     for (const fixture of versionRegistryCases) {
       test(`getVersionById parity: ${fixture.id}`, () => {
         const info = getVersionById(fixture.versionId);
@@ -451,5 +469,6 @@ describe("Tier-1 parity fixture suites", () => {
         expectErrorWithMessage(err);
       }
     });
-  });
+    });
+  }
 });

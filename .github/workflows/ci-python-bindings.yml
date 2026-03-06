@@ -26,13 +26,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Run Tier-1 Python parity gate
+      - name: Run Tier-1 Python parity and runtime coverage gate
         run: python tools/python_api_parity/check_parity_gate.py --repo-root .
 
       - name: Run Python stub validation gate
         run: python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 
-      - name: Upload parity diagnostics
+      - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:

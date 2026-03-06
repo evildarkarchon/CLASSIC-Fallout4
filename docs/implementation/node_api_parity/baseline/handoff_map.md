@@ -1,20 +1,22 @@
 # Phase 1 Engineering Handoff Map
 
-- Generated: `2026-03-03T02:18:54.985132+00:00`
-- Total gaps handed off: **99**
+- Generated: `2026-03-06T06:47:30.499054+00:00`
+- Total gaps handed off: **101**
 
 ## Squad A (scanlog/config)
 
 ### `config`
 
-- Total gaps: **19**
+- Total gaps: **21**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **19**
+- Tier 2 gaps: **21**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `ConfigError` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenEntryRaw` | `-` |
+| `rust_unmapped` | `tier2` | `format_registry_game_version` | `-` |
+| `rust_unmapped` | `tier2` | `resolve_registry_version_info` | `-` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_INTERVAL` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_QUERY_CACHE_CAPACITY` |

@@ -2,12 +2,13 @@
 
 ## Status Baseline
 
-Source baseline: `parity_diff_report.md` and `handoff_map.md`.
+Source baseline: `parity_diff_report.md`, `runtime_coverage_summary.md`, and `handoff_map.md`.
 
-- Last refreshed from baseline artifacts: `2026-02-26T00:44:49.305404+00:00`
+- Last refreshed from baseline artifacts: `2026-03-06T06:47:30.500597+00:00`
 - Tier-1 contract rows: `262`
 - Tier-1 drift: `0` (all matched)
-- Deferred Tier-2 gaps: `83`
+- Runtime-verified tracked surfaces: `271`
+- Deferred Tier-2 gaps: `92`
 
 Wave-planning setup artifacts:
 
@@ -24,16 +25,18 @@ Tier-2 remains intentionally deferred so we can preserve guaranteed parity for h
 The complete, machine-readable backlog is tracked in:
 
 - `parity_diff_report.json`
+- `runtime_coverage_summary.json`
 - `handoff_map.md`
+- `deferred_runtime_backlog.json`
 
 Working summary by owner module:
 
 | Owner Module | Tier-2 Gap Count | Deferred Rationale | Representative Deferred APIs |
 |---|---:|---|---|
-| `scanlog` | 70 | Advanced parser/scanner internals and helper types are not required for current cross-language app workflows. | `StreamingLogParser`, `ReportGenerator`, `PatternMatcher`, `detect_mods_batch` |
-| `config` | 13 | Remaining low-level YAML/settings internals are intentionally outside the guaranteed Tier-1 workflow surface. | `ConfigError`, `CrashgenEntryRaw`, `detectConfigDuplicates`, `needsPathDetection` |
-| `version_registry` | 0 | No deferred Tier-2 gaps currently. | `-` |
-| `aux` | 0 | No deferred Tier-2 gaps currently. | `-` |
+| `scanlog` | 64 | Advanced parser/scanner internals and helper types are not required for current cross-language app workflows. | `StreamingLogParser`, `ReportGenerator`, `PatternMatcher`, `detect_mods_batch` |
+| `config` | 18 | Remaining low-level YAML/settings internals are intentionally outside the guaranteed Tier-1 workflow surface. | `ConfigError`, `CrashgenEntryRaw`, `format_registry_game_version`, `resolve_registry_version_info` |
+| `version_registry` | 4 | Lower-priority compatibility helpers remain deferred until a workflow requires them directly. | `MatchConfidence`, `MatchResult`, `UnknownVersionHandling`, `VersionInfo` |
+| `aux` | 6 | A small residual utility surface remains deferred after runtime-verifying the higher-value filesystem, registry, and logger helpers. | `registryClear`, `registryRemove`, `registrySet`, `registrySetGameVersion` |
 
 ## Tier-2 To Tier-1 Promotion Criteria
 
@@ -50,6 +53,7 @@ Promotion implementation requirements:
 
 - Add or update `#[napi]` exports in `ClassicLib-rs/node-bindings/classic-node/src/`.
 - Rebuild declarations and commit `ClassicLib-rs/node-bindings/classic-node/index.d.ts`.
+- Refresh `docs/implementation/node_api_parity/baseline/runtime_coverage_summary.{json,md}` and `docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json` when tracked coverage moves.
 - Run local gates from `ClassicLib-rs/node-bindings/classic-node`:
   - `bun run parity:gate:local`
   - `bun run test:bun`

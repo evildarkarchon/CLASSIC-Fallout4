@@ -1,4 +1,4 @@
-"""Tier-1 parity smoke tests for maintained Python bindings."""
+"""Registry-driven runtime parity smoke tests for maintained Python bindings."""
 
 from __future__ import annotations
 
@@ -6,11 +6,15 @@ from pathlib import Path
 
 import pytest
 
+from .fixtures.runtime_coverage_registry import get_runtime_coverage_case_ids
 from .fixtures.tier1_parity_fixtures import (
     PARITY_GAME_YAML,
     PARITY_IGNORE_YAML,
     PARITY_MAIN_YAML,
 )
+
+
+THIS_SUITE = "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py"
 
 
 def test_imports_and_versions() -> None:
@@ -25,7 +29,7 @@ def test_imports_and_versions() -> None:
     assert isinstance(classic_version_registry.__version__, str)
 
 
-def test_config_smoke() -> None:
+def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import classic_config
 
     data = classic_config.YamlData.from_yaml_content(
@@ -39,10 +43,6 @@ def test_config_smoke() -> None:
     assert data.xse_acronym == "F4SE"
     assert data.crashgen_name == "Buffout 4"
     classic_config.clear_yaml_cache()
-
-
-def test_config_runtime_workflow_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import classic_config
 
     config = classic_config.ClassicConfig()
     assert config.game_version == "auto"
@@ -69,8 +69,8 @@ def test_config_runtime_workflow_smoke(tmp_path: Path, monkeypatch: pytest.Monke
         "\n".join(
             (
                 "Game_Info:",
-                "  Root_Folder_Game: \"C:/Games/Fallout4\"",
-                "  Root_Folder_Docs: \"C:/Users/Test/Documents/My Games/Fallout4\"",
+                '  Root_Folder_Game: "C:/Games/Fallout4"',
+                '  Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"',
             )
         ),
         encoding="utf-8",
@@ -81,11 +81,17 @@ def test_config_runtime_workflow_smoke(tmp_path: Path, monkeypatch: pytest.Monke
     assert config.paths.docs_root == "C:/Users/Test/Documents/My Games/Fallout4"
 
     assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
-    assert classic_config.YamlSource.GAME.display_name_with_game("Fallout4") == "Fallout4 Database"
-    assert classic_config.YamlSource.GAME.path("Fallout4").endswith("CLASSIC Fallout4.yaml")
+    assert (
+        classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
+        == "Fallout4 Database"
+    )
+    assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
+        "CLASSIC Fallout4.yaml"
+    )
 
 
-def test_scanlog_smoke() -> None:
+def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_config
     import classic_scanlog
 
     parser = classic_scanlog.LogParser()
@@ -93,11 +99,6 @@ def test_scanlog_smoke() -> None:
     assert isinstance(
         classic_scanlog.extract_formids_batch([["Form ID: FF001234"]]), list
     )
-
-
-def test_scanlog_expanded_workflow_smoke(tmp_path: Path) -> None:
-    import classic_config
-    import classic_scanlog
 
     repo_root = Path(__file__).resolve().parents[3]
     log_path = (
@@ -139,7 +140,6 @@ def test_scanlog_expanded_workflow_smoke(tmp_path: Path) -> None:
     )
     assert config.remove_list == ["skip-me"]
 
-    parser = classic_scanlog.LogParser()
     assert isinstance(parser.parse_segments(log_lines), list)
     assert isinstance(parser.extract_formids(log_lines), list)
     assert isinstance(parser.extract_plugins(log_lines), list)
@@ -176,7 +176,9 @@ def test_scanlog_expanded_workflow_smoke(tmp_path: Path) -> None:
     assert len(batch_results) == 1
 
 
-def test_version_registry_smoke() -> None:
+def _run_version_registry_tier1_smoke(
+    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
     import classic_version_registry
 
     registry = classic_version_registry.get_version_registry()
@@ -191,12 +193,13 @@ def test_version_registry_smoke() -> None:
     )
     assert result.is_valid is True
 
-
-def test_version_registry_expanded_workflow_smoke() -> None:
-    import classic_version_registry
-
     game_version = classic_version_registry.GameVersion("1.10.163.0")
-    assert game_version.semantic_distance(classic_version_registry.GameVersion("1.10.984.0")) > 0
+    assert (
+        game_version.semantic_distance(
+            classic_version_registry.GameVersion("1.10.984.0")
+        )
+        > 0
+    )
 
     registry = classic_version_registry.VersionRegistry()
     assert registry.get_by_version("1.10.163.0") is not None
@@ -220,7 +223,49 @@ def test_version_registry_expanded_workflow_smoke() -> None:
     assert registry.unknown_version_handling.get_default("Fallout4") is not None
 
 
-def test_pybridge_smoke() -> None:
+def _run_config_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_config
+
+    data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        PARITY_GAME_YAML,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    assert data.classic_version_date == "2026-02-25"
+    assert data.warn_outdated == "Outdated"
+    assert data.autoscan_text == "Autoscan Fallout 4"
+
+
+def _run_scanlog_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_scanlog
+
+    version = classic_scanlog.parse_crashgen_version("Buffout 4 v1.28.6")
+    assert version is not None
+    assert version.to_tuple() == (1, 28, 6)
+
+    parser = classic_scanlog.LogParser()
+    errors = parser.find_errors(["INFO: ok", "ERROR: sample failure"])
+    assert isinstance(errors, list)
+    assert len(errors) >= 1
+
+    matcher = classic_scanlog.PatternMatcher([r"Buffout", r"GPU"])
+    assert len(matcher.find_all("Buffout 4 GPU warning")) >= 1
+    assert matcher.has_match("GPU fallback detected") is True
+
+
+def _run_version_registry_tier2_smoke(
+    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import classic_version_registry
+
+    base = classic_version_registry.GameVersion("1.10.163.0")
+    newer = classic_version_registry.GameVersion("1.10.984.0")
+    assert base.semantic_distance(newer) > 0
+
+
+def _run_aux_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
     import classic_pybridge
 
     classic_pybridge.clear_metrics()
@@ -229,6 +274,25 @@ def test_pybridge_smoke() -> None:
     )
     metrics = classic_pybridge.get_metrics()
     assert metrics.run_async_count >= 1
+    assert classic_pybridge.is_runtime_available() is True
 
     info = classic_pybridge.get_runtime_info()
     assert info.available is True
+
+
+CASE_RUNNERS = {
+    "config-tier1-smoke": _run_config_tier1_smoke,
+    "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
+    "version-registry-tier1-smoke": _run_version_registry_tier1_smoke,
+    "config-tier2-smoke": _run_config_tier2_smoke,
+    "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
+    "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
+    "aux-tier2-smoke": _run_aux_tier2_smoke,
+}
+
+
+@pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
+def test_runtime_coverage_registry_cases(
+    case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    CASE_RUNNERS[case_id](tmp_path, monkeypatch)

@@ -19,6 +19,8 @@
     "dts:freshness:local": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../..",
     "parity:gate:ci": "bun run parity:gate && bun run dts:freshness:check",
     "parity:gate:local": "bun run dts:freshness:local && bun run parity:gate",
+    "parity:gate:local:vsdev": "pwsh -ExecutionPolicy Bypass -File ../../../tools/enter_vs_dev_shell.ps1 -WorkingDirectory . -Command \"bun run parity:gate:local\"",
+    "shell:vsdev": "pwsh -ExecutionPolicy Bypass -File ../../../tools/enter_vs_dev_shell.ps1 -WorkingDirectory . -Interactive",
     "test:bun": "bun test",
     "test:node": "node --test __test__/runtime.node.test.mjs",
     "test": "bun run test:bun"

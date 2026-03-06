@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-03T02:18:54.985132+00:00",
+  "generated_at_utc": "2026-03-06T06:47:30.499054+00:00",
   "summary": {
     "tier1_contract_total": 262,
     "tier1_matched": 262,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 99,
+    "total_gaps": 101,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 99
+    "tier2_gap_total": 101
   },
   "contract_results": [
     {
@@ -3444,6 +3444,28 @@
     {
       "gap_type": "rust_unmapped",
       "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "format_registry_game_version",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "resolve_registry_version_info",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "AnalysisResult",
@@ -4469,7 +4491,7 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 19
+      "tier2": 21
     },
     "scanlog": {
       "tier2": 70

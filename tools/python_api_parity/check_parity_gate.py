@@ -7,6 +7,15 @@ import argparse
 import json
 from pathlib import Path
 from typing import Any
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from binding_parity_runtime_coverage import (
+    build_coverage_summary,
+    load_json_file,
+    render_coverage_summary_markdown,
+)
 
 from generate_baseline import (
     collect_tier1_python_targets,
@@ -70,6 +79,30 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def artifacts_match(expected: Path, actual: Path) -> bool:
+    """Return whether two artifact files have identical content."""
+    if not expected.exists() or not actual.exists():
+        return False
+    if expected.suffix == ".json":
+        expected_payload = json.loads(expected.read_text(encoding="utf-8"))
+        actual_payload = json.loads(actual.read_text(encoding="utf-8"))
+        expected_payload.pop("generated_at_utc", None)
+        actual_payload.pop("generated_at_utc", None)
+        return expected_payload == actual_payload
+
+    expected_lines = [
+        line
+        for line in expected.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("- Generated:")
+    ]
+    actual_lines = [
+        line
+        for line in actual.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("- Generated:")
+    ]
+    return expected_lines == actual_lines
+
+
 def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -90,11 +123,27 @@ def main() -> int:
         default="ClassicLib-rs/python-bindings/parity-artifacts",
         help="Directory for generated gate artifacts, relative to repo root.",
     )
+    parser.add_argument(
+        "--runtime-registry",
+        default="ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        help="Path to the Python runtime coverage registry JSON, relative to repo root.",
+    )
+    parser.add_argument(
+        "--deferred-registry",
+        default="docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json",
+        help="Path to the Python deferred backlog registry JSON, relative to repo root.",
+    )
+    parser.add_argument(
+        "--baseline-output-dir",
+        default="docs/implementation/python_api_parity/baseline",
+        help="Directory containing checked-in baseline artifacts, relative to repo root.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     contract_path = repo_root / args.contract
     output_dir = repo_root / args.output_dir
+    baseline_output_dir = repo_root / args.baseline_output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -105,12 +154,30 @@ def main() -> int:
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     python_manifest = parse_python_surface(repo_root, tier1_python_exports)
     diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
+    runtime_registry = load_json_file(repo_root / args.runtime_registry)
+    deferred_registry = load_json_file(repo_root / args.deferred_registry)
+    coverage_summary = build_coverage_summary(
+        binding="python",
+        contract=contract,
+        diff_report=diff_report,
+        runtime_registry=runtime_registry,
+        deferred_registry=deferred_registry,
+        source_paths={
+            "contract": args.contract,
+            "runtime_registry": args.runtime_registry,
+            "deferred_registry": args.deferred_registry,
+        },
+    )
 
     write_json(output_dir / "rust_api_surface.json", rust_manifest)
     write_json(output_dir / "python_api_surface.json", python_manifest)
     write_json(output_dir / "parity_diff_report.json", diff_report)
     (output_dir / "parity_diff_report.md").write_text(
         render_diff_markdown(diff_report), encoding="utf-8"
+    )
+    write_json(output_dir / "runtime_coverage_summary.json", coverage_summary)
+    (output_dir / "runtime_coverage_summary.md").write_text(
+        render_coverage_summary_markdown(coverage_summary), encoding="utf-8"
     )
     (output_dir / "tier1_gate_report.md").write_text(
         render_tier1_gate_markdown(diff_report), encoding="utf-8"
@@ -122,12 +189,26 @@ def main() -> int:
         + summary["tier1_missing_python"]
         + summary["tier1_signature_mismatch"]
     )
+    coverage_totals = coverage_summary["summary"]
+
+    stale_artifacts = [
+        name
+        for name in (
+            "parity_diff_report.json",
+            "parity_diff_report.md",
+            "runtime_coverage_summary.json",
+            "runtime_coverage_summary.md",
+        )
+        if not artifacts_match(baseline_output_dir / name, output_dir / name)
+    ]
 
     print("Python parity gate artifacts generated:")
     print(f"- {output_dir / 'rust_api_surface.json'}")
     print(f"- {output_dir / 'python_api_surface.json'}")
     print(f"- {output_dir / 'parity_diff_report.json'}")
     print(f"- {output_dir / 'parity_diff_report.md'}")
+    print(f"- {output_dir / 'runtime_coverage_summary.json'}")
+    print(f"- {output_dir / 'runtime_coverage_summary.md'}")
     print(f"- {output_dir / 'tier1_gate_report.md'}")
 
     if tier1_drift_count > 0:
@@ -136,6 +217,34 @@ def main() -> int:
             f"missing_rust={summary['tier1_missing_rust']}, "
             f"missing_python={summary['tier1_missing_python']}, "
             f"signature_mismatch={summary['tier1_signature_mismatch']}"
+        )
+        return 1
+
+    if coverage_totals["tier1_missing_runtime_total"] > 0:
+        print(
+            "Tier-1 runtime coverage metadata missing for "
+            f"{coverage_totals['tier1_missing_runtime_total']} contract row(s)."
+        )
+        return 1
+
+    if coverage_totals["registry_mismatch_total"] > 0:
+        print(
+            "Python runtime coverage registry snapshot mismatch detected for "
+            f"{coverage_totals['registry_mismatch_total']} selector row(s)."
+        )
+        return 1
+
+    if coverage_totals["newly_uncovered_total"] > 0:
+        print(
+            "Newly uncovered Python surfaces detected: "
+            f"{coverage_totals['newly_uncovered_total']}"
+        )
+        return 1
+
+    if stale_artifacts:
+        print(
+            "Checked-in Python parity artifacts are stale: "
+            + ", ".join(stale_artifacts)
         )
         return 1
 

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-03T02:18:54.982608+00:00",
+  "generated_at_utc": "2026-03-06T06:47:30.496181+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -43,7 +43,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ConfigError, CrashgenEntryRaw, YamlDataCore};",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ConfigError",
       "tier": "tier2"
     },
@@ -53,7 +53,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ConfigError, CrashgenEntryRaw, YamlDataCore};",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::CrashgenEntryRaw",
       "tier": "tier2"
     },
@@ -73,7 +73,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ConfigError, CrashgenEntryRaw, YamlDataCore};",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::YamlDataCore",
       "tier": "tier1"
     },
@@ -107,6 +107,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "format_registry_game_version",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::format_registry_game_version",
+      "tier": "tier2"
+    },
+    {
       "symbol": "get_runtime",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -115,6 +125,16 @@
       "source_decl": "pub use classic_shared_core::get_runtime;",
       "source_expr": "classic_shared_core::get_runtime",
       "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_registry_version_info",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::resolve_registry_version_info",
+      "tier": "tier2"
     },
     {
       "symbol": "yamldata",

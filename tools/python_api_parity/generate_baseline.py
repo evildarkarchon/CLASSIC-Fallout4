@@ -7,10 +7,19 @@ import argparse
 import json
 import operator
 import re
+import sys
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from binding_parity_runtime_coverage import (
+    build_coverage_summary,
+    load_json_file,
+    render_coverage_summary_markdown,
+)
 
 RUST_TARGET_CRATES: dict[str, str] = {
     "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
@@ -713,6 +722,16 @@ def main() -> int:
         default="docs/implementation/python_api_parity/baseline",
         help="Directory for generated output files, relative to repo root.",
     )
+    parser.add_argument(
+        "--runtime-registry",
+        default="ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        help="Path to the Python runtime coverage registry JSON, relative to repo root.",
+    )
+    parser.add_argument(
+        "--deferred-registry",
+        default="docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json",
+        help="Path to the Python deferred backlog registry JSON, relative to repo root.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -727,6 +746,20 @@ def main() -> int:
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     python_manifest = parse_python_surface(repo_root, tier1_python_exports)
     diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
+    runtime_registry = load_json_file(repo_root / args.runtime_registry)
+    deferred_registry = load_json_file(repo_root / args.deferred_registry)
+    coverage_summary = build_coverage_summary(
+        binding="python",
+        contract=contract,
+        diff_report=diff_report,
+        runtime_registry=runtime_registry,
+        deferred_registry=deferred_registry,
+        source_paths={
+            "contract": args.contract,
+            "runtime_registry": args.runtime_registry,
+            "deferred_registry": args.deferred_registry,
+        },
+    )
 
     write_json(output_dir / "rust_api_surface.json", rust_manifest)
     write_json(output_dir / "python_api_surface.json", python_manifest)
@@ -734,12 +767,18 @@ def main() -> int:
     (output_dir / "parity_diff_report.md").write_text(
         render_diff_markdown(diff_report), encoding="utf-8"
     )
+    write_json(output_dir / "runtime_coverage_summary.json", coverage_summary)
+    (output_dir / "runtime_coverage_summary.md").write_text(
+        render_coverage_summary_markdown(coverage_summary), encoding="utf-8"
+    )
 
     print("Python parity baseline generated:")
     print(f"- {output_dir / 'rust_api_surface.json'}")
     print(f"- {output_dir / 'python_api_surface.json'}")
     print(f"- {output_dir / 'parity_diff_report.json'}")
     print(f"- {output_dir / 'parity_diff_report.md'}")
+    print(f"- {output_dir / 'runtime_coverage_summary.json'}")
+    print(f"- {output_dir / 'runtime_coverage_summary.md'}")
     return 0
 
 
