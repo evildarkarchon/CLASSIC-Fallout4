@@ -15,6 +15,54 @@ from typing import Any
 __version__: str
 
 # =============================================================================
+# Crashgen Version Helpers
+# =============================================================================
+
+class CrashgenVersion:
+    """Parsed crash generator version."""
+
+    def __init__(self, version_str: str) -> None:
+        """Parse a crash generator version string."""
+
+    @property
+    def major(self) -> int:
+        """Major version component."""
+
+    @property
+    def minor(self) -> int:
+        """Minor version component."""
+
+    @property
+    def patch(self) -> int:
+        """Patch version component."""
+
+    @property
+    def original(self) -> str:
+        """Original input string."""
+
+    def to_tuple(self) -> tuple[int, int, int]:
+        """Return ``(major, minor, patch)``."""
+
+    def __eq__(self, other: object) -> bool: ...
+    def __hash__(self) -> int: ...
+
+class CrashgenVersionStatus:
+    """Enum-like crash generator version validation status."""
+
+    VALID: str
+    OUTDATED: str
+    NEWER_THAN_KNOWN: str
+    NO_SUPPORTED_VERSION: str
+
+def parse_crashgen_version(version_str: str) -> CrashgenVersion | None:
+    """Parse a crash generator version string."""
+
+def check_crashgen_version_status(
+    detected_version: str, valid_versions: list[str]
+) -> CrashgenVersionStatus:
+    """Check a crash generator version against a list of valid versions."""
+
+# =============================================================================
 # Cancellation Support
 # =============================================================================
 
@@ -863,6 +911,7 @@ class AnalysisConfig:
         show_formid_values: bool = False,
         fcx_mode: bool = False,
         simplify_logs: bool = False,
+        remove_list: list[str] = [],
     ) -> AnalysisConfig:
         """Create AnalysisConfig from YamlData.
 
@@ -877,6 +926,7 @@ class AnalysisConfig:
             show_formid_values: Whether to show FormID values (default: False)
             fcx_mode: Whether FCX mode is enabled (default: False)
             simplify_logs: Whether to simplify logs (default: False)
+            remove_list: Strings to remove when simplify mode is enabled
 
         Returns:
             Configured AnalysisConfig instance

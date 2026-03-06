@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from generate_baseline import (
+    collect_tier1_python_targets,
     generate_diff_report,
     parse_python_surface,
     parse_rust_surface,
@@ -53,13 +54,14 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
         )
     )
     for row in failing_rows:
+        python_target = row.get("python_export_path", row["python_export"])
         lines.append(
             "| `{id}` | `{owner_module}` | `{rust_symbol}` | `{python_module}.{python_export}` | `{status}` | {reason} |".format(
                 id=row["id"],
                 owner_module=row["owner_module"],
                 rust_symbol=row["rust_symbol"],
                 python_module=row["python_module"],
-                python_export=row["python_export"],
+                python_export=python_target,
                 status=row["status"],
                 reason=row.get("reason", "-"),
             )
@@ -98,7 +100,7 @@ def main() -> int:
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_python_exports = {mapping["pythonExport"] for mapping in tier1_mappings}
+    tier1_python_exports = collect_tier1_python_targets(tier1_mappings)
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     python_manifest = parse_python_surface(repo_root, tier1_python_exports)

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-05T12:33:37.108530+00:00",
+  "generated_at_utc": "2026-03-06T02:49:56.211743+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -21,7 +21,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
       "source_expr": "config::ClassicConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigError",
@@ -51,7 +51,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
       "source_expr": "config::PathConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "YamlDataCore",
@@ -71,7 +71,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
       "source_expr": "config::YamlSource",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "clear_global_yaml_cache",
@@ -199,7 +199,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
       "source_expr": "version::CrashgenVersion",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenVersionStatus",
@@ -209,7 +209,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
       "source_expr": "version::CrashgenVersionStatus",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FcxModeHandler",
@@ -259,7 +259,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};",
       "source_expr": "gpu_detector::GpuDetector",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GpuInfo",
@@ -309,7 +309,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};",
       "source_expr": "papyrus::PapyrusAnalyzer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PapyrusError",
@@ -339,7 +339,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use patterns::PatternMatcher;",
       "source_expr": "patterns::PatternMatcher",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PluginAnalyzer",
@@ -469,7 +469,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
       "source_expr": "orchestrator::build_analysis_config_from_yaml",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "check_crashgen_version_status",
@@ -479,7 +479,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
       "source_expr": "version::check_crashgen_version_status",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "contains_plugin",
@@ -578,7 +578,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub fn detect_vr_log(content: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "error",
@@ -821,7 +821,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use version::GameVersion;",
       "source_expr": "version::GameVersion",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "LogLevel",
@@ -841,7 +841,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use matching::{MatchConfidence, MatchResult, VersionMatcher};",
       "source_expr": "matching::MatchConfidence",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MatchResult",
@@ -851,7 +851,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use matching::{MatchConfidence, MatchResult, VersionMatcher};",
       "source_expr": "matching::MatchResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Result",
@@ -870,7 +870,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::UnknownVersionHandling",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "UnknownVersionStrategy",
@@ -890,7 +890,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::VersionInfo",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionMatcher",

@@ -48,9 +48,14 @@ SQUAD_BY_OWNER: dict[str, str] = {
 
 def count_top_level_params(params: str) -> int:
     """Count top-level function parameters in a signature parameter string."""
+    return len(split_top_level_params(params))
+
+
+def split_top_level_params(params: str) -> list[str]:
+    """Split a signature parameter string into top-level parameter items."""
     candidate = params.strip()
     if not candidate:
-        return 0
+        return []
 
     items: list[str] = []
     current: list[str] = []
@@ -75,8 +80,27 @@ def count_top_level_params(params: str) -> int:
     if tail:
         items.append(tail)
 
-    filtered = [item for item in items if item and item not in {"/", "*"}]
-    return len(filtered)
+    return [item for item in items if item and item not in {"/", "*"}]
+
+
+def count_call_arity(params: str, decorators: list[str] | None = None) -> int:
+    """Count Python call-site arity, ignoring implicit self/cls when applicable."""
+    items = split_top_level_params(params)
+    if not items:
+        return 0
+
+    decorators = decorators or []
+    if any(decorator == "@staticmethod" for decorator in decorators):
+        return len(items)
+
+    first_name = (
+        items[0].split(":", 1)[0].split("=", 1)[0].strip()
+        if items
+        else ""
+    )
+    if first_name in {"self", "cls"}:
+        return len(items) - 1
+    return len(items)
 
 
 def normalize_whitespace(value: str) -> str:
@@ -244,14 +268,28 @@ def _collect_signature(lines: list[str], start_idx: int) -> tuple[str, int]:
     return (" ".join(signature_parts), idx)
 
 
+def _indent_of(line: str) -> int:
+    """Return leading space count for a line."""
+    return len(line) - len(line.lstrip(" "))
+
+
+def _is_property_decorator(decorators: list[str]) -> bool:
+    """Return whether decorators describe a property accessor."""
+    return any(
+        decorator == "@property"
+        or decorator.endswith(".setter")
+        or decorator.endswith(".deleter")
+        for decorator in decorators
+    )
+
+
 def parse_python_surface(
     repo_root: Path, tier1_python_exports: set[str]
 ) -> dict[str, Any]:
-    """Extract public class and top-level function exports from target `.pyi` files."""
+    """Extract public classes, top-level functions, and callable methods from `.pyi` files."""
     exports: list[dict[str, Any]] = []
 
     class_re = re.compile(r"^class\s+([A-Za-z0-9_]+)\b")
-    def_re = re.compile(r"^(?:async\s+)?def\s+([A-Za-z0-9_]+)\s*\(")
 
     for module_name, rel_path in PYTHON_TARGET_MODULES.items():
         path = repo_root / rel_path
@@ -266,20 +304,82 @@ def parse_python_surface(
             if line.startswith("class "):
                 match = class_re.match(stripped)
                 if match:
-                    export_name = match.group(1)
+                    class_name = match.group(1)
                     exports.append(
                         {
                             "module": module_name,
-                            "export": export_name,
+                            "export": class_name,
+                            "export_path": class_name,
                             "kind": "class",
                             "owner_module": owner_module,
                             "tier": "tier1"
-                            if export_name in tier1_python_exports
+                            if class_name in tier1_python_exports
                             else "tier2",
                             "source_file": rel_path,
                             "signature": stripped,
                         }
                     )
+                    class_indent = _indent_of(line)
+                    idx += 1
+                    pending_decorators: list[str] = []
+
+                    while idx < len(lines):
+                        class_line = lines[idx]
+                        class_stripped = class_line.strip()
+
+                        if not class_stripped:
+                            idx += 1
+                            continue
+
+                        class_member_indent = _indent_of(class_line)
+                        if class_member_indent <= class_indent:
+                            break
+
+                        if class_stripped.startswith("@"):
+                            pending_decorators.append(class_stripped)
+                            idx += 1
+                            continue
+
+                        if class_stripped.startswith("def ") or class_stripped.startswith(
+                            "async def "
+                        ):
+                            signature, end_idx = _collect_signature(lines, idx)
+                            method_match = re.match(
+                                r"^(?:async\s+)?def\s+([A-Za-z0-9_]+)\s*\((.*)\)",
+                                signature,
+                            )
+                            if method_match and not _is_property_decorator(
+                                pending_decorators
+                            ):
+                                export_name = method_match.group(1)
+                                params = method_match.group(2)
+                                export_path = f"{class_name}.{export_name}"
+                                exports.append(
+                                    {
+                                        "module": module_name,
+                                        "export": export_name,
+                                        "export_path": export_path,
+                                        "parent_class": class_name,
+                                        "kind": "method",
+                                        "arity": count_call_arity(
+                                            params, pending_decorators
+                                        ),
+                                        "owner_module": owner_module,
+                                        "tier": "tier1"
+                                        if export_path in tier1_python_exports
+                                        or export_name in tier1_python_exports
+                                        else "tier2",
+                                        "source_file": rel_path,
+                                        "signature": signature,
+                                    }
+                                )
+                            pending_decorators = []
+                            idx = end_idx + 1
+                            continue
+
+                        pending_decorators = []
+                        idx += 1
+                    continue
                 idx += 1
                 continue
 
@@ -295,6 +395,7 @@ def parse_python_surface(
                         {
                             "module": module_name,
                             "export": export_name,
+                            "export_path": export_name,
                             "kind": "function",
                             "arity": count_top_level_params(params),
                             "owner_module": owner_module,
@@ -310,7 +411,7 @@ def parse_python_surface(
 
             idx += 1
 
-    exports.sort(key=operator.itemgetter("module", "export", "kind"))
+    exports.sort(key=operator.itemgetter("module", "export_path", "kind"))
     return {
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "scope": {
@@ -336,13 +437,31 @@ def build_lookup(
 def build_python_lookup(
     items: list[dict[str, Any]],
 ) -> dict[tuple[str, str], dict[str, Any]]:
-    """Build `(module, export)` lookup for Python exports."""
+    """Build `(module, export_path)` lookup for Python exports."""
     lookup: dict[tuple[str, str], dict[str, Any]] = {}
     for item in items:
-        key = (item["module"], item["export"])
+        key = (item["module"], item.get("export_path", item["export"]))
         if key not in lookup:
             lookup[key] = item
     return lookup
+
+
+def collect_tier1_python_targets(tier1_mappings: list[dict[str, Any]]) -> set[str]:
+    """Collect Python export identifiers used for Tier-1 tagging.
+
+    During migration, contracts may carry either legacy ``pythonExport`` values
+    or method-aware ``pythonExportPath`` values. Include both when present so
+    manifest tagging remains stable across mixed contracts.
+    """
+    targets: set[str] = set()
+    for mapping in tier1_mappings:
+        python_export = mapping.get("pythonExport")
+        python_export_path = mapping.get("pythonExportPath")
+        if python_export:
+            targets.add(python_export)
+        if python_export_path:
+            targets.add(python_export_path)
+    return targets
 
 
 def generate_diff_report(
@@ -360,7 +479,11 @@ def generate_diff_report(
 
     tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
     tier1_python_pairs = {
-        (mapping["pythonModule"], mapping["pythonExport"]) for mapping in tier1_mappings
+        (
+            mapping["pythonModule"],
+            mapping.get("pythonExportPath") or mapping.get("pythonExport"),
+        )
+        for mapping in tier1_mappings
     }
 
     contract_results: list[dict[str, Any]] = []
@@ -369,13 +492,14 @@ def generate_diff_report(
     for mapping in tier1_mappings:
         rust_symbol = mapping["rustSymbol"]
         python_module = mapping["pythonModule"]
-        python_export = mapping["pythonExport"]
+        python_export_path = mapping.get("pythonExportPath") or mapping.get("pythonExport")
+        python_export = mapping.get("pythonExport") or python_export_path
         expected_kind = mapping.get("pythonKind")
         expected_arity = mapping.get("pythonArity")
         owner_module = mapping["ownerModule"]
 
         rust_item = rust_lookup.get(rust_symbol)
-        py_item = python_lookup.get((python_module, python_export))
+        py_item = python_lookup.get((python_module, python_export_path))
         status = "matched"
         reason = ""
 
@@ -384,7 +508,9 @@ def generate_diff_report(
             reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."
         elif py_item is None:
             status = "missing_python"
-            reason = f"Python export '{python_module}.{python_export}' not found in target .pyi surfaces."
+            reason = (
+                f"Python export '{python_module}.{python_export_path}' not found in target .pyi surfaces."
+            )
         elif expected_kind and py_item["kind"] != expected_kind:
             status = "signature_mismatch"
             reason = (
@@ -402,6 +528,7 @@ def generate_diff_report(
             "rust_symbol": rust_symbol,
             "python_module": python_module,
             "python_export": python_export,
+            "python_export_path": python_export_path,
             "status": status,
             "expected_python_kind": expected_kind,
             "actual_python_kind": py_item["kind"] if py_item else None,
@@ -422,6 +549,7 @@ def generate_diff_report(
                     "rust_symbol": rust_symbol,
                     "python_module": python_module,
                     "python_export": python_export,
+                    "python_export_path": python_export_path,
                     "reason": reason,
                 }
             )
@@ -446,7 +574,7 @@ def generate_diff_report(
         )
 
     for py_item in python_exports:
-        pair = (py_item["module"], py_item["export"])
+        pair = (py_item["module"], py_item.get("export_path", py_item["export"]))
         if pair in tier1_python_pairs:
             continue
         gaps.append(
@@ -458,6 +586,7 @@ def generate_diff_report(
                 "rust_symbol": None,
                 "python_module": py_item["module"],
                 "python_export": py_item["export"],
+                "python_export_path": py_item.get("export_path", py_item["export"]),
                 "reason": "Python export is outside Tier-1 mapping scope (deferred).",
                 "kind": py_item["kind"],
             }
@@ -519,8 +648,9 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
         )
     )
     for row in diff_report["contract_results"]:
+        python_target = row.get("python_export_path", row["python_export"])
         lines.append(
-            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['python_module']}.{row['python_export']}` | `{row['status']}` |"
+            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['python_module']}.{python_target}` | `{row['status']}` |"
         )
 
     lines.extend(
@@ -581,7 +711,7 @@ def main() -> int:
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_python_exports = {mapping["pythonExport"] for mapping in tier1_mappings}
+    tier1_python_exports = collect_tier1_python_targets(tier1_mappings)
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     python_manifest = parse_python_surface(repo_root, tier1_python_exports)

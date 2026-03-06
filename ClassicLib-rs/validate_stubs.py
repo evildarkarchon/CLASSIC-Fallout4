@@ -118,9 +118,19 @@ class StubValidator:
 
         if impl_match:
             impl_body = impl_match.group(1)
-            # Find all pub fn methods
-            for match in re.finditer(r"(?:pub\s+)?fn\s+(\w+)", impl_body):
-                method_name = match.group(1)
+            # Find callable methods while excluding property/classattr accessors.
+            for match in re.finditer(
+                r"(?P<attrs>(?:\s*#\[[^\]]+\]\s*)*)(?:pub\s+)?fn\s+(\w+)",
+                impl_body,
+                re.DOTALL,
+            ):
+                attrs = match.group("attrs") or ""
+                method_name = match.group(2)
+                if any(
+                    marker in attrs
+                    for marker in ("#[getter", "#[setter", "#[classattr")
+                ):
+                    continue
                 if method_name == "new":
                     continue
                 if method_name.startswith("py_"):

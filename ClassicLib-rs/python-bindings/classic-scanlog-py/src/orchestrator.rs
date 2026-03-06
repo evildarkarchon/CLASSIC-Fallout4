@@ -274,7 +274,7 @@ impl PyAnalysisConfig {
     /// # Returns
     /// Configured AnalysisConfig instance
     #[staticmethod]
-    #[pyo3(signature = (yamldata, game, game_version, show_formid_values=false, fcx_mode=false, simplify_logs=false))]
+    #[pyo3(signature = (yamldata, game, game_version, show_formid_values=false, fcx_mode=false, simplify_logs=false, remove_list=Vec::new()))]
     pub fn from_yamldata(
         yamldata: &Bound<'_, pyo3::types::PyAny>,
         game: String,
@@ -282,6 +282,7 @@ impl PyAnalysisConfig {
         show_formid_values: bool,
         fcx_mode: bool,
         simplify_logs: bool,
+        remove_list: Vec<String>,
     ) -> PyResult<Self> {
         let yaml_core = adapt_yamldata_to_core(yamldata);
         let config = build_analysis_config_from_yaml(
@@ -291,7 +292,7 @@ impl PyAnalysisConfig {
             show_formid_values,
             fcx_mode,
             simplify_logs,
-            Vec::new(),
+            remove_list,
         );
         Ok(Self { inner: config })
     }

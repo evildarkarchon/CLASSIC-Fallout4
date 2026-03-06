@@ -79,7 +79,10 @@
 //!     t.join()
 //! ```
 
-use classic_config_core::{ConfigError, YamlDataCore};
+use classic_config_core::{
+    ClassicConfig as CoreClassicConfig, ConfigError, PathConfig as CorePathConfig,
+    YamlDataCore, YamlSource as CoreYamlSource,
+};
 use classic_crashgen_settings_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
 };
@@ -88,6 +91,7 @@ use classic_shared_core::get_runtime;
 use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 fn severity_to_str(severity: RuleSeverity) -> &'static str {
@@ -221,6 +225,424 @@ impl ToPyErr for PyConfigError {
             ConfigError::InvalidInput(msg) => Self::parse_err(format!("Invalid input: {}", msg)),
             ConfigError::RuntimeError(msg) => Self::base_err(format!("Runtime error: {}", msg)),
         }
+    }
+}
+
+fn runtime_to_pyerr(err: impl std::fmt::Display) -> PyErr {
+    RustConfigError::new_err(err.to_string())
+}
+
+fn pathbuf_to_string(path: &std::path::Path) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn option_pathbuf_to_string(path: &Option<PathBuf>) -> Option<String> {
+    path.as_ref().map(|value| pathbuf_to_string(value.as_path()))
+}
+
+/// Python wrapper for runtime path configuration settings.
+#[pyclass(name = "PathConfig")]
+#[derive(Clone)]
+pub struct PyPathConfig {
+    inner: CorePathConfig,
+}
+
+impl From<CorePathConfig> for PyPathConfig {
+    fn from(inner: CorePathConfig) -> Self {
+        Self { inner }
+    }
+}
+
+#[pymethods]
+impl PyPathConfig {
+    #[new]
+    #[pyo3(signature = (ini_folder=None, scan_custom=None, mods_folder=None, game_root=None, docs_root=None))]
+    fn new(
+        ini_folder: Option<String>,
+        scan_custom: Option<String>,
+        mods_folder: Option<String>,
+        game_root: Option<String>,
+        docs_root: Option<String>,
+    ) -> Self {
+        Self {
+            inner: CorePathConfig {
+                ini_folder: ini_folder.map(PathBuf::from),
+                scan_custom: scan_custom.map(PathBuf::from),
+                mods_folder: mods_folder.map(PathBuf::from),
+                game_root: PathBuf::from(game_root.unwrap_or_default()),
+                docs_root: docs_root.map(PathBuf::from),
+            },
+        }
+    }
+
+    #[getter]
+    fn ini_folder(&self) -> Option<String> {
+        option_pathbuf_to_string(&self.inner.ini_folder)
+    }
+
+    #[setter]
+    fn set_ini_folder(&mut self, value: Option<String>) {
+        self.inner.ini_folder = value.map(PathBuf::from);
+    }
+
+    #[getter]
+    fn scan_custom(&self) -> Option<String> {
+        option_pathbuf_to_string(&self.inner.scan_custom)
+    }
+
+    #[setter]
+    fn set_scan_custom(&mut self, value: Option<String>) {
+        self.inner.scan_custom = value.map(PathBuf::from);
+    }
+
+    #[getter]
+    fn mods_folder(&self) -> Option<String> {
+        option_pathbuf_to_string(&self.inner.mods_folder)
+    }
+
+    #[setter]
+    fn set_mods_folder(&mut self, value: Option<String>) {
+        self.inner.mods_folder = value.map(PathBuf::from);
+    }
+
+    #[getter]
+    fn game_root(&self) -> String {
+        pathbuf_to_string(self.inner.game_root.as_path())
+    }
+
+    #[setter]
+    fn set_game_root(&mut self, value: String) {
+        self.inner.game_root = PathBuf::from(value);
+    }
+
+    #[getter]
+    fn docs_root(&self) -> Option<String> {
+        option_pathbuf_to_string(&self.inner.docs_root)
+    }
+
+    #[setter]
+    fn set_docs_root(&mut self, value: Option<String>) {
+        self.inner.docs_root = value.map(PathBuf::from);
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "PathConfig(game_root='{}')",
+            pathbuf_to_string(self.inner.game_root.as_path())
+        )
+    }
+}
+
+/// Python enum-like wrapper for YAML source identifiers.
+#[pyclass(name = "YamlSource")]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct PyYamlSource {
+    inner: CoreYamlSource,
+}
+
+#[pymethods]
+#[allow(non_snake_case)]
+impl PyYamlSource {
+    #[classattr]
+    fn MAIN() -> Self {
+        Self {
+            inner: CoreYamlSource::Main,
+        }
+    }
+
+    #[classattr]
+    fn SETTINGS() -> Self {
+        Self {
+            inner: CoreYamlSource::Settings,
+        }
+    }
+
+    #[classattr]
+    fn IGNORE() -> Self {
+        Self {
+            inner: CoreYamlSource::Ignore,
+        }
+    }
+
+    #[classattr]
+    fn GAME() -> Self {
+        Self {
+            inner: CoreYamlSource::Game,
+        }
+    }
+
+    #[classattr]
+    fn GAME_LOCAL() -> Self {
+        Self {
+            inner: CoreYamlSource::GameLocal,
+        }
+    }
+
+    #[classattr]
+    fn TEST() -> Self {
+        Self {
+            inner: CoreYamlSource::Test,
+        }
+    }
+
+    #[classattr]
+    fn CACHE() -> Self {
+        Self {
+            inner: CoreYamlSource::Cache,
+        }
+    }
+
+    fn path(&self, game: &str) -> String {
+        pathbuf_to_string(self.inner.path(game).as_path())
+    }
+
+    fn display_name(&self) -> &'static str {
+        self.inner.display_name()
+    }
+
+    fn display_name_with_game(&self, game: &str) -> String {
+        self.inner.display_name_with_game(game)
+    }
+
+    fn __repr__(&self) -> String {
+        format!("YamlSource.{}", self.variant_name())
+    }
+
+    fn __str__(&self) -> &'static str {
+        self.variant_name()
+    }
+
+    fn __hash__(&self) -> usize {
+        match self.inner {
+            CoreYamlSource::Main => 0,
+            CoreYamlSource::Settings => 1,
+            CoreYamlSource::Ignore => 2,
+            CoreYamlSource::Game => 3,
+            CoreYamlSource::GameLocal => 4,
+            CoreYamlSource::Test => 5,
+            CoreYamlSource::Cache => 6,
+        }
+    }
+
+    fn __eq__(&self, other: &PyYamlSource) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl PyYamlSource {
+    fn variant_name(&self) -> &'static str {
+        match self.inner {
+            CoreYamlSource::Main => "MAIN",
+            CoreYamlSource::Settings => "SETTINGS",
+            CoreYamlSource::Ignore => "IGNORE",
+            CoreYamlSource::Game => "GAME",
+            CoreYamlSource::GameLocal => "GAME_LOCAL",
+            CoreYamlSource::Test => "TEST",
+            CoreYamlSource::Cache => "CACHE",
+        }
+    }
+}
+
+/// Python wrapper for the runtime CLASSIC configuration model.
+#[pyclass(name = "ClassicConfig")]
+#[derive(Clone)]
+pub struct PyClassicConfig {
+    inner: CoreClassicConfig,
+}
+
+#[pymethods]
+impl PyClassicConfig {
+    #[new]
+    fn new() -> Self {
+        Self {
+            inner: CoreClassicConfig::default(),
+        }
+    }
+
+    #[staticmethod]
+    fn load_from_yaml(py: Python<'_>, path: String) -> PyResult<Self> {
+        let path_buf = PathBuf::from(path);
+        let inner = without_gil(py, || {
+            get_runtime().block_on(async { CoreClassicConfig::load_from_yaml(&path_buf).await })
+        })
+        .map_err(runtime_to_pyerr)?;
+        Ok(Self { inner })
+    }
+
+    #[staticmethod]
+    fn load_or_default(py: Python<'_>) -> PyResult<Self> {
+        let inner = without_gil(py, || {
+            get_runtime().block_on(async { CoreClassicConfig::load_or_default().await })
+        })
+        .map_err(runtime_to_pyerr)?;
+        Ok(Self { inner })
+    }
+
+    fn save_to_yaml(&self, py: Python<'_>, path: String) -> PyResult<()> {
+        let path_buf = PathBuf::from(path);
+        without_gil(py, || {
+            get_runtime().block_on(async { self.inner.save_to_yaml(&path_buf).await })
+        })
+        .map_err(runtime_to_pyerr)
+    }
+
+    fn get_config_path(&self) -> String {
+        pathbuf_to_string(self.inner.get_config_path().as_path())
+    }
+
+    fn validate_paths(&self) -> PyResult<()> {
+        self.inner.validate_paths().map_err(runtime_to_pyerr)
+    }
+
+    fn load_local_yaml_paths(&mut self, py: Python<'_>, game: String) -> PyResult<()> {
+        without_gil(py, || {
+            get_runtime().block_on(async { self.inner.load_local_yaml_paths(&game).await })
+        })
+        .map_err(runtime_to_pyerr)
+    }
+
+    #[getter]
+    fn fcx_mode(&self) -> bool {
+        self.inner.fcx_mode
+    }
+
+    #[setter]
+    fn set_fcx_mode(&mut self, value: bool) {
+        self.inner.fcx_mode = value;
+    }
+
+    #[getter]
+    fn show_formid_values(&self) -> bool {
+        self.inner.show_formid_values
+    }
+
+    #[setter]
+    fn set_show_formid_values(&mut self, value: bool) {
+        self.inner.show_formid_values = value;
+    }
+
+    #[getter]
+    fn stat_logging(&self) -> bool {
+        self.inner.stat_logging
+    }
+
+    #[setter]
+    fn set_stat_logging(&mut self, value: bool) {
+        self.inner.stat_logging = value;
+    }
+
+    #[getter]
+    fn move_unsolved_logs(&self) -> bool {
+        self.inner.move_unsolved_logs
+    }
+
+    #[setter]
+    fn set_move_unsolved_logs(&mut self, value: bool) {
+        self.inner.move_unsolved_logs = value;
+    }
+
+    #[getter]
+    fn simplify_logs(&self) -> bool {
+        self.inner.simplify_logs
+    }
+
+    #[setter]
+    fn set_simplify_logs(&mut self, value: bool) {
+        self.inner.simplify_logs = value;
+    }
+
+    #[getter]
+    fn update_check(&self) -> bool {
+        self.inner.update_check
+    }
+
+    #[setter]
+    fn set_update_check(&mut self, value: bool) {
+        self.inner.update_check = value;
+    }
+
+    #[getter]
+    fn game_version(&self) -> String {
+        self.inner.game_version.clone()
+    }
+
+    #[setter]
+    fn set_game_version(&mut self, value: String) {
+        self.inner.game_version = value;
+    }
+
+    #[getter]
+    fn update_source(&self) -> String {
+        self.inner.update_source.clone()
+    }
+
+    #[setter]
+    fn set_update_source(&mut self, value: String) {
+        self.inner.update_source = value;
+    }
+
+    #[getter]
+    fn auto_switch_to_results(&self) -> bool {
+        self.inner.auto_switch_to_results
+    }
+
+    #[setter]
+    fn set_auto_switch_to_results(&mut self, value: bool) {
+        self.inner.auto_switch_to_results = value;
+    }
+
+    #[getter]
+    fn auto_refresh_interval_ms(&self) -> u64 {
+        self.inner.auto_refresh_interval_ms
+    }
+
+    #[setter]
+    fn set_auto_refresh_interval_ms(&mut self, value: u64) {
+        self.inner.auto_refresh_interval_ms = value;
+    }
+
+    #[getter]
+    fn paths(&self) -> PyPathConfig {
+        PyPathConfig::from(self.inner.paths.clone())
+    }
+
+    #[setter]
+    fn set_paths(&mut self, value: PyRef<'_, PyPathConfig>) {
+        self.inner.paths = value.inner.clone();
+    }
+
+    #[getter]
+    fn formid_databases(&self) -> HashMap<String, Vec<String>> {
+        self.inner
+            .formid_databases
+            .iter()
+            .map(|(game, paths)| {
+                (
+                    game.clone(),
+                    paths
+                        .iter()
+                        .map(|path| pathbuf_to_string(path.as_path()))
+                        .collect(),
+                )
+            })
+            .collect()
+    }
+
+    #[setter]
+    fn set_formid_databases(&mut self, value: HashMap<String, Vec<String>>) {
+        self.inner.formid_databases = value
+            .into_iter()
+            .map(|(game, paths)| {
+                (
+                    game,
+                    paths.into_iter().map(PathBuf::from).collect::<Vec<_>>(),
+                )
+            })
+            .collect();
+    }
+
+    fn __repr__(&self) -> String {
+        format!("ClassicConfig(game_version='{}')", self.inner.game_version)
     }
 }
 
@@ -583,6 +1005,9 @@ pub fn clear_yaml_cache() {
 #[pymodule]
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
+    m.add_class::<PyPathConfig>()?;
+    m.add_class::<PyYamlSource>()?;
+    m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -597,6 +1022,9 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 /// This allows classic-core to include config components in its submodule
 pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
+    m.add_class::<PyPathConfig>()?;
+    m.add_class::<PyYamlSource>()?;
+    m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
 

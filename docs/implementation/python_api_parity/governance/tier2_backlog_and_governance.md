@@ -16,8 +16,9 @@ An API can be promoted when all are true:
 1. It is required by an active maintained integration workflow.
 2. The Rust symbol shape is stable for at least one release cycle.
 3. Python export naming/signature is finalized in `.pyi`.
-4. `parity_contract.json` includes owner, symbol mapping, and expected signature metadata.
-5. Local parity and runtime tests pass.
+4. `parity_contract.json` includes owner, Rust symbol mapping, `pythonExportPath`,
+   and expected callable signature metadata.
+5. Local parity, stub validation, and runtime smoke tests pass.
 
 ## Required local checks
 
@@ -38,6 +39,15 @@ Run parity maintenance when any of these change:
 - `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
 - `ClassicLib-rs/python-bindings/*-py/src/`
 - `ClassicLib-rs/python-bindings/*-py/*.pyi`
+
+## Contract rules
+
+- Tier-1 contract rows cover classes, top-level functions, and callable methods.
+- Method rows must use `pythonExportPath` such as
+  `classic_scanlog.AnalysisConfig.from_yamldata`.
+- Properties are not added as parity rows; verify them with smoke tests and stub checks.
+- Mixed contracts are supported temporarily, but new rows should not rely on legacy
+  `pythonExport` unless a migration step still requires it.
 
 ## Release gate
 
