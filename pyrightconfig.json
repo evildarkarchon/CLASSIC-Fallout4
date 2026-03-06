@@ -2,6 +2,8 @@
     "exclude": [
         "deprecated",
         "**/node_modules",
-        "**/examples"
+        "**/examples",
+        "**/.venv",
+        "**/vcpkg_installed"
     ]
 }

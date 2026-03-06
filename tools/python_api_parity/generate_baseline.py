@@ -93,11 +93,7 @@ def count_call_arity(params: str, decorators: list[str] | None = None) -> int:
     if any(decorator == "@staticmethod" for decorator in decorators):
         return len(items)
 
-    first_name = (
-        items[0].split(":", 1)[0].split("=", 1)[0].strip()
-        if items
-        else ""
-    )
+    first_name = items[0].split(":", 1)[0].split("=", 1)[0].strip() if items else ""
     if first_name in {"self", "cls"}:
         return len(items) - 1
     return len(items)
@@ -125,29 +121,31 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
         prefix = prefix.strip().removesuffix("::")
 
         for part in split_parts(inner):
-            alias_name: str | None = None
+            alias_name_inner: str | None = None
             symbol_expr = part
             if " as " in part:
-                symbol_expr, alias_name = [
+                symbol_expr, alias_name_inner = [
                     piece.strip() for piece in part.split(" as ", 1)
                 ]
 
             if symbol_expr == "self":
                 source_path = prefix
-                export_name = alias_name or prefix.split("::")[-1]
+                export_name = alias_name_inner or prefix.split("::")[-1]
             else:
                 source_path = f"{prefix}::{symbol_expr}" if prefix else symbol_expr
-                export_name = alias_name or symbol_expr.split("::")[-1]
+                export_name = alias_name_inner or symbol_expr.split("::")[-1]
 
             expanded.append((export_name, source_path))
         return expanded
 
     for part in split_parts(statement):
-        alias_name: str | None = None
+        alias_name_outer: str | None = None
         symbol_expr = part
         if " as " in part:
-            symbol_expr, alias_name = [piece.strip() for piece in part.split(" as ", 1)]
-        export_name = alias_name or symbol_expr.split("::")[-1]
+            symbol_expr, alias_name_outer = [
+                piece.strip() for piece in part.split(" as ", 1)
+            ]
+        export_name = alias_name_outer or symbol_expr.split("::")[-1]
         expanded.append((export_name, symbol_expr))
 
     return expanded
@@ -340,9 +338,9 @@ def parse_python_surface(
                             idx += 1
                             continue
 
-                        if class_stripped.startswith("def ") or class_stripped.startswith(
-                            "async def "
-                        ):
+                        if class_stripped.startswith(
+                            "def "
+                        ) or class_stripped.startswith("async def "):
                             signature, end_idx = _collect_signature(lines, idx)
                             method_match = re.match(
                                 r"^(?:async\s+)?def\s+([A-Za-z0-9_]+)\s*\((.*)\)",
@@ -464,6 +462,12 @@ def collect_tier1_python_targets(tier1_mappings: list[dict[str, Any]]) -> set[st
     return targets
 
 
+def get_contract_python_export_identifier(mapping: dict[str, Any]) -> str | None:
+    """Return the method-aware or legacy Python export identifier from a mapping."""
+    export_identifier = mapping.get("pythonExportPath") or mapping.get("pythonExport")
+    return export_identifier if isinstance(export_identifier, str) else None
+
+
 def generate_diff_report(
     contract: dict[str, Any],
     rust_manifest: dict[str, Any],
@@ -479,11 +483,10 @@ def generate_diff_report(
 
     tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
     tier1_python_pairs = {
-        (
-            mapping["pythonModule"],
-            mapping.get("pythonExportPath") or mapping.get("pythonExport"),
-        )
+        (mapping["pythonModule"], python_export_path)
         for mapping in tier1_mappings
+        if (python_export_path := get_contract_python_export_identifier(mapping))
+        is not None
     }
 
     contract_results: list[dict[str, Any]] = []
@@ -492,25 +495,33 @@ def generate_diff_report(
     for mapping in tier1_mappings:
         rust_symbol = mapping["rustSymbol"]
         python_module = mapping["pythonModule"]
-        python_export_path = mapping.get("pythonExportPath") or mapping.get("pythonExport")
+        python_export_path = get_contract_python_export_identifier(mapping)
         python_export = mapping.get("pythonExport") or python_export_path
         expected_kind = mapping.get("pythonKind")
         expected_arity = mapping.get("pythonArity")
         owner_module = mapping["ownerModule"]
 
         rust_item = rust_lookup.get(rust_symbol)
-        py_item = python_lookup.get((python_module, python_export_path))
+        py_item = (
+            python_lookup.get((python_module, python_export_path))
+            if python_export_path is not None
+            else None
+        )
         status = "matched"
         reason = ""
 
         if rust_item is None:
             status = "missing_rust"
             reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."
-        elif py_item is None:
+        elif python_export_path is None:
             status = "missing_python"
             reason = (
-                f"Python export '{python_module}.{python_export_path}' not found in target .pyi surfaces."
+                "Tier-1 mapping is missing a Python export identifier "
+                "(`pythonExportPath` or legacy `pythonExport`)."
             )
+        elif py_item is None:
+            status = "missing_python"
+            reason = f"Python export '{python_module}.{python_export_path}' not found in target .pyi surfaces."
         elif expected_kind and py_item["kind"] != expected_kind:
             status = "signature_mismatch"
             reason = (
