@@ -62,7 +62,7 @@
       "rustSymbol": "OrchestratorCore",
       "nodeExport": "processLogsBatch",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 3
     },
     {
       "id": "scanlog-parse-segments",
@@ -161,7 +161,7 @@
       "rustSymbol": "OrchestratorCore",
       "nodeExport": "processLogsBatchWithYamlContent",
       "nodeKind": "function",
-      "nodeArity": 7
+      "nodeArity": 8
     },
     {
       "id": "scanlog-detect-crash-pattern",

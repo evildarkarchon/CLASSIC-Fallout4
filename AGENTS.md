@@ -63,6 +63,7 @@ cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
 # From ClassicLib-rs/node-bindings/classic-node
 bun install
 bun run build
+bun run cli -- --version
 bun run parity:gate:local
 bun run test:bun
 bun run test:node

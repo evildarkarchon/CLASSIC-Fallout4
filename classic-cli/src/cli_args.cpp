@@ -1,6 +1,20 @@
 #include "cli_args.h"
+#include <algorithm>
 #include <CLI/CLI.hpp>
 #include <thread>
+
+
+uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count) {
+    auto recommended = std::max(cpu_count, 4u) - 2u;
+    return std::min(recommended, 32u);
+}
+
+uint32_t effective_concurrency(uint32_t requested, uint32_t cpu_count) {
+    if (requested > 0) {
+        return requested;
+    }
+    return auto_concurrency_for_cpu_count(cpu_count);
+}
 
 CliArgs parse_args(int argc, char* argv[]) {
     CliArgs args;
@@ -22,7 +36,7 @@ CliArgs parse_args(int argc, char* argv[]) {
     app.add_option("--scan-path", args.scan_path, "Custom crash log directory");
 
     auto cpu_count = std::thread::hardware_concurrency();
-    auto recommended = (cpu_count > 2) ? (cpu_count - 2) : 2u;
+    auto recommended = auto_concurrency_for_cpu_count(cpu_count);
     app.add_option("--max-concurrent", args.max_concurrent,
                    "Max parallel scans (0=auto, recommended: " + std::to_string(recommended) + " for " +
                        std::to_string(cpu_count) + " cores)")

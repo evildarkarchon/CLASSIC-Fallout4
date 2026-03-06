@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-06T06:47:30.500597+00:00",
+  "generated_at_utc": "2026-03-06T10:48:39.230146+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,8 +8,8 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 363,
-    "runtime_verified_total": 271,
+    "tracked_surface_total": 364,
+    "runtime_verified_total": 272,
     "contract_mapped_total": 0,
     "deferred_total": 92,
     "newly_uncovered_total": 0,
@@ -20,8 +20,8 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 140,
-      "total": 146,
+      "runtime_verified": 141,
+      "total": 147,
       "deferred": 6
     },
     "config": {
@@ -6224,15 +6224,20 @@
       "classification": "runtime_verified",
       "rustSymbol": null,
       "bindingIdentifier": "JsLogCollector",
-      "coverageId": "node-tier2-scanlog-runtime",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scangame.spec.ts",
-      "testCaseId": "scanlog-tier2-scangame",
-      "fixtureRefs": [],
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": null
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
     },
     {
       "trackedId": "binding:JsLogErrorEntry",
@@ -6689,6 +6694,30 @@
       "owner": null,
       "deferReason": null,
       "notes": null
+    },
+    {
+      "trackedId": "binding:writeAutoscanReport",
+      "trackedType": "gap",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "writeAutoscanReport",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
     }
   ]
 }

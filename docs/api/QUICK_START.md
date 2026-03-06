@@ -95,6 +95,7 @@ From [`ClassicLib-rs/node-bindings/classic-node/`](../../ClassicLib-rs/node-bind
 ```powershell
 bun install
 bun run build
+bun run cli -- --version
 bun run parity:gate:local
 bun run test:bun
 bun run test:node

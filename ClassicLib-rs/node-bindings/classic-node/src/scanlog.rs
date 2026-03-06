@@ -26,6 +26,13 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
 }
 
+fn normalize_max_concurrent(max_concurrent: Option<u32>) -> Option<usize> {
+    match max_concurrent {
+        Some(0) | None => None,
+        Some(value) => Some(value as usize),
+    }
+}
+
 /// Detect crashgen settings section markers within parser `settings` lines.
 ///
 /// The parser's `settings` segment now includes all pre-`SYSTEM SPECS:` lines.
@@ -265,6 +272,7 @@ pub async fn process_log_with_yaml_content(
 }
 
 /// Process multiple crash logs using configuration built directly from YAML content.
+#[allow(clippy::too_many_arguments)]
 #[napi]
 pub async fn process_logs_batch_with_yaml_content(
     log_paths: Vec<String>,
@@ -274,6 +282,7 @@ pub async fn process_logs_batch_with_yaml_content(
     game: String,
     game_version: String,
     options: Option<JsAnalysisBuildOptions>,
+    max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
     let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
@@ -284,12 +293,13 @@ pub async fn process_logs_batch_with_yaml_content(
         options,
     )?;
     let handle = classic_shared_core::get_runtime().handle().clone();
+    let max_concurrent = normalize_max_concurrent(max_concurrent);
 
     let results = handle
         .spawn(async move {
             let orchestrator = OrchestratorCore::new(core_config)
                 .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
-            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, None).await)
+            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, max_concurrent).await)
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
@@ -343,15 +353,17 @@ pub async fn process_log(
 pub async fn process_logs_batch(
     log_paths: Vec<String>,
     config: JsAnalysisConfig,
+    max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
     let core_config = _js_config_to_core(&config);
     let handle = classic_shared_core::get_runtime().handle().clone();
+    let max_concurrent = normalize_max_concurrent(max_concurrent);
 
     let results = handle
         .spawn(async move {
             let orchestrator = OrchestratorCore::new(core_config)
                 .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
-            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, None).await)
+            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, max_concurrent).await)
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?

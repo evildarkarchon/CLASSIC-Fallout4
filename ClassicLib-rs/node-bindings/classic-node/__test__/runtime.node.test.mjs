@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const classic = require("../index.js");
@@ -51,6 +53,94 @@ const IGNORE_YAML = `
 CLASSIC_Ignore_Fallout4:
   - "IgnoreItem1"
 `;
+
+const CLI_SAMPLE_LOG = `Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+SYSTEM SPECS:
+\tOS: Microsoft Windows 11 Pro v10.0.22621
+\tCPU: AMD Ryzen 7 7800X3D 8-Core Processor
+\tGPU #1: Nvidia AD104 [GeForce RTX 4070]
+\tPHYSICAL MEMORY: 32.0 GB
+
+PROBABLE CALL STACK:
+\t[ 0] 0x7FF6EF4C3512 Fallout4.exe+0733512 -> TESForm::SetReference+0x12
+\t[ 1] 0x7FF6EF4C3600 Fallout4.exe+0733600 -> BGSInventoryItem::GetOwner+0x30
+
+MODULES:
+\tFallout4.exe v1.10.163.0
+\tnvwgf2umx.dll v31.0.15.3713
+
+PLUGINS:
+\t[00] Fallout4.esm
+\t[01] DLCRobot.esm
+\t[03] Unofficial Fallout 4 Patch.esp
+`;
+
+function replaceDocsPlaceholder(content, docsPath) {
+  return content.replaceAll("DOCS_XSE_PLACEHOLDER", docsPath.replaceAll("\\", "\\\\"));
+}
+
+function createCliWorkspace() {
+  const packageRoot = fileURLToPath(new URL("..", import.meta.url));
+  const workspace = mkdtempSync(join(tmpdir(), "classic-node-runtime-cli-"));
+  const classicDataDir = join(workspace, "CLASSIC Data");
+  const databaseDir = join(classicDataDir, "databases");
+  const docsDir = join(workspace, "docs", "F4SE");
+  const scanDir = join(workspace, "incoming");
+  const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+  const localYaml = `
+Game_Info:
+  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
+GameVR_Info:
+  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
+`;
+  const gameYaml = `
+Game_Info:
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+  GameVersionNEW: "1.10.984"
+  CRASHGEN_LatestVer: "1.37.0"
+  CRASHGEN_LogName: "Buffout 4"
+  Main_Root_Name: "Fallout4"
+  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins found"
+  Warn_Outdated: "Outdated"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check: {}
+Crashlog_Stack_Check: {}
+Mods_CONF: {}
+Mods_CORE: {}
+Mods_CORE_FOLON: {}
+Mods_FREQ: {}
+Mods_OPC2: {}
+Mods_SOLU: {}
+`;
+
+  mkdirSync(databaseDir, { recursive: true });
+  mkdirSync(docsDir, { recursive: true });
+  mkdirSync(scanDir, { recursive: true });
+
+  writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), MAIN_YAML, "utf8");
+  writeFileSync(join(databaseDir, "CLASSIC Fallout4.yaml"), replaceDocsPlaceholder(gameYaml, docsDir), "utf8");
+  writeFileSync(join(workspace, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
+  writeFileSync(
+    join(classicDataDir, "CLASSIC Fallout4 Local.yaml"),
+    replaceDocsPlaceholder(localYaml, docsDir),
+    "utf8",
+  );
+  writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+
+  return {
+    cliPath: join(packageRoot, "dist", "cli", "main.js"),
+    logPath,
+    workspace,
+  };
+}
 
 test("loads native binding in Node runtime", () => {
   assert.equal(typeof classic.getVersion, "function");
@@ -295,5 +385,35 @@ if (activeTier1Owners.has("scanlog")) {
       "auto",
     );
     assert.deepEqual(results, []);
+  });
+}
+
+if (activeTier1Owners.has("scanlog")) {
+  test("runs functional CLI workflow in Node runtime", () => {
+    const { cliPath, logPath, workspace } = createCliWorkspace();
+
+    try {
+      assert.equal(existsSync(cliPath), true);
+
+      const result = spawnSync(
+        process.execPath,
+        [cliPath, "--json", "--scan-path", join(workspace, "incoming"), "--game-version", "auto"],
+        {
+          cwd: workspace,
+          encoding: "utf8",
+        },
+      );
+
+      assert.equal(result.status, 0);
+
+      const output = JSON.parse(result.stdout);
+      assert.equal(output.mode, "scan");
+      assert.equal(output.logsFound, 1);
+      assert.equal(output.scanErrors, 0);
+      assert.equal(output.reportsWritten, 1);
+      assert.equal(existsSync(logPath.replace(".log", "-AUTOSCAN.md")), true);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
   });
 }

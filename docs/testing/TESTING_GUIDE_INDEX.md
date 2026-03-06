@@ -55,6 +55,7 @@ Use local command sets that mirror these workflows before opening PRs.
 ```powershell
 bun install
 bun run build
+bun run cli -- --version
 bun run parity:gate:local
 bun run test:bun
 bun run test:node

@@ -54,6 +54,7 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 # From ClassicLib-rs/node-bindings/classic-node
 bun install
 bun run build
+bun run cli -- --version
 bun run parity:gate:local
 bun run test:bun
 bun run test:node

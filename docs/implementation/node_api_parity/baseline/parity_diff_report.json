@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-06T06:47:30.499054+00:00",
+  "generated_at_utc": "2026-03-06T10:48:39.228573+00:00",
   "summary": {
     "tier1_contract_total": 262,
     "tier1_matched": 262,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 101,
+    "total_gaps": 102,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 101
+    "tier2_gap_total": 102
   },
   "contract_results": [
     {
@@ -47,8 +47,8 @@
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",
-      "expected_node_arity": 2,
-      "actual_node_arity": 2
+      "expected_node_arity": 3,
+      "actual_node_arity": 3
     },
     {
       "id": "scanlog-parse-segments",
@@ -190,8 +190,8 @@
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",
-      "expected_node_arity": 7,
-      "actual_node_arity": 7
+      "expected_node_arity": 8,
+      "actual_node_arity": 8
     },
     {
       "id": "scanlog-detect-crash-pattern",
@@ -4487,6 +4487,16 @@
       "node_export": "processGameLogs",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "writeAutoscanReport",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
     }
   ],
   "gap_counts_by_owner_tier": {
@@ -4497,7 +4507,7 @@
       "tier2": 70
     },
     "aux": {
-      "tier2": 6
+      "tier2": 7
     },
     "version_registry": {
       "tier2": 4

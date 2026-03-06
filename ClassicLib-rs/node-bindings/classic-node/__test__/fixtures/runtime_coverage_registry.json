@@ -122,6 +122,27 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/path.spec.ts",
       "testCaseId": "aux-tier2-path-shared-message"
+    },
+    {
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsLogCollector",
+        "processLogsBatch",
+        "writeAutoscanReport"
+      ],
+      "verificationMode": "cli_workflow",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
     }
   ]
 }

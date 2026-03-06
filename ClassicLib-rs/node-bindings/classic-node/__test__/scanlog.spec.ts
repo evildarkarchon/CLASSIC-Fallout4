@@ -224,6 +224,14 @@ describe("processLogsBatch", () => {
       expect(result.error).toBeDefined();
     }
   });
+
+  test("processLogsBatch accepts an explicit maxConcurrent override", async () => {
+    const config = createAnalysisConfig("Fallout4", "auto");
+    const results = await processLogsBatch(["Z:\\nonexistent\\single.log"], config, 1);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].success).toBe(false);
+  });
 });
 
 describe("YAML-backed analysis entry points", () => {
@@ -289,6 +297,22 @@ describe("YAML-backed analysis entry points", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     }
+  });
+
+  test("processLogsBatchWithYamlContent accepts an explicit maxConcurrent override", async () => {
+    const results = await processLogsBatchWithYamlContent(
+      ["Z:\\nonexistent\\single.log"],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+      undefined,
+      1,
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0].success).toBe(false);
   });
 });
 
