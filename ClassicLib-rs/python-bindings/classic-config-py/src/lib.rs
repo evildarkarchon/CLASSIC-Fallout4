@@ -80,8 +80,8 @@
 //! ```
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, PathConfig as CorePathConfig,
-    YamlDataCore, YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, PathConfig as CorePathConfig, YamlDataCore,
+    YamlSource as CoreYamlSource,
 };
 use classic_crashgen_settings_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
@@ -237,7 +237,8 @@ fn pathbuf_to_string(path: &std::path::Path) -> String {
 }
 
 fn option_pathbuf_to_string(path: &Option<PathBuf>) -> Option<String> {
-    path.as_ref().map(|value| pathbuf_to_string(value.as_path()))
+    path.as_ref()
+        .map(|value| pathbuf_to_string(value.as_path()))
 }
 
 /// Python wrapper for runtime path configuration settings.

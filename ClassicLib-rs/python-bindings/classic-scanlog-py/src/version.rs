@@ -21,9 +21,7 @@ impl PyCrashgenVersion {
     #[new]
     fn new(version_str: &str) -> PyResult<Self> {
         let inner = core::CrashgenVersion::parse(version_str).ok_or_else(|| {
-            pyo3::exceptions::PyValueError::new_err(
-                "Invalid crash generator version string",
-            )
+            pyo3::exceptions::PyValueError::new_err("Invalid crash generator version string")
         })?;
         Ok(Self { inner })
     }
