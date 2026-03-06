@@ -299,7 +299,11 @@ pub async fn process_logs_batch_with_yaml_content(
         .spawn(async move {
             let orchestrator = OrchestratorCore::new(core_config)
                 .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
-            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, max_concurrent).await)
+            Ok::<_, String>(
+                orchestrator
+                    .process_logs_batch(log_paths, max_concurrent)
+                    .await,
+            )
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
@@ -363,7 +367,11 @@ pub async fn process_logs_batch(
         .spawn(async move {
             let orchestrator = OrchestratorCore::new(core_config)
                 .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
-            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, max_concurrent).await)
+            Ok::<_, String>(
+                orchestrator
+                    .process_logs_batch(log_paths, max_concurrent)
+                    .await,
+            )
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
