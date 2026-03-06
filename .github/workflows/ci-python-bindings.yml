@@ -91,6 +91,8 @@ jobs:
       - name: Install Python build and test dependencies
         run: uv pip install maturin pytest
 
+      # `maturin` is intentionally installed into the repo `.venv`.
+      # `rebuild_rust.ps1` invokes `uv run maturin ...`, so no global PATH install is required.
       - name: Build and install required Python bindings
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
