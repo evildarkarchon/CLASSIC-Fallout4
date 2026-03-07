@@ -19,8 +19,8 @@ CLASSIC_Info:
     # Set to true if you want CLASSIC to periodically check for its own updates online through GitHub.
       Update Check: true
 
-    # Set to true if you want CLASSIC to prioritize scanning the Virtual Reality version of your game.
-      VR Mode: false
+    # Select which game version mode CLASSIC should target. (auto | Original | NextGen | VR)
+      Game Version: auto
 
     # FCX - File Check Xtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
       FCX Mode: false
@@ -171,7 +171,7 @@ CLASSIC_Interface:
   autoscan_text_Fallout4: |
     FOR FULL LIST OF MODS THAT CAUSE PROBLEMS, THEIR ALTERNATIVES AND DETAILED SOLUTIONS
 
-    VISIT THE BUFFOUT 4 CRASH ARTICLE: https://www.nexusmods.com/fallout4/articles/3115
+    VISIT THE FALLOUT 4 CRASH ARTICLE: https://www.nexusmods.com/fallout4/articles/3115
 
     ---
 
@@ -427,8 +427,8 @@ Version_Registry:
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
-           min: "1.10.163.0"
-           max: "1.11.163.999"
+            min: "1.10.163.0"
+            max: "1.11.163.999"
       address_library:
         filename: version-1-10-163-0.bin
         format: bin
@@ -494,8 +494,8 @@ Version_Registry:
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
-           min: "1.10.984.0"
-           max: "1.10.999.999"
+            min: "1.10.984.0"
+            max: "1.10.999.999"
       address_library:
         filename: version-1-10-984-0.bin
         format: bin
@@ -548,7 +548,7 @@ Version_Registry:
       short_name: AE
       description: Anniversary Edition version (active development branch)
       exe_hash: # Placeholder - hash not yet available for AE version
-      crashgen_versions: 
+      crashgen_versions:
         - version: "1.7.1"
           name: "Buffout 4"
           description: "AE-compatible Crash Logger"
@@ -561,8 +561,8 @@ Version_Registry:
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
-           min: "1.11.137.0"
-           max: "1.11.999.999"
+            min: "1.11.137.0"
+            max: "1.11.999.999"
       address_library:
         filename: version-1-11-191-0.bin
         format: bin

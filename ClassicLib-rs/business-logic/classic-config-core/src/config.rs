@@ -201,13 +201,6 @@ pub struct ClassicConfig {
     /// Check for updates at startup
     pub update_check: bool,
 
-    /// Enable VR mode (for VR-specific game configurations)
-    ///
-    /// Note: Kept for backward compatibility. New code should use `game_version`
-    /// instead. Legacy configs with `vr_mode: true` are auto-migrated to
-    /// `game_version: "VR"` on load.
-    pub vr_mode: bool,
-
     /// Game version selection: "auto", "Original", "NextGen", or "VR"
     ///
     /// Stored lowercase "auto" in YAML, display as "Auto" in UI.
@@ -292,7 +285,6 @@ impl Default for ClassicConfig {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
-            vr_mode: false,
             game_version: "auto".to_string(),
             update_source: "github".to_string(),
             auto_switch_to_results: true, // Enable by default for better UX
@@ -346,15 +338,7 @@ impl ClassicConfig {
         let move_unsolved_logs = yaml["move_unsolved_logs"].as_bool().unwrap_or(false);
         let simplify_logs = yaml["simplify_logs"].as_bool().unwrap_or(false);
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
-        let vr_mode = yaml["vr_mode"].as_bool().unwrap_or(false);
-
-        // Game version with VR mode migration: if legacy config has vr_mode=true
-        // but no game_version key, auto-migrate to game_version="VR"
-        let game_version = if yaml["game_version"].is_badvalue() && vr_mode {
-            "VR".to_string()
-        } else {
-            yaml["game_version"].as_str().unwrap_or("auto").to_string()
-        };
+        let game_version = yaml["game_version"].as_str().unwrap_or("auto").to_string();
         let update_source = yaml["update_source"]
             .as_str()
             .unwrap_or("github")
@@ -401,7 +385,6 @@ impl ClassicConfig {
             move_unsolved_logs,
             simplify_logs,
             update_check,
-            vr_mode,
             game_version,
             update_source,
             auto_switch_to_results,
@@ -438,10 +421,6 @@ impl ClassicConfig {
         root.insert(
             Yaml::String("update_check".to_string()),
             Yaml::Boolean(self.update_check),
-        );
-        root.insert(
-            Yaml::String("vr_mode".to_string()),
-            Yaml::Boolean(self.vr_mode),
         );
         root.insert(
             Yaml::String("game_version".to_string()),
@@ -705,7 +684,6 @@ mod tests {
         assert!(!config.move_unsolved_logs);
         assert!(!config.simplify_logs);
         assert!(config.update_check);
-        assert!(!config.vr_mode);
         assert_eq!(config.game_version, "auto");
         assert_eq!(config.update_source, "github");
     }
@@ -742,7 +720,6 @@ mod tests {
             move_unsolved_logs: false,
             simplify_logs: true,
             update_check: false,
-            vr_mode: true,
             game_version: "NextGen".to_string(),
             update_source: "both".to_string(),
             auto_switch_to_results: false,
@@ -769,7 +746,6 @@ mod tests {
         assert_eq!(restored.move_unsolved_logs, config.move_unsolved_logs);
         assert_eq!(restored.simplify_logs, config.simplify_logs);
         assert_eq!(restored.update_check, config.update_check);
-        assert_eq!(restored.vr_mode, config.vr_mode);
         assert_eq!(restored.game_version, config.game_version);
         assert_eq!(restored.update_source, config.update_source);
         assert_eq!(
@@ -789,45 +765,25 @@ mod tests {
     }
 
     #[test]
-    fn test_vr_mode_migration() {
-        // Simulate a legacy YAML with vr_mode: true but no game_version key
-        let yaml_str = "vr_mode: true\nfcx_mode: false\n";
-        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
-        let yaml = docs.first().unwrap();
-
-        let config = ClassicConfig::from_yaml(yaml).unwrap();
-
-        // Should auto-migrate to game_version "VR"
-        assert_eq!(config.game_version, "VR");
-        // vr_mode should still be true for backward compat
-        assert!(config.vr_mode);
-    }
-
-    #[test]
-    fn test_vr_mode_no_migration_when_game_version_set() {
-        // If game_version is already set, vr_mode should NOT override it
-        let yaml_str = "vr_mode: true\ngame_version: Original\n";
-        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
-        let yaml = docs.first().unwrap();
-
-        let config = ClassicConfig::from_yaml(yaml).unwrap();
-
-        // game_version should remain as explicitly set
-        assert_eq!(config.game_version, "Original");
-        assert!(config.vr_mode);
-    }
-
-    #[test]
-    fn test_vr_mode_false_no_migration() {
-        // If vr_mode is false and no game_version, should default to "auto"
-        let yaml_str = "vr_mode: false\n";
+    fn test_missing_game_version_defaults_to_auto() {
+        let yaml_str = "fcx_mode: false\n";
         let docs = YamlLoader::load_from_str(yaml_str).unwrap();
         let yaml = docs.first().unwrap();
 
         let config = ClassicConfig::from_yaml(yaml).unwrap();
 
         assert_eq!(config.game_version, "auto");
-        assert!(!config.vr_mode);
+    }
+
+    #[test]
+    fn test_game_version_is_loaded_when_set() {
+        let yaml_str = "game_version: Original\n";
+        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
+        let yaml = docs.first().unwrap();
+
+        let config = ClassicConfig::from_yaml(yaml).unwrap();
+
+        assert_eq!(config.game_version, "Original");
     }
 
     #[tokio::test]
@@ -855,7 +811,6 @@ mod tests {
             move_unsolved_logs: false,
             simplify_logs: false,
             update_check: true,
-            vr_mode: false,
             game_version: "auto".to_string(),
             update_source: "github".to_string(),
             auto_switch_to_results: true,

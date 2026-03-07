@@ -7,9 +7,9 @@
 //! The public API uses conditional compilation to expose the appropriate
 //! platform implementation.
 
-use crate::error::DocsPathResult;
 #[cfg(target_os = "windows")]
 use crate::error::DocsPathError;
+use crate::error::DocsPathResult;
 use std::path::PathBuf;
 
 #[cfg(target_os = "windows")]

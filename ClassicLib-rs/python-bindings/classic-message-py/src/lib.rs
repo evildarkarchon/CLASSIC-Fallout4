@@ -5,6 +5,7 @@
 
 use classic_message_core as core;
 use pyo3::prelude::*;
+use std::collections::HashMap;
 
 mod logging;
 
@@ -472,6 +473,50 @@ fn format_log_message(content: &str, details: Option<&str>) -> String {
     core::format_log_message(content, details)
 }
 
+/// Formats a structured contract event with canonical required fields.
+///
+/// Args:
+///     component: Logical component emitting the event.
+///     event: Canonical event identifier.
+///     severity: Contract severity ("info", "warning", "error", "debug").
+///     outcome: Outcome status ("success", "failure", etc.).
+///     context: Optional key-value context fields.
+///
+/// Returns:
+///     str: Structured contract log line with redaction applied.
+///
+/// Raises:
+///     ValueError: If severity is not recognized.
+#[pyfunction]
+fn format_contract_event(
+    component: &str,
+    event: &str,
+    severity: &str,
+    outcome: &str,
+    context: Option<HashMap<String, String>>,
+) -> PyResult<String> {
+    let severity = match severity.to_ascii_lowercase().as_str() {
+        "info" => core::MessageType::Info,
+        "warning" | "warn" => core::MessageType::Warning,
+        "error" => core::MessageType::Error,
+        "debug" => core::MessageType::Debug,
+        _ => {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "Invalid contract severity: '{severity}'. Expected one of: info, warning, error, debug"
+            )));
+        }
+    };
+
+    let mut contract_event = core::ContractEvent::new(component, event, severity, outcome);
+    if let Some(context) = context {
+        for (key, value) in context {
+            contract_event = contract_event.with_context(key, value);
+        }
+    }
+
+    Ok(core::format_contract_event(&contract_event))
+}
+
 /// Python module for CLASSIC message routing and formatting.
 ///
 /// This module provides Rust-accelerated message handling with type-safe
@@ -519,6 +564,7 @@ fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add functions
     m.add_function(wrap_pyfunction!(strip_emoji, m)?)?;
     m.add_function(wrap_pyfunction!(format_log_message, m)?)?;
+    m.add_function(wrap_pyfunction!(format_contract_event, m)?)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

@@ -4,9 +4,12 @@ import { join } from "path";
 import { tmpdir } from "os";
 import {
   createAnalysisConfig,
+  createAnalysisConfigFromYamlContent,
   getVersion,
   processLog,
   processLogsBatch,
+  processLogWithYamlContent,
+  processLogsBatchWithYamlContent,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -72,6 +75,47 @@ const PLUGIN_CONTENT = `PLUGINS:
 [04] TestMod.esp
 `;
 
+const SETTINGS_MARKER_CONTENT = `Fallout 4 v1.10.163
+[Compatibility]
+Achievements: true
+MemoryManager: false
+`;
+
+const MAIN_YAML = `
+CLASSIC_Info:
+  version: "9.0.0"
+  version_date: "2026-02-25"
+catch_log_records:
+  - "LAND"
+`;
+
+const GAME_YAML = `
+Game_Info:
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+  GameVersionNEW: "1.10.984"
+  CRASHGEN_LatestVer: "1.37.0"
+  CRASHGEN_LogName: "Buffout 4"
+  Main_Root_Name: "Fallout4"
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins found"
+  Warn_Outdated: "Outdated"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check: {}
+Crashlog_Stack_Check: {}
+Mods_CONF: {}
+Mods_CORE: {}
+Mods_CORE_FOLON: {}
+Mods_FREQ: {}
+Mods_OPC2: {}
+Mods_SOLU: {}
+`;
+
+const IGNORE_YAML = `
+CLASSIC_Ignore_Fallout4: []
+`;
+
 // ============================================================================
 // Version & Config
 // ============================================================================
@@ -84,24 +128,55 @@ describe("Scanlog bindings", () => {
   });
 
   test("createAnalysisConfig returns a config object", () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     expect(config).toBeDefined();
     expect(config.game).toBe("Fallout4");
-    expect(config.vrMode).toBe(false);
+    expect(config.gameVersion).toBe("auto");
   });
 
   test("createAnalysisConfig accepts VR mode", () => {
-    const config = createAnalysisConfig("Fallout4", true);
-    expect(config.vrMode).toBe(true);
+    const config = createAnalysisConfig("Fallout4", "VR");
+    expect(config.gameVersion).toBe("VR");
   });
 
   test("createAnalysisConfig has correct default values", () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     expect(config.crashgenName).toBe("");
     expect(config.xseAcronym).toBe("");
     expect(config.classicVersion).toBe("CLASSIC");
     expect(config.fcxMode).toBe(false);
     expect(config.simplifyLogs).toBe(false);
+  });
+
+  test("createAnalysisConfigFromYamlContent builds config from YAML", () => {
+    const config = createAnalysisConfigFromYamlContent(
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+    );
+    expect(config.game).toBe("Fallout4");
+    expect(config.gameVersion).toBe("auto");
+    expect(config.crashgenName).toBe("Buffout 4");
+    expect(config.xseAcronym).toBe("F4SE");
+    expect(config.classicVersion).toBe("9.0.0");
+  });
+
+  test("createAnalysisConfigFromYamlContent applies optional build flags", () => {
+    const config = createAnalysisConfigFromYamlContent(
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+      {
+        fcxMode: true,
+        simplifyLogs: true,
+      },
+    );
+    expect(config.fcxMode).toBe(true);
+    expect(config.simplifyLogs).toBe(true);
   });
 });
 
@@ -111,7 +186,7 @@ describe("Scanlog bindings", () => {
 
 describe("processLog", () => {
   test("processLog rejects for a non-existent file", async () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     try {
       await processLog("Z:\\nonexistent\\crash.log", config);
       // If it doesn't throw, the result should indicate failure
@@ -132,13 +207,13 @@ describe("processLog", () => {
 
 describe("processLogsBatch", () => {
   test("processLogsBatch returns empty array for empty input", async () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     const results = await processLogsBatch([], config);
     expect(results).toEqual([]);
   });
 
   test("processLogsBatch handles non-existent files gracefully", async () => {
-    const config = createAnalysisConfig("Fallout4", false);
+    const config = createAnalysisConfig("Fallout4", "auto");
     const results = await processLogsBatch(
       ["Z:\\nonexistent\\a.log", "Z:\\nonexistent\\b.log"],
       config,
@@ -148,6 +223,96 @@ describe("processLogsBatch", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     }
+  });
+
+  test("processLogsBatch accepts an explicit maxConcurrent override", async () => {
+    const config = createAnalysisConfig("Fallout4", "auto");
+    const results = await processLogsBatch(["Z:\\nonexistent\\single.log"], config, 1);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].success).toBe(false);
+  });
+});
+
+describe("YAML-backed analysis entry points", () => {
+  test("processLogWithYamlContent rejects for invalid YAML payload", async () => {
+    try {
+      await processLogWithYamlContent(
+        "Z:\\nonexistent\\crash.log",
+        "this: [is: not: yaml",
+        GAME_YAML,
+        IGNORE_YAML,
+        "Fallout4",
+        "auto",
+      );
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect(err).toBeDefined();
+      const message = err instanceof Error ? err.message : String(err);
+      expect(message).toMatch(/yaml/i);
+    }
+  });
+
+  test("processLogWithYamlContent rejects for a non-existent file", async () => {
+    try {
+      await processLogWithYamlContent(
+        "Z:\\nonexistent\\crash.log",
+        MAIN_YAML,
+        GAME_YAML,
+        IGNORE_YAML,
+        "Fallout4",
+        "auto",
+      );
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect(err).toBeDefined();
+      const message = err instanceof Error ? err.message : String(err);
+      expect(message.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("processLogsBatchWithYamlContent returns empty array for empty input", async () => {
+    const results = await processLogsBatchWithYamlContent(
+      [],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+    );
+    expect(results).toEqual([]);
+  });
+
+  test("processLogsBatchWithYamlContent returns per-log failures", async () => {
+    const results = await processLogsBatchWithYamlContent(
+      ["Z:\\nonexistent\\a.log", "Z:\\nonexistent\\b.log"],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+    );
+    expect(results.length).toBe(2);
+    for (const result of results) {
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    }
+  });
+
+  test("processLogsBatchWithYamlContent accepts an explicit maxConcurrent override", async () => {
+    const results = await processLogsBatchWithYamlContent(
+      ["Z:\\nonexistent\\single.log"],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      "auto",
+      undefined,
+      1,
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0].success).toBe(false);
   });
 });
 
@@ -188,6 +353,18 @@ describe("parseLogSegments", () => {
     expect(segments.modules.length).toBeGreaterThan(0);
     const joined = segments.modules.join("\n");
     expect(joined).toContain("nvwgf2umx.dll");
+  });
+
+  test("extracts header compatibility settings", () => {
+    const segments = parseLogSegments(SAMPLE_CRASH_LOG);
+    expect(segments.header.length).toBeGreaterThan(0);
+    const joined = segments.header.join("\n");
+    expect(joined).toContain("Achievements: true");
+  });
+
+  test("uses compatibility marker to build header section", () => {
+    const segments = parseLogSegments(SETTINGS_MARKER_CONTENT);
+    expect(segments.header).toEqual(["Achievements: true", "MemoryManager: false"]);
   });
 
   test("returns empty segments for empty content", () => {
@@ -514,6 +691,14 @@ describe("checkCrashgenVersionStatus", () => {
       "1.37.0",
     ]);
     expect(status).toBe("Valid");
+  });
+
+  test("treats unparsable detected version as Outdated", () => {
+    const status = checkCrashgenVersionStatus("invalid-version", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("Outdated");
   });
 });
 

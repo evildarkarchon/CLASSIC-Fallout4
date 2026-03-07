@@ -114,6 +114,15 @@ impl RecordScanner {
     /// let (report, matches) = scanner.scan_named_records(&callstack);
     /// ```
     pub fn scan_named_records(&self, segment_callstack: &[String]) -> (Vec<String>, Vec<String>) {
+        self.scan_named_records_with_crashgen_name(segment_callstack, &self.crashgen_name)
+    }
+
+    /// Like [`Self::scan_named_records`] but allows overriding the crashgen label in report text.
+    pub fn scan_named_records_with_crashgen_name(
+        &self,
+        segment_callstack: &[String],
+        crashgen_name: &str,
+    ) -> (Vec<String>, Vec<String>) {
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
 
@@ -121,7 +130,7 @@ impl RecordScanner {
             self.find_matching_records_internal(segment_callstack, RSP_MARKER, RSP_OFFSET);
 
         let report_lines = if !records_matches.is_empty() {
-            self.generate_found_records_lines(&records_matches)
+            self.generate_found_records_lines(&records_matches, crashgen_name)
         } else {
             vec!["* COULDN'T FIND ANY NAMED RECORDS *\n\n".to_string()]
         };
@@ -234,7 +243,11 @@ impl RecordScanner {
     }
 
     /// Generate report lines for found records
-    fn generate_found_records_lines(&self, records_matches: &[String]) -> Vec<String> {
+    fn generate_found_records_lines(
+        &self,
+        records_matches: &[String],
+        crashgen_name: &str,
+    ) -> Vec<String> {
         let mut lines = Vec::new();
 
         // Count and sort the records
@@ -259,7 +272,7 @@ impl RecordScanner {
         lines.extend(vec![
             "\n[Last number counts how many times each Named Record shows up in the crash log.]\n".to_string(),
             format!("These records were caught by {} and some of them might be related to this crash.\n",
-                    self.crashgen_name),
+                    crashgen_name),
             "Named records should give extra info on involved game objects, record types or mod files.\n\n".to_string(),
         ]);
 
@@ -617,6 +630,23 @@ mod tests {
         // Should contain count information
         assert!(output.contains("| 2") || output.contains("|2")); // Player appears twice
         assert!(output.contains("| 1") || output.contains("|1")); // NPC appears once
+    }
+
+    #[test]
+    fn test_scan_named_records_with_crashgen_name_override_uses_effective_name() {
+        let scanner = RecordScanner::new(
+            vec!["ActorBase".to_string()],
+            vec![],
+            "Buffout 4".to_string(),
+        );
+
+        let callstack = vec!["ActorBase_Player reference".to_string()];
+        let (report, _matches) =
+            scanner.scan_named_records_with_crashgen_name(&callstack, "Addictol");
+        let output = report.join("");
+
+        assert!(output.contains("caught by Addictol"));
+        assert!(!output.contains("caught by Buffout 4"));
     }
 
     // ============================================

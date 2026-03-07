@@ -19,6 +19,10 @@ private slots:
 };
 
 namespace {
+const QString kRefreshButtonObjectName = QStringLiteral("reportListRefreshButton");
+const QString kDeleteButtonObjectName = QStringLiteral("reportListDeleteButton");
+const QString kOpenFolderButtonObjectName = QStringLiteral("reportListOpenFolderButton");
+
 QString writeReportFile(QTemporaryDir& tempDir,
                         const QString& fileName,
                         const QString& content)
@@ -32,16 +36,6 @@ QString writeReportFile(QTemporaryDir& tempDir,
     QTextStream stream(&file);
     stream << content;
     return path;
-}
-
-QPushButton* findButtonByText(ReportListWidget& widget, const QString& text)
-{
-    for (auto* button : widget.findChildren<QPushButton*>()) {
-        if (button->text() == text) {
-            return button;
-        }
-    }
-    return nullptr;
 }
 } // namespace
 
@@ -144,9 +138,9 @@ void ReportListWidgetTests::selection_and_toolbar_buttons_emit_expected_signals(
     auto* list = widget.findChild<QListWidget*>();
     QVERIFY(list);
 
-    auto* refreshButton = findButtonByText(widget, QStringLiteral("Refresh"));
-    auto* deleteButton = findButtonByText(widget, QStringLiteral("Delete"));
-    auto* openFolderButton = findButtonByText(widget, QStringLiteral("Open Folder"));
+    auto* refreshButton = widget.findChild<QPushButton*>(kRefreshButtonObjectName);
+    auto* deleteButton = widget.findChild<QPushButton*>(kDeleteButtonObjectName);
+    auto* openFolderButton = widget.findChild<QPushButton*>(kOpenFolderButtonObjectName);
     QVERIFY(refreshButton);
     QVERIFY(deleteButton);
     QVERIFY(openFolderButton);
@@ -164,15 +158,16 @@ void ReportListWidgetTests::selection_and_toolbar_buttons_emit_expected_signals(
     QVERIFY(!widget.currentReportPath().isEmpty());
     QCOMPARE(selectedSpy.takeFirst().at(0).toString(), widget.currentReportPath());
 
-    QTest::mouseClick(refreshButton, Qt::LeftButton);
+    refreshButton->click();
     QTRY_COMPARE(refreshSpy.count(), 1);
 
-    QTest::mouseClick(deleteButton, Qt::LeftButton);
+    deleteButton->click();
     QTRY_COMPARE(deleteSpy.count(), 1);
     QCOMPARE(deleteSpy.takeFirst().at(0).toString(), widget.currentReportPath());
 
-    QTest::mouseClick(openFolderButton, Qt::LeftButton);
+    openFolderButton->click();
     QTRY_COMPARE(openFolderSpy.count(), 1);
+    QCOMPARE(openFolderSpy.takeFirst().at(0).toString(), widget.currentReportPath());
 }
 
 QTEST_MAIN(ReportListWidgetTests)

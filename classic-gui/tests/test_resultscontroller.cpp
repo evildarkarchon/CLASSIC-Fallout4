@@ -1,6 +1,7 @@
 #include <QDir>
 #include <QFile>
 #include <QListWidget>
+#include <QPushButton>
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTextStream>
@@ -21,9 +22,14 @@ private slots:
     void custom_directory_changes_trigger_refresh();
     void scan_completed_switches_to_results_tab_when_auto_switch_enabled();
     void scan_completed_does_not_switch_tabs_when_auto_switch_disabled();
+    void open_folder_reveals_selected_report_when_file_exists();
+    void open_folder_falls_back_to_crash_logs_when_no_selection();
+    void open_folder_falls_back_to_crash_logs_when_selected_report_missing();
 };
 
 namespace {
+const QString kOpenFolderButtonObjectName = QStringLiteral("reportListOpenFolderButton");
+
 QString writeTextFile(const QString& filePath, const QString& content)
 {
     const QFileInfo info(filePath);
@@ -43,6 +49,31 @@ QListWidget* findReportList(ReportListWidget& widget)
 {
     return widget.findChild<QListWidget*>();
 }
+
+class TestableResultsController final : public ResultsController {
+public:
+    using ResultsController::ResultsController;
+
+    QString openedFolderPath;
+    QString revealedFilePath;
+    int openFolderCalls = 0;
+    int revealFileCalls = 0;
+
+protected:
+    bool openFolderInFileBrowser(const QString& folderPath) override
+    {
+        ++openFolderCalls;
+        openedFolderPath = QDir::cleanPath(folderPath);
+        return true;
+    }
+
+    bool revealFileInFileBrowser(const QString& filePath) override
+    {
+        ++revealFileCalls;
+        revealedFilePath = QDir::cleanPath(filePath);
+        return true;
+    }
+};
 } // namespace
 
 void ResultsControllerTests::setReportDirectories_creates_primary_and_discovers_reports_from_both_dirs()
@@ -197,6 +228,141 @@ void ResultsControllerTests::scan_completed_does_not_switch_tabs_when_auto_switc
     emit SignalHub::instance().scanCompleted();
 
     QTRY_COMPARE(tabWidget.currentIndex(), 1);
+}
+
+void ResultsControllerTests::open_folder_reveals_selected_report_when_file_exists()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    const QString customDir = tempDir.filePath(QStringLiteral("Custom Folder"));
+    QVERIFY(QDir().mkpath(crashDir));
+    QVERIFY(QDir().mkpath(customDir));
+
+    const QString customReport = writeTextFile(
+        customDir + QStringLiteral("/crash-2025-03-01-00-00-00-AUTOSCAN.md"),
+        QStringLiteral("SUSPECT: custom\n"));
+    QVERIFY(!customReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    TestableResultsController controller(
+        &SignalHub::instance(),
+        &tabWidget,
+        &reportList,
+        &markdownViewer,
+        &metadata);
+
+    controller.setReportDirectories({crashDir, customDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    list->setCurrentRow(0);
+    QTRY_VERIFY(!reportList.currentReportPath().isEmpty());
+
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
+    QVERIFY(openFolderButton);
+
+    openFolderButton->click();
+
+    QTRY_COMPARE(controller.revealFileCalls, 1);
+    QCOMPARE(controller.revealedFilePath, QDir::cleanPath(customReport));
+    QCOMPARE(controller.openFolderCalls, 0);
+}
+
+void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_no_selection()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    QVERIFY(QDir().mkpath(crashDir));
+
+    const QString crashReport = writeTextFile(
+        crashDir + QStringLiteral("/crash-2025-03-01-00-00-01-AUTOSCAN.md"),
+        QStringLiteral("NO ISSUES FOUND\n"));
+    QVERIFY(!crashReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    TestableResultsController controller(
+        &SignalHub::instance(),
+        &tabWidget,
+        &reportList,
+        &markdownViewer,
+        &metadata);
+
+    controller.setReportDirectories({crashDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    list->clearSelection();
+    list->setCurrentItem(nullptr);
+    QCOMPARE(reportList.currentReportPath(), QString());
+
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
+    QVERIFY(openFolderButton);
+
+    openFolderButton->click();
+
+    QTRY_COMPARE(controller.openFolderCalls, 1);
+    QCOMPARE(controller.openedFolderPath, QDir::cleanPath(crashDir));
+    QCOMPARE(controller.revealFileCalls, 0);
+}
+
+void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_selected_report_missing()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    const QString customDir = tempDir.filePath(QStringLiteral("Custom Folder"));
+    QVERIFY(QDir().mkpath(crashDir));
+    QVERIFY(QDir().mkpath(customDir));
+
+    const QString customReport = writeTextFile(
+        customDir + QStringLiteral("/crash-2025-03-01-00-00-02-AUTOSCAN.md"),
+        QStringLiteral("SUSPECT: custom\n"));
+    QVERIFY(!customReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    TestableResultsController controller(
+        &SignalHub::instance(),
+        &tabWidget,
+        &reportList,
+        &markdownViewer,
+        &metadata);
+
+    controller.setReportDirectories({crashDir, customDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    list->setCurrentRow(0);
+    QTRY_VERIFY(!reportList.currentReportPath().isEmpty());
+    QVERIFY(QFile::remove(customReport));
+
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
+    QVERIFY(openFolderButton);
+
+    openFolderButton->click();
+
+    QTRY_COMPARE(controller.openFolderCalls, 1);
+    QCOMPARE(controller.openedFolderPath, QDir::cleanPath(crashDir));
+    QCOMPARE(controller.revealFileCalls, 0);
 }
 
 QTEST_MAIN(ResultsControllerTests)

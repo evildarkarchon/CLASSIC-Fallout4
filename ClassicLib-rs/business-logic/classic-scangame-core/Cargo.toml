@@ -14,6 +14,7 @@ crate-type = ["rlib"] # Pure Rust library ONLY - NO Python bindings
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
+classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
 classic-path-core = { path = "../classic-path-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
@@ -24,7 +25,6 @@ futures = { workspace = true }
 # File operations
 walkdir = { workspace = true }
 ddsfile = { workspace = true }
-ba2 = { workspace = true }
 
 # Configuration file processing
 sha2 = { workspace = true }
@@ -74,6 +74,9 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+ba2 = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

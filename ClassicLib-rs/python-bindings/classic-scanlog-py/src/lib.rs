@@ -92,6 +92,8 @@ define_exceptions!(
 );
 
 // Import all wrapper modules
+/// Crashgen settings rule parsing helpers for Python inputs.
+pub mod crashgen_rules;
 pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
@@ -106,6 +108,7 @@ pub mod record_scanner;
 pub mod report;
 pub mod settings_validator;
 pub mod suspect_scanner;
+pub mod version;
 
 // Re-export all public types
 pub use fcx_handler::{PyConfigIssue, PyFcxModeHandler};
@@ -130,6 +133,10 @@ pub use report::{
 };
 pub use settings_validator::PySettingsValidator;
 pub use suspect_scanner::PySuspectScanner;
+pub use version::{
+    PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
+    parse_crashgen_version,
+};
 
 /// Convert errors to PyErr using custom exception types
 ///
@@ -184,6 +191,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGpuDetector>()?;
     m.add_class::<PyGpuInfo>()?;
     m.add_class::<PyGpuVendor>()?;
+    version::register(m)?;
 
     // Mod detection
     m.add_function(wrap_pyfunction!(detect_mods_single, m)?)?;
@@ -250,6 +258,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGpuDetector>()?;
     m.add_class::<PyGpuInfo>()?;
     m.add_class::<PyGpuVendor>()?;
+    version::register(m)?;
 
     // Mod detection
     m.add_function(wrap_pyfunction!(detect_mods_single, m)?)?;

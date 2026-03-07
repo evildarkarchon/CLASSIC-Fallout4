@@ -54,8 +54,8 @@ pub use orchestrator::{
     OrchestratorError,
 };
 pub use setup::{
-    SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, get_config_suffix,
-    migrate_vr_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks,
+    SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_vr_setting,
+    needs_path_detection, resolve_effective_game_version, run_combined_checks,
 };
 pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};
 pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};

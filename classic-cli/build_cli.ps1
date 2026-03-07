@@ -48,6 +48,10 @@ if ($Package) { $Install = $true }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+function Get-Tool([string]$ToolName) {
+    return Get-Command $ToolName -ErrorAction SilentlyContinue
+}
+
 # Verify VCPKG_ROOT is set
 if (-not $env:VCPKG_ROOT) {
     Write-Error "VCPKG_ROOT environment variable is not set. Install vcpkg and set VCPKG_ROOT."
@@ -56,7 +60,7 @@ if (-not $env:VCPKG_ROOT) {
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
 # Check if cl.exe is already in PATH (i.e., we're in a VS Dev Shell)
-$clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
+$clFound = Get-Tool "cl.exe"
 if (-not $clFound) {
     Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
     $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
@@ -68,10 +72,25 @@ if (-not $clFound) {
     $devShell = Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1"
     if (Test-Path $devShell) {
         & $devShell -Arch amd64 -SkipAutomaticLocation | Out-Null
-    } else {
+    }
+    else {
         Write-Error "Could not find VS Dev Shell. Run this script from a Developer PowerShell."
         exit 1
     }
+}
+
+# Validate required toolchain components before CMake configure.
+$clFound = Get-Tool "cl.exe"
+$ninjaFound = Get-Tool "ninja"
+if (-not $clFound -or -not $ninjaFound) {
+    if (-not $clFound) {
+        Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
+    }
+    if (-not $ninjaFound) {
+        Write-Host "Missing required tool: ninja" -ForegroundColor Red
+    }
+    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload + Ninja/CMake components are installed."
+    exit 1
 }
 
 # ── Step 1: Clean (optional) ─────────────────────────────────────
@@ -166,11 +185,12 @@ try {
             exit $LASTEXITCODE
         }
         $zipFile = Get-ChildItem -Path $packageDir -Filter "*.zip" |
-            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($zipFile) {
             Write-Host "Package: $($zipFile.FullName)" -ForegroundColor Green
         }
     }
-} finally {
+}
+finally {
     Pop-Location
 }

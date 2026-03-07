@@ -3,6 +3,8 @@
 //! This module provides plugin detection and analysis using pure Rust data structures.
 
 use crate::error::Result;
+use crate::version::crashgen_version_gen;
+use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
 use dashmap::DashMap;
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
@@ -31,7 +33,6 @@ pub struct PluginAnalyzer {
     crashgen_name: String,
     game_version: String,
     game_version_vr: String,
-    game_version_new: String,
     #[allow(dead_code)] // Reserved for future case-insensitive matching optimization
     case_cache: Arc<DashMap<String, String>>,
 }
@@ -51,7 +52,6 @@ impl PluginAnalyzer {
     /// * `crashgen_name` - Name of crash generator for report text (e.g., "Buffout 4")
     /// * `game_version` - Base game version string (e.g., "1.10.163")
     /// * `game_version_vr` - VR version string for VR-specific checks
-    /// * `game_version_new` - Newer game version threshold for feature detection
     ///
     /// # Returns
     ///
@@ -74,7 +74,6 @@ impl PluginAnalyzer {
     ///     "Buffout 4".to_string(),
     ///     "1.10.163".to_string(),
     ///     "1.10.163vr".to_string(),
-    ///     "1.37.0".to_string(),
     /// )?;
     /// # Ok(())
     /// # }
@@ -85,7 +84,6 @@ impl PluginAnalyzer {
         crashgen_name: String,
         game_version: String,
         game_version_vr: String,
-        game_version_new: String,
     ) -> Result<Self> {
         // Convert to lowercase sets for case-insensitive matching
         let lower_plugins_ignore: HashSet<String> = game_ignore_plugins
@@ -102,7 +100,6 @@ impl PluginAnalyzer {
             crashgen_name,
             game_version,
             game_version_vr,
-            game_version_new,
             case_cache: Arc::new(DashMap::new()),
         })
     }
@@ -218,7 +215,7 @@ impl PluginAnalyzer {
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = PluginAnalyzer::new(
     ///     vec![], vec![], "Buffout 4".to_string(),
-    ///     "1.10.163".to_string(), "1.10.163vr".to_string(), "1.37.0".to_string()
+    ///     "1.10.163".to_string(), "1.10.163vr".to_string()
     /// )?;
     ///
     /// let segment = vec![
@@ -295,8 +292,9 @@ impl PluginAnalyzer {
     /// Checks for plugin limit markers (`[FF]`) in crash logs with version-specific logic.
     ///
     /// This method detects the plugin limit marker (`[FF]`) and interprets its meaning based on
-    /// game version. In original game versions, `[FF]` indicates the plugin limit was hit (a problem).
-    /// In newer versions with pre-1.37 crash generators, the limit check is disabled (not a problem).
+    /// game version. Registry classification decides behavior:
+    /// - `OG` / `VR` / `AE`: `[FF]` indicates plugin limit hit.
+    /// - `NG` with crashgen `< 1.37.0`: limit check is disabled.
     ///
     /// # Arguments
     ///
@@ -318,7 +316,7 @@ impl PluginAnalyzer {
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = PluginAnalyzer::new(
     ///     vec![], vec![], "Buffout 4".to_string(),
-    ///     "1.10.163".to_string(), "1.10.163vr".to_string(), "1.37.0".to_string()
+    ///     "1.10.163".to_string(), "1.10.163vr".to_string()
     /// )?;
     ///
     /// let segment = vec!["[FF] PluginLimit.esp".to_string()];
@@ -332,14 +330,17 @@ impl PluginAnalyzer {
         game_version: &str,
         version_current: &str,
     ) -> Result<(bool, bool)> {
-        // Parse versions for comparison
-        let version_137 = "1.37.0";
-
-        // Determine game version characteristics
-        let is_original_game =
-            game_version == self.game_version || game_version == self.game_version_vr;
-        let is_new_game_crashgen_pre_137 =
-            game_version >= self.game_version_new.as_str() && version_current < version_137;
+        let current = crashgen_version_gen(version_current);
+        let is_crashgen_pre_137 = (current.major, current.minor, current.patch) < (1, 37, 0);
+        let detected_short_name = Self::resolve_registry_short_name(game_version).or_else(|| {
+            if game_version == self.game_version_vr {
+                Some("VR".to_string())
+            } else if game_version == self.game_version {
+                Self::resolve_registry_short_name(&self.game_version)
+            } else {
+                None
+            }
+        });
 
         let mut plugin_limit_triggered = false;
         let mut limit_check_disabled = false;
@@ -347,16 +348,39 @@ impl PluginAnalyzer {
         // Check for plugin limit markers
         for entry in &segment_plugins {
             if entry.contains(PLUGIN_LIMIT_MARKER) {
-                if is_original_game {
-                    plugin_limit_triggered = true;
-                } else if is_new_game_crashgen_pre_137 {
-                    limit_check_disabled = true;
+                match detected_short_name.as_deref() {
+                    Some("NG") if is_crashgen_pre_137 => {
+                        limit_check_disabled = true;
+                    }
+                    Some("OG") | Some("VR") | Some("AE") => {
+                        plugin_limit_triggered = true;
+                    }
+                    _ => {}
                 }
                 break; // No need to check further once found
             }
         }
 
         Ok((plugin_limit_triggered, limit_check_disabled))
+    }
+
+    fn resolve_registry_short_name(game_version: &str) -> Option<String> {
+        let parsed = crashgen_version_gen(game_version);
+        if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
+            return None;
+        }
+
+        let major = u32::try_from(parsed.major).ok()?;
+        let minor = u32::try_from(parsed.minor).ok()?;
+        let patch = u32::try_from(parsed.patch).ok()?;
+        let detected = RegistryGameVersion::new(major, minor, patch, 0);
+
+        let registry = get_version_registry();
+        registry
+            .get_all_for_game("Fallout4", None)
+            .into_iter()
+            .find(|info| info.is_compatible_with(&detected))
+            .map(|info| info.short_name.to_ascii_uppercase())
     }
 
     /// Matches plugins found in crash call stack and generates a suspect report with counts.
@@ -389,7 +413,7 @@ impl PluginAnalyzer {
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = PluginAnalyzer::new(
     ///     vec![], vec![], "Buffout 4".to_string(),
-    ///     "1.10.163".to_string(), "1.10.163vr".to_string(), "1.37.0".to_string()
+    ///     "1.10.163".to_string(), "1.10.163vr".to_string()
     /// )?;
     ///
     /// let callstack = vec!["mymod.esp function call".to_string()];
@@ -404,6 +428,20 @@ impl PluginAnalyzer {
         &self,
         segment_callstack_lower: Vec<String>,
         crashlog_plugins_lower: HashSet<String>,
+    ) -> Result<Vec<String>> {
+        self.plugin_match_with_crashgen_name(
+            segment_callstack_lower,
+            crashlog_plugins_lower,
+            &self.crashgen_name,
+        )
+    }
+
+    /// Like [`Self::plugin_match`] but allows overriding the crashgen label used in report text.
+    pub fn plugin_match_with_crashgen_name(
+        &self,
+        segment_callstack_lower: Vec<String>,
+        crashlog_plugins_lower: HashSet<String>,
+        crashgen_name: &str,
     ) -> Result<Vec<String>> {
         let mut lines = Vec::new();
 
@@ -442,7 +480,7 @@ impl PluginAnalyzer {
             }
 
             lines.push("\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n".to_string());
-            lines.push(format!("These Plugins were caught by {} and some of them might be responsible for this crash.\n", self.crashgen_name));
+            lines.push(format!("These Plugins were caught by {} and some of them might be responsible for this crash.\n", crashgen_name));
             lines.push("You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n".to_string());
         } else {
             lines.push("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n".to_string());
@@ -476,7 +514,7 @@ impl PluginAnalyzer {
     ///     vec!["Fallout4.esm".to_string()],  // Ignore base game
     ///     vec![],
     ///     "Buffout 4".to_string(),
-    ///     "1.10.163".to_string(), "1.10.163vr".to_string(), "1.37.0".to_string()
+    ///     "1.10.163".to_string(), "1.10.163vr".to_string()
     /// )?;
     ///
     /// let mut plugins = IndexMap::new();
@@ -638,7 +676,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         );
         assert!(analyzer.is_ok());
     }
@@ -651,7 +688,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         );
         assert!(analyzer.is_ok());
     }
@@ -704,7 +740,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -723,7 +758,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -749,7 +783,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -773,7 +806,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -799,7 +831,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -820,7 +851,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -841,7 +871,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -851,6 +880,46 @@ mod tests {
             .unwrap();
 
         assert!(triggered);
+    }
+
+    #[test]
+    fn test_check_plugin_limit_ng_pre_137_disables_limit_check() {
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.10.163vr".to_string(),
+        )
+        .unwrap();
+
+        let segment = vec!["[FF] PluginLimit.esp".to_string()];
+        let (triggered, disabled) = analyzer
+            .check_plugin_limit(segment, "1.10.984", "1.36.0")
+            .unwrap();
+
+        assert!(!triggered);
+        assert!(disabled);
+    }
+
+    #[test]
+    fn test_check_plugin_limit_ae_pre_137_still_triggers_warning() {
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.10.163vr".to_string(),
+        )
+        .unwrap();
+
+        let segment = vec!["[FF] PluginLimit.esp".to_string()];
+        let (triggered, disabled) = analyzer
+            .check_plugin_limit(segment, "1.11.191", "1.36.0")
+            .unwrap();
+
+        assert!(triggered);
+        assert!(!disabled);
     }
 
     // ============================================
@@ -865,7 +934,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -886,7 +954,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -912,7 +979,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -941,7 +1007,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -953,6 +1018,30 @@ mod tests {
         let result = analyzer.plugin_match(callstack, plugins).unwrap();
         let output = result.join("");
         assert!(output.contains("COULDN'T FIND"));
+    }
+
+    #[test]
+    fn test_plugin_match_with_crashgen_name_override_uses_effective_name() {
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.10.163vr".to_string(),
+        )
+        .unwrap();
+
+        let callstack = vec!["Function call from mymod.esp".to_string()];
+        let mut plugins = HashSet::new();
+        plugins.insert("mymod.esp".to_string());
+
+        let result = analyzer
+            .plugin_match_with_crashgen_name(callstack, plugins, "Addictol")
+            .unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("caught by Addictol"));
+        assert!(!output.contains("caught by Buffout 4"));
     }
 
     // ============================================
@@ -967,7 +1056,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -984,7 +1072,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -1004,7 +1091,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 
@@ -1026,7 +1112,6 @@ mod tests {
             "Buffout 4".to_string(),
             "1.10.163".to_string(),
             "1.10.163vr".to_string(),
-            "1.37.0".to_string(),
         )
         .unwrap();
 

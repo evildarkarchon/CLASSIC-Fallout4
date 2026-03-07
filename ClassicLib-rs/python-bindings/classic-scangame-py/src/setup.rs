@@ -5,8 +5,8 @@
 
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::setup::{
-    SetupCheckConfig, SetupCheckResults, get_config_suffix, migrate_vr_setting,
-    needs_path_detection, resolve_effective_game_version, run_combined_checks,
+    SetupCheckConfig, SetupCheckResults, needs_path_detection, resolve_effective_game_version,
+    run_combined_checks,
 };
 use classic_shared::without_gil;
 use pyo3::prelude::*;
@@ -164,28 +164,24 @@ fn run_setup_checks(py: Python<'_>, config: &PySetupCheckConfig) -> PySetupCheck
     convert_results(results)
 }
 
-/// Migrate legacy VR Mode setting to Game Version format.
+/// Normalize a Game Version setting value.
 ///
 /// Args:
 ///     game_version: Current Game Version setting value (or None)
-///     legacy_vr_mode: Legacy VR Mode boolean (or None)
 ///
 /// Returns:
-///     Resolved game version string, or None if neither setting is configured
+///     Resolved game version string, or None if no game version is provided
 ///
 /// Example:
-///     >>> migrate_vr_setting_py(None, True)
+///     >>> migrate_vr_setting_py("VR")
 ///     'VR'
-///     >>> migrate_vr_setting_py("Original", True)
+///     >>> migrate_vr_setting_py("Original")
 ///     'Original'
 #[pyfunction]
 #[pyo3(name = "migrate_vr_setting")]
-#[pyo3(signature = (game_version=None, legacy_vr_mode=None))]
-fn migrate_vr_setting_py(
-    game_version: Option<&str>,
-    legacy_vr_mode: Option<bool>,
-) -> Option<String> {
-    migrate_vr_setting(game_version, legacy_vr_mode)
+#[pyo3(signature = (game_version=None))]
+fn migrate_vr_setting_py(game_version: Option<&str>) -> Option<String> {
+    game_version.map(|version| resolve_effective_game_version(Some(version)).to_string())
 }
 
 /// Resolve the effective game version from a raw setting value.
@@ -197,7 +193,7 @@ fn migrate_vr_setting_py(
 ///     game_version: Raw Game Version setting value (or None)
 ///
 /// Returns:
-///     One of: "Original", "NextGen", "VR", or "auto"
+///     One of: "Original", "NextGen", "AnniversaryEdition", "VR", or "auto"
 ///
 /// Example:
 ///     >>> resolve_effective_game_version_py("VR")
@@ -232,25 +228,6 @@ fn needs_path_detection_py(game_path: Option<&str>, docs_path: Option<&str>) -> 
     needs_path_detection(game_path, docs_path)
 }
 
-/// Get the VR suffix for configuration keys.
-///
-/// Args:
-///     game_version: The effective game version
-///
-/// Returns:
-///     "VR" if version is VR, empty string otherwise
-///
-/// Example:
-///     >>> get_config_suffix_py("VR")
-///     'VR'
-///     >>> get_config_suffix_py("Original")
-///     ''
-#[pyfunction]
-#[pyo3(name = "get_config_suffix")]
-fn get_config_suffix_py(game_version: &str) -> &'static str {
-    get_config_suffix(game_version)
-}
-
 /// Register setup functions with the Python module
 pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySetupCheckConfig>()?;
@@ -259,6 +236,5 @@ pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(migrate_vr_setting_py, m)?)?;
     m.add_function(wrap_pyfunction!(resolve_effective_game_version_py, m)?)?;
     m.add_function(wrap_pyfunction!(needs_path_detection_py, m)?)?;
-    m.add_function(wrap_pyfunction!(get_config_suffix_py, m)?)?;
     Ok(())
 }

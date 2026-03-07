@@ -8,6 +8,7 @@ members = [
     "business-logic/classic-yaml-core",
     "business-logic/classic-database-core",
     "business-logic/classic-file-io-core",
+    "business-logic/classic-crashgen-settings-core",
     "business-logic/classic-scanlog-core",
     "business-logic/classic-config-core",
     "business-logic/classic-scangame-core",

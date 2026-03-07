@@ -6,14 +6,17 @@
 /// Parsed CLI arguments, mirroring Python's CLASSIC_ScanLogs.py argparse.
 struct CliArgs {
     std::string game = "Fallout4";
-    bool vr_mode = false;
+    std::string game_version = "auto";
     bool fcx_mode = false;
     bool show_fid_values = false;
     bool simplify_logs = false;
-    std::string scan_path;          // Empty = auto-detect
-    uint32_t max_concurrent = 0;    // 0 = auto (cpu_count - 2, min 2)
+    std::string scan_path;       // Empty = auto-detect
+    uint32_t max_concurrent = 0; // 0 = auto (cpu_count - 2, min 2, max 32)
     bool version_flag = false;
 };
+
+uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count);
+uint32_t effective_concurrency(uint32_t requested, uint32_t cpu_count);
 
 /// Parse command-line arguments using CLI11.
 /// Exits the process on --help or parse error.

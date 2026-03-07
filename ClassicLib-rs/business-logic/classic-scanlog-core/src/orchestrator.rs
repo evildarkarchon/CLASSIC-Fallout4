@@ -10,6 +10,7 @@
 //! - Incomplete/failed log detection with statistics
 //! - Full analysis pipeline integration
 
+use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use crate::error::Result;
 use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
@@ -19,6 +20,7 @@ use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
 use crate::report::ReportGenerator;
+use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
@@ -43,8 +45,11 @@ pub struct AnalysisConfig {
     /// Game name (e.g., "Fallout4")
     pub game: String,
 
-    /// VR mode enabled
-    pub vr_mode: bool,
+    /// Selected game-version mode state (derived from caller input).
+    ///
+    /// This is intentionally not exposed publicly; public callers configure
+    /// mode via `game_version` selection APIs.
+    is_vr_mode: bool,
 
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
@@ -60,9 +65,6 @@ pub struct AnalysisConfig {
 
     /// Game version for VR variant (if applicable)
     pub game_version_vr: String,
-
-    /// New/updated game version (for compatibility checks)
-    pub game_version_new: String,
 
     /// XSE acronym (e.g., "F4SE")
     pub xse_acronym: String,
@@ -113,21 +115,25 @@ pub struct AnalysisConfig {
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
 
-    /// Settings to ignore when validating crashgen configuration
-    pub crashgen_ignore: Vec<String>,
+    /// Per-crashgen settings registry loaded from YAML.
+    ///
+    /// Used by the orchestrator to resolve the `CrashgenEntry` for `SettingsValidator`.
+    pub crashgen_registry: CrashgenRegistry,
 }
 
 impl AnalysisConfig {
     /// Creates a new analysis configuration with default values for all optional fields.
     ///
-    /// This constructor initializes an `AnalysisConfig` with the specified game and VR mode,
+    /// This constructor initializes an `AnalysisConfig` with the specified game and selected
+    /// game-version mode,
     /// setting all other fields (crash generator info, game versions, ignore lists, pattern dictionaries,
     /// mod databases) to empty defaults. These fields should be populated before analysis begins.
     ///
     /// # Arguments
     ///
     /// * `game` - The game name (e.g., "Fallout4", "Skyrim")
-    /// * `vr_mode` - Whether VR mode is enabled for this game
+    /// * `selected_game_version` - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR")
     ///
     /// # Returns
     ///
@@ -139,7 +145,7 @@ impl AnalysisConfig {
     /// use classic_scanlog_core::AnalysisConfig;
     ///
     /// // Create configuration for Fallout 4 (non-VR)
-    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     ///
     /// // Populate with additional configuration
     /// config.crashgen_name = "Buffout 4".to_string();
@@ -149,16 +155,15 @@ impl AnalysisConfig {
     /// // Add ignore lists
     /// config.ignore_plugins = vec!["Fallout4.esm".to_string()];
     /// ```
-    pub fn new(game: String, vr_mode: bool) -> Self {
+    pub fn new(game: String, selected_game_version: String) -> Self {
         Self {
             game,
-            vr_mode,
+            is_vr_mode: selected_game_version.eq_ignore_ascii_case("VR"),
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
             crashgen_latest_vr: String::new(),
             game_version: String::new(),
             game_version_vr: String::new(),
-            game_version_new: String::new(),
             xse_acronym: String::new(),
             game_root_name: String::new(),
             classic_version: "CLASSIC".to_string(),
@@ -178,22 +183,37 @@ impl AnalysisConfig {
             mods_opc2: IndexMap::new(),
             mods_core_folon: IndexMap::new(),
             classic_records_list: Vec::new(),
-            crashgen_ignore: Vec::new(),
+            crashgen_registry: CrashgenRegistry::default(),
         }
     }
+
+    #[must_use]
+    fn is_vr_mode(&self) -> bool {
+        self.is_vr_mode
+    }
+}
+
+/// Resolve VR game version string for a game from Version Registry.
+///
+/// This is used to preserve plugin-limit matching behavior where callers may
+/// provide a VR game version string directly (e.g., "1.2.72" for Fallout 4 VR).
+fn resolve_registry_game_version_vr(registry_game_id: &str) -> Option<String> {
+    classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
+        .map(|info| classic_config_core::format_registry_game_version(&info.version))
 }
 
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
 ///
 /// This is the canonical way to create an `AnalysisConfig` from loaded YAML data.
-/// It uses VR-aware accessors to select the correct crashgen name, ignore list,
-/// and game root name based on the `vr_mode` parameter.
+/// Static metadata is sourced from Version Registry (single source of truth),
+/// with YAML used only as a compatibility fallback when registry data is absent.
 ///
 /// # Arguments
 ///
 /// * `yaml` - Reference to the loaded YAML configuration data
 /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-/// * `vr_mode` - Whether VR mode is active for this analysis
+/// * `selected_game_version` - Selected mode
+///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR")
 /// * `show_formid_values` - Whether to include FormID value lookups in reports
 /// * `fcx_mode` - Whether FCX (enhanced analysis) mode is enabled
 /// * `simplify_logs` - Whether to remove specified strings from crash logs
@@ -201,23 +221,56 @@ impl AnalysisConfig {
 pub fn build_analysis_config_from_yaml(
     yaml: &classic_config_core::YamlDataCore,
     game: &str,
-    vr_mode: bool,
+    selected_game_version: &str,
     show_formid_values: bool,
     fcx_mode: bool,
     simplify_logs: bool,
     remove_list: Vec<String>,
 ) -> AnalysisConfig {
+    let is_vr_mode = selected_game_version.eq_ignore_ascii_case("VR");
+    let registry_game_id = match yaml.get_game_root_name().trim() {
+        "" => game,
+        root_name => root_name,
+    };
+    let registry_info =
+        classic_config_core::resolve_registry_version_info(registry_game_id, selected_game_version);
+    let game_version_vr = resolve_registry_game_version_vr(registry_game_id).unwrap_or_default();
+    let registry_crashgen = registry_info
+        .as_ref()
+        .and_then(|info| info.crashgen_versions.first());
+
+    let crashgen_name = registry_crashgen
+        .map(|c| c.name.as_str())
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| yaml.get_crashgen_name())
+        .to_string();
+    let crashgen_latest = registry_crashgen
+        .map(|c| c.version.as_str())
+        .filter(|version| !version.is_empty())
+        .unwrap_or(yaml.crashgen_latest_og.as_str())
+        .to_string();
+    let xse_acronym = registry_info
+        .as_ref()
+        .and_then(|info| info.xse.as_ref())
+        .map(|xse| xse.acronym.as_str())
+        .filter(|acronym| !acronym.is_empty())
+        .unwrap_or(yaml.xse_acronym.as_str())
+        .to_string();
+    let game_version = registry_info
+        .as_ref()
+        .map(|info| classic_config_core::format_registry_game_version(&info.version))
+        .unwrap_or_else(|| yaml.game_version.clone());
+
     AnalysisConfig {
         game: game.to_string(),
-        vr_mode,
-        crashgen_name: yaml.get_crashgen_name(vr_mode).to_string(),
-        crashgen_latest: yaml.crashgen_latest_og.clone(),
-        crashgen_latest_vr: yaml.crashgen_latest_vr.clone(),
-        game_version: yaml.game_version.clone(),
-        game_version_vr: yaml.game_version_vr.clone(),
-        game_version_new: yaml.game_version_new.clone(),
-        xse_acronym: yaml.xse_acronym.clone(),
-        game_root_name: yaml.get_game_root_name(vr_mode).to_string(),
+        is_vr_mode,
+        crashgen_name,
+        crashgen_latest,
+        crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
+        game_version,
+        game_version_vr,
+        xse_acronym,
+        game_root_name: yaml.get_game_root_name().to_string(),
         classic_version: yaml.classic_version.clone(),
         ignore_plugins: yaml.game_ignore_plugins.clone(),
         ignore_records: yaml.game_ignore_records.clone(),
@@ -235,8 +288,44 @@ pub fn build_analysis_config_from_yaml(
         mods_opc2: yaml.game_mods_opc2.clone(),
         mods_core_folon: yaml.game_mods_core_folon.clone(),
         classic_records_list: yaml.classic_records_list.clone(),
-        crashgen_ignore: yaml.get_crashgen_ignore(vr_mode).to_vec(),
+        crashgen_registry: build_crashgen_registry(&yaml.crashgen_registry),
     }
+}
+
+/// Build a `CrashgenRegistry` from raw `CrashgenEntryRaw` data loaded from YAML.
+fn build_crashgen_registry(
+    raw: &std::collections::HashMap<String, classic_config_core::CrashgenEntryRaw>,
+) -> CrashgenRegistry {
+    use crate::crashgen_registry::CheckId;
+    use std::collections::HashMap;
+
+    let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
+    let mut default_entry = CrashgenEntry::default_entry();
+
+    for (name, raw_entry) in raw {
+        let ignore_keys: std::collections::HashSet<String> =
+            raw_entry.ignore_keys.iter().cloned().collect();
+        let checks: Vec<CheckId> = raw_entry
+            .checks
+            .iter()
+            .filter_map(|s| CheckId::parse(s))
+            .collect();
+
+        let entry = CrashgenEntry {
+            display_section: raw_entry.display_section.clone(),
+            ignore_keys,
+            checks,
+            settings_rules: raw_entry.settings_rules.clone(),
+        };
+
+        if name == "default" {
+            default_entry = entry;
+        } else {
+            entries.insert(name.clone(), entry);
+        }
+    }
+
+    CrashgenRegistry::new(entries, default_entry)
 }
 
 /// Analysis result for a single crash log
@@ -479,6 +568,42 @@ pub struct OrchestratorCore {
 }
 
 impl OrchestratorCore {
+    /// Build a settings validator from `AnalysisConfig`.
+    fn settings_validator_from_config(config: &AnalysisConfig) -> SettingsValidator {
+        Self::settings_validator_for_crashgen(config, &config.crashgen_name)
+    }
+
+    /// Build a settings validator for a specific crashgen name.
+    fn settings_validator_for_crashgen(
+        config: &AnalysisConfig,
+        crashgen_name: &str,
+    ) -> SettingsValidator {
+        let entry = config.crashgen_registry.lookup(crashgen_name).clone();
+        SettingsValidator::new(crashgen_name.to_string(), entry)
+    }
+
+    /// Resolve the effective crashgen name for settings validation for a single log.
+    fn resolve_effective_crashgen_name(
+        &self,
+        crashgen_version_str: &str,
+        xse_modules: &HashSet<String>,
+    ) -> String {
+        if crashgen_version_str
+            .to_ascii_lowercase()
+            .contains("addictol")
+        {
+            return "Addictol".to_string();
+        }
+
+        let has_addictol = xse_modules.contains("addictol.dll");
+        let has_buffout = xse_modules.contains("buffout4.dll");
+        if has_addictol && !has_buffout {
+            return "Addictol".to_string();
+        }
+
+        self.config.crashgen_name.clone()
+    }
+
     /// Creates a new crash log analysis orchestrator with the specified configuration.
     ///
     /// This constructor initializes the orchestrator with:
@@ -509,7 +634,7 @@ impl OrchestratorCore {
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// // Create configuration
-    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// config.crashgen_name = "Buffout 4".to_string();
     /// config.game_version = "1.10.163".to_string();
     ///
@@ -530,7 +655,6 @@ impl OrchestratorCore {
                 config.crashgen_name.clone(),
                 config.game_version.clone(),
                 config.game_version_vr.clone(),
-                config.game_version_new.clone(),
             )?)
         } else {
             None
@@ -565,9 +689,9 @@ impl OrchestratorCore {
             None
         };
 
-        // Initialize settings validator
-        let settings_validator =
-            SettingsValidator::new(config.crashgen_name.clone(), config.crashgen_ignore.clone());
+        // Resolve per-crashgen registry entry and build the settings validator.
+        // The entry is resolved once at construction time from the crashgen name.
+        let settings_validator = Self::settings_validator_from_config(&config);
 
         Ok(Self {
             config,
@@ -613,7 +737,7 @@ impl OrchestratorCore {
     /// use std::time::Duration;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let db_pool = DatabasePool::new(Some(10), Duration::from_secs(300), "Fallout4".to_string());
     ///
     /// let orchestrator = OrchestratorCore::new(config)?
@@ -761,7 +885,7 @@ impl OrchestratorCore {
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// let result = orchestrator.process_log("crash-2024-01-01.log".to_string()).await?;
@@ -797,12 +921,39 @@ impl OrchestratorCore {
             .map(|s| Arc::from(s.as_str()))
             .collect();
 
-        // Parse log into segments
-        let segments = self.parser.parse_segments(&lines);
+        // Parse log into named segments using anchor-first segmentation (task 4.1)
+        let segments = self.parser.parse_all_sections_arc(&lines);
 
-        // Create ReportGenerator and ReportComposer for proper formatting
-        let report_gen = self.create_report_generator();
+        // Create ReportComposer for proper formatting
         let mut composer = ReportComposer::new();
+
+        // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP.
+        // This combined scope is intentionally used for suspect, plugin, FormID,
+        // and named-record scanning in the current Rust implementation.
+        let combined_crash_data: Vec<Arc<str>> = [
+            segment_key::CALLSTACK,
+            segment_key::REGISTERS,
+            segment_key::STACK_DUMP,
+        ]
+        .into_iter()
+        .filter_map(|key| segments.get(key))
+        .flat_map(|segment_lines| segment_lines.iter().cloned())
+        .collect();
+
+        // Extract XSE modules for settings validation.
+        // Combine MODULES + XSE_MODULES to preserve backward compatibility.
+        let combined_modules: Vec<Arc<str>> = {
+            let mods = segments
+                .get(segment_key::MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            let xse = segments
+                .get(segment_key::XSE_MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            mods.iter().chain(xse.iter()).cloned().collect()
+        };
+        let xse_modules_for_settings: HashSet<String> = extract_module_names(&combined_modules);
 
         // Statistics
         let mut formid_count = 0;
@@ -814,9 +965,6 @@ impl OrchestratorCore {
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or(&log_path);
-
-        // Generate header
-        composer.add(report_gen.generate_header(crashlog_filename));
 
         // Extract header info (crashgen version, main error) from the raw processed lines
         // We use processed_lines because header is in the first ~20 lines before segmentation
@@ -830,6 +978,15 @@ impl OrchestratorCore {
             .get("crashgen_version")
             .cloned()
             .unwrap_or_default();
+
+        let effective_crashgen_name =
+            self.resolve_effective_crashgen_name(&crashgen_version_str, &xse_modules_for_settings);
+
+        // Create ReportGenerator for this log using effective crashgen name.
+        let report_gen = self.create_report_generator_with_crashgen_name(&effective_crashgen_name);
+
+        // Generate header
+        composer.add(report_gen.generate_header(crashlog_filename));
 
         // Get detected game version from header info (used for list-based version validation)
         let detected_game_version_str =
@@ -856,6 +1013,16 @@ impl OrchestratorCore {
             Some(status)
         };
 
+        let crashgen_version = {
+            let parsed = crashgen_version_gen(&crashgen_version_str);
+            if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
+                None
+            } else {
+                Some(parsed.to_tuple())
+            }
+        };
+        let config_layout = self.derive_scanlog_config_layout(&detected_game_version_str);
+
         // Generate error section
         composer.add(report_gen.generate_error_section_with_status(
             &main_error,
@@ -868,22 +1035,13 @@ impl OrchestratorCore {
 
         // Extract plugins from segments (if plugin analyzer is available)
         if let Some(ref analyzer) = self.plugin_analyzer {
-            // Find plugin segment - scan backwards from end to find segment with game plugins
-            // Game plugins have format: "[XX] PluginName.esp" or "[FE:XXX] PluginName.esl"
-            // The Rust parser may return different segment counts depending on crash log format
-            let plugin_segment_opt = segments.iter().rev().find(|seg| {
-                // Check if segment contains game plugin entries
-                seg.iter().any(|line| {
-                    let trimmed = line.trim();
-                    // Game plugins start with [XX] or [FE:XXX] and end with .esp/.esm/.esl
-                    trimmed.starts_with('[')
-                        && (trimmed.contains(".esp")
-                            || trimmed.contains(".esm")
-                            || trimmed.contains(".esl"))
-                })
-            });
+            // Direct named-key access for plugins segment (task 4.6)
+            let plugin_segment = segments
+                .get(segment_key::PLUGINS)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
 
-            if let Some(plugin_segment) = plugin_segment_opt {
+            if !plugin_segment.is_empty() {
                 // Convert Arc<str> to String for compatibility
                 let plugin_lines: Vec<String> =
                     plugin_segment.iter().map(|s| s.to_string()).collect();
@@ -908,15 +1066,13 @@ impl OrchestratorCore {
         let mut suspect_fragments: Vec<ReportFragment> = Vec::new();
 
         if let Some(ref scanner) = self.suspect_scanner {
-            // Use the main_error extracted from header parsing (not segments[0]!)
-            // segments[0] contains crashgen settings, not the main error line
-
-            // Extract callstack (segment 2: PROBABLE CALL STACK)
-            let callstack = if segments.len() > 2 {
-                segments[2].join("\n")
-            } else {
-                String::new()
-            };
+            // Use the main_error extracted from header parsing (not settings segment!)
+            // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP) for suspect scanning
+            let callstack = combined_crash_data
+                .iter()
+                .map(|s| s.as_ref())
+                .collect::<Vec<_>>()
+                .join("\n");
 
             let max_warn_length = 50; // Default width for formatting
 
@@ -967,18 +1123,15 @@ impl OrchestratorCore {
         };
         composer.add(fcx_handler.get_fcx_messages());
 
-        // Extract XSE modules for settings validation (segment 3)
-        let xse_modules_for_settings: HashSet<String> = if segments.len() > 3 {
-            extract_module_names(&segments[3])
-        } else {
-            HashSet::new()
-        };
-
-        // Parse crashgen settings from Compatibility segment (segment 0)
+        // Parse crashgen settings from settings segment (task 4.2)
         // Format: "key: value" (TOML-like with colon separator)
         // Skip section headers like [Compatibility], [Crashlog], [Fixes], etc.
-        let crashgen_settings: HashMap<String, String> = if !segments.is_empty() {
-            segments[0]
+        let settings_segment = segments
+            .get(segment_key::SETTINGS)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let crashgen_settings: HashMap<String, String> = if !settings_segment.is_empty() {
+            settings_segment
                 .iter()
                 .filter_map(|line| {
                     let line = line.trim();
@@ -1005,94 +1158,50 @@ impl OrchestratorCore {
         };
 
         // Add settings validation section
-        if !crashgen_settings.is_empty() {
-            let mut settings_fragments = Vec::new();
-
-            // Achievements check
-            if let Ok(achievements_fragment) =
-                self.settings_validator.scan_buffout_achievements_setting(
-                    xse_modules_for_settings.clone(),
-                    &crashgen_settings,
-                )
-            {
-                if !achievements_fragment.is_empty() {
-                    settings_fragments.push(achievements_fragment);
-                }
+        let settings_validator = if !crashgen_settings.is_empty() {
+            if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
+                self.settings_validator.clone()
+            } else {
+                Self::settings_validator_for_crashgen(&self.config, &effective_crashgen_name)
             }
+        } else {
+            self.settings_validator.clone()
+        };
 
-            // Memory Manager check (check for X-Cell and Baka ScrapHeap)
-            let has_xcell = [
-                "x-cell-fo4.dll",
-                "x-cell-og.dll",
-                "x-cell-ng2.dll",
-                "x-cell-ae.dll",
-                "addictol.dll",
-            ]
-            .iter()
-            .any(|dll| xse_modules_for_settings.contains(*dll));
-            let has_old_xcell = false; // Would need version check
-            let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
-            if let Ok(memory_fragment) = self
-                .settings_validator
-                .scan_buffout_memorymanagement_settings(
-                    &crashgen_settings,
-                    has_xcell,
-                    has_old_xcell,
-                    has_baka_scrapheap,
-                )
-            {
-                if !memory_fragment.is_empty() {
-                    settings_fragments.push(memory_fragment);
-                }
-            }
-
-            // ArchiveLimit check
-            if let Ok(archive_fragment) = self.settings_validator.scan_archivelimit_setting(
+        if !crashgen_settings.is_empty()
+            && let Ok(settings_fragments) = settings_validator.scan_all_settings(
                 &crashgen_settings,
-                None, // Version parsing would go here
-            ) {
-                if !archive_fragment.is_empty() {
-                    settings_fragments.push(archive_fragment);
-                }
-            }
-
-            // LooksMenu check
-            if let Ok(looksmenu_fragment) = self.settings_validator.scan_buffout_looksmenu_setting(
-                &crashgen_settings,
-                xse_modules_for_settings.clone(),
-            ) {
-                if !looksmenu_fragment.is_empty() {
-                    settings_fragments.push(looksmenu_fragment);
-                }
-            }
-
-            if !settings_fragments.is_empty() {
-                composer.add(report_gen.generate_settings_section_header());
-                for settings_fragment in settings_fragments {
-                    composer.add(settings_fragment);
-                }
+                &xse_modules_for_settings,
+                crashgen_version,
+                config_layout,
+            )
+            && !settings_fragments.is_empty()
+        {
+            composer.add(report_gen.generate_settings_section_header());
+            for settings_fragment in settings_fragments {
+                composer.add(settings_fragment);
             }
         }
 
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
-            // Extract GPU info from system segment (segment 1)
-            let gpu_rival_string: Option<String> = if segments.len() > 1 {
-                let system_segment: Vec<String> =
-                    segments[1].iter().map(|s| s.to_string()).collect();
-                let gpu_info = GpuDetector::get_gpu_info(&system_segment);
-                gpu_info.rival
-            } else {
-                None
+            // Extract GPU info from system segment (task 4.3)
+            let gpu_rival_string: Option<String> = {
+                let system_segment: Vec<String> = segments
+                    .get(segment_key::SYSTEM)
+                    .map(|v| v.iter().map(|s| s.to_string()).collect())
+                    .unwrap_or_default();
+                if system_segment.is_empty() {
+                    None
+                } else {
+                    let gpu_info = GpuDetector::get_gpu_info(&system_segment);
+                    gpu_info.rival
+                }
             };
             let gpu_rival = gpu_rival_string.as_deref();
 
-            // Extract XSE modules from MODULES segment (segment 3)
-            let xse_modules: HashSet<String> = if segments.len() > 3 {
-                extract_module_names(&segments[3])
-            } else {
-                HashSet::new()
-            };
+            // Extract XSE modules from combined MODULES+XSE_MODULES (task 4.5)
+            let xse_modules: HashSet<String> = extract_module_names(&combined_modules);
 
             // Check for conflicting mods
             if !self.config.mods_conf.is_empty() {
@@ -1173,21 +1282,23 @@ impl OrchestratorCore {
             if let Some(ref plugins) = plugins_map {
                 // Only show section if we have plugins to check (matches Python behavior)
                 if !plugins.is_empty() {
-                    // Get callstack segment (segment 2) for plugin matching
-                    let segment_callstack_lower: Vec<String> = if segments.len() > 2 {
-                        segments[2].iter().map(|s| s.to_lowercase()).collect()
-                    } else {
-                        Vec::new()
-                    };
+                    // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP)
+                    // to find plugin references in the full crash scope
+                    let segment_callstack_lower: Vec<String> = combined_crash_data
+                        .iter()
+                        .map(|s| s.to_lowercase())
+                        .collect();
 
                     // Convert plugins to lowercase set for matching
                     let crashlog_plugins_lower: HashSet<String> =
                         plugins.keys().map(|k| k.to_lowercase()).collect();
 
                     // Call plugin_match to find plugins in crash stack
-                    if let Ok(plugin_match_lines) =
-                        analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
-                    {
+                    if let Ok(plugin_match_lines) = analyzer.plugin_match_with_crashgen_name(
+                        segment_callstack_lower,
+                        crashlog_plugins_lower,
+                        &effective_crashgen_name,
+                    ) {
                         // Add the header and the plugin match results
                         composer.add(report_gen.generate_plugin_suspect_header());
                         composer.add(ReportFragment::from_lines(plugin_match_lines));
@@ -1196,16 +1307,12 @@ impl OrchestratorCore {
             }
         }
 
-        // Extract FormIDs from callstack segment (segment 2 includes registers/stack
-        // since it spans from PROBABLE CALL STACK: to MODULES:)
+        // Extract FormIDs from callstack segment (task 4.4)
         // FormIDs are ALWAYS shown regardless of show_formid_values setting.
-        // The show_formid_values setting only controls whether database descriptions are included.
-        if segments.len() > 2 {
-            let callstack_segment = &segments[2];
-
-            // Convert Arc<str> to String for FormID extraction
+        if !combined_crash_data.is_empty() {
+            // Convert combined crash data to String for FormID extraction
             let callstack_lines: Vec<String> =
-                callstack_segment.iter().map(|s| s.to_string()).collect();
+                combined_crash_data.iter().map(|s| s.to_string()).collect();
 
             // Extract FormIDs using FormIDAnalyzerCore
             let formids = self.formid_analyzer.extract_formids(callstack_lines);
@@ -1219,7 +1326,7 @@ impl OrchestratorCore {
 
                 let formid_report_lines = self
                     .formid_analyzer
-                    .formid_match(formids, plugins_ref)
+                    .formid_match_with_crashgen_name(formids, plugins_ref, &effective_crashgen_name)
                     .await?;
 
                 composer.add(report_gen.generate_formid_section_header());
@@ -1227,14 +1334,17 @@ impl OrchestratorCore {
             }
         }
 
-        // Add Named Records section (scan callstack for named records)
+        // Add Named Records section (scan callstack for named records) (task 4.4)
         if let Some(ref record_scanner) = self.record_scanner {
-            if segments.len() > 2 {
-                let callstack_segment = &segments[2];
+            if !combined_crash_data.is_empty() {
                 let callstack_lines: Vec<String> =
-                    callstack_segment.iter().map(|s| s.to_string()).collect();
+                    combined_crash_data.iter().map(|s| s.to_string()).collect();
 
-                let (record_report, _matches) = record_scanner.scan_named_records(&callstack_lines);
+                let (record_report, _matches) = record_scanner
+                    .scan_named_records_with_crashgen_name(
+                        &callstack_lines,
+                        &effective_crashgen_name,
+                    );
                 if !record_report.is_empty() {
                     composer.add(report_gen.generate_record_section_header());
                     composer.add(ReportFragment::from_lines(record_report));
@@ -1294,7 +1404,7 @@ impl OrchestratorCore {
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// let logs = vec![
@@ -1372,13 +1482,13 @@ impl OrchestratorCore {
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// // Access configuration after creation
     /// let config_ref = orchestrator.config();
     /// println!("Analyzing game: {}", config_ref.game);
-    /// println!("VR mode: {}", config_ref.vr_mode);
+    /// println!("Configured game: {}", config_ref.game);
     /// # Ok(())
     /// # }
     /// ```
@@ -1479,18 +1589,27 @@ impl OrchestratorCore {
 
     /// Detects if a crash log is incomplete (missing plugin segment).
     ///
-    /// This matches Python's `_detect_incomplete_log()` logic.
+    /// Uses the named segment map: checks whether the `plugins` segment is empty.
     ///
     /// # Arguments
     ///
-    /// * `segment_plugin` - The plugin segment from the parsed crash log
+    /// * `segments` - Named segment map from `parse_all_sections_arc`
     ///
     /// # Returns
     ///
-    /// `true` if the log is incomplete (plugin segment is empty or too short).
-    pub fn detect_incomplete_log(&self, segment_plugin: &[String]) -> bool {
-        // Python considers log incomplete if plugin segment is missing or empty
-        segment_plugin.is_empty() || segment_plugin.len() < 2
+    /// `true` if the plugins segment is empty or absent.
+    pub fn detect_incomplete_log(&self, segments: &HashMap<String, Vec<Arc<str>>>) -> bool {
+        segments
+            .get(segment_key::PLUGINS)
+            .map(|p| p.is_empty())
+            .unwrap_or(true)
+    }
+
+    /// Compat overload: detect incomplete log from a plain string slice.
+    ///
+    /// Used by callers that still pass a `&[String]` plugins segment.
+    pub fn detect_incomplete_log_slice(&self, segment_plugin: &[String]) -> bool {
+        segment_plugin.is_empty()
     }
 
     /// Detects if a crash log has failed (too short to analyze).
@@ -1522,17 +1641,24 @@ impl OrchestratorCore {
         )
     }
 
+    /// Creates a ReportGenerator configured with an explicit crashgen name.
+    pub fn create_report_generator_with_crashgen_name(
+        &self,
+        crashgen_name: &str,
+    ) -> ReportGenerator {
+        ReportGenerator::with_config(
+            self.config.classic_version.clone(),
+            crashgen_name.to_string(),
+        )
+    }
+
     /// Creates a SettingsValidator configured for this orchestrator.
     ///
     /// # Returns
     ///
-    /// A `SettingsValidator` instance configured with the crashgen name
-    /// and ignore settings from the analysis configuration.
+    /// A `SettingsValidator` instance configured from the crashgen registry entry.
     pub fn create_settings_validator(&self) -> SettingsValidator {
-        SettingsValidator::new(
-            self.config.crashgen_name.clone(),
-            self.config.crashgen_ignore.clone(),
-        )
+        Self::settings_validator_from_config(&self.config)
     }
 
     /// Creates a RecordScanner configured for this orchestrator.
@@ -1599,7 +1725,7 @@ impl OrchestratorCore {
         let match_result = registry.match_version(
             &detected_game_version,
             &self.config.game,
-            self.config.vr_mode,
+            self.config.is_vr_mode(),
         );
 
         let valid_versions: Vec<&str> = match match_result.version_info {
@@ -1625,6 +1751,20 @@ impl OrchestratorCore {
         let minor = u32::try_from(parsed.minor).ok()?;
         let patch = u32::try_from(parsed.patch).ok()?;
         Some(RegistryGameVersion::new(major, minor, patch, 0))
+    }
+
+    fn derive_scanlog_config_layout(
+        &self,
+        detected_game_version_str: &str,
+    ) -> classic_crashgen_settings_core::ConfigLayout {
+        if self
+            .parse_detected_game_version(detected_game_version_str)
+            .is_some()
+        {
+            classic_crashgen_settings_core::ConfigLayout::Og
+        } else {
+            classic_crashgen_settings_core::ConfigLayout::Unknown
+        }
     }
 
     /// Checks if the game is running FOLON (Fallout: London) based on plugins.
@@ -1768,7 +1908,7 @@ impl OrchestratorCore {
     /// use std::path::PathBuf;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     /// let orchestrator = OrchestratorCore::new(config)?;
     ///
     /// let reports = vec![
@@ -1868,11 +2008,8 @@ mod tests {
             classic_version: classic_version.to_string(),
             classic_version_date: String::new(),
             crashgen_name: "Buffout 4".to_string(),
-            crashgen_name_vr: "Buffout 4 VR".to_string(),
             crashgen_latest_og: String::new(),
-            crashgen_latest_vr: String::new(),
             crashgen_ignore: Vec::new(),
-            crashgen_ignore_vr: Vec::new(),
             warn_noplugins: String::new(),
             warn_outdated: String::new(),
             xse_acronym: "F4SE".to_string(),
@@ -1889,10 +2026,8 @@ mod tests {
             game_mods_solu: IndexMap::new(),
             autoscan_text: String::new(),
             game_version: String::new(),
-            game_version_new: String::new(),
-            game_version_vr: String::new(),
             game_root_name: "Fallout4".to_string(),
-            game_root_name_vr: "Fallout4VR".to_string(),
+            crashgen_registry: std::collections::HashMap::new(),
         }
     }
 
@@ -1903,7 +2038,7 @@ mod tests {
         let config = build_analysis_config_from_yaml(
             &yaml,
             "Fallout4",
-            false,
+            "auto",
             false,
             false,
             false,
@@ -1914,8 +2049,153 @@ mod tests {
     }
 
     #[test]
+    fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing() {
+        let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+        yaml.crashgen_name.clear();
+        yaml.crashgen_latest_og.clear();
+        yaml.xse_acronym.clear();
+        yaml.game_version.clear();
+        yaml.crashgen_registry.insert(
+            "Buffout 4".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Compatibility]".to_string(),
+                ignore_keys: vec![],
+                checks: vec!["achievements".to_string()],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+        yaml.crashgen_registry.insert(
+            "default".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: String::new(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(config.crashgen_name, "Buffout 4");
+        assert!(!config.crashgen_latest.is_empty());
+        assert_eq!(config.xse_acronym, "F4SE");
+        // Auto mode resolves to the configured registry default for Fallout4.
+        assert_eq!(config.game_version, "1.11.191");
+        assert_eq!(config.game_version_vr, "1.2.72");
+        assert!(
+            !config
+                .crashgen_registry
+                .lookup(&config.crashgen_name)
+                .checks
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_name() {
+        let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+        yaml.game_root_name = "Fallout 4".to_string();
+        yaml.crashgen_name.clear();
+        yaml.crashgen_latest_og.clear();
+        yaml.xse_acronym.clear();
+        yaml.game_version.clear();
+
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout 4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(config.crashgen_name, "Buffout 4");
+        assert_eq!(config.game_version, "1.11.191");
+        assert_eq!(config.game_version_vr, "1.2.72");
+    }
+
+    #[test]
+    fn build_analysis_config_resolves_identical_metadata_for_spaced_and_compact_names() {
+        let mut compact_yaml = make_yaml_data("CLASSIC v9.0.0");
+        compact_yaml.crashgen_name.clear();
+        compact_yaml.crashgen_latest_og.clear();
+        compact_yaml.xse_acronym.clear();
+        compact_yaml.game_version.clear();
+
+        let mut spaced_yaml = compact_yaml.clone();
+        spaced_yaml.game_root_name = "Fallout 4".to_string();
+
+        let compact_config = build_analysis_config_from_yaml(
+            &compact_yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+        let spaced_config = build_analysis_config_from_yaml(
+            &spaced_yaml,
+            "Fallout 4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(spaced_config.crashgen_name, compact_config.crashgen_name);
+        assert_eq!(
+            spaced_config.crashgen_latest,
+            compact_config.crashgen_latest
+        );
+        assert_eq!(spaced_config.xse_acronym, compact_config.xse_acronym);
+        assert_eq!(spaced_config.game_version, compact_config.game_version);
+        assert_eq!(
+            spaced_config.game_version_vr,
+            compact_config.game_version_vr
+        );
+    }
+
+    #[test]
+    fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
+        let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+        yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
+
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+        let analyzer = orchestrator.plugin_analyzer.as_ref().unwrap();
+
+        let (triggered, disabled) = analyzer
+            .check_plugin_limit(vec!["[FF] PluginLimit.esp".to_string()], "1.2.72", "1.36.0")
+            .unwrap();
+
+        assert!(triggered);
+        assert!(!disabled);
+    }
+
+    #[test]
     fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
-        let config = AnalysisConfig::new("Fallout4".to_string(), false);
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
         let orchestrator = OrchestratorCore::new(config).unwrap();
 
         let (_parsed, status) = orchestrator.check_crashgen_version_for_detected_game(
@@ -1924,5 +2204,196 @@ mod tests {
         );
 
         assert_eq!(status, crate::version::CrashgenVersionStatus::Valid);
+    }
+
+    #[test]
+    fn resolve_effective_crashgen_name_prefers_addictol_header() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let xse_modules = HashSet::new();
+        let resolved = orchestrator
+            .resolve_effective_crashgen_name("Addictol v1.0.0 Feb 16 2026 08:02:06", &xse_modules);
+
+        assert_eq!(resolved, "Addictol");
+    }
+
+    #[test]
+    fn resolve_effective_crashgen_name_uses_module_fallback_when_header_missing() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("addictol.dll".to_string());
+        let resolved = orchestrator.resolve_effective_crashgen_name("", &xse_modules);
+
+        assert_eq!(resolved, "Addictol");
+    }
+
+    #[test]
+    fn resolve_effective_crashgen_name_falls_back_for_ambiguous_modules() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("addictol.dll".to_string());
+        xse_modules.insert("buffout4.dll".to_string());
+        let resolved = orchestrator.resolve_effective_crashgen_name("", &xse_modules);
+
+        assert_eq!(resolved, "Buffout 4");
+    }
+
+    #[test]
+    fn create_report_generator_with_crashgen_name_updates_error_section_label() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let report_gen = orchestrator.create_report_generator_with_crashgen_name("Addictol");
+        let fragment = report_gen.generate_error_section_with_status(
+            "Unhandled exception",
+            "Addictol v1.0.0",
+            Some(crate::version::CrashgenVersionStatus::Valid),
+        );
+        let text = fragment.to_list().join("");
+
+        assert!(text.contains("Detected Addictol Version"));
+        assert!(text.contains("valid version of Addictol"));
+        assert!(!text.contains("Detected Buffout 4 Version"));
+    }
+
+    #[test]
+    fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
+        use classic_crashgen_settings_core::{
+            CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
+            RuleSeverity,
+        };
+
+        let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> =
+            HashMap::new();
+        raw_registry.insert(
+            "Buffout 4".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Compatibility]".to_string(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+        raw_registry.insert(
+            "Addictol".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Patches]".to_string(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: Some(1),
+                settings_rules: Some(CrashgenSettingsRules {
+                    version: 1,
+                    preflight: vec![PreflightRule {
+                        id: "addictol_active".to_string(),
+                        when: Predicate::Always,
+                        action: PreflightAction {
+                            kind: PreflightActionKind::Notice,
+                            severity: RuleSeverity::Info,
+                            message: "Addictol rules active".to_string(),
+                            fix: None,
+                        },
+                    }],
+                    checks: vec![],
+                }),
+            },
+        );
+        raw_registry.insert(
+            "default".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: String::new(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        config.crashgen_registry = build_crashgen_registry(&raw_registry);
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("addictol.dll".to_string());
+        let effective_name = orchestrator
+            .resolve_effective_crashgen_name("Addictol v1.0.0 Feb 16 2026 08:02:06", &xse_modules);
+        assert_eq!(effective_name, "Addictol");
+
+        let validator = OrchestratorCore::settings_validator_for_crashgen(
+            &orchestrator.config,
+            &effective_name,
+        );
+        let fragments = validator
+            .scan_all_settings(
+                &HashMap::new(),
+                &xse_modules,
+                None,
+                classic_crashgen_settings_core::ConfigLayout::Unknown,
+            )
+            .unwrap();
+        let all_lines: Vec<String> = fragments
+            .iter()
+            .flat_map(crate::report::ReportFragment::to_list)
+            .collect();
+
+        assert!(
+            all_lines
+                .iter()
+                .any(|line| line.contains("Addictol rules active"))
+        );
+        assert!(
+            !all_lines
+                .iter()
+                .any(|line| line.contains("scaffold (rules pending)"))
+        );
+    }
+
+    #[test]
+    fn derive_config_layout_returns_og_for_valid_non_vr_version() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let layout = orchestrator.derive_scanlog_config_layout("Fallout 4 v1.10.163");
+        assert_eq!(layout, classic_crashgen_settings_core::ConfigLayout::Og);
+    }
+
+    #[test]
+    fn derive_config_layout_returns_og_for_valid_vr_version() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "VR".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let layout = orchestrator.derive_scanlog_config_layout("Fallout 4 VR v1.2.72");
+        assert_eq!(layout, classic_crashgen_settings_core::ConfigLayout::Og);
+    }
+
+    #[test]
+    fn derive_config_layout_returns_unknown_for_invalid_header_version() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let layout = orchestrator.derive_scanlog_config_layout("not a valid version line");
+        assert_eq!(
+            layout,
+            classic_crashgen_settings_core::ConfigLayout::Unknown
+        );
+    }
+
+    #[test]
+    fn detect_incomplete_log_slice_matches_named_segment_semantics() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        // One plugin line should be considered complete by both APIs.
+        let one_plugin = vec!["[00] Fallout4.esm".to_string()];
+        assert!(!orchestrator.detect_incomplete_log_slice(&one_plugin));
     }
 }

@@ -5,6 +5,9 @@
   "description": "Node.js/Bun bindings for CLASSIC Rust crates via NAPI-RS",
   "main": "index.js",
   "types": "index.d.ts",
+  "bin": {
+    "classic-node": "dist/cli/main.js"
+  },
   "napi": {
     "binaryName": "classic-node",
     "targets": [
@@ -12,13 +15,26 @@
     ]
   },
   "scripts": {
-    "build": "napi build --release --platform --manifest-path ./Cargo.toml",
-    "build:debug": "napi build --platform --manifest-path ./Cargo.toml",
-    "test": "bun test"
+    "build": "napi build --release --platform --manifest-path ./Cargo.toml && bun run build:cli",
+    "build:cli": "bun x tsc -p tsconfig.json",
+    "build:debug": "napi build --platform --manifest-path ./Cargo.toml && bun run build:cli",
+    "cli": "bun run build:cli && node ./dist/cli/main.js",
+    "parity:gate": "python ../../../tools/node_api_parity/check_parity_gate.py --repo-root ../../..",
+    "dts:freshness:check": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../.. --check-only",
+    "dts:freshness:local": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../..",
+    "parity:gate:ci": "bun run parity:gate && bun run dts:freshness:check",
+    "parity:gate:local": "bun run dts:freshness:local && bun run parity:gate",
+    "parity:gate:local:vsdev": "pwsh -ExecutionPolicy Bypass -File ../../../tools/enter_vs_dev_shell.ps1 -WorkingDirectory . -Command \"bun run parity:gate:local\"",
+    "shell:vsdev": "pwsh -ExecutionPolicy Bypass -File ../../../tools/enter_vs_dev_shell.ps1 -WorkingDirectory . -Interactive",
+    "test:bun": "bun run build:cli && bun test",
+    "test:node": "bun run build:cli && node --test __test__/runtime.node.test.mjs",
+    "test": "bun run test:bun"
   },
   "devDependencies": {
+    "@types/node": "^22.13.10",
     "@napi-rs/cli": "^3.0.0",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^5.8.2"
   },
   "license": "MIT",
   "repository": {

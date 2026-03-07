@@ -22,14 +22,14 @@ fn yaml_data_load(
     yaml_dir_root: &str,
     yaml_dir_data: &str,
     game: &str,
-    vr_mode: bool,
+    game_version: &str,
 ) -> Result<Box<YamlData>, String> {
     let dirs = vec![PathBuf::from(yaml_dir_root), PathBuf::from(yaml_dir_data)];
     let inner = get_runtime()
         .block_on(YamlDataCore::load_from_yaml_files(
             dirs,
             game.to_string(),
-            vr_mode,
+            game_version.to_string(),
         ))
         .map_err(|e| format!("{e}"))?;
     Ok(Box::new(YamlData { inner }))
@@ -49,16 +49,8 @@ fn yaml_data_crashgen_name_field(data: &YamlData) -> &str {
     &data.inner.crashgen_name
 }
 
-fn yaml_data_crashgen_name_vr_field(data: &YamlData) -> &str {
-    &data.inner.crashgen_name_vr
-}
-
 fn yaml_data_crashgen_latest_og(data: &YamlData) -> &str {
     &data.inner.crashgen_latest_og
-}
-
-fn yaml_data_crashgen_latest_vr(data: &YamlData) -> &str {
-    &data.inner.crashgen_latest_vr
 }
 
 fn yaml_data_warn_noplugins(data: &YamlData) -> &str {
@@ -81,34 +73,22 @@ fn yaml_data_game_version(data: &YamlData) -> &str {
     &data.inner.game_version
 }
 
-fn yaml_data_game_version_new(data: &YamlData) -> &str {
-    &data.inner.game_version_new
-}
-
-fn yaml_data_game_version_vr(data: &YamlData) -> &str {
-    &data.inner.game_version_vr
-}
-
 fn yaml_data_game_root_name_field(data: &YamlData) -> &str {
     &data.inner.game_root_name
 }
 
-fn yaml_data_game_root_name_vr_field(data: &YamlData) -> &str {
-    &data.inner.game_root_name_vr
+// ── Accessors ───────────────────────────────────────────────────────
+
+fn yaml_data_get_crashgen_name(data: &YamlData) -> String {
+    data.inner.get_crashgen_name().to_string()
 }
 
-// ── VR-aware accessors ──────────────────────────────────────────────
-
-fn yaml_data_get_crashgen_name(data: &YamlData, is_vr: bool) -> String {
-    data.inner.get_crashgen_name(is_vr).to_string()
+fn yaml_data_get_game_root_name(data: &YamlData) -> String {
+    data.inner.get_game_root_name().to_string()
 }
 
-fn yaml_data_get_game_root_name(data: &YamlData, is_vr: bool) -> String {
-    data.inner.get_game_root_name(is_vr).to_string()
-}
-
-fn yaml_data_get_crashgen_ignore(data: &YamlData, is_vr: bool) -> Vec<String> {
-    data.inner.get_crashgen_ignore(is_vr).to_vec()
+fn yaml_data_get_crashgen_ignore(data: &YamlData) -> Vec<String> {
+    data.inner.get_crashgen_ignore().to_vec()
 }
 
 // ── Vec<String> getters ─────────────────────────────────────────────
@@ -123,10 +103,6 @@ fn yaml_data_classic_records_list(data: &YamlData) -> Vec<String> {
 
 fn yaml_data_crashgen_ignore_og(data: &YamlData) -> Vec<String> {
     data.inner.crashgen_ignore.clone()
-}
-
-fn yaml_data_crashgen_ignore_vr_list(data: &YamlData) -> Vec<String> {
-    data.inner.crashgen_ignore_vr.clone()
 }
 
 fn yaml_data_game_ignore_plugins(data: &YamlData) -> Vec<String> {
@@ -215,36 +191,30 @@ mod ffi {
             yaml_dir_root: &str,
             yaml_dir_data: &str,
             game: &str,
-            vr_mode: bool,
+            game_version: &str,
         ) -> Result<Box<YamlData>>;
 
         // String getters
         fn yaml_data_classic_version(data: &YamlData) -> &str;
         fn yaml_data_classic_version_date(data: &YamlData) -> &str;
         fn yaml_data_crashgen_name_field(data: &YamlData) -> &str;
-        fn yaml_data_crashgen_name_vr_field(data: &YamlData) -> &str;
         fn yaml_data_crashgen_latest_og(data: &YamlData) -> &str;
-        fn yaml_data_crashgen_latest_vr(data: &YamlData) -> &str;
         fn yaml_data_warn_noplugins(data: &YamlData) -> &str;
         fn yaml_data_warn_outdated(data: &YamlData) -> &str;
         fn yaml_data_xse_acronym(data: &YamlData) -> &str;
         fn yaml_data_autoscan_text(data: &YamlData) -> &str;
         fn yaml_data_game_version(data: &YamlData) -> &str;
-        fn yaml_data_game_version_new(data: &YamlData) -> &str;
-        fn yaml_data_game_version_vr(data: &YamlData) -> &str;
         fn yaml_data_game_root_name_field(data: &YamlData) -> &str;
-        fn yaml_data_game_root_name_vr_field(data: &YamlData) -> &str;
 
-        // VR-aware accessors
-        fn yaml_data_get_crashgen_name(data: &YamlData, is_vr: bool) -> String;
-        fn yaml_data_get_game_root_name(data: &YamlData, is_vr: bool) -> String;
-        fn yaml_data_get_crashgen_ignore(data: &YamlData, is_vr: bool) -> Vec<String>;
+        // Accessors
+        fn yaml_data_get_crashgen_name(data: &YamlData) -> String;
+        fn yaml_data_get_game_root_name(data: &YamlData) -> String;
+        fn yaml_data_get_crashgen_ignore(data: &YamlData) -> Vec<String>;
 
         // Vec<String> getters
         fn yaml_data_classic_game_hints(data: &YamlData) -> Vec<String>;
         fn yaml_data_classic_records_list(data: &YamlData) -> Vec<String>;
         fn yaml_data_crashgen_ignore_og(data: &YamlData) -> Vec<String>;
-        fn yaml_data_crashgen_ignore_vr_list(data: &YamlData) -> Vec<String>;
         fn yaml_data_game_ignore_plugins(data: &YamlData) -> Vec<String>;
         fn yaml_data_game_ignore_records(data: &YamlData) -> Vec<String>;
         fn yaml_data_ignore_list(data: &YamlData) -> Vec<String>;
@@ -271,6 +241,7 @@ mod ffi {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_yaml_data_load_invalid_dirs() {
@@ -278,7 +249,7 @@ mod tests {
             "nonexistent_root_dir",
             "nonexistent_data_dir",
             "Fallout4",
-            false,
+            "auto",
         );
         assert!(result.is_err());
     }
@@ -288,17 +259,15 @@ mod tests {
         let root_dir = "J:\\CLASSIC-Fallout4";
         let data_dir = "J:\\CLASSIC-Fallout4\\ClassicLib";
 
-        let result = yaml_data_load(root_dir, data_dir, "Fallout4", false);
+        let result = yaml_data_load(root_dir, data_dir, "Fallout4", "auto");
         if let Ok(data) = result {
             assert!(!yaml_data_classic_version(&data).is_empty());
             assert!(!yaml_data_xse_acronym(&data).is_empty());
             assert!(!yaml_data_crashgen_name_field(&data).is_empty());
             assert!(!yaml_data_game_version(&data).is_empty());
 
-            let og_name = yaml_data_get_crashgen_name(&data, false);
-            let vr_name = yaml_data_get_crashgen_name(&data, true);
-            assert!(!og_name.is_empty());
-            assert!(!vr_name.is_empty());
+            let name = yaml_data_get_crashgen_name(&data);
+            assert!(!name.is_empty());
 
             // IndexMap key/value pairs should have matching lengths
             let err_keys = yaml_data_suspects_error_keys(&data);
@@ -308,18 +277,67 @@ mod tests {
     }
 
     #[test]
-    fn test_yaml_data_vr_mode() {
+    fn test_yaml_data_game_version_mode() {
         let root_dir = "J:\\CLASSIC-Fallout4";
         let data_dir = "J:\\CLASSIC-Fallout4\\ClassicLib";
 
-        let result_og = yaml_data_load(root_dir, data_dir, "Fallout4", false);
-        let result_vr = yaml_data_load(root_dir, data_dir, "Fallout4", true);
+        let result_og = yaml_data_load(root_dir, data_dir, "Fallout4", "auto");
+        let result_vr = yaml_data_load(root_dir, data_dir, "Fallout4", "VR");
 
         if let (Ok(og), Ok(vr)) = (result_og, result_vr) {
-            let og_root = yaml_data_get_game_root_name(&og, false);
-            let vr_root = yaml_data_get_game_root_name(&vr, true);
+            let og_root = yaml_data_get_game_root_name(&og);
+            let vr_root = yaml_data_get_game_root_name(&vr);
             assert!(!og_root.is_empty());
             assert!(!vr_root.is_empty());
         }
+    }
+
+    #[test]
+    fn test_yaml_data_accessors_fallback_when_game_info_is_minimal() {
+        let temp = tempdir().expect("failed to create temp dir");
+        let data_dir = temp.path().join("CLASSIC Data");
+        let db_dir = data_dir.join("databases");
+        std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
+
+        let main_yaml = r#"
+CLASSIC_Info:
+  version: "7.31.0"
+  version_date: "2024-01-15"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Autoscan Fallout 4"
+"#;
+        let game_yaml = r#"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys:
+      - "BuffoutSpecificIgnore"
+    checks: []
+  default:
+    ignore_keys:
+      - "DefaultIgnore"
+    checks: []
+"#;
+        let ignore_yaml = r#"
+CLASSIC_Ignore_Fallout4: []
+"#;
+
+        std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).expect("write main yaml");
+        std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).expect("write game yaml");
+        std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml)
+            .expect("write ignore yaml");
+
+        let root_dir = temp.path().to_string_lossy().to_string();
+        let data_dir_str = data_dir.to_string_lossy().to_string();
+        let data = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto")
+            .expect("yaml_data_load should succeed");
+
+        assert!(!yaml_data_get_crashgen_name(&data).is_empty());
+        assert_eq!(
+            yaml_data_get_crashgen_ignore(&data),
+            vec!["BuffoutSpecificIgnore".to_string()]
+        );
+        assert!(!yaml_data_game_version(&data).is_empty());
     }
 }

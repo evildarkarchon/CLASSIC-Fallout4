@@ -23,6 +23,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 use crate::toml::{CrashgenChecker, TomlConfigIssue};
+use classic_crashgen_settings_core::CrashgenSettingsRules;
 
 /// Errors that can occur during crash generator orchestration
 #[derive(Debug, Error)]
@@ -101,7 +102,17 @@ impl CrashgenCheckOrchestrator {
     ///
     /// A `CrashgenReport` containing the formatted message and any detected issues
     pub fn check(plugins_path: &Path, crashgen_name: &str) -> Result<CrashgenReport> {
-        let mut checker = CrashgenChecker::new(plugins_path, crashgen_name);
+        Self::check_with_rules(plugins_path, crashgen_name, None)
+    }
+
+    /// Run the full crash generator check with optional YAML-defined settings rules.
+    pub fn check_with_rules(
+        plugins_path: &Path,
+        crashgen_name: &str,
+        settings_rules: Option<CrashgenSettingsRules>,
+    ) -> Result<CrashgenReport> {
+        let mut checker =
+            CrashgenChecker::new_with_rules(plugins_path, crashgen_name, settings_rules);
 
         let config_path = checker.config_file().cloned();
         let installed_plugins = checker.installed_plugins().to_vec();
@@ -254,17 +265,46 @@ mod tests {
     }
 
     #[test]
-    fn test_check_detects_addictol_conflicts() {
+    fn test_addictol_skips_all_checks() {
         let temp = setup_with_og_config(
             "[Patches]\nMemoryManager = true\nHavokMemorySystem = true\n",
             &["Addictol.dll"],
         );
         let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();
 
-        assert!(!report.issues.is_empty());
-        let settings: Vec<&str> = report.issues.iter().map(|i| i.setting.as_str()).collect();
-        assert!(settings.contains(&"MemoryManager"));
-        assert!(settings.contains(&"HavokMemorySystem"));
+        // Addictol only (no Buffout4 DLL) — skip silently, no incompatibility warning
+        assert!(
+            report.issues.is_empty(),
+            "No issues when Addictol is present"
+        );
+        assert!(report.message.contains("Addictol detected"));
+        assert!(
+            !report.message.contains("incompatible"),
+            "Should NOT warn about incompatibility when only Addictol is present"
+        );
+    }
+
+    #[test]
+    fn test_addictol_and_buffout_shows_incompatibility_warning() {
+        let temp = setup_with_og_config(
+            "[Patches]\nMemoryManager = true\nHavokMemorySystem = true\n",
+            &["Addictol.dll", "Buffout4.dll"],
+        );
+        let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();
+
+        // Both present — should warn about incompatibility
+        assert!(
+            report.issues.is_empty(),
+            "No issues — TOML checks are skipped"
+        );
+        assert!(
+            report.message.contains("incompatible"),
+            "Should warn about incompatibility when both are present"
+        );
+        assert!(
+            report.message.contains("remove one to avoid crashes"),
+            "Should have clear removal guidance"
+        );
     }
 
     #[test]

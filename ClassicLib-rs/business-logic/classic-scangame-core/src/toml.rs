@@ -22,6 +22,10 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 use toml::Value;
 
+use classic_crashgen_settings_core::{
+    ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
+};
+
 /// Errors that can occur during TOML validation
 #[derive(Debug, Error)]
 pub enum TomlError {
@@ -142,6 +146,9 @@ pub struct CrashgenChecker {
 
     /// Message list for reporting
     message_list: Vec<String>,
+
+    /// Optional YAML-defined settings rules.
+    settings_rules: Option<classic_crashgen_settings_core::CrashgenSettingsRules>,
 }
 
 impl CrashgenChecker {
@@ -164,6 +171,15 @@ impl CrashgenChecker {
     /// );
     /// ```
     pub fn new(plugins_path: &Path, crashgen_name: impl Into<String>) -> Self {
+        Self::new_with_rules(plugins_path, crashgen_name, None)
+    }
+
+    /// Create a checker with optional YAML-defined rules.
+    pub fn new_with_rules(
+        plugins_path: &Path,
+        crashgen_name: impl Into<String>,
+        settings_rules: Option<classic_crashgen_settings_core::CrashgenSettingsRules>,
+    ) -> Self {
         let crashgen_name = crashgen_name.into();
         let plugins_path = plugins_path.to_path_buf();
 
@@ -174,6 +190,7 @@ impl CrashgenChecker {
             installed_plugins: Vec::new(),
             toml_data: None,
             message_list: Vec::new(),
+            settings_rules,
         };
 
         // Detect installed plugins
@@ -314,6 +331,104 @@ impl CrashgenChecker {
         self.toml_data.as_ref()?.get(section)?.as_table()?.get(key)
     }
 
+    fn infer_config_layout(&self) -> ConfigLayout {
+        self.config_file
+            .as_ref()
+            .map(|path| {
+                let lower = path.to_string_lossy().to_lowercase();
+                if lower.contains("buffout4/config.toml") {
+                    ConfigLayout::Og
+                } else if lower.ends_with("buffout4.toml") {
+                    ConfigLayout::Vr
+                } else {
+                    ConfigLayout::Unknown
+                }
+            })
+            .unwrap_or(ConfigLayout::Unknown)
+    }
+
+    fn flattened_settings(&self) -> HashMap<String, String> {
+        let mut result = HashMap::new();
+        if let Some(data) = self.toml_data.as_ref() {
+            for value in data.values() {
+                if let Some(table) = value.as_table() {
+                    for (key, item) in table {
+                        result.insert(key.clone(), item.to_string());
+                    }
+                }
+            }
+        }
+        result
+    }
+
+    fn detect_settings_issues_from_rules(&mut self) -> Vec<TomlConfigIssue> {
+        let mut issues = Vec::new();
+        let config_file = match &self.config_file {
+            Some(file) => file.clone(),
+            None => return issues,
+        };
+        let Some(rules) = self.settings_rules.as_ref() else {
+            return issues;
+        };
+
+        let context = EvaluationContext {
+            crashgen_name: self.crashgen_name.clone(),
+            display_section: "[Compatibility]".to_string(),
+            installed_plugins: self.installed_plugins.iter().cloned().collect(),
+            settings: self.flattened_settings(),
+            config_layout: self.infer_config_layout(),
+            crashgen_version: None,
+        };
+        let evaluation = evaluate_rules(rules, &context);
+
+        for outcome in evaluation.outcomes {
+            match outcome.kind {
+                OutcomeKind::Issue => {
+                    let issue = TomlConfigIssue {
+                        file_path: config_file.clone(),
+                        section: outcome.section.unwrap_or_else(|| "General".to_string()),
+                        setting: outcome.setting.unwrap_or_else(|| "General".to_string()),
+                        current_value: outcome.actual.unwrap_or_default(),
+                        recommended_value: outcome.expected.unwrap_or_default(),
+                        description: match &outcome.fix {
+                            Some(fix) => format!("{}. {}", outcome.message, fix),
+                            None => outcome.message.clone(),
+                        },
+                        severity: match outcome.severity {
+                            RuleSeverity::Info => TomlIssueSeverity::Info,
+                            RuleSeverity::Warning => TomlIssueSeverity::Warning,
+                            RuleSeverity::Error => TomlIssueSeverity::Error,
+                        },
+                    };
+                    issues.push(issue);
+
+                    self.message_list
+                        .push(format!("# ❌ CAUTION : {} #\n", outcome.message));
+                    if let Some(fix) = outcome.fix {
+                        self.message_list.push(format!(" FIX: {}\n-----\n", fix));
+                    } else {
+                        self.message_list.push("-----\n".to_string());
+                    }
+                }
+                OutcomeKind::Notice => {
+                    self.message_list
+                        .push(format!("# [!] NOTICE : {} #\n", outcome.message));
+                    if let Some(fix) = outcome.fix {
+                        self.message_list.push(format!("  {}\n-----\n", fix));
+                    } else {
+                        self.message_list.push("-----\n".to_string());
+                    }
+                }
+                OutcomeKind::Success => {
+                    self.message_list
+                        .push(format!("✔️ {}\n-----\n", outcome.message));
+                }
+            }
+        }
+
+        issues
+    }
+
     /// Get settings to check based on installed plugins
     ///
     /// # Returns
@@ -325,7 +440,6 @@ impl CrashgenChecker {
             "x-cell-og.dll",
             "x-cell-ng2.dll",
             "x-cell-ae.dll",
-            "addictol.dll",
         ]);
         let has_achievements =
             self.has_plugin(&["achievements.dll", "achievementsmodsenablerloader.dll"]);
@@ -444,6 +558,10 @@ impl CrashgenChecker {
     ///
     /// Vector of detected configuration issues
     fn detect_settings_issues(&mut self) -> Vec<TomlConfigIssue> {
+        if self.settings_rules.is_some() {
+            return self.detect_settings_issues_from_rules();
+        }
+
         let mut issues = Vec::new();
 
         // Early return if no config file
@@ -560,6 +678,28 @@ impl CrashgenChecker {
             return Ok((self.message_list.join(""), Vec::new()));
         }
 
+        // Legacy Addictol short-circuit. YAML-defined rules should handle this via preflight.
+        if self.settings_rules.is_none() && self.has_plugin(&["addictol.dll"]) {
+            if self.has_plugin(&["buffout4.dll"]) {
+                // Both present: warn about incompatibility
+                self.message_list.push(format!(
+                    "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
+                    self.crashgen_name
+                ));
+                self.message_list.push(format!(
+                    "  Skipping {} TOML settings checks.\n-----\n",
+                    self.crashgen_name
+                ));
+            } else {
+                // Addictol only: skip silently
+                self.message_list.push(format!(
+                    "# [!] NOTICE : Addictol detected — skipping {} TOML settings checks. #\n-----\n",
+                    self.crashgen_name
+                ));
+            }
+            return Ok((self.message_list.join(""), Vec::new()));
+        }
+
         // Load TOML data
         self.load_toml()?;
 
@@ -573,6 +713,10 @@ impl CrashgenChecker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_crashgen_settings_core::{
+        CheckRule, CrashgenSettingsRules, ExpectedValue, Predicate, RuleMessages, RuleSeverity,
+        RuleTarget, TargetValueType,
+    };
     use std::fs;
     use tempfile::TempDir;
 
@@ -659,21 +803,119 @@ mod tests {
     }
 
     #[test]
-    fn test_issue_detection_addictol_conflict() {
+    fn test_addictol_skips_all_toml_checks() {
         let temp_dir = TempDir::new().unwrap();
         let buffout_dir = temp_dir.path().join("Buffout4");
         fs::create_dir(&buffout_dir).unwrap();
 
-        // Create config with MemoryManager enabled
+        // Create config with MemoryManager enabled (would normally be flagged)
         let config_file = buffout_dir.join("config.toml");
         fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
 
-        // Addictol is the renamed X-Cell DLL and should trigger the same checks
+        // Addictol DLL only (no Buffout4 DLL) — skip silently, no incompatibility warning
         fs::write(temp_dir.path().join("Addictol.dll"), b"").unwrap();
+
+        let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
+        let (report, issues) = checker.check().unwrap();
+
+        assert!(
+            issues.is_empty(),
+            "No issues should be reported when Addictol is detected"
+        );
+        assert!(
+            report.contains("Addictol detected"),
+            "Report should mention Addictol"
+        );
+        assert!(
+            !report.contains("incompatible"),
+            "Should NOT warn about incompatibility when only Addictol is present"
+        );
+    }
+
+    #[test]
+    fn test_addictol_and_buffout_shows_incompatibility_warning() {
+        let temp_dir = TempDir::new().unwrap();
+        let buffout_dir = temp_dir.path().join("Buffout4");
+        fs::create_dir(&buffout_dir).unwrap();
+
+        // Create config with MemoryManager enabled (would normally be flagged)
+        let config_file = buffout_dir.join("config.toml");
+        fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
+
+        // Both Addictol AND Buffout4 DLLs present — should warn about incompatibility
+        fs::write(temp_dir.path().join("Addictol.dll"), b"").unwrap();
+        fs::write(temp_dir.path().join("Buffout4.dll"), b"").unwrap();
+
+        let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
+        let (report, issues) = checker.check().unwrap();
+
+        assert!(
+            issues.is_empty(),
+            "No issues should be reported — TOML checks are skipped"
+        );
+        assert!(
+            report.contains("incompatible"),
+            "Should warn about incompatibility when both are present"
+        );
+        assert!(
+            report.contains("remove one to avoid crashes"),
+            "Should have clear removal guidance"
+        );
+    }
+
+    #[test]
+    fn test_xcell_still_triggers_memory_checks_without_addictol() {
+        let temp_dir = TempDir::new().unwrap();
+        let buffout_dir = temp_dir.path().join("Buffout4");
+        fs::create_dir(&buffout_dir).unwrap();
+
+        let config_file = buffout_dir.join("config.toml");
+        fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
+
+        // Only X-Cell DLL, no Addictol
+        fs::write(temp_dir.path().join("x-cell-fo4.dll"), b"").unwrap();
 
         let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
         let (_report, issues) = checker.check().unwrap();
 
         assert!(issues.iter().any(|i| i.setting == "MemoryManager"));
+    }
+
+    #[test]
+    fn test_yaml_rules_path_detects_issue() {
+        let temp_dir = TempDir::new().unwrap();
+        let buffout_dir = temp_dir.path().join("Buffout4");
+        fs::create_dir(&buffout_dir).unwrap();
+
+        let config_file = buffout_dir.join("config.toml");
+        fs::write(&config_file, "[Patches]\nAchievements = true\n").unwrap();
+        fs::write(temp_dir.path().join("achievements.dll"), b"").unwrap();
+
+        let rules = CrashgenSettingsRules {
+            version: 1,
+            preflight: vec![],
+            checks: vec![CheckRule {
+                id: "achievements".to_string(),
+                target: RuleTarget {
+                    section: "Patches".to_string(),
+                    key: "Achievements".to_string(),
+                    value_type: TargetValueType::Bool,
+                },
+                when: Predicate::PluginAny(vec!["achievements.dll".to_string()]),
+                expect: ExpectedValue::Bool(false),
+                messages: RuleMessages {
+                    fail: "Achievements should be false".to_string(),
+                    fix: Some("Set Achievements to FALSE".to_string()),
+                    pass: None,
+                },
+                severity: RuleSeverity::Warning,
+            }],
+        };
+
+        let mut checker = CrashgenChecker::new_with_rules(temp_dir.path(), "Buffout4", Some(rules));
+        let (report, issues) = checker.check().unwrap();
+
+        assert!(!issues.is_empty());
+        assert!(report.contains("Achievements should be false"));
     }
 }

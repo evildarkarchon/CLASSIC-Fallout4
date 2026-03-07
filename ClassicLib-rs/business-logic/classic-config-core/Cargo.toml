@@ -8,7 +8,7 @@ description = "Pure Rust configuration loading business logic for CLASSIC"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"]  # Pure Rust library ONLY - no PyO3
+crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
 
 [dependencies]
 # CLASSIC shared utilities (provides runtime)
@@ -16,13 +16,15 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 # YAML operations (provides YamlOperations with helpers)
 classic-yaml-core = { path = "../classic-yaml-core" }
+classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
+classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }
 
 # YAML parsing
 yaml-rust2 = { workspace = true }
-hashlink = "0.11.0" # LinkedHashMap for yaml-rust2
+hashlink = "0.11.0"               # LinkedHashMap for yaml-rust2
 
 # Ordered collections (preserves YAML key order for Python parity)
 indexmap = { workspace = true }
@@ -35,12 +37,15 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 
+# Logging
+log = { workspace = true }
+
 [dev-dependencies]
 tempfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "warn"
-unsafe_code = "deny"  # We don't use unsafe in CLASSIC
-missing_docs = "warn"   # Encourage documentation
+unsafe_code = "deny"             # We don't use unsafe in CLASSIC
+missing_docs = "warn"            # Encourage documentation
 unused = "deny"

@@ -17,6 +17,7 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 
 # Core business logic (pure Rust - no PyO3)
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
+classic-crashgen-settings-core = { path = "../../business-logic/classic-crashgen-settings-core" }
 
 # CLASSIC shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }

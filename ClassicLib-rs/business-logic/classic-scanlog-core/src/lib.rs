@@ -23,6 +23,7 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // Re-export all public modules
+pub mod crashgen_registry;
 pub mod error;
 pub mod fcx_handler;
 pub mod formid;
@@ -36,11 +37,13 @@ pub mod patterns;
 pub mod plugin_analyzer;
 pub mod record_scanner;
 pub mod report;
+pub mod segment_key;
 pub mod settings_validator;
 pub mod suspect_scanner;
 pub mod version;
 
 // Re-export key types for convenience
+pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
 pub use error::ScanLogError;
 pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};

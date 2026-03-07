@@ -1,5 +1,11 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "classic-cli",
   "version": "9.0.0",
-  "dependencies": ["fmt", "cli11", "catch2"]
+  "builtin-baseline": "39a6cc0e44641977a7ccdfdb01a14eaf832aa330",
+  "dependencies": [
+    "fmt",
+    "cli11",
+    "catch2"
+  ]
 }

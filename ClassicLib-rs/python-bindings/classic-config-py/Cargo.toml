@@ -14,6 +14,7 @@ crate-type = ["cdylib", "rlib"]  # Both for Python and Rust usage
 [dependencies]
 # Business logic (pure Rust)
 classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-crashgen-settings-core = { path = "../../business-logic/classic-crashgen-settings-core" }
 
 # Foundation
 classic-shared-core = { path = "../../foundation/classic-shared-core" }

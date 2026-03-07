@@ -11,13 +11,36 @@
 //! Parsing utilities (`parseLogSegments`, `extractFormIds`, `extractPluginList`,
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
+use classic_config_core::YamlDataCore;
 use classic_scanlog_core::OrchestratorCore;
+use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
+use classic_scanlog_core::segment_key;
+use std::collections::{HashMap, HashSet};
+
+use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js, js_rules_to_core};
 
 /// Convert any Display error to a napi::Error.
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
+}
+
+fn normalize_max_concurrent(max_concurrent: Option<u32>) -> Option<usize> {
+    match max_concurrent {
+        Some(0) | None => None,
+        Some(value) => Some(value as usize),
+    }
+}
+
+/// Detect crashgen settings section markers within parser `settings` lines.
+///
+/// The parser's `settings` segment now includes all pre-`SYSTEM SPECS:` lines.
+/// For Node's `header` field we preserve legacy behavior by only exposing lines
+/// after known crashgen settings markers.
+fn is_settings_header_marker(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.eq_ignore_ascii_case("[Compatibility]") || trimmed.eq_ignore_ascii_case("[Patches]")
 }
 
 /// JavaScript-compatible analysis configuration.
@@ -28,8 +51,9 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
 pub struct JsAnalysisConfig {
     /// Game name (e.g., "Fallout4")
     pub game: String,
-    /// VR mode enabled
-    pub vr_mode: bool,
+    /// Selected game-version mode
+    /// ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
+    pub game_version: String,
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
     /// XSE acronym (e.g., "F4SE")
@@ -40,6 +64,21 @@ pub struct JsAnalysisConfig {
     pub fcx_mode: bool,
     /// Whether to simplify logs
     pub simplify_logs: bool,
+    /// Per-crashgen registry entries with optional settings rules.
+    pub crashgen_registry: Option<HashMap<String, JsCrashgenRegistryEntry>>,
+}
+
+/// Optional settings used when building analysis config from YAML content.
+#[napi(object)]
+pub struct JsAnalysisBuildOptions {
+    /// Whether to include FormID value lookups in reports.
+    pub show_formid_values: Option<bool>,
+    /// Whether FCX mode is enabled.
+    pub fcx_mode: Option<bool>,
+    /// Whether to simplify logs by removing configured strings.
+    pub simplify_logs: Option<bool>,
+    /// Strings to remove when simplify logs is enabled.
+    pub remove_list: Option<Vec<String>>,
 }
 
 /// JavaScript-compatible analysis result.
@@ -89,16 +128,188 @@ pub struct JsLogSegments {
 /// Returns a JavaScript object with the configuration fields.
 /// Modify the returned object's properties before passing to analysis functions.
 #[napi]
-pub fn create_analysis_config(game: String, vr_mode: bool) -> JsAnalysisConfig {
+pub fn create_analysis_config(game: String, game_version: String) -> JsAnalysisConfig {
     JsAnalysisConfig {
         game,
-        vr_mode,
+        game_version,
         crashgen_name: String::new(),
         xse_acronym: String::new(),
         classic_version: "CLASSIC".to_string(),
         fcx_mode: false,
         simplify_logs: false,
+        crashgen_registry: Some(HashMap::new()),
     }
+}
+
+fn resolve_build_options(
+    options: Option<JsAnalysisBuildOptions>,
+) -> (bool, bool, bool, Vec<String>) {
+    let Some(options) = options else {
+        return (false, false, false, Vec::new());
+    };
+
+    (
+        options.show_formid_values.unwrap_or(false),
+        options.fcx_mode.unwrap_or(false),
+        options.simplify_logs.unwrap_or(false),
+        options.remove_list.unwrap_or_default(),
+    )
+}
+
+fn build_core_config_from_yaml_content(
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    selected_game_version: String,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<(orchestrator::AnalysisConfig, YamlDataCore)> {
+    let (show_formid_values, fcx_mode, simplify_logs, remove_list) = resolve_build_options(options);
+    let yaml = YamlDataCore::from_yaml_content(
+        &main_content,
+        &game_content,
+        &ignore_content,
+        game.clone(),
+        selected_game_version.clone(),
+    )
+    .map_err(to_napi_err)?;
+
+    let config = orchestrator::build_analysis_config_from_yaml(
+        &yaml,
+        &game,
+        &selected_game_version,
+        show_formid_values,
+        fcx_mode,
+        simplify_logs,
+        remove_list,
+    );
+
+    Ok((config, yaml))
+}
+
+/// Build an analysis config from raw YAML content (high-level config path).
+#[napi]
+pub fn create_analysis_config_from_yaml_content(
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    game_version: String,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<JsAnalysisConfig> {
+    let (core_config, yaml) = build_core_config_from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        game_version.clone(),
+        options,
+    )?;
+
+    Ok(JsAnalysisConfig {
+        game: core_config.game,
+        game_version,
+        crashgen_name: core_config.crashgen_name,
+        xse_acronym: core_config.xse_acronym,
+        classic_version: core_config.classic_version,
+        fcx_mode: core_config.fcx_mode,
+        simplify_logs: core_config.simplify_logs,
+        crashgen_registry: Some(
+            yaml.crashgen_registry
+                .iter()
+                .map(|(name, entry)| {
+                    (
+                        name.clone(),
+                        JsCrashgenRegistryEntry {
+                            display_section: entry.display_section.clone(),
+                            ignore_keys: entry.ignore_keys.clone(),
+                            checks: entry.checks.clone(),
+                            settings_rules_version: entry.settings_rules_version,
+                            settings_rules: core_rules_to_js(entry.settings_rules.as_ref()),
+                        },
+                    )
+                })
+                .collect(),
+        ),
+    })
+}
+
+/// Process a single crash log using configuration built directly from YAML content.
+#[napi]
+pub async fn process_log_with_yaml_content(
+    log_path: String,
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    game_version: String,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<JsAnalysisResult> {
+    let (core_config, _) = build_core_config_from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        game_version,
+        options,
+    )?;
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    let result = handle
+        .spawn(async move {
+            let orchestrator = OrchestratorCore::new(core_config)
+                .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
+            orchestrator
+                .process_log(log_path)
+                .await
+                .map_err(|e| format!("Analysis error: {e}"))
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(_core_result_to_js(&result))
+}
+
+/// Process multiple crash logs using configuration built directly from YAML content.
+#[allow(clippy::too_many_arguments)]
+#[napi]
+pub async fn process_logs_batch_with_yaml_content(
+    log_paths: Vec<String>,
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    game_version: String,
+    options: Option<JsAnalysisBuildOptions>,
+    max_concurrent: Option<u32>,
+) -> napi::Result<Vec<JsAnalysisResult>> {
+    let (core_config, _) = build_core_config_from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        game_version,
+        options,
+    )?;
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    let max_concurrent = normalize_max_concurrent(max_concurrent);
+
+    let results = handle
+        .spawn(async move {
+            let orchestrator = OrchestratorCore::new(core_config)
+                .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
+            Ok::<_, String>(
+                orchestrator
+                    .process_logs_batch(log_paths, max_concurrent)
+                    .await,
+            )
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(results.iter().map(_core_result_to_js).collect())
 }
 
 // ============================================================================
@@ -146,15 +357,21 @@ pub async fn process_log(
 pub async fn process_logs_batch(
     log_paths: Vec<String>,
     config: JsAnalysisConfig,
+    max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
     let core_config = _js_config_to_core(&config);
     let handle = classic_shared_core::get_runtime().handle().clone();
+    let max_concurrent = normalize_max_concurrent(max_concurrent);
 
     let results = handle
         .spawn(async move {
             let orchestrator = OrchestratorCore::new(core_config)
                 .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
-            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, None).await)
+            Ok::<_, String>(
+                orchestrator
+                    .process_logs_batch(log_paths, max_concurrent)
+                    .await,
+            )
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
@@ -181,17 +398,49 @@ pub fn parse_log_segments(content: String) -> napi::Result<JsLogSegments> {
     let lines: Vec<String> = content.lines().map(String::from).collect();
 
     let all_sections = parser.parse_all_sections(&lines);
+    let header = all_sections
+        .get(segment_key::SETTINGS)
+        .and_then(|settings| {
+            settings
+                .iter()
+                .position(|line| is_settings_header_marker(line))
+                .map(|idx| settings[idx + 1..].to_vec())
+        })
+        .unwrap_or_default();
+    let system = all_sections
+        .get(segment_key::SYSTEM)
+        .cloned()
+        .unwrap_or_default();
+    let stack = all_sections
+        .get(segment_key::CALLSTACK)
+        .cloned()
+        .unwrap_or_default();
+    let modules = all_sections
+        .get(segment_key::MODULES)
+        .cloned()
+        .unwrap_or_default();
+    let plugins = all_sections
+        .get(segment_key::PLUGINS)
+        .cloned()
+        .unwrap_or_default();
+    let segment_count = [
+        header.as_slice(),
+        system.as_slice(),
+        stack.as_slice(),
+        modules.as_slice(),
+        plugins.as_slice(),
+    ]
+    .iter()
+    .filter(|section| !section.is_empty())
+    .count() as u32;
 
     Ok(JsLogSegments {
-        header: all_sections
-            .get("compatibility")
-            .cloned()
-            .unwrap_or_default(),
-        system: all_sections.get("system").cloned().unwrap_or_default(),
-        stack: all_sections.get("callstack").cloned().unwrap_or_default(),
-        modules: all_sections.get("modules").cloned().unwrap_or_default(),
-        plugins: all_sections.get("plugins").cloned().unwrap_or_default(),
-        segment_count: all_sections.len() as u32,
+        header,
+        system,
+        stack,
+        modules,
+        plugins,
+        segment_count,
     })
 }
 
@@ -279,12 +528,37 @@ pub fn detect_crash_pattern(content: String) -> Option<String> {
 /// This is an internal helper used when passing config to the orchestrator.
 /// Not exported to JavaScript.
 pub(crate) fn _js_config_to_core(config: &JsAnalysisConfig) -> orchestrator::AnalysisConfig {
-    let mut core_config = orchestrator::AnalysisConfig::new(config.game.clone(), config.vr_mode);
+    let mut core_config =
+        orchestrator::AnalysisConfig::new(config.game.clone(), config.game_version.clone());
     core_config.crashgen_name = config.crashgen_name.clone();
     core_config.xse_acronym = config.xse_acronym.clone();
     core_config.classic_version = config.classic_version.clone();
     core_config.fcx_mode = config.fcx_mode;
     core_config.simplify_logs = config.simplify_logs;
+
+    let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
+    let mut default_entry = CrashgenEntry::default_entry();
+    if let Some(registry) = &config.crashgen_registry {
+        for (name, entry) in registry {
+            let mapped = CrashgenEntry {
+                display_section: entry.display_section.clone(),
+                ignore_keys: entry.ignore_keys.iter().cloned().collect::<HashSet<_>>(),
+                checks: entry
+                    .checks
+                    .iter()
+                    .filter_map(|check| CheckId::parse(check))
+                    .collect(),
+                settings_rules: js_rules_to_core(entry.settings_rules.clone()),
+            };
+
+            if name == "default" {
+                default_entry = mapped;
+            } else {
+                entries.insert(name.clone(), mapped);
+            }
+        }
+    }
+    core_config.crashgen_registry = CrashgenRegistry::new(entries, default_entry);
     core_config
 }
 
@@ -368,6 +642,19 @@ pub struct JsCrashgenVersionInfo {
     pub patch: u32,
 }
 
+/// Crashgen version validation status returned to JavaScript.
+#[napi(string_enum)]
+pub enum JsCrashgenVersionStatus {
+    /// Detected version matches one of the supported versions.
+    Valid,
+    /// Detected version is older than the supported range.
+    Outdated,
+    /// Detected version is newer than any known supported version.
+    NewerThanKnown,
+    /// No supported versions were provided or version parsing failed.
+    NoSupportedVersion,
+}
+
 /// Parse a crash generator version string into components.
 ///
 /// Accepts various formats: "1.28.0", "v1.28.0", "Buffout 4 v1.28.0".
@@ -394,18 +681,25 @@ pub fn parse_crashgen_version(version_str: String) -> Option<JsCrashgenVersionIn
 /// @param validVersions - Array of valid version strings to check against.
 /// @returns A status string indicating the validation result.
 #[napi]
-pub fn check_crashgen_version_status(detected: String, valid_versions: Vec<String>) -> String {
+pub fn check_crashgen_version_status(
+    detected: String,
+    valid_versions: Vec<String>,
+) -> JsCrashgenVersionStatus {
     let valid_refs: Vec<&str> = valid_versions.iter().map(|s| s.as_str()).collect();
     let status =
         classic_scanlog_core::version::check_crashgen_version_status(&detected, &valid_refs);
     match status {
-        classic_scanlog_core::version::CrashgenVersionStatus::Valid => "Valid".to_string(),
-        classic_scanlog_core::version::CrashgenVersionStatus::Outdated => "Outdated".to_string(),
+        classic_scanlog_core::version::CrashgenVersionStatus::Valid => {
+            JsCrashgenVersionStatus::Valid
+        }
+        classic_scanlog_core::version::CrashgenVersionStatus::Outdated => {
+            JsCrashgenVersionStatus::Outdated
+        }
         classic_scanlog_core::version::CrashgenVersionStatus::NewerThanKnown => {
-            "NewerThanKnown".to_string()
+            JsCrashgenVersionStatus::NewerThanKnown
         }
         classic_scanlog_core::version::CrashgenVersionStatus::NoSupportedVersion => {
-            "NoSupportedVersion".to_string()
+            JsCrashgenVersionStatus::NoSupportedVersion
         }
     }
 }

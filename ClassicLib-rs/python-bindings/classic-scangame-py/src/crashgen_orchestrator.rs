@@ -2,8 +2,10 @@
 
 use classic_scangame_core::crashgen_orchestrator::{CrashgenCheckOrchestrator, CrashgenReport};
 use pyo3::prelude::*;
+use pyo3::types::PyAny;
 use std::path::PathBuf;
 
+use crate::crashgen_rules::parse_settings_rules;
 use crate::toml_check::PyTomlConfigIssue;
 use crate::toml_check::PyTomlIssueSeverity;
 use classic_scangame_core::TomlIssueSeverity;
@@ -103,9 +105,18 @@ impl PyCrashgenCheckOrchestrator {
     /// Returns:
     ///     CrashgenReport with message, issues, and metadata
     #[staticmethod]
-    fn check(plugins_path: PathBuf, crashgen_name: &str) -> PyResult<PyCrashgenReport> {
-        let report = CrashgenCheckOrchestrator::check(&plugins_path, crashgen_name)
-            .map_err(crate::to_pyerr)?;
+    #[pyo3(signature = (plugins_path, crashgen_name, settings_rules = None))]
+    fn check(
+        plugins_path: PathBuf,
+        crashgen_name: &str,
+        settings_rules: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<PyCrashgenReport> {
+        let report = CrashgenCheckOrchestrator::check_with_rules(
+            &plugins_path,
+            crashgen_name,
+            settings_rules.and_then(parse_settings_rules),
+        )
+        .map_err(crate::to_pyerr)?;
         Ok(convert_report(report))
     }
 
@@ -147,13 +158,18 @@ impl PyCrashgenCheckOrchestrator {
 /// Returns:
 ///     Tuple of (message_string, list of TomlConfigIssue objects)
 #[pyfunction]
-#[pyo3(signature = (plugins_path, crashgen_name))]
+#[pyo3(signature = (plugins_path, crashgen_name, settings_rules = None))]
 pub fn check_crashgen_settings(
     plugins_path: PathBuf,
     crashgen_name: &str,
+    settings_rules: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<(String, Vec<PyTomlConfigIssue>)> {
-    let report =
-        CrashgenCheckOrchestrator::check(&plugins_path, crashgen_name).map_err(crate::to_pyerr)?;
+    let report = CrashgenCheckOrchestrator::check_with_rules(
+        &plugins_path,
+        crashgen_name,
+        settings_rules.and_then(parse_settings_rules),
+    )
+    .map_err(crate::to_pyerr)?;
 
     let py_issues = report
         .issues

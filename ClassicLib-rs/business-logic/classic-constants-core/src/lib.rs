@@ -335,57 +335,6 @@ impl Fallout4Version {
         )
     }
 
-    /// Get the YAML configuration section name for this version.
-    ///
-    /// This determines which section of the game YAML file to read
-    /// configuration from (e.g., `Game_Info` vs `GameVR_Info`).
-    /// Derived from VR status to match VersionRegistry behavior.
-    ///
-    /// # Returns
-    ///
-    /// The YAML section name for this version variant.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use classic_constants_core::Fallout4Version;
-    ///
-    /// assert_eq!(Fallout4Version::Original.config_section(), "Game_Info");
-    /// assert_eq!(Fallout4Version::NextGen.config_section(), "Game_Info");
-    /// assert_eq!(Fallout4Version::Vr.config_section(), "GameVR_Info");
-    /// ```
-    #[must_use]
-    pub const fn config_section(&self) -> &'static str {
-        if self.is_vr() {
-            "GameVR_Info"
-        } else {
-            "Game_Info"
-        }
-    }
-
-    /// Get the configuration suffix for registry lookups.
-    ///
-    /// This provides backward compatibility with the legacy VR suffix system.
-    /// Returns `""` for standard versions and `"VR"` for VR version.
-    ///
-    /// # Returns
-    ///
-    /// The legacy VR suffix for configuration lookups.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use classic_constants_core::Fallout4Version;
-    ///
-    /// assert_eq!(Fallout4Version::Original.config_suffix(), "");
-    /// assert_eq!(Fallout4Version::NextGen.config_suffix(), "");
-    /// assert_eq!(Fallout4Version::Vr.config_suffix(), "VR");
-    /// ```
-    #[must_use]
-    pub const fn config_suffix(&self) -> &'static str {
-        if self.is_vr() { "VR" } else { "" }
-    }
-
     /// Get the XSE acronym for this version from the VersionRegistry.
     ///
     /// # Returns
@@ -1107,20 +1056,6 @@ mod tests {
         assert_eq!(og_version.major, 1);
         assert_eq!(ng_version.major, 1);
         assert_eq!(vr_version.major, 1);
-    }
-
-    #[test]
-    fn test_fallout4_version_config_section() {
-        assert_eq!(Fallout4Version::Original.config_section(), "Game_Info");
-        assert_eq!(Fallout4Version::NextGen.config_section(), "Game_Info");
-        assert_eq!(Fallout4Version::Vr.config_section(), "GameVR_Info");
-    }
-
-    #[test]
-    fn test_fallout4_version_config_suffix() {
-        assert_eq!(Fallout4Version::Original.config_suffix(), "");
-        assert_eq!(Fallout4Version::NextGen.config_suffix(), "");
-        assert_eq!(Fallout4Version::Vr.config_suffix(), "VR");
     }
 
     #[test]

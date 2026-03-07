@@ -12,8 +12,7 @@ struct ArgvBuilder {
     std::vector<char*> ptrs;
 
     explicit ArgvBuilder(std::initializer_list<std::string> list)
-        : args(list)
-    {
+        : args(list) {
         ptrs.reserve(args.size());
         for (auto& s : args) {
             ptrs.push_back(s.data());
@@ -29,13 +28,26 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
     CliArgs args = parse_args(ab.argc(), ab.argv());
 
     REQUIRE(args.game == "Fallout4");
-    REQUIRE(args.vr_mode == false);
+    REQUIRE(args.game_version == "auto");
     REQUIRE(args.fcx_mode == false);
     REQUIRE(args.show_fid_values == false);
     REQUIRE(args.simplify_logs == false);
     REQUIRE(args.scan_path.empty());
     REQUIRE(args.max_concurrent == 0);
     REQUIRE(args.version_flag == false);
+}
+
+TEST_CASE("Auto concurrency helper preserves floor and cap", "[cli_args]") {
+    REQUIRE(auto_concurrency_for_cpu_count(1) == 2);
+    REQUIRE(auto_concurrency_for_cpu_count(2) == 2);
+    REQUIRE(auto_concurrency_for_cpu_count(3) == 2);
+    REQUIRE(auto_concurrency_for_cpu_count(8) == 6);
+    REQUIRE(auto_concurrency_for_cpu_count(40) == 32);
+}
+
+TEST_CASE("Effective concurrency helper preserves explicit overrides", "[cli_args]") {
+    REQUIRE(effective_concurrency(5, 3) == 5);
+    REQUIRE(effective_concurrency(0, 3) == 2);
 }
 
 TEST_CASE("CliArgs game selection", "[cli_args]") {
@@ -57,10 +69,10 @@ TEST_CASE("CliArgs game selection", "[cli_args]") {
 }
 
 TEST_CASE("CliArgs boolean flags", "[cli_args]") {
-    SECTION("--vr enables VR mode") {
-        ArgvBuilder ab({"classic-cli", "--vr"});
+    SECTION("--game-version sets version mode") {
+        ArgvBuilder ab({"classic-cli", "--game-version", "VR"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
-        REQUIRE(args.vr_mode == true);
+        REQUIRE(args.game_version == "VR");
     }
 
     SECTION("--fcx-mode enables FCX") {
@@ -103,16 +115,12 @@ TEST_CASE("CliArgs scan-path and max-concurrent", "[cli_args]") {
 }
 
 TEST_CASE("CliArgs combined flags", "[cli_args]") {
-    ArgvBuilder ab({"classic-cli",
-                    "--game", "Skyrim",
-                    "--vr",
-                    "--fcx-mode",
-                    "--scan-path", "/tmp/crashes",
-                    "--max-concurrent", "4"});
+    ArgvBuilder ab({"classic-cli", "--game", "Skyrim", "--game-version", "VR", "--fcx-mode", "--scan-path",
+                    "/tmp/crashes", "--max-concurrent", "4"});
     CliArgs args = parse_args(ab.argc(), ab.argv());
 
     REQUIRE(args.game == "Skyrim");
-    REQUIRE(args.vr_mode == true);
+    REQUIRE(args.game_version == "VR");
     REQUIRE(args.fcx_mode == true);
     REQUIRE(args.scan_path == "/tmp/crashes");
     REQUIRE(args.max_concurrent == 4);

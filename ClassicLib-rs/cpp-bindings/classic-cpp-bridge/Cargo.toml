@@ -11,9 +11,6 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 crate-type = ["staticlib", "lib"]  # staticlib for C++ linking, lib for Rust tests
 
 [dependencies]
-# CXX FFI framework
-cxx = { workspace = true }
-
 # Markdown → HTML rendering
 pulldown-cmark = { workspace = true, features = ["html"] }
 
@@ -58,7 +55,11 @@ classic-update-core = { path = "../../business-logic/classic-update-core" }
 tempfile = { workspace = true }
 serial_test = "3.2"
 
-[build-dependencies]
+[target.'cfg(windows)'.dependencies]
+# CXX FFI framework
+cxx = { workspace = true }
+
+[target.'cfg(windows)'.build-dependencies]
 cxx-build = { workspace = true }
 
 [lints.rust]

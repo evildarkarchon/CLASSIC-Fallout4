@@ -4,9 +4,15 @@ import {
   getDefaultCacheTtl,
   getBatchCacheTtl,
   getMaxCacheTtl,
+  getDefaultQueryCacheCapacity,
+  getDefaultCacheCleanupThreshold,
+  getDefaultCacheCleanupInterval,
   DEFAULT_CACHE_TTL,
   BATCH_CACHE_TTL,
   MAX_CACHE_TTL,
+  DEFAULT_QUERY_CACHE_CAPACITY,
+  DEFAULT_CACHE_CLEANUP_THRESHOLD,
+  DEFAULT_CACHE_CLEANUP_INTERVAL,
 } from "../index.js";
 
 // ============================================================================
@@ -53,6 +59,9 @@ describe("Database cache TTL helper functions", () => {
     expect(getDefaultCacheTtl()).toBe(DEFAULT_CACHE_TTL);
     expect(getBatchCacheTtl()).toBe(BATCH_CACHE_TTL);
     expect(getMaxCacheTtl()).toBe(MAX_CACHE_TTL);
+    expect(getDefaultQueryCacheCapacity()).toBe(DEFAULT_QUERY_CACHE_CAPACITY);
+    expect(getDefaultCacheCleanupThreshold()).toBe(DEFAULT_CACHE_CLEANUP_THRESHOLD);
+    expect(getDefaultCacheCleanupInterval()).toBe(DEFAULT_CACHE_CLEANUP_INTERVAL);
   });
 });
 
@@ -121,7 +130,7 @@ describe("DatabasePool game table", () => {
 // ============================================================================
 
 describe("DatabasePool connection settings", () => {
-  test("setMaxConnections updates the value", () => {
+  test("setMaxConnections updates configured global budget", () => {
     const pool = new JsDatabasePool("Fallout4", 4);
     expect(pool.getMaxConnections()).toBe(4);
     pool.setMaxConnections(32);
@@ -135,6 +144,12 @@ describe("DatabasePool connection settings", () => {
     expect(newMax).toBeDefined();
     expect(newMax!).toBeGreaterThanOrEqual(8);
     expect(newMax!).toBeLessThanOrEqual(64);
+  });
+
+  test("rebalanceConnections on uninitialized pool does not throw", async () => {
+    const pool = new JsDatabasePool("Fallout4");
+    await pool.rebalanceConnections();
+    expect(pool.isAvailable()).toBe(false);
   });
 });
 
@@ -160,6 +175,21 @@ describe("DatabasePool cache management", () => {
     // Should not throw
     pool.setCacheTtl(600);
   });
+
+  test("cache capacity getters/setters work", () => {
+    const pool = new JsDatabasePool("Fallout4");
+    expect(pool.getCacheCapacity()).toBeGreaterThan(0);
+    pool.setCacheCapacity(1234);
+    expect(pool.getCacheCapacity()).toBe(1234);
+  });
+
+  test("cleanup threshold and interval getters/setters work", () => {
+    const pool = new JsDatabasePool("Fallout4");
+    pool.setCacheCleanupThreshold(321);
+    pool.setCacheCleanupInterval(7);
+    expect(pool.getCacheCleanupThreshold()).toBe(321);
+    expect(pool.getCacheCleanupInterval()).toBe(7);
+  });
 });
 
 // ============================================================================
@@ -176,6 +206,18 @@ describe("DatabasePool statistics", () => {
     expect(stats.cacheMisses).toBe(0);
     expect(stats.totalConnections).toBe(0);
     expect(stats.activeConnections).toBe(0);
+    expect(stats.cacheEvictions).toBe(0);
+    expect(stats.cleanupRuns).toBe(0);
+    expect(stats.cleanupRemoved).toBe(0);
+    expect(stats.configuredConnectionBudget).toBeGreaterThan(0);
+    expect(stats.effectiveConnectionBudget).toBe(0);
+    expect(stats.activePoolCount).toBe(0);
+    expect(stats.minPoolAllocation).toBe(0);
+    expect(stats.maxPoolAllocation).toBe(0);
+    expect(stats.allocationSpread).toBe(0);
+    expect(stats.cacheCapacity).toBeGreaterThan(0);
+    expect(stats.cleanupThreshold).toBeGreaterThan(0);
+    expect(stats.cleanupIntervalSeconds).toBeGreaterThan(0);
     expect(stats.cacheHitRate).toBe(0);
   });
 
@@ -188,6 +230,18 @@ describe("DatabasePool statistics", () => {
     expect(typeof stats.cacheMisses).toBe("number");
     expect(typeof stats.totalConnections).toBe("number");
     expect(typeof stats.activeConnections).toBe("number");
+    expect(typeof stats.cacheEvictions).toBe("number");
+    expect(typeof stats.cleanupRuns).toBe("number");
+    expect(typeof stats.cleanupRemoved).toBe("number");
+    expect(typeof stats.configuredConnectionBudget).toBe("number");
+    expect(typeof stats.effectiveConnectionBudget).toBe("number");
+    expect(typeof stats.activePoolCount).toBe("number");
+    expect(typeof stats.minPoolAllocation).toBe("number");
+    expect(typeof stats.maxPoolAllocation).toBe("number");
+    expect(typeof stats.allocationSpread).toBe("number");
+    expect(typeof stats.cacheCapacity).toBe("number");
+    expect(typeof stats.cleanupThreshold).toBe("number");
+    expect(typeof stats.cleanupIntervalSeconds).toBe("number");
     expect(typeof stats.cacheHitRate).toBe("number");
   });
 });

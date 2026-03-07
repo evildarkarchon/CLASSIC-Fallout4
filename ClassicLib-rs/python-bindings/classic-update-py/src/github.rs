@@ -242,7 +242,9 @@ impl PyGithubClient {
             core::GithubClient::new(owner, repo)
         }
         .map_err(|e| {
-            pyo3::exceptions::PyRuntimeError::new_err(format!("GitHub client initialization failed: {e}"))
+            pyo3::exceptions::PyRuntimeError::new_err(format!(
+                "GitHub client initialization failed: {e}"
+            ))
         })?;
 
         Ok(Self { inner })

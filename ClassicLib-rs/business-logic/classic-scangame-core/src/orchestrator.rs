@@ -19,6 +19,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
+use classic_crashgen_settings_core::CrashgenSettingsRules;
 use thiserror::Error;
 use tokio::task::JoinSet;
 
@@ -82,6 +83,8 @@ pub struct GameScanConfig {
     pub game_version: GameVersion,
     /// Crashgen plugin name (e.g., "Buffout4")
     pub crashgen_name: String,
+    /// Optional YAML-defined crashgen settings rules.
+    pub crashgen_settings_rules: Option<CrashgenSettingsRules>,
     /// Wrye Bash warning patterns
     pub wrye_warnings: HashMap<String, String>,
     /// Log error catch patterns
@@ -157,6 +160,7 @@ pub struct ModScanResult {
 ///     is_vr: false,
 ///     game_version: GameVersion::Original,
 ///     crashgen_name: "Buffout4".to_string(),
+///     crashgen_settings_rules: None,
 ///     wrye_warnings: HashMap::new(),
 ///     log_catch_errors: vec!["error".to_string()],
 ///     log_exclude_files: vec!["crash-".to_string()],
@@ -217,8 +221,13 @@ impl GameScanOrchestrator {
         {
             let game_path = config.game_path.clone();
             let crashgen_name = config.crashgen_name.clone();
+            let crashgen_settings_rules = config.crashgen_settings_rules.clone();
             join_set.spawn_blocking(move || {
-                match CrashgenCheckOrchestrator::check(&game_path, &crashgen_name) {
+                match CrashgenCheckOrchestrator::check_with_rules(
+                    &game_path,
+                    &crashgen_name,
+                    crashgen_settings_rules,
+                ) {
                     Ok(report) => Ok(CheckResult {
                         name: "crashgen".to_string(),
                         output: report.message,
@@ -634,6 +643,7 @@ mod tests {
             is_vr: false,
             game_version: GameVersion::Original,
             crashgen_name: "Buffout4".to_string(),
+            crashgen_settings_rules: None,
             wrye_warnings: HashMap::new(),
             log_catch_errors: vec!["error".to_string()],
             log_exclude_files: vec![],

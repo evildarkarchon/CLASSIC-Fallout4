@@ -1,0 +1,667 @@
+{
+  "contractVersion": "1.1.0",
+  "phase": "phase1",
+  "description": "Tiered Python bindings parity contract for Rust core APIs, including callable member export paths.",
+  "tierDefinitions": {
+    "tier1": "Must-have Python APIs required by maintained integration workflows.",
+    "tier2": "Deferred or lower-priority APIs outside initial gate scope."
+  },
+  "ownerModules": {
+    "scanlog": {
+      "description": "Crash log orchestration, parsing, and analysis APIs."
+    },
+    "config": {
+      "description": "YAML data and runtime configuration APIs."
+    },
+    "version_registry": {
+      "description": "Game version lookup and compatibility APIs."
+    },
+    "aux": {
+      "description": "Auxiliary modules outside core phase-1 workflow APIs."
+    }
+  },
+  "tier1Mappings": [
+    {
+      "id": "config-yamldata-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "YamlDataCore",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "YamlData",
+      "pythonKind": "class"
+    },
+    {
+      "id": "config-yamldata-from-content",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "YamlDataCore",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "YamlData.from_yaml_content",
+      "pythonKind": "method",
+      "pythonArity": 5
+    },
+    {
+      "id": "config-clear-yaml-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "clear_global_yaml_cache",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "clear_yaml_cache",
+      "pythonKind": "function",
+      "pythonArity": 0
+    },
+    {
+      "id": "config-classic-config-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "config-classic-config-load-from-yaml",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig.load_from_yaml",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "config-classic-config-load-or-default",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig.load_or_default",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "config-classic-config-save-to-yaml",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig.save_to_yaml",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "config-classic-config-get-config-path",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig.get_config_path",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "config-classic-config-validate-paths",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig.validate_paths",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "config-classic-config-load-local-yaml-paths",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "ClassicConfig.load_local_yaml_paths",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "config-path-config-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "PathConfig",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "PathConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "config-yaml-source-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "YamlSource",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "YamlSource",
+      "pythonKind": "class"
+    },
+    {
+      "id": "config-yaml-source-path",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "YamlSource",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "YamlSource.path",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "config-yaml-source-display-name",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "YamlSource",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "YamlSource.display_name",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "config-yaml-source-display-name-with-game",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "YamlSource",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "YamlSource.display_name_with_game",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-logparser-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogParser",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "LogParser",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-logparser-parse-segments",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogParser",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "LogParser.parse_segments",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-logparser-extract-formids",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogParser",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "LogParser.extract_formids",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-logparser-extract-plugins",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogParser",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "LogParser.extract_plugins",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-logparser-detect-vr",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_vr_log",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "LogParser.detect_vr_log",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-analysis-config-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisConfig",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-analysis-config-from-yamldata",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "build_analysis_config_from_yaml",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisConfig.from_yamldata",
+      "pythonKind": "method",
+      "pythonArity": 7
+    },
+    {
+      "id": "scanlog-orchestrator-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-orchestrator-process-log",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.process_log",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-orchestrator-process-batch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.process_logs_batch",
+      "pythonKind": "method",
+      "pythonArity": 4
+    },
+    {
+      "id": "scanlog-pattern-matcher-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PatternMatcher",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PatternMatcher",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-pattern-matcher-find-first",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PatternMatcher",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PatternMatcher.find_first",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-gpu-detector-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "GpuDetector",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "GpuDetector",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-gpu-detector-extract-info",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "GpuDetector",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "GpuDetector.extract_gpu_info",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-papyrus-analyzer-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-papyrus-analyze-full",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.analyze_full",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog-crashgen-version-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenVersion",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-parse-crashgen-version",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenVersion",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "parse_crashgen_version",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog-crashgen-version-status",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "check_crashgen_version_status",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "check_crashgen_version_status",
+      "pythonKind": "function",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog-crashgen-version-status-class",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenVersionStatus",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersionStatus",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog-extract-formids-batch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "extract_formids_batch",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "extract_formids_batch",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-game-version-class",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version-registry-match-confidence-class",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "MatchConfidence",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "MatchConfidence",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version-registry-match-result-class",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "MatchResult",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "MatchResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version-registry-version-info-class",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version-registry-unknown-version-handling-class",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "UnknownVersionHandling",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "UnknownVersionHandling",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version-registry-unknown-version-get-default",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "UnknownVersionHandling",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "UnknownVersionHandling.get_default",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-class",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version-registry-get-singleton",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "get_version_registry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "get_version_registry",
+      "pythonKind": "function",
+      "pythonArity": 0
+    },
+    {
+      "id": "version-registry-match-version-string",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "match_version_string",
+      "pythonKind": "function",
+      "pythonArity": 3
+    },
+    {
+      "id": "version-registry-get-by-id",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_by_id",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-get-by-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_by_version",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-get-by-short-name",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_by_short_name",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-get-all",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_all",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version-registry-get-all-for-game",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_all_for_game",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "version-registry-get-correct-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_correct_versions",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-get-wrong-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_wrong_versions",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-match-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.match_version",
+      "pythonKind": "method",
+      "pythonArity": 3
+    },
+    {
+      "id": "version-registry-get-address-library-filename",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_address_library_filename",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "version-registry-get-crashgen-configs",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_crashgen_configs",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-get-crashgen-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_crashgen_versions",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version-registry-get-crashgen-for-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_crashgen_for_version",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "version-registry-get-all-exe-hashes",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_all_exe_hashes",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "version-registry-get-all-script-hashes",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_all_script_hashes",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "version-registry-get-script-hashes-for-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.get_script_hashes_for_version",
+      "pythonKind": "method",
+      "pythonArity": 1
+    }
+  ]
+}

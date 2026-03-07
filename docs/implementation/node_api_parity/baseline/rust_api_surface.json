@@ -1,0 +1,1448 @@
+{
+  "generated_at_utc": "2026-03-06T06:47:30.496181+00:00",
+  "scope": {
+    "target_crates": [
+      "classic-scanlog-core",
+      "classic-config-core",
+      "classic-version-registry-core",
+      "classic-file-io-core",
+      "classic-path-core",
+      "classic-settings-core",
+      "classic-message-core",
+      "classic-perf-core",
+      "classic-registry-core",
+      "classic-shared-core"
+    ],
+    "source_files": [
+      "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+      "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs"
+    ]
+  },
+  "symbols": [
+    {
+      "symbol": "ClassicConfig",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
+      "source_expr": "config::ClassicConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ConfigError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::ConfigError",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CrashgenEntryRaw",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::CrashgenEntryRaw",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "PathConfig",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
+      "source_expr": "config::PathConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlDataCore",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::YamlDataCore",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlSource",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
+      "source_expr": "config::YamlSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_global_yaml_cache",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use classic_yaml_core::clear_global_yaml_cache;",
+      "source_expr": "classic_yaml_core::clear_global_yaml_cache",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "config",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod config;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "format_registry_game_version",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::format_registry_game_version",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "get_runtime",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use classic_shared_core::get_runtime;",
+      "source_expr": "classic_shared_core::get_runtime",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_registry_version_info",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::resolve_registry_version_info",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "yamldata",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod yamldata;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupInfo",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
+      "source_expr": "backup::BackupInfo",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupManager",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
+      "source_expr": "backup::BackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "EncodingDetector",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use encoding::EncodingDetector;",
+      "source_expr": "encoding::EncodingDetector",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileGenerator",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
+      "source_expr": "generation::FileGenerator",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileHasher",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use hash::FileHasher;",
+      "source_expr": "hash::FileHasher",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileIOCore",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use core::FileIOCore;",
+      "source_expr": "core::FileIOCore",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileOperationResult",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
+      "source_expr": "game_files::FileOperationResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameFilesManager",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
+      "source_expr": "game_files::GameFilesManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "calculate_similarity",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use similarity::{calculate_similarity, similarity_ratio};",
+      "source_expr": "similarity::calculate_similarity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_ignore_file",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
+      "source_expr": "generation::generate_ignore_file",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Message",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use message::Message;",
+      "source_expr": "message::Message",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MessageTarget",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use enums::{MessageTarget, MessageType};",
+      "source_expr": "enums::MessageTarget",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MessageType",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use enums::{MessageTarget, MessageType};",
+      "source_expr": "enums::MessageType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "format_log_message",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use formatter::{format_log_message, strip_emoji};",
+      "source_expr": "formatter::format_log_message",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "strip_emoji",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use formatter::{format_log_message, strip_emoji};",
+      "source_expr": "formatter::strip_emoji",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupManager",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use backup::{BackupManager, XseVersion};",
+      "source_expr": "backup::BackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BackupManager",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use backup::BackupManager;",
+      "source_expr": "backup::BackupManager",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocsPathFinder",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use docs_path::DocsPathFinder;",
+      "source_expr": "docs_path::DocsPathFinder",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentsChecker",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use checker::{DocumentsChecker, IniCheckResult};",
+      "source_expr": "checker::DocumentsChecker",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentsChecker",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use checker::DocumentsChecker;",
+      "source_expr": "checker::DocumentsChecker",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GamePathFinder",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use game_path::{GamePathFinder, parse_xse_log};",
+      "source_expr": "game_path::GamePathFinder",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GamePathFinder",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use game_path::GamePathFinder;",
+      "source_expr": "game_path::GamePathFinder",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_read_permissions",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::check_read_permissions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_write_permissions",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::check_write_permissions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_system_documents_path",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use platform::{get_system_documents_path, parse_steam_library};",
+      "source_expr": "platform::get_system_documents_path",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_restricted_path",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::is_restricted_path",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_valid_path",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::is_valid_path",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse_steam_library",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use platform::{get_system_documents_path, parse_steam_library};",
+      "source_expr": "platform::parse_steam_library",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "query_game_registry",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use platform::{remove_readonly, windows::query_game_registry};",
+      "source_expr": "platform::windows::query_game_registry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use platform::{remove_readonly, windows::query_game_registry};",
+      "source_expr": "platform::remove_readonly",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_custom_scan_path",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::validate_custom_scan_path",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_path_with_permissions",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::validate_path_with_permissions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_required_files",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_expr": "validator::validate_required_files",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MetricsSummary",
+      "kind": "reexport",
+      "crate": "classic-perf-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
+      "source_expr": "metrics::MetricsSummary",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_metrics",
+      "kind": "reexport",
+      "crate": "classic-perf-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
+      "source_expr": "metrics::clear_metrics",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_summary",
+      "kind": "reexport",
+      "crate": "classic-perf-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
+      "source_expr": "metrics::get_summary",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_timing",
+      "kind": "reexport",
+      "crate": "classic-perf-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
+      "source_expr": "metrics::record_timing",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_all",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
+      "source_expr": "registry::clear_all",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
+      "source_expr": "registry::get",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_game",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_vr, get_yaml_cache, is_gui_mode, set_game, };",
+      "source_expr": "registry::get_game",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "register",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
+      "source_expr": "registry::register",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_game",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_vr, get_yaml_cache, is_gui_mode, set_game, };",
+      "source_expr": "registry::set_game",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "unregister",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
+      "source_expr": "registry::unregister",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalysisConfig",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_expr": "orchestrator::AnalysisConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_expr": "orchestrator::AnalysisResult",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CheckId",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};",
+      "source_expr": "crashgen_registry::CheckId",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ConfigIssue",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};",
+      "source_expr": "fcx_handler::ConfigIssue",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CrashgenEntry",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};",
+      "source_expr": "crashgen_registry::CrashgenEntry",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CrashgenRegistry",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};",
+      "source_expr": "crashgen_registry::CrashgenRegistry",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CrashgenVersion",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
+      "source_expr": "version::CrashgenVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenVersionStatus",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
+      "source_expr": "version::CrashgenVersionStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FcxModeHandler",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};",
+      "source_expr": "fcx_handler::FcxModeHandler",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "FormIDAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};",
+      "source_expr": "formid::FormIDAnalyzer",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "FormIDAnalyzerCore",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_expr": "formid_analyzer::FormIDAnalyzerCore",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "GLOBAL_FCX_HANDLER",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};",
+      "source_expr": "fcx_handler::GLOBAL_FCX_HANDLER",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "GpuDetector",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};",
+      "source_expr": "gpu_detector::GpuDetector",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "GpuInfo",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};",
+      "source_expr": "gpu_detector::GpuInfo",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GpuVendor",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};",
+      "source_expr": "gpu_detector::GpuVendor",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "LogParser",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};",
+      "source_expr": "parser::LogParser",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "OrchestratorCore",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_expr": "orchestrator::OrchestratorCore",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PapyrusAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};",
+      "source_expr": "papyrus::PapyrusAnalyzer",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "PapyrusError",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};",
+      "source_expr": "papyrus::PapyrusError",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "PapyrusStats",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};",
+      "source_expr": "papyrus::PapyrusStats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PatternMatcher",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use patterns::PatternMatcher;",
+      "source_expr": "patterns::PatternMatcher",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};",
+      "source_expr": "plugin_analyzer::PluginAnalyzer",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "RecordScanner",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
+      "source_expr": "record_scanner::RecordScanner",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ReportComposer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
+      "source_expr": "report::ReportComposer",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ReportFragment",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
+      "source_expr": "report::ReportFragment",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ReportGenerator",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
+      "source_expr": "report::ReportGenerator",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "RustFormIDAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};",
+      "source_expr": "formid::RustFormIDAnalyzer",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ScanLogError",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use error::ScanLogError;",
+      "source_expr": "error::ScanLogError",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "SettingsValidator",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use settings_validator::SettingsValidator;",
+      "source_expr": "settings_validator::SettingsValidator",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "StreamingIteratorParser",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};",
+      "source_expr": "parser::StreamingIteratorParser",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "StreamingLogParser",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};",
+      "source_expr": "parser::StreamingLogParser",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "StringPool",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
+      "source_expr": "report::StringPool",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "SuspectScanner",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use suspect_scanner::SuspectScanner;",
+      "source_expr": "suspect_scanner::SuspectScanner",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "build_analysis_config_from_yaml",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_expr": "orchestrator::build_analysis_config_from_yaml",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_crashgen_version_status",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
+      "source_expr": "version::check_crashgen_version_status",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "contains_plugin",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};",
+      "source_expr": "plugin_analyzer::contains_plugin",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "contains_record",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
+      "source_expr": "record_scanner::contains_record",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "crashgen_registry",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod crashgen_registry;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "crashgen_version_gen",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
+      "source_expr": "version::crashgen_version_gen",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "detect_mods_batch",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
+      "source_expr": "mod_detector::detect_mods_batch",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "detect_mods_double",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
+      "source_expr": "mod_detector::detect_mods_double",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "detect_mods_important",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
+      "source_expr": "mod_detector::detect_mods_important",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "detect_mods_single",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
+      "source_expr": "mod_detector::detect_mods_single",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "detect_plugins_batch",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};",
+      "source_expr": "plugin_analyzer::detect_plugins_batch",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "detect_vr_log",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub fn detect_vr_log(content: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "error",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod error;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "extract_formids_batch",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_expr": "formid_analyzer::extract_formids_batch",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "fcx_handler",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod fcx_handler;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "formid",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod formid;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "formid_analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod formid_analyzer;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "gpu_detector",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod gpu_detector;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "is_valid_formid",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_expr": "formid_analyzer::is_valid_formid",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "mod_detector",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod mod_detector;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "orchestrator",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod orchestrator;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "papyrus",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod papyrus;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "parser",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod parser;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "patterns",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod patterns;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "plugin_analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod plugin_analyzer;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "record_scanner",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod record_scanner;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "report",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod report;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "scan_records_batch",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
+      "source_expr": "record_scanner::scan_records_batch",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "segment_key",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod segment_key;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "settings_validator",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod settings_validator;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "suspect_scanner",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod suspect_scanner;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "validate_formids_batch",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_expr": "formid_analyzer::validate_formids_batch",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "version",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod version;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "Result",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+      "source_decl": "pub use error::{Result, SettingsError};",
+      "source_expr": "error::Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_async",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "cache::load_batch_async",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_sync",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "cache::load_batch_sync",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_runtime",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub fn get_runtime()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path_core",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod path_core;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "strings_core",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "aux",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod strings_core;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AddressLibFormat",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::AddressLibFormat",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AddressLibraryConfig",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::AddressLibraryConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CompatibleRange",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::CompatibleRange",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenConfig",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::CrashgenConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameVersion",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use version::GameVersion;",
+      "source_expr": "version::GameVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogLevel",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::LogLevel",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MatchConfidence",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use matching::{MatchConfidence, MatchResult, VersionMatcher};",
+      "source_expr": "matching::MatchConfidence",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MatchResult",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use matching::{MatchConfidence, MatchResult, VersionMatcher};",
+      "source_expr": "matching::MatchResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Result",
+      "kind": "type",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UnknownVersionHandling",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::UnknownVersionHandling",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UnknownVersionStrategy",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::UnknownVersionStrategy",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionInfo",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::VersionInfo",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionMatcher",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use matching::{MatchConfidence, MatchResult, VersionMatcher};",
+      "source_expr": "matching::VersionMatcher",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionRegistry",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{VersionRegistry, get_version_registry};",
+      "source_expr": "registry::VersionRegistry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "VersionRegistryError",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use error::VersionRegistryError;",
+      "source_expr": "error::VersionRegistryError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "XseConfig",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
+      "source_expr": "models::XseConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_version_registry",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::{VersionRegistry, get_version_registry};",
+      "source_expr": "registry::get_version_registry",
+      "tier": "tier1"
+    }
+  ]
+}

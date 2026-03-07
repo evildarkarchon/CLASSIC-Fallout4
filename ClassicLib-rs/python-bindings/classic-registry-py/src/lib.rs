@@ -52,11 +52,7 @@ impl Keys {
     const OPEN_FILE_FUNC: &'static str = classic_registry_core::Keys::OPEN_FILE_FUNC;
 
     /// VR game variant identifier (DEPRECATED).
-    ///
-    /// This key is deprecated. Use `GAME_VERSION` instead, which stores
-    /// a Fallout4Version enum that treats VR as a version variant.
     #[classattr]
-    #[allow(deprecated)]
     const VR: &'static str = classic_registry_core::Keys::VR;
 
     #[classattr]
@@ -337,10 +333,8 @@ fn get_game_path_gui(py: Python) -> Option<Py<PyAny>> {
 ///     print(f"VR variant: {vr}")
 /// ```
 #[pyfunction]
-#[allow(deprecated)]
 fn get_vr(py: Python) -> String {
     // Try to get as PyObjectWrapper first (for Python string), then fallback to native string
-    #[allow(deprecated)]
     if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(Keys::VR) {
         let obj = wrapper.get(py);
         if let Ok(value) = obj.extract::<String>(py) {
@@ -348,7 +342,6 @@ fn get_vr(py: Python) -> String {
         }
     }
     // Fallback to native string (for compatibility)
-    #[allow(deprecated)]
     classic_registry_core::get_vr()
 }
 
@@ -526,7 +519,7 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(get_manual_docs_gui, m)?)?;
     m.add_function(wrap_pyfunction!(get_game_path_gui, m)?)?;
-    m.add_function(wrap_pyfunction!(get_vr, m)?)?; // Deprecated - kept for backward compatibility
+    m.add_function(wrap_pyfunction!(get_vr, m)?)?;
     m.add_function(wrap_pyfunction!(get_local_dir, m)?)?;
 
     // Add new version-aware functions

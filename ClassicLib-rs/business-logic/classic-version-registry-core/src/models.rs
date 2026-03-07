@@ -91,10 +91,14 @@ impl AddressLibraryConfig {
 pub struct XseConfig {
     /// XSE acronym (e.g., "F4SE", "F4SEVR", "SKSE").
     pub acronym: String,
+    /// Full display name (e.g., "Fallout 4 Script Extender (F4SE)").
+    pub full_name: String,
     /// Compatible XSE version (e.g., "0.6.23").
     pub compatible_version: String,
     /// Loader executable name (e.g., "f4se_loader.exe").
     pub loader: String,
+    /// Expected number of script files (e.g., 29).
+    pub file_count: u32,
     /// SHA-256 hashes for XSE script files, as (filename, hash) pairs.
     /// Used for validating that installed scripts match the expected version.
     pub script_hashes: Vec<(String, String)>,
@@ -105,13 +109,17 @@ impl XseConfig {
     #[must_use]
     pub fn new(
         acronym: impl Into<String>,
+        full_name: impl Into<String>,
         compatible_version: impl Into<String>,
         loader: impl Into<String>,
+        file_count: u32,
     ) -> Self {
         Self {
             acronym: acronym.into(),
+            full_name: full_name.into(),
             compatible_version: compatible_version.into(),
             loader: loader.into(),
+            file_count,
             script_hashes: Vec::new(),
         }
     }
@@ -120,14 +128,18 @@ impl XseConfig {
     #[must_use]
     pub fn with_script_hashes(
         acronym: impl Into<String>,
+        full_name: impl Into<String>,
         compatible_version: impl Into<String>,
         loader: impl Into<String>,
+        file_count: u32,
         script_hashes: Vec<(String, String)>,
     ) -> Self {
         Self {
             acronym: acronym.into(),
+            full_name: full_name.into(),
             compatible_version: compatible_version.into(),
             loader: loader.into(),
+            file_count,
             script_hashes,
         }
     }
@@ -207,6 +219,8 @@ impl CompatibleRange {
 /// let full = CrashgenConfig::new(
 ///     "1.28.6",
 ///     "Buffout 4",
+///     "BO4",
+///     "buffout4.dll",
 ///     "Legacy version for OG",
 ///     "https://www.nexusmods.com/fallout4/mods/47359",
 /// );
@@ -217,6 +231,10 @@ pub struct CrashgenConfig {
     pub version: String,
     /// Display name (e.g., "Buffout 4", "Buffout 4 NG").
     pub name: String,
+    /// Short identifier/acronym (e.g., "BO4", "BO4 NG").
+    pub acronym: String,
+    /// DLL filename (e.g., "buffout4.dll").
+    pub dll_file: String,
     /// Description of this crash generator version.
     pub description: String,
     /// Nexus Mods or other download URL.
@@ -233,18 +251,24 @@ impl CrashgenConfig {
     ///
     /// * `version` - Version string of the crash generator
     /// * `name` - Display name
+    /// * `acronym` - Short identifier (e.g., "BO4", "BO4 NG")
+    /// * `dll_file` - DLL filename (e.g., "buffout4.dll")
     /// * `description` - Description of this version
     /// * `download_url` - Download URL
     #[must_use]
     pub fn new(
         version: impl Into<String>,
         name: impl Into<String>,
+        acronym: impl Into<String>,
+        dll_file: impl Into<String>,
         description: impl Into<String>,
         download_url: impl Into<String>,
     ) -> Self {
         Self {
             version: version.into(),
             name: name.into(),
+            acronym: acronym.into(),
+            dll_file: dll_file.into(),
             description: description.into(),
             download_url: download_url.into(),
             compatible_range: None,
@@ -257,6 +281,8 @@ impl CrashgenConfig {
     ///
     /// * `version` - Version string of the crash generator
     /// * `name` - Display name
+    /// * `acronym` - Short identifier (e.g., "BO4", "BO4 NG")
+    /// * `dll_file` - DLL filename (e.g., "buffout4.dll")
     /// * `description` - Description of this version
     /// * `download_url` - Download URL
     /// * `compatible_range` - Game version range this crash generator is compatible with
@@ -264,6 +290,8 @@ impl CrashgenConfig {
     pub fn with_range(
         version: impl Into<String>,
         name: impl Into<String>,
+        acronym: impl Into<String>,
+        dll_file: impl Into<String>,
         description: impl Into<String>,
         download_url: impl Into<String>,
         compatible_range: CompatibleRange,
@@ -271,6 +299,8 @@ impl CrashgenConfig {
         Self {
             version: version.into(),
             name: name.into(),
+            acronym: acronym.into(),
+            dll_file: dll_file.into(),
             description: description.into(),
             download_url: download_url.into(),
             compatible_range: Some(compatible_range),
@@ -290,6 +320,8 @@ impl CrashgenConfig {
         Self {
             version: version.into(),
             name: String::new(),
+            acronym: String::new(),
+            dll_file: String::new(),
             description: String::new(),
             download_url: String::new(),
             compatible_range: None,
@@ -352,6 +384,10 @@ pub struct VersionInfo {
     pub short_name: String,
     /// Description of this version.
     pub description: String,
+    /// My Documents subfolder name (e.g., "Fallout4", "Fallout4VR").
+    pub docs_name: String,
+    /// Steam application ID (e.g., 377160, 611660).
+    pub steam_id: u32,
     /// Address Library configuration, if applicable.
     pub address_library: Option<AddressLibraryConfig>,
     /// Script Extender configuration, if applicable.
@@ -640,12 +676,16 @@ mod tests {
         let config = CrashgenConfig::new(
             "1.28.6",
             "Buffout 4",
+            "BO4",
+            "buffout4.dll",
             "Legacy version for OG",
             "https://www.nexusmods.com/fallout4/mods/47359",
         );
 
         assert_eq!(config.version, "1.28.6");
         assert_eq!(config.name, "Buffout 4");
+        assert_eq!(config.acronym, "BO4");
+        assert_eq!(config.dll_file, "buffout4.dll");
         assert_eq!(config.description, "Legacy version for OG");
         assert_eq!(
             config.download_url,
@@ -660,6 +700,8 @@ mod tests {
 
         assert_eq!(config.version, "1.37.0");
         assert!(config.name.is_empty());
+        assert!(config.acronym.is_empty());
+        assert!(config.dll_file.is_empty());
         assert!(config.description.is_empty());
         assert!(config.download_url.is_empty());
         assert!(config.compatible_range.is_none());
@@ -671,12 +713,16 @@ mod tests {
         let config = CrashgenConfig::with_range(
             "1.28.6",
             "Buffout 4",
+            "BO4",
+            "buffout4.dll",
             "Legacy version for OG",
             "https://www.nexusmods.com/fallout4/mods/47359",
             range,
         );
 
         assert_eq!(config.version, "1.28.6");
+        assert_eq!(config.acronym, "BO4");
+        assert_eq!(config.dll_file, "buffout4.dll");
         assert!(config.compatible_range.is_some());
     }
 
@@ -696,6 +742,8 @@ mod tests {
         let config = CrashgenConfig::with_range(
             "1.28.6",
             "Buffout 4",
+            "BO4",
+            "buffout4.dll",
             "Legacy version for OG",
             "https://www.nexusmods.com/fallout4/mods/47359",
             range,
@@ -724,6 +772,8 @@ mod tests {
             display_name: "Test Version".to_string(),
             short_name: "TEST".to_string(),
             description: "Test version for unit tests".to_string(),
+            docs_name: "Fallout4".to_string(),
+            steam_id: 377160,
             address_library: None,
             xse: None,
             compatible_range: None,
@@ -734,6 +784,8 @@ mod tests {
                 CrashgenConfig::with_range(
                     "1.28.6",
                     "Buffout 4",
+                    "BO4",
+                    "buffout4.dll",
                     "Legacy version for OG",
                     "https://www.nexusmods.com/fallout4/mods/47359",
                     og_range,
@@ -741,6 +793,8 @@ mod tests {
                 CrashgenConfig::new(
                     "1.37.0",
                     "Buffout 4", // Name matches what appears in log output
+                    "BO4 NG",
+                    "buffout4.dll",
                     "Buffout 4 NG",
                     "https://www.nexusmods.com/fallout4/mods/64880",
                 ),
@@ -874,6 +928,8 @@ mod tests {
             display_name: "Test Version".to_string(),
             short_name: "TEST".to_string(),
             description: "Test version".to_string(),
+            docs_name: "Fallout4".to_string(),
+            steam_id: 377160,
             address_library: None,
             xse: None,
             compatible_range: None,
@@ -881,8 +937,8 @@ mod tests {
             deprecated: false,
             exe_hash: None,
             crashgen_versions: vec![
-                CrashgenConfig::with_range("1.0.0", "Config 1", "", "", range1),
-                CrashgenConfig::with_range("2.0.0", "Config 2", "", "", range2),
+                CrashgenConfig::with_range("1.0.0", "Config 1", "", "", "", "", range1),
+                CrashgenConfig::with_range("2.0.0", "Config 2", "", "", "", "", range2),
             ],
         };
 

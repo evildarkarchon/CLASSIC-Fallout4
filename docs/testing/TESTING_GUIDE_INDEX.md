@@ -1,255 +1,113 @@
-# CLASSIC Testing Documentation Index
+# CLASSIC Testing Guide Index
 
-## Overview
+This index points contributors to the active testing workflows for the current **C++ + Rust** architecture.
 
-This index provides a comprehensive guide to testing practices in the CLASSIC codebase, with special emphasis on handling singletons, async patterns, and parallel test execution.
+## 1) Primary testing entry points (active)
 
-## 📚 Testing Guides
+### C++ frontend tests (via script wrappers + CTest)
 
-### 1. [Rust Testing Guide](./rust_testing_guide.md)
-**Purpose**: Comprehensive guide for testing Rust crates including patterns, fixtures, and coverage requirements.
-
-**Key Concepts**:
-- Test organization for business-logic (`-core`) crates
-- Using `tempfile`, `serial_test`, and `#[tokio::test]`
-- Coverage requirements and running `cargo-llvm-cov`
-- Integration test patterns
-
-**When to Use**:
-- Writing tests for Rust crates
-- Understanding coverage targets
-- Setting up test fixtures for database or file operations
-- Debugging test failures in Rust code
-
----
-
-### 2. [Testing AsyncBridge](./testing_async_bridge.md)
-**Purpose**: Avoid `RuntimeWarning: coroutine was never awaited` errors when testing sync/async bridge code.
-
-**Key Concepts**:
-- Mock `AsyncBridge.run_async`, not the underlying async methods
-- Use `MagicMock` for bridge-wrapped methods, not `AsyncMock`
-- Proper patterns for testing sync wrappers of async functions
-
-**When to Use**:
-- Testing any code that calls async functions through `AsyncBridge`
-- Testing synchronous wrapper functions
-- Debugging RuntimeWarnings about unawaited coroutines
-
----
-
-### 3. [Testing GlobalRegistry](./testing_global_registry.md)
-**Purpose**: Prevent test pollution and race conditions from singleton instances.
-
-**Key Concepts**:
-- Clear registry before/after tests
-- Use unique keys for parallel test safety
-- Mock entire registry for unit tests
-- Worker isolation strategies for pytest-xdist
-
-**When to Use**:
-- Testing code that uses `GlobalRegistry`
-- Testing singleton classes (ScanGameCore, MessageHandler)
-- Running tests in parallel with pytest-xdist
-- Experiencing test failures that only occur when tests run together
-
----
-
-### 4. [Testing YamlSettingsCache](./testing_yaml_cache.md)
-**Purpose**: Test configuration-dependent code without modifying production YAML files.
-
-**Key Concepts**:
-- NEVER modify production YAML files (YAML.Settings, YAML.Main)
-- Always mock `yaml_settings` for unit tests
-- Use `YAML.TEST` enum for test-safe modifications
-- Clear cache between tests
-
-**When to Use**:
-- Testing code that reads configuration
-- Testing settings updates
-- Running parallel tests that access YAML
-- Need to test different configuration scenarios
-
----
-
-## 🚀 Quick Start Patterns
-
-### For New Tests
-
-```python
-import pytest
-from unittest.mock import patch, MagicMock
-
-class TestMyFeature:
-    @pytest.fixture(autouse=True)
-    def setup(self, tmp_path):
-        """Standard test setup."""
-        # 1. Clear GlobalRegistry
-        from ClassicLib import GlobalRegistry
-        GlobalRegistry._registry.clear()
-
-        # 2. Initialize MessageHandler
-        from ClassicLib.MessageHandler import init_message_handler
-        init_message_handler(parent=None, is_gui_mode=False)
-
-        # 3. Mock YAML settings
-        with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
-            mock_yaml.return_value = "test_value"
-            yield
-
-        # Cleanup
-        GlobalRegistry._registry.clear()
-        import ClassicLib.MessageHandler
-        ClassicLib.MessageHandler._message_handler = None
+```powershell
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
 ```
 
-### For Async Tests
+CLI integration test wrapper:
 
-```python
-@pytest.mark.asyncio
-async def test_async_feature():
-    """Direct async test."""
-    result = await async_function()
-    assert result == expected
-
-def test_sync_wrapper():
-    """Test sync wrapper of async code."""
-    with patch("module.AsyncBridge") as mock_bridge_class:
-        mock_bridge = MagicMock()
-        mock_bridge_class.get_instance.return_value = mock_bridge
-        mock_bridge.run_async.return_value = "result"
-
-        result = sync_function()
-        assert result == "result"
+```powershell
+pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ```
 
-### For Parallel Tests
+> Policy: run C++ tests via wrapper scripts/CTest path, not by invoking test binaries directly.
 
-```python
-import uuid
+### Rust workspace tests and quality gates
 
-def test_parallel_safe():
-    """Test that works in parallel execution."""
-    # Use unique keys
-    test_key = f"key_{uuid.uuid4()}"
+```powershell
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
 
-    # Use tmp_path for files
-    test_file = tmp_path / f"test_{uuid.uuid4()}.yaml"
-
-    # Mock shared resources
-    with patch("ClassicLib.GlobalRegistry.get") as mock_get:
-        mock_get.return_value = "isolated_value"
-        # Your test code
+cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
 ```
 
 ---
 
-## ⚠️ Common Pitfalls
+## 2) CI workflow mapping
 
-### 1. AsyncMock Misuse
-```python
-# ❌ WRONG
-mock.async_method = AsyncMock()  # Causes RuntimeWarning
+- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml)
+  - C++ CLI/GUI build + test jobs on Windows
+- [`ci-rust.yml`](../../.github/workflows/ci-rust.yml)
+  - Rust format/lint/build/test jobs
+- [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml)
+  - Node binding parity gate and Bun/Node runtime tests
+- [`ci-python-bindings.yml`](../../.github/workflows/ci-python-bindings.yml)
+  - Python binding parity gate, stub validation, and smoke tests
+- [`benchmarks.yml`](../../.github/workflows/benchmarks.yml)
+  - benchmark regression checks
 
-# ✅ CORRECT
-mock_bridge.run_async.return_value = "result"
+Use local command sets that mirror these workflows before opening PRs.
+
+---
+
+## 3) Binding-specific testing flows
+
+### Node bindings (`ClassicLib-rs/node-bindings/classic-node`)
+
+```powershell
+bun install
+bun run build
+bun run cli -- --version
+bun run parity:gate:local
+bun run test:bun
+bun run test:node
 ```
 
-### 2. Production YAML Modification
-```python
-# ❌ FORBIDDEN
-yaml_settings(str, YAML.Settings, "key", "value")
+### Python bindings (`ClassicLib-rs/python-bindings`)
 
-# ✅ CORRECT
-yaml_settings(str, YAML.TEST, "key", "value")
-```
-
-### 3. Registry Pollution
-```python
-# ❌ BAD
-GlobalRegistry.register("key", "value")
-# No cleanup!
-
-# ✅ GOOD
-try:
-    GlobalRegistry.register("key", "value")
-finally:
-    GlobalRegistry._registry.pop("key", None)
+```powershell
+uv venv
+uv pip install maturin pytest
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
+uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
 
 ---
 
-## 🔍 Debugging Test Issues
+## 4) Scope boundaries (important)
 
-### Symptom: `RuntimeWarning: coroutine was never awaited`
-**Solution**: See [Testing AsyncBridge Guide](./testing_async_bridge.md)
-- Check for `AsyncMock()()` double-call pattern
-- Verify AsyncBridge mocking
+- Active app/runtime paths:
+  - [`classic-cli/`](../../classic-cli)
+  - [`classic-gui/`](../../classic-gui)
+  - [`ClassicLib-rs/`](../../ClassicLib-rs)
+- Maintained integration bindings:
+  - [`ClassicLib-rs/node-bindings/`](../../ClassicLib-rs/node-bindings)
+  - [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+- Deprecated runtime entrypoints/orchestration:
+  - [`deprecated/`](../../deprecated)
 
-### Symptom: Tests pass individually but fail together
-**Solution**: See [Testing GlobalRegistry Guide](./testing_global_registry.md)
-- Add registry cleanup fixtures
-- Check for shared state pollution
-
-### Symptom: Tests fail only in parallel (pytest-xdist)
-**Solution**: See all guides for parallel testing sections
-- Use worker-specific keys/paths
-- Isolate singleton instances per worker
-- Mock shared resources
-
-### Symptom: Settings changes persist between tests
-**Solution**: See [Testing YamlSettingsCache Guide](./testing_yaml_cache.md)
-- Clear cache in fixtures
-- Mock yaml_settings function
-- Use temp files for test data
+Do not assume Python runtime/orchestration tests under `deprecated/` are part of the default contributor test flow unless the task explicitly targets migration/legacy support.
 
 ---
 
-## 📋 Testing Checklist
+## 5) Related testing docs
 
-Before committing test changes, verify:
-
-- [ ] No `AsyncMock` for bridge-wrapped methods
-- [ ] No modification of production YAML files
-- [ ] GlobalRegistry cleaned up in fixtures
-- [ ] MessageHandler initialized for UI-related tests
-- [ ] Cache cleared between tests
-- [ ] Unique keys used for parallel safety
-- [ ] tmp_path used for test files
-- [ ] All mocks properly configured
-- [ ] No hardcoded paths
-- [ ] Tests pass both individually and together
-- [ ] Tests pass with pytest-xdist (`-n auto`)
+- [`docs/testing/rust_testing_guide.md`](rust_testing_guide.md)
+- [`docs/testing/TEST_STRUCTURE.md`](TEST_STRUCTURE.md)
+- [`docs/testing/test_pollution_guide.md`](test_pollution_guide.md)
+- [`docs/testing/testing_async_bridge.md`](testing_async_bridge.md) *(legacy Python-runtime context)*
+- [`docs/testing/testing_global_registry.md`](testing_global_registry.md) *(legacy Python-runtime context)*
+- [`docs/testing/testing_yaml_cache.md`](testing_yaml_cache.md) *(legacy Python-runtime context)*
 
 ---
 
-## 🔗 Related Documentation
+## 6) Quick pre-PR checklist
 
-- [CLAUDE.md](../CLAUDE.md) - Main project documentation with testing sections
-- [pytest.ini](../pytest.ini) - Test configuration and markers
-- [conftest.py](../tests/conftest.py) - Shared test fixtures
+- [ ] Ran relevant C++ wrapper script tests (`classic-cli` / `classic-gui`)
+- [ ] Ran Rust format/lint/tests for touched crates
+- [ ] Ran Node parity/runtime checks if Node-exposed APIs changed
+- [ ] Ran Python parity/stub/runtime checks if Python-exposed APIs changed
+- [ ] Updated docs when architecture/build/test behavior changed
 
----
+Canonical policy reference: [`AGENTS.md`](../../AGENTS.md).
 
-## 💡 Best Practices Summary
-
-1. **Isolation First**: Every test should be completely independent
-2. **Mock at Boundaries**: Mock external dependencies, not internal logic
-3. **Clear State**: Always clean up singletons and caches
-4. **Parallel Safety**: Design tests to work with pytest-xdist
-5. **Production Safety**: Never touch production configuration
-6. **Document Dependencies**: Make test requirements explicit
-7. **Fail Fast**: Use clear assertions and error messages
-
----
-
-## 📝 Contributing
-
-When adding new testing patterns or discovering issues:
-
-1. Update the relevant guide in `docs/`
-2. Add examples from actual test fixes
-3. Update this index if adding new guides
-4. Include in CLAUDE.md for AI agent discovery
-
-Remember: Good tests are the foundation of maintainable code!

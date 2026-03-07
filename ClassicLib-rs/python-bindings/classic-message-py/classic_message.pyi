@@ -38,7 +38,7 @@ from enum import IntEnum
 
 __version__: str
 
-class MessageType(IntEnum):
+class MessageType:
     """Message type enumeration for categorizing messages.
 
     This enum provides various message categories for logging and display purposes.
@@ -62,15 +62,22 @@ class MessageType(IntEnum):
 
     """
 
-    Info = 0
-    Warning = 1
-    Error = 2
-    Success = 3
-    Progress = 4
-    Debug = 5
-    Critical = 6
+    Info: MessageType
+    Warning: MessageType
+    Error: MessageType
+    Success: MessageType
+    Progress: MessageType
+    Debug: MessageType
+    Critical: MessageType
 
-    def name(self) -> str:  # pyright: ignore[reportIncompatibleMethodOverride]
+    @property
+    def value(self) -> int:
+        """Get the integer value of the message type."""
+
+    def __int__(self) -> int:
+        """Convert the message type to its integer value."""
+
+    def name(self) -> str:
         """Get the human-readable name of the message type.
 
         Returns:
@@ -559,5 +566,29 @@ def format_log_message(content: str, details: str | None) -> str:
         >>> print(formatted)
         'Success!
         Details: All tests passed'
+
+    """
+
+def format_contract_event(
+    component: str,
+    event: str,
+    severity: str,
+    outcome: str,
+    context: dict[str, str] | None = ...,
+) -> str:
+    """Format a structured contract event with redaction applied.
+
+    Args:
+        component: Logical component emitting the event.
+        event: Canonical event identifier.
+        severity: Contract severity ("info", "warning", "error", "debug").
+        outcome: Outcome status such as "success" or "failure".
+        context: Optional context fields.
+
+    Returns:
+        Structured key=value log line.
+
+    Raises:
+        ValueError: If severity is not recognized.
 
     """

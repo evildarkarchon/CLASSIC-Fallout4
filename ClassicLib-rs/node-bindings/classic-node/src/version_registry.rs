@@ -4,8 +4,11 @@
 //! to JavaScript/TypeScript.
 
 use napi::bindgen_prelude::*;
+use std::collections::{BTreeSet, HashMap};
 
-use classic_version_registry_core::{GameVersion, MatchConfidence, get_version_registry};
+use classic_version_registry_core::{
+    GameVersion, MatchConfidence, get_version_registry as core_get_version_registry,
+};
 
 /// Convert any Display error to a napi::Error
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
@@ -32,10 +35,25 @@ pub struct JsAddressLibraryConfig {
 pub struct JsXseConfig {
     /// XSE acronym (e.g., "F4SE", "F4SEVR")
     pub acronym: String,
+    /// Full display name (e.g., "Fallout 4 Script Extender (F4SE)")
+    pub full_name: String,
     /// Compatible XSE version string (e.g., "0.6.23")
     pub compatible_version: String,
     /// Loader executable name (e.g., "f4se_loader.exe")
     pub loader: String,
+    /// Expected number of script files (e.g., 29)
+    pub file_count: u32,
+    /// Expected script hashes as [filename, sha256] pairs.
+    pub script_hashes: Vec<(String, String)>,
+}
+
+/// Version range for compatibility matching.
+#[napi(object)]
+pub struct JsCompatibleRange {
+    /// Minimum version string (inclusive)
+    pub min_version: String,
+    /// Maximum version string (inclusive)
+    pub max_version: String,
 }
 
 /// Crash generator configuration for a specific version.
@@ -45,6 +63,10 @@ pub struct JsCrashgenConfig {
     pub version: String,
     /// Display name (e.g., "Buffout 4", "Buffout 4 NG")
     pub name: String,
+    /// Short identifier/acronym (e.g., "BO4", "BO4 NG")
+    pub acronym: String,
+    /// DLL filename (e.g., "buffout4.dll")
+    pub dll_file: String,
     /// Description of this crash generator version
     pub description: String,
     /// Nexus Mods or other download URL
@@ -70,14 +92,22 @@ pub struct JsVersionInfo {
     pub short_name: String,
     /// Description of this version
     pub description: String,
+    /// My Documents subfolder name (e.g., "Fallout4", "Fallout4VR")
+    pub docs_name: String,
+    /// Steam application ID (e.g., 377160, 611660)
+    pub steam_id: u32,
     /// Address Library configuration, if applicable
     pub address_library: Option<JsAddressLibraryConfig>,
     /// Script Extender configuration, if applicable
     pub xse: Option<JsXseConfig>,
+    /// Compatible range for this version, if present
+    pub compatible_range: Option<JsCompatibleRange>,
     /// Priority for matching (higher = preferred)
     pub priority: i32,
     /// Whether this version is deprecated
     pub deprecated: bool,
+    /// Known executable SHA-256 hash for this version, if available
+    pub exe_hash: Option<String>,
 }
 
 /// Result of version matching.
@@ -99,6 +129,30 @@ pub struct JsMatchResult {
     pub is_valid: bool,
 }
 
+/// Unknown-version handling policy from the version registry.
+#[napi(object)]
+pub struct JsUnknownVersionHandling {
+    /// Strategy: "nearest_match", "strict", or "default_only"
+    pub strategy: String,
+    /// Log level for unknown-version messaging.
+    pub log_level: String,
+    /// Per-game default version IDs.
+    pub defaults: HashMap<String, String>,
+}
+
+/// Snapshot of the current version registry for a game/mode filter.
+#[napi(object)]
+pub struct JsVersionRegistrySnapshot {
+    /// Game identifier used for filtering.
+    pub game: String,
+    /// Optional VR filter used for selecting versions.
+    pub is_vr: Option<bool>,
+    /// Matching versions sorted by priority (descending).
+    pub versions: Vec<JsVersionInfo>,
+    /// Unknown-version strategy configuration currently loaded.
+    pub unknown_version_handling: JsUnknownVersionHandling,
+}
+
 // ============================================================================
 // Internal Conversion Helpers
 // ============================================================================
@@ -113,6 +167,8 @@ fn core_version_info_to_js(info: &classic_version_registry_core::VersionInfo) ->
         display_name: info.display_name.clone(),
         short_name: info.short_name.clone(),
         description: info.description.clone(),
+        docs_name: info.docs_name.clone(),
+        steam_id: info.steam_id,
         address_library: info
             .address_library
             .as_ref()
@@ -123,11 +179,22 @@ fn core_version_info_to_js(info: &classic_version_registry_core::VersionInfo) ->
             }),
         xse: info.xse.as_ref().map(|x| JsXseConfig {
             acronym: x.acronym.clone(),
+            full_name: x.full_name.clone(),
             compatible_version: x.compatible_version.clone(),
             loader: x.loader.clone(),
+            file_count: x.file_count,
+            script_hashes: x.script_hashes.clone(),
         }),
+        compatible_range: info
+            .compatible_range
+            .as_ref()
+            .map(|range| JsCompatibleRange {
+                min_version: range.min_version.to_string(),
+                max_version: range.max_version.to_string(),
+            }),
         priority: info.priority,
         deprecated: info.deprecated,
+        exe_hash: info.exe_hash.clone(),
     }
 }
 
@@ -136,6 +203,8 @@ fn core_crashgen_to_js(config: &classic_version_registry_core::CrashgenConfig) -
     JsCrashgenConfig {
         version: config.version.clone(),
         name: config.name.clone(),
+        acronym: config.acronym.clone(),
+        dll_file: config.dll_file.clone(),
         description: config.description.clone(),
         download_url: config.download_url.clone(),
         has_compatible_range: config.compatible_range.is_some(),
@@ -153,6 +222,28 @@ fn confidence_to_string(confidence: &MatchConfidence) -> String {
     }
 }
 
+fn unknown_strategy_to_string(
+    strategy: &classic_version_registry_core::UnknownVersionStrategy,
+) -> String {
+    match strategy {
+        classic_version_registry_core::UnknownVersionStrategy::NearestMatch => {
+            "nearest_match".to_string()
+        }
+        classic_version_registry_core::UnknownVersionStrategy::Strict => "strict".to_string(),
+        classic_version_registry_core::UnknownVersionStrategy::DefaultOnly => {
+            "default_only".to_string()
+        }
+    }
+}
+
+fn log_level_to_string(log_level: &classic_version_registry_core::LogLevel) -> String {
+    match log_level {
+        classic_version_registry_core::LogLevel::Debug => "debug".to_string(),
+        classic_version_registry_core::LogLevel::Warning => "warning".to_string(),
+        classic_version_registry_core::LogLevel::Error => "error".to_string(),
+    }
+}
+
 // ============================================================================
 // Exported Functions — Lookup
 // ============================================================================
@@ -163,7 +254,7 @@ fn confidence_to_string(confidence: &MatchConfidence) -> String {
 /// @returns The version info object, or null if not found.
 #[napi]
 pub fn get_version_by_id(id: String) -> Option<JsVersionInfo> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry.get_by_id(&id).map(core_version_info_to_js)
 }
 
@@ -175,7 +266,7 @@ pub fn get_version_by_id(id: String) -> Option<JsVersionInfo> {
 #[napi]
 pub fn get_version_by_version_string(version: String) -> Result<Option<JsVersionInfo>> {
     let game_version = GameVersion::parse(&version).map_err(to_napi_err)?;
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     Ok(registry
         .get_by_version(&game_version)
         .map(core_version_info_to_js))
@@ -187,7 +278,7 @@ pub fn get_version_by_version_string(version: String) -> Result<Option<JsVersion
 /// @returns The version info object, or null if not found.
 #[napi]
 pub fn get_version_by_short_name(short_name: String) -> Option<JsVersionInfo> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_by_short_name(&short_name)
         .map(core_version_info_to_js)
@@ -202,7 +293,7 @@ pub fn get_version_by_short_name(short_name: String) -> Option<JsVersionInfo> {
 /// @returns Array of version info objects.
 #[napi]
 pub fn get_all_versions() -> Vec<JsVersionInfo> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_all()
         .iter()
@@ -217,7 +308,7 @@ pub fn get_all_versions() -> Vec<JsVersionInfo> {
 /// @returns Array of matching version info objects, sorted by priority (descending).
 #[napi]
 pub fn get_all_versions_for_game(game: String, is_vr: Option<bool>) -> Vec<JsVersionInfo> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_all_for_game(&game, is_vr)
         .iter()
@@ -231,7 +322,7 @@ pub fn get_all_versions_for_game(game: String, is_vr: Option<bool>) -> Vec<JsVer
 /// @returns Array of version info objects matching the specified mode.
 #[napi]
 pub fn get_correct_versions(is_vr: bool) -> Vec<JsVersionInfo> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_correct_versions(is_vr)
         .iter()
@@ -245,12 +336,43 @@ pub fn get_correct_versions(is_vr: bool) -> Vec<JsVersionInfo> {
 /// @returns Array of version info objects that do NOT match the specified mode.
 #[napi]
 pub fn get_wrong_versions(is_vr: bool) -> Vec<JsVersionInfo> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_wrong_versions(is_vr)
         .iter()
         .map(|v| core_version_info_to_js(v))
         .collect()
+}
+
+/// Get a filtered snapshot of the version registry.
+///
+/// @param game - Optional game identifier (defaults to "Fallout4")
+/// @param is_vr - Optional VR filter. If omitted, includes all versions for the game.
+/// @returns Snapshot with selected versions and unknown-version handling config.
+#[napi]
+pub fn get_version_registry(
+    game: Option<String>,
+    is_vr: Option<bool>,
+) -> JsVersionRegistrySnapshot {
+    let game = game.unwrap_or_else(|| "Fallout4".to_string());
+    let registry = core_get_version_registry();
+    let versions = registry
+        .get_all_for_game(&game, is_vr)
+        .iter()
+        .map(|v| core_version_info_to_js(v))
+        .collect();
+    let unknown = registry.unknown_version_handling();
+
+    JsVersionRegistrySnapshot {
+        game,
+        is_vr,
+        versions,
+        unknown_version_handling: JsUnknownVersionHandling {
+            strategy: unknown_strategy_to_string(&unknown.strategy),
+            log_level: log_level_to_string(&unknown.log_level),
+            defaults: unknown.defaults.clone(),
+        },
+    }
 }
 
 // ============================================================================
@@ -273,7 +395,7 @@ pub fn get_wrong_versions(is_vr: bool) -> Vec<JsVersionInfo> {
 #[napi]
 pub fn match_version(version: String, game: String, is_vr: bool) -> Result<JsMatchResult> {
     let detected = GameVersion::parse(&version).map_err(to_napi_err)?;
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     let result = registry.match_version(&detected, &game, is_vr);
 
     Ok(JsMatchResult {
@@ -296,7 +418,7 @@ pub fn match_version(version: String, game: String, is_vr: bool) -> Result<JsMat
 #[napi]
 pub fn get_address_library_filename(version: String, is_vr: bool) -> Result<Option<String>> {
     let game_version = GameVersion::parse(&version).map_err(to_napi_err)?;
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     Ok(registry.get_address_library_filename(&game_version, is_vr))
 }
 
@@ -310,7 +432,7 @@ pub fn get_address_library_filename(version: String, is_vr: bool) -> Result<Opti
 /// @returns Array of crash generator config objects. Empty array if version ID not found.
 #[napi]
 pub fn get_crashgen_versions(id: String) -> Vec<JsCrashgenConfig> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_crashgen_versions(&id)
         .iter()
@@ -324,7 +446,7 @@ pub fn get_crashgen_versions(id: String) -> Vec<JsCrashgenConfig> {
 /// @returns Array of version strings. Empty array if version ID not found.
 #[napi]
 pub fn get_crashgen_version_strings(id: String) -> Vec<String> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_crashgen_version_strings(&id)
         .iter()
@@ -339,10 +461,100 @@ pub fn get_crashgen_version_strings(id: String) -> Vec<String> {
 /// @returns The crash generator config, or null if not found.
 #[napi]
 pub fn get_crashgen_for_version(id: String, crashgen_version: String) -> Option<JsCrashgenConfig> {
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     registry
         .get_crashgen_for_version(&id, &crashgen_version)
         .map(core_crashgen_to_js)
+}
+
+/// Get all known executable hashes for the selected game/mode.
+///
+/// @param game - Optional game identifier (defaults to "Fallout4")
+/// @param is_vr - Optional VR filter (if omitted, includes all game modes)
+/// @returns Unique executable SHA-256 hashes.
+#[napi]
+pub fn get_all_exe_hashes(game: Option<String>, is_vr: Option<bool>) -> Vec<String> {
+    let game = game.unwrap_or_else(|| "Fallout4".to_string());
+    let registry = core_get_version_registry();
+
+    let mut hashes: BTreeSet<String> = BTreeSet::new();
+    for version in registry.get_all_for_game(&game, is_vr) {
+        if let Some(exe_hash) = &version.exe_hash {
+            hashes.insert(exe_hash.clone());
+        }
+    }
+
+    hashes.into_iter().collect()
+}
+
+/// Get all known script hashes grouped by script filename.
+///
+/// @param game - Optional game identifier (defaults to "Fallout4")
+/// @param is_vr - Optional VR filter (if omitted, includes all game modes)
+/// @returns Map of script filename to unique SHA-256 hashes.
+#[napi]
+pub fn get_all_script_hashes(
+    game: Option<String>,
+    is_vr: Option<bool>,
+) -> HashMap<String, Vec<String>> {
+    let game = game.unwrap_or_else(|| "Fallout4".to_string());
+    let registry = core_get_version_registry();
+
+    let mut aggregate: HashMap<String, BTreeSet<String>> = HashMap::new();
+    for version in registry.get_all_for_game(&game, is_vr) {
+        if let Some(xse) = &version.xse {
+            for (script_name, hash_val) in &xse.script_hashes {
+                aggregate
+                    .entry(script_name.clone())
+                    .or_default()
+                    .insert(hash_val.clone());
+            }
+        }
+    }
+
+    aggregate
+        .into_iter()
+        .map(|(script_name, hashes)| (script_name, hashes.into_iter().collect()))
+        .collect()
+}
+
+/// Get script hashes for a specific version ID.
+///
+/// @param id - The version ID (e.g., "FO4_OG")
+/// @returns Map of script filename to SHA-256 hash for that version.
+#[napi]
+pub fn get_script_hashes_for_version(id: String) -> HashMap<String, String> {
+    let registry = core_get_version_registry();
+    registry
+        .get_by_id(&id)
+        .and_then(|version| version.xse.as_ref())
+        .map(|xse| xse.script_hashes.iter().cloned().collect())
+        .unwrap_or_default()
+}
+
+/// Get unknown-version handling configuration.
+#[napi]
+pub fn get_unknown_version_handling() -> JsUnknownVersionHandling {
+    let registry = core_get_version_registry();
+    let handling = registry.unknown_version_handling();
+    JsUnknownVersionHandling {
+        strategy: unknown_strategy_to_string(&handling.strategy),
+        log_level: log_level_to_string(&handling.log_level),
+        defaults: handling.defaults.clone(),
+    }
+}
+
+/// Get the default version ID used for unknown versions for a game.
+///
+/// @param game - Game identifier (e.g., "Fallout4")
+/// @returns Default version ID or null if not configured.
+#[napi]
+pub fn get_unknown_version_default(game: String) -> Option<String> {
+    let registry = core_get_version_registry();
+    registry
+        .unknown_version_handling()
+        .get_default(&game)
+        .map(String::from)
 }
 
 // ============================================================================
@@ -360,7 +572,7 @@ pub fn get_crashgen_for_version(id: String, crashgen_version: String) -> Option<
 #[napi]
 pub fn is_version_compatible(id: String, version: String) -> Result<bool> {
     let detected = GameVersion::parse(&version).map_err(to_napi_err)?;
-    let registry = get_version_registry();
+    let registry = core_get_version_registry();
     Ok(registry
         .get_by_id(&id)
         .is_some_and(|info| info.is_compatible_with(&detected)))

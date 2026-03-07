@@ -1,6 +1,20 @@
 #include "cli_args.h"
+#include <algorithm>
 #include <CLI/CLI.hpp>
 #include <thread>
+
+
+uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count) {
+    auto recommended = std::max(cpu_count, 4u) - 2u;
+    return std::min(recommended, 32u);
+}
+
+uint32_t effective_concurrency(uint32_t requested, uint32_t cpu_count) {
+    if (requested > 0) {
+        return requested;
+    }
+    return auto_concurrency_for_cpu_count(cpu_count);
+}
 
 CliArgs parse_args(int argc, char* argv[]) {
     CliArgs args;
@@ -11,7 +25,10 @@ CliArgs parse_args(int argc, char* argv[]) {
         ->default_val("Fallout4")
         ->check(CLI::IsMember({"Fallout4", "Skyrim"}));
 
-    app.add_flag("--vr", args.vr_mode, "Enable VR mode");
+    app.add_option("--game-version", args.game_version,
+                   "Game version mode (auto, Original, NextGen, AnniversaryEdition/AE, VR)")
+        ->default_val("auto")
+        ->check(CLI::IsMember({"auto", "Original", "NextGen", "AnniversaryEdition", "AE", "VR"}));
     app.add_flag("--fcx-mode", args.fcx_mode, "Enable FCX enhanced analysis");
     app.add_flag("--show-fid-values", args.show_fid_values, "Show FormID database values");
     app.add_flag("--simplify-logs", args.simplify_logs, "Remove specified strings from logs");
@@ -19,10 +36,10 @@ CliArgs parse_args(int argc, char* argv[]) {
     app.add_option("--scan-path", args.scan_path, "Custom crash log directory");
 
     auto cpu_count = std::thread::hardware_concurrency();
-    auto recommended = (cpu_count > 2) ? (cpu_count - 2) : 2u;
+    auto recommended = auto_concurrency_for_cpu_count(cpu_count);
     app.add_option("--max-concurrent", args.max_concurrent,
-        "Max parallel scans (0=auto, recommended: " + std::to_string(recommended) +
-        " for " + std::to_string(cpu_count) + " cores)")
+                   "Max parallel scans (0=auto, recommended: " + std::to_string(recommended) + " for " +
+                       std::to_string(cpu_count) + " cores)")
         ->default_val(0)
         ->check(CLI::Range(0u, 32u));
 
@@ -32,6 +49,10 @@ CliArgs parse_args(int argc, char* argv[]) {
         app.parse(argc, argv);
     } catch (const CLI::ParseError& e) {
         std::exit(app.exit(e));
+    }
+
+    if (args.game_version == "AE") {
+        args.game_version = "AnniversaryEdition";
     }
 
     return args;

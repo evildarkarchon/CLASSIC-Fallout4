@@ -88,12 +88,17 @@ mod enums;
 mod formatter;
 pub mod logging;
 mod message;
+mod redaction;
 
 // Re-export public API
 pub use enums::{MessageTarget, MessageType};
 pub use formatter::{format_log_message, strip_emoji};
-pub use logging::Logger;
+pub use logging::{
+    ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+    EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event,
+};
 pub use message::Message;
+pub use redaction::{redact_contract_fields, redact_field_value};
 
 #[cfg(test)]
 mod tests {

@@ -1,0 +1,298 @@
+"""Registry-driven runtime parity smoke tests for maintained Python bindings."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from .fixtures.runtime_coverage_registry import get_runtime_coverage_case_ids
+from .fixtures.tier1_parity_fixtures import (
+    PARITY_GAME_YAML,
+    PARITY_IGNORE_YAML,
+    PARITY_MAIN_YAML,
+)
+
+
+THIS_SUITE = "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py"
+
+
+def test_imports_and_versions() -> None:
+    import classic_config
+    import classic_pybridge
+    import classic_scanlog
+    import classic_version_registry
+
+    assert isinstance(classic_config.__version__, str)
+    assert isinstance(classic_pybridge.__version__, str)
+    assert isinstance(classic_scanlog.__version__, str)
+    assert isinstance(classic_version_registry.__version__, str)
+
+
+def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_config
+
+    data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        PARITY_GAME_YAML,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    assert data.classic_version == "9.0.0"
+    assert data.xse_acronym == "F4SE"
+    assert data.crashgen_name == "Buffout 4"
+    classic_config.clear_yaml_cache()
+
+    config = classic_config.ClassicConfig()
+    assert config.game_version == "auto"
+    assert config.get_config_path().endswith("CLASSIC Settings.yaml")
+
+    config.paths = classic_config.PathConfig(game_root=str(tmp_path))
+    config.validate_paths()
+
+    config_path = tmp_path / "classic-settings.yaml"
+    config.save_to_yaml(str(config_path))
+    loaded = classic_config.ClassicConfig.load_from_yaml(str(config_path))
+    assert loaded.paths.game_root == str(tmp_path)
+
+    monkeypatch.chdir(tmp_path)
+    default_settings = tmp_path / "CLASSIC Settings.yaml"
+    default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
+    auto_loaded = classic_config.ClassicConfig.load_or_default()
+    assert auto_loaded.fcx_mode is True
+
+    local_yaml_dir = tmp_path / "CLASSIC Data"
+    local_yaml_dir.mkdir()
+    local_yaml = local_yaml_dir / "CLASSIC Fallout4 Local.yaml"
+    local_yaml.write_text(
+        "\n".join(
+            (
+                "Game_Info:",
+                '  Root_Folder_Game: "C:/Games/Fallout4"',
+                '  Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"',
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    config.load_local_yaml_paths("Fallout4")
+    assert config.paths.game_root == "C:/Games/Fallout4"
+    assert config.paths.docs_root == "C:/Users/Test/Documents/My Games/Fallout4"
+
+    assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
+    assert (
+        classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
+        == "Fallout4 Database"
+    )
+    assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
+        "CLASSIC Fallout4.yaml"
+    )
+
+
+def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_config
+    import classic_scanlog
+
+    parser = classic_scanlog.LogParser()
+    assert parser.detect_vr_log("Fallout4VR.exe") is True
+    assert isinstance(
+        classic_scanlog.extract_formids_batch([["Form ID: FF001234"]]), list
+    )
+
+    repo_root = Path(__file__).resolve().parents[3]
+    log_path = (
+        repo_root
+        / "ClassicLib-rs"
+        / "business-logic"
+        / "classic-scanlog-core"
+        / "benches"
+        / "fixtures"
+        / "crash-12624.log"
+    )
+    log_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+
+    parsed_version = classic_scanlog.parse_crashgen_version("Buffout 4 v1.28.6")
+    assert parsed_version is not None
+    assert parsed_version.major == 1
+    assert parsed_version.minor == 28
+    assert parsed_version.patch == 6
+
+    status = classic_scanlog.check_crashgen_version_status(
+        "1.26.0",
+        ["1.28.6", "1.37.0"],
+    )
+    assert status == classic_scanlog.CrashgenVersionStatus.OUTDATED
+
+    yamldata = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        PARITY_GAME_YAML,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    config = classic_scanlog.AnalysisConfig.from_yamldata(
+        yamldata,
+        "Fallout4",
+        "auto",
+        simplify_logs=True,
+        remove_list=["skip-me"],
+    )
+    assert config.remove_list == ["skip-me"]
+
+    assert isinstance(parser.parse_segments(log_lines), list)
+    assert isinstance(parser.extract_formids(log_lines), list)
+    assert isinstance(parser.extract_plugins(log_lines), list)
+
+    matcher = classic_scanlog.PatternMatcher([r"Buffout"])
+    assert matcher.find_first("Buffout 4 detected") is not None
+
+    gpu_detector = classic_scanlog.GpuDetector()
+    gpu_info = gpu_detector.extract_gpu_info(
+        ["GPU #1: Nvidia GeForce RTX 4070", "GPU #2: Intel UHD Graphics"]
+    )
+    assert "Nvidia" in gpu_info.manufacturer
+
+    papyrus_log = tmp_path / "Papyrus.0.log"
+    papyrus_log.write_text(
+        "\n".join(
+            (
+                "Dumping Stacks",
+                "warning: sample warning",
+                "error: sample error",
+            )
+        ),
+        encoding="utf-8",
+    )
+    papyrus = classic_scanlog.PapyrusAnalyzer(str(papyrus_log))
+    papyrus_stats = papyrus.analyze_full()
+    assert papyrus_stats.dumps >= 1
+
+    orchestrator = classic_scanlog.Orchestrator(config)
+    result = orchestrator.process_log(str(log_path))
+    assert isinstance(result.report_lines, list)
+
+    batch_results = orchestrator.process_logs_batch([str(log_path)], max_concurrent=1)
+    assert len(batch_results) == 1
+
+
+def _run_version_registry_tier1_smoke(
+    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import classic_version_registry
+
+    registry = classic_version_registry.get_version_registry()
+    assert registry is not None
+
+    info = registry.get_by_id("FO4_OG")
+    assert info is not None
+    assert info.short_name == "OG"
+
+    result = classic_version_registry.match_version_string(
+        "1.10.163.0", "Fallout4", False
+    )
+    assert result.is_valid is True
+
+    game_version = classic_version_registry.GameVersion("1.10.163.0")
+    assert (
+        game_version.semantic_distance(
+            classic_version_registry.GameVersion("1.10.984.0")
+        )
+        > 0
+    )
+
+    registry = classic_version_registry.VersionRegistry()
+    assert registry.get_by_version("1.10.163.0") is not None
+    assert registry.get_by_short_name("OG") is not None
+    assert len(registry.get_all()) >= 1
+    assert len(registry.get_all_for_game("Fallout4")) >= 1
+    assert len(registry.get_correct_versions(False)) >= 1
+    assert isinstance(registry.get_wrong_versions(False), list)
+
+    match_result = registry.match_version("1.10.163.0", "Fallout4", False)
+    assert match_result.is_exact is True
+    assert match_result.confidence_enum.is_high_confidence() is True
+
+    assert registry.get_address_library_filename("1.10.163.0", False) is not None
+    assert len(registry.get_crashgen_configs("FO4_OG")) >= 1
+    assert len(registry.get_crashgen_versions("FO4_OG")) >= 1
+    assert registry.get_crashgen_for_version("FO4_OG", "1.28.6") is not None
+    assert isinstance(registry.get_all_exe_hashes(), set)
+    assert isinstance(registry.get_all_script_hashes(), dict)
+    assert isinstance(registry.get_script_hashes_for_version("FO4_OG"), dict)
+    assert registry.unknown_version_handling.get_default("Fallout4") is not None
+
+
+def _run_config_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_config
+
+    data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        PARITY_GAME_YAML,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    assert data.classic_version_date == "2026-02-25"
+    assert data.warn_outdated == "Outdated"
+    assert data.autoscan_text == "Autoscan Fallout 4"
+
+
+def _run_scanlog_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_scanlog
+
+    version = classic_scanlog.parse_crashgen_version("Buffout 4 v1.28.6")
+    assert version is not None
+    assert version.to_tuple() == (1, 28, 6)
+
+    parser = classic_scanlog.LogParser()
+    errors = parser.find_errors(["INFO: ok", "ERROR: sample failure"])
+    assert isinstance(errors, list)
+    assert len(errors) >= 1
+
+    matcher = classic_scanlog.PatternMatcher([r"Buffout", r"GPU"])
+    assert len(matcher.find_all("Buffout 4 GPU warning")) >= 1
+    assert matcher.has_match("GPU fallback detected") is True
+
+
+def _run_version_registry_tier2_smoke(
+    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import classic_version_registry
+
+    base = classic_version_registry.GameVersion("1.10.163.0")
+    newer = classic_version_registry.GameVersion("1.10.984.0")
+    assert base.semantic_distance(newer) > 0
+
+
+def _run_aux_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_pybridge
+
+    classic_pybridge.clear_metrics()
+    classic_pybridge.record_operation(
+        classic_pybridge.BridgeOperationType.RunAsync, 0.01, True
+    )
+    metrics = classic_pybridge.get_metrics()
+    assert metrics.run_async_count >= 1
+    assert classic_pybridge.is_runtime_available() is True
+
+    info = classic_pybridge.get_runtime_info()
+    assert info.available is True
+
+
+CASE_RUNNERS = {
+    "config-tier1-smoke": _run_config_tier1_smoke,
+    "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
+    "version-registry-tier1-smoke": _run_version_registry_tier1_smoke,
+    "config-tier2-smoke": _run_config_tier2_smoke,
+    "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
+    "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
+    "aux-tier2-smoke": _run_aux_tier2_smoke,
+}
+
+
+@pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
+def test_runtime_coverage_registry_cases(
+    case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    CASE_RUNNERS[case_id](tmp_path, monkeypatch)

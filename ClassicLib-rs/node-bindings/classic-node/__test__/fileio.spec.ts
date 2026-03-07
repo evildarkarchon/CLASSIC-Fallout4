@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "fs";
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import {
@@ -16,6 +16,7 @@ import {
   JsGameFilesManager,
   CRASH_LOG_PATTERN,
   CRASH_AUTOSCAN_PATTERN,
+  writeAutoscanReport,
 } from "../index.js";
 
 // ============================================================================
@@ -614,6 +615,28 @@ describe("JsLogCollector", () => {
     expect(dir).toContain("Pastebin");
     expect(dir).toContain("Crash Logs");
   });
+
+  test("collectAll organizes logs from base, XSE, and custom folders", async () => {
+    const xseDir = join(tempDir, "docs", "F4SE");
+    const customDir = join(tempDir, "custom");
+    const baseLog = join(tempDir, "crash-2026-03-06-12-00-00.log");
+    const xseLog = join(xseDir, "crash-2026-03-06-12-01-00.log");
+    const customLog = join(customDir, "crash-2026-03-06-12-02-00.log");
+
+    mkdirSync(xseDir, { recursive: true });
+    mkdirSync(customDir, { recursive: true });
+    writeFileSync(baseLog, "base log", "utf8");
+    writeFileSync(xseLog, "xse log", "utf8");
+    writeFileSync(customLog, "custom log", "utf8");
+
+    const collector = new JsLogCollector(tempDir, xseDir, customDir);
+    const logPaths = await collector.collectAll();
+
+    expect(logPaths.length).toBe(3);
+    expect(logPaths.some((entry) => entry.endsWith("12-00-00.log"))).toBe(true);
+    expect(logPaths.some((entry) => entry.endsWith("12-01-00.log"))).toBe(true);
+    expect(logPaths.some((entry) => entry.endsWith("12-02-00.log"))).toBe(true);
+  });
 });
 
 describe("Log collection constants", () => {
@@ -623,6 +646,16 @@ describe("Log collection constants", () => {
 
   test("CRASH_AUTOSCAN_PATTERN is defined", () => {
     expect(CRASH_AUTOSCAN_PATTERN).toBe("crash-*-AUTOSCAN.md");
+  });
+
+  test("writeAutoscanReport writes next to the source log", async () => {
+    const logPath = join(tempDir, "crash-2026-03-06-12-00-00.log");
+    writeFileSync(logPath, "log content", "utf8");
+
+    const reportPath = await writeAutoscanReport(logPath, "# report body\n");
+
+    expect(reportPath).toContain("AUTOSCAN.md");
+    expect(readFileSync(reportPath, "utf8")).toBe("# report body\n");
   });
 });
 

@@ -18,16 +18,22 @@
 //! ```
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use std::hint::black_box;
 use std::sync::Arc;
+use std::time::Duration;
 
 // Import shared benchmark configuration from workspace benches/common/
 #[path = "../../../benches/common/mod.rs"]
 mod common;
+#[path = "../../../benches/common/db_fixtures.rs"]
+mod db_fixtures;
 
+use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     FormIDAnalyzerCore, LogParser, PatternMatcher, RecordScanner, contains_plugin, contains_record,
     detect_plugins_batch, scan_records_batch,
 };
+use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
 
 // =============================================================================
@@ -127,7 +133,7 @@ fn segment_parsing_benchmarks(c: &mut Criterion) {
                 let parser = LogParser::new(None).expect("parser creation should succeed");
                 b.iter(|| {
                     parser.clear_caches();
-                    parser.parse_segments(lines)
+                    parser.parse_all_sections_arc(lines)
                 });
             },
         );
@@ -139,8 +145,8 @@ fn segment_parsing_benchmarks(c: &mut Criterion) {
             |b, lines| {
                 let parser = LogParser::new(None).expect("parser creation should succeed");
                 // Prime the cache
-                parser.parse_segments(lines);
-                b.iter(|| parser.parse_segments(lines));
+                parser.parse_all_sections_arc(lines);
+                b.iter(|| parser.parse_all_sections_arc(lines));
             },
         );
     }
@@ -203,6 +209,88 @@ fn formid_extraction_benchmarks(c: &mut Criterion) {
     });
 
     group.finish();
+}
+
+fn formid_resolution_db_benchmarks(c: &mut Criterion) {
+    let runtime = get_runtime();
+    let fixture = runtime
+        .block_on(db_fixtures::DeterministicDbFixture::create(
+            db_fixtures::FixtureConfig::default(),
+        ))
+        .expect("deterministic fixture generation should succeed");
+
+    let mut group = c.benchmark_group("scanlog_formid_resolution");
+    let pool = Arc::new(DatabasePool::new(
+        Some(8),
+        Duration::from_secs(900),
+        fixture.table_name.clone(),
+    ));
+    runtime
+        .block_on(pool.initialize(vec![fixture.db_paths[0].clone()]))
+        .expect("database fixture initialization should succeed");
+
+    let analyzer = FormIDAnalyzerCore::new(
+        Some(pool.clone()),
+        true, // show_formid_values=true to force DB-backed value resolution path
+        "Buffout 4".to_string(),
+        IndexMap::new(),
+        IndexMap::new(),
+        IndexMap::new(),
+    )
+    .expect("analyzer creation should succeed");
+
+    let crashlog_plugins: IndexMap<String, String> =
+        fixture.plugin_prefix_pairs().into_iter().collect();
+
+    for (scenario_id, formid_count) in [
+        ("cold_small_32", 32usize),
+        ("cold_medium_128", 128usize),
+        ("cold_large_512", 512usize),
+    ] {
+        let callstack_lines = fixture.formid_callstack_lines(formid_count);
+        group.throughput(Throughput::Elements(formid_count as u64));
+
+        group.bench_with_input(
+            BenchmarkId::new("resolve_with_db", scenario_id),
+            &callstack_lines,
+            |b, lines| {
+                b.iter(|| {
+                    pool.clear_cache(false);
+                    let formids = analyzer.extract_formids(lines.clone());
+                    let report_lines = runtime
+                        .block_on(analyzer.formid_match(formids, &crashlog_plugins))
+                        .expect("formid resolution should succeed");
+                    black_box(report_lines.len())
+                });
+            },
+        );
+    }
+
+    // Warm-cache run that exercises the same resolution path without cache clearing.
+    let warm_lines = fixture.formid_callstack_lines(128);
+    let warm_formids = analyzer.extract_formids(warm_lines.clone());
+    runtime
+        .block_on(analyzer.formid_match(warm_formids, &crashlog_plugins))
+        .expect("warm cache priming should succeed");
+
+    group.bench_with_input(
+        BenchmarkId::new("resolve_with_db", "warm_medium_128"),
+        &warm_lines,
+        |b, lines| {
+            b.iter(|| {
+                let formids = analyzer.extract_formids(lines.clone());
+                let report_lines = runtime
+                    .block_on(analyzer.formid_match(formids, &crashlog_plugins))
+                    .expect("formid resolution should succeed");
+                black_box(report_lines.len())
+            });
+        },
+    );
+
+    group.finish();
+    runtime
+        .block_on(pool.close())
+        .expect("database pool close should succeed");
 }
 
 // =============================================================================
@@ -409,7 +497,7 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
                     let lines = log_to_lines(content);
 
                     // Parse segments
-                    let _segments = parser.parse_segments(&lines);
+                    let _segments = parser.parse_all_sections_arc(&lines);
 
                     // Pattern matching
                     let _matches = pattern_matcher.find_all(content);
@@ -491,6 +579,7 @@ criterion_group! {
     targets =
         segment_parsing_benchmarks,
         formid_extraction_benchmarks,
+        formid_resolution_db_benchmarks,
         pattern_matching_benchmarks,
         plugin_detection_benchmarks,
         record_scanning_benchmarks,

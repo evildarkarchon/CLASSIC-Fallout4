@@ -4,6 +4,65 @@ if(NOT Qt6Test_FOUND)
     return()
 endif()
 
+set(CLASSIC_GUI_TEST_TIMEOUT_SECONDS 600 CACHE STRING
+    "Timeout (seconds) for classic-gui CTest tests")
+
+set(_classic_gui_qt_bin_dir "${Qt6_DIR}/../../bin")
+set(_classic_gui_qt_plugins_dir "")
+foreach(_plugins_candidate
+        "${Qt6_DIR}/../../Qt6/plugins"
+        "${Qt6_DIR}/../../plugins"
+        "${Qt6_DIR}/../../../plugins")
+    if(EXISTS "${_plugins_candidate}/platforms")
+        set(_classic_gui_qt_plugins_dir "${_plugins_candidate}")
+        break()
+    endif()
+endforeach()
+
+if(_classic_gui_qt_plugins_dir STREQUAL "")
+    set(_classic_gui_qt_plugins_dir "${Qt6_DIR}/../../plugins")
+endif()
+
+set(_classic_gui_qt_platforms_dir "${_classic_gui_qt_plugins_dir}/platforms")
+
+set(CLASSIC_GUI_TEST_QPA_PLATFORM "offscreen")
+set(_classic_gui_qoffscreen_found FALSE)
+foreach(_plugin_file
+        qoffscreen.dll
+        libqoffscreen.so
+        libqoffscreen.dylib
+        qoffscreen)
+    if(EXISTS "${_classic_gui_qt_platforms_dir}/${_plugin_file}")
+        set(_classic_gui_qoffscreen_found TRUE)
+        break()
+    endif()
+endforeach()
+
+set(_classic_gui_qminimal_found FALSE)
+foreach(_plugin_file
+        qminimal.dll
+        libqminimal.so
+        libqminimal.dylib
+        qminimal)
+    if(EXISTS "${_classic_gui_qt_platforms_dir}/${_plugin_file}")
+        set(_classic_gui_qminimal_found TRUE)
+        break()
+    endif()
+endforeach()
+
+if(NOT _classic_gui_qoffscreen_found)
+    if(_classic_gui_qminimal_found)
+        set(CLASSIC_GUI_TEST_QPA_PLATFORM "minimal")
+    else()
+        message(FATAL_ERROR
+            "classic-gui tests require a headless Qt platform plugin (offscreen or minimal), "
+            "but neither was found in ${_classic_gui_qt_platforms_dir}")
+    endif()
+endif()
+
+message(STATUS
+    "classic-gui tests: QT_PLUGIN_PATH=${_classic_gui_qt_plugins_dir}, QT_QPA_PLATFORM=${CLASSIC_GUI_TEST_QPA_PLATFORM}")
+
 function(add_classic_gui_qt_test target)
     add_executable(${target}
         ${ARGN}
@@ -23,10 +82,10 @@ function(add_classic_gui_qt_test target)
     endif()
 
     add_test(NAME ${target} COMMAND ${target})
-    set(_qt_bin_dir "${Qt6_DIR}/../../../bin")
     set_tests_properties(${target} PROPERTIES
-        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
-        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${_qt_bin_dir}"
+        ENVIRONMENT "QT_QPA_PLATFORM=${CLASSIC_GUI_TEST_QPA_PLATFORM};QT_PLUGIN_PATH=${_classic_gui_qt_plugins_dir};QT_QPA_PLATFORM_PLUGIN_PATH=${_classic_gui_qt_platforms_dir}"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${_classic_gui_qt_bin_dir}"
+        TIMEOUT ${CLASSIC_GUI_TEST_TIMEOUT_SECONDS}
     )
 endfunction()
 

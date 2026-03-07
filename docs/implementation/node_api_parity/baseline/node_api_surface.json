@@ -1,0 +1,2625 @@
+{
+  "generated_at_utc": "2026-03-06T06:47:30.498683+00:00",
+  "scope": {
+    "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
+  },
+  "exports": [
+    {
+      "export": "BATCH_CACHE_TTL",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const BATCH_CACHE_TTL: number"
+    },
+    {
+      "export": "BackupManager",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class BackupManager {"
+    },
+    {
+      "export": "CRASH_AUTOSCAN_PATTERN",
+      "kind": "const",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const CRASH_AUTOSCAN_PATTERN: string"
+    },
+    {
+      "export": "CRASH_LOG_PATTERN",
+      "kind": "const",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const CRASH_LOG_PATTERN: string"
+    },
+    {
+      "export": "ClassicConfigJs",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ClassicConfigJs {"
+    },
+    {
+      "export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_CACHE_CLEANUP_INTERVAL: number"
+    },
+    {
+      "export": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_CACHE_CLEANUP_THRESHOLD: number"
+    },
+    {
+      "export": "DEFAULT_CACHE_TTL",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_CACHE_TTL: number"
+    },
+    {
+      "export": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const DEFAULT_QUERY_CACHE_CAPACITY: number"
+    },
+    {
+      "export": "DocsPathFinder",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class DocsPathFinder {"
+    },
+    {
+      "export": "DocumentsChecker",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class DocumentsChecker {"
+    },
+    {
+      "export": "Fallout4VersionInfo",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface Fallout4VersionInfo {"
+    },
+    {
+      "export": "FileIoConfig",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface FileIoConfig {"
+    },
+    {
+      "export": "GamePathFinder",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class GamePathFinder {"
+    },
+    {
+      "export": "GithubClient",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class GithubClient {"
+    },
+    {
+      "export": "JsAddressLibInfo",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsAddressLibInfo {"
+    },
+    {
+      "export": "JsAddressLibraryConfig",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsAddressLibraryConfig {"
+    },
+    {
+      "export": "JsAnalysisBuildOptions",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsAnalysisBuildOptions {"
+    },
+    {
+      "export": "JsAnalysisConfig",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsAnalysisConfig {"
+    },
+    {
+      "export": "JsAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsAnalysisResult {"
+    },
+    {
+      "export": "JsBa2Issues",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsBa2Issues {"
+    },
+    {
+      "export": "JsBa2ScanResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsBa2ScanResult {"
+    },
+    {
+      "export": "JsBa2Scanner",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsBa2Scanner {"
+    },
+    {
+      "export": "JsBackupInfo",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsBackupInfo {"
+    },
+    {
+      "export": "JsBackupManager",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsBackupManager {"
+    },
+    {
+      "export": "JsBatchEntry",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsBatchEntry {"
+    },
+    {
+      "export": "JsCheckResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCheckResult {"
+    },
+    {
+      "export": "JsCheckRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCheckRule {"
+    },
+    {
+      "export": "JsCheckType",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsCheckType {"
+    },
+    {
+      "export": "JsCompatibleRange",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCompatibleRange {"
+    },
+    {
+      "export": "JsConfigDuplicateDetector",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsConfigDuplicateDetector {"
+    },
+    {
+      "export": "JsConfigIssue",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsConfigIssue {"
+    },
+    {
+      "export": "JsCrashgenCheckResult",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenCheckResult {"
+    },
+    {
+      "export": "JsCrashgenChecker",
+      "kind": "class",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsCrashgenChecker {"
+    },
+    {
+      "export": "JsCrashgenConfig",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenConfig {"
+    },
+    {
+      "export": "JsCrashgenRegistryEntry",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenRegistryEntry {"
+    },
+    {
+      "export": "JsCrashgenReport",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenReport {"
+    },
+    {
+      "export": "JsCrashgenSettingsRules",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenSettingsRules {"
+    },
+    {
+      "export": "JsCrashgenVersionInfo",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenVersionInfo {"
+    },
+    {
+      "export": "JsCrashgenVersionStatus",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsCrashgenVersionStatus {"
+    },
+    {
+      "export": "JsDDSAnalyzer",
+      "kind": "type",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export type JsDDSAnalyzer = JsDdsAnalyzer"
+    },
+    {
+      "export": "JsDatabasePool",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsDatabasePool {"
+    },
+    {
+      "export": "JsDdsAnalyzer",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsDdsAnalyzer {"
+    },
+    {
+      "export": "JsDdsBatchResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsDdsBatchResult {"
+    },
+    {
+      "export": "JsDdsIssue",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsDdsIssue {"
+    },
+    {
+      "export": "JsDuplicateGroup",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsDuplicateGroup {"
+    },
+    {
+      "export": "JsEnbChecker",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsEnbChecker {"
+    },
+    {
+      "export": "JsEnbConfigResult",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsEnbConfigResult {"
+    },
+    {
+      "export": "JsEnbResult",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsEnbResult {"
+    },
+    {
+      "export": "JsEnbValidationResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsEnbValidationResult {"
+    },
+    {
+      "export": "JsExpectedValue",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsExpectedValue {"
+    },
+    {
+      "export": "JsFallout4Version",
+      "kind": "const_enum",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsFallout4Version {"
+    },
+    {
+      "export": "JsFileGenerator",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsFileGenerator {"
+    },
+    {
+      "export": "JsFileIO",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsFileIO {"
+    },
+    {
+      "export": "JsFileOperationResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFileOperationResult {"
+    },
+    {
+      "export": "JsGameFilesManager",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsGameFilesManager {"
+    },
+    {
+      "export": "JsGameId",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsGameId {"
+    },
+    {
+      "export": "JsGameIntegrityChecker",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsGameIntegrityChecker {"
+    },
+    {
+      "export": "JsGameScanConfig",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameScanConfig {"
+    },
+    {
+      "export": "JsGameScanResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameScanResult {"
+    },
+    {
+      "export": "JsGameVersion",
+      "kind": "const_enum",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsGameVersion {"
+    },
+    {
+      "export": "JsGithubAsset",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGithubAsset {"
+    },
+    {
+      "export": "JsGithubRelease",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGithubRelease {"
+    },
+    {
+      "export": "JsGpuInfo",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGpuInfo {"
+    },
+    {
+      "export": "JsIniCheckResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsIniCheckResult {"
+    },
+    {
+      "export": "JsIniValidator",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsIniValidator {"
+    },
+    {
+      "export": "JsIntegrityCheckResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsIntegrityCheckResult {"
+    },
+    {
+      "export": "JsIntegrityConfig",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsIntegrityConfig {"
+    },
+    {
+      "export": "JsIssueSeverity",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsIssueSeverity {"
+    },
+    {
+      "export": "JsLogCollector",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsLogCollector {"
+    },
+    {
+      "export": "JsLogErrorEntry",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLogErrorEntry {"
+    },
+    {
+      "export": "JsLogProcessor",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsLogProcessor {"
+    },
+    {
+      "export": "JsLogSegments",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLogSegments {"
+    },
+    {
+      "export": "JsLogger",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsLogger {"
+    },
+    {
+      "export": "JsMatchResult",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsMatchResult {"
+    },
+    {
+      "export": "JsMessage",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsMessage {"
+    },
+    {
+      "export": "JsMessageTarget",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsMessageTarget {"
+    },
+    {
+      "export": "JsMessageType",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsMessageType {"
+    },
+    {
+      "export": "JsModDuplicateEntry",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModDuplicateEntry {"
+    },
+    {
+      "export": "JsModIniScanResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModIniScanResult {"
+    },
+    {
+      "export": "JsModScanResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModScanResult {"
+    },
+    {
+      "export": "JsModSite",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsModSite {"
+    },
+    {
+      "export": "JsPapyrusStats",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPapyrusStats {"
+    },
+    {
+      "export": "JsPathConfig",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPathConfig {"
+    },
+    {
+      "export": "JsPathDetectionResult",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPathDetectionResult {"
+    },
+    {
+      "export": "JsPoolStatistics",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPoolStatistics {"
+    },
+    {
+      "export": "JsPreflightAction",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPreflightAction {"
+    },
+    {
+      "export": "JsPreflightRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPreflightRule {"
+    },
+    {
+      "export": "JsRuleMessages",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsRuleMessages {"
+    },
+    {
+      "export": "JsRuleTarget",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsRuleTarget {"
+    },
+    {
+      "export": "JsTomlConfigIssue",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsTomlConfigIssue {"
+    },
+    {
+      "export": "JsTomlIssueSeverity",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsTomlIssueSeverity {"
+    },
+    {
+      "export": "JsUnknownVersionHandling",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUnknownVersionHandling {"
+    },
+    {
+      "export": "JsUnpackedIssues",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUnpackedIssues {"
+    },
+    {
+      "export": "JsUnpackedScanner",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsUnpackedScanner {"
+    },
+    {
+      "export": "JsUpdateCheckResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUpdateCheckResult {"
+    },
+    {
+      "export": "JsValidationResult",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsValidationResult {"
+    },
+    {
+      "export": "JsVersionInfo",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsVersionInfo {"
+    },
+    {
+      "export": "JsVersionRegistrySnapshot",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsVersionRegistrySnapshot {"
+    },
+    {
+      "export": "JsVsyncEntry",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsVsyncEntry {"
+    },
+    {
+      "export": "JsWryeBashParser",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsWryeBashParser {"
+    },
+    {
+      "export": "JsWryeIssue",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsWryeIssue {"
+    },
+    {
+      "export": "JsXseChecker",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsXseChecker {"
+    },
+    {
+      "export": "JsXseConfig",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsXseConfig {"
+    },
+    {
+      "export": "JsXseInfo",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsXseInfo {"
+    },
+    {
+      "export": "JsXseType",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsXseType {"
+    },
+    {
+      "export": "JsYamlFile",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsYamlFile {"
+    },
+    {
+      "export": "JsYamlSource",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsYamlSource {"
+    },
+    {
+      "export": "MAX_CACHE_TTL",
+      "kind": "const",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export const MAX_CACHE_TTL: number"
+    },
+    {
+      "export": "MetricsSummaryResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface MetricsSummaryResult {"
+    },
+    {
+      "export": "QueryParam",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface QueryParam {"
+    },
+    {
+      "export": "ResourceCount",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface ResourceCount {"
+    },
+    {
+      "export": "ResourceInfo",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface ResourceInfo {"
+    },
+    {
+      "export": "RuntimeInfo",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface RuntimeInfo {"
+    },
+    {
+      "export": "SettingsCacheStats",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface SettingsCacheStats {"
+    },
+    {
+      "export": "TimingStats",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface TimingStats {"
+    },
+    {
+      "export": "XseVersion",
+      "kind": "class",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class XseVersion {"
+    },
+    {
+      "export": "YamlData",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class YamlData {"
+    },
+    {
+      "export": "YamlDocument",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class YamlDocument {"
+    },
+    {
+      "export": "analyzePapyrusLog",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats",
+      "arity": 1
+    },
+    {
+      "export": "buildUrlWithQuery",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function buildUrlWithQuery(base: string, params: Array<QueryParam>): string",
+      "arity": 2
+    },
+    {
+      "export": "calculateFileSimilarity",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function calculateFileSimilarity(path1: string, path2: string): number",
+      "arity": 2
+    },
+    {
+      "export": "calculateTextSimilarity",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function calculateTextSimilarity(text1: string, text2: string): number",
+      "arity": 2
+    },
+    {
+      "export": "checkCrashgenConfig",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenConfig(pluginsPath: string, crashgenName: string): JsCrashgenCheckResult",
+      "arity": 2
+    },
+    {
+      "export": "checkCrashgenConfigWithRules",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenConfigWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenCheckResult",
+      "arity": 3
+    },
+    {
+      "export": "checkCrashgenFull",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenFull(pluginsPath: string, crashgenName: string): JsCrashgenReport",
+      "arity": 2
+    },
+    {
+      "export": "checkCrashgenFullWithRules",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenFullWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenReport",
+      "arity": 3
+    },
+    {
+      "export": "checkCrashgenVersionStatus",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkCrashgenVersionStatus(detected: string, validVersions: Array<string>): JsCrashgenVersionStatus",
+      "arity": 2
+    },
+    {
+      "export": "checkDriveExists",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkDriveExists(path: string): void",
+      "arity": 1
+    },
+    {
+      "export": "checkEnb",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkEnb(gamePath: string): JsEnbValidationResult",
+      "arity": 1
+    },
+    {
+      "export": "checkForUpdates",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkForUpdates(owner: string, repo: string, currentVersion: string): Promise<JsUpdateCheckResult>",
+      "arity": 3
+    },
+    {
+      "export": "checkReadPermissions",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkReadPermissions(path: string): void",
+      "arity": 1
+    },
+    {
+      "export": "checkWritePermissions",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkWritePermissions(path: string): void",
+      "arity": 1
+    },
+    {
+      "export": "checkXsePlugins",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string",
+      "arity": 2
+    },
+    {
+      "export": "clearAllMetrics",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function clearAllMetrics(): void",
+      "arity": 0
+    },
+    {
+      "export": "clearSettingsCache",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function clearSettingsCache(): void",
+      "arity": 0
+    },
+    {
+      "export": "clearYamlCache",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function clearYamlCache(): void",
+      "arity": 0
+    },
+    {
+      "export": "compareVersions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function compareVersions(a: string, b: string): number",
+      "arity": 2
+    },
+    {
+      "export": "countResourcesByType",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function countResourcesByType(root: string): Array<ResourceCount>",
+      "arity": 1
+    },
+    {
+      "export": "createAnalysisConfig",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createAnalysisConfig(game: string, gameVersion: string): JsAnalysisConfig",
+      "arity": 2
+    },
+    {
+      "export": "createAnalysisConfigFromYamlContent",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
+      "arity": 6
+    },
+    {
+      "export": "createDefaultConfig",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createDefaultConfig(): ClassicConfigJs",
+      "arity": 0
+    },
+    {
+      "export": "createLogger",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createLogger(name: string): JsLogger",
+      "arity": 1
+    },
+    {
+      "export": "createMessage",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createMessage(msgType: JsMessageType, content: string, target?: JsMessageTarget | undefined | null): JsMessage",
+      "arity": 3
+    },
+    {
+      "export": "createResourceInfo",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createResourceInfo(path: string): ResourceInfo",
+      "arity": 1
+    },
+    {
+      "export": "createResourceInfoWithSize",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createResourceInfoWithSize(path: string, size: number): ResourceInfo",
+      "arity": 2
+    },
+    {
+      "export": "createYamlDataFromContent",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function createYamlDataFromContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string): YamlData",
+      "arity": 5
+    },
+    {
+      "export": "detectConfigDuplicates",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectConfigDuplicates(rootPath: string): Array<JsDuplicateGroup>",
+      "arity": 1
+    },
+    {
+      "export": "detectCrashPattern",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectCrashPattern(content: string): string | null",
+      "arity": 1
+    },
+    {
+      "export": "detectEncoding",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectEncoding(path: string): string",
+      "arity": 1
+    },
+    {
+      "export": "detectGpuInfo",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectGpuInfo(systemLines: Array<string>): JsGpuInfo",
+      "arity": 1
+    },
+    {
+      "export": "detectResourceType",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectResourceType(path: string): string",
+      "arity": 1
+    },
+    {
+      "export": "detectVrLog",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectVrLog(content: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "detectXseVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function detectXseVersion(loaderPath: string, xseType: JsXseType): string | null",
+      "arity": 2
+    },
+    {
+      "export": "enumerateResources",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function enumerateResources(root: string, filterType?: string | undefined | null): Array<ResourceInfo>",
+      "arity": 2
+    },
+    {
+      "export": "extractAllVersions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractAllVersions(content: string): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "extractDomain",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractDomain(urlStr: string): string",
+      "arity": 1
+    },
+    {
+      "export": "extractFormIds",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractFormIds(content: string): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "extractPluginList",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractPluginList(content: string): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "extractVersionFromFilename",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractVersionFromFilename(filename: string): string | null",
+      "arity": 1
+    },
+    {
+      "export": "extractVersionFromLog",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractVersionFromLog(content: string): string | null",
+      "arity": 1
+    },
+    {
+      "export": "formatMessage",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function formatMessage(message: JsMessage): string",
+      "arity": 1
+    },
+    {
+      "export": "formatVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function formatVersion(version: string): string",
+      "arity": 1
+    },
+    {
+      "export": "gameVersionDistance",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function gameVersionDistance(a: string, b: string): number",
+      "arity": 2
+    },
+    {
+      "export": "generateIgnoreFile",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function generateIgnoreFile(content: string): Promise<boolean>",
+      "arity": 1
+    },
+    {
+      "export": "generateLocalYaml",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function generateLocalYaml(content: string, gameName: string): Promise<boolean>",
+      "arity": 2
+    },
+    {
+      "export": "getAddressLibInfo",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAddressLibInfo(version: string): JsAddressLibInfo",
+      "arity": 1
+    },
+    {
+      "export": "getAddressLibraryFilename",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAddressLibraryFilename(version: string, isVr: boolean): string | null",
+      "arity": 2
+    },
+    {
+      "export": "getAllExeHashes",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllExeHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Array<string>",
+      "arity": 2
+    },
+    {
+      "export": "getAllFallout4Versions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllFallout4Versions(): Array<JsFallout4Version>",
+      "arity": 0
+    },
+    {
+      "export": "getAllGameIds",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllGameIds(): Array<JsGameId>",
+      "arity": 0
+    },
+    {
+      "export": "getAllScriptHashes",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllScriptHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Record<string, Array<string>>",
+      "arity": 2
+    },
+    {
+      "export": "getAllVersions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllVersions(): Array<JsVersionInfo>",
+      "arity": 0
+    },
+    {
+      "export": "getAllVersionsForGame",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllVersionsForGame(game: string, isVr?: boolean | undefined | null): Array<JsVersionInfo>",
+      "arity": 2
+    },
+    {
+      "export": "getAllYamlFiles",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getAllYamlFiles(): Array<JsYamlFile>",
+      "arity": 0
+    },
+    {
+      "export": "getBatchCacheTtl",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getBatchCacheTtl(): number",
+      "arity": 0
+    },
+    {
+      "export": "getCached",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getCached(key: string): any | null",
+      "arity": 1
+    },
+    {
+      "export": "getClassicVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getClassicVersion(): string",
+      "arity": 0
+    },
+    {
+      "export": "getCorrectVersions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getCorrectVersions(isVr: boolean): Array<JsVersionInfo>",
+      "arity": 1
+    },
+    {
+      "export": "getCrashgenForVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getCrashgenForVersion(id: string, crashgenVersion: string): JsCrashgenConfig | null",
+      "arity": 2
+    },
+    {
+      "export": "getCrashgenVersionStrings",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getCrashgenVersionStrings(id: string): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "getCrashgenVersions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getCrashgenVersions(id: string): Array<JsCrashgenConfig>",
+      "arity": 1
+    },
+    {
+      "export": "getDefaultCacheCleanupInterval",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultCacheCleanupInterval(): number",
+      "arity": 0
+    },
+    {
+      "export": "getDefaultCacheCleanupThreshold",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultCacheCleanupThreshold(): number",
+      "arity": 0
+    },
+    {
+      "export": "getDefaultCacheTtl",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultCacheTtl(): number",
+      "arity": 0
+    },
+    {
+      "export": "getDefaultQueryCacheCapacity",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getDefaultQueryCacheCapacity(): number",
+      "arity": 0
+    },
+    {
+      "export": "getFallout4VersionInfo",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getFallout4VersionInfo(version: JsFallout4Version): Fallout4VersionInfo",
+      "arity": 1
+    },
+    {
+      "export": "getGameName",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getGameName(id: JsGameId): string",
+      "arity": 1
+    },
+    {
+      "export": "getLatestRelease",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getLatestRelease(owner: string, repo: string): Promise<JsGithubRelease>",
+      "arity": 2
+    },
+    {
+      "export": "getMaxCacheTtl",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getMaxCacheTtl(): number",
+      "arity": 0
+    },
+    {
+      "export": "getMetricsSummary",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getMetricsSummary(): MetricsSummaryResult",
+      "arity": 0
+    },
+    {
+      "export": "getModSiteGameUrl",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getModSiteGameUrl(site: JsModSite, gameId: JsGameId): string",
+      "arity": 2
+    },
+    {
+      "export": "getModSiteName",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getModSiteName(site: JsModSite): string",
+      "arity": 1
+    },
+    {
+      "export": "getModSiteUrl",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getModSiteUrl(site: JsModSite): string",
+      "arity": 1
+    },
+    {
+      "export": "getResourceExtensions",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getResourceExtensions(typeName: string): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "getRuntimeInfo",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getRuntimeInfo(): RuntimeInfo",
+      "arity": 0
+    },
+    {
+      "export": "getScriptHashesForVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getScriptHashesForVersion(id: string): Record<string, string>",
+      "arity": 1
+    },
+    {
+      "export": "getSettingsCacheStats",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getSettingsCacheStats(): SettingsCacheStats",
+      "arity": 0
+    },
+    {
+      "export": "getSystemDocumentsPath",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getSystemDocumentsPath(): string | null",
+      "arity": 0
+    },
+    {
+      "export": "getUnknownVersionDefault",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getUnknownVersionDefault(game: string): string | null",
+      "arity": 1
+    },
+    {
+      "export": "getUnknownVersionHandling",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getUnknownVersionHandling(): JsUnknownVersionHandling",
+      "arity": 0
+    },
+    {
+      "export": "getUserAgent",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getUserAgent(): string",
+      "arity": 0
+    },
+    {
+      "export": "getUserAgentPrefix",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getUserAgentPrefix(): string",
+      "arity": 0
+    },
+    {
+      "export": "getUserAgentWithSuffix",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getUserAgentWithSuffix(suffix: string): string",
+      "arity": 1
+    },
+    {
+      "export": "getVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getVersion(): string",
+      "arity": 0
+    },
+    {
+      "export": "getVersionById",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getVersionById(id: string): JsVersionInfo | null",
+      "arity": 1
+    },
+    {
+      "export": "getVersionByShortName",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getVersionByShortName(shortName: string): JsVersionInfo | null",
+      "arity": 1
+    },
+    {
+      "export": "getVersionByVersionString",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getVersionByVersionString(version: string): JsVersionInfo | null",
+      "arity": 1
+    },
+    {
+      "export": "getVersionRegistry",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getVersionRegistry(game?: string | undefined | null, isVr?: boolean | undefined | null): JsVersionRegistrySnapshot",
+      "arity": 2
+    },
+    {
+      "export": "getWrongVersions",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getWrongVersions(isVr: boolean): Array<JsVersionInfo>",
+      "arity": 1
+    },
+    {
+      "export": "getXseInfo",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getXseInfo(gamePath: string, xseType: JsXseType): JsXseInfo",
+      "arity": 2
+    },
+    {
+      "export": "getYamlFileDescription",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getYamlFileDescription(file: JsYamlFile): string",
+      "arity": 1
+    },
+    {
+      "export": "getYamlSourceDisplayName",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getYamlSourceDisplayName(source: JsYamlSource): string",
+      "arity": 1
+    },
+    {
+      "export": "getYamlSourceDisplayNameWithGame",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getYamlSourceDisplayNameWithGame(source: JsYamlSource, game: string): string",
+      "arity": 2
+    },
+    {
+      "export": "getYamlSourcePath",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getYamlSourcePath(source: JsYamlSource, game: string): string",
+      "arity": 2
+    },
+    {
+      "export": "hasUpdate",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function hasUpdate(currentVersion: string, latestVersion: string): boolean",
+      "arity": 2
+    },
+    {
+      "export": "hashFile",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function hashFile(path: string): string",
+      "arity": 1
+    },
+    {
+      "export": "hashFilesParallel",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function hashFilesParallel(paths: Array<string>): Record<string, string>",
+      "arity": 1
+    },
+    {
+      "export": "internString",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function internString(value: string): string",
+      "arity": 1
+    },
+    {
+      "export": "invalidateSettings",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function invalidateSettings(key: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isCached",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isCached(key: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isKnownFallout4Version",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isKnownFallout4Version(version: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isRestrictedPath",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isRestrictedPath(path: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isRuntimeAvailable",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isRuntimeAvailable(): boolean",
+      "arity": 0
+    },
+    {
+      "export": "isSupportedResource",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isSupportedResource(path: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isValidExecutablePath",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isValidExecutablePath(path: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isValidPath",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isValidPath(path: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isValidUrl",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isValidUrl(urlStr: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isVersionCompatible",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isVersionCompatible(id: string, version: string): boolean",
+      "arity": 2
+    },
+    {
+      "export": "isXseInstalled",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isXseInstalled(gamePath: string, xseType: JsXseType): boolean",
+      "arity": 2
+    },
+    {
+      "export": "joinPaths",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function joinPaths(parts: Array<string>): string",
+      "arity": 1
+    },
+    {
+      "export": "joinUrl",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function joinUrl(base: string, path: string): string",
+      "arity": 2
+    },
+    {
+      "export": "loadBatchAsync",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadBatchAsync(paths: Array<string>): Promise<number>",
+      "arity": 1
+    },
+    {
+      "export": "loadBatchSync",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadBatchSync(paths: Array<string>): number",
+      "arity": 1
+    },
+    {
+      "export": "loadSettingsAsync",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadSettingsAsync(key: string, path: string): Promise<any>",
+      "arity": 2
+    },
+    {
+      "export": "loadSettingsSync",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadSettingsSync(key: string, path: string): any",
+      "arity": 2
+    },
+    {
+      "export": "matchVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function matchVersion(version: string, game: string, isVr: boolean): JsMatchResult",
+      "arity": 3
+    },
+    {
+      "export": "migrateVrSetting",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function migrateVrSetting(gameVersion?: string | undefined | null): string | null",
+      "arity": 1
+    },
+    {
+      "export": "needsPathDetection",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function needsPathDetection(gamePath?: string | undefined | null, docsPath?: string | undefined | null): JsPathDetectionResult",
+      "arity": 2
+    },
+    {
+      "export": "normalizePath",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function normalizePath(path: string): string",
+      "arity": 1
+    },
+    {
+      "export": "normalizeString",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function normalizeString(value: string): string",
+      "arity": 1
+    },
+    {
+      "export": "parseCrashgenVersion",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseCrashgenVersion(versionStr: string): JsCrashgenVersionInfo | null",
+      "arity": 1
+    },
+    {
+      "export": "parseGameVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseGameVersion(version: string): string",
+      "arity": 1
+    },
+    {
+      "export": "parseLogSegments",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseLogSegments(content: string): JsLogSegments",
+      "arity": 1
+    },
+    {
+      "export": "parseResourceType",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseResourceType(typeName: string): string",
+      "arity": 1
+    },
+    {
+      "export": "parseSteamLibrary",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseSteamLibrary(gameSteamId: number): string | null",
+      "arity": 1
+    },
+    {
+      "export": "parseVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseVersion(input: string): string",
+      "arity": 1
+    },
+    {
+      "export": "parseXseLog",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseXseLog(logPath: string): string | null",
+      "arity": 1
+    },
+    {
+      "export": "parseXseType",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function parseXseType(typeName: string): JsXseType",
+      "arity": 1
+    },
+    {
+      "export": "processGameLogs",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function processGameLogs(logDir: string, catchErrors: Array<string>, excludeFiles: Array<string>, excludeErrors: Array<string>): string",
+      "arity": 4
+    },
+    {
+      "export": "processLog",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function processLog(logPath: string, config: JsAnalysisConfig): Promise<JsAnalysisResult>",
+      "arity": 2
+    },
+    {
+      "export": "processLogWithYamlContent",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>",
+      "arity": 7
+    },
+    {
+      "export": "processLogsBatch",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig): Promise<Array<JsAnalysisResult>>",
+      "arity": 2
+    },
+    {
+      "export": "processLogsBatchWithYamlContent",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<Array<JsAnalysisResult>>",
+      "arity": 7
+    },
+    {
+      "export": "processStringBatch",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function processStringBatch(values: Array<string>): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "queryGameRegistry",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function queryGameRegistry(gameName: string, vrSuffix: string, tryGog: boolean): string | null",
+      "arity": 3
+    },
+    {
+      "export": "recordTimingMetric",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function recordTimingMetric(label: string, durationMs: number): void",
+      "arity": 2
+    },
+    {
+      "export": "registryClear",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registryClear(): void",
+      "arity": 0
+    },
+    {
+      "export": "registryGet",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registryGet(key: string): any",
+      "arity": 1
+    },
+    {
+      "export": "registryGetGame",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registryGetGame(): string | null",
+      "arity": 0
+    },
+    {
+      "export": "registryGetGameVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registryGetGameVersion(): string | null",
+      "arity": 0
+    },
+    {
+      "export": "registryIsVrVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registryIsVrVersion(): boolean",
+      "arity": 0
+    },
+    {
+      "export": "registryRemove",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registryRemove(key: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "registrySet",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registrySet(key: string, value: any): void",
+      "arity": 2
+    },
+    {
+      "export": "registrySetGame",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function registrySetGame(game: string): void",
+      "arity": 1
+    },
+    {
+      "export": "removeReadonly",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function removeReadonly(filePath: string): void",
+      "arity": 1
+    },
+    {
+      "export": "resetSettingsCacheStats",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resetSettingsCacheStats(): void",
+      "arity": 0
+    },
+    {
+      "export": "resolveEffectiveGameVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resolveEffectiveGameVersion(version?: string | undefined | null): string",
+      "arity": 1
+    },
+    {
+      "export": "runGameChecks",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>",
+      "arity": 1
+    },
+    {
+      "export": "runModScans",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function runModScans(config: JsGameScanConfig): Promise<JsModScanResult>",
+      "arity": 1
+    },
+    {
+      "export": "scanAllBa2Archives",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanResult>",
+      "arity": 1
+    },
+    {
+      "export": "scanModInis",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult",
+      "arity": 2
+    },
+    {
+      "export": "scanUnpackedFiles",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanUnpackedFiles(rootPath: string, xseScriptfiles: Array<string>): JsUnpackedIssues",
+      "arity": 2
+    },
+    {
+      "export": "settingsCacheKeys",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function settingsCacheKeys(): Array<string>",
+      "arity": 0
+    },
+    {
+      "export": "settingsCacheSize",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function settingsCacheSize(): number",
+      "arity": 0
+    },
+    {
+      "export": "stripEmojiText",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function stripEmojiText(text: string): string",
+      "arity": 1
+    },
+    {
+      "export": "tryParseVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function tryParseVersion(input: string): string | null",
+      "arity": 1
+    },
+    {
+      "export": "validateCustomScanPath",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validateCustomScanPath(path: string): void",
+      "arity": 1
+    },
+    {
+      "export": "validatePathWithPermissions",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validatePathWithPermissions(path: string, checkRead?: boolean | undefined | null, checkWrite?: boolean | undefined | null): void",
+      "arity": 3
+    },
+    {
+      "export": "validatePathsBatch",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validatePathsBatch(paths: Array<string>): Record<string, boolean>",
+      "arity": 1
+    },
+    {
+      "export": "validateRequiredFiles",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validateRequiredFiles(directory: string, requiredFiles: Array<string>): void",
+      "arity": 2
+    },
+    {
+      "export": "validateResource",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validateResource(path: string): void",
+      "arity": 1
+    },
+    {
+      "export": "validateSettingsPath",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validateSettingsPath(path: string, settingName: string, requiredFiles?: Array<string> | undefined | null): void",
+      "arity": 3
+    },
+    {
+      "export": "validateSettingsPaths",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validateSettingsPaths(gamePath: string, docsPath: string, customScanPath: string | undefined | null, gameExe: string): void",
+      "arity": 4
+    },
+    {
+      "export": "validateUrl",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function validateUrl(urlStr: string): string",
+      "arity": 1
+    },
+    {
+      "export": "xseDllPrefix",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function xseDllPrefix(xseType: JsXseType): string",
+      "arity": 1
+    },
+    {
+      "export": "xseLoaderName",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function xseLoaderName(xseType: JsXseType): string",
+      "arity": 1
+    },
+    {
+      "export": "xseTypeForGame",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function xseTypeForGame(gameId: JsGameId): JsXseType",
+      "arity": 1
+    },
+    {
+      "export": "xseTypeName",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function xseTypeName(xseType: JsXseType): string",
+      "arity": 1
+    },
+    {
+      "export": "yamlClearCache",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlClearCache(): void",
+      "arity": 0
+    },
+    {
+      "export": "yamlGetCacheStats",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetCacheStats(): any",
+      "arity": 0
+    },
+    {
+      "export": "yamlGetHashmapValue",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetHashmapValue(content: string, keyPath: string): Record<string, string>",
+      "arity": 2
+    },
+    {
+      "export": "yamlGetHashmapVecValue",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetHashmapVecValue(content: string, keyPath: string): Record<string, Array<string>>",
+      "arity": 2
+    },
+    {
+      "export": "yamlGetIndexmapValue",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetIndexmapValue(content: string, keyPath: string): any",
+      "arity": 2
+    },
+    {
+      "export": "yamlGetSettingsBatch",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetSettingsBatch(content: string, keyPaths: Array<string>): any",
+      "arity": 2
+    },
+    {
+      "export": "yamlGetStringValue",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetStringValue(content: string, keyPath: string, default: string): string",
+      "arity": 3
+    },
+    {
+      "export": "yamlGetValue",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetValue(content: string, keyPath: string): any",
+      "arity": 2
+    },
+    {
+      "export": "yamlGetVecValue",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlGetVecValue(content: string, keyPath: string): Array<string>",
+      "arity": 2
+    },
+    {
+      "export": "yamlLoadFile",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlLoadFile(path: string): any",
+      "arity": 1
+    },
+    {
+      "export": "yamlParse",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlParse(content: string): any",
+      "arity": 1
+    },
+    {
+      "export": "yamlSaveFile",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlSaveFile(path: string, data: any): void",
+      "arity": 2
+    },
+    {
+      "export": "yamlSetSetting",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlSetSetting(content: string, keyPath: string, value: any): string",
+      "arity": 3
+    },
+    {
+      "export": "yamlSetSettingsBatch",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlSetSettingsBatch(content: string, settings: any): string",
+      "arity": 2
+    },
+    {
+      "export": "yamlStringify",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function yamlStringify(data: any): string",
+      "arity": 1
+    }
+  ]
+}

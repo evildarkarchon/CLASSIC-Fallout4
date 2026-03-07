@@ -11,9 +11,11 @@ use classic_scangame_core::xse::GameVersion;
 use classic_shared::without_gil;
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
+use pyo3::types::PyAny;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use crate::crashgen_rules::parse_settings_rules;
 use crate::ini::{PyConfigIssue, PyIssueSeverity};
 use crate::xse::PyGameVersion;
 
@@ -161,6 +163,7 @@ impl PyGameScanConfig {
         log_catch_errors = None,
         log_exclude_files = None,
         log_exclude_errors = None,
+        crashgen_settings_rules = None,
         game_target = None,
     ))]
     #[allow(clippy::too_many_arguments)]
@@ -179,6 +182,7 @@ impl PyGameScanConfig {
         log_catch_errors: Option<Vec<String>>,
         log_exclude_files: Option<Vec<String>>,
         log_exclude_errors: Option<Vec<String>>,
+        crashgen_settings_rules: Option<&Bound<'_, PyAny>>,
         game_target: Option<&str>,
     ) -> Self {
         let gv = match game_version {
@@ -206,6 +210,7 @@ impl PyGameScanConfig {
                 is_vr,
                 game_version: gv,
                 crashgen_name,
+                crashgen_settings_rules: crashgen_settings_rules.and_then(parse_settings_rules),
                 wrye_warnings: wrye_warnings.unwrap_or_default(),
                 log_catch_errors: log_catch_errors.unwrap_or_default(),
                 log_exclude_files: log_exclude_files.unwrap_or_default(),

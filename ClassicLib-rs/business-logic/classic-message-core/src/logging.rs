@@ -55,6 +55,129 @@
 
 #[allow(unused_imports)]
 use crate::{Message, MessageType};
+use std::collections::BTreeMap;
+
+use crate::redaction::redact_contract_fields;
+
+/// Canonical event id for successful startup binding contract validation.
+pub const EVENT_STARTUP_BINDING_CONTRACT_VALIDATED: &str =
+    "classic.startup.binding_contract.validated";
+/// Canonical event id for startup binding contract failure.
+pub const EVENT_STARTUP_BINDING_CONTRACT_FAILED: &str = "classic.startup.binding_contract.failed";
+/// Canonical event id for startup acceleration status summary.
+pub const EVENT_STARTUP_ACCELERATION_STATUS: &str = "classic.startup.acceleration.status";
+
+/// Structured contract event for parity-scoped logging.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContractEvent {
+    event: String,
+    severity: MessageType,
+    component: String,
+    outcome: String,
+    context: BTreeMap<String, String>,
+}
+
+impl ContractEvent {
+    /// Create a new structured contract event.
+    #[must_use]
+    pub fn new(
+        component: impl Into<String>,
+        event: impl Into<String>,
+        severity: MessageType,
+        outcome: impl Into<String>,
+    ) -> Self {
+        Self {
+            event: event.into(),
+            severity,
+            component: component.into(),
+            outcome: outcome.into(),
+            context: BTreeMap::new(),
+        }
+    }
+
+    /// Add a context field to the event.
+    #[must_use]
+    pub fn with_context(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.context.insert(key.into(), value.into());
+        self
+    }
+
+    /// Get event identifier.
+    #[must_use]
+    pub fn event(&self) -> &str {
+        &self.event
+    }
+
+    /// Get message severity.
+    #[must_use]
+    pub const fn severity(&self) -> MessageType {
+        self.severity
+    }
+
+    /// Get component name.
+    #[must_use]
+    pub fn component(&self) -> &str {
+        &self.component
+    }
+
+    /// Get event outcome.
+    #[must_use]
+    pub fn outcome(&self) -> &str {
+        &self.outcome
+    }
+
+    /// Get event context fields.
+    #[must_use]
+    pub const fn context(&self) -> &BTreeMap<String, String> {
+        &self.context
+    }
+}
+
+#[must_use]
+fn contract_severity_name(severity: MessageType) -> &'static str {
+    match severity {
+        MessageType::Info | MessageType::Success => "info",
+        MessageType::Warning => "warning",
+        MessageType::Error | MessageType::Critical => "error",
+        MessageType::Debug | MessageType::Progress => "debug",
+    }
+}
+
+#[must_use]
+fn escape_contract_value(value: &str) -> String {
+    if value.is_empty()
+        || value.contains(' ')
+        || value.contains('=')
+        || value.contains('"')
+        || value.contains('\n')
+    {
+        let escaped = value.replace('"', "\\\"");
+        format!("\"{escaped}\"")
+    } else {
+        value.to_string()
+    }
+}
+
+/// Format a structured contract event into a stable key=value log line.
+#[must_use]
+pub fn format_contract_event(event: &ContractEvent) -> String {
+    let mut segments = vec![
+        format!("event={}", escape_contract_value(event.event())),
+        format!(
+            "severity={}",
+            escape_contract_value(contract_severity_name(event.severity()))
+        ),
+        format!("component={}", escape_contract_value(event.component())),
+        format!("outcome={}", escape_contract_value(event.outcome())),
+    ];
+
+    let redacted = redact_contract_fields(event.context());
+    for (key, value) in redacted {
+        segments.push(format!("{}={}", key, escape_contract_value(value.as_str())));
+    }
+
+    segments.join(" ")
+}
 
 /// Logger instance for the CLASSIC application.
 ///
@@ -260,6 +383,91 @@ impl Logger {
         self.log(level, &log_text);
     }
 
+    /// Logs a structured contract event.
+    pub fn log_contract_event(&self, event: &ContractEvent) {
+        self.log(
+            event.severity().to_log_level(),
+            &format_contract_event(event),
+        );
+    }
+
+    /// Logs startup contract validation success with canonical event fields.
+    pub fn log_startup_binding_contract_validated(
+        &self,
+        contract: &str,
+        checked_bindings: usize,
+        correlation_id: Option<&str>,
+    ) {
+        let mut event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_BINDING_CONTRACT_VALIDATED,
+            MessageType::Info,
+            "success",
+        )
+        .with_context("contract", contract)
+        .with_context("checked_bindings", checked_bindings.to_string());
+
+        if let Some(correlation_id) = correlation_id {
+            event = event.with_context("correlation_id", correlation_id);
+        }
+
+        self.log_contract_event(&event);
+    }
+
+    /// Logs startup contract validation failure with canonical event fields.
+    pub fn log_startup_binding_contract_failed(
+        &self,
+        contract: &str,
+        missing_binding: &str,
+        failure_type: &str,
+        failure_hint: &str,
+        error: &str,
+        correlation_id: Option<&str>,
+    ) {
+        let mut event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+            MessageType::Error,
+            "failure",
+        )
+        .with_context("contract", contract)
+        .with_context("missing_binding", missing_binding)
+        .with_context("failure_type", failure_type)
+        .with_context("failure_hint", failure_hint)
+        .with_context("error", error);
+
+        if let Some(correlation_id) = correlation_id {
+            event = event.with_context("correlation_id", correlation_id);
+        }
+
+        self.log_contract_event(&event);
+    }
+
+    /// Logs startup acceleration summary with canonical event fields.
+    pub fn log_startup_acceleration_status(
+        &self,
+        active_components: usize,
+        total_components: usize,
+        acceleration_level: &str,
+        correlation_id: Option<&str>,
+    ) {
+        let mut event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_ACCELERATION_STATUS,
+            MessageType::Info,
+            "success",
+        )
+        .with_context("active_components", active_components.to_string())
+        .with_context("total_components", total_components.to_string())
+        .with_context("acceleration_level", acceleration_level);
+
+        if let Some(correlation_id) = correlation_id {
+            event = event.with_context("correlation_id", correlation_id);
+        }
+
+        self.log_contract_event(&event);
+    }
+
     /// Checks if the logger is enabled for the specified log level.
     ///
     /// This is useful for avoiding expensive computations when the log level is not enabled.
@@ -408,5 +616,78 @@ mod tests {
         let _ = logger.is_info_enabled();
         let _ = logger.is_debug_enabled();
         let _ = logger.is_trace_enabled();
+    }
+
+    #[test]
+    fn test_format_contract_event_required_fields() {
+        let event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_BINDING_CONTRACT_VALIDATED,
+            MessageType::Info,
+            "success",
+        )
+        .with_context("contract", "startup_all")
+        .with_context("checked_bindings", "29");
+
+        let formatted = format_contract_event(&event);
+        assert!(formatted.contains("event=classic.startup.binding_contract.validated"));
+        assert!(formatted.contains("severity=info"));
+        assert!(formatted.contains("component=integration.startup"));
+        assert!(formatted.contains("outcome=success"));
+        assert!(formatted.contains("contract=startup_all"));
+        assert!(formatted.contains("checked_bindings=29"));
+    }
+
+    #[test]
+    fn test_format_contract_event_redacts_sensitive_fields() {
+        let event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+            MessageType::Error,
+            "failure",
+        )
+        .with_context("api_key", "secret-token")
+        .with_context(
+            "install_path",
+            r"C:\Users\alice\Documents\My Games\Fallout4",
+        );
+
+        let formatted = format_contract_event(&event);
+        assert!(formatted.contains("api_key=[REDACTED]"));
+        assert!(formatted.contains("install_path=<path-redacted>"));
+    }
+
+    #[test]
+    fn test_contract_severity_mapping_for_warning_and_debug() {
+        let warning_event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_BINDING_CONTRACT_VALIDATED,
+            MessageType::Warning,
+            "success",
+        );
+        let debug_event = ContractEvent::new(
+            "integration.startup",
+            EVENT_STARTUP_BINDING_CONTRACT_VALIDATED,
+            MessageType::Debug,
+            "success",
+        );
+
+        assert!(format_contract_event(&warning_event).contains("severity=warning"));
+        assert!(format_contract_event(&debug_event).contains("severity=debug"));
+    }
+
+    #[test]
+    fn test_startup_contract_helpers_compile() {
+        let logger = Logger::new();
+        logger.log_startup_binding_contract_validated("startup_all", 29, Some("corr-1"));
+        logger.log_startup_binding_contract_failed(
+            "startup_all",
+            "classic_yaml.YamlOperations",
+            "import",
+            "Rebuild and reinstall Rust bindings with `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1`.",
+            "No module named 'classic_yaml'",
+            None,
+        );
+        logger.log_startup_acceleration_status(5, 5, "MANDATORY", None);
     }
 }

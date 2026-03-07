@@ -5,17 +5,19 @@
 //! Placeholder — will be implemented by Wave 2 agent.
 
 use classic_config_core::YamlDataCore;
-use classic_database_core::DatabasePool;
+use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;
 use classic_yaml_core::YamlOperations;
+use log::info;
 use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
@@ -27,6 +29,79 @@ pub struct FullScanConfig {
 /// Opaque wrapper around OrchestratorCore.
 pub struct Orchestrator {
     inner: OrchestratorCore,
+    completed_logs: AtomicU64,
+    db_counter_interval: u64,
+}
+
+const SHORT_SCAN_CACHE_CAPACITY: usize = 30_000;
+const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
+const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
+const SHORT_SCAN_CACHE_TTL_SECS: u64 = BATCH_CACHE_TTL_SECS;
+const DB_COUNTER_LOG_INTERVAL_DEFAULT: u64 = 25;
+
+fn parse_db_counter_interval(raw: Option<&str>) -> u64 {
+    raw.and_then(|value| value.trim().parse::<u64>().ok())
+        .filter(|interval| *interval > 0)
+        .unwrap_or(DB_COUNTER_LOG_INTERVAL_DEFAULT)
+}
+
+fn resolve_db_counter_interval() -> u64 {
+    parse_db_counter_interval(std::env::var("CLASSIC_DB_COUNTER_INTERVAL").ok().as_deref())
+}
+
+fn apply_short_scan_db_profile(pool: &DatabasePool) {
+    pool.set_cache_ttl(Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS));
+    pool.set_cache_capacity(SHORT_SCAN_CACHE_CAPACITY);
+    pool.set_cache_cleanup_threshold(SHORT_SCAN_CLEANUP_THRESHOLD);
+    pool.set_cache_cleanup_interval(Duration::from_secs(SHORT_SCAN_CLEANUP_INTERVAL_SECS));
+}
+
+fn maybe_log_db_perf_counters(orch: &Orchestrator, scanned_path: &str) {
+    let completed = orch.completed_logs.fetch_add(1, Ordering::Relaxed) + 1;
+    let interval = orch.db_counter_interval;
+
+    if completed % interval != 0 {
+        return;
+    }
+
+    let Some(pool) = orch.inner.database_pool() else {
+        return;
+    };
+
+    let Ok(stats) = pool.get_stats() else {
+        return;
+    };
+
+    let cache_queries = stats.cache_hits.saturating_add(stats.cache_misses);
+    let cache_hit_rate = if cache_queries == 0 {
+        0.0
+    } else {
+        (stats.cache_hits as f64 / cache_queries as f64) * 100.0
+    };
+    let log_name = Path::new(scanned_path)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or(scanned_path);
+
+    info!(
+        "DB counters @{} logs (last={}): cache_size={}/{}, cache_hits={}, cache_misses={}, hit_rate={:.1}%, evictions={}, cleanup_runs={}, cleanup_removed={}, cleanup_total_ms={:.3}, cleanup_max_ms={:.3}, eviction_total_ms={:.3}, eviction_max_ms={:.3}, stable_shape_selections={}, stable_shape_padding_pairs={}",
+        completed,
+        log_name,
+        pool.cache_size(),
+        pool.get_cache_capacity(),
+        stats.cache_hits,
+        stats.cache_misses,
+        cache_hit_rate,
+        stats.cache_evictions,
+        stats.cleanup_runs,
+        stats.cleanup_removed,
+        stats.cleanup_elapsed_total_ns as f64 / 1_000_000.0,
+        stats.cleanup_elapsed_max_ns as f64 / 1_000_000.0,
+        stats.eviction_elapsed_total_ns as f64 / 1_000_000.0,
+        stats.eviction_elapsed_max_ns as f64 / 1_000_000.0,
+        stats.stable_shape_selections,
+        stats.stable_shape_padding_pairs
+    );
 }
 
 // ── Config construction ─────────────────────────────────────────────
@@ -35,7 +110,7 @@ fn build_full_scan_config(
     yaml_dir_root: &str,
     yaml_dir_data: &str,
     game: &str,
-    vr_mode: bool,
+    game_version: &str,
     show_formid_values: bool,
     fcx_mode: bool,
     simplify_logs: bool,
@@ -45,7 +120,7 @@ fn build_full_scan_config(
         .block_on(YamlDataCore::load_from_yaml_files(
             dirs,
             game.to_string(),
-            vr_mode,
+            game_version.to_string(),
         ))
         .map_err(|e| format!("{e}"))?;
 
@@ -53,7 +128,7 @@ fn build_full_scan_config(
     let config = build_analysis_config_from_yaml(
         &yaml,
         game,
-        vr_mode,
+        game_version,
         show_formid_values,
         fcx_mode,
         simplify_logs,
@@ -76,41 +151,57 @@ fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String
     if config.inner.show_formid_values {
         let pool = Arc::new(DatabasePool::new(
             None,
-            Duration::from_secs(300),
+            Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS),
             config.inner.game.clone(),
         ));
+        apply_short_scan_db_profile(&pool);
 
         get_runtime()
             .block_on(pool.initialize(config.db_paths.clone()))
             .map_err(|e| format!("{e}"))?;
 
-        orch.attach_database_pool(pool).map_err(|e| format!("{e}"))?;
+        orch.attach_database_pool(pool)
+            .map_err(|e| format!("{e}"))?;
     }
 
-    Ok(Box::new(Orchestrator { inner: orch }))
+    Ok(Box::new(Orchestrator {
+        inner: orch,
+        completed_logs: AtomicU64::new(0),
+        db_counter_interval: resolve_db_counter_interval(),
+    }))
 }
 
 fn orchestrator_new_minimal(
     game: &str,
-    vr_mode: bool,
+    game_version: &str,
     crashgen_name: &str,
     xse_acronym: &str,
 ) -> Result<Box<Orchestrator>, String> {
-    let mut config = AnalysisConfig::new(game.to_string(), vr_mode);
+    let mut config = AnalysisConfig::new(game.to_string(), game_version.to_string());
     config.crashgen_name = crashgen_name.to_string();
     config.xse_acronym = xse_acronym.to_string();
     let orch = OrchestratorCore::new(config).map_err(|e| format!("{e}"))?;
-    Ok(Box::new(Orchestrator { inner: orch }))
+    Ok(Box::new(Orchestrator {
+        inner: orch,
+        completed_logs: AtomicU64::new(0),
+        db_counter_interval: resolve_db_counter_interval(),
+    }))
 }
 
 fn orchestrator_process_log(
     orch: &Orchestrator,
     log_path: &str,
 ) -> Result<ffi::ScanResult, String> {
-    let result = get_runtime()
-        .block_on(orch.inner.process_log(log_path.to_string()))
-        .map_err(|e| format!("{e}"))?;
-    Ok(analysis_result_to_dto(result))
+    match get_runtime().block_on(orch.inner.process_log(log_path.to_string())) {
+        Ok(result) => {
+            maybe_log_db_perf_counters(orch, result.log_path.as_str());
+            Ok(analysis_result_to_dto(result))
+        }
+        Err(e) => {
+            maybe_log_db_perf_counters(orch, log_path);
+            Err(format!("{e}"))
+        }
+    }
 }
 
 fn orchestrator_process_logs_batch(
@@ -125,6 +216,9 @@ fn orchestrator_process_logs_batch(
         Some(max_concurrent as usize)
     };
     let results = get_runtime().block_on(orch.inner.process_logs_batch(paths, max_parallel));
+    for result in &results {
+        maybe_log_db_perf_counters(orch, result.log_path.as_str());
+    }
     results.into_iter().map(analysis_result_to_dto).collect()
 }
 
@@ -187,6 +281,7 @@ fn orchestrator_process_logs_batch_with_progress(
 
         while let Some((input_index, scanned_path, result)) = tasks.next().await {
             completed += 1;
+            maybe_log_db_perf_counters(orch, scanned_path.as_str());
             callback.on_batch_progress(
                 completed,
                 total as u32,
@@ -466,7 +561,7 @@ mod ffi {
             yaml_dir_root: &str,
             yaml_dir_data: &str,
             game: &str,
-            vr_mode: bool,
+            game_version: &str,
             show_formid_values: bool,
             fcx_mode: bool,
             simplify_logs: bool,
@@ -476,7 +571,7 @@ mod ffi {
         fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>>;
         fn orchestrator_new_minimal(
             game: &str,
-            vr_mode: bool,
+            game_version: &str,
             crashgen_name: &str,
             xse_acronym: &str,
         ) -> Result<Box<Orchestrator>>;
@@ -517,7 +612,7 @@ mod tests {
 
     #[test]
     fn test_orchestrator_new_minimal() {
-        let result = orchestrator_new_minimal("Fallout4", false, "Buffout 4", "F4SE");
+        let result = orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE");
         assert!(result.is_ok());
     }
 
@@ -534,6 +629,29 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_db_counter_interval() {
+        assert_eq!(
+            parse_db_counter_interval(None),
+            DB_COUNTER_LOG_INTERVAL_DEFAULT
+        );
+        assert_eq!(
+            parse_db_counter_interval(Some(" 50 ")),
+            50,
+            "Valid positive interval should be accepted"
+        );
+        assert_eq!(
+            parse_db_counter_interval(Some("0")),
+            DB_COUNTER_LOG_INTERVAL_DEFAULT,
+            "Zero should fall back to default"
+        );
+        assert_eq!(
+            parse_db_counter_interval(Some("not-a-number")),
+            DB_COUNTER_LOG_INTERVAL_DEFAULT,
+            "Invalid values should fall back to default"
+        );
+    }
+
+    #[test]
     fn test_detect_crash_pattern_empty() {
         let result = detect_crash_pattern("");
         // Empty content should not match any crash pattern
@@ -546,7 +664,7 @@ mod tests {
             "nonexistent_root",
             "nonexistent_data",
             "Fallout4",
-            false,
+            "auto",
             false,
             false,
             false,
@@ -622,6 +740,26 @@ mod tests {
         assert!(dto.success);
         assert_eq!(dto.report_lines, vec!["line1"]);
         assert!(dto.error_message.is_empty());
+    }
+
+    #[test]
+    fn test_apply_short_scan_db_profile_sets_pool_knobs() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "Fallout4".to_string());
+        apply_short_scan_db_profile(&pool);
+
+        assert_eq!(pool.get_cache_capacity(), SHORT_SCAN_CACHE_CAPACITY);
+        assert_eq!(
+            pool.get_cache_ttl(),
+            Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS)
+        );
+        assert_eq!(
+            pool.get_cache_cleanup_threshold(),
+            SHORT_SCAN_CLEANUP_THRESHOLD
+        );
+        assert_eq!(
+            pool.get_cache_cleanup_interval(),
+            Duration::from_secs(SHORT_SCAN_CLEANUP_INTERVAL_SECS)
+        );
     }
 
     // ── Papyrus bridge tests ──────────────────────────────────────

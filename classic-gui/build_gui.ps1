@@ -46,7 +46,8 @@ param(
     [switch]$Debug,
     [switch]$Install,
     [switch]$Package,
-    [string]$Preset = "default"
+    [string]$Preset = "default",
+    [int]$TestTimeoutSec = 600
 )
 
 $ErrorActionPreference = "Stop"
@@ -139,8 +140,19 @@ try {
 
     # ── Step 4: Tests (optional) ─────────────────────────────────
     if ($Test) {
+        if ($TestTimeoutSec -le 0) {
+            Write-Error "Test timeout must be greater than zero. Received: $TestTimeoutSec"
+            exit 1
+        }
+
         Write-Host "`n=== Running CTest ===" -ForegroundColor Cyan
-        & ctest --test-dir $buildDirName --output-on-failure
+        & ctest --test-dir $buildDirName -N -V --no-tests=error
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "CTest discovery failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
+
+        & ctest --test-dir $buildDirName --output-on-failure --timeout $TestTimeoutSec --no-tests=error
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Tests failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE

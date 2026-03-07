@@ -15,7 +15,7 @@ public slots:
                 const QString& yamlRoot,
                 const QString& yamlData,
                 const QString& game,
-                bool vrMode,
+                const QString& gameVersion,
                 bool showFormIdValues,
                 bool fcxMode,
                 bool simplifyLogs,

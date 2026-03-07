@@ -160,6 +160,9 @@ jobs:
             ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-test-
 
+      - name: Run phase-1 logging contract tests (Rust)
+        run: cargo test -p classic-message-core --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+
       - name: Run Rust tests
         run: cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
 

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "1.0",
+  "binding": "node",
+  "entries": [
+    {
+      "coverageId": "node-tier1-scanlog",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scanlog",
+        "tier": "tier1"
+      },
+      "contractCount": 16,
+      "contractIdsHash": "ccedc9444087032095810fe739f0beebc9cd8d3761913099b9526b28879c0924",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ]
+    },
+    {
+      "coverageId": "node-tier1-config",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "config",
+        "tier": "tier1"
+      },
+      "contractCount": 50,
+      "contractIdsHash": "120217e20e3d570f2bc2f780e6615d13613be35300a959afa5f61626e307c9ad",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ]
+    },
+    {
+      "coverageId": "node-tier1-version-registry",
+      "classification": "runtime_verified",
+      "ownerModule": "version_registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version_registry",
+        "tier": "tier1"
+      },
+      "contractCount": 56,
+      "contractIdsHash": "36cc7bc21f519f13b43059ac46507987c7f384f3e353e2b877296ba27a15a116",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ]
+    },
+    {
+      "coverageId": "node-tier1-aux",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "aux",
+        "tier": "tier1"
+      },
+      "contractCount": 140,
+      "contractIdsHash": "c1cbcb2e9fb911552ff48433081bb3ea2412bb005027b289b79db8e325730995",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+    },
+    {
+      "coverageId": "node-tier2-scanlog-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsLogCollector",
+        "JsLogProcessor",
+        "processGameLogs"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scangame.spec.ts",
+      "testCaseId": "scanlog-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier2-config-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsConfigDuplicateDetector",
+        "detectConfigDuplicates",
+        "migrateVrSetting",
+        "needsPathDetection"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scangame.spec.ts",
+      "testCaseId": "config-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier2-aux-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "DocsPathFinder",
+        "DocumentsChecker",
+        "GamePathFinder",
+        "JsLogger",
+        "createLogger",
+        "internString",
+        "registryGet",
+        "registrySetGame"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/path.spec.ts",
+      "testCaseId": "aux-tier2-path-shared-message"
+    },
+    {
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsLogCollector",
+        "processLogsBatch",
+        "writeAutoscanReport"
+      ],
+      "verificationMode": "cli_workflow",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+    }
+  ]
+}

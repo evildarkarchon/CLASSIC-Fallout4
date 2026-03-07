@@ -90,6 +90,12 @@ impl PyXseConfig {
         &self.inner.acronym
     }
 
+    /// Gets the full display name (e.g., "Fallout 4 Script Extender (F4SE)").
+    #[getter]
+    fn full_name(&self) -> &str {
+        &self.inner.full_name
+    }
+
     /// Gets the compatible XSE version string.
     #[getter]
     fn compatible_version(&self) -> &str {
@@ -100,6 +106,12 @@ impl PyXseConfig {
     #[getter]
     fn loader(&self) -> &str {
         &self.inner.loader
+    }
+
+    /// Gets the expected number of script files.
+    #[getter]
+    fn file_count(&self) -> u32 {
+        self.inner.file_count
     }
 
     /// Gets the script hashes as a tuple of (filename, hash) pairs.
@@ -216,6 +228,18 @@ impl PyCrashgenConfig {
     #[getter]
     fn name(&self) -> &str {
         &self.inner.name
+    }
+
+    /// Gets the short identifier/acronym (e.g., "BO4", "BO4 NG").
+    #[getter]
+    fn acronym(&self) -> &str {
+        &self.inner.acronym
+    }
+
+    /// Gets the DLL filename (e.g., "buffout4.dll").
+    #[getter]
+    fn dll_file(&self) -> &str {
+        &self.inner.dll_file
     }
 
     /// Gets the description.
@@ -456,6 +480,18 @@ impl PyVersionInfo {
     #[getter]
     fn deprecated(&self) -> bool {
         self.inner.deprecated
+    }
+
+    /// Gets the My Documents subfolder name (e.g., "Fallout4", "Fallout4VR").
+    #[getter]
+    fn docs_name(&self) -> &str {
+        &self.inner.docs_name
+    }
+
+    /// Gets the Steam application ID (e.g., 377160, 611660).
+    #[getter]
+    fn steam_id(&self) -> u32 {
+        self.inner.steam_id
     }
 
     /// Gets the SHA-256 hash of the game executable.

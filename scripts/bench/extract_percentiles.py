@@ -135,7 +135,7 @@ def process_raw_csv(csv_path: Path) -> dict[str, Any] | None:
             return None
 
         stats = calculate_percentiles(per_iteration_times)
-        stats["unit"] = unit
+        stats["unit"] = float(unit)
 
         return stats  # noqa: TRY300
 

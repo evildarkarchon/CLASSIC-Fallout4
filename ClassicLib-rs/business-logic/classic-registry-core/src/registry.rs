@@ -308,16 +308,9 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 /// clear_all();
 /// assert_eq!(get_vr(), "");
 /// ```
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_game_version() instead; VR is now a version variant"
-)]
-#[allow(deprecated)]
 pub fn get_vr() -> String {
     // First check legacy VR key for backward compatibility
     get::<_, String>(Keys::VR).unwrap_or_else(String::new)
-    // Note: When GAME_VERSION migration is complete, this should check:
-    // get_game_version().map(|v| v.config_suffix()).unwrap_or_default()
 }
 
 /// Get the current Fallout 4 version.
@@ -413,7 +406,6 @@ pub fn get_local_dir() -> PathBuf {
 /// register(Keys::GAME_VERSION, "VR".to_string());
 /// assert_eq!(get_config_suffix(), "VR");
 /// ```
-#[allow(deprecated)]
 pub fn get_config_suffix() -> String {
     // Check GAME_VERSION first
     if let Some(version) = get::<_, String>(Keys::GAME_VERSION) {
@@ -651,7 +643,6 @@ mod tests {
 
     #[test]
     #[serial]
-    #[allow(deprecated)]
     fn test_get_config_suffix_vr_via_legacy_key() {
         clear_all();
         register(Keys::VR, "VR".to_string());

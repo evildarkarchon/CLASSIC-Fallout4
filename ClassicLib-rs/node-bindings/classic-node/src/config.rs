@@ -20,6 +20,8 @@ use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js};
+
 /// Convert any Display error to a napi::Error
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
@@ -35,7 +37,7 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
 /// suspect patterns, ignore lists, version info, and UI text. It is immutable
 /// after creation and thread-safe.
 ///
-/// Construct via `new YamlData(yamlDirs, game, vrMode)` or the static
+/// Construct via `new YamlData(yamlDirs, game, gameVersion)` or the static
 /// `YamlData.fromYamlContent(...)` method for testing.
 #[napi]
 pub struct YamlData {
@@ -49,13 +51,14 @@ impl YamlData {
     /// @param yamlDirs - Array of directory paths containing YAML files.
     ///   Either 2 elements `[rootDir, dataDir]` or 3 elements `[mainDir, gameDir, ignoreDir]`.
     /// @param game - Game identifier (e.g., "Fallout4", "Skyrim").
-    /// @param vrMode - Whether to load VR-specific configuration.
+    /// @param gameVersion - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR").
     /// @throws on I/O errors, parse errors, or invalid input.
     #[napi(constructor)]
-    pub fn new(yaml_dirs: Vec<String>, game: String, vr_mode: bool) -> Result<Self> {
+    pub fn new(yaml_dirs: Vec<String>, game: String, game_version: String) -> Result<Self> {
         let dirs: Vec<PathBuf> = yaml_dirs.into_iter().map(PathBuf::from).collect();
         let inner = get_runtime()
-            .block_on(async { YamlDataCore::load_from_yaml_files(dirs, game, vr_mode).await })
+            .block_on(async { YamlDataCore::load_from_yaml_files(dirs, game, game_version).await })
             .map_err(to_napi_err)?;
         Ok(Self { inner })
     }
@@ -66,7 +69,8 @@ impl YamlData {
     /// @param gameContent - Content of the game-specific YAML configuration file.
     /// @param ignoreContent - Content of the ignore list YAML configuration file.
     /// @param game - Game identifier (e.g., "Fallout4", "Skyrim").
-    /// @param vrMode - Whether to load VR-specific configuration.
+    /// @param gameVersion - Selected mode
+    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR").
     /// @throws on parse errors or empty documents.
     #[napi(factory)]
     pub fn from_yaml_content(
@@ -74,14 +78,14 @@ impl YamlData {
         game_content: String,
         ignore_content: String,
         game: String,
-        vr_mode: bool,
+        game_version: String,
     ) -> Result<Self> {
         let inner = YamlDataCore::from_yaml_content(
             &main_content,
             &game_content,
             &ignore_content,
             game,
-            vr_mode,
+            game_version,
         )
         .map_err(to_napi_err)?;
         Ok(Self { inner })
@@ -131,28 +135,31 @@ impl YamlData {
         self.inner.crashgen_latest_og.clone()
     }
 
-    /// Latest VR crash generator version.
-    #[napi(getter)]
-    pub fn crashgen_latest_vr(&self) -> String {
-        self.inner.crashgen_latest_vr.clone()
-    }
-
-    /// Crash generator name for VR mode.
-    #[napi(getter)]
-    pub fn crashgen_name_vr(&self) -> String {
-        self.inner.crashgen_name_vr.clone()
-    }
-
-    /// Items to ignore during crash generation (OG/non-VR, as an array).
+    /// Items to ignore during crash generation (as an array).
     #[napi(getter)]
     pub fn crashgen_ignore(&self) -> Vec<String> {
         self.inner.crashgen_ignore.clone()
     }
 
-    /// Items to ignore during crash generation (VR, as an array).
+    /// Crash generator registry with checks and optional settings rules.
     #[napi(getter)]
-    pub fn crashgen_ignore_vr(&self) -> Vec<String> {
-        self.inner.crashgen_ignore_vr.clone()
+    pub fn crashgen_registry(&self) -> HashMap<String, JsCrashgenRegistryEntry> {
+        self.inner
+            .crashgen_registry
+            .iter()
+            .map(|(name, entry)| {
+                (
+                    name.clone(),
+                    JsCrashgenRegistryEntry {
+                        display_section: entry.display_section.clone(),
+                        ignore_keys: entry.ignore_keys.clone(),
+                        checks: entry.checks.clone(),
+                        settings_rules_version: entry.settings_rules_version,
+                        settings_rules: core_rules_to_js(entry.settings_rules.as_ref()),
+                    },
+                )
+            })
+            .collect()
     }
 
     // ========================================================================
@@ -315,54 +322,36 @@ impl YamlData {
         self.inner.game_version.clone()
     }
 
-    /// Newer game version string (if available).
-    #[napi(getter)]
-    pub fn game_version_new(&self) -> String {
-        self.inner.game_version_new.clone()
-    }
-
-    /// VR game version string.
-    #[napi(getter)]
-    pub fn game_version_vr(&self) -> String {
-        self.inner.game_version_vr.clone()
-    }
-
     // ========================================================================
     // Game Root Names
     // ========================================================================
 
-    /// Game root name (OG/non-VR).
+    /// Game root name.
     #[napi(getter)]
     pub fn game_root_name(&self) -> String {
         self.inner.game_root_name.clone()
     }
 
-    /// Game root name (VR).
-    #[napi(getter)]
-    pub fn game_root_name_vr(&self) -> String {
-        self.inner.game_root_name_vr.clone()
-    }
-
     // ========================================================================
-    // VR-Aware Accessor Methods
+    // Accessor Methods
     // ========================================================================
 
-    /// Get crash generator name for the specified mode (OG or VR).
+    /// Get crash generator name.
     #[napi]
-    pub fn get_crashgen_name(&self, is_vr: bool) -> String {
-        self.inner.get_crashgen_name(is_vr).to_string()
+    pub fn get_crashgen_name(&self) -> String {
+        self.inner.get_crashgen_name().to_string()
     }
 
-    /// Get crash generator ignore list for the specified mode (OG or VR).
+    /// Get crash generator ignore list.
     #[napi]
-    pub fn get_crashgen_ignore(&self, is_vr: bool) -> Vec<String> {
-        self.inner.get_crashgen_ignore(is_vr).to_vec()
+    pub fn get_crashgen_ignore(&self) -> Vec<String> {
+        self.inner.get_crashgen_ignore().to_vec()
     }
 
-    /// Get game root name for the specified mode (OG or VR).
+    /// Get game root name.
     #[napi]
-    pub fn get_game_root_name(&self, is_vr: bool) -> String {
-        self.inner.get_game_root_name(is_vr).to_string()
+    pub fn get_game_root_name(&self) -> String {
+        self.inner.get_game_root_name().to_string()
     }
 
     // ========================================================================
@@ -373,14 +362,13 @@ impl YamlData {
     #[napi(js_name = "toString")]
     pub fn to_string_repr(&self) -> String {
         format!(
-            "YamlData(game={}, version={}, vr_mode={})",
+            "YamlData(game={}, version={})",
             self.inner
                 .crashgen_name
                 .split('_')
                 .next()
                 .unwrap_or("unknown"),
             self.inner.classic_version,
-            !self.inner.crashgen_latest_vr.is_empty()
         )
     }
 }
@@ -608,19 +596,8 @@ impl ClassicConfigJs {
         self.inner.update_check = value;
     }
 
-    /// Whether VR mode is enabled (legacy; prefer gameVersion).
-    #[napi(getter)]
-    pub fn vr_mode(&self) -> bool {
-        self.inner.vr_mode
-    }
-
-    /// Set VR mode.
-    #[napi(setter)]
-    pub fn set_vr_mode(&mut self, value: bool) {
-        self.inner.vr_mode = value;
-    }
-
-    /// Game version selection: "auto", "Original", "NextGen", or "VR".
+    /// Game version selection:
+    /// "auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR".
     #[napi(getter)]
     pub fn game_version(&self) -> String {
         self.inner.game_version.clone()
@@ -768,9 +745,15 @@ pub fn create_yaml_data_from_content(
     game_content: String,
     ignore_content: String,
     game: String,
-    vr_mode: bool,
+    game_version: String,
 ) -> Result<YamlData> {
-    YamlData::from_yaml_content(main_content, game_content, ignore_content, game, vr_mode)
+    YamlData::from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        game_version,
+    )
 }
 
 /// Create a new ClassicConfig with default values (convenience free function).

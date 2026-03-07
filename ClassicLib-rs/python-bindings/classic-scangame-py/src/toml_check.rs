@@ -2,7 +2,10 @@
 
 use classic_scangame_core::{CrashgenChecker, TomlIssueSeverity};
 use pyo3::prelude::*;
+use pyo3::types::PyAny;
 use std::path::PathBuf;
+
+use crate::crashgen_rules::parse_settings_rules;
 
 /// Python wrapper for TomlIssueSeverity
 #[pyclass(name = "TomlIssueSeverity")]
@@ -73,10 +76,18 @@ pub struct PyCrashgenChecker {
 #[pymethods]
 impl PyCrashgenChecker {
     #[new]
-    #[pyo3(signature = (plugins_path, crashgen_name))]
-    fn new(plugins_path: PathBuf, crashgen_name: String) -> Self {
+    #[pyo3(signature = (plugins_path, crashgen_name, settings_rules = None))]
+    fn new(
+        plugins_path: PathBuf,
+        crashgen_name: String,
+        settings_rules: Option<&Bound<'_, PyAny>>,
+    ) -> Self {
         Self {
-            inner: CrashgenChecker::new(&plugins_path, crashgen_name),
+            inner: CrashgenChecker::new_with_rules(
+                &plugins_path,
+                crashgen_name,
+                settings_rules.and_then(parse_settings_rules),
+            ),
         }
     }
 
@@ -122,12 +133,13 @@ impl PyCrashgenChecker {
 /// Returns:
 ///     Tuple of (message_string, list of TomlConfigIssue objects)
 #[pyfunction]
-#[pyo3(signature = (plugins_path, crashgen_name))]
+#[pyo3(signature = (plugins_path, crashgen_name, settings_rules = None))]
 pub fn check_crashgen_config(
     plugins_path: PathBuf,
     crashgen_name: String,
+    settings_rules: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<(String, Vec<PyTomlConfigIssue>)> {
-    let mut checker = PyCrashgenChecker::new(plugins_path, crashgen_name);
+    let mut checker = PyCrashgenChecker::new(plugins_path, crashgen_name, settings_rules);
     checker.check()
 }
 

@@ -1,0 +1,2238 @@
+{
+  "contractVersion": "1.0.0",
+  "phase": "phase1",
+  "description": "Hybrid-tiered Node vs Rust parity contract for high-level APIs.",
+  "tierDefinitions": {
+    "tier1": "Must-have high-level APIs required by app workflows and cross-language integration.",
+    "tier2": "Lower-level or advanced APIs intentionally triaged for later parity work."
+  },
+  "ownerModules": {
+    "scanlog": {
+      "description": "Crash log orchestration, parsing, and crash analysis APIs."
+    },
+    "config": {
+      "description": "YAML data and runtime configuration APIs."
+    },
+    "version_registry": {
+      "description": "Game version lookup and compatibility APIs."
+    },
+    "aux": {
+      "description": "Non-phase1 exports outside scanlog/config/version-registry."
+    }
+  },
+  "squads": {
+    "scanlog_config": {
+      "name": "Squad A (scanlog/config)",
+      "ownerModules": [
+        "scanlog",
+        "config"
+      ]
+    },
+    "version_registry_aux": {
+      "name": "Squad B (version-registry/aux)",
+      "ownerModules": [
+        "version_registry",
+        "aux"
+      ]
+    }
+  },
+  "tier1Mappings": [
+    {
+      "id": "scanlog-analysis-config",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "AnalysisConfig",
+      "nodeExport": "createAnalysisConfig",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-process-log",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLog",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-process-batch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLogsBatch",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "scanlog-parse-segments",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogParser",
+      "nodeExport": "parseLogSegments",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-extract-formids",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogParser",
+      "nodeExport": "extractFormIds",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-extract-plugins",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogParser",
+      "nodeExport": "extractPluginList",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-detect-vr",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "detect_vr_log",
+      "nodeExport": "detectVrLog",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-detect-gpu",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "GpuInfo",
+      "nodeExport": "detectGpuInfo",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-parse-crashgen-version",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashgenVersion",
+      "nodeExport": "parseCrashgenVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-crashgen-version-status",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "check_crashgen_version_status",
+      "nodeExport": "checkCrashgenVersionStatus",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-papyrus-analysis",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "PapyrusStats",
+      "nodeExport": "analyzePapyrusLog",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-analysis-config-from-yaml-content",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "build_analysis_config_from_yaml",
+      "nodeExport": "createAnalysisConfigFromYamlContent",
+      "nodeKind": "function",
+      "nodeArity": 6
+    },
+    {
+      "id": "scanlog-process-log-with-yaml-content",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLogWithYamlContent",
+      "nodeKind": "function",
+      "nodeArity": 7
+    },
+    {
+      "id": "scanlog-process-batch-with-yaml-content",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLogsBatchWithYamlContent",
+      "nodeKind": "function",
+      "nodeArity": 8
+    },
+    {
+      "id": "scanlog-detect-crash-pattern",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "PatternMatcher",
+      "nodeExport": "detectCrashPattern",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-crashgen-version-status-enum",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashgenVersionStatus",
+      "nodeExport": "JsCrashgenVersionStatus",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config-yamldata-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlDataCore",
+      "nodeExport": "YamlData",
+      "nodeKind": "class"
+    },
+    {
+      "id": "config-create-yamldata-content",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlDataCore",
+      "nodeExport": "createYamlDataFromContent",
+      "nodeKind": "function",
+      "nodeArity": 5
+    },
+    {
+      "id": "config-classic-config-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "ClassicConfig",
+      "nodeExport": "ClassicConfigJs",
+      "nodeKind": "class"
+    },
+    {
+      "id": "config-create-default-config",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "ClassicConfig",
+      "nodeExport": "createDefaultConfig",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "config-clear-yaml-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "clear_global_yaml_cache",
+      "nodeExport": "clearYamlCache",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "config-yaml-source-enum",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "JsYamlSource",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config-yaml-source-path",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlSourcePath",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "config-yaml-source-display-name",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlSourceDisplayName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "config-yaml-source-display-name-with-game",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlSourceDisplayNameWithGame",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "config-fileio-config-interface",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "FileIoConfig",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config-path-config-interface",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "PathConfig",
+      "nodeExport": "JsPathConfig",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config-yaml-file-enum",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "JsYamlFile",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config-get-all-yaml-files",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getAllYamlFiles",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-yaml-file-description",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlFileDescription",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-default-cache-ttl-const",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "DEFAULT_CACHE_TTL",
+      "nodeKind": "const"
+    },
+    {
+      "id": "config-batch-cache-ttl-const",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "BATCH_CACHE_TTL",
+      "nodeKind": "const"
+    },
+    {
+      "id": "config-max-cache-ttl-const",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "MAX_CACHE_TTL",
+      "nodeKind": "const"
+    },
+    {
+      "id": "config-get-default-cache-ttl",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getDefaultCacheTtl",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-batch-cache-ttl",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getBatchCacheTtl",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-max-cache-ttl",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getMaxCacheTtl",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-generate-local-yaml",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "generateLocalYaml",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-settings-cache-stats-interface",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "SettingsCacheStats",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config-load-settings-sync",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "loadSettingsSync",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-load-settings-async",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "loadSettingsAsync",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-cached",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getCached",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-is-cached",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "isCached",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-invalidate-settings",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "invalidateSettings",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-clear-settings-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "clearSettingsCache",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-settings-cache-size",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "settingsCacheSize",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-settings-cache-keys",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "settingsCacheKeys",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-settings-cache-stats",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getSettingsCacheStats",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-reset-settings-cache-stats",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "resetSettingsCacheStats",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-validate-settings-path",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "PathConfig",
+      "nodeExport": "validateSettingsPath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-validate-settings-paths",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "PathConfig",
+      "nodeExport": "validateSettingsPaths",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-document-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "YamlDocument",
+      "nodeKind": "class"
+    },
+    {
+      "id": "config-yaml-parse",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlParse",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-stringify",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlStringify",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-load-file",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlLoadFile",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-string-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetStringValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-vec-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetVecValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-hashmap-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetHashmapValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-save-file",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlSaveFile",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-set-setting",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlSetSetting",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-settings-batch",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetSettingsBatch",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-set-settings-batch",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlSetSettingsBatch",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-indexmap-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetIndexmapValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-hashmap-vec-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetHashmapVecValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-clear-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "clear_global_yaml_cache",
+      "nodeExport": "yamlClearCache",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-cache-stats",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "clear_global_yaml_cache",
+      "nodeExport": "yamlGetCacheStats",
+      "nodeKind": "function"
+    },
+    {
+      "id": "version-registry-get-by-id",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getVersionById",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-by-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getVersionByVersionString",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-by-short-name",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getVersionByShortName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-all",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAllVersions",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-get-all-for-game",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAllVersionsForGame",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-get-correct-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getCorrectVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-wrong-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getWrongVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-match-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "MatchResult",
+      "nodeExport": "matchVersion",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "version-registry-address-lib-filename",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAddressLibraryFilename",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-crashgen-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "getCrashgenVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-crashgen-version-strings",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "getCrashgenVersionStrings",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-crashgen-for-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "getCrashgenForVersion",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-is-compatible",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "isVersionCompatible",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-parse-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "parseGameVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-version-distance",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "gameVersionDistance",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-promote-fallout4-version-info",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "Fallout4VersionInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-address-lib-info",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "AddressLibFormat",
+      "nodeExport": "JsAddressLibInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-address-library-config",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "AddressLibraryConfig",
+      "nodeExport": "JsAddressLibraryConfig",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-crashgen-check-result",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "MatchResult",
+      "nodeExport": "JsCrashgenCheckResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-crashgen-checker",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionMatcher",
+      "nodeExport": "JsCrashgenChecker",
+      "nodeKind": "class"
+    },
+    {
+      "id": "version-registry-promote-js-crashgen-config",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "JsCrashgenConfig",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-crashgen-report",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "Result",
+      "nodeExport": "JsCrashgenReport",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-crashgen-version-info",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "JsCrashgenVersionInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-fallout4-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "JsFallout4Version",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "version-registry-promote-js-game-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "JsGameVersion",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "version-registry-promote-js-unknown-version-handling",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "UnknownVersionHandling",
+      "nodeExport": "JsUnknownVersionHandling",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-version-info",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "XseConfig",
+      "nodeExport": "JsVersionInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-js-version-registry-snapshot",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionMatcher",
+      "nodeExport": "JsVersionRegistrySnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-promote-xse-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "XseConfig",
+      "nodeExport": "XseVersion",
+      "nodeKind": "class"
+    },
+    {
+      "id": "version-registry-promote-check-crashgen-config",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "Result",
+      "nodeExport": "checkCrashgenConfig",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-promote-check-crashgen-full",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "Result",
+      "nodeExport": "checkCrashgenFull",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-promote-compare-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "compareVersions",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-promote-detect-xse-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "XseConfig",
+      "nodeExport": "detectXseVersion",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-promote-extract-all-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "extractAllVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-extract-version-from-filename",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "extractVersionFromFilename",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-extract-version-from-log",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "extractVersionFromLog",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-format-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "formatVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-get-address-lib-info",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CompatibleRange",
+      "nodeExport": "getAddressLibInfo",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-get-all-fallout4-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAllFallout4Versions",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-promote-get-classic-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getClassicVersion",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-promote-get-fallout4-version-info",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getFallout4VersionInfo",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-get-script-hashes-for-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "XseConfig",
+      "nodeExport": "getScriptHashesForVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-get-unknown-version-default",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "UnknownVersionStrategy",
+      "nodeExport": "getUnknownVersionDefault",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-get-unknown-version-handling",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "LogLevel",
+      "nodeExport": "getUnknownVersionHandling",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-promote-get-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getVersion",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-promote-get-version-registry",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "get_version_registry",
+      "nodeExport": "getVersionRegistry",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-promote-is-known-fallout4-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "isKnownFallout4Version",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-parse-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistryError",
+      "nodeExport": "parseVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-registry-get-game-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "registryGetGameVersion",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-promote-registry-is-vr-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "registryIsVrVersion",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-promote-resolve-effective-game-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "MatchConfidence",
+      "nodeExport": "resolveEffectiveGameVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-promote-try-parse-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "tryParseVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4a-backup-manager",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "BackupManager",
+      "nodeExport": "BackupManager",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-docs-path-finder",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "DocsPathFinder",
+      "nodeExport": "DocsPathFinder",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-documents-checker",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "DocumentsChecker",
+      "nodeExport": "DocumentsChecker",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-game-path-finder",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "GamePathFinder",
+      "nodeExport": "GamePathFinder",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-js-backup-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "BackupInfo",
+      "nodeExport": "JsBackupInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4a-js-backup-manager",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "BackupManager",
+      "nodeExport": "JsBackupManager",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-js-file-generator",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileGenerator",
+      "nodeExport": "JsFileGenerator",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-js-file-i-o",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsFileIO",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-js-file-operation-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileOperationResult",
+      "nodeExport": "JsFileOperationResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4a-js-game-files-manager",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "GameFilesManager",
+      "nodeExport": "JsGameFilesManager",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4a-js-message",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "Message",
+      "nodeExport": "JsMessage",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4a-js-message-target",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "MessageTarget",
+      "nodeExport": "JsMessageTarget",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4a-js-message-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "MessageType",
+      "nodeExport": "JsMessageType",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4a-metrics-summary-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "MetricsSummary",
+      "nodeExport": "MetricsSummaryResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4a-runtime-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get_runtime",
+      "nodeExport": "RuntimeInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4a-timing-stats",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "MetricsSummary",
+      "nodeExport": "TimingStats",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4a-calculate-file-similarity",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "calculate_similarity",
+      "nodeExport": "calculateFileSimilarity",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-check-read-permissions",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "check_read_permissions",
+      "nodeExport": "checkReadPermissions",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-check-write-permissions",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "check_write_permissions",
+      "nodeExport": "checkWritePermissions",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-clear-all-metrics",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "clear_metrics",
+      "nodeExport": "clearAllMetrics",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-create-message",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "Message",
+      "nodeExport": "createMessage",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-detect-encoding",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "EncodingDetector",
+      "nodeExport": "detectEncoding",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-format-message",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "format_log_message",
+      "nodeExport": "formatMessage",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-generate-ignore-file",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "generate_ignore_file",
+      "nodeExport": "generateIgnoreFile",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-get-metrics-summary",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get_summary",
+      "nodeExport": "getMetricsSummary",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-get-runtime-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get_runtime",
+      "nodeExport": "getRuntimeInfo",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-get-system-documents-path",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get_system_documents_path",
+      "nodeExport": "getSystemDocumentsPath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-hash-file",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileHasher",
+      "nodeExport": "hashFile",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-hash-files-parallel",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileHasher",
+      "nodeExport": "hashFilesParallel",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-intern-string",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "strings_core",
+      "nodeExport": "internString",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-is-restricted-path",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "is_restricted_path",
+      "nodeExport": "isRestrictedPath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-is-runtime-available",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get_runtime",
+      "nodeExport": "isRuntimeAvailable",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-is-valid-executable-path",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "is_valid_path",
+      "nodeExport": "isValidExecutablePath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-is-valid-path",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "is_valid_path",
+      "nodeExport": "isValidPath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-join-paths",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "joinPaths",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-load-batch-async",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "load_batch_async",
+      "nodeExport": "loadBatchAsync",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-load-batch-sync",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "load_batch_sync",
+      "nodeExport": "loadBatchSync",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-normalize-path",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "normalizePath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-normalize-string",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "strings_core",
+      "nodeExport": "normalizeString",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-parse-steam-library",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "parse_steam_library",
+      "nodeExport": "parseSteamLibrary",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-process-string-batch",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "strings_core",
+      "nodeExport": "processStringBatch",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-query-game-registry",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "query_game_registry",
+      "nodeExport": "queryGameRegistry",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-record-timing-metric",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "record_timing",
+      "nodeExport": "recordTimingMetric",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-registry-clear",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "clear_all",
+      "nodeExport": "registryClear",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-registry-get",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get",
+      "nodeExport": "registryGet",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-registry-get-game",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "get_game",
+      "nodeExport": "registryGetGame",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-registry-remove",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "unregister",
+      "nodeExport": "registryRemove",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-registry-set",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "register",
+      "nodeExport": "registrySet",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-registry-set-game",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "set_game",
+      "nodeExport": "registrySetGame",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-remove-readonly",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "remove_readonly",
+      "nodeExport": "removeReadonly",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-strip-emoji-text",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "strip_emoji",
+      "nodeExport": "stripEmojiText",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-validate-custom-scan-path",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "validate_custom_scan_path",
+      "nodeExport": "validateCustomScanPath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-validate-path-with-permissions",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "validate_path_with_permissions",
+      "nodeExport": "validatePathWithPermissions",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-validate-paths-batch",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "validatePathsBatch",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4a-validate-required-files",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "validate_required_files",
+      "nodeExport": "validateRequiredFiles",
+      "nodeKind": "function"
+    },
+    {
+      "id": "aux-phase4b-github-client",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "GithubClient",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-ba2-issues",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsBa2Issues",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-ba2-scan-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsBa2ScanResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-ba2-scanner",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsBa2Scanner",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-batch-entry",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsBatchEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-check-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsCheckResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-check-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsCheckType",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-js-database-pool",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsDatabasePool",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-duplicate-group",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsDuplicateGroup",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-enb-checker",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsEnbChecker",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-enb-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsEnbResult",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-js-enb-validation-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsEnbValidationResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-game-integrity-checker",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsGameIntegrityChecker",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-game-scan-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsGameScanResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-github-asset",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsGithubAsset",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-github-release",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsGithubRelease",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-ini-validator",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsIniValidator",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-integrity-check-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsIntegrityCheckResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-issue-severity",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsIssueSeverity",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-js-mod-duplicate-entry",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsModDuplicateEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-mod-ini-scan-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsModIniScanResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-mod-scan-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsModScanResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-mod-site",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsModSite",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-js-pool-statistics",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsPoolStatistics",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-toml-issue-severity",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsTomlIssueSeverity",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-js-unpacked-issues",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsUnpackedIssues",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-unpacked-scanner",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsUnpackedScanner",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-update-check-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsUpdateCheckResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-validation-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsValidationResult",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-js-vsync-entry",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsVsyncEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-wrye-bash-parser",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsWryeBashParser",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-wrye-issue",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsWryeIssue",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-xse-checker",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsXseChecker",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4b-js-xse-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsXseInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-js-xse-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsXseType",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4b-query-param",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "QueryParam",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-resource-count",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "ResourceCount",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-resource-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "ResourceInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4b-build-url-with-query",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "buildUrlWithQuery",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-check-enb",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "checkEnb",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-check-for-updates",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "checkForUpdates",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "aux-phase4b-count-resources-by-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "countResourcesByType",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-create-resource-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "createResourceInfo",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-create-resource-info-with-size",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "createResourceInfoWithSize",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-detect-resource-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "detectResourceType",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-enumerate-resources",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "enumerateResources",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-extract-domain",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "extractDomain",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-get-latest-release",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getLatestRelease",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-get-mod-site-game-url",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getModSiteGameUrl",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-get-mod-site-name",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getModSiteName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-get-mod-site-url",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getModSiteUrl",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-get-resource-extensions",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getResourceExtensions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-get-user-agent",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getUserAgent",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "aux-phase4b-get-user-agent-prefix",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getUserAgentPrefix",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "aux-phase4b-get-user-agent-with-suffix",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getUserAgentWithSuffix",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-get-xse-info",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getXseInfo",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-has-update",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "hasUpdate",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-is-supported-resource",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "isSupportedResource",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-is-valid-url",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "isValidUrl",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-is-xse-installed",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "isXseInstalled",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-join-url",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "joinUrl",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-parse-resource-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "parseResourceType",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-parse-xse-type",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "parseXseType",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-run-game-checks",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "runGameChecks",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-run-mod-scans",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "runModScans",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-scan-all-ba2-archives",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "scanAllBa2Archives",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-scan-mod-inis",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "scanModInis",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-scan-unpacked-files",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "scanUnpackedFiles",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4b-validate-resource",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "validateResource",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-validate-url",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "validateUrl",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-xse-dll-prefix",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "xseDllPrefix",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-xse-loader-name",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "xseLoaderName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-xse-type-for-game",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "xseTypeForGame",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4b-xse-type-name",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "xseTypeName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4c-crash-autoscan-pattern",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "CRASH_AUTOSCAN_PATTERN",
+      "nodeKind": "const"
+    },
+    {
+      "id": "version-registry-phase4c-js-compatible-range",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CompatibleRange",
+      "nodeExport": "JsCompatibleRange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-js-dds-analyzer-alias",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDDSAnalyzer",
+      "nodeKind": "type"
+    },
+    {
+      "id": "aux-phase4c-js-dds-analyzer-class",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDdsAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4c-js-dds-batch-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDdsBatchResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-js-dds-issue",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDdsIssue",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-js-game-id",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsGameId",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4c-js-ini-check-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsIniCheckResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-phase4c-js-match-result",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "MatchResult",
+      "nodeExport": "JsMatchResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-calculate-text-similarity",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "calculate_similarity",
+      "nodeExport": "calculateTextSimilarity",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4c-check-drive-exists",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "checkDriveExists",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-phase4c-get-all-exe-hashes",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "get_version_registry",
+      "nodeExport": "getAllExeHashes",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4c-get-all-game-ids",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getAllGameIds",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-phase4c-get-all-script-hashes",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "get_version_registry",
+      "nodeExport": "getAllScriptHashes",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4c-get-game-name",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getGameName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    }
+  ]
+}

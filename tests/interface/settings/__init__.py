@@ -1,1 +1,0 @@
-"""Settings interface unit tests."""

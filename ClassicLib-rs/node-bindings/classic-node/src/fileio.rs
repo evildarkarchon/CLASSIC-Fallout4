@@ -614,6 +614,9 @@ pub const CRASH_AUTOSCAN_PATTERN: &str = classic_file_io_core::CRASH_AUTOSCAN_PA
 #[napi]
 pub struct JsLogCollector {
     inner: classic_file_io_core::LogCollector,
+    base_folder: String,
+    xse_folder: Option<String>,
+    custom_folder: Option<String>,
 }
 
 #[napi]
@@ -629,12 +632,15 @@ impl JsLogCollector {
         xse_folder: Option<String>,
         custom_folder: Option<String>,
     ) -> Self {
+        let base_path = PathBuf::from(&base_folder);
+        let xse_path = xse_folder.clone().map(PathBuf::from);
+        let custom_path = custom_folder.clone().map(PathBuf::from);
+
         Self {
-            inner: classic_file_io_core::LogCollector::new(
-                PathBuf::from(base_folder),
-                xse_folder.map(PathBuf::from),
-                custom_folder.map(PathBuf::from),
-            ),
+            inner: classic_file_io_core::LogCollector::new(base_path, xse_path, custom_path),
+            base_folder,
+            xse_folder,
+            custom_folder,
         }
     }
 
@@ -648,6 +654,32 @@ impl JsLogCollector {
     #[napi]
     pub fn pastebin_dir(&self) -> String {
         self.inner.pastebin_dir().to_string_lossy().to_string()
+    }
+
+    /// Execute the full log collection workflow and return discovered crash log paths.
+    #[napi]
+    pub async fn collect_all(&self) -> Result<Vec<String>> {
+        let collector = classic_file_io_core::LogCollector::new(
+            PathBuf::from(&self.base_folder),
+            self.xse_folder.clone().map(PathBuf::from),
+            self.custom_folder.clone().map(PathBuf::from),
+        );
+        let handle = classic_shared_core::get_runtime().handle().clone();
+        handle
+            .spawn(async move {
+                collector
+                    .collect_all()
+                    .await
+                    .map(|paths| {
+                        paths
+                            .into_iter()
+                            .map(|path| path.to_string_lossy().to_string())
+                            .collect()
+                    })
+                    .map_err(to_napi_err)
+            })
+            .await
+            .map_err(to_napi_err)?
     }
 }
 
@@ -724,6 +756,29 @@ pub async fn generate_local_yaml(content: String, game_name: String) -> Result<b
             classic_file_io_core::generate_local_yaml(content, game_name)
                 .await
                 .map_err(to_napi_err)
+        })
+        .await
+        .map_err(to_napi_err)?
+}
+
+/// Write an AUTOSCAN report adjacent to the source crash log.
+#[napi]
+pub async fn write_autoscan_report(log_path: String, content: String) -> Result<String> {
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    handle
+        .spawn(async move {
+            let log_path = PathBuf::from(&log_path);
+            let stem = log_path
+                .file_stem()
+                .and_then(|value| value.to_str())
+                .unwrap_or("unknown");
+            let autoscan_path = log_path.with_file_name(format!("{stem}-AUTOSCAN.md"));
+            let file_io = FileIOCore::new("utf-8", "ignore", 4, 8);
+            file_io
+                .write_file(&autoscan_path, &content)
+                .await
+                .map_err(to_napi_err)?;
+            Ok(autoscan_path.to_string_lossy().to_string())
         })
         .await
         .map_err(to_napi_err)?

@@ -14,7 +14,10 @@ pub mod config;
 pub mod yamldata;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
-pub use yamldata::{ConfigError, YamlDataCore};
+pub use yamldata::{
+    ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version,
+    resolve_registry_version_info,
+};
 
 // Re-export get_runtime from classic-shared-core for convenience
 pub use classic_shared_core::get_runtime;

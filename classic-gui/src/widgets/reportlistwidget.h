@@ -21,7 +21,7 @@ signals:
     void reportSelected(const QString& filePath);
     void refreshRequested();
     void deleteRequested(const QString& filePath);
-    void openFolderRequested();
+    void openFolderRequested(const QString& filePath);
 
 private slots:
     void onSearchTextChanged(const QString& text);

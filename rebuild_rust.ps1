@@ -1,25 +1,110 @@
-# Rebuild Rust Extension Script
-# Ensures clean rebuild of all Rust Python modules
+<#
+.SYNOPSIS
+    General-purpose Rust rebuild script for CLASSIC.
+
+.DESCRIPTION
+    Rebuilds one or more Rust targets used by the CLASSIC project:
+      - Python bindings (PyO3 wheels, install + verify)
+      - Rust workspace (cargo build --workspace)
+      - Node bindings (NAPI-RS addon build)
+
+    By default, this script targets the Rust workspace unless -Target is specified.
+    Python bindings remain available for legacy/deprecation support.
+
+.PARAMETER Target
+    Rebuild scope:
+      - python    : Build/install/verify Python bindings
+      - workspace : Build full Rust workspace via cargo (default)
+      - node      : Build Node/Bun bindings
+
+.PARAMETER Crates
+    Optional positional filters:
+      - Target python: matches Python binding modules by package/wheel/import name
+      - Target workspace/all: maps to cargo package filters (`cargo build -p <crate>`)
+      - Target node: currently ignored
+
+.PARAMETER Clean
+    Perform clean rebuild behavior for selected targets.
+
+.PARAMETER BuildOnly
+    Python target: build wheels but skip install/verification.
+    Other targets: accepted for compatibility but has no effect.
+
+.PARAMETER Debug
+    Workspace/node targets: use debug-oriented build commands.
+    Python target: currently ignored (maturin release wheels are used).
+
+.EXAMPLE
+    ./rebuild_rust.ps1
+    # Default: rebuild Rust workspace
+
+.EXAMPLE
+    ./rebuild_rust.ps1 classic_yaml
+    # Default workspace target with package filter equivalent to `cargo build -p classic_yaml`
+
+.EXAMPLE
+    ./rebuild_rust.ps1 -Target python classic_yaml
+    # Rebuild only matching Python binding module(s)
+
+.EXAMPLE
+    ./rebuild_rust.ps1 -Target workspace classic-scanlog-core
+    # Rebuild only specific Rust workspace crate(s)
+
+.EXAMPLE
+    ./rebuild_rust.ps1 -Target workspace -Clean
+    # Clean + rebuild Rust workspace
+
+.EXAMPLE
+    ./rebuild_rust.ps1 -Target node -DebugBuild
+    # Build node addon in debug mode
+
+.EXAMPLE
+    ./rebuild_rust.ps1 -Clean
+    # Clean + rebuild entire Rust workspace
+#>
 
 param (
     [Parameter(ValueFromRemainingArguments = $true, Position = 0)]
     [string[]]$Crates,
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet("python", "workspace", "node")]
+    [string]$Target = "workspace",
+
+    [Parameter(Mandatory = $false)]
     [switch]$Clean,
 
     [Parameter(Mandatory = $false)]
-    [switch]$BuildOnly  # Skip install and verification (useful for CI)
+    [switch]$BuildOnly,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$DebugBuild
 )
 
 $ErrorActionPreference = "Stop"
 
-# Function to parse Cargo.toml
+$ProjectRoot = $PSScriptRoot
+$WorkspaceManifest = Join-Path $ProjectRoot "ClassicLib-rs/Cargo.toml"
+$UseUv = [bool](Get-Command uv -ErrorAction SilentlyContinue)
+
+function Assert-LastExitCode {
+    param (
+        [string]$CommandLabel
+    )
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "$CommandLabel failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+    }
+}
+
 function Get-RustModuleInfo {
-    param ($CargoPath)
+    param (
+        [string]$CargoPath
+    )
 
     $content = Get-Content $CargoPath -Raw
-    
+
     # Extract package name
     $packageName = $null
     if ($content -match '\[package\][\s\S]*?name\s*=\s*"(?<name>[^"]+)"') {
@@ -36,13 +121,14 @@ function Get-RustModuleInfo {
     $isPyO3 = $content -match 'pyo3\s*=' -or $content -match 'crate-type\s*=\s*\[.*"cdylib".*\]'
 
     if ($packageName -and $libName -and $isPyO3) {
-        return @{
+        return [PSCustomObject]@{
             WheelName   = $packageName.Replace('-', '_')
-            Dir         = $CargoPath | Split-Path -Parent
+            Dir         = Split-Path -Path $CargoPath -Parent
             ImportName  = $libName
             PackageName = $packageName
         }
     }
+
     return $null
 }
 
@@ -52,7 +138,7 @@ function Test-IsTransientLinkerLock {
     )
 
     return ($Text -match "LNK1105" -and $Text -match "error code 1224") -or
-           $Text -match "cannot close file '.*lnk.*\.tmp'"
+    $Text -match "cannot close file '.*lnk.*\.tmp'"
 }
 
 function Invoke-MaturinBuildWithRetry {
@@ -78,10 +164,17 @@ function Invoke-MaturinBuildWithRetry {
 
             $previousNativeCommandPreference = $PSNativeCommandUseErrorActionPreference
             $outputText = @()
+            $exitCode = 1
+
             try {
                 # Stream output directly so Ctrl+C is handled like a normal foreground command.
                 $PSNativeCommandUseErrorActionPreference = $false
-                & maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+                if ($UseUv) {
+                    & uv run maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+                }
+                else {
+                    & maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+                }
                 $exitCode = $LASTEXITCODE
             }
             finally {
@@ -116,171 +209,361 @@ function Invoke-MaturinBuildWithRetry {
     return $false
 }
 
-# Discover modules
-Write-Host "🔍 Discovering Rust Python modules..." -ForegroundColor Cyan
-$RustModules = @()
+function Get-PythonRustModules {
+    param (
+        [string[]]$CrateFilters
+    )
 
-# Search directories
-$searchPaths = @("ClassicLib-rs/foundation", "ClassicLib-rs/python-bindings")
-foreach ($path in $searchPaths) {
-    if (Test-Path $path) {
-        $cargoFiles = Get-ChildItem -Path $path -Filter "Cargo.toml" -Recurse
-        foreach ($file in $cargoFiles) {
-            $info = Get-RustModuleInfo -CargoPath $file.FullName
-            if ($info) {
-                # Make path relative to project root
-                $relPath = $info.Dir.Substring($PWD.Path.Length + 1).Replace('\', '/')
-                $info.Dir = $relPath
-                $RustModules += $info
+    Write-Host "🔍 Discovering Rust Python modules..." -ForegroundColor Cyan
+    $rustModules = @()
+
+    $searchPaths = @(
+        (Join-Path $ProjectRoot "ClassicLib-rs/foundation"),
+        (Join-Path $ProjectRoot "ClassicLib-rs/python-bindings")
+    )
+
+    foreach ($path in $searchPaths) {
+        if (Test-Path $path) {
+            $cargoFiles = Get-ChildItem -Path $path -Filter "Cargo.toml" -Recurse -File
+            foreach ($file in $cargoFiles) {
+                $info = Get-RustModuleInfo -CargoPath $file.FullName
+                if ($info) {
+                    $rustModules += $info
+                }
             }
         }
     }
-}
 
-# Sort modules (foundation first, then alphabetical)
-$RustModules = $RustModules | Sort-Object { 
-    if ($_.Dir -match "foundation") { "0_" + $_.WheelName } else { "1_" + $_.WheelName } 
-}
+    # Sort modules (foundation first, then alphabetical)
+    $rustModules = @($rustModules | Sort-Object {
+            if ($_.Dir -match "ClassicLib-rs[\\/]foundation") { "0_" + $_.WheelName } else { "1_" + $_.WheelName }
+        })
 
-# Filter modules if arguments provided
-if ($Crates) {
-    $filteredModules = @()
-    foreach ($crate in $Crates) {
-        $match = $RustModules | Where-Object { 
-            $_.WheelName -match $crate -or 
-            $_.ImportName -match $crate -or 
-            $_.PackageName -match $crate 
+    # Filter modules if arguments provided
+    if ($CrateFilters -and $CrateFilters.Count -gt 0) {
+        $filteredModules = @()
+        foreach ($crate in $CrateFilters) {
+            $match = $rustModules | Where-Object {
+                $_.WheelName -match $crate -or
+                $_.ImportName -match $crate -or
+                $_.PackageName -match $crate
+            }
+            if ($match) {
+                $filteredModules += $match
+            }
+            else {
+                Write-Warning "Could not find module matching '$crate'"
+            }
         }
-        if ($match) {
-            $filteredModules += $match
-        }
-        else {
-            Write-Warning "Could not find module matching '$crate'"
-        }
-    }
-    if ($filteredModules.Count -eq 0) {
-        Write-Error "No modules matched the provided arguments."
-    }
-    # Deduplicate by WheelName and ensure array
-    $RustModules = @($filteredModules | Group-Object WheelName | ForEach-Object { $_.Group[0] })
-}
 
-Write-Host "Found $($RustModules.Count) modules to build." -ForegroundColor Cyan
-foreach ($m in $RustModules) {
-    Write-Host " - $($m.WheelName) ($($m.Dir))" -ForegroundColor Gray
-}
-
-# Clean if requested
-if ($Clean) {
-    Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan
-    Push-Location ClassicLib-rs
-    cargo clean
-    Pop-Location
-
-    Write-Host "🗑️  Removing old .pyd files from venv..." -ForegroundColor Cyan
-    foreach ($module in $RustModules) {
-        Remove-Item -Path ".venv\Lib\site-packages\$($module.WheelName)*.pyd" -ErrorAction SilentlyContinue
-        Remove-Item -Path ".venv\Lib\site-packages\$($module.WheelName)*.dll" -ErrorAction SilentlyContinue
-        Remove-Item -Path ".venv\Lib\site-packages\$($module.WheelName)-*.dist-info" -Recurse -ErrorAction SilentlyContinue
-    }
-}
-else {
-    Write-Host "ℹ️  Skipping clean step (use -Clean to force)" -ForegroundColor Gray
-}
-
-Write-Host ""
-if ($BuildOnly) {
-    Write-Host "🔨 Building wheels (install skipped)..." -ForegroundColor Yellow
-}
-else {
-    Write-Host "🔨 Building and installing..." -ForegroundColor Yellow
-}
-Write-Host ""
-
-foreach ($module in $RustModules) {
-    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host "Building $($module.WheelName)..." -ForegroundColor Cyan
-    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-
-    Push-Location $module.Dir
-
-    # Build wheel
-    $buildOk = Invoke-MaturinBuildWithRetry -WheelName $module.WheelName
-    if (-not $buildOk) {
-        Pop-Location
-        Write-Error "Failed to build $($module.WheelName)!"
-        exit 1
-    }
-
-    # Find the latest wheel
-    $wheel = Get-ChildItem -Path "dist\$($module.WheelName)-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $wheel) {
-        Pop-Location
-        Write-Error "No wheel file found for $($module.WheelName)!"
-        exit 1
-    }
-
-    # Install unless BuildOnly mode
-    if (-not $BuildOnly) {
-        Write-Host "📦 Installing $($module.WheelName)..." -ForegroundColor Green
-        uv pip install $wheel.FullName --force-reinstall
-        if ($LASTEXITCODE -ne 0) {
-            Pop-Location
-            Write-Error "Failed to install $($module.WheelName)!"
+        if ($filteredModules.Count -eq 0) {
+            Write-Error "No modules matched the provided arguments."
             exit 1
         }
+
+        # Deduplicate by WheelName and ensure array
+        $rustModules = @($filteredModules | Group-Object WheelName | ForEach-Object { $_.Group[0] })
     }
 
-    Pop-Location
+    return @($rustModules)
+}
+
+function Remove-PythonInstalledArtifacts {
+    param (
+        [array]$RustModules
+    )
+
+    $sitePackages = Join-Path $ProjectRoot ".venv/Lib/site-packages"
+    if (-not (Test-Path $sitePackages)) {
+        Write-Host "ℹ️  No local .venv site-packages found; skipping installed artifact cleanup." -ForegroundColor Gray
+        return
+    }
+
+    Write-Host "🗑️  Removing old Python binding artifacts from .venv..." -ForegroundColor Cyan
+    foreach ($module in $RustModules) {
+        Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.pyd") -ErrorAction SilentlyContinue
+        Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.dll") -ErrorAction SilentlyContinue
+        Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)-*.dist-info") -Recurse -ErrorAction SilentlyContinue
+    }
+}
+
+function Invoke-PythonBindingsRebuild {
+    param (
+        [string[]]$CrateFilters,
+        [switch]$CleanBuild,
+        [switch]$BuildOnlyMode
+    )
+
+    Write-Host "Rust bindings are mandatory prerequisites for CLASSIC Python entrypoints." -ForegroundColor Cyan
+    Write-Host "This run rebuilds/installs required Python bindings used by startup-all validation." -ForegroundColor Cyan
+
+    $rustModules = Get-PythonRustModules -CrateFilters $CrateFilters
+    if ($rustModules.Count -eq 0) {
+        Write-Error "No Rust Python modules were discovered."
+        exit 1
+    }
+
+    Write-Host "Found $($rustModules.Count) Python module(s) to build." -ForegroundColor Cyan
+    foreach ($m in $rustModules) {
+        $relativeDir = $m.Dir.Replace($ProjectRoot, ".").Replace('\\', '/')
+        Write-Host " - $($m.WheelName) ($relativeDir)" -ForegroundColor Gray
+    }
+
+    if ($CleanBuild) {
+        Write-Host "🧹 Cleaning old Rust build artifacts..." -ForegroundColor Cyan
+        Push-Location (Join-Path $ProjectRoot "ClassicLib-rs")
+        try {
+            & cargo clean
+            Assert-LastExitCode -CommandLabel "cargo clean"
+        }
+        finally {
+            Pop-Location
+        }
+
+        Remove-PythonInstalledArtifacts -RustModules $rustModules
+    }
+    else {
+        Write-Host "ℹ️  Skipping clean step (use -Clean to force)" -ForegroundColor Gray
+    }
+
     Write-Host ""
+    if ($BuildOnlyMode) {
+        Write-Host "🔨 Building wheels (install skipped)..." -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "🔨 Building and installing..." -ForegroundColor Yellow
+    }
+    Write-Host ""
+
+    foreach ($module in $rustModules) {
+        Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host "Building $($module.WheelName)..." -ForegroundColor Cyan
+        Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+
+        Push-Location $module.Dir
+        try {
+            $buildOk = Invoke-MaturinBuildWithRetry -WheelName $module.WheelName
+            if (-not $buildOk) {
+                Write-Error "Failed to build $($module.WheelName)!"
+                exit 1
+            }
+
+            $wheel = Get-ChildItem -Path "dist\$($module.WheelName)-*.whl" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+
+            if (-not $wheel) {
+                Write-Error "No wheel file found for $($module.WheelName)!"
+                exit 1
+            }
+
+            if (-not $BuildOnlyMode) {
+                Write-Host "📦 Installing $($module.WheelName)..." -ForegroundColor Green
+                if ($UseUv) {
+                    & uv pip install $wheel.FullName --force-reinstall
+                    Assert-LastExitCode -CommandLabel "uv pip install $($wheel.FullName)"
+                }
+                else {
+                    & pip install $wheel.FullName --force-reinstall
+                    Assert-LastExitCode -CommandLabel "pip install $($wheel.FullName)"
+                }
+            }
+        }
+        finally {
+            Pop-Location
+        }
+
+        Write-Host ""
+    }
+
+    if ($BuildOnlyMode) {
+        Write-Host "✨ Wheel build complete. Install these wheels before running CLASSIC Python entrypoints." -ForegroundColor Green
+        return
+    }
+
+    Write-Host "✅ Verifying installations..." -ForegroundColor Green
+    Write-Host ""
+
+    $verificationResults = @()
+    foreach ($module in $rustModules) {
+        try {
+            $importName = $module.ImportName
+            if ($UseUv) {
+                $version = & uv run python -c "import $importName; print($importName.__version__)" 2>&1
+            }
+            else {
+                $venvPython = Join-Path $ProjectRoot ".venv/Scripts/python.exe"
+                if (Test-Path $venvPython) {
+                    $version = & $venvPython -c "import $importName; print($importName.__version__)" 2>&1
+                }
+                else {
+                    $version = & python -c "import $importName; print($importName.__version__)" 2>&1
+                }
+            }
+
+            if ($LASTEXITCODE -eq 0) {
+                $verificationResults += @{ Module = $module.WheelName; Status = "✓"; Version = $version }
+                Write-Host "  ✓ $($module.WheelName) (import: $importName) v$version" -ForegroundColor Green
+            }
+            else {
+                $verificationResults += @{ Module = $module.WheelName; Status = "✗"; Version = "Failed" }
+                Write-Host "  ✗ $($module.WheelName) (import: $importName) - Import failed" -ForegroundColor Red
+            }
+        }
+        catch {
+            $verificationResults += @{ Module = $module.WheelName; Status = "✗"; Version = "Error" }
+            Write-Host "  ✗ $($module.WheelName) (import: $importName) - $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    Write-Host ""
+    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "Installation Summary" -ForegroundColor Cyan
+    Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+
+    $successCount = @($verificationResults | Where-Object { $_.Status -eq "✓" }).Count
+    $totalCount = @($verificationResults).Count
+
+    Write-Host ""
+    Write-Host "Installed: $successCount/$totalCount modules" -ForegroundColor $(if ($successCount -eq $totalCount) { "Green" } else { "Yellow" })
+    Write-Host ""
+
+    if ($successCount -eq $totalCount) {
+        Write-Host "✨ Python bindings rebuild complete!" -ForegroundColor Green
+    }
+    else {
+        Write-Host "⚠️  Some Python modules failed!" -ForegroundColor Yellow
+        exit 1
+    }
 }
 
-# Skip verification in BuildOnly mode
-if ($BuildOnly) {
-    Write-Host "✨ Build complete! (verification skipped)" -ForegroundColor Green
-    exit 0
+function Invoke-RustWorkspaceRebuild {
+    param (
+        [switch]$CleanBuild,
+        [switch]$DebugBuild,
+        [string[]]$CrateFilters
+    )
+
+    if (-not (Test-Path $WorkspaceManifest)) {
+        Write-Error "Rust workspace manifest not found: $WorkspaceManifest"
+        exit 1
+    }
+
+    if ($CleanBuild) {
+        Write-Host "🧹 Cleaning Rust workspace..." -ForegroundColor Cyan
+        & cargo clean --manifest-path $WorkspaceManifest
+        Assert-LastExitCode -CommandLabel "cargo clean --manifest-path ClassicLib-rs/Cargo.toml"
+    }
+    else {
+        Write-Host "ℹ️  Skipping workspace clean step (use -Clean to force)" -ForegroundColor Gray
+    }
+
+    $cargoArgs = @("build", "--manifest-path", $WorkspaceManifest)
+    if ($CrateFilters -and $CrateFilters.Count -gt 0) {
+        Write-Host "Using workspace crate filters: $($CrateFilters -join ', ')" -ForegroundColor Cyan
+        foreach ($crate in $CrateFilters) {
+            $cargoArgs += @("-p", $crate)
+        }
+    }
+    else {
+        $cargoArgs += "--workspace"
+    }
+    if (-not $DebugBuild) {
+        $cargoArgs += "--release"
+    }
+
+    Write-Host "🔨 Building Rust workspace..." -ForegroundColor Yellow
+    Write-Host "cargo $($cargoArgs -join ' ')" -ForegroundColor DarkGray
+    & cargo @cargoArgs
+    Assert-LastExitCode -CommandLabel "cargo build --workspace"
+
+    Write-Host "✨ Rust workspace rebuild complete!" -ForegroundColor Green
 }
 
-Write-Host "✅ Verifying installations..." -ForegroundColor Green
-Write-Host ""
+function Invoke-NodeBindingsRebuild {
+    param (
+        [switch]$CleanBuild,
+        [switch]$DebugBuild
+    )
 
-# Verify each module
-$verificationResults = @()
-foreach ($module in $RustModules) {
+    $nodeDir = Join-Path $ProjectRoot "ClassicLib-rs/node-bindings/classic-node"
+    if (-not (Test-Path $nodeDir)) {
+        Write-Error "Node bindings directory not found: $nodeDir"
+        exit 1
+    }
+
+    Push-Location $nodeDir
     try {
-        $importName = $module.ImportName
-        $version = .venv\Scripts\python -c "import $importName; print($importName.__version__)" 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            $verificationResults += @{Module = $module.WheelName; Status = "✓"; Version = $version }
-            Write-Host "  ✓ $($module.WheelName) (import: $importName) v$version" -ForegroundColor Green
+        if (-not (Test-Path "node_modules")) {
+            Write-Host "Installing node dependencies..." -ForegroundColor Cyan
+            & bun install
+            Assert-LastExitCode -CommandLabel "bun install"
+        }
+
+        if ($CleanBuild) {
+            Write-Host "🧹 Cleaning Node binding artifacts..." -ForegroundColor Yellow
+            Remove-Item -Force -ErrorAction SilentlyContinue *.node
+            Remove-Item -Force -ErrorAction SilentlyContinue index.js
+            Remove-Item -Force -ErrorAction SilentlyContinue index.d.ts
+
+            & cargo clean -p classic-node --manifest-path $WorkspaceManifest
+            Assert-LastExitCode -CommandLabel "cargo clean -p classic-node"
         }
         else {
-            $verificationResults += @{Module = $module.WheelName; Status = "✗"; Version = "Failed" }
-            Write-Host "  ✗ $($module.WheelName) (import: $importName) - Import failed" -ForegroundColor Red
+            Write-Host "ℹ️  Skipping node clean step (use -Clean to force)" -ForegroundColor Gray
         }
+
+        if ($DebugBuild) {
+            Write-Host "🔨 Building classic-node (debug)..." -ForegroundColor Cyan
+            & bun run build:debug
+            Assert-LastExitCode -CommandLabel "bun run build:debug"
+        }
+        else {
+            Write-Host "🔨 Building classic-node (release)..." -ForegroundColor Cyan
+            & bun run build
+            Assert-LastExitCode -CommandLabel "bun run build"
+        }
+
+        Write-Host "Build complete!" -ForegroundColor Green
+
+        $nodeFile = Get-ChildItem -Filter "*.node" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($nodeFile) {
+            Write-Host "  Native addon: $($nodeFile.Name) ($([math]::Round($nodeFile.Length / 1MB, 2)) MB)" -ForegroundColor Gray
+        }
+        if (Test-Path "index.d.ts") {
+            Write-Host "  TypeScript types: index.d.ts" -ForegroundColor Gray
+        }
+
+        Write-Host "✨ Node bindings rebuild complete!" -ForegroundColor Green
     }
-    catch {
-        $verificationResults += @{Module = $module.WheelName; Status = "✗"; Version = "Error" }
-        Write-Host "  ✗ $($module.WheelName) (import: $importName) - $($_.Exception.Message)" -ForegroundColor Red
+    finally {
+        Pop-Location
     }
 }
 
-Write-Host ""
-Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "Installation Summary" -ForegroundColor Cyan
-Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "CLASSIC Rust rebuild script" -ForegroundColor Cyan
+Write-Host "Target: $Target" -ForegroundColor Cyan
 
-$successCount = @($verificationResults | Where-Object { $_.Status -eq "✓" }).Count
-$totalCount = @($verificationResults).Count
-
-Write-Host ""
-Write-Host "Installed: $successCount/$totalCount modules" -ForegroundColor $(if ($successCount -eq $totalCount) { "Green" } else { "Yellow" })
-Write-Host ""
-
-if ($successCount -eq $totalCount) {
-    Write-Host "✨ Build complete!" -ForegroundColor Green
+if ($Crates -and $Target -eq "node") {
+    Write-Warning "Positional crate/module filters are ignored for -Target node. Use -Target python to build wheels."
 }
-else {
-    Write-Host "⚠️  Some modules failed!" -ForegroundColor Yellow
-    exit 1
+if ($BuildOnly -and ($Target -eq "workspace" -or $Target -eq "node")) {
+    Write-Warning "-BuildOnly only affects Python wheel install/verification. No-op for target '$Target'."
 }
+if ($DebugBuild -and $Target -eq "python") {
+    Write-Warning "-DebugBuild currently has no effect for Python bindings (release wheels are produced)."
+}
+
+switch ($Target) {
+    "python" {
+        Invoke-PythonBindingsRebuild -CrateFilters $Crates -CleanBuild:$Clean -BuildOnlyMode:$BuildOnly
+    }
+    "workspace" {
+        Invoke-RustWorkspaceRebuild -CleanBuild:$Clean -DebugBuild:$DebugBuild -CrateFilters $Crates
+    }
+    "node" {
+        Invoke-NodeBindingsRebuild -CleanBuild:$Clean -DebugBuild:$DebugBuild
+    }
+}
+
+Write-Host "✨ Rebuild target '$Target' complete." -ForegroundColor Green
