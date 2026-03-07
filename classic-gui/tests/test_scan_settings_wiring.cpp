@@ -156,12 +156,14 @@ void ScanSettingsWiringTests::mainwindow_wires_live_crash_scan_progress_updates(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
+    const QRegularExpression slotRegex(QStringLiteral(
+        R"(onCrashScanProgress\s*\(\s*float\s+percent,\s*const\s+QString&\s+status,\s*int\s+completed,\s*int\s+total\s*\))"));
     QVERIFY2(sourceText.contains(QStringLiteral("&ScanController::scanProgress")),
              "MainWindow should connect crash-scan progress updates from ScanController");
     QVERIFY2(sourceText.contains(QStringLiteral("&MainWindow::onCrashScanProgress")),
              "MainWindow should route crash-scan progress through a dedicated live progress slot");
-    QVERIFY2(sourceText.contains(QStringLiteral("m_crashScanLogsCompleted = qMin(completed, total)")),
-             "MainWindow should refresh completed-log counts from live progress payloads");
+    QVERIFY2(slotRegex.match(sourceText).hasMatch(),
+             "MainWindow should receive structured completed and total counts in the live crash-scan progress slot");
 }
 
 void ScanSettingsWiringTests::mainwindow_does_not_use_deprecated_vr_mode_setting()

@@ -127,6 +127,27 @@ void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    const auto extractFunctionBody = [&](const QString& signature) -> QString {
+        const QString marker = QStringLiteral("void MainWindow::") + signature;
+        const qsizetype start = sourceText.indexOf(marker);
+        if (start < 0) {
+            return {};
+        }
+
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+        return sourceText.mid(start, end - start);
+    };
+
+    const QString crashScanProgressBody =
+        extractFunctionBody(QStringLiteral("onCrashScanProgress(float percent, const QString& status, int completed, int total)"));
+    QVERIFY2(!crashScanProgressBody.isEmpty(),
+             "Could not locate MainWindow::onCrashScanProgress(float percent, const QString& status, int completed, int total)");
+
+    const QString scanProgressBody = extractFunctionBody(QStringLiteral("onScanProgress(float percent, const QString& status)"));
+    QVERIFY2(!scanProgressBody.isEmpty(),
+             "Could not locate MainWindow::onScanProgress(float percent, const QString& status)");
+
     QVERIFY2(sourceText.contains(QStringLiteral("logs scanned")),
              "Crash scan status text should include scanned-log statistics");
     QVERIFY2(sourceText.contains(QStringLiteral("elapsed")),
@@ -135,8 +156,12 @@ void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
              "Crash scan status should update scanned-log stats during live progress events");
     QVERIFY2(sourceText.contains(QStringLiteral("completed, int total")),
              "Crash scan progress updates should carry structured completed and total counts");
-    QVERIFY2(!sourceText.contains(QStringLiteral("progressCompletedEstimate")),
-             "Crash scan status should no longer infer completed-log counts from percent progress");
+    QVERIFY2(crashScanProgressBody.contains(QStringLiteral("m_crashScanLogsCompleted = qMin(completed, total);")),
+             "Crash scan progress updates should store completed-log counts from structured progress arguments");
+    QVERIFY2(scanProgressBody.contains(QStringLiteral("m_crashScanLogsCompleted")),
+             "Crash scan status formatting should read tracked completed-log counts");
+    QVERIFY2(!crashScanProgressBody.contains(QStringLiteral("progressCompletedEstimate")),
+             "Crash scan progress handling should not infer completed-log counts from percent progress");
 }
 
 void MainWindowGeometryTests::first_run_path_detection_treats_invalid_directories_as_unresolved()
