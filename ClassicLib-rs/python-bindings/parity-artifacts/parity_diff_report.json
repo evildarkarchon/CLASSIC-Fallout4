@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-06T06:50:13.675810+00:00",
+  "generated_at_utc": "2026-03-07T11:38:58.497253+00:00",
   "summary": {
     "tier1_contract_total": 60,
     "tier1_matched": 60,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 292,
+    "total_gaps": 293,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 292
+    "tier2_gap_total": 293
   },
   "contract_results": [
     {
@@ -1231,6 +1231,18 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "ScanLogError",
+      "python_module": null,
+      "python_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-scanlog-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ScanProgressPhase",
       "python_module": null,
       "python_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -4423,7 +4435,7 @@
       "tier2": 18
     },
     "scanlog": {
-      "tier2": 231
+      "tier2": 232
     },
     "version_registry": {
       "tier2": 35

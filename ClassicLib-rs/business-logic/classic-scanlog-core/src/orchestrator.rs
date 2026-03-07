@@ -62,8 +62,19 @@ struct ScanAnalysisContext {
 
 impl ScanAnalysisContext {
     fn from_processed_lines(parser: &LogParser, processed_lines: Vec<String>) -> Self {
-        let segments = parser.parse_all_sections(&processed_lines);
+        let processed_line_arcs: Vec<Arc<str>> = processed_lines
+            .iter()
+            .map(|line| Arc::from(line.as_str()))
+            .collect();
+        let segments = parser.parse_all_sections_arc(&processed_line_arcs);
 
+        Self::from_arc_sections(processed_lines, &segments)
+    }
+
+    fn from_arc_sections(
+        processed_lines: Vec<String>,
+        segments: &HashMap<String, Vec<Arc<str>>>,
+    ) -> Self {
         let combined_crash_lines: Vec<String> = [
             segment_key::CALLSTACK,
             segment_key::REGISTERS,
@@ -71,7 +82,7 @@ impl ScanAnalysisContext {
         ]
         .into_iter()
         .filter_map(|key| segments.get(key))
-        .flat_map(|segment_lines| segment_lines.iter().map(ToString::to_string))
+        .flat_map(|segment_lines| segment_lines.iter().map(|line| line.to_string()))
         .collect();
         let combined_crash_text = combined_crash_lines.join("\n");
         let combined_crash_lower_lines = combined_crash_lines
@@ -81,10 +92,10 @@ impl ScanAnalysisContext {
 
         let plugin_lines = segments
             .get(segment_key::PLUGINS)
-            .map(|segment_lines| segment_lines.iter().map(ToString::to_string).collect())
+            .map(|segment_lines| segment_lines.iter().map(|line| line.to_string()).collect())
             .unwrap_or_default();
 
-        let combined_modules: Vec<String> = {
+        let xse_modules_for_settings = {
             let mods = segments
                 .get(segment_key::MODULES)
                 .map(Vec::as_slice)
@@ -93,14 +104,12 @@ impl ScanAnalysisContext {
                 .get(segment_key::XSE_MODULES)
                 .map(Vec::as_slice)
                 .unwrap_or_default();
-            mods.iter().chain(xse.iter()).cloned().collect()
+            extract_module_names(mods.iter().chain(xse.iter()))
         };
-        let xse_modules_for_settings = extract_module_names(&combined_modules);
 
         let crashgen_settings = segments
             .get(segment_key::SETTINGS)
-            .map(Vec::as_slice)
-            .unwrap_or_default()
+            .map_or(&[][..], Vec::as_slice)
             .iter()
             .filter_map(|line| {
                 let line = line.trim();
@@ -122,7 +131,7 @@ impl ScanAnalysisContext {
 
         let system_segment_lines = segments
             .get(segment_key::SYSTEM)
-            .map(|segment_lines| segment_lines.iter().map(ToString::to_string).collect())
+            .map(|segment_lines| segment_lines.iter().map(|line| line.to_string()).collect())
             .unwrap_or_default();
 
         Self {
@@ -613,12 +622,16 @@ impl AnalysisResult {
 ///
 /// # Arguments
 ///
-/// * `module_lines` - Lines from the MODULES segment
+/// * `module_lines` - Lines from the MODULES/XSE_MODULES segments
 ///
 /// # Returns
 ///
 /// A HashSet of lowercase module names (DLL filenames only)
-fn extract_module_names<T: AsRef<str>>(module_lines: &[T]) -> HashSet<String> {
+fn extract_module_names<'a, T, I>(module_lines: I) -> HashSet<String>
+where
+    T: AsRef<str> + 'a,
+    I: IntoIterator<Item = &'a T>,
+{
     // Pre-compiled regex pattern to extract module name (everything up to .dll)
     // Pattern: (.*?\.dll)\s*v?.* - captures filename.dll, ignoring version info
     static MODULE_PATTERN: Lazy<Regex> =
@@ -627,7 +640,7 @@ fn extract_module_names<T: AsRef<str>>(module_lines: &[T]) -> HashSet<String> {
     let mut result = HashSet::new();
 
     for line in module_lines {
-        let text = line.as_ref().trim();
+        let text = (*line).as_ref().trim();
         if text.is_empty() {
             continue;
         }
@@ -2327,6 +2340,70 @@ mod tests {
         let resolved = orchestrator.resolve_effective_crashgen_name("", &xse_modules);
 
         assert_eq!(resolved, "Addictol");
+    }
+
+    #[test]
+    fn extract_module_names_accepts_chained_borrowed_iterators() {
+        let mods = ["kernel32.dll v10.0.0", "user32.dll v10.0.0"];
+        let xse = ["addictol.dll v1.0.0"];
+
+        let extracted = extract_module_names(mods.iter().chain(xse.iter()));
+
+        assert_eq!(extracted.len(), 3);
+        assert!(extracted.contains("kernel32.dll"));
+        assert!(extracted.contains("user32.dll"));
+        assert!(extracted.contains("addictol.dll"));
+    }
+
+    #[test]
+    fn scan_analysis_context_builds_from_arc_sections() {
+        let parser = LogParser::new(None).unwrap();
+        let processed_lines = vec![
+            "[Compatibility]".to_string(),
+            "Achievements: true".to_string(),
+            "SYSTEM SPECS:".to_string(),
+            "GPU #1: NVIDIA GeForce RTX 4090".to_string(),
+            "PROBABLE CALL STACK:".to_string(),
+            "stack frame".to_string(),
+            "MODULES:".to_string(),
+            "kernel32.dll v10.0.0".to_string(),
+            "F4SE PLUGINS:".to_string(),
+            "addictol.dll v1.0.0".to_string(),
+            "PLUGINS:".to_string(),
+            "[00] Fallout4.esm".to_string(),
+            "REGISTERS:".to_string(),
+            "RAX 0x0".to_string(),
+            "STACK:".to_string(),
+            "stack dump line".to_string(),
+        ];
+        let arc_lines: Vec<Arc<str>> = processed_lines
+            .iter()
+            .map(|line| Arc::from(line.as_str()))
+            .collect();
+        let segments = parser.parse_all_sections_arc(&arc_lines);
+
+        let context = ScanAnalysisContext::from_arc_sections(processed_lines.clone(), &segments);
+
+        assert_eq!(context.processed_lines, processed_lines);
+        assert_eq!(
+            context.combined_crash_lines,
+            vec![
+                "stack frame".to_string(),
+                "RAX 0x0".to_string(),
+                "stack dump line".to_string(),
+            ]
+        );
+        assert_eq!(context.plugin_lines, vec!["[00] Fallout4.esm".to_string()]);
+        assert_eq!(
+            context.system_segment_lines,
+            vec!["GPU #1: NVIDIA GeForce RTX 4090".to_string()]
+        );
+        assert_eq!(
+            context.crashgen_settings.get("Achievements"),
+            Some(&"true".to_string())
+        );
+        assert!(context.xse_modules_for_settings.contains("kernel32.dll"));
+        assert!(context.xse_modules_for_settings.contains("addictol.dll"));
     }
 
     #[test]

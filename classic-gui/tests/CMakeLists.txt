@@ -7,7 +7,21 @@ endif()
 set(CLASSIC_GUI_TEST_TIMEOUT_SECONDS 600 CACHE STRING
     "Timeout (seconds) for classic-gui CTest tests")
 
-set(_classic_gui_qt_bin_dir "${Qt6_DIR}/../../../bin")
+set(_classic_gui_qt_bin_dir "")
+foreach(_bin_candidate
+        "${Qt6_DIR}/../../bin"
+        "${Qt6_DIR}/../../../bin"
+        "${QT_HOST_PATH}/bin")
+    if(EXISTS "${_bin_candidate}")
+        set(_classic_gui_qt_bin_dir "${_bin_candidate}")
+        break()
+    endif()
+endforeach()
+
+if(_classic_gui_qt_bin_dir STREQUAL "")
+    set(_classic_gui_qt_bin_dir "${Qt6_DIR}/../../../bin")
+endif()
+
 set(_classic_gui_qt_plugins_dir "")
 foreach(_plugins_candidate
         "${Qt6_DIR}/../../Qt6/plugins"

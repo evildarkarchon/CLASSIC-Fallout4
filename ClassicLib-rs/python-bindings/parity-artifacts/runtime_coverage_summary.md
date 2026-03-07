@@ -1,10 +1,10 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-03-06T06:50:13.677913+00:00`
-- Tracked surfaces: **352**
+- Generated: `2026-03-07T11:38:58.499556+00:00`
+- Tracked surfaces: **353**
 - Runtime verified: **70**
 - Contract mapped only: **0**
-- Deferred: **282**
+- Deferred: **283**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -14,7 +14,7 @@
 |---|---:|---:|---:|---:|---:|
 | `aux` | 5 | 0 | 3 | 0 | 8 |
 | `config` | 15 | 0 | 18 | 0 | 33 |
-| `scanlog` | 25 | 0 | 227 | 0 | 252 |
+| `scanlog` | 25 | 0 | 228 | 0 | 253 |
 | `version_registry` | 25 | 0 | 34 | 0 | 59 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.

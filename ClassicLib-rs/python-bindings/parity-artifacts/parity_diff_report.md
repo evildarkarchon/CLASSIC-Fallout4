@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-03-06T06:50:13.675810+00:00`
+- Generated: `2026-03-07T11:38:58.497253+00:00`
 - Tier-1 contract rows: **60**
 - Tier-1 matched: **60**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **292**
+- Total gaps (Tier-1 + Tier-2): **293**
 
 ## Tier-1 Contract Evaluation
 
@@ -77,7 +77,7 @@
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `scanlog` | 0 | 231 |
+| `scanlog` | 0 | 232 |
 | `config` | 0 | 18 |
 | `version_registry` | 0 | 35 |
 | `aux` | 0 | 8 |
