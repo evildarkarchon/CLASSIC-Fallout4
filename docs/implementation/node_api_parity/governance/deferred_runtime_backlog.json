@@ -1197,6 +1197,19 @@
         "parseXseLog"
       ],
       "rustSymbols": []
+    },
+    {
+      "coverageId": "node-deferred-scanlog-101",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "ScanProgressPhase"
+      ]
     }
   ]
 }

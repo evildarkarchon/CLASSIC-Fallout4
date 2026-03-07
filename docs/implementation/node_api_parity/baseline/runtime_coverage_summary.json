@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-06T10:48:39.230146+00:00",
+  "generated_at_utc": "2026-03-07T12:21:12.224637+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,10 +8,10 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 364,
+    "tracked_surface_total": 365,
     "runtime_verified_total": 272,
     "contract_mapped_total": 0,
-    "deferred_total": 92,
+    "deferred_total": 93,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 262,
     "tier1_missing_runtime_total": 0,
@@ -31,8 +31,8 @@
     },
     "scanlog": {
       "runtime_verified": 22,
-      "total": 86,
-      "deferred": 64
+      "total": 87,
+      "deferred": 65
     },
     "version_registry": {
       "runtime_verified": 56,
@@ -5218,6 +5218,25 @@
       "rustSymbol": "ScanLogError",
       "bindingIdentifier": null,
       "coverageId": "node-deferred-scanlog-024",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:rust:ScanProgressPhase",
+      "trackedType": "gap",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "ScanProgressPhase",
+      "bindingIdentifier": null,
+      "coverageId": "node-deferred-scanlog-101",
       "verificationMode": null,
       "testSuite": null,
       "testCaseId": null,

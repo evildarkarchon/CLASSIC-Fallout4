@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-06T06:47:30.498683+00:00",
+  "generated_at_utc": "2026-03-07T12:21:12.222211+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -2159,8 +2159,8 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig): Promise<Array<JsAnalysisResult>>",
-      "arity": 2
+      "signature": "export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
+      "arity": 3
     },
     {
       "export": "processLogsBatchWithYamlContent",
@@ -2168,8 +2168,8 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<Array<JsAnalysisResult>>",
-      "arity": 7
+      "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
+      "arity": 8
     },
     {
       "export": "processStringBatch",
@@ -2449,6 +2449,15 @@
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateUrl(urlStr: string): string",
       "arity": 1
+    },
+    {
+      "export": "writeAutoscanReport",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function writeAutoscanReport(logPath: string, content: string): Promise<string>",
+      "arity": 2
     },
     {
       "export": "xseDllPrefix",
