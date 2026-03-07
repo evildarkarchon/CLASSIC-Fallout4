@@ -161,6 +161,10 @@ jobs:
           ctest --version
           Write-Host "QT_QPA_PLATFORM=$env:QT_QPA_PLATFORM"
 
+      - name: Verify Qt resolution policy
+        shell: pwsh
+        run: pwsh -ExecutionPolicy Bypass -File classic-gui/verify_qt_resolution.ps1
+
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test -TestTimeoutSec 600
 

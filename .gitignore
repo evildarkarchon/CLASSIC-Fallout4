@@ -326,3 +326,4 @@ qt.conf
 .coverage.*
 build-debug/
 .opencode/
+build-*/

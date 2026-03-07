@@ -1,5 +1,6 @@
 #include "scanworker.h"
 #include "core/rust_qt_bridge.h"
+#include "scanprogressmodel.h"
 
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/scanner.h"
@@ -85,26 +86,23 @@ void move_unsolved_artifacts(const std::string& log_path, const QString& yaml_ro
 class BatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
 public:
     BatchProgressCallback(ScanWorker& worker, int total_logs)
-        : m_worker(worker), m_total_logs(total_logs) {}
+        : m_worker(worker), m_progressModel(total_logs) {}
 
-    void on_batch_progress(
-        std::uint32_t completed,
-        std::uint32_t total,
-        std::uint32_t /*input_index*/,
-        rust::Str log_path,
-        bool /*success*/
-    ) const override {
-        const int effective_total =
-            (total > 0) ? static_cast<int>(total) : qMax(1, m_total_logs);
-        const float percent =
-            (static_cast<float>(completed) * 100.0f) / static_cast<float>(effective_total);
-        const QString status = QString::fromUtf8(log_path.data(), static_cast<int>(log_path.size()));
+    void on_batch_progress(const classic::scanner::BatchProgressEvent& event) const override {
+        const float percent = m_progressModel.update(event);
+        const QString status = QString::fromUtf8(
+            event.log_path.data(),
+            static_cast<int>(event.log_path.size())
+        );
+        const int completed = static_cast<int>(event.completed);
+        const int total = static_cast<int>(event.total);
         Q_EMIT m_worker.progress(percent, status);
+        Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
     }
 
 private:
     ScanWorker& m_worker;
-    int m_total_logs = 0;
+    mutable BatchProgressModel m_progressModel;
 };
 }
 
@@ -155,6 +153,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
             }
 
             emit progress(0.0f, QStringLiteral("Scanning logs in parallel..."));
+            emit progressDetailed(0.0f, QStringLiteral("Scanning logs in parallel..."), 0, total);
 
             rust::Vec<rust::String> rustPaths;
             for (int i = 0; i < total; ++i) {
@@ -203,6 +202,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
             }
 
             emit progress(100.0f, QStringLiteral("Complete"));
+            emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
             emit finished(total, successCount, errorCount);
             return;
         }
@@ -215,6 +215,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
 
             float percent = (static_cast<float>(i) * 100.0f) / static_cast<float>(total);
             emit progress(percent, logPaths[i]);
+            emit progressDetailed(percent, logPaths[i], i, total);
 
             try {
                 auto result = classic::scanner::orchestrator_process_log(
@@ -257,6 +258,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
         }
 
         emit progress(100.0f, QStringLiteral("Complete"));
+        emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
         emit finished(total, successCount, errorCount);
 
     } catch (const rust::Error& e) {

@@ -36,6 +36,108 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Arc;
 
+/// Coarse-grained scan progress phases emitted at orchestration boundaries.
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum ScanProgressPhase {
+    /// File read and initial setup work.
+    Setup,
+    /// Log parsing and shared context construction.
+    Parse,
+    /// Analyzer execution over prepared shared data.
+    Analyze,
+    /// Report composition and result finalization.
+    Finalize,
+}
+
+struct ScanAnalysisContext {
+    processed_lines: Vec<String>,
+    combined_crash_lines: Vec<String>,
+    combined_crash_text: String,
+    combined_crash_lower_lines: Vec<String>,
+    plugin_lines: Vec<String>,
+    xse_modules_for_settings: HashSet<String>,
+    crashgen_settings: HashMap<String, String>,
+    system_segment_lines: Vec<String>,
+}
+
+impl ScanAnalysisContext {
+    fn from_processed_lines(parser: &LogParser, processed_lines: Vec<String>) -> Self {
+        let segments = parser.parse_all_sections(&processed_lines);
+
+        let combined_crash_lines: Vec<String> = [
+            segment_key::CALLSTACK,
+            segment_key::REGISTERS,
+            segment_key::STACK_DUMP,
+        ]
+        .into_iter()
+        .filter_map(|key| segments.get(key))
+        .flat_map(|segment_lines| segment_lines.iter().map(ToString::to_string))
+        .collect();
+        let combined_crash_text = combined_crash_lines.join("\n");
+        let combined_crash_lower_lines = combined_crash_lines
+            .iter()
+            .map(|line| line.to_lowercase())
+            .collect();
+
+        let plugin_lines = segments
+            .get(segment_key::PLUGINS)
+            .map(|segment_lines| segment_lines.iter().map(ToString::to_string).collect())
+            .unwrap_or_default();
+
+        let combined_modules: Vec<String> = {
+            let mods = segments
+                .get(segment_key::MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            let xse = segments
+                .get(segment_key::XSE_MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            mods.iter().chain(xse.iter()).cloned().collect()
+        };
+        let xse_modules_for_settings = extract_module_names(&combined_modules);
+
+        let crashgen_settings = segments
+            .get(segment_key::SETTINGS)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+            .iter()
+            .filter_map(|line| {
+                let line = line.trim();
+                if line.starts_with('[') {
+                    return None;
+                }
+
+                line.find(':').and_then(|colon_pos| {
+                    let key = line[..colon_pos].trim().to_string();
+                    let value = line[colon_pos + 1..].trim().to_string();
+                    if key.is_empty() {
+                        None
+                    } else {
+                        Some((key, value))
+                    }
+                })
+            })
+            .collect();
+
+        let system_segment_lines = segments
+            .get(segment_key::SYSTEM)
+            .map(|segment_lines| segment_lines.iter().map(ToString::to_string).collect())
+            .unwrap_or_default();
+
+        Self {
+            processed_lines,
+            combined_crash_lines,
+            combined_crash_text,
+            combined_crash_lower_lines,
+            plugin_lines,
+            xse_modules_for_settings,
+            crashgen_settings,
+            system_segment_lines,
+        }
+    }
+}
+
 /// Analysis configuration
 ///
 /// Contains all necessary configuration data for analyzing crash logs.
@@ -516,7 +618,7 @@ impl AnalysisResult {
 /// # Returns
 ///
 /// A HashSet of lowercase module names (DLL filenames only)
-fn extract_module_names(module_lines: &[Arc<str>]) -> HashSet<String> {
+fn extract_module_names<T: AsRef<str>>(module_lines: &[T]) -> HashSet<String> {
     // Pre-compiled regex pattern to extract module name (everything up to .dll)
     // Pattern: (.*?\.dll)\s*v?.* - captures filename.dll, ignoring version info
     static MODULE_PATTERN: Lazy<Regex> =
@@ -525,7 +627,7 @@ fn extract_module_names(module_lines: &[Arc<str>]) -> HashSet<String> {
     let mut result = HashSet::new();
 
     for line in module_lines {
-        let text = line.trim();
+        let text = line.as_ref().trim();
         if text.is_empty() {
             continue;
         }
@@ -900,9 +1002,41 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub async fn process_log(&self, log_path: String) -> Result<AnalysisResult> {
+        self.process_log_with_progress(log_path, |_| {}).await
+    }
+
+    /// Processes a single log while reporting coarse phase transitions.
+    pub async fn process_log_with_progress<F>(
+        &self,
+        log_path: String,
+        mut on_phase: F,
+    ) -> Result<AnalysisResult>
+    where
+        F: FnMut(ScanProgressPhase),
+    {
         use crate::report::{ReportComposer, ReportFragment};
 
         let start_time = std::time::Instant::now();
+        let diagnostics_enabled = std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some();
+        let mut phase_started = diagnostics_enabled.then_some(start_time);
+        let mut phase_timings_us = diagnostics_enabled.then(Vec::new);
+
+        let mut enter_phase = |phase: ScanProgressPhase| {
+            if let (Some(phase_started), Some(phase_timings_us)) =
+                (phase_started.as_mut(), phase_timings_us.as_mut())
+            {
+                let now = std::time::Instant::now();
+                if let Some((_, last_elapsed)) = phase_timings_us.last_mut() {
+                    let elapsed_us = now.duration_since(*phase_started).as_micros() as u64;
+                    *last_elapsed = elapsed_us;
+                }
+                *phase_started = now;
+                phase_timings_us.push((phase, 0));
+            }
+            on_phase(phase);
+        };
+
+        enter_phase(ScanProgressPhase::Setup);
 
         // Read log file
         use std::path::Path;
@@ -915,45 +1049,11 @@ impl OrchestratorCore {
         let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
         let processed_lines = self.reformat_crash_data_inline(&raw_lines);
 
-        // Convert to Arc<str> for efficient memory sharing during parsing
-        let lines: Vec<Arc<str>> = processed_lines
-            .iter()
-            .map(|s| Arc::from(s.as_str()))
-            .collect();
-
-        // Parse log into named segments using anchor-first segmentation (task 4.1)
-        let segments = self.parser.parse_all_sections_arc(&lines);
+        enter_phase(ScanProgressPhase::Parse);
+        let context = ScanAnalysisContext::from_processed_lines(&self.parser, processed_lines);
 
         // Create ReportComposer for proper formatting
         let mut composer = ReportComposer::new();
-
-        // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP.
-        // This combined scope is intentionally used for suspect, plugin, FormID,
-        // and named-record scanning in the current Rust implementation.
-        let combined_crash_data: Vec<Arc<str>> = [
-            segment_key::CALLSTACK,
-            segment_key::REGISTERS,
-            segment_key::STACK_DUMP,
-        ]
-        .into_iter()
-        .filter_map(|key| segments.get(key))
-        .flat_map(|segment_lines| segment_lines.iter().cloned())
-        .collect();
-
-        // Extract XSE modules for settings validation.
-        // Combine MODULES + XSE_MODULES to preserve backward compatibility.
-        let combined_modules: Vec<Arc<str>> = {
-            let mods = segments
-                .get(segment_key::MODULES)
-                .map(Vec::as_slice)
-                .unwrap_or_default();
-            let xse = segments
-                .get(segment_key::XSE_MODULES)
-                .map(Vec::as_slice)
-                .unwrap_or_default();
-            mods.iter().chain(xse.iter()).cloned().collect()
-        };
-        let xse_modules_for_settings: HashSet<String> = extract_module_names(&combined_modules);
 
         // Statistics
         let mut formid_count = 0;
@@ -970,7 +1070,7 @@ impl OrchestratorCore {
         // We use processed_lines because header is in the first ~20 lines before segmentation
         let header_info = self
             .parser
-            .parse_crash_header(&processed_lines)
+            .parse_crash_header(&context.processed_lines)
             .unwrap_or_default();
 
         // Get crashgen version from header info
@@ -979,8 +1079,10 @@ impl OrchestratorCore {
             .cloned()
             .unwrap_or_default();
 
-        let effective_crashgen_name =
-            self.resolve_effective_crashgen_name(&crashgen_version_str, &xse_modules_for_settings);
+        let effective_crashgen_name = self.resolve_effective_crashgen_name(
+            &crashgen_version_str,
+            &context.xse_modules_for_settings,
+        );
 
         // Create ReportGenerator for this log using effective crashgen name.
         let report_gen = self.create_report_generator_with_crashgen_name(&effective_crashgen_name);
@@ -995,7 +1097,8 @@ impl OrchestratorCore {
         // Get main error - from header parsing or fallback to first "Unhandled exception" line
         let main_error = header_info.get("main_error").cloned().unwrap_or_else(|| {
             // Fallback: search processed_lines for Unhandled exception
-            processed_lines
+            context
+                .processed_lines
                 .iter()
                 .find(|line| line.starts_with("Unhandled exception"))
                 .cloned()
@@ -1023,6 +1126,8 @@ impl OrchestratorCore {
         };
         let config_layout = self.derive_scanlog_config_layout(&detected_game_version_str);
 
+        enter_phase(ScanProgressPhase::Analyze);
+
         // Generate error section
         composer.add(report_gen.generate_error_section_with_status(
             &main_error,
@@ -1035,21 +1140,11 @@ impl OrchestratorCore {
 
         // Extract plugins from segments (if plugin analyzer is available)
         if let Some(ref analyzer) = self.plugin_analyzer {
-            // Direct named-key access for plugins segment (task 4.6)
-            let plugin_segment = segments
-                .get(segment_key::PLUGINS)
-                .map(Vec::as_slice)
-                .unwrap_or_default();
-
-            if !plugin_segment.is_empty() {
-                // Convert Arc<str> to String for compatibility
-                let plugin_lines: Vec<String> =
-                    plugin_segment.iter().map(|s| s.to_string()).collect();
-
+            if !context.plugin_lines.is_empty() {
                 // Scan plugins using the analyzer (limit flags unused for now, may need in future)
                 if let Ok((plugins, _limit_triggered, _limit_disabled)) = analyzer
                     .loadorder_scan_log(
-                        plugin_lines,
+                        &context.plugin_lines,
                         Some(self.config.game_version.as_str()),
                         Some(self.config.crashgen_latest.as_str()),
                     )
@@ -1068,12 +1163,6 @@ impl OrchestratorCore {
         if let Some(ref scanner) = self.suspect_scanner {
             // Use the main_error extracted from header parsing (not settings segment!)
             // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP) for suspect scanning
-            let callstack = combined_crash_data
-                .iter()
-                .map(|s| s.as_ref())
-                .collect::<Vec<_>>()
-                .join("\n");
-
             let max_warn_length = 50; // Default width for formatting
 
             // Scan for error suspects (using header-extracted main_error)
@@ -1083,7 +1172,7 @@ impl OrchestratorCore {
 
             // Scan for stack suspects (using header-extracted main_error)
             let (stack_fragment, stack_found) = scanner
-                .suspect_scan_stack(&main_error, &callstack, max_warn_length)
+                .suspect_scan_stack(&main_error, &context.combined_crash_text, max_warn_length)
                 .unwrap_or_else(|_| (ReportFragment::empty(), false));
 
             // Check for DLL crash pattern (using header-extracted main_error)
@@ -1126,39 +1215,8 @@ impl OrchestratorCore {
         // Parse crashgen settings from settings segment (task 4.2)
         // Format: "key: value" (TOML-like with colon separator)
         // Skip section headers like [Compatibility], [Crashlog], [Fixes], etc.
-        let settings_segment = segments
-            .get(segment_key::SETTINGS)
-            .map(Vec::as_slice)
-            .unwrap_or_default();
-        let crashgen_settings: HashMap<String, String> = if !settings_segment.is_empty() {
-            settings_segment
-                .iter()
-                .filter_map(|line| {
-                    let line = line.trim();
-                    // Skip section headers (lines starting with '[')
-                    if line.starts_with('[') {
-                        return None;
-                    }
-                    // Settings use colon as separator (e.g., "F4EE: true")
-                    if let Some(colon_pos) = line.find(':') {
-                        let key = line[..colon_pos].trim().to_string();
-                        let value = line[colon_pos + 1..].trim().to_string();
-                        if !key.is_empty() {
-                            Some((key, value))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        } else {
-            HashMap::new()
-        };
-
         // Add settings validation section
-        let settings_validator = if !crashgen_settings.is_empty() {
+        let settings_validator = if !context.crashgen_settings.is_empty() {
             if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
                 self.settings_validator.clone()
             } else {
@@ -1168,10 +1226,10 @@ impl OrchestratorCore {
             self.settings_validator.clone()
         };
 
-        if !crashgen_settings.is_empty()
+        if !context.crashgen_settings.is_empty()
             && let Ok(settings_fragments) = settings_validator.scan_all_settings(
-                &crashgen_settings,
-                &xse_modules_for_settings,
+                &context.crashgen_settings,
+                &context.xse_modules_for_settings,
                 crashgen_version,
                 config_layout,
             )
@@ -1187,22 +1245,16 @@ impl OrchestratorCore {
         if let Some(ref plugins) = plugins_map {
             // Extract GPU info from system segment (task 4.3)
             let gpu_rival_string: Option<String> = {
-                let system_segment: Vec<String> = segments
-                    .get(segment_key::SYSTEM)
-                    .map(|v| v.iter().map(|s| s.to_string()).collect())
-                    .unwrap_or_default();
-                if system_segment.is_empty() {
+                if context.system_segment_lines.is_empty() {
                     None
                 } else {
-                    let gpu_info = GpuDetector::get_gpu_info(&system_segment);
+                    let gpu_info = GpuDetector::get_gpu_info(&context.system_segment_lines);
                     gpu_info.rival
                 }
             };
             let gpu_rival = gpu_rival_string.as_deref();
 
             // Extract XSE modules from combined MODULES+XSE_MODULES (task 4.5)
-            let xse_modules: HashSet<String> = extract_module_names(&combined_modules);
-
             // Check for conflicting mods
             if !self.config.mods_conf.is_empty() {
                 if let Ok(conflict_lines) =
@@ -1249,7 +1301,7 @@ impl OrchestratorCore {
                     self.config.mods_core.clone(),
                     plugins.clone(),
                     gpu_rival,
-                    xse_modules.clone(),
+                    context.xse_modules_for_settings.clone(),
                 ) {
                     if !important_lines.is_empty() {
                         // Use direct header to match Python format exactly
@@ -1282,23 +1334,18 @@ impl OrchestratorCore {
             if let Some(ref plugins) = plugins_map {
                 // Only show section if we have plugins to check (matches Python behavior)
                 if !plugins.is_empty() {
-                    // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP)
-                    // to find plugin references in the full crash scope
-                    let segment_callstack_lower: Vec<String> = combined_crash_data
-                        .iter()
-                        .map(|s| s.to_lowercase())
-                        .collect();
-
                     // Convert plugins to lowercase set for matching
                     let crashlog_plugins_lower: HashSet<String> =
                         plugins.keys().map(|k| k.to_lowercase()).collect();
 
                     // Call plugin_match to find plugins in crash stack
-                    if let Ok(plugin_match_lines) = analyzer.plugin_match_with_crashgen_name(
-                        segment_callstack_lower,
-                        crashlog_plugins_lower,
-                        &effective_crashgen_name,
-                    ) {
+                    if let Ok(plugin_match_lines) = analyzer
+                        .plugin_match_with_crashgen_name_from_lowered(
+                            &context.combined_crash_lower_lines,
+                            &crashlog_plugins_lower,
+                            &effective_crashgen_name,
+                        )
+                    {
                         // Add the header and the plugin match results
                         composer.add(report_gen.generate_plugin_suspect_header());
                         composer.add(ReportFragment::from_lines(plugin_match_lines));
@@ -1309,13 +1356,11 @@ impl OrchestratorCore {
 
         // Extract FormIDs from callstack segment (task 4.4)
         // FormIDs are ALWAYS shown regardless of show_formid_values setting.
-        if !combined_crash_data.is_empty() {
-            // Convert combined crash data to String for FormID extraction
-            let callstack_lines: Vec<String> =
-                combined_crash_data.iter().map(|s| s.to_string()).collect();
-
+        if !context.combined_crash_lines.is_empty() {
             // Extract FormIDs using FormIDAnalyzerCore
-            let formids = self.formid_analyzer.extract_formids(callstack_lines);
+            let formids = self
+                .formid_analyzer
+                .extract_formids(context.combined_crash_lines.clone());
             formid_count = formids.len();
 
             if formid_count > 0 {
@@ -1336,13 +1381,11 @@ impl OrchestratorCore {
 
         // Add Named Records section (scan callstack for named records) (task 4.4)
         if let Some(ref record_scanner) = self.record_scanner {
-            if !combined_crash_data.is_empty() {
-                let callstack_lines: Vec<String> =
-                    combined_crash_data.iter().map(|s| s.to_string()).collect();
-
+            if !context.combined_crash_lines.is_empty() {
                 let (record_report, _matches) = record_scanner
-                    .scan_named_records_with_crashgen_name(
-                        &callstack_lines,
+                    .scan_named_records_with_crashgen_name_and_lowercase(
+                        &context.combined_crash_lines,
+                        &context.combined_crash_lower_lines,
                         &effective_crashgen_name,
                     );
                 if !record_report.is_empty() {
@@ -1352,9 +1395,7 @@ impl OrchestratorCore {
             }
         }
 
-        // Add footer (timing is tracked in AnalysisResult, not in report - matches Python)
-        let elapsed = start_time.elapsed();
-        let elapsed_us = elapsed.as_micros() as u64;
+        enter_phase(ScanProgressPhase::Finalize);
 
         composer.add(report_gen.generate_footer());
 
@@ -1362,12 +1403,36 @@ impl OrchestratorCore {
         let final_report = composer.compose();
         let report_lines = final_report.to_list();
 
+        if let (Some(phase_started), Some(phase_timings_us)) =
+            (phase_started.as_ref(), phase_timings_us.as_mut())
+            && let Some((_, last_elapsed)) = phase_timings_us.last_mut()
+        {
+            *last_elapsed = std::time::Instant::now()
+                .duration_since(*phase_started)
+                .as_micros() as u64;
+        }
+
+        let elapsed_us = start_time.elapsed().as_micros() as u64;
         let mut result = AnalysisResult::success(log_path, report_lines, elapsed_us);
 
         // Update statistics
         result.formid_count = formid_count;
         result.plugin_count = plugin_count;
         result.suspect_count = suspect_count;
+
+        if let Some(phase_timings_us) = phase_timings_us.as_ref() {
+            let phase_summary = phase_timings_us
+                .iter()
+                .map(|(phase, elapsed_us)| format!("{phase:?}={elapsed_us}us"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            log::debug!(
+                "scan diagnostics [{}]: total_us={}, phases=[{}]",
+                result.log_path,
+                elapsed_us,
+                phase_summary
+            );
+        }
 
         Ok(result)
     }
@@ -2000,6 +2065,37 @@ impl OrchestratorCore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_shared_core::get_runtime;
+    use tempfile::tempdir;
+
+    const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
+    const FIXTURE_LOG_LARGE: &str =
+        include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
+
+    fn make_fixture_orchestrator() -> OrchestratorCore {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        config.crashgen_latest = "1.26.2".to_string();
+        config.game_version = "1.10.163".to_string();
+        config.game_version_vr = "1.2.72".to_string();
+        config.xse_acronym = "F4SE".to_string();
+        OrchestratorCore::new(config).expect("fixture orchestrator should build")
+    }
+
+    struct FixtureLog {
+        _temp: tempfile::TempDir,
+        path: String,
+    }
+
+    fn write_fixture_log(filename: &str, contents: &str) -> FixtureLog {
+        let temp = tempdir().expect("tempdir should succeed");
+        let log_path = temp.path().join(filename);
+        std::fs::write(&log_path, contents).expect("fixture log write should succeed");
+        FixtureLog {
+            _temp: temp,
+            path: log_path.to_string_lossy().to_string(),
+        }
+    }
 
     fn make_yaml_data(classic_version: &str) -> classic_config_core::YamlDataCore {
         classic_config_core::YamlDataCore {
@@ -2185,8 +2281,9 @@ mod tests {
         let orchestrator = OrchestratorCore::new(config).unwrap();
         let analyzer = orchestrator.plugin_analyzer.as_ref().unwrap();
 
+        let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(vec!["[FF] PluginLimit.esp".to_string()], "1.2.72", "1.36.0")
+            .check_plugin_limit(&segment, "1.2.72", "1.36.0")
             .unwrap();
 
         assert!(triggered);
@@ -2395,5 +2492,62 @@ mod tests {
         // One plugin line should be considered complete by both APIs.
         let one_plugin = vec!["[00] Fallout4.esm".to_string()];
         assert!(!orchestrator.detect_incomplete_log_slice(&one_plugin));
+    }
+
+    #[test]
+    fn process_log_with_progress_reports_monotonic_phases_for_fixture() {
+        let orchestrator = make_fixture_orchestrator();
+        let fixture = write_fixture_log("progress-fixture.log", FIXTURE_LOG_SMALL);
+        let mut phases = Vec::new();
+
+        let result = get_runtime().block_on(orchestrator.process_log_with_progress(
+            fixture.path.clone(),
+            |phase| {
+                phases.push(phase);
+            },
+        ));
+
+        let result = result.expect("fixture processing should succeed");
+        assert!(result.success);
+        assert_eq!(
+            phases,
+            vec![
+                ScanProgressPhase::Setup,
+                ScanProgressPhase::Parse,
+                ScanProgressPhase::Analyze,
+                ScanProgressPhase::Finalize,
+            ]
+        );
+    }
+
+    #[test]
+    fn process_log_missing_fixture_returns_error_after_setup_phase() {
+        let orchestrator = make_fixture_orchestrator();
+        let mut phases = Vec::new();
+
+        let result = get_runtime().block_on(
+            orchestrator.process_log_with_progress("missing-fixture.log".to_string(), |phase| {
+                phases.push(phase)
+            }),
+        );
+
+        assert!(result.is_err());
+        assert_eq!(phases, vec![ScanProgressPhase::Setup]);
+    }
+
+    #[test]
+    fn process_log_large_fixture_preserves_basic_report_shape() {
+        let orchestrator = make_fixture_orchestrator();
+        let fixture = write_fixture_log("heavy-fixture.log", FIXTURE_LOG_LARGE);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("large fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(report_text.contains("Generated by CLASSIC"));
+        assert!(report_text.contains("Checking for Known Crash Messages, Errors and Suspects"));
+        assert!(report_text.contains("### End of Report"));
     }
 }

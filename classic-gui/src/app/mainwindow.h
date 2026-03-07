@@ -58,6 +58,7 @@ private slots:
     void onScanCrashLogs();
     void onScanGameFiles();
     void onExit();
+    void onCrashScanProgress(float percent, const QString& status, int completed, int total);
     void onScanProgress(float percent, const QString& status);
     void onScanCompleted(int total, int success, int errors);
     void onScanError(const QString& message);

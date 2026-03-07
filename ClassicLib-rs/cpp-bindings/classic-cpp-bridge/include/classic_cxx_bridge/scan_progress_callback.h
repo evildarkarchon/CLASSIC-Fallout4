@@ -6,17 +6,13 @@
 
 namespace classic::scanner {
 
+struct BatchProgressEvent;
+
 class ScanBatchProgressCallback {
 public:
     virtual ~ScanBatchProgressCallback() = default;
 
-    virtual void on_batch_progress(
-        std::uint32_t completed,
-        std::uint32_t total,
-        std::uint32_t input_index,
-        rust::Str log_path,
-        bool success
-    ) const = 0;
+    virtual void on_batch_progress(const BatchProgressEvent& event) const = 0;
 };
 
 } // namespace classic::scanner

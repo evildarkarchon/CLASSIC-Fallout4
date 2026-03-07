@@ -631,7 +631,7 @@ void MainWindow::connectSignals()
     connect(m_editCustomFolder, &QLineEdit::editingFinished, this, &MainWindow::onCustomFolderEdited);
 
     // ScanController → MainWindow
-    connect(m_scanController, &ScanController::scanProgress, this, &MainWindow::onScanProgress);
+    connect(m_scanController, &ScanController::scanProgress, this, &MainWindow::onCrashScanProgress);
     connect(m_scanController, &ScanController::scanDiscovered, this, &MainWindow::onCrashScanDiscovered);
     connect(m_scanController, &ScanController::scanLogScanned, this, &MainWindow::onCrashLogScanned);
     connect(m_scanController, &ScanController::scanFinished, this, &MainWindow::onScanCompleted);
@@ -1498,15 +1498,23 @@ void MainWindow::onExit()
     QApplication::quit();
 }
 
+void MainWindow::onCrashScanProgress(float percent, const QString& status, int completed, int total)
+{
+    if (m_crashScanInProgress) {
+        if (total > 0) {
+            m_crashScanTotalLogs = total;
+            m_crashScanLogsCompleted = qMin(completed, total);
+        } else {
+            m_crashScanLogsCompleted = completed;
+        }
+    }
+
+    onScanProgress(percent, status);
+}
+
 void MainWindow::onScanProgress(float percent, const QString& status)
 {
     if (m_crashScanInProgress) {
-        if (percent >= 0.0f && m_crashScanTotalLogs > 0) {
-            const int progressCompletedEstimate =
-                qBound(0, qRound((percent * static_cast<float>(m_crashScanTotalLogs)) / 100.0f), m_crashScanTotalLogs);
-            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, progressCompletedEstimate);
-        }
-
         const int completedLogs = (m_crashScanTotalLogs > 0) ? qMin(m_crashScanLogsCompleted, m_crashScanTotalLogs)
                                                              : m_crashScanLogsCompleted;
         const QString scanStats =

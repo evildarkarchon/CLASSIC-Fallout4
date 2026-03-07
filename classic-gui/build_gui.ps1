@@ -7,8 +7,9 @@
     Corrosion automatically builds the Rust static library (classic-cpp-bridge)
     as part of the CMake build process. Requires VS Dev Shell (auto-detected).
 
-    Qt 6 must be installed and its path configured in CMakePresets.json
-    (default: C:\Qt\6.10.2\msvc2022_64) or via CMAKE_PREFIX_PATH.
+    The default presets expect Qt 6 to come from vcpkg via VCPKG_ROOT.
+    Use the system-fallback presets only when you intentionally want a
+    non-vcpkg Qt install, typically alongside CMAKE_PREFIX_PATH or Qt6_DIR.
 
 .PARAMETER Clean
     Remove build directory before building.
@@ -38,6 +39,8 @@
     .\build_gui.ps1 -Install
     .\build_gui.ps1 -Package
     .\build_gui.ps1 -Clean -Package
+    .\build_gui.ps1 -Preset system-fallback
+    .\build_gui.ps1 -Debug -Preset system-fallback
 #>
 
 param(
@@ -64,15 +67,23 @@ if ($Debug) {
         "ci" { $effectivePreset = "ci-debug" }
         "debug" { $effectivePreset = "debug" }
         "ci-debug" { $effectivePreset = "ci-debug" }
+        "system-fallback" { $effectivePreset = "system-fallback-debug" }
+        "system-fallback-debug" { $effectivePreset = "system-fallback-debug" }
         default {
-            Write-Error "Debug mode supports -Preset default, ci, debug, or ci-debug. Received: '$Preset'."
+            Write-Error "Debug mode supports -Preset default, ci, debug, ci-debug, system-fallback, or system-fallback-debug. Received: '$Preset'."
             exit 1
         }
     }
 }
 
-$isDebugPreset = $effectivePreset -in @("debug", "ci-debug")
-$buildDirName = if ($isDebugPreset) { "build-debug" } else { "build" }
+$isDebugPreset = $effectivePreset -in @("debug", "ci-debug", "system-fallback-debug")
+$buildDirName = switch ($effectivePreset) {
+    "system-fallback" { "build-system-fallback" }
+    "system-fallback-debug" { "build-system-fallback-debug" }
+    default {
+        if ($isDebugPreset) { "build-debug" } else { "build" }
+    }
+}
 $buildDir = Join-Path $ScriptDir $buildDirName
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────

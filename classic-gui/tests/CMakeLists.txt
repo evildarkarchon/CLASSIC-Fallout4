@@ -7,7 +7,7 @@ endif()
 set(CLASSIC_GUI_TEST_TIMEOUT_SECONDS 600 CACHE STRING
     "Timeout (seconds) for classic-gui CTest tests")
 
-set(_classic_gui_qt_bin_dir "${Qt6_DIR}/../../bin")
+set(_classic_gui_qt_bin_dir "${Qt6_DIR}/../../../bin")
 set(_classic_gui_qt_plugins_dir "")
 foreach(_plugins_candidate
         "${Qt6_DIR}/../../Qt6/plugins"
@@ -154,3 +154,9 @@ add_classic_gui_qt_test(classic-gui-test-mainwindow-geometry
 add_classic_gui_qt_test(classic-gui-test-scan-settings-wiring
     test_scan_settings_wiring.cpp
 )
+
+add_classic_gui_qt_test(classic-gui-test-scan-progress-model
+    test_scan_progress_model.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-scan-progress-model)

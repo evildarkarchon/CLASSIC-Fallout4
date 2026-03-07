@@ -55,7 +55,8 @@ pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
 pub use orchestrator::{
-    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+    AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase,
+    build_analysis_config_from_yaml,
 };
 pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};

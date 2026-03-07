@@ -25,6 +25,7 @@ public slots:
 
 signals:
     void progress(float percent, const QString& status);
+    void progressDetailed(float percent, const QString& status, int completed, int total);
     void logScanned(int index, bool success, const QString& logPath);
     void finished(int totalLogs, int successCount, int errorCount);
     void error(const QString& message);

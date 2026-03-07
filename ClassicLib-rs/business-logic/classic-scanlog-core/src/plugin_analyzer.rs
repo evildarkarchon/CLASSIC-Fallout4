@@ -4,6 +4,7 @@
 
 use crate::error::Result;
 use crate::version::crashgen_version_gen;
+use aho_corasick::AhoCorasickBuilder;
 use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
 use dashmap::DashMap;
 use indexmap::IndexMap;
@@ -224,7 +225,7 @@ impl PluginAnalyzer {
     /// ];
     ///
     /// let (plugins, limit_triggered, limit_disabled) = analyzer.loadorder_scan_log(
-    ///     segment,
+    ///     &segment,
     ///     Some("1.10.163"),
     ///     Some("1.36.0")
     /// )?;
@@ -235,7 +236,7 @@ impl PluginAnalyzer {
     /// ```
     pub fn loadorder_scan_log(
         &self,
-        segment_plugins: Vec<String>,
+        segment_plugins: &[String],
         game_version: Option<&str>,
         version_current: Option<&str>,
     ) -> Result<(IndexMap<String, String>, bool, bool)> {
@@ -252,14 +253,14 @@ impl PluginAnalyzer {
         let mut limit_check_disabled = false;
         if let (Some(game_ver), Some(version_cur)) = (game_version, version_current) {
             let (triggered, disabled) =
-                self.check_plugin_limit(segment_plugins.clone(), game_ver, version_cur)?;
+                self.check_plugin_limit(segment_plugins, game_ver, version_cur)?;
             plugin_limit_triggered = triggered;
             limit_check_disabled = disabled;
         }
 
         // Process each plugin entry (universal parsing logic)
         // Plugins are added in the order they appear in the crash log (load order)
-        for entry in &segment_plugins {
+        for entry in segment_plugins {
             // Extract plugin information using regex
             if let Some(caps) = PLUGIN_PATTERN.captures(entry) {
                 let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
@@ -320,13 +321,13 @@ impl PluginAnalyzer {
     /// )?;
     ///
     /// let segment = vec!["[FF] PluginLimit.esp".to_string()];
-    /// let (triggered, disabled) = analyzer.check_plugin_limit(segment, "1.10.163", "1.36.0")?;
+    /// let (triggered, disabled) = analyzer.check_plugin_limit(&segment, "1.10.163", "1.36.0")?;
     /// # Ok(())
     /// # }
     /// ```
     pub fn check_plugin_limit(
         &self,
-        segment_plugins: Vec<String>,
+        segment_plugins: &[String],
         game_version: &str,
         version_current: &str,
     ) -> Result<(bool, bool)> {
@@ -346,7 +347,7 @@ impl PluginAnalyzer {
         let mut limit_check_disabled = false;
 
         // Check for plugin limit markers
-        for entry in &segment_plugins {
+        for entry in segment_plugins {
             if entry.contains(PLUGIN_LIMIT_MARKER) {
                 match detected_short_name.as_deref() {
                     Some("NG") if is_crashgen_pre_137 => {
@@ -443,27 +444,53 @@ impl PluginAnalyzer {
         crashlog_plugins_lower: HashSet<String>,
         crashgen_name: &str,
     ) -> Result<Vec<String>> {
+        self.plugin_match_with_crashgen_name_from_lowered(
+            &segment_callstack_lower,
+            &crashlog_plugins_lower,
+            crashgen_name,
+        )
+    }
+
+    /// Like [`Self::plugin_match_with_crashgen_name`] but borrows already-lowercased data.
+    pub fn plugin_match_with_crashgen_name_from_lowered(
+        &self,
+        segment_callstack_lower: &[String],
+        crashlog_plugins_lower: &HashSet<String>,
+        crashgen_name: &str,
+    ) -> Result<Vec<String>> {
         let mut lines = Vec::new();
 
-        // Pre-filter call stack lines
-        let relevant_lines: Vec<_> = segment_callstack_lower
+        let relevant_lines: Vec<&str> = segment_callstack_lower
             .iter()
+            .map(String::as_str)
             .filter(|line| !line.contains("modified by:"))
             .collect();
 
-        // Use Counter equivalent
+        let plugin_patterns: Vec<&String> = crashlog_plugins_lower
+            .iter()
+            .filter(|plugin| !self.lower_plugins_ignore.contains(*plugin))
+            .collect();
+
         let mut plugins_matches: HashMap<String, usize> = HashMap::new();
 
-        // Optimize the matching algorithm
-        for line in &relevant_lines {
-            for plugin in &crashlog_plugins_lower {
-                // Skip plugins that are in the ignore list
-                if self.lower_plugins_ignore.contains(plugin) {
-                    continue;
-                }
+        if !plugin_patterns.is_empty() && !relevant_lines.is_empty() {
+            let matcher = AhoCorasickBuilder::new()
+                .ascii_case_insensitive(false)
+                .build(
+                    plugin_patterns
+                        .iter()
+                        .map(|plugin| plugin.as_str())
+                        .collect::<Vec<_>>(),
+                )?;
 
-                if line.contains(plugin) {
-                    *plugins_matches.entry(plugin.clone()).or_insert(0) += 1;
+            for line in relevant_lines {
+                let mut matched_pattern_indexes = HashSet::new();
+                for matched in matcher.find_iter(line) {
+                    if matched_pattern_indexes.insert(matched.pattern().as_usize())
+                        && let Some(plugin) = plugin_patterns.get(matched.pattern().as_usize())
+                    {
+                        *plugins_matches.entry((**plugin).clone()).or_insert(0) += 1;
+                    }
                 }
             }
         }
@@ -743,7 +770,8 @@ mod tests {
         )
         .unwrap();
 
-        let (plugins, limit, disabled) = analyzer.loadorder_scan_log(vec![], None, None).unwrap();
+        let empty: Vec<String> = vec![];
+        let (plugins, limit, disabled) = analyzer.loadorder_scan_log(&empty, None, None).unwrap();
 
         assert!(plugins.is_empty());
         assert!(!limit);
@@ -767,7 +795,7 @@ mod tests {
             "[02] MyMod.esp".to_string(),
         ];
 
-        let (plugins, _, _) = analyzer.loadorder_scan_log(segment, None, None).unwrap();
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 3);
         assert_eq!(plugins.get("Fallout4.esm"), Some(&"00".to_string()));
@@ -791,7 +819,7 @@ mod tests {
             "[FE:002] LightMod2.esl".to_string(),
         ];
 
-        let (plugins, _, _) = analyzer.loadorder_scan_log(segment, None, None).unwrap();
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 2);
         assert_eq!(plugins.get("LightMod1.esl"), Some(&"FE001".to_string()));
@@ -814,7 +842,7 @@ mod tests {
             "[00] Fallout4.esm".to_string(), // Duplicate
         ];
 
-        let (plugins, _, _) = analyzer.loadorder_scan_log(segment, None, None).unwrap();
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 1);
     }
@@ -836,7 +864,7 @@ mod tests {
 
         let segment = vec!["[00] Fallout4.esm".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.10.163", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.163", "1.36.0")
             .unwrap();
 
         assert!(!triggered);
@@ -856,7 +884,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.10.163", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.163", "1.36.0")
             .unwrap();
 
         assert!(triggered);
@@ -876,7 +904,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, _) = analyzer
-            .check_plugin_limit(segment, "1.10.163vr", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.163vr", "1.36.0")
             .unwrap();
 
         assert!(triggered);
@@ -895,7 +923,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.10.984", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.984", "1.36.0")
             .unwrap();
 
         assert!(!triggered);
@@ -915,7 +943,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.11.191", "1.36.0")
+            .check_plugin_limit(&segment, "1.11.191", "1.36.0")
             .unwrap();
 
         assert!(triggered);

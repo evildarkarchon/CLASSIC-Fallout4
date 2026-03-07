@@ -12,7 +12,9 @@ private slots:
     void mainwindow_forwards_game_version_to_scan_controller();
     void scan_worker_handles_move_unsolved_and_max_concurrent_settings();
     void scan_worker_uses_progress_enabled_batch_api();
+    void scan_worker_forwards_batch_counts_in_progress_updates();
     void scan_worker_defaults_to_batch_for_multi_log_scans();
+    void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
@@ -111,8 +113,26 @@ void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressCallback")),
              "ScanWorker should define a CXX batch progress callback adapter");
+    QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressEvent")),
+             "ScanWorker should consume the richer batch progress event payload");
     QVERIFY2(sourceText.contains(QStringLiteral("orchestrator_process_logs_batch_with_progress")),
              "ScanWorker should use the CXX batch API that reports progress");
+}
+
+void ScanSettingsWiringTests::scan_worker_forwards_batch_counts_in_progress_updates()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("event.completed")),
+             "ScanWorker should forward completed-count progress from BatchProgressEvent");
+    QVERIFY2(sourceText.contains(QStringLiteral("event.total")),
+             "ScanWorker should forward total-count progress from BatchProgressEvent");
+    QVERIFY2(sourceText.contains(QStringLiteral("progressDetailed(percent, status, completed, total)")),
+             "ScanWorker should emit batch progress updates with structured completed and total counts");
 }
 
 void ScanSettingsWiringTests::scan_worker_defaults_to_batch_for_multi_log_scans()
@@ -126,6 +146,22 @@ void ScanSettingsWiringTests::scan_worker_defaults_to_batch_for_multi_log_scans(
     const QRegularExpression batchGateRegex(QStringLiteral(R"(if\s*\(\s*total\s*>\s*1\s*\))"));
     QVERIFY2(batchGateRegex.match(sourceText).hasMatch(),
              "ScanWorker should default to batch mode whenever there is more than one log");
+}
+
+void ScanSettingsWiringTests::mainwindow_wires_live_crash_scan_progress_updates()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("&ScanController::scanProgress")),
+             "MainWindow should connect crash-scan progress updates from ScanController");
+    QVERIFY2(sourceText.contains(QStringLiteral("&MainWindow::onCrashScanProgress")),
+             "MainWindow should route crash-scan progress through a dedicated live progress slot");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_crashScanLogsCompleted = qMin(completed, total)")),
+             "MainWindow should refresh completed-log counts from live progress payloads");
 }
 
 void ScanSettingsWiringTests::mainwindow_does_not_use_deprecated_vr_mode_setting()

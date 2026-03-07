@@ -104,7 +104,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     m_currentWorker = worker;
 
     // Connect worker signals to controller slots
-    connect(worker, &ScanWorker::progress, this, &ScanController::scanProgress);
+    connect(worker, &ScanWorker::progressDetailed, this, &ScanController::scanProgress);
     connect(worker, &ScanWorker::logScanned, this, &ScanController::scanLogScanned);
     connect(worker, &ScanWorker::finished, this, &ScanController::onWorkerFinished);
     connect(worker, &ScanWorker::error, this, &ScanController::onWorkerError);

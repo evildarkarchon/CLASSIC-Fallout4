@@ -131,8 +131,12 @@ void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
              "Crash scan status text should include scanned-log statistics");
     QVERIFY2(sourceText.contains(QStringLiteral("elapsed")),
              "Crash scan status text should include elapsed time statistics");
-    QVERIFY2(sourceText.contains(QStringLiteral("progressCompletedEstimate")),
-             "Crash scan status should derive scanned-log stats from streaming progress updates");
+    QVERIFY2(sourceText.contains(QStringLiteral("onCrashScanProgress")),
+             "Crash scan status should update scanned-log stats during live progress events");
+    QVERIFY2(sourceText.contains(QStringLiteral("completed, int total")),
+             "Crash scan progress updates should carry structured completed and total counts");
+    QVERIFY2(!sourceText.contains(QStringLiteral("progressCompletedEstimate")),
+             "Crash scan status should no longer infer completed-log counts from percent progress");
 }
 
 void MainWindowGeometryTests::first_run_path_detection_treats_invalid_directories_as_unresolved()
