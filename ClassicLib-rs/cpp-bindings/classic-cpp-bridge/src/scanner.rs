@@ -565,11 +565,9 @@ fn orchestrator_process_logs_batch_with_progress(
                     emit_progress_event(callback, diagnostics.as_mut(), event);
                 }
                 BatchUpdate::Result((input_index, scanned_path, last_phase, result)) => {
-                    for event in drain_ready_progress_events(
-                        &mut pending_progress_events,
-                        &mut progress_rx,
-                    )
-                    .await
+                    for event in
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await
                     {
                         emit_progress_event(callback, diagnostics.as_mut(), event);
                     }
@@ -1274,8 +1272,8 @@ mod tests {
         use futures::stream::Stream;
         use std::pin::Pin;
         use std::task::{Context, Poll};
-        use tokio::task::LocalSet;
         use tokio::sync::mpsc;
+        use tokio::task::LocalSet;
 
         struct ResultBeforeScheduledPhaseStream {
             emitted: bool,
@@ -1330,16 +1328,17 @@ mod tests {
                         progress_tx: progress_tx.clone(),
                     };
 
-                    let update =
-                        next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
-                            .await;
-                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
-
-                    let drained = drain_ready_progress_events(
+                    let update = next_batch_update(
                         &mut pending_progress_events,
                         &mut progress_rx,
+                        &mut tasks,
                     )
                     .await;
+                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+                    let drained =
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await;
                     assert_eq!(drained.len(), 1);
                     assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
                     assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
@@ -1417,16 +1416,17 @@ mod tests {
                         progress_tx: progress_tx.clone(),
                     };
 
-                    let update =
-                        next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
-                            .await;
-                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
-
-                    let drained = drain_ready_progress_events(
+                    let update = next_batch_update(
                         &mut pending_progress_events,
                         &mut progress_rx,
+                        &mut tasks,
                     )
                     .await;
+                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+                    let drained =
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await;
                     assert_eq!(drained.len(), 1);
                     assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
                     assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
