@@ -14,7 +14,7 @@ use classic_scanlog_core::{
 use classic_shared_core::get_runtime;
 use classic_yaml_core::YamlOperations;
 use log::info;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -183,13 +183,54 @@ fn emit_progress_event(
 
 type BatchTaskResult = (u32, String, ffi::BatchProgressPhase, AnalysisResult);
 
+const READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS: usize = 2;
+
 enum BatchUpdate {
     Progress(ffi::BatchProgressEvent),
     Result(BatchTaskResult),
     TasksExhausted,
 }
 
+/// Drain all progress currently visible to preserve global event ordering before emitting the
+/// terminal Completed/Failed event for a finished task.
+async fn drain_ready_progress_events(
+    pending_progress_events: &mut VecDeque<ffi::BatchProgressEvent>,
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<ffi::BatchProgressEvent>,
+) -> Vec<ffi::BatchProgressEvent> {
+    let mut events = Vec::new();
+
+    while let Some(event) = pending_progress_events.pop_front() {
+        events.push(event);
+    }
+
+    let mut empty_yields_remaining = READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+    loop {
+        match progress_rx.try_recv() {
+            Ok(event) => {
+                events.push(event);
+                empty_yields_remaining = READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) if empty_yields_remaining > 0 => {
+                // A same-log phase send can be queued a couple runtime turns after the task
+                // result becomes visible. Yield a small, bounded number of times so already-
+                // scheduled sends can land before the terminal event without paying the old
+                // eight-yield busy-poll cost on every empty drain.
+                empty_yields_remaining -= 1;
+                tokio::task::yield_now().await;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => break,
+            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => {
+                // The sender side is gone, so only already-buffered task results remain.
+                break;
+            }
+        }
+    }
+
+    events
+}
+
 async fn next_batch_update<S>(
+    pending_progress_events: &mut VecDeque<ffi::BatchProgressEvent>,
     progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<ffi::BatchProgressEvent>,
     tasks: &mut S,
 ) -> BatchUpdate
@@ -197,6 +238,10 @@ where
     S: futures::stream::Stream<Item = BatchTaskResult> + Unpin,
 {
     use futures::StreamExt;
+
+    if let Some(event) = pending_progress_events.pop_front() {
+        return BatchUpdate::Progress(event);
+    }
 
     tokio::select! {
         biased;
@@ -448,6 +493,7 @@ fn orchestrator_process_logs_batch_with_progress(
         let completed_counter = Arc::new(AtomicU32::new(0));
         let mut batch_results = Vec::with_capacity(indexed_paths.len());
         let mut diagnostics = diagnostics_enabled.then(BatchProgressDiagnostics::default);
+        let mut pending_progress_events = VecDeque::new();
 
         for (input_index, log_path) in &indexed_paths {
             emit_progress_event(
@@ -512,11 +558,22 @@ fn orchestrator_process_logs_batch_with_progress(
             .buffer_unordered(concurrency);
 
         while completed < total as u32 {
-            match next_batch_update(&mut progress_rx, &mut tasks).await {
+            match next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await
+            {
                 BatchUpdate::Progress(event) => {
                     emit_progress_event(callback, diagnostics.as_mut(), event);
                 }
                 BatchUpdate::Result((input_index, scanned_path, last_phase, result)) => {
+                    for event in drain_ready_progress_events(
+                        &mut pending_progress_events,
+                        &mut progress_rx,
+                    )
+                    .await
+                    {
+                        emit_progress_event(callback, diagnostics.as_mut(), event);
+                    }
+
                     completed += 1;
                     completed_counter.store(completed, Ordering::Relaxed);
                     maybe_log_db_perf_counters(orch, scanned_path.as_str());
@@ -550,6 +607,13 @@ fn orchestrator_process_logs_batch_with_progress(
 
         drop(tasks);
         drop(progress_tx);
+
+        // Any events left here come from an abnormal shutdown path where some task results never
+        // surfaced. Keep emitting them for diagnostics, even though they may be orphaned from a
+        // terminal Completed/Failed event; under the normal invariant, all logs finish above.
+        while let Some(event) = pending_progress_events.pop_front() {
+            emit_progress_event(callback, diagnostics.as_mut(), event);
+        }
 
         while let Some(event) = progress_rx.recv().await {
             emit_progress_event(callback, diagnostics.as_mut(), event);
@@ -1100,6 +1164,7 @@ mod tests {
 
         get_runtime().block_on(async {
             let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::new();
             progress_tx
                 .send(make_progress_event(
                     ffi::BatchProgressEventKind::Started,
@@ -1119,12 +1184,385 @@ mod tests {
                 AnalysisResult::success("test.log".to_string(), vec![], 0),
             )]);
 
-            let update = next_batch_update(&mut progress_rx, &mut tasks).await;
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
             assert!(matches!(update, BatchUpdate::Progress(event) if event.event_kind == ffi::BatchProgressEventKind::Started));
 
             drop(progress_tx);
 
-            let update = next_batch_update(&mut progress_rx, &mut tasks).await;
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_flushes_phase_emitted_during_result_poll() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+
+        struct ResultAfterPhaseStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultAfterPhaseStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                self.progress_tx
+                    .send(make_progress_event(
+                        ffi::BatchProgressEventKind::Phase,
+                        ffi::BatchProgressPhase::Finalize,
+                        0,
+                        1,
+                        0,
+                        "test.log",
+                        false,
+                    ))
+                    .expect("phase event should send");
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "test.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("test.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::new();
+            let mut tasks = ResultAfterPhaseStream {
+                emitted: false,
+                progress_tx: progress_tx.clone(),
+            };
+
+            let update =
+                next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks).await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+            let drained =
+                drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx).await;
+            assert_eq!(drained.len(), 1);
+            assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+            assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
+            assert_eq!(drained[0].input_index, 0);
+            assert_eq!(drained[0].log_path, "test.log");
+            assert!(!drained[0].success);
+            assert!(pending_progress_events.is_empty());
+            assert!(progress_rx.try_recv().is_err());
+
+            drop(progress_tx);
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_flushes_phase_scheduled_for_next_tick() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::task::LocalSet;
+        use tokio::sync::mpsc;
+
+        struct ResultBeforeScheduledPhaseStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultBeforeScheduledPhaseStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                let progress_tx = self.progress_tx.clone();
+                tokio::task::spawn_local(async move {
+                    tokio::task::yield_now().await;
+                    progress_tx
+                        .send(make_progress_event(
+                            ffi::BatchProgressEventKind::Phase,
+                            ffi::BatchProgressPhase::Finalize,
+                            0,
+                            1,
+                            0,
+                            "test.log",
+                            false,
+                        ))
+                        .expect("scheduled phase event should send");
+                });
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "test.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("test.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            LocalSet::new()
+                .run_until(async {
+                    let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+                    let mut pending_progress_events = VecDeque::new();
+                    let mut tasks = ResultBeforeScheduledPhaseStream {
+                        emitted: false,
+                        progress_tx: progress_tx.clone(),
+                    };
+
+                    let update =
+                        next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                            .await;
+                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+                    let drained = drain_ready_progress_events(
+                        &mut pending_progress_events,
+                        &mut progress_rx,
+                    )
+                    .await;
+                    assert_eq!(drained.len(), 1);
+                    assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+                    assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
+                    assert_eq!(drained[0].input_index, 0);
+                    assert_eq!(drained[0].log_path, "test.log");
+                    assert!(pending_progress_events.is_empty());
+                    assert!(progress_rx.try_recv().is_err());
+
+                    drop(progress_tx);
+                })
+                .await;
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_flushes_phase_scheduled_after_multiple_yields() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+        use tokio::task::LocalSet;
+
+        struct ResultBeforeDelayedPhaseStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultBeforeDelayedPhaseStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                let progress_tx = self.progress_tx.clone();
+                tokio::task::spawn_local(async move {
+                    tokio::task::yield_now().await;
+                    tokio::task::spawn_local(async move {
+                        progress_tx
+                            .send(make_progress_event(
+                                ffi::BatchProgressEventKind::Phase,
+                                ffi::BatchProgressPhase::Finalize,
+                                0,
+                                1,
+                                0,
+                                "test.log",
+                                false,
+                            ))
+                            .expect("delayed phase event should send");
+                    });
+                });
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "test.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("test.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            LocalSet::new()
+                .run_until(async {
+                    let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+                    let mut pending_progress_events = VecDeque::new();
+                    let mut tasks = ResultBeforeDelayedPhaseStream {
+                        emitted: false,
+                        progress_tx: progress_tx.clone(),
+                    };
+
+                    let update =
+                        next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                            .await;
+                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+                    let drained = drain_ready_progress_events(
+                        &mut pending_progress_events,
+                        &mut progress_rx,
+                    )
+                    .await;
+                    assert_eq!(drained.len(), 1);
+                    assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+                    assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
+                    assert_eq!(drained[0].input_index, 0);
+                    assert_eq!(drained[0].log_path, "test.log");
+                    assert!(pending_progress_events.is_empty());
+                    assert!(progress_rx.try_recv().is_err());
+
+                    drop(progress_tx);
+                })
+                .await;
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_emits_other_logs_without_rebuffering() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+
+        struct ResultAfterCrossLogPhasesStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultAfterCrossLogPhasesStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                self.progress_tx
+                    .send(make_progress_event(
+                        ffi::BatchProgressEventKind::Phase,
+                        ffi::BatchProgressPhase::Analyze,
+                        0,
+                        2,
+                        1,
+                        "other.log",
+                        false,
+                    ))
+                    .expect("other log phase event should send");
+                self.progress_tx
+                    .send(make_progress_event(
+                        ffi::BatchProgressEventKind::Phase,
+                        ffi::BatchProgressPhase::Finalize,
+                        0,
+                        2,
+                        0,
+                        "target.log",
+                        false,
+                    ))
+                    .expect("target log phase event should send");
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "target.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("target.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::new();
+            let mut tasks = ResultAfterCrossLogPhasesStream {
+                emitted: false,
+                progress_tx: progress_tx.clone(),
+            };
+
+            let update =
+                next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks).await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+            let drained =
+                drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx).await;
+            assert_eq!(
+                drained.len(),
+                2,
+                "other-log progress should be forwarded immediately instead of rebuffered"
+            );
+            assert_eq!(drained[0].input_index, 1);
+            assert_eq!(drained[0].log_path, "other.log");
+            assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+            assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Analyze);
+
+            assert_eq!(drained[1].input_index, 0);
+            assert_eq!(drained[1].log_path, "target.log");
+            assert_eq!(drained[1].event_kind, ffi::BatchProgressEventKind::Phase);
+            assert_eq!(drained[1].phase, ffi::BatchProgressPhase::Finalize);
+
+            assert!(pending_progress_events.is_empty());
+            assert!(progress_rx.try_recv().is_err());
+
+            drop(progress_tx);
+        });
+    }
+
+    #[test]
+    fn test_next_batch_update_prefers_buffered_progress_events_before_results() {
+        use futures::stream;
+        use tokio::sync::mpsc;
+
+        get_runtime().block_on(async {
+            let (_progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::from([make_progress_event(
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Analyze,
+                0,
+                2,
+                1,
+                "buffered.log",
+                false,
+            )]);
+            let mut tasks = stream::iter(vec![(
+                0,
+                "result.log".to_string(),
+                ffi::BatchProgressPhase::Finalize,
+                AnalysisResult::success("result.log".to_string(), vec![], 0),
+            )]);
+
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
+            assert!(matches!(update, BatchUpdate::Progress(event) if event.input_index == 1 && event.log_path == "buffered.log"));
+
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
             assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
         });
     }
