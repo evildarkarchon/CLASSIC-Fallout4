@@ -7,6 +7,7 @@
 - Removed hardcoded fallbacks for the program's version. If it can't detect the version of the program, it will now display an error message.
 - Add architecture to scan Addictol crash logs.
 - Fix C++ GUI not honoring some configuration settings.
+- Optimize the orchestrator logic and make the progress bar operate more smoothly by sending updates during the scanning process instead of waiting for the scan to complete.
 - More stuff I didn't write down.
 
 ### 8.1.1 CHANGES
