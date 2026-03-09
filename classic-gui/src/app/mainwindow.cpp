@@ -1193,22 +1193,7 @@ void MainWindow::onTabChanged(int index)
 
 QString MainWindow::readCrashLogsDir() const
 {
-    if (!m_dataDir.isEmpty()) {
-        QString settingsPath = settingsFilePath(m_dataRoot);
-        try {
-            auto ops = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-            auto dir = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Crash Logs Folder", "");
-            if (!dir.empty()) {
-                return QDir::cleanPath(classic::toQString(dir));
-            }
-        } catch (...) {
-            // Fall through to default path below.
-        }
-    }
-
-    // Default to a local "Crash Logs" folder when settings are missing.
-    return QDir::cleanPath(QDir::current().filePath(QStringLiteral("Crash Logs")));
+    return QDir::cleanPath(QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("Crash Logs")));
 }
 
 bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const

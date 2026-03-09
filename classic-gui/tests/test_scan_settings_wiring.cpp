@@ -18,8 +18,10 @@ private slots:
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
+    void mainwindow_uses_exe_relative_crash_logs_dir();
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
     void controllers_emit_global_scan_started_signal_on_scan_start();
+    void scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
 };
@@ -269,6 +271,36 @@ void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_sele
              "MainWindow should fall back to selected game root executable after stale path reset");
 }
 
+void ScanSettingsWiringTests::mainwindow_uses_exe_relative_crash_logs_dir()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const auto extractFunctionBody = [&](const QString& signature) -> QString {
+        const QString marker = QStringLiteral("QString MainWindow::") + signature;
+        const qsizetype start = sourceText.indexOf(marker);
+        if (start < 0) {
+            return {};
+        }
+
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nbool MainWindow::"), start + marker.size());
+        const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+        return sourceText.mid(start, end - start);
+    };
+
+    const QString body = extractFunctionBody(QStringLiteral("readCrashLogsDir() const"));
+    QVERIFY2(!body.isEmpty(), "MainWindow::readCrashLogsDir() should exist");
+    QVERIFY2(body.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
+             "MainWindow should resolve Crash Logs relative to the GUI executable directory");
+    QVERIFY2(!body.contains(QStringLiteral("CLASSIC_Settings.Crash Logs Folder")),
+             "MainWindow should not load a separate Crash Logs Folder setting");
+    QVERIFY2(!body.contains(QStringLiteral("QDir::current().filePath(QStringLiteral(\"Crash Logs\"))")),
+             "MainWindow should not fall back to the current working directory for Crash Logs");
+}
+
 void ScanSettingsWiringTests::controllers_emit_global_scan_started_signal_on_scan_start()
 {
     const QString scanControllerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
@@ -287,6 +319,26 @@ void ScanSettingsWiringTests::controllers_emit_global_scan_started_signal_on_sca
     const QString gameFilesControllerSource = QString::fromUtf8(gameFilesControllerFile.readAll());
     QVERIFY2(gameFilesControllerSource.contains(QStringLiteral("emit m_signalHub->scanStarted();")),
              "GameFilesController should emit SignalHub::scanStarted() when a game-files scan begins");
+}
+
+void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("Game_Info.Root_Folder_Docs")),
+             "ScanController should fall back to Root_Folder_Docs when Docs_Folder_XSE is unavailable");
+    QVERIFY2(sourceText.contains(QStringLiteral("filePath(QStringLiteral(\"F4SE\"))")),
+             "ScanController should derive the F4SE folder from the docs root when needed");
+    QVERIFY2(sourceText.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
+             "ScanController should collect crash logs relative to the GUI executable directory");
+    QVERIFY2(!sourceText.contains(QStringLiteral("QDir::currentPath()")),
+             "ScanController should not use the current working directory for crash-log collection");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(customFolder)")),
+             "ScanController should continue forwarding the custom scan folder separately");
 }
 
 void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()

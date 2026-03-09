@@ -8,27 +8,45 @@
 #include "classic_cxx_bridge/yaml.h"
 #include "rust/cxx.h"
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QThread>
 
 namespace {
 
-rust::String resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game, const QString& gameVersion)
+QString cleanDirectoryPath(const rust::String& value)
 {
+    const QString path = QDir::cleanPath(classic::toQString(value).trimmed());
+    return path.isEmpty() ? QString() : path;
+}
+
+QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game, const QString& gameVersion)
+{
+    Q_UNUSED(gameVersion);
+
     const QString localYamlPath = QDir(yamlData).filePath(QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
 
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
 
-        const char* keyPath = gameVersion.compare(QStringLiteral("VR"), Qt::CaseInsensitive) == 0
-                                  ? "GameVR_Info.Docs_Folder_XSE"
-                                  : "Game_Info.Docs_Folder_XSE";
-        auto xsePath = classic::yaml::yaml_ops_get_string(*ops, keyPath, "");
-        return xsePath;
+        for (const char* keyPath : {"Game_Info.Docs_Folder_XSE", "GameVR_Info.Docs_Folder_XSE"}) {
+            const QString xsePath = cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, keyPath, ""));
+            if (!xsePath.isEmpty()) {
+                return xsePath;
+            }
+        }
+
+        const QString docsRoot = cleanDirectoryPath(
+            classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
+        if (!docsRoot.isEmpty()) {
+            return QDir(docsRoot).filePath(QStringLiteral("F4SE"));
+        }
+
+        return {};
     } catch (const rust::Error&) {
-        return rust::String();
+        return {};
     }
 }
 
@@ -66,9 +84,10 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     // Collect crash logs via Rust file collector
     QStringList logPathsList;
     try {
-        auto baseDir = QDir::currentPath();
+        const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
         auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
-        auto collector = classic::files::log_collector_new(classic::toRustString(baseDir), xseFolder,
+        auto collector = classic::files::log_collector_new(classic::toRustString(baseDir),
+                                                           classic::toRustString(xseFolder),
                                                            classic::toRustString(customFolder));
         auto rustPaths = classic::files::log_collector_collect_all(*collector);
 
