@@ -27,6 +27,36 @@ const PLUGIN_STATUS_DLL: &str = "DLL";
 const PLUGIN_STATUS_UNKNOWN: &str = "???";
 const PLUGIN_LIMIT_MARKER: &str = "[FF]";
 
+fn normalize_plugin_name(plugin_name: &str) -> String {
+    plugin_name.to_lowercase()
+}
+
+fn classify_plugin_status(plugin_id: Option<&str>, plugin_name: &str) -> String {
+    if let Some(id) = plugin_id {
+        id.replace(':', "").to_uppercase()
+    } else if normalize_plugin_name(plugin_name).contains("dll") {
+        PLUGIN_STATUS_DLL.to_string()
+    } else {
+        PLUGIN_STATUS_UNKNOWN.to_string()
+    }
+}
+
+fn insert_plugin_if_new(
+    plugin_map: &mut IndexMap<String, String>,
+    seen_plugins: &mut HashSet<String>,
+    plugin_name: String,
+    plugin_status: String,
+) {
+    if plugin_name.is_empty() {
+        return;
+    }
+
+    let normalized_name = normalize_plugin_name(&plugin_name);
+    if seen_plugins.insert(normalized_name) {
+        plugin_map.insert(plugin_name, plugin_status);
+    }
+}
+
 /// Core plugin analyzer - pure Rust implementation (NO PyO3)
 pub struct PluginAnalyzer {
     lower_plugins_ignore: HashSet<String>,
@@ -151,6 +181,7 @@ impl PluginAnalyzer {
 
         // IndexMap preserves insertion order for Python parity
         let mut loadorder_plugins = IndexMap::new();
+        let mut seen_plugins = HashSet::new();
         let loadorder_path = Path::new("loadorder.txt");
 
         if loadorder_path.exists() {
@@ -162,14 +193,12 @@ impl PluginAnalyzer {
                     if loadorder_data.len() > 1 {
                         for plugin_entry in loadorder_data.iter().skip(1) {
                             let plugin_entry = plugin_entry.trim();
-                            if !plugin_entry.is_empty()
-                                && !loadorder_plugins.contains_key(plugin_entry)
-                            {
-                                loadorder_plugins.insert(
-                                    plugin_entry.to_string(),
-                                    PLUGIN_ORIGIN_LOADORDER.to_string(),
-                                );
-                            }
+                            insert_plugin_if_new(
+                                &mut loadorder_plugins,
+                                &mut seen_plugins,
+                                plugin_entry.to_string(),
+                                PLUGIN_ORIGIN_LOADORDER.to_string(),
+                            );
                         }
                     }
                 }
@@ -247,6 +276,7 @@ impl PluginAnalyzer {
 
         // Initialize plugin map - IndexMap preserves insertion order for Python parity
         let mut plugin_map = IndexMap::new();
+        let mut seen_plugins = HashSet::new();
 
         // Check plugin limits separately if version info provided
         let mut plugin_limit_triggered = false;
@@ -263,27 +293,18 @@ impl PluginAnalyzer {
         for entry in segment_plugins {
             // Extract plugin information using regex
             if let Some(caps) = PLUGIN_PATTERN.captures(entry) {
-                let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
+                let plugin_id = caps.get(1).map(|m| m.as_str());
                 let plugin_name = caps
                     .get(3)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_default();
 
-                // Skip if plugin name is empty or already processed
-                if plugin_name.is_empty() || plugin_map.contains_key(&plugin_name) {
-                    continue;
-                }
-
-                // Classify the plugin
-                let status = if let Some(id) = plugin_id {
-                    id.replace(":", "").to_uppercase()
-                } else if plugin_name.to_lowercase().contains("dll") {
-                    PLUGIN_STATUS_DLL.to_string()
-                } else {
-                    PLUGIN_STATUS_UNKNOWN.to_string()
-                };
-
-                plugin_map.insert(plugin_name, status);
+                insert_plugin_if_new(
+                    &mut plugin_map,
+                    &mut seen_plugins,
+                    plugin_name.clone(),
+                    classify_plugin_status(plugin_id, &plugin_name),
+                );
             }
         }
 
@@ -624,26 +645,22 @@ pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<IndexMap<String, String>> 
         .map(|log| {
             // IndexMap preserves insertion order for Python parity
             let mut plugins = IndexMap::new();
+            let mut seen_plugins = HashSet::new();
 
             for line in log.lines() {
                 if let Some(caps) = PLUGIN_PATTERN.captures(line) {
-                    let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
+                    let plugin_id = caps.get(1).map(|m| m.as_str());
                     let plugin_name = caps
                         .get(3)
                         .map(|m| m.as_str().to_string())
                         .unwrap_or_default();
 
-                    if !plugin_name.is_empty() && !plugins.contains_key(&plugin_name) {
-                        let status = if let Some(id) = plugin_id {
-                            id.replace(":", "").to_uppercase()
-                        } else if plugin_name.to_lowercase().contains("dll") {
-                            PLUGIN_STATUS_DLL.to_string()
-                        } else {
-                            PLUGIN_STATUS_UNKNOWN.to_string()
-                        };
-
-                        plugins.insert(plugin_name, status);
-                    }
+                    insert_plugin_if_new(
+                        &mut plugins,
+                        &mut seen_plugins,
+                        plugin_name.clone(),
+                        classify_plugin_status(plugin_id, &plugin_name),
+                    );
                 }
             }
 
@@ -845,6 +862,26 @@ mod tests {
         let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 1);
+    }
+
+    #[test]
+    fn test_loadorder_scan_log_skips_mixed_case_duplicates() {
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.10.163vr".to_string(),
+        )
+        .unwrap();
+
+        let segment = vec!["[01] MyMod.esp".to_string(), "[02] mymod.esp".to_string()];
+
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
+
+        assert_eq!(plugins.len(), 1);
+        assert_eq!(plugins.get("MyMod.esp"), Some(&"01".to_string()));
+        assert!(!plugins.contains_key("mymod.esp"));
     }
 
     // ============================================
@@ -1218,5 +1255,16 @@ mod tests {
 
         assert_eq!(result.len(), 1);
         assert!(result[0].is_empty());
+    }
+
+    #[test]
+    fn test_detect_plugins_batch_skips_mixed_case_duplicates() {
+        let logs = vec!["[01] MyMod.esp\n[02] mymod.esp".to_string()];
+        let result = detect_plugins_batch(logs);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].len(), 1);
+        assert_eq!(result[0].get("MyMod.esp"), Some(&"01".to_string()));
+        assert!(!result[0].contains_key("mymod.esp"));
     }
 }
