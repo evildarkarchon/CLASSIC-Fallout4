@@ -22,6 +22,7 @@ private slots:
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
     void controllers_emit_global_scan_started_signal_on_scan_start();
     void scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection();
+    void scan_controller_treats_blank_xse_paths_as_missing();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
 };
@@ -339,6 +340,20 @@ void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for
              "ScanController should not use the current working directory for crash-log collection");
     QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(customFolder)")),
              "ScanController should continue forwarding the custom scan folder separately");
+}
+
+void ScanSettingsWiringTests::scan_controller_treats_blank_xse_paths_as_missing()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("const QString trimmed = classic::toQString(value).trimmed();")),
+             "ScanController should trim YAML directory values before deciding whether they are present");
+    QVERIFY2(sourceText.contains(QStringLiteral("return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);")),
+             "ScanController should keep blank Docs_Folder_XSE values empty instead of normalizing them to the current directory");
 }
 
 void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()

@@ -17,8 +17,8 @@ namespace {
 
 QString cleanDirectoryPath(const rust::String& value)
 {
-    const QString path = QDir::cleanPath(classic::toQString(value).trimmed());
-    return path.isEmpty() ? QString() : path;
+    const QString trimmed = classic::toQString(value).trimmed();
+    return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);
 }
 
 QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game, const QString& gameVersion)
