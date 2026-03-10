@@ -320,6 +320,46 @@ mod from_content_workflows {
         assert!(!config.ignore_list.is_empty());
     }
 
+    #[test]
+    fn test_from_yaml_content_merges_multiple_documents_per_input() {
+        let main = concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"7.31.0\"\n",
+            "---\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Merged Autoscan\"\n",
+        );
+        let game = concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "---\n",
+            "Warnings_CRASHGEN:\n",
+            "  Warn_NOPlugins: \"Merged warning\"\n",
+        );
+        let ignore = concat!(
+            "CLASSIC_Ignore_Fallout4:\n",
+            "  - \"IgnoreA\"\n",
+            "---\n",
+            "CLASSIC_Ignore_Skyrim:\n",
+            "  - \"IgnoreB\"\n",
+        );
+
+        let config = YamlDataCore::from_yaml_content(
+            main,
+            game,
+            ignore,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("from_yaml_content should merge multiple documents per input");
+
+        assert_eq!(config.classic_version, "7.31.0");
+        assert_eq!(config.autoscan_text, "Merged Autoscan");
+        assert_eq!(config.xse_acronym, "F4SE");
+        assert_eq!(config.warn_noplugins, "Merged warning");
+        assert_eq!(config.ignore_list, vec!["IgnoreA"]);
+    }
+
     /// Test from_content produces identical results across selected game modes
     #[test]
     fn test_from_content_selected_game_version_ignored_for_explicit_game_info() {
@@ -453,6 +493,33 @@ mod error_handling_workflows {
         }
     }
 
+    #[test]
+    fn test_from_yaml_content_non_mapping_later_document_returns_parse_like_error() {
+        let invalid_game_yaml = concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "---\n",
+            "- invalid\n",
+        );
+
+        let result = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            invalid_game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        );
+
+        assert!(result.is_err());
+        match result {
+            Err(ConfigError::ParseError { context, .. }) => {
+                assert!(context.contains("game") || context.contains("Game"));
+            }
+            Err(e) => panic!("Expected ParseError, got {:?}", e),
+            Ok(_) => panic!("Should fail when a later YAML document is not a mapping"),
+        }
+    }
+
     /// Test empty document error handling
     #[test]
     fn test_empty_document_error() {
@@ -525,6 +592,63 @@ mod error_handling_workflows {
 
 mod parallel_loading {
     use super::*;
+
+    #[tokio::test]
+    async fn test_load_from_yaml_files_merges_multiple_documents() {
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let databases_dir = temp_dir.path().join("databases");
+        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
+
+        fs::write(
+            databases_dir.join("CLASSIC Main.yaml"),
+            concat!(
+                "CLASSIC_Info:\n",
+                "  version: \"7.31.0\"\n",
+                "---\n",
+                "CLASSIC_Interface:\n",
+                "  autoscan_text_Fallout4: \"Merged Autoscan\"\n",
+            ),
+        )
+        .expect("Failed to write main YAML");
+        fs::write(
+            databases_dir.join("CLASSIC Fallout4.yaml"),
+            concat!(
+                "Game_Info:\n",
+                "  XSE_Acronym: \"F4SE\"\n",
+                "---\n",
+                "Warnings_CRASHGEN:\n",
+                "  Warn_NOPlugins: \"Merged warning\"\n",
+            ),
+        )
+        .expect("Failed to write game YAML");
+        fs::write(
+            temp_dir.path().join("CLASSIC Ignore.yaml"),
+            concat!(
+                "CLASSIC_Ignore_Fallout4:\n",
+                "  - \"IgnoreA\"\n",
+                "---\n",
+                "CLASSIC_Ignore_Skyrim:\n",
+                "  - \"IgnoreB\"\n",
+            ),
+        )
+        .expect("Failed to write ignore YAML");
+
+        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
+
+        let config = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await
+        .expect("load_from_yaml_files should merge multiple documents");
+
+        assert_eq!(config.classic_version, "7.31.0");
+        assert_eq!(config.autoscan_text, "Merged Autoscan");
+        assert_eq!(config.xse_acronym, "F4SE");
+        assert_eq!(config.warn_noplugins, "Merged warning");
+        assert_eq!(config.ignore_list, vec!["IgnoreA"]);
+    }
 
     /// Test that parallel loading preserves file order
     #[tokio::test]

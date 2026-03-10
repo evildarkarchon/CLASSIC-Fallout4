@@ -167,7 +167,7 @@ Descriptions exposed by `description()` are contributor-relevant because they en
 - `Game` -> `CLASSIC Data/databases/CLASSIC {Game}.yaml`
 - `GameLocal` -> `CLASSIC Data/CLASSIC {Game} Local.yaml`
 - `Test` -> `tests/test_settings.yaml`
-- `Cache` -> `User config dir/CLASSIC-Fallout4/cache.yaml`
+- `Cache` -> `User config dir/CLASSIC/cache.yaml`
 
 Contributor notes:
 
@@ -314,7 +314,7 @@ if let Some(info) = version.get_version_info() {
 }
 
 assert_eq!(GameId::Fallout4VR.exe_name(), "Fallout4VR.exe");
-assert_eq!(YamlFile::Cache.description(), "User config dir/CLASSIC-Fallout4/cache.yaml");
+assert_eq!(YamlFile::Cache.description(), "User config dir/CLASSIC/cache.yaml");
 assert!(must_not_be_none("Root_Folder_Game"));
 
 # Ok::<(), String>(())

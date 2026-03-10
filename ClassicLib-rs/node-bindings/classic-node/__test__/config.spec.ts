@@ -1,4 +1,7 @@
 import { describe, test, expect, beforeEach } from "bun:test";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import {
   // YamlData class
   YamlData,
@@ -136,7 +139,24 @@ describe("YamlData construction", () => {
         "Fallout4",
         "auto",
       ),
-    ).toThrow();
+    ).toThrow(/Failed to parse main YAML:/);
+  });
+
+  test("fromYamlContent classifies parse failures as InvalidArg", () => {
+    try {
+      YamlData.fromYamlContent(
+        "{ invalid: yaml: content: }}}",
+        GAME_YAML,
+        IGNORE_YAML,
+        "Fallout4",
+        "auto",
+      );
+      throw new Error("expected parse failure");
+    } catch (err) {
+      const error = err as Error & { code?: string };
+      expect(error.code).toBe("InvalidArg");
+      expect(error.message).toContain("Failed to parse main YAML:");
+    }
   });
 
   test("fromYamlContent throws on empty document", () => {
@@ -621,11 +641,88 @@ describe("ClassicConfigJs FormID databases", () => {
 // ============================================================================
 
 describe("ClassicConfigJs config path", () => {
-  test("getConfigPath returns the default path", () => {
+  test("getConfigPath returns a CLASSIC-based default path", () => {
     const config = new ClassicConfigJs();
     const path = config.getConfigPath();
     expect(typeof path).toBe("string");
     expect(path).toContain("CLASSIC Settings.yaml");
+    expect(path).not.toContain("CLASSIC-Fallout4");
+  });
+
+  test("loadOrDefault reads from the resolved default settings path", () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-config-"));
+    const originalAppData = process.env.APPDATA;
+    const originalXdgConfigHome = process.env.XDG_CONFIG_HOME;
+    const originalHome = process.env.HOME;
+
+    try {
+      process.env.APPDATA = root;
+      delete process.env.XDG_CONFIG_HOME;
+      delete process.env.HOME;
+
+      const settingsPath = new ClassicConfigJs().getConfigPath();
+      mkdirSync(dirname(settingsPath), { recursive: true });
+      writeFileSync(settingsPath, "fcx_mode: true\n", "utf8");
+
+      const config = ClassicConfigJs.loadOrDefault();
+      expect(config.fcxMode).toBe(true);
+      expect(config.getConfigPath()).toBe(settingsPath);
+      expect(config.getConfigPath()).not.toContain("CLASSIC-Fallout4");
+    } finally {
+      if (originalAppData === undefined) {
+        delete process.env.APPDATA;
+      } else {
+        process.env.APPDATA = originalAppData;
+      }
+      if (originalXdgConfigHome === undefined) {
+        delete process.env.XDG_CONFIG_HOME;
+      } else {
+        process.env.XDG_CONFIG_HOME = originalXdgConfigHome;
+      }
+      if (originalHome === undefined) {
+        delete process.env.HOME;
+      } else {
+        process.env.HOME = originalHome;
+      }
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("loadFromYaml classifies parse failures as InvalidArg", () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-config-"));
+
+    try {
+      const settingsPath = join(root, "invalid-classic-settings.yaml");
+      writeFileSync(settingsPath, "{ invalid: yaml: content: }}}", "utf8");
+
+      try {
+        ClassicConfigJs.loadFromYaml(settingsPath);
+        throw new Error("expected parse failure");
+      } catch (err) {
+        const error = err as Error & { code?: string };
+        expect(error.code).toBe("InvalidArg");
+        expect(error.message).toContain("Failed to load merged config YAML");
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("loadFromYaml classifies missing-file failures as GenericFailure", () => {
+    const missingPath = join(
+      tmpdir(),
+      "classic-node-missing",
+      "missing-classic-settings.yaml",
+    );
+
+    try {
+      ClassicConfigJs.loadFromYaml(missingPath);
+      throw new Error("expected I/O failure");
+    } catch (err) {
+      const error = err as Error & { code?: string };
+      expect(error.code).toBe("GenericFailure");
+      expect(error.message).toContain("Failed to load merged config YAML");
+    }
   });
 });
 
@@ -657,6 +754,13 @@ describe("YamlSource free functions", () => {
   test("getYamlSourcePath returns correct path for GameLocal", () => {
     const path = getYamlSourcePath("GameLocal", "Skyrim");
     expect(path).toContain("CLASSIC Skyrim Local.yaml");
+  });
+
+  test("getYamlSourcePath returns CLASSIC cache path", () => {
+    const path = getYamlSourcePath("Cache", "");
+    expect(path).toContain("CLASSIC");
+    expect(path).toContain("cache.yaml");
+    expect(path).not.toContain("CLASSIC-Fallout4");
   });
 
   test("getYamlSourceDisplayName returns correct name for Main", () => {

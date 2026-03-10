@@ -4,17 +4,201 @@
 //! for both classic-cli and classic-tui applications.
 
 use anyhow::{Context, Result};
+use classic_settings_core::load_yaml_merged_async;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
-use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
+use yaml_rust2::{Yaml, YamlEmitter};
 
 // Import the LinkedHashMap type that yaml-rust2 uses
 type LinkedHashMap<K, V> = hashlink::LinkedHashMap<K, V>;
 
 const DEFAULT_CONFIG_FILENAME: &str = "CLASSIC Settings.yaml";
 const LEGACY_CONFIG_FILENAME: &str = "CLASSIC_Settings.yaml";
+
+fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
+    current_exe.and_then(|path| path.parent().map(Path::to_path_buf))
+}
+
+fn application_dir() -> Option<PathBuf> {
+    std::env::current_exe()
+        .ok()
+        .and_then(|path| resolve_application_dir(Some(path.as_path())))
+}
+
+fn resolve_user_config_dir(config_dir: Option<&Path>) -> Option<PathBuf> {
+    config_dir.map(|dir| dir.join("CLASSIC"))
+}
+
+fn user_config_dir() -> Option<PathBuf> {
+    let config_dir = dirs::config_dir();
+    resolve_user_config_dir(config_dir.as_deref())
+}
+
+fn resolve_settings_search_paths(app_dir: Option<&Path>, user_dir: Option<&Path>) -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+
+    if let Some(app_dir) = app_dir {
+        paths.push(app_dir.join(DEFAULT_CONFIG_FILENAME));
+        paths.push(app_dir.join(LEGACY_CONFIG_FILENAME));
+    }
+
+    if let Some(user_dir) = user_dir {
+        paths.push(user_dir.join(DEFAULT_CONFIG_FILENAME));
+        paths.push(user_dir.join(LEGACY_CONFIG_FILENAME));
+    }
+
+    paths
+}
+
+fn resolve_existing_settings_path(
+    app_dir: Option<&Path>,
+    user_dir: Option<&Path>,
+) -> Option<PathBuf> {
+    resolve_settings_search_paths(app_dir, user_dir)
+        .into_iter()
+        .find(|path| path.exists())
+}
+
+fn resolve_preferred_settings_path(app_dir: Option<&Path>, user_dir: Option<&Path>) -> PathBuf {
+    if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
+        return app_target;
+    }
+
+    if let Some(user_target) = user_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
+        return user_target;
+    }
+
+    resolve_settings_search_paths(app_dir, user_dir)
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG_FILENAME))
+}
+
+fn choose_settings_write_path(
+    existing_paths: &[PathBuf],
+    app_dir: Option<&Path>,
+    user_dir: Option<&Path>,
+) -> Result<Option<PathBuf>> {
+    choose_settings_write_path_with_access(
+        existing_paths,
+        app_dir,
+        user_dir,
+        can_update_existing_settings_file,
+        can_create_new_settings_file,
+    )
+}
+
+fn choose_settings_write_path_with_access(
+    existing_paths: &[PathBuf],
+    app_dir: Option<&Path>,
+    user_dir: Option<&Path>,
+    can_update_existing: impl Fn(&Path) -> bool,
+    can_create_new: impl Fn(&Path) -> bool,
+) -> Result<Option<PathBuf>> {
+    for candidate in resolve_settings_search_paths(app_dir, user_dir) {
+        if existing_paths.iter().any(|path| path == &candidate) && can_update_existing(&candidate) {
+            return Ok(Some(candidate));
+        }
+    }
+
+    if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
+        if can_create_new(&app_target) {
+            return Ok(Some(app_target));
+        }
+    }
+
+    if let Some(user_target) = user_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
+        if can_create_new(&user_target) {
+            return Ok(Some(user_target));
+        }
+    }
+
+    Ok(None)
+}
+
+fn can_update_existing_settings_file(path: &Path) -> bool {
+    std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(path)
+        .is_ok()
+}
+
+fn can_create_new_settings_file(path: &Path) -> bool {
+    let Some(parent) = path.parent() else {
+        return false;
+    };
+
+    if std::fs::create_dir_all(parent).is_err() {
+        return false;
+    }
+
+    let probe_name = format!(
+        ".classic-write-test-{}-{}.tmp",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|duration| duration.as_nanos())
+            .unwrap_or_default()
+    );
+    let probe_path = parent.join(probe_name);
+
+    match std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&probe_path)
+    {
+        Ok(file) => {
+            drop(file);
+            let _ = std::fs::remove_file(probe_path);
+            true
+        }
+        Err(_) => false,
+    }
+}
+
+fn resolve_settings_write_path(app_dir: Option<&Path>, user_dir: Option<&Path>) -> PathBuf {
+    if app_dir.is_none() && user_dir.is_none() {
+        return PathBuf::from(DEFAULT_CONFIG_FILENAME);
+    }
+
+    let existing_paths: Vec<_> = resolve_settings_search_paths(app_dir, user_dir)
+        .into_iter()
+        .filter(|path| path.exists())
+        .collect();
+
+    choose_settings_write_path(&existing_paths, app_dir, user_dir)
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| resolve_preferred_settings_path(app_dir, user_dir))
+}
+
+fn resolve_settings_read_path(app_dir: Option<&Path>, user_dir: Option<&Path>) -> PathBuf {
+    resolve_existing_settings_path(app_dir, user_dir)
+        .unwrap_or_else(|| resolve_preferred_settings_path(app_dir, user_dir))
+}
+
+fn resolve_cache_path(user_dir: Option<&Path>, app_dir: Option<&Path>) -> PathBuf {
+    user_dir
+        .map(|dir| dir.join("cache.yaml"))
+        .or_else(|| app_dir.map(|dir| dir.join("CLASSIC").join("cache.yaml")))
+        .unwrap_or_else(|| PathBuf::from("CLASSIC").join("cache.yaml"))
+}
+
+async fn load_or_default_from_dirs(
+    app_dir: Option<&Path>,
+    user_dir: Option<&Path>,
+) -> Result<ClassicConfig> {
+    for path in resolve_settings_search_paths(app_dir, user_dir) {
+        if path.exists() {
+            return ClassicConfig::load_from_yaml(&path).await;
+        }
+    }
+
+    Ok(ClassicConfig::default())
+}
 
 /// YAML file source identifier - mirrors Python's YAML enum
 ///
@@ -51,7 +235,7 @@ pub enum YamlSource {
     /// Test settings: tests/test_settings.yaml
     Test,
 
-    /// Cache: User config dir/CLASSIC-Fallout4/cache.yaml
+    /// Cache: User config dir/CLASSIC/cache.yaml
     Cache,
 }
 
@@ -69,7 +253,11 @@ impl YamlSource {
     pub fn path(&self, game: &str) -> PathBuf {
         match self {
             Self::Main => PathBuf::from("CLASSIC Data/databases/CLASSIC Main.yaml"),
-            Self::Settings => PathBuf::from("CLASSIC Settings.yaml"),
+            Self::Settings => {
+                let app_dir = application_dir();
+                let user_dir = user_config_dir();
+                resolve_settings_read_path(app_dir.as_deref(), user_dir.as_deref())
+            }
             Self::Ignore => PathBuf::from("CLASSIC Ignore.yaml"),
             Self::Game => {
                 assert!(!game.is_empty(), "Game name required for YamlSource::Game");
@@ -84,8 +272,9 @@ impl YamlSource {
             }
             Self::Test => PathBuf::from("tests/test_settings.yaml"),
             Self::Cache => {
-                // TODO: Get actual user config directory
-                PathBuf::from("CLASSIC-Fallout4/cache.yaml")
+                let app_dir = application_dir();
+                let user_dir = user_config_dir();
+                resolve_cache_path(user_dir.as_deref(), app_dir.as_deref())
             }
         }
     }
@@ -160,19 +349,9 @@ impl YamlSource {
             self.display_name_with_game(game)
         };
 
-        let content = fs::read_to_string(&path)
+        load_yaml_merged_async(&path)
             .await
-            .with_context(|| format!("Failed to read {}: {}", display, path.display()))?;
-
-        let docs = YamlLoader::load_from_str(&content)
-            .with_context(|| format!("Failed to parse {}: {}", display, path.display()))?;
-
-        let doc = docs
-            .first()
-            .cloned()
-            .ok_or_else(|| anyhow::anyhow!("{} file is empty: {}", display, path.display()))?;
-
-        Ok(doc)
+            .with_context(|| format!("Failed to load {}: {}", display, path.display()))
     }
 }
 
@@ -318,16 +497,11 @@ impl ClassicConfig {
     /// * `Ok(ClassicConfig)` - Successfully loaded configuration
     /// * `Err(anyhow::Error)` - Failed to load or parse configuration
     pub async fn load_from_yaml(path: &Path) -> Result<Self> {
-        let content = fs::read_to_string(path)
+        let yaml = load_yaml_merged_async(path)
             .await
-            .context(format!("Failed to read config file: {}", path.display()))?;
+            .with_context(|| format!("Failed to load merged config YAML: {}", path.display()))?;
 
-        let docs =
-            YamlLoader::load_from_str(&content).context("Failed to parse YAML configuration")?;
-
-        let doc = docs.first().context("YAML file is empty")?;
-
-        Self::from_yaml(doc).context("Failed to extract configuration from YAML")
+        Self::from_yaml(&yaml).context("Failed to extract configuration from YAML")
     }
 
     /// Convert YAML document to ClassicConfig
@@ -532,31 +706,25 @@ impl ClassicConfig {
     /// Load configuration from default location or return defaults
     ///
     /// Searches for configuration in standard locations:
-    /// 1. Current directory: ./CLASSIC Settings.yaml
-    /// 2. Current directory: ./CLASSIC_Settings.yaml (legacy fallback)
-    /// 3. User config directory (future)
+    /// 1. Application directory: CLASSIC Settings.yaml
+    /// 2. Application directory: CLASSIC_Settings.yaml (legacy fallback)
+    /// 3. User config directory: CLASSIC Settings.yaml
+    /// 4. User config directory: CLASSIC_Settings.yaml (legacy fallback)
     ///
     /// # Returns
     /// * Configuration loaded from file (if exists)
     /// * Default configuration (if no file found)
     pub async fn load_or_default() -> Result<Self> {
-        let default_paths = [
-            PathBuf::from(DEFAULT_CONFIG_FILENAME),
-            PathBuf::from(LEGACY_CONFIG_FILENAME),
-        ];
-
-        for path in &default_paths {
-            if path.exists() {
-                return Self::load_from_yaml(path).await;
-            }
-        }
-
-        Ok(Self::default())
+        let app_dir = application_dir();
+        let user_dir = user_config_dir();
+        load_or_default_from_dirs(app_dir.as_deref(), user_dir.as_deref()).await
     }
 
     /// Get the default config path
     pub fn get_config_path(&self) -> PathBuf {
-        PathBuf::from(DEFAULT_CONFIG_FILENAME)
+        let app_dir = application_dir();
+        let user_dir = user_config_dir();
+        resolve_settings_write_path(app_dir.as_deref(), user_dir.as_deref())
     }
 
     /// Validate configuration paths
@@ -621,15 +789,14 @@ impl ClassicConfig {
             return Ok(());
         }
 
-        let content = fs::read_to_string(&local_yaml_path).await.context(format!(
-            "Failed to read Local.yaml file: {}",
-            local_yaml_path.display()
-        ))?;
-
-        let docs = YamlLoader::load_from_str(&content)
-            .context("Failed to parse Local.yaml configuration")?;
-
-        let doc = docs.first().context("Local.yaml file is empty")?;
+        let doc = load_yaml_merged_async(&local_yaml_path)
+            .await
+            .with_context(|| {
+                format!(
+                    "Failed to load Local.yaml file: {}",
+                    local_yaml_path.display()
+                )
+            })?;
 
         // Extract paths from Game_Info section
         if let Some(game_root_str) = doc["Game_Info"]["Root_Folder_Game"].as_str() {
@@ -647,32 +814,18 @@ impl ClassicConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
-    use std::sync::OnceLock;
+    use classic_settings_core::{merge_yaml_documents, parse_yaml_content};
+    use std::sync::{Mutex, OnceLock};
     use tempfile::tempdir;
-    use tokio::sync::Mutex;
 
     fn current_dir_lock() -> &'static Mutex<()> {
         static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
         LOCK.get_or_init(|| Mutex::new(()))
     }
 
-    struct CurrentDirGuard {
-        original_dir: PathBuf,
-    }
-
-    impl CurrentDirGuard {
-        fn change_to(path: &Path) -> Self {
-            let original_dir = env::current_dir().unwrap();
-            env::set_current_dir(path).unwrap();
-            Self { original_dir }
-        }
-    }
-
-    impl Drop for CurrentDirGuard {
-        fn drop(&mut self) {
-            env::set_current_dir(&self.original_dir).unwrap();
-        }
+    fn parse_yaml_document(yaml_str: &str) -> Yaml {
+        let docs = parse_yaml_content("memory://config.rs", yaml_str).unwrap();
+        merge_yaml_documents("memory://config.rs", &docs).unwrap()
     }
 
     #[test]
@@ -709,6 +862,41 @@ mod tests {
         assert_eq!(loaded.fcx_mode, config.fcx_mode);
         assert_eq!(loaded.show_formid_values, config.show_formid_values);
         assert_eq!(loaded.paths.ini_folder, config.paths.ini_folder);
+    }
+
+    #[tokio::test]
+    async fn test_load_from_yaml_merges_multiple_documents() {
+        let temp_dir = tempdir().unwrap();
+        let config_path = temp_dir.path().join("CLASSIC Settings.yaml");
+
+        std::fs::write(
+            &config_path,
+            concat!(
+                "paths:\n",
+                "  game_root: C:/Games/Fallout4\n",
+                "formid_databases:\n",
+                "  Fallout4:\n",
+                "    - databases/FOLON FormIDs.db\n",
+                "---\n",
+                "fcx_mode: true\n",
+                "paths:\n",
+                "  docs_root: C:/Users/Test/Documents/My Games/Fallout4\n",
+            ),
+        )
+        .unwrap();
+
+        let config = ClassicConfig::load_from_yaml(&config_path).await.unwrap();
+
+        assert!(config.fcx_mode);
+        assert_eq!(config.paths.game_root, PathBuf::from("C:/Games/Fallout4"));
+        assert_eq!(
+            config.paths.docs_root,
+            Some(PathBuf::from("C:/Users/Test/Documents/My Games/Fallout4"))
+        );
+        assert_eq!(
+            config.formid_databases.get("Fallout4"),
+            Some(&vec![PathBuf::from("databases/FOLON FormIDs.db")])
+        );
     }
 
     #[test]
@@ -767,10 +955,9 @@ mod tests {
     #[test]
     fn test_missing_game_version_defaults_to_auto() {
         let yaml_str = "fcx_mode: false\n";
-        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
-        let yaml = docs.first().unwrap();
+        let yaml = parse_yaml_document(yaml_str);
 
-        let config = ClassicConfig::from_yaml(yaml).unwrap();
+        let config = ClassicConfig::from_yaml(&yaml).unwrap();
 
         assert_eq!(config.game_version, "auto");
     }
@@ -778,10 +965,9 @@ mod tests {
     #[test]
     fn test_game_version_is_loaded_when_set() {
         let yaml_str = "game_version: Original\n";
-        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
-        let yaml = docs.first().unwrap();
+        let yaml = parse_yaml_document(yaml_str);
 
-        let config = ClassicConfig::from_yaml(yaml).unwrap();
+        let config = ClassicConfig::from_yaml(&yaml).unwrap();
 
         assert_eq!(config.game_version, "Original");
     }
@@ -836,6 +1022,43 @@ mod tests {
     }
 
     #[test]
+    fn test_load_local_yaml_paths_merges_multiple_documents() {
+        let _guard = current_dir_lock().lock().unwrap();
+        let original_dir = std::env::current_dir().unwrap();
+        let temp_dir = tempdir().unwrap();
+        let local_yaml_dir = temp_dir.path().join("CLASSIC Data");
+        let local_yaml_path = local_yaml_dir.join("CLASSIC Task4Merge Local.yaml");
+
+        std::fs::create_dir_all(&local_yaml_dir).unwrap();
+        std::fs::write(
+            &local_yaml_path,
+            concat!(
+                "Game_Info:\n",
+                "  Root_Folder_Game: C:/Games/Fallout4\n",
+                "---\n",
+                "Game_Info:\n",
+                "  Root_Folder_Docs: C:/Users/Test/Documents/My Games/Fallout4\n",
+            ),
+        )
+        .unwrap();
+
+        std::env::set_current_dir(temp_dir.path()).unwrap();
+
+        let mut config = ClassicConfig::default();
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let result = runtime.block_on(config.load_local_yaml_paths("Task4Merge"));
+
+        std::env::set_current_dir(original_dir).unwrap();
+
+        result.unwrap();
+        assert_eq!(config.paths.game_root, PathBuf::from("C:/Games/Fallout4"));
+        assert_eq!(
+            config.paths.docs_root,
+            Some(PathBuf::from("C:/Users/Test/Documents/My Games/Fallout4"))
+        );
+    }
+
+    #[test]
     fn test_path_config_default() {
         let config = PathConfig::default();
         assert!(config.ini_folder.is_none());
@@ -846,41 +1069,352 @@ mod tests {
         assert!(config.docs_root.is_none());
     }
 
+    #[test]
+    fn test_resolve_application_dir_returns_none_without_exe_path() {
+        assert_eq!(resolve_application_dir(None), None);
+    }
+
+    #[test]
+    fn test_resolve_user_config_dir_returns_none_without_base_dir() {
+        assert_eq!(resolve_user_config_dir(None), None);
+    }
+
+    #[test]
+    fn test_resolve_user_config_dir_appends_classic_directory_name() {
+        let config_dir = PathBuf::from("C:/Users/Test/AppData/Roaming");
+
+        assert_eq!(
+            resolve_user_config_dir(Some(&config_dir)),
+            Some(config_dir.join("CLASSIC"))
+        );
+    }
+
+    #[test]
+    fn test_resolve_settings_search_paths_prefers_app_dir_then_user_dir_and_legacy_names() {
+        let app_dir = PathBuf::from("C:/ClassicApp");
+        let user_dir = PathBuf::from("C:/Users/Test/AppData/Roaming/CLASSIC");
+
+        let paths = resolve_settings_search_paths(Some(&app_dir), Some(&user_dir));
+
+        assert_eq!(paths[0], app_dir.join("CLASSIC Settings.yaml"));
+        assert_eq!(paths[1], app_dir.join("CLASSIC_Settings.yaml"));
+        assert_eq!(paths[2], user_dir.join("CLASSIC Settings.yaml"));
+        assert_eq!(paths[3], user_dir.join("CLASSIC_Settings.yaml"));
+    }
+
+    #[test]
+    fn test_resolve_settings_search_paths_uses_app_dir_only_when_user_dir_missing() {
+        let app_dir = PathBuf::from("C:/ClassicApp");
+
+        let paths = resolve_settings_search_paths(Some(&app_dir), None);
+
+        assert_eq!(paths.len(), 2);
+        assert_eq!(paths[0], app_dir.join("CLASSIC Settings.yaml"));
+        assert_eq!(paths[1], app_dir.join("CLASSIC_Settings.yaml"));
+    }
+
+    #[test]
+    fn test_resolve_settings_search_paths_uses_user_dir_only_when_app_dir_missing() {
+        let user_dir = PathBuf::from("C:/Users/Test/AppData/Roaming/CLASSIC");
+
+        let paths = resolve_settings_search_paths(None, Some(&user_dir));
+
+        assert_eq!(paths.len(), 2);
+        assert_eq!(paths[0], user_dir.join("CLASSIC Settings.yaml"));
+        assert_eq!(paths[1], user_dir.join("CLASSIC_Settings.yaml"));
+    }
+
+    #[test]
+    fn test_resolve_settings_search_paths_returns_empty_when_no_dirs_are_available() {
+        let paths = resolve_settings_search_paths(None, None);
+
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_prefers_existing_app_dir_file() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let existing_path = app_dir.join("CLASSIC_Settings.yaml");
+        std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
+        let existing = vec![existing_path.clone()];
+        let chosen =
+            choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
+
+        assert_eq!(chosen, Some(existing_path));
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_prefers_existing_user_dir_file_when_app_has_none() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let existing_path = user_dir.join("CLASSIC Settings.yaml");
+        std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
+        let existing = vec![existing_path.clone()];
+        let chosen =
+            choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
+
+        assert_eq!(chosen, Some(existing_path));
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_skips_existing_app_file_when_exact_file_is_not_writable() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let app_file = app_dir.join("CLASSIC Settings.yaml");
+        let user_file = user_dir.join("CLASSIC Settings.yaml");
+        let existing = vec![app_file.clone(), user_file.clone()];
+
+        let chosen = choose_settings_write_path_with_access(
+            &existing,
+            Some(&app_dir),
+            Some(&user_dir),
+            |path| path != app_file.as_path(),
+            |_| true,
+        )
+        .unwrap();
+
+        assert_eq!(chosen, Some(user_file));
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_falls_back_to_user_dir_when_app_dir_target_is_not_writable()
+    {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let chosen = choose_settings_write_path_with_access(
+            &[],
+            Some(&app_dir),
+            Some(&user_dir),
+            |_| true,
+            |path| path.parent() != Some(app_dir.as_path()),
+        )
+        .unwrap();
+
+        assert_eq!(chosen, Some(user_dir.join("CLASSIC Settings.yaml")));
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_prefers_new_modern_file_in_app_dir() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let chosen = choose_settings_write_path(&[], Some(&app_dir), Some(&user_dir)).unwrap();
+
+        assert_eq!(chosen, Some(app_dir.join("CLASSIC Settings.yaml")));
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_prefers_new_modern_file_in_user_dir_when_app_missing() {
+        let temp_dir = tempdir().unwrap();
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let chosen = choose_settings_write_path(&[], None, Some(&user_dir)).unwrap();
+
+        assert_eq!(chosen, Some(user_dir.join("CLASSIC Settings.yaml")));
+    }
+
+    #[test]
+    fn test_choose_settings_write_path_returns_none_when_no_dirs_are_available() {
+        let chosen = choose_settings_write_path(&[], None, None).unwrap();
+
+        assert_eq!(chosen, None);
+    }
+
+    #[test]
+    fn test_resolve_settings_path_uses_compatibility_fallback_when_no_dirs_are_available() {
+        assert_eq!(
+            resolve_settings_write_path(None, None),
+            PathBuf::from(DEFAULT_CONFIG_FILENAME)
+        );
+    }
+
+    #[test]
+    fn test_resolve_settings_write_path_does_not_use_compatibility_fallback_when_dirs_are_available()
+     {
+        let app_dir = PathBuf::from("C:/ClassicApp");
+
+        let path = resolve_settings_write_path(Some(&app_dir), None);
+
+        assert_ne!(path, PathBuf::from(DEFAULT_CONFIG_FILENAME));
+    }
+
+    #[test]
+    fn test_resolve_existing_settings_path_prefers_actual_existing_file_in_search_order() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let existing_path = user_dir.join(LEGACY_CONFIG_FILENAME);
+        std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
+
+        let resolved = resolve_existing_settings_path(Some(&app_dir), Some(&user_dir));
+
+        assert_eq!(resolved, Some(existing_path));
+    }
+
+    #[test]
+    fn test_resolve_settings_read_path_prefers_existing_file_over_write_target() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+
+        let existing_path = user_dir.join(LEGACY_CONFIG_FILENAME);
+        std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
+
+        let resolved = resolve_settings_read_path(Some(&app_dir), Some(&user_dir));
+
+        assert_eq!(resolved, existing_path);
+    }
+
+    #[test]
+    fn test_resolve_settings_read_path_has_no_directory_creation_side_effects() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+
+        let resolved = resolve_settings_read_path(Some(&app_dir), Some(&user_dir));
+
+        assert_eq!(resolved, app_dir.join(DEFAULT_CONFIG_FILENAME));
+        assert!(!app_dir.exists());
+        assert!(!user_dir.exists());
+    }
+
+    #[test]
+    fn test_resolve_cache_path_prefers_user_config_dir() {
+        let user_dir = PathBuf::from("C:/Users/Test/AppData/Roaming/CLASSIC");
+
+        assert_eq!(
+            resolve_cache_path(Some(&user_dir), None),
+            user_dir.join("cache.yaml")
+        );
+    }
+
+    #[test]
+    fn test_resolve_cache_path_prefers_application_dir_compatibility_fallback_without_user_config_dir()
+     {
+        let app_dir = PathBuf::from("C:/ClassicApp");
+
+        assert_eq!(
+            resolve_cache_path(None, Some(&app_dir)),
+            app_dir.join("CLASSIC").join("cache.yaml")
+        );
+    }
+
+    #[test]
+    fn test_resolve_cache_path_uses_relative_compatibility_fallback_without_user_or_app_dir() {
+        assert_eq!(
+            resolve_cache_path(None, None),
+            PathBuf::from("CLASSIC").join("cache.yaml")
+        );
+    }
+
     #[tokio::test]
     async fn test_load_or_default_no_file() {
-        let _lock = current_dir_lock().lock().await;
         let temp_dir = tempdir().unwrap();
-        let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
 
-        let config = ClassicConfig::load_or_default().await.unwrap();
+        let config = load_or_default_from_dirs(Some(&app_dir), Some(&user_dir))
+            .await
+            .unwrap();
         assert!(!config.fcx_mode);
         assert!(config.update_check);
     }
 
     #[tokio::test]
-    async fn test_load_or_default_accepts_space_settings_filename() {
-        let _lock = current_dir_lock().lock().await;
+    async fn test_load_or_default_prefers_existing_app_dir_file_when_both_locations_exist() {
         let temp_dir = tempdir().unwrap();
-        let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
-        let settings_path = temp_dir.path().join("CLASSIC Settings.yaml");
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+        let app_settings_path = app_dir.join("CLASSIC Settings.yaml");
+        let user_settings_path = user_dir.join("CLASSIC Settings.yaml");
 
-        std::fs::write(settings_path, "fcx_mode: true\n").unwrap();
+        std::fs::write(&app_settings_path, "fcx_mode: true\n").unwrap();
+        std::fs::write(&user_settings_path, "fcx_mode: false\n").unwrap();
 
-        let config = ClassicConfig::load_or_default().await.unwrap();
+        let config = load_or_default_from_dirs(Some(&app_dir), Some(&user_dir))
+            .await
+            .unwrap();
         assert!(config.fcx_mode);
     }
 
     #[tokio::test]
-    async fn test_load_or_default_accepts_legacy_underscore_settings_filename() {
-        let _lock = current_dir_lock().lock().await;
+    async fn test_load_or_default_falls_back_to_user_dir_when_app_has_no_settings_file() {
         let temp_dir = tempdir().unwrap();
-        let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
-        let settings_path = temp_dir.path().join("CLASSIC_Settings.yaml");
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+        let settings_path = user_dir.join("CLASSIC Settings.yaml");
 
         std::fs::write(settings_path, "fcx_mode: true\n").unwrap();
 
-        let config = ClassicConfig::load_or_default().await.unwrap();
+        let config = load_or_default_from_dirs(Some(&app_dir), Some(&user_dir))
+            .await
+            .unwrap();
         assert!(config.fcx_mode);
+    }
+
+    #[tokio::test]
+    async fn test_load_or_default_reads_legacy_underscore_filename_from_app_dir() {
+        let temp_dir = tempdir().unwrap();
+        let app_dir = temp_dir.path().join("app");
+        let user_dir = temp_dir.path().join("user");
+        std::fs::create_dir_all(&app_dir).unwrap();
+        std::fs::create_dir_all(&user_dir).unwrap();
+        let settings_path = app_dir.join("CLASSIC_Settings.yaml");
+
+        std::fs::write(settings_path, "fcx_mode: true\n").unwrap();
+
+        let config = load_or_default_from_dirs(Some(&app_dir), Some(&user_dir))
+            .await
+            .unwrap();
+        assert!(config.fcx_mode);
+    }
+
+    #[test]
+    fn test_yaml_source_settings_path_mirrors_resolved_settings_path() {
+        assert_eq!(
+            YamlSource::Settings.path(""),
+            resolve_settings_read_path(application_dir().as_deref(), user_config_dir().as_deref())
+        );
+    }
+
+    #[test]
+    fn test_yaml_source_cache_path_matches_resolved_cache_path() {
+        assert_eq!(
+            YamlSource::Cache.path(""),
+            resolve_cache_path(user_config_dir().as_deref(), application_dir().as_deref())
+        );
     }
 
     #[test]
@@ -912,10 +1446,9 @@ mod tests {
     #[test]
     fn test_formid_databases_missing_key_defaults_empty() {
         let yaml_str = "fcx_mode: false\n";
-        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
-        let yaml = docs.first().unwrap();
+        let yaml = parse_yaml_document(yaml_str);
 
-        let config = ClassicConfig::from_yaml(yaml).unwrap();
+        let config = ClassicConfig::from_yaml(&yaml).unwrap();
         assert!(config.formid_databases.is_empty());
     }
 

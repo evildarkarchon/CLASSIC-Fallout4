@@ -12,6 +12,8 @@ This crate is the Rust-side configuration loader for CLASSIC. It does two relate
 1. Load the user/runtime settings YAML used by UI surfaces such as the CLI and TUI.
 2. Load the main/game/ignore YAML dataset used by crash-log analysis and related bindings.
 
+Schema reference: [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
+
 It is a pure Rust business-logic crate. It does not own a runtime, UI, or FFI layer.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
@@ -54,7 +56,7 @@ Runtime settings API for CLI/TUI-style application configuration.
 Bulk YAML dataset loader for scanlog/business logic.
 
 - `YamlDataCore` - combined view of Main/Game/Ignore YAML data
-- `CrashgenEntryRaw` - raw per-crashgen registry entry extracted from game YAML
+- `CrashgenEntryRaw` - raw per-crashgen registry entry extracted from merged game YAML
 - `ConfigError` - typed errors for bulk YAML loading/parsing
 - `resolve_registry_version_info()` - version-registry lookup helper
 - `format_registry_game_version()` - formatting helper for registry versions
@@ -82,7 +84,7 @@ Variants:
 - `Game` -> `CLASSIC Data/databases/CLASSIC {game}.yaml`
 - `GameLocal` -> `CLASSIC Data/CLASSIC {game} Local.yaml`
 - `Test` -> `tests/test_settings.yaml`
-- `Cache` -> `CLASSIC-Fallout4/cache.yaml`
+- `Cache` -> `User config dir/CLASSIC/cache.yaml` with application-relative compatibility fallback
 
 Important methods:
 
@@ -94,8 +96,8 @@ Important methods:
 Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
-- `YamlSource::Cache` is still a placeholder path; the source contains a `TODO` for using the actual user config directory.
-- `load()` reads and parses a single YAML document and returns the first document from the file.
+- `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
+- `load()` reads the full YAML stream, merges documents with `classic-settings-core`, and returns one merged mapping.
 
 ## `ClassicConfig`
 
@@ -122,12 +124,16 @@ Important methods:
 Behavior worth knowing:
 
 - missing scalar keys mostly fall back to defaults instead of erroring
-- `load_or_default()` currently checks only the current working directory for:
+- `load_or_default()` searches in this order:
   - `CLASSIC Settings.yaml`
   - `CLASSIC_Settings.yaml` (legacy fallback)
+  - `dirs::config_dir()/CLASSIC/CLASSIC Settings.yaml`
+  - `dirs::config_dir()/CLASSIC/CLASSIC_Settings.yaml`
+- `get_config_path()` is best-effort: it prefers the first writable existing settings file in that order, otherwise the preferred `CLASSIC Settings.yaml` target for the resolved application or user config directory, with a final relative fallback only when neither directory can be resolved
 - `save_to_yaml()` creates parent directories if needed
 - `save_to_yaml()` serializes YAML in `spawn_blocking()` because `YamlEmitter` is not `Send`
 - `load_local_yaml_paths()` is non-fatal when `CLASSIC Data/CLASSIC {game} Local.yaml` does not exist
+- field-level YAML shape and default details live in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md)
 
 ## `PathConfig`
 
@@ -201,11 +207,8 @@ Variants:
 
 - `InvalidInput(String)`
 - `IOError { context, source }`
-- `ParseError { context, source }`
+- `ParseError { context, message }`
 - `EmptyDocument(String)`
-- `RuntimeError(String)`
-
-Note: `RuntimeError` is public but the current `yamldata` implementation does not appear to construct it.
 
 ## Registry Helpers
 
@@ -221,19 +224,22 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 ## `ClassicConfig` flow
 
 1. A caller loads `CLASSIC Settings.yaml` with `ClassicConfig::load_from_yaml()` or `load_or_default()`.
-2. YAML scalar fields are read with tolerant defaults.
-3. Nested `paths` and `formid_databases` are reconstructed.
-4. Optional post-processing may call:
-   - `load_local_yaml_paths(game)` to fill `game_root` and `docs_root` from `GameLocal`
+2. The crate parses and merges every YAML document in the stream.
+3. YAML scalar fields are read with tolerant defaults.
+4. Nested `paths` and `formid_databases` are reconstructed.
+5. Optional post-processing may call:
+   - `load_local_yaml_paths(game)` to fill `game_root` and `docs_root` from merged `GameLocal`
    - `validate_paths()` to fail fast on missing directories
-5. The config can be persisted again with `save_to_yaml()`.
+6. The config can be persisted again with `save_to_yaml()`.
+
+Read/write path policy is defined in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
 
 ## `YamlDataCore` flow
 
 1. The caller provides either the 2-dir or legacy 3-dir layout plus `game` and `selected_game_version`.
 2. The crate resolves file paths and checks that all three YAML files exist.
 3. It reads all three files in parallel with `tokio::join!`.
-4. It parses the first YAML document from each file.
+4. It parses and merges every YAML document from each file.
 5. `YamlOperations` from [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) extracts nested values.
 6. `Crashgen_Registry` is parsed into `HashMap<String, CrashgenEntryRaw>`.
 7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core):
@@ -241,9 +247,11 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
    - `crashgen_latest_og`
    - `xse_acronym`
    - `game_version`
-8. If `Game_Info.CRASHGEN_Ignore` is not explicitly configured, the crate may fall back to `Crashgen_Registry.<selected|default>.ignore_keys`.
+8. If `Game_Info.CRASHGEN_Ignore` is missing, the crate may fall back to `Crashgen_Registry.<selected|default>.ignore_keys`.
 
-One subtle rule from the implementation: explicit values already present in `Game_Info` win over registry fallback values.
+The exact consumed keys and merge rules are documented in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
+
+One subtle rule from the implementation: explicit values already present in `Game_Info` win over registry fallback values, and a present-but-malformed `Game_Info.CRASHGEN_Ignore` path still blocks registry fallback.
 
 ---
 
@@ -361,10 +369,8 @@ config.save_to_yaml(&config.get_config_path()).await?;
 
 - `ClassicConfig::from_yaml()` and `to_yaml()` are internal helpers, not public API.
 - `YamlDataCore` is a broad data container with many public fields; consumers often read fields directly instead of going through accessor methods.
-- `load_from_yaml_files()` only reads the first YAML document from each file.
 - The source documents a 15-30x speedup claim for parallel loading, but this page does not restate that as a benchmark guarantee.
-- The current source does not document a stable schema contract for every YAML key beyond what the implementation reads.
-- `YamlSource::Cache` and user-config-directory behavior are not fully implemented yet.
+- the stable YAML shape contract now lives in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md)
 
 If you extend the crate, update this document when you change:
 

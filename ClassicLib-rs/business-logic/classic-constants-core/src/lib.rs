@@ -602,7 +602,7 @@ pub enum YamlFile {
     GameLocal,
     /// tests/test_settings.yaml (for testing only)
     Test,
-    /// User config dir/CLASSIC-Fallout4/cache.yaml (persistent cache for uvx)
+    /// User config dir/CLASSIC/cache.yaml (persistent cache for uvx)
     Cache,
 }
 
@@ -657,7 +657,7 @@ impl YamlFile {
             Self::Game => "CLASSIC Data/databases/CLASSIC {Game}.yaml",
             Self::GameLocal => "CLASSIC Data/CLASSIC {Game} Local.yaml",
             Self::Test => "tests/test_settings.yaml",
-            Self::Cache => "User config dir/CLASSIC-Fallout4/cache.yaml",
+            Self::Cache => "User config dir/CLASSIC/cache.yaml",
         }
     }
 

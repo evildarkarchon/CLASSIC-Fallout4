@@ -109,7 +109,7 @@ impl PyYamlFile {
         }
     }
 
-    /// User config dir/CLASSIC-Fallout4/cache.yaml (persistent cache for uvx)
+    /// User config dir/CLASSIC/cache.yaml (persistent cache for uvx)
     #[classattr]
     #[allow(non_snake_case)]
     fn Cache() -> Self {

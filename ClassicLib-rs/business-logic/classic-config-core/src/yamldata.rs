@@ -10,6 +10,7 @@ use classic_crashgen_settings_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
     PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
 };
+use classic_settings_core::{SettingsError, merge_yaml_documents, parse_yaml_content};
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
@@ -17,7 +18,7 @@ use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use yaml_rust2::{Yaml, YamlLoader};
+use yaml_rust2::Yaml;
 
 /// Raw per-crashgen settings configuration deserialized from YAML.
 ///
@@ -546,16 +547,78 @@ fn resolve_crashgen_ignore_fallback(
         .map(|entry| entry.ignore_keys.clone())
 }
 
+fn map_settings_error(
+    parse_context: &str,
+    empty_context: &str,
+    error: SettingsError,
+) -> ConfigError {
+    match error {
+        SettingsError::IoError { path, source } => ConfigError::IOError {
+            context: format!("Failed to read {}", path.display()),
+            source,
+        },
+        SettingsError::YamlParseError { message, .. } => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message,
+        },
+        SettingsError::InvalidYamlStructure {
+            source,
+            index,
+            found,
+        } => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message: format!(
+                "Invalid YAML structure in {}: document {} must be a mapping, found {}",
+                source, index, found
+            ),
+        },
+        SettingsError::EmptyDocument { .. } => {
+            ConfigError::EmptyDocument(empty_context.to_string())
+        }
+        SettingsError::TaskJoinError { path, source } => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message: format!(
+                "Task join error while loading {}: {}",
+                path.display(),
+                source
+            ),
+        },
+        SettingsError::KeyNotFound(key) => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message: format!("Cache key not found: {}", key),
+        },
+    }
+}
+
+fn parse_and_merge_yaml_content(
+    source_label: &str,
+    empty_label: &str,
+    content: &str,
+) -> Result<Yaml, ConfigError> {
+    let docs = parse_yaml_content(source_label, content).map_err(|error| {
+        map_settings_error(
+            &format!("Failed to parse {source_label}"),
+            empty_label,
+            error,
+        )
+    })?;
+
+    merge_yaml_documents(source_label, &docs).map_err(|error| {
+        map_settings_error(
+            &format!("Failed to parse {source_label}"),
+            empty_label,
+            error,
+        )
+    })
+}
+
 #[cfg(test)]
 mod crashgen_registry_tests {
     use super::*;
 
     fn parse_yaml_document(yaml_content: &str) -> Yaml {
-        YamlLoader::load_from_str(yaml_content)
-            .unwrap()
-            .into_iter()
-            .next()
-            .unwrap()
+        let docs = parse_yaml_content("memory://crashgen_registry", yaml_content).unwrap();
+        merge_yaml_documents("memory://crashgen_registry", &docs).unwrap()
     }
 
     #[test]
@@ -1117,38 +1180,15 @@ impl YamlDataCore {
             source: e,
         })?;
 
-        // Parse YAML contents using yaml-rust2
-        let main_docs =
-            YamlLoader::load_from_str(&main_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse main YAML".to_string(),
-                source: e,
-            })?;
-        let game_docs =
-            YamlLoader::load_from_str(&game_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse game YAML".to_string(),
-                source: e,
-            })?;
-        let ignore_docs =
-            YamlLoader::load_from_str(&ignore_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse ignore YAML".to_string(),
-                source: e,
-            })?;
-
-        // Get first document from each file
-        let main_data = main_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Main YAML".to_string()))?;
-        let game_data = game_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Game YAML".to_string()))?;
-        let ignore_data = ignore_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
+        let main_data = parse_and_merge_yaml_content("main YAML", "Main YAML", &main_content)?;
+        let game_data = parse_and_merge_yaml_content("game YAML", "Game YAML", &game_content)?;
+        let ignore_data =
+            parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", &ignore_content)?;
 
         Ok(Self::build_from_yaml_documents(
-            main_data,
-            game_data,
-            ignore_data,
+            &main_data,
+            &game_data,
+            &ignore_data,
             &game,
             &selected_game_version,
         ))
@@ -1208,38 +1248,15 @@ impl YamlDataCore {
         game: String,
         selected_game_version: String,
     ) -> Result<Self, ConfigError> {
-        // Parse YAML contents using yaml-rust2
-        let main_docs =
-            YamlLoader::load_from_str(main_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse main YAML".to_string(),
-                source: e,
-            })?;
-        let game_docs =
-            YamlLoader::load_from_str(game_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse game YAML".to_string(),
-                source: e,
-            })?;
-        let ignore_docs =
-            YamlLoader::load_from_str(ignore_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse ignore YAML".to_string(),
-                source: e,
-            })?;
-
-        // Get first document from each file
-        let main_data = main_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Main YAML".to_string()))?;
-        let game_data = game_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Game YAML".to_string()))?;
-        let ignore_data = ignore_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
+        let main_data = parse_and_merge_yaml_content("main YAML", "Main YAML", main_content)?;
+        let game_data = parse_and_merge_yaml_content("game YAML", "Game YAML", game_content)?;
+        let ignore_data =
+            parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", ignore_content)?;
 
         Ok(Self::build_from_yaml_documents(
-            main_data,
-            game_data,
-            ignore_data,
+            &main_data,
+            &game_data,
+            &ignore_data,
             &game,
             &selected_game_version,
         ))
@@ -1264,22 +1281,17 @@ pub enum ConfigError {
     },
 
     /// Error parsing YAML configuration content
-    #[error("{context}: {source}")]
+    #[error("{context}: {message}")]
     ParseError {
         /// Contextual information about which file failed to parse
         context: String,
-        /// The underlying YAML parse error
-        #[source]
-        source: yaml_rust2::ScanError,
+        /// The underlying parse or merge failure message
+        message: String,
     },
 
     /// YAML document is empty (no content to parse)
     #[error("Empty YAML document: {0}")]
     EmptyDocument(String),
-
-    /// Runtime error during configuration processing
-    #[error("Runtime error: {0}")]
-    RuntimeError(String),
 }
 
 #[cfg(test)]
@@ -1683,7 +1695,7 @@ CLASSIC_Ignore_Skyrim:
         assert!(matches!(err, ConfigError::ParseError { .. }));
         match err {
             ConfigError::ParseError { context, .. } => {
-                assert!(context.contains("main YAML"));
+                assert!(context.to_lowercase().contains("main yaml"));
             }
             _ => panic!("Expected ParseError"),
         }
@@ -1706,7 +1718,7 @@ CLASSIC_Ignore_Skyrim:
         assert!(matches!(err, ConfigError::ParseError { .. }));
         match err {
             ConfigError::ParseError { context, .. } => {
-                assert!(context.contains("game YAML"));
+                assert!(context.to_lowercase().contains("game yaml"));
             }
             _ => panic!("Expected ParseError"),
         }
@@ -1729,7 +1741,7 @@ CLASSIC_Ignore_Skyrim:
         assert!(matches!(err, ConfigError::ParseError { .. }));
         match err {
             ConfigError::ParseError { context, .. } => {
-                assert!(context.contains("ignore YAML"));
+                assert!(context.to_lowercase().contains("ignore yaml"));
             }
             _ => panic!("Expected ParseError"),
         }
@@ -2298,11 +2310,14 @@ CLASSIC_Ignore_TestGame:
     }
 
     #[test]
-    fn test_config_error_runtime_error_display() {
-        let err = ConfigError::RuntimeError("something went wrong".to_string());
+    fn test_config_error_parse_error_display() {
+        let err = ConfigError::ParseError {
+            context: "Failed to parse game YAML".to_string(),
+            message: "document 1 must be a mapping".to_string(),
+        };
         let display = format!("{}", err);
-        assert!(display.contains("Runtime error"));
-        assert!(display.contains("something went wrong"));
+        assert!(display.contains("Failed to parse game YAML"));
+        assert!(display.contains("document 1 must be a mapping"));
     }
 
     #[test]

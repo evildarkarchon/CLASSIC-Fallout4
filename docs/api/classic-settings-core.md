@@ -10,7 +10,8 @@ Crate metadata:
 This crate is a small YAML settings utility layer with two distinct responsibilities:
 
 1. Load YAML documents from disk through synchronous or asynchronous helpers.
-2. Cache loaded YAML documents behind caller-chosen string keys for later reuse.
+2. Parse and merge YAML streams for higher-level callers that want one mapping result.
+3. Cache loaded YAML documents behind caller-chosen string keys for later reuse.
 
 It also exposes a public `validators` module for lightweight settings-shape checks and string-to-type coercion.
 
@@ -25,6 +26,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 Use this crate when you need to:
 
 - read one or more YAML files into `Vec<Yaml>`
+- merge a multi-document YAML stream into one mapping with deterministic override rules
 - cache parsed YAML documents under a logical string key
 - expose the same YAML-loading behavior through sync and async Rust APIs
 - inspect or clear cache state from tests, bindings, or startup code
@@ -48,10 +50,15 @@ This crate exposes most of its API from the crate root and one public module.
 ## Root-level re-exports from `lib.rs`
 
 - `SettingsError`, `Result<T>` - crate error type and alias
+- `SettingsSource` - distinguishes path-backed and label-backed parse sources
 - `Yaml` - re-export of `yaml_rust2::Yaml`
 - loader functions:
+  - `parse_yaml_content(source, content)`
+  - `merge_yaml_documents(source, docs)`
   - `load_yaml_sync(path)`
+  - `load_yaml_merged_sync(path)`
   - `load_yaml_async(path)`
+  - `load_yaml_merged_async(path)`
   - `load_yaml_batch_sync(paths)`
   - `load_yaml_batch_async(paths)`
 - cache-facing functions:
@@ -87,9 +94,55 @@ Important layout note: `cache`, `loader`, and `error` are internal modules. Thei
 
 ## Public API Surface
 
+## `SettingsSource`
+
+Variants:
+
+- `Path(PathBuf)` - filesystem-backed source used by path-based loaders
+- `Label(String)` - logical source name for in-memory content
+
+Helpers and conversions:
+
+- `path() -> Option<&PathBuf>` returns the path only for `Path`
+- `label() -> Option<&str>` returns the label only for `Label`
+- `From<PathBuf>`, `From<&Path>`, `From<String>`, and `From<&str>` are implemented
+- `Display` prints the filesystem path or label text used in error messages
+
+## `SettingsError`
+
+Variants:
+
+- `IoError { path, source }` - disk read failure for a path-backed load
+- `YamlParseError { source, message }` - YAML syntax failure tagged with `SettingsSource`
+- `EmptyDocument { source }` - empty YAML stream or stream where every document is `BadValue`
+- `KeyNotFound(String)` - cache lookup miss for APIs that treat a missing key as an error
+- `InvalidYamlStructure { source, index, found }` - merge-time failure when any document is not a mapping
+- `TaskJoinError { path, source }` - async batch task failed to join
+
+Behavior worth knowing:
+
+- `EmptyDocument`, `InvalidYamlStructure`, and `TaskJoinError` are part of the public error surface now, not internal-only details
+- only `IoError` and `TaskJoinError` expose an underlying `source()` error through `std::error::Error`
+- parse and merge helpers use `SettingsSource::Label(...)` for in-memory content and `SettingsSource::Path(...)` for file-backed content
+
 ## Loader API
 
-These functions read YAML from disk and return parsed documents without touching the cache.
+These functions read or normalize YAML without touching the cache.
+
+## `parse_yaml_content(source, content)`
+
+- parses YAML from an in-memory string and preserves the caller-supplied logical source label in parse errors
+- returns `Vec<Yaml>` so higher layers can decide whether to inspect raw documents or merge them
+- uses `SettingsSource::Label(...)` under the hood
+
+## `merge_yaml_documents(source, docs)`
+
+- reduces a `Vec<Yaml>` into one merged mapping
+- requires every document to be a mapping
+- merges nested mappings recursively
+- replaces sequences, scalars, and type-conflict values with the later document's value
+- returns `SettingsError::EmptyDocument` for an empty stream and `SettingsError::InvalidYamlStructure` when any document is not a mapping
+- document indexes in `InvalidYamlStructure` are zero-based, matching the implementation
 
 ## `load_yaml_sync(path)`
 
@@ -104,16 +157,23 @@ These functions read YAML from disk and return parsed documents without touching
 - uses the same YAML parsing path and error variants as the sync loader
 - is the async equivalent for callers already running on the shared Tokio runtime
 
+## `load_yaml_merged_sync(path)` and `load_yaml_merged_async(path)`
+
+- thin wrappers over `load_yaml_*` plus `merge_yaml_documents`
+- return one merged `Yaml::Hash` value instead of `Vec<Yaml>`
+- are the preferred entry points for crates such as [`classic-config-core`](classic-config-core.md) that consume multi-document settings files as one mapping
+
 ## Batch loader helpers
 
 - `load_yaml_batch_sync(paths)` loads files sequentially and returns `Vec<(String, Vec<Yaml>)>`
 - `load_yaml_batch_async(paths)` spawns one Tokio task per path, then collects the same tuple shape
 - both batch APIs stop and return an error if any input file fails
 - tuple keys are `path.display().to_string()`, not caller-supplied logical names
+- async batch loading reports join failures as `SettingsError::TaskJoinError` instead of disguising them as parse failures
 
 Source-observed note:
 
-- unlike `classic-yaml-core`, these loader functions do not reduce input to the first document; multi-document YAML remains a `Vec<Yaml>` of every parsed document
+- unlike `classic-yaml-core`, the raw loader functions do not reduce input to the first document; multi-document YAML remains a `Vec<Yaml>` until a caller explicitly merges it
 
 ## Cache API
 
@@ -283,16 +343,20 @@ The crate uses two error styles depending on API family.
 Public variants:
 
 - `IoError { path, source }`
-- `YamlParseError { path, message }`
+- `YamlParseError { source, message }`
+- `EmptyDocument { source }`
 - `KeyNotFound(String)`
-- `InvalidYamlStructure { path, expected, found }`
+- `InvalidYamlStructure { source, index, found }`
+- `TaskJoinError { path, source }`
 
 Source-observed behavior:
 
-- `IoError` and `YamlParseError` are actively used by the loader functions
-- current crate-root APIs do not appear to construct `KeyNotFound` or `InvalidYamlStructure`
+- `IoError` and `YamlParseError` are used by raw load helpers
+- `EmptyDocument` and `InvalidYamlStructure` are used by merge helpers
+- `TaskJoinError` is used by async batch loading when a spawned task fails to join
+- `KeyNotFound` remains part of the public error surface for cache-oriented APIs
 
-That means contributors should treat those two variants as public but currently unused parts of the error surface unless they add new APIs that actually return them.
+That means contributors should treat all of these variants as live public API, even when a specific call path uses only a subset of them.
 
 ## `String` errors for coercion
 
@@ -388,7 +452,6 @@ For async callers, replace `load_settings_sync()` with `load_settings_async(...)
 - `get_cached()` is the only API that updates hit/miss counters
 - cache key ordering from `cache_keys()` is not stable
 - multi-document YAML is preserved rather than collapsed to the first document
-- `SettingsError::KeyNotFound` and `SettingsError::InvalidYamlStructure` are public, but current crate-root APIs do not visibly return them
 - validator coercion errors use plain `String`, not `SettingsError`
 - crate docs mention shared-runtime integration, but current source does not provide a root-level runtime helper or direct `classic-shared-core` call site
 

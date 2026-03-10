@@ -44,9 +44,29 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert data.crashgen_name == "Buffout 4"
     classic_config.clear_yaml_cache()
 
+    with pytest.raises(classic_config.RustConfigParseError) as exc_info:
+        classic_config.YamlData.from_yaml_content(
+            "{ invalid: yaml: content: }}}",
+            PARITY_GAME_YAML,
+            PARITY_IGNORE_YAML,
+            "Fallout4",
+            "auto",
+        )
+    assert "Failed to parse main YAML:" in str(exc_info.value)
+
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.YamlData.from_yaml_content(
+            "",
+            PARITY_GAME_YAML,
+            PARITY_IGNORE_YAML,
+            "Fallout4",
+            "auto",
+        )
+
     config = classic_config.ClassicConfig()
     assert config.game_version == "auto"
     assert config.get_config_path().endswith("CLASSIC Settings.yaml")
+    assert "CLASSIC-Fallout4" not in config.get_config_path()
 
     config.paths = classic_config.PathConfig(game_root=str(tmp_path))
     config.validate_paths()
@@ -56,13 +76,42 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     loaded = classic_config.ClassicConfig.load_from_yaml(str(config_path))
     assert loaded.paths.game_root == str(tmp_path)
 
-    monkeypatch.chdir(tmp_path)
-    default_settings = tmp_path / "CLASSIC Settings.yaml"
-    default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
+    invalid_config_path = tmp_path / "invalid-classic-settings.yaml"
+    invalid_config_path.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.ClassicConfig.load_from_yaml(str(invalid_config_path))
+
+    with pytest.raises(classic_config.RustConfigIOError):
+        classic_config.ClassicConfig.load_from_yaml(
+            str(tmp_path / "missing-settings.yaml")
+        )
+
+    blocked_parent = tmp_path / "not-a-directory"
+    blocked_parent.write_text("content", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigIOError):
+        config.save_to_yaml(str(blocked_parent / "child.yaml"))
+
+    appdata_root = tmp_path / "appdata"
+    monkeypatch.setenv("APPDATA", str(appdata_root))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.delenv("HOME", raising=False)
+    resolved_default_settings = Path(classic_config.ClassicConfig().get_config_path())
+    resolved_default_settings.parent.mkdir(parents=True, exist_ok=True)
+    resolved_default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
     auto_loaded = classic_config.ClassicConfig.load_or_default()
     assert auto_loaded.fcx_mode is True
+    assert auto_loaded.get_config_path() == str(resolved_default_settings)
+    assert "CLASSIC-Fallout4" not in auto_loaded.get_config_path()
 
-    local_yaml_dir = tmp_path / "CLASSIC Data"
+    resolved_default_settings.write_text(
+        "{ invalid: yaml: content: }}}", encoding="utf-8"
+    )
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.ClassicConfig.load_or_default()
+    resolved_default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+    local_yaml_dir = Path("CLASSIC Data")
     local_yaml_dir.mkdir()
     local_yaml = local_yaml_dir / "CLASSIC Fallout4 Local.yaml"
     local_yaml.write_text(
@@ -80,6 +129,10 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert config.paths.game_root == "C:/Games/Fallout4"
     assert config.paths.docs_root == "C:/Users/Test/Documents/My Games/Fallout4"
 
+    local_yaml.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigParseError):
+        config.load_local_yaml_paths("Fallout4")
+
     assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
     assert (
         classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
@@ -88,6 +141,10 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
         "CLASSIC Fallout4.yaml"
     )
+    cache_path = classic_config.YamlSource.CACHE.path("")
+    assert cache_path.endswith("cache.yaml")
+    assert "CLASSIC" in cache_path
+    assert "CLASSIC-Fallout4" not in cache_path
 
 
 def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:

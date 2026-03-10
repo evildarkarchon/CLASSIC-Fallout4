@@ -25,6 +25,7 @@ thiserror = { workspace = true }
 semver = { workspace = true }
 log = { workspace = true }
 walkdir = { workspace = true }
+anyhow = { workspace = true }
 
 # Foundation
 classic-shared-core = { path = "../../foundation/classic-shared-core" }

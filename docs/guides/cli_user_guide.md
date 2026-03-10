@@ -122,24 +122,21 @@ ClassicLib-rs/ui-applications/classic-cli --version    # Show version
 
 ### Configuration File Location
 
-**Windows:**
+CLASSIC now looks for settings in this order:
 
-```
-C:\Users\<YourName>\Documents\My Games\Fallout4\CLASSIC Settings.yaml
-```
+1. Application directory: `CLASSIC Settings.yaml`
+2. Application directory: `CLASSIC_Settings.yaml`
+3. User config directory: `dirs::config_dir()/CLASSIC/CLASSIC Settings.yaml`
+4. User config directory: `dirs::config_dir()/CLASSIC/CLASSIC_Settings.yaml`
 
-**Linux/macOS:**
-
-```
-~/.local/share/CLASSIC/CLASSIC Settings.yaml
-```
+The user-config fallback lives under `dirs::config_dir()/CLASSIC/`, so the exact platform path depends on the OS conventions that library resolves at runtime.
 
 ### Configuration Priority
 
 Settings are applied in this order (later overrides earlier):
 
 1. Default values
-2. Configuration file (`CLASSIC Settings.yaml`)
+2. Active configuration file (`CLASSIC Settings.yaml` or legacy `CLASSIC_Settings.yaml`)
 3. Command-line arguments (highest priority)
 
 ### Sample Configuration
@@ -163,8 +160,12 @@ paths:
 
 **Option 1: Manual Edit**
 
+Edit the active copy next to the CLI binary, or the copy under your platform's user config directory if CLASSIC is using that fallback. The active filename may be `CLASSIC Settings.yaml` or an existing legacy `CLASSIC_Settings.yaml`.
+
 ```bash
-notepad "C:\Users\Name\Documents\My Games\Fallout4\CLASSIC Settings.yaml"
+notepad "<config dir>\CLASSIC\CLASSIC Settings.yaml"
+# or, if the legacy file is the active one:
+notepad "<config dir>\CLASSIC\CLASSIC_Settings.yaml"
 ```
 
 **Option 2: CLI Override (Temporary)**
@@ -192,7 +193,7 @@ CLASSIC v8.0.0 - Crash Log Auto Scanner
 ========================================
 
 Initializing scan...
-  ✓ Loaded configuration from CLASSIC Settings.yaml
+  ✓ Loaded configuration from active settings file
   ✓ Found 47 crash logs in scan directory
   ✓ FormID database loaded (125,347 entries)
 
@@ -394,9 +395,11 @@ Keep your FormID database updated for faster lookups:
 
 **Solutions:**
 
-1. Delete configuration and let CLASSIC recreate it:
+1. Delete the active configuration file and let CLASSIC recreate it:
    ```bash
-   del "CLASSIC Settings.yaml"
+   rem Delete the active copy next to the binary or under your platform's config dir
+   del "<config dir>\CLASSIC\CLASSIC Settings.yaml"
+   del "<config dir>\CLASSIC\CLASSIC_Settings.yaml"
    ClassicLib-rs/ui-applications/classic-cli  # Creates new config
    ```
 
