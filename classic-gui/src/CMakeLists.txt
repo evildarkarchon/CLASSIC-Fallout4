@@ -35,6 +35,8 @@ qt_add_executable(ClassicGui WIN32
     workers/scanprogressmodel.cpp
     workers/scanworker.h
     workers/scanworker.cpp
+    workers/scanworker_execution.h
+    workers/scanworker_execution.cpp
     workers/gamefilesworker.h
     workers/gamefilesworker.cpp
     workers/papyrusworker.h
