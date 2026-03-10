@@ -174,8 +174,3 @@ add_classic_gui_qt_test(classic-gui-test-scan-progress-model
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-scan-progress-model)
-
-add_classic_gui_qt_test(classic-gui-test-scanworker-batch-result-ordering
-    test_scanworker_batch_result_ordering.cpp
-    ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
-)

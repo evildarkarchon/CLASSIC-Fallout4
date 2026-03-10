@@ -58,6 +58,8 @@ Run parity maintenance when any of these change:
 - `ClassicLib-rs/python-bindings/*-py/src/`
 - `ClassicLib-rs/python-bindings/*-py/*.pyi`
 
+For companion guidance on when Python stub refreshes align with Node declaration refreshes, see [`docs/api/binding-contract-refresh-note.md`](../../../api/binding-contract-refresh-note.md). That note supports this workflow and does not replace the Python parity gates on this page.
+
 ## Contract rules
 
 - Tier-1 contract rows cover classes, top-level functions, and callable methods.

@@ -791,7 +791,7 @@ result = await fetch_all_data()
 
 ## See Also
 
-- [API Reference](API_REFERENCE.md)
+- [API Docs Index](../api/README.md)
 - [Architecture Overview](../architecture/ARCHITECTURE_OVERVIEW.md)
 - [Quick Start Guide](QUICK_START.md)
 - [Testing Guide](../testing/TESTING_GUIDE_INDEX.md)

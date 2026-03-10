@@ -17,6 +17,7 @@ For policy-level guidance, see [`AGENTS.md`](../AGENTS.md).
 
 ## Quick Navigation
 
+- [`api/README.md`](api/README.md) - contributor-facing Rust API docs index
 - [`api/QUICK_START.md`](api/QUICK_START.md) — contributor quick start for current C++ + Rust workflows
 - [`architecture/ARCHITECTURE_OVERVIEW.md`](architecture/ARCHITECTURE_OVERVIEW.md) — architecture map and runtime boundaries
 - [`development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — Rust integration surfaces (C++, Node, Python bindings)

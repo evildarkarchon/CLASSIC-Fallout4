@@ -26,6 +26,7 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a C++ plus Rust ap
 2. Maintain a single shared Tokio runtime from Rust core runtime facilities; do not introduce independent runtimes.
 3. Keep docs synchronized with architecture or workflow changes, especially `README.md` and this file.
 4. Never write to `NUL` or `nul` as if it were a file path on Windows.
+5. Consult `docs/api/README.md` before changing public Rust, bridge, GUI-consumer, or binding-facing APIs; if an API-breaking or contract-shaping change occurs, update the affected pages under `docs/api/` in the same change.
 
 ## Quick Notes
 
