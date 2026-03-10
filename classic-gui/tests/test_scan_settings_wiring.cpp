@@ -28,7 +28,7 @@ private slots:
 
 void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config()
 {
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker_execution.cpp");
     QFile file(sourcePath);
     QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
@@ -36,8 +36,8 @@ void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config(
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("build_full_scan_config(")),
              "ScanWorker should call build_full_scan_config()");
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
-             "ScanWorker should forward gameVersion to build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(config.gameVersion)")),
+              "ScanWorker should forward gameVersion to build_full_scan_config()");
     QVERIFY2(sourceText.contains(QStringLiteral("showFormIdValues")),
              "ScanWorker should forward showFormIdValues to build_full_scan_config()");
     QVERIFY2(sourceText.contains(QStringLiteral("fcxMode")),
@@ -107,14 +107,14 @@ void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurre
 
 void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
 {
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker_execution.cpp");
     QFile file(sourcePath);
     QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressCallback")),
-             "ScanWorker should define a CXX batch progress callback adapter");
+    QVERIFY2(sourceText.contains(QStringLiteral("QtBatchProgressCallback")),
+              "ScanWorker should define a CXX batch progress callback adapter");
     QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressEvent")),
              "ScanWorker should consume the richer batch progress event payload");
     QVERIFY2(sourceText.contains(QStringLiteral("orchestrator_process_logs_batch_with_progress")),
@@ -123,18 +123,25 @@ void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
 
 void ScanSettingsWiringTests::scan_worker_forwards_batch_counts_in_progress_updates()
 {
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+    const QString executionSourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker_execution.cpp");
+    QFile executionFile(executionSourcePath);
+    QVERIFY2(executionFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(executionSourcePath)));
 
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("event.completed")),
-             "ScanWorker should forward completed-count progress from BatchProgressEvent");
-    QVERIFY2(sourceText.contains(QStringLiteral("event.total")),
-             "ScanWorker should forward total-count progress from BatchProgressEvent");
-    QVERIFY2(sourceText.contains(QStringLiteral("progressDetailed(percent, status, completed, total)")),
-             "ScanWorker should emit batch progress updates with structured completed and total counts");
+    const QString executionSourceText = QString::fromUtf8(executionFile.readAll());
+    QVERIFY2(executionSourceText.contains(QStringLiteral("event.completed")),
+              "ScanWorker should forward completed-count progress from BatchProgressEvent");
+    QVERIFY2(executionSourceText.contains(QStringLiteral("event.total")),
+              "ScanWorker should forward total-count progress from BatchProgressEvent");
+
+    const QString workerSourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    QFile workerFile(workerSourcePath);
+    QVERIFY2(workerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(workerSourcePath)));
+
+    const QString workerSourceText = QString::fromUtf8(workerFile.readAll());
+    QVERIFY2(workerSourceText.contains(QStringLiteral("emit progressDetailed(percent, status, completed, totalCount);")),
+              "ScanWorker should emit batch progress updates with structured completed and total counts");
 }
 
 void ScanSettingsWiringTests::scan_worker_defaults_to_batch_for_multi_log_scans()
