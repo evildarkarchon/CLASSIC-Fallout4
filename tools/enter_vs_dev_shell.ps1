@@ -11,6 +11,8 @@
     If -Command is provided, the command runs after the Dev Shell is initialized.
     If -Interactive is provided, a nested `pwsh -NoExit` session is opened with
     the initialized environment and requested working directory.
+    If -EmitEnvironment is provided, a machine-readable subset of the initialized
+    environment is written to stdout for wrappers such as Git Bash helpers.
 
 .PARAMETER Command
     Optional command string to execute after the Dev Shell is initialized.
@@ -23,6 +25,10 @@
 
 .PARAMETER Interactive
     Open a nested interactive PowerShell session after initialization.
+
+.PARAMETER EmitEnvironment
+    Emit a machine-readable subset of the initialized environment for shell
+    wrappers. Cannot be combined with -Command or -Interactive.
 
 .EXAMPLE
     pwsh -ExecutionPolicy Bypass -File tools/enter_vs_dev_shell.ps1 -Interactive
@@ -38,7 +44,8 @@ param(
     [string]$WorkingDirectory = ".",
     [ValidateSet("amd64", "x86", "arm64")]
     [string]$Arch = "amd64",
-    [switch]$Interactive
+    [switch]$Interactive,
+    [switch]$EmitEnvironment
 )
 
 $ErrorActionPreference = "Stop"
@@ -87,10 +94,13 @@ function Get-VsInstallPath {
 function Ensure-VsDevShell {
     param(
         [Parameter(Mandatory)]
-        [string]$TargetArch
+        [string]$TargetArch,
+        [switch]$Quiet
     )
 
-    Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
+    if (-not $Quiet) {
+        Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
+    }
     $vsInstallPath = Get-VsInstallPath
     $devShellPath = Join-Path $vsInstallPath "Common7\Tools\Launch-VsDevShell.ps1"
 
@@ -116,8 +126,72 @@ function Ensure-VsDevShell {
     }
 }
 
-$resolvedWorkingDirectory = Resolve-WorkingDirectory -PathValue $WorkingDirectory
-Ensure-VsDevShell -TargetArch $Arch
+if ($EmitEnvironment -and ($Interactive -or $Command)) {
+    throw "-EmitEnvironment cannot be combined with -Command or -Interactive."
+}
+
+$resolvedWorkingDirectory = $null
+if (-not $EmitEnvironment) {
+    $resolvedWorkingDirectory = Resolve-WorkingDirectory -PathValue $WorkingDirectory
+}
+
+Ensure-VsDevShell -TargetArch $Arch -Quiet:$EmitEnvironment
+
+if ($EmitEnvironment) {
+    $linkCommand = Get-Command link.exe -ErrorAction Stop
+    [Environment]::SetEnvironmentVariable(
+        "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER",
+        $linkCommand.Source,
+        "Process"
+    )
+
+    $allowedPatterns = @(
+        '^PATH$',
+        '^PATHEXT$',
+        '^INCLUDE$',
+        '^LIB$',
+        '^LIBPATH$',
+        '^VS',
+        '^VC',
+        '^VSCMD',
+        '^__VSCMD',
+        '^VisualStudioVersion$',
+        '^WindowsSdk',
+        '^WindowsSDK',
+        '^UniversalCRT',
+        '^UCRT',
+        '^Framework',
+        '^ExtensionSdkDir$',
+        '^Platform$',
+        '^CommandPromptType$',
+        '^DevEnvDir$',
+        '^PreferredToolArchitecture$',
+        '^CARGO_TARGET_'
+    )
+
+    foreach ($entry in Get-ChildItem Env: | Sort-Object Name) {
+        if ($entry.Name -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
+            continue
+        }
+
+        $allowed = $false
+        foreach ($pattern in $allowedPatterns) {
+            if ($entry.Name -match $pattern) {
+                $allowed = $true
+                break
+            }
+        }
+
+        if (-not $allowed) {
+            continue
+        }
+
+        $encodedValue = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($entry.Value))
+        Write-Output ("{0}`t{1}" -f $entry.Name, $encodedValue)
+    }
+
+    exit 0
+}
 
 if ($Command) {
     Write-Host "Running in VS Dev Shell: $Command" -ForegroundColor Cyan

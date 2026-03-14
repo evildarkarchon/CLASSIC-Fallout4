@@ -38,7 +38,7 @@ Crashgen_Registry:
           when:
             all:
               - plugin_any: [addictol.dll]
-              - plugin_any: [buffout4.dll]
+              - plugin_any: [buffout4.dll, buffout4ae.dll]
           action:
             kind: notice_and_skip_remaining
             severity: warning
@@ -212,11 +212,11 @@ Crashgen_Registry:
           when:
             all:
               - plugin_any: [addictol.dll]
-              - plugin_any: [buffout4.dll]
+              - plugin_any: [buffout4.dll, buffout4ae.dll]
           action:
             kind: notice_and_skip_remaining
             severity: warning
-            message: "{crashgen_name} and another crash log generator are incompatible, remove one to avoid crashes."
+            message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes."
         - id: bakascrapheap_redundant_addictol
           when:
             plugin_any: [bakascrapheap.dll]

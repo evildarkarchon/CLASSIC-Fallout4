@@ -12,6 +12,7 @@ private slots:
     void entering_results_tab_forces_report_reload();
     void crash_scan_status_bar_tracks_scan_statistics();
     void first_run_path_detection_treats_invalid_directories_as_unresolved();
+    void first_run_bootstraps_and_updates_local_yaml();
     void manual_path_dialog_validates_before_accepting();
 };
 
@@ -176,6 +177,45 @@ void MainWindowGeometryTests::first_run_path_detection_treats_invalid_directorie
              "First-run path detection should treat non-existing game directories as unresolved");
     QVERIFY2(sourceText.contains(QStringLiteral("QDir(docsPath).exists()")),
              "First-run path detection should treat non-existing docs directories as unresolved");
+}
+
+void MainWindowGeometryTests::first_run_bootstraps_and_updates_local_yaml()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    const auto extractFunctionBody = [&](const QString& signature) -> QString {
+        const QString marker = QStringLiteral("void MainWindow::") + signature;
+        const qsizetype start = sourceText.indexOf(marker);
+        if (start < 0) {
+            return {};
+        }
+
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+        return sourceText.mid(start, end - start);
+    };
+
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::config::save_local_yaml_paths")),
+             "Local YAML sync should delegate file creation and persistence to the Rust config bridge");
+
+    const QString firstRunBody = extractFunctionBody(QStringLiteral("checkFirstRunPaths()"));
+    QVERIFY2(!firstRunBody.isEmpty(), "Could not locate MainWindow::checkFirstRunPaths()");
+
+    const qsizetype needsCheck = firstRunBody.indexOf(QStringLiteral("needs_path_detection"));
+    const qsizetype firstLocalYamlSync = firstRunBody.indexOf(QStringLiteral("saveLocalYamlPaths"));
+    const qsizetype dialogExec = firstRunBody.indexOf(QStringLiteral("dlg.exec()"));
+    const qsizetype finalLocalYamlSync = firstRunBody.lastIndexOf(QStringLiteral("saveLocalYamlPaths"));
+
+    QVERIFY2(firstLocalYamlSync >= 0,
+             "First-run path detection should persist the Fallout 4 Local YAML after successful path resolution");
+    QVERIFY2(needsCheck >= 0 && firstLocalYamlSync > needsCheck,
+             "First-run path detection should wait until path detection completes before syncing Local YAML");
+    QVERIFY2(dialogExec < 0 || finalLocalYamlSync > dialogExec,
+             "Manual path entry should sync Local YAML only after the dialog result is known");
 }
 
 void MainWindowGeometryTests::manual_path_dialog_validates_before_accepting()

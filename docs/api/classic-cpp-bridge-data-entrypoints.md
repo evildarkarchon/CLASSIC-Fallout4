@@ -41,15 +41,16 @@ For crate-level behavior, see:
 
 ## `src/config.rs` -> `classic::config`
 
-This file exposes a read-mostly bridge around `classic_config_core::YamlDataCore`.
+This file exposes a mostly read-oriented bridge around `classic_config_core::YamlDataCore` plus a small Local-YAML path persistence helper.
 
 It owns:
 
 - YAML dataset loading through `yaml_data_load(...)`
+- Local-YAML path persistence through `save_local_yaml_paths(...)`
 - field getters for selected scalar and `Vec<String>` values
 - flattened `IndexMap` access for suspect and mod dictionaries
 
-It does not expose the full `YamlDataCore` model, `ClassicConfig`, YAML save APIs, or raw crashgen registry data.
+It does not expose the full `YamlDataCore` model, general `ClassicConfig` save APIs, or raw crashgen registry data.
 
 ## `src/files.rs` -> `classic::files`
 
@@ -109,6 +110,20 @@ Current bridge behavior:
 - always uses the 2-directory loader shape `[yaml_dir_root, yaml_dir_data]`
 - blocks on the shared runtime with `block_on(...)`
 - preserves load failure as a CXX `Result` error string instead of using sentinel values
+
+### `save_local_yaml_paths(local_yaml_path, game_root, docs_root) -> Result<()>`
+
+Forwards to:
+
+- `classic_shared_core::get_runtime()`
+- `classic_config_core::ClassicConfig::save_local_yaml_paths_to(...)`
+
+Current bridge behavior:
+
+- builds a temporary `ClassicConfig` only to reuse Rust-side Local-YAML persistence logic
+- treats empty `game_root` or `docs_root` strings as unset optional values
+- lets Rust create `CLASSIC Data/CLASSIC {game} Local.yaml` when the file is missing
+- preserves Rust-side error propagation as a CXX `Result` error string
 
 ### Selected scalar and vector getters
 

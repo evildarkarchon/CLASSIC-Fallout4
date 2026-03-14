@@ -106,6 +106,8 @@ Persistence notes:
 
 If the local YAML file does not exist, the method returns `Ok(())` and leaves the existing config unchanged.
 
+`ClassicConfig::save_local_yaml_paths(game)` and `ClassicConfig::save_local_yaml_paths_to(path)` persist only those same keys. They create the local YAML file when needed, preserve unrelated existing YAML keys, and skip file creation entirely when both `paths.game_root` and `paths.docs_root` are unset.
+
 ---
 
 ## `YamlDataCore` Sections And Shapes

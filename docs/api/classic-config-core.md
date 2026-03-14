@@ -120,6 +120,8 @@ Important methods:
 - `get_config_path(&self) -> PathBuf`
 - `validate_paths(&self) -> anyhow::Result<()>`
 - `load_local_yaml_paths(&mut self, game: &str) -> anyhow::Result<()>`
+- `save_local_yaml_paths(&self, game: &str) -> anyhow::Result<()>`
+- `save_local_yaml_paths_to(&self, path: &Path) -> anyhow::Result<()>`
 
 Behavior worth knowing:
 
@@ -133,6 +135,8 @@ Behavior worth knowing:
 - `save_to_yaml()` creates parent directories if needed
 - `save_to_yaml()` serializes YAML in `spawn_blocking()` because `YamlEmitter` is not `Send`
 - `load_local_yaml_paths()` is non-fatal when `CLASSIC Data/CLASSIC {game} Local.yaml` does not exist
+- `save_local_yaml_paths()` creates `CLASSIC Data/CLASSIC {game} Local.yaml` when needed and updates only `Game_Info.Root_Folder_Game` / `Game_Info.Root_Folder_Docs`
+- `save_local_yaml_paths_to()` does the same work for an explicit caller-provided local-YAML path, which is useful for frontends that resolve `CLASSIC Data/` outside the process working directory
 - field-level YAML shape and default details live in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md)
 
 ## `PathConfig`
@@ -229,6 +233,7 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 4. Nested `paths` and `formid_databases` are reconstructed.
 5. Optional post-processing may call:
    - `load_local_yaml_paths(game)` to fill `game_root` and `docs_root` from merged `GameLocal`
+   - `save_local_yaml_paths(game)` or `save_local_yaml_paths_to(path)` to persist detected runtime paths back into `GameLocal`
    - `validate_paths()` to fail fast on missing directories
 6. The config can be persisted again with `save_to_yaml()`.
 
