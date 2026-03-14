@@ -41,7 +41,8 @@ Crashgen_Registry:
               - plugin_any: [buffout4.dll, buffout4ae.dll]
           action:
             kind: notice_and_skip_remaining
-            severity: warning
+            bucket: error_information
+            severity: error
             message: "{crashgen_name} and Addictol are incompatible, remove one to avoid crashes."
         - id: bakascrapheap_redundant
           when:
@@ -215,7 +216,8 @@ Crashgen_Registry:
               - plugin_any: [buffout4.dll, buffout4ae.dll]
           action:
             kind: notice_and_skip_remaining
-            severity: warning
+            bucket: error_information
+            severity: error
             message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes."
         - id: bakascrapheap_redundant_addictol
           when:

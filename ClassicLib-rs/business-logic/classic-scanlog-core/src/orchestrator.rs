@@ -1141,11 +1141,48 @@ impl OrchestratorCore {
 
         enter_phase(ScanProgressPhase::Analyze);
 
+        // Parse crashgen settings once so rule buckets can influence report placement.
+        let settings_validator = if !context.crashgen_settings.is_empty() {
+            if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
+                self.settings_validator.clone()
+            } else {
+                Self::settings_validator_for_crashgen(&self.config, &effective_crashgen_name)
+            }
+        } else {
+            self.settings_validator.clone()
+        };
+
+        let mut error_information_fragments: Vec<ReportFragment> = Vec::new();
+        let mut settings_fragments: Vec<ReportFragment> = Vec::new();
+        if !context.crashgen_settings.is_empty()
+            && let Ok(bucketed_settings_fragments) = settings_validator.scan_all_settings_bucketed(
+                &context.crashgen_settings,
+                &context.xse_modules_for_settings,
+                crashgen_version,
+                config_layout,
+            )
+        {
+            for bucketed_fragment in bucketed_settings_fragments {
+                match bucketed_fragment.bucket {
+                    classic_crashgen_settings_core::RuleReportBucket::Settings => {
+                        settings_fragments.push(bucketed_fragment.fragment);
+                    }
+                    classic_crashgen_settings_core::RuleReportBucket::ErrorInformation => {
+                        error_information_fragments.push(bucketed_fragment.fragment);
+                    }
+                }
+            }
+        }
+
         // Generate error section
-        composer.add(report_gen.generate_error_section_with_status(
+        let error_section = report_gen.generate_error_section_with_status(
             &main_error,
             &crashgen_version_str,
             crashgen_status,
+        );
+        composer.add(Self::append_error_information_fragments(
+            error_section,
+            error_information_fragments,
         ));
 
         // Store plugins for mod detection - IndexMap preserves load order for Python parity
@@ -1225,29 +1262,7 @@ impl OrchestratorCore {
         };
         composer.add(fcx_handler.get_fcx_messages());
 
-        // Parse crashgen settings from settings segment (task 4.2)
-        // Format: "key: value" (TOML-like with colon separator)
-        // Skip section headers like [Compatibility], [Crashlog], [Fixes], etc.
-        // Add settings validation section
-        let settings_validator = if !context.crashgen_settings.is_empty() {
-            if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
-                self.settings_validator.clone()
-            } else {
-                Self::settings_validator_for_crashgen(&self.config, &effective_crashgen_name)
-            }
-        } else {
-            self.settings_validator.clone()
-        };
-
-        if !context.crashgen_settings.is_empty()
-            && let Ok(settings_fragments) = settings_validator.scan_all_settings(
-                &context.crashgen_settings,
-                &context.xse_modules_for_settings,
-                crashgen_version,
-                config_layout,
-            )
-            && !settings_fragments.is_empty()
-        {
+        if !settings_fragments.is_empty() {
             composer.add(report_gen.generate_settings_section_header());
             for settings_fragment in settings_fragments {
                 composer.add(settings_fragment);
@@ -1728,6 +1743,29 @@ impl OrchestratorCore {
             self.config.classic_version.clone(),
             crashgen_name.to_string(),
         )
+    }
+
+    fn append_error_information_fragments(
+        error_section: crate::report::ReportFragment,
+        extra_fragments: Vec<crate::report::ReportFragment>,
+    ) -> crate::report::ReportFragment {
+        if extra_fragments.is_empty() {
+            return error_section;
+        }
+
+        let mut lines = error_section.to_list();
+        let separator = if matches!(lines.last(), Some(line) if line == "---\n\n") {
+            lines.pop().unwrap_or_default()
+        } else {
+            "---\n\n".to_string()
+        };
+
+        for fragment in extra_fragments {
+            lines.extend(fragment.to_list());
+        }
+        lines.push(separator);
+
+        crate::report::ReportFragment::from_lines(lines)
     }
 
     /// Creates a SettingsValidator configured for this orchestrator.
@@ -2442,7 +2480,7 @@ mod tests {
     fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
         use classic_crashgen_settings_core::{
             CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
-            RuleSeverity,
+            RuleReportBucket, RuleSeverity,
         };
 
         let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> =
@@ -2471,6 +2509,7 @@ mod tests {
                         when: Predicate::Always,
                         action: PreflightAction {
                             kind: PreflightActionKind::Notice,
+                            bucket: RuleReportBucket::Settings,
                             severity: RuleSeverity::Info,
                             message: "Addictol rules active".to_string(),
                             fix: None,
@@ -2529,6 +2568,116 @@ mod tests {
                 .iter()
                 .any(|line| line.contains("scaffold (rules pending)"))
         );
+    }
+
+    #[test]
+    fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
+        use classic_crashgen_settings_core::{
+            CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
+            RuleReportBucket, RuleSeverity,
+        };
+
+        let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> =
+            HashMap::new();
+        raw_registry.insert(
+            "Buffout 4".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Compatibility]".to_string(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+        raw_registry.insert(
+            "Addictol".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Patches]".to_string(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: Some(1),
+                settings_rules: Some(CrashgenSettingsRules {
+                    version: 1,
+                    preflight: vec![PreflightRule {
+                        id: "buffout_addictol_incompatible".to_string(),
+                        when: Predicate::All(vec![
+                            Predicate::PluginAny(vec!["addictol.dll".to_string()]),
+                            Predicate::PluginAny(vec!["buffout4.dll".to_string()]),
+                        ]),
+                        action: PreflightAction {
+                            kind: PreflightActionKind::NoticeAndSkipRemaining,
+                            bucket: RuleReportBucket::ErrorInformation,
+                            severity: RuleSeverity::Warning,
+                            message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes.".to_string(),
+                            fix: None,
+                        },
+                    }],
+                    checks: vec![],
+                }),
+            },
+        );
+        raw_registry.insert(
+            "default".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: String::new(),
+                ignore_keys: vec![],
+                checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
+            },
+        );
+
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        config.crashgen_registry = build_crashgen_registry(&raw_registry);
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Addictol v1.0.0 Feb 16 2026 08:02:06",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Patches]",
+            "bThreads: true",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "addictol.dll v1.0.0",
+            "buffout4.dll v1.28.6",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log("bucketed-addictol.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("bucketed fixture should process");
+        let report_text = result.report_lines.join("");
+
+        let status_line = "✅ *You have a valid version of Addictol!*";
+        let compatibility_notice = "**# ⚠️ NOTICE : Addictol and Buffout 4 are incompatible, remove one to avoid crashes. #**";
+        let suspect_header = "### Checking for Known Crash Messages, Errors and Suspects";
+
+        assert!(result.success);
+        assert!(report_text.contains("### Error Information"));
+        assert!(report_text.contains(status_line));
+        assert!(report_text.contains(compatibility_notice));
+        assert!(!report_text.contains("### Checking for Settings-related Issues"));
+
+        let status_index = report_text.find(status_line).unwrap();
+        let notice_index = report_text.find(compatibility_notice).unwrap();
+        let suspect_index = report_text.find(suspect_header).unwrap();
+        assert!(status_index < notice_index);
+        assert!(notice_index < suspect_index);
     }
 
     #[test]

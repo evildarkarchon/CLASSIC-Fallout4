@@ -1,6 +1,7 @@
 use classic_crashgen_settings_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
+    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
+    TargetValueType,
 };
 use serde_json::{Value, json};
 
@@ -8,6 +9,7 @@ use serde_json::{Value, json};
 #[napi(object)]
 pub struct JsPreflightAction {
     pub kind: String,
+    pub bucket: Option<String>,
     pub severity: String,
     pub message: String,
     pub fix: Option<String>,
@@ -81,6 +83,13 @@ fn severity_to_str(value: RuleSeverity) -> String {
         RuleSeverity::Info => "info".to_string(),
         RuleSeverity::Warning => "warning".to_string(),
         RuleSeverity::Error => "error".to_string(),
+    }
+}
+
+fn bucket_to_str(value: RuleReportBucket) -> String {
+    match value {
+        RuleReportBucket::Settings => "settings".to_string(),
+        RuleReportBucket::ErrorInformation => "error_information".to_string(),
     }
 }
 
@@ -168,6 +177,12 @@ pub fn js_rules_to_core(rules: Option<JsCrashgenSettingsRules>) -> Option<Crashg
             action: PreflightAction {
                 kind: PreflightActionKind::parse(&rule.action.kind)
                     .unwrap_or(PreflightActionKind::Notice),
+                bucket: rule
+                    .action
+                    .bucket
+                    .as_deref()
+                    .and_then(RuleReportBucket::parse)
+                    .unwrap_or_default(),
                 severity: parse_severity(&rule.action.severity, RuleSeverity::Info),
                 message: rule.action.message,
                 fix: rule.action.fix,
@@ -236,6 +251,7 @@ pub fn core_rules_to_js(rules: Option<&CrashgenSettingsRules>) -> Option<JsCrash
                         PreflightActionKind::Notice => "notice".to_string(),
                         PreflightActionKind::Issue => "issue".to_string(),
                     },
+                    bucket: Some(bucket_to_str(rule.action.bucket)),
                     severity: severity_to_str(rule.action.severity),
                     message: rule.action.message.clone(),
                     fix: rule.action.fix.clone(),

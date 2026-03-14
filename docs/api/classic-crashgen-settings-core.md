@@ -134,7 +134,12 @@ Preflight rules run before check rules.
 Fields:
 
 - `PreflightRule`: `id`, `when`, `action`
-- `PreflightAction`: `kind`, `severity`, `message`, `fix`
+- `PreflightAction`: `kind`, `bucket`, `severity`, `message`, `fix`
+
+`RuleReportBucket` meanings:
+
+- `Settings` - default settings-related destination used by ordinary checks and preflight notices
+- `ErrorInformation` - promoted destination for notices or issues that callers want to render under `Error Information`
 
 `PreflightActionKind` meanings:
 
@@ -189,7 +194,7 @@ Matching behavior from `value_matches()`:
 
 Fields:
 
-- `id`, `kind`, `severity`, `message`, `fix`
+- `id`, `kind`, `bucket`, `severity`, `message`, `fix`
 - `section`, `setting`, `expected`, `actual`
 
 `EvaluationResult` contains:
@@ -207,6 +212,7 @@ The crate exposes string parsers for several enums:
 - `ConfigLayout::parse(&str) -> Option<ConfigLayout>`
 - `TargetValueType::parse(&str) -> Option<TargetValueType>`
 - `PreflightActionKind::parse(&str) -> Option<PreflightActionKind>`
+- `RuleReportBucket::parse(&str) -> Option<RuleReportBucket>`
 
 These return `None` for unsupported strings. They are useful in loaders and binding adapters, but they do not report detailed parse errors.
 
@@ -221,6 +227,7 @@ The source-visible evaluation order is:
 3. For each matching preflight rule:
    - render `message` and optional `fix`
    - emit a `Notice` or `Issue` outcome based on `PreflightActionKind`
+   - copy `PreflightAction.bucket` into the emitted `EvaluationOutcome`
 4. If a preflight action is `NoticeAndSkipRemaining`, set `skip_remaining = true` and return immediately.
 5. Evaluate all `checks` in declaration order.
 6. For each matching check rule:
@@ -229,6 +236,7 @@ The source-visible evaluation order is:
    - compare the current value to `expect`
    - emit an `Issue` on mismatch
    - emit a `Success` on match only when `messages.pass` exists
+   - emit `RuleReportBucket::Settings` for those check outcomes
 7. Return the ordered `EvaluationResult`.
 
 Template rendering is intentionally small in scope. `apply_template()` only replaces:

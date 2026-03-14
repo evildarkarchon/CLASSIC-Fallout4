@@ -158,6 +158,19 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `settings_rules_version` | non-negative integer or numeric string | optional |
 | `settings_rules` | mapping | optional; parsed into `CrashgenSettingsRules`; malformed nested rules are skipped/defaulted where possible |
 
+Recognized nested settings-rules keys from current source include:
+
+- `settings_rules.preflight[].action.kind`
+- `settings_rules.preflight[].action.bucket`
+- `settings_rules.preflight[].action.severity`
+- `settings_rules.preflight[].action.message`
+- `settings_rules.preflight[].action.fix`
+
+`settings_rules.preflight[].action.bucket` currently accepts:
+
+- `settings` - default bucket when omitted or malformed
+- `error_information` - promotes the rendered notice or issue into the autoscan error-information section for bucket-aware callers
+
 ### Ignore YAML
 
 | Section / key | Type / shape | Behavior |

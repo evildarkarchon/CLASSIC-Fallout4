@@ -234,6 +234,7 @@ Important methods:
 Contributor notes:
 
 - If `CrashgenEntry.settings_rules` exists, the validator prefers those rules and only falls back to legacy checks for uncovered areas.
+- Rule-driven preflight outcomes can now carry a report bucket from [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
 - `check_disabled_settings()` always runs and uses `ignore_keys` as its skip set.
 - In `classic-scanlog-core`, `config_layout` is currently a coarse valid/invalid fact for settings evaluation: `derive_scanlog_config_layout()` returns `Og` for parseable detected versions and `Unknown` otherwise.
 - OG vs VR selection is handled earlier through `AnalysisConfig` construction and Version Registry data, not by `config_layout` in this crate.

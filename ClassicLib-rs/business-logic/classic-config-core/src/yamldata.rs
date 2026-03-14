@@ -8,7 +8,8 @@
 
 use classic_crashgen_settings_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
+    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
+    TargetValueType,
 };
 use classic_settings_core::{SettingsError, merge_yaml_documents, parse_yaml_content};
 use classic_version_registry_core::{
@@ -207,6 +208,13 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
             .and_then(PreflightActionKind::parse)
             .unwrap_or(PreflightActionKind::Notice);
 
+        let bucket = action_map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("bucket")).then_some(v))
+            .and_then(Yaml::as_str)
+            .and_then(RuleReportBucket::parse)
+            .unwrap_or_default();
+
         let severity = action_map
             .iter()
             .find_map(|(k, v)| (k.as_str() == Some("severity")).then_some(v))
@@ -230,6 +238,7 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
             when,
             action: PreflightAction {
                 kind,
+                bucket,
                 severity,
                 message,
                 fix,
@@ -742,6 +751,7 @@ Crashgen_Registry:
             plugin_any: ["addictol.dll"]
           action:
             kind: notice_and_skip_remaining
+            bucket: error_information
             severity: info
             message: "skip"
       checks:
@@ -772,6 +782,10 @@ Crashgen_Registry:
         assert_eq!(rules.version, 2);
         assert_eq!(rules.preflight.len(), 1);
         assert_eq!(rules.checks.len(), 1);
+        assert_eq!(
+            rules.preflight[0].action.bucket,
+            RuleReportBucket::ErrorInformation
+        );
         assert_eq!(rules.checks[0].target.key, "Achievements");
     }
 
@@ -802,6 +816,7 @@ Crashgen_Registry:
             .expect("expected parsed settings rules");
         assert_eq!(rules.version, 1);
         assert_eq!(rules.preflight.len(), 1);
+        assert_eq!(rules.preflight[0].action.bucket, RuleReportBucket::Settings);
         assert!(rules.checks.is_empty());
     }
 }
