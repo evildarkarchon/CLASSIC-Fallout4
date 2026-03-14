@@ -8,6 +8,7 @@
 - Add architecture to scan Addictol crash logs.
 - Fix C++ GUI not honoring some configuration settings.
 - Optimize the orchestrator logic and make the progress bar operate more smoothly by sending updates during the scanning process instead of waiting for the scan to complete.
+- Add a bucket system to the crash generator settings rules to allow for more fine-grained control over the reporting of the rules. Currently this is used to promote the Addictol and Buffout 4 conflict rules into the "Error Information" section.
 - More stuff I didn't write down.
 
 ### 8.1.1 CHANGES
