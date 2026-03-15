@@ -59,8 +59,8 @@ Crashgen_Registry:
           action:
             kind: issue
             severity: error
-            message: "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell"
-            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell."
+            message: "Baka ScrapHeap is redundant with X-Cell"
+            fix: "Uninstall Baka ScrapHeap to prevent conflicts with X-Cell."
         - id: bakascrapheap_redundant_buffout
           when:
             all:
@@ -77,8 +77,8 @@ Crashgen_Registry:
           action:
             kind: issue
             severity: error
-            message: "The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}"
-            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}."
+            message: "Baka ScrapHeap is redundant with {crashgen_name}"
+            fix: "Uninstall Baka ScrapHeap to prevent conflicts with {crashgen_name}."
       checks:
         - id: achievements_conflict
           target:
@@ -225,8 +225,8 @@ Crashgen_Registry:
           action:
             kind: notice
             severity: error
-            message: "The Baka ScrapHeap Mod is installed, but is redundant with Addictol"
-            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with Addictol."
+            message: "Baka ScrapHeap is redundant with Addictol"
+            fix: "Uninstall Baka ScrapHeap to prevent conflicts with Addictol."
       checks: []
   default:
     display_section: ""
