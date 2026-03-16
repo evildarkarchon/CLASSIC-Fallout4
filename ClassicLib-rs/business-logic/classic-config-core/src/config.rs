@@ -839,7 +839,10 @@ impl ClassicConfig {
         let yaml_ops = YamlOperations::new();
         let mut yaml = if path.exists() {
             load_yaml_merged_async(path).await.with_context(|| {
-                format!("Failed to load Local.yaml file for save: {}", path.display())
+                format!(
+                    "Failed to load Local.yaml file for save: {}",
+                    path.display()
+                )
             })?
         } else {
             Yaml::Hash(yaml_rust2::yaml::Hash::new())
@@ -1147,7 +1150,10 @@ mod tests {
             ..Default::default()
         };
 
-        config.save_local_yaml_paths_to(&local_yaml_path).await.unwrap();
+        config
+            .save_local_yaml_paths_to(&local_yaml_path)
+            .await
+            .unwrap();
 
         assert!(local_yaml_path.exists());
 
@@ -1191,7 +1197,10 @@ mod tests {
             ..Default::default()
         };
 
-        config.save_local_yaml_paths_to(&local_yaml_path).await.unwrap();
+        config
+            .save_local_yaml_paths_to(&local_yaml_path)
+            .await
+            .unwrap();
 
         let yaml = load_yaml_merged_async(&local_yaml_path).await.unwrap();
         assert_eq!(

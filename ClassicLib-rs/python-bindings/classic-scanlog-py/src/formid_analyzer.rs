@@ -50,9 +50,21 @@ impl PyFormIDAnalyzerCore {
                         Some(CoreModEntry {
                             detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
                             name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                            description: dict.get_item("description").ok()??.extract::<String>().ok()?,
-                            gpu: dict.get_item("gpu").ok().flatten().and_then(|v| v.extract::<String>().ok()),
-                            gpu_mismatch_warning: dict.get_item("gpu_mismatch_warning").ok().flatten().and_then(|v| v.extract::<String>().ok()),
+                            description: dict
+                                .get_item("description")
+                                .ok()??
+                                .extract::<String>()
+                                .ok()?,
+                            gpu: dict
+                                .get_item("gpu")
+                                .ok()
+                                .flatten()
+                                .and_then(|v| v.extract::<String>().ok()),
+                            gpu_mismatch_warning: dict
+                                .get_item("gpu_mismatch_warning")
+                                .ok()
+                                .flatten()
+                                .and_then(|v| v.extract::<String>().ok()),
                             exclude_when: None,
                         })
                     })
@@ -71,9 +83,17 @@ impl PyFormIDAnalyzerCore {
                             mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
                             name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
                             name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
-                            description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                            description: dict
+                                .get_item("description")
+                                .ok()??
+                                .extract::<String>()
+                                .ok()?,
                             fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
-                            link: dict.get_item("link").ok().flatten().and_then(|v| v.extract::<String>().ok()),
+                            link: dict
+                                .get_item("link")
+                                .ok()
+                                .flatten()
+                                .and_then(|v| v.extract::<String>().ok()),
                         })
                     })
                     .collect()

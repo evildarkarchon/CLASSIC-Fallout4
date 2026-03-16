@@ -47,7 +47,11 @@ pub fn detect_mods_double(
                 mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
                 name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
                 name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
-                description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
                 fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
                 link: dict
                     .get_item("link")

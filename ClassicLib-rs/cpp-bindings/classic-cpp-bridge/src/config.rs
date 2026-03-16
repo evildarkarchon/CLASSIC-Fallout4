@@ -156,15 +156,27 @@ fn yaml_data_suspects_stack_keys(data: &YamlData) -> Vec<String> {
 }
 
 fn yaml_data_mods_core_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.iter().map(|e| e.detect.clone()).collect()
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.detect.clone())
+        .collect()
 }
 
 fn yaml_data_mods_core_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.iter().map(|e| e.description.clone()).collect()
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.description.clone())
+        .collect()
 }
 
 fn yaml_data_mods_core_names(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.iter().map(|e| e.name.clone()).collect()
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.name.clone())
+        .collect()
 }
 
 fn yaml_data_mods_core_gpus(data: &YamlData) -> Vec<String> {
@@ -188,31 +200,59 @@ fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String> {
 }
 
 fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.mod_a.clone()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.mod_a.clone())
+        .collect()
 }
 
 fn yaml_data_mods_conf_mod_b(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.mod_b.clone()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.mod_b.clone())
+        .collect()
 }
 
 fn yaml_data_mods_conf_name_a(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.name_a.clone()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.name_a.clone())
+        .collect()
 }
 
 fn yaml_data_mods_conf_name_b(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.name_b.clone()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.name_b.clone())
+        .collect()
 }
 
 fn yaml_data_mods_conf_descriptions(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.description.clone()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.description.clone())
+        .collect()
 }
 
 fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.fix.clone()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.fix.clone())
+        .collect()
 }
 
 fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.iter().map(|e| e.link.clone().unwrap_or_default()).collect()
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.link.clone().unwrap_or_default())
+        .collect()
 }
 
 fn yaml_data_mods_conf_count(data: &YamlData) -> usize {

@@ -122,7 +122,10 @@ fn extract_indexmap_vecstr_attr(
         .unwrap_or_default()
 }
 
-fn extract_mod_conflict_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<ModConflictEntry> {
+fn extract_mod_conflict_entries(
+    yamldata: &Bound<'_, PyAny>,
+    attr_name: &str,
+) -> Vec<ModConflictEntry> {
     let Ok(attr) = yamldata.getattr(attr_name) else {
         return Vec::new();
     };
@@ -137,7 +140,11 @@ fn extract_mod_conflict_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) ->
                 mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
                 name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
                 name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
-                description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
                 fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
                 link: dict
                     .get_item("link")
@@ -599,7 +606,11 @@ impl PyAnalysisConfig {
                     mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
                     name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
                     name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
-                    description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                    description: dict
+                        .get_item("description")
+                        .ok()??
+                        .extract::<String>()
+                        .ok()?,
                     fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
                     link: dict
                         .get_item("link")
@@ -1173,5 +1184,4 @@ impl PyRustOrchestrator {
 
         Ok((result.0, result.1.to_list()))
     }
-
 }

@@ -434,9 +434,7 @@ fn matches_crash_log_pattern(path: &Path) -> bool {
     path.file_name()
         .and_then(|n| n.to_str())
         .map(|name| {
-            name.starts_with("crash-")
-                && name.ends_with(".log")
-                && name.len() > "crash-.log".len()
+            name.starts_with("crash-") && name.ends_with(".log") && name.len() > "crash-.log".len()
         })
         .unwrap_or(false)
 }
@@ -654,12 +652,9 @@ mod tests {
         tokio::fs::write(sub.join("crash-2024-01-01-12-00-00.log"), b"log1")
             .await
             .unwrap();
-        tokio::fs::write(
-            temp.path().join("crash-2024-01-01-13-00-00.log"),
-            b"log2",
-        )
-        .await
-        .unwrap();
+        tokio::fs::write(temp.path().join("crash-2024-01-01-13-00-00.log"), b"log2")
+            .await
+            .unwrap();
 
         let res = resolve_targeted_inputs(vec![temp.path().to_path_buf()]).await;
         assert_eq!(res.logs.len(), 2);
@@ -683,8 +678,7 @@ mod tests {
         let log = temp.path().join("crash-2024-01-01-12-00-00.log");
         tokio::fs::write(&log, b"data").await.unwrap();
 
-        let res =
-            resolve_targeted_inputs(vec![log.clone(), temp.path().to_path_buf()]).await;
+        let res = resolve_targeted_inputs(vec![log.clone(), temp.path().to_path_buf()]).await;
         assert_eq!(
             res.logs.len(),
             1,
@@ -742,9 +736,10 @@ mod tests {
 
         assert_eq!(logs.len(), 1);
         assert!(!log.exists(), "log should be moved into Crash Logs");
-        assert!(base
-            .join("Crash Logs")
-            .join("crash-2024-06-01-10-00-00.log")
-            .exists());
+        assert!(
+            base.join("Crash Logs")
+                .join("crash-2024-06-01-10-00-00.log")
+                .exists()
+        );
     }
 }

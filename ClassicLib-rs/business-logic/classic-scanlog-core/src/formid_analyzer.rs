@@ -31,9 +31,9 @@ pub struct FormIDAnalyzerCore {
     db_pool: Option<Arc<DatabasePool>>,
     // Mod detection dictionaries (from YAML configuration)
     // These are used by the mod_detector module functions
-    important_mods: Vec<CoreModEntry>,        // game_mods_core
-    mods_single: IndexMap<String, String>,    // game_mods_freq, _solu, _opc2
-    mods_double: Vec<ModConflictEntry>,       // game_mods_conf (conflicts)
+    important_mods: Vec<CoreModEntry>,     // game_mods_core
+    mods_single: IndexMap<String, String>, // game_mods_freq, _solu, _opc2
+    mods_double: Vec<ModConflictEntry>,    // game_mods_conf (conflicts)
 }
 
 #[derive(Debug)]

@@ -175,9 +175,8 @@ fn log_collector_collect_crash_logs(collector: &CxxLogCollector) -> Result<Vec<S
 
 fn resolve_targeted_inputs(input_paths: &[String]) -> ffi::TargetedResolutionDto {
     let paths: Vec<PathBuf> = input_paths.iter().map(PathBuf::from).collect();
-    let resolution = get_runtime().block_on(
-        classic_file_io_core::log_collection::resolve_targeted_inputs(paths),
-    );
+    let resolution = get_runtime()
+        .block_on(classic_file_io_core::log_collection::resolve_targeted_inputs(paths));
     ffi::TargetedResolutionDto {
         logs: resolution
             .logs
@@ -189,11 +188,7 @@ fn resolve_targeted_inputs(input_paths: &[String]) -> ffi::TargetedResolutionDto
             .iter()
             .map(|r| r.path.to_string_lossy().to_string())
             .collect(),
-        rejected_reasons: resolution
-            .rejected
-            .into_iter()
-            .map(|r| r.reason)
-            .collect(),
+        rejected_reasons: resolution.rejected.into_iter().map(|r| r.reason).collect(),
     }
 }
 

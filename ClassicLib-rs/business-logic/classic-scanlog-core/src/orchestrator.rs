@@ -1275,7 +1275,11 @@ impl OrchestratorCore {
                 } else {
                     let gpu_info = GpuDetector::get_gpu_info(&context.system_segment_lines);
                     let mfr = gpu_info.manufacturer.as_str();
-                    if mfr == "Unknown" { None } else { Some(mfr.to_lowercase()) }
+                    if mfr == "Unknown" {
+                        None
+                    } else {
+                        Some(mfr.to_lowercase())
+                    }
                 }
             };
             let user_gpu = user_gpu_string.as_deref();

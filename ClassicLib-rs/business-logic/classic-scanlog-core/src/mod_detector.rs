@@ -379,20 +379,25 @@ pub fn detect_mods_important(
             continue;
         }
 
-        let pattern = Regex::new(&format!("(?i){}", regex::escape(&entry.detect.to_lowercase())))
-            .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
+        let pattern = Regex::new(&format!(
+            "(?i){}",
+            regex::escape(&entry.detect.to_lowercase())
+        ))
+        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
         let mod_found = pattern.is_match(&all_text);
 
         // gpu_mismatch: entry is for a specific GPU that the user does NOT have
-        let gpu_mismatch = entry.gpu.as_ref().is_some_and(|mod_gpu| {
-            user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug))
-        });
+        let gpu_mismatch = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug)));
 
         // gpu_matches_user: entry is for a specific GPU that the user DOES have
-        let gpu_matches_user = entry.gpu.as_ref().is_some_and(|mod_gpu| {
-            user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug))
-        });
+        let gpu_matches_user = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug)));
 
         if mod_found {
             if gpu_mismatch {
@@ -436,10 +441,7 @@ pub fn detect_mods_important(
 }
 
 /// Checks whether a `CoreModExclude` condition is met by the current plugin list.
-fn is_excluded(
-    exclude: &Option<CoreModExclude>,
-    plugins: &IndexMap<String, String>,
-) -> bool {
+fn is_excluded(exclude: &Option<CoreModExclude>, plugins: &IndexMap<String, String>) -> bool {
     match exclude {
         Some(CoreModExclude::PluginAny(required_plugins)) => {
             let plugin_names_lower: HashSet<String> =
@@ -898,8 +900,7 @@ mod tests {
         let xse_modules: HashSet<String> = HashSet::new();
 
         // user_gpu is known → "not installed" warnings are shown for universal mods
-        let result =
-            detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❌"));
         assert!(output.contains("Engine Fixes"));
@@ -918,8 +919,7 @@ mod tests {
             output
         );
 
-        let result_no_gpu =
-            detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
+        let result_no_gpu = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         assert!(result_no_gpu.is_empty());
     }
 
@@ -939,8 +939,7 @@ mod tests {
         let xse_modules: HashSet<String> = HashSet::new();
 
         // User has AMD, nvidia mod is installed → mismatch warning
-        let result =
-            detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❓"));
         assert!(output.contains("UNINSTALL"));
@@ -1004,13 +1003,9 @@ mod tests {
         plugins_without_folon.insert("SomeMod.esp".to_string(), "01".to_string());
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let result = detect_mods_important(
-            &entries,
-            &plugins_without_folon,
-            Some("amd"),
-            &xse_modules,
-        )
-        .unwrap();
+        let result =
+            detect_mods_important(&entries, &plugins_without_folon, Some("amd"), &xse_modules)
+                .unwrap();
         assert!(
             !result.is_empty(),
             "Entry should be shown when exclusion plugin is absent"
@@ -1019,13 +1014,9 @@ mod tests {
         let mut plugins_with_folon = IndexMap::new();
         plugins_with_folon.insert("LondonWorldspace.esm".to_string(), "01".to_string());
 
-        let result = detect_mods_important(
-            &entries,
-            &plugins_with_folon,
-            Some("amd"),
-            &xse_modules,
-        )
-        .unwrap();
+        let result =
+            detect_mods_important(&entries, &plugins_with_folon, Some("amd"), &xse_modules)
+                .unwrap();
         assert!(
             result.is_empty(),
             "Entry should be skipped when exclusion plugin is present"
@@ -1073,8 +1064,7 @@ mod tests {
         let xse_modules: HashSet<String> = HashSet::new();
 
         // User has AMD, nvidia mod is installed → custom mismatch warning
-        let result =
-            detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❓"));
         assert!(output.contains("Custom warning: you don't have NVIDIA"));

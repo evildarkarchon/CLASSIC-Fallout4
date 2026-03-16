@@ -1804,10 +1804,7 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(config.game_mods_core[0].exclude_when, None);
 
         assert_eq!(config.game_mods_core[1].detect, "GpuMod.dll");
-        assert_eq!(
-            config.game_mods_core[1].gpu,
-            Some("nvidia".to_string())
-        );
+        assert_eq!(config.game_mods_core[1].gpu, Some("nvidia".to_string()));
 
         assert_eq!(config.game_mods_core[2].detect, "ExcludedMod.esp");
         assert_eq!(
