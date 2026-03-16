@@ -66,7 +66,7 @@ impl PyFormIDAnalyzerCore {
                                 .ok()
                                 .flatten()
                                 .and_then(|v| v.extract::<String>().ok()),
-                            exclude_when: exclude_when_from_pydict(&dict),
+                            exclude_when: exclude_when_from_pydict(dict),
                         })
                     })
                     .collect()

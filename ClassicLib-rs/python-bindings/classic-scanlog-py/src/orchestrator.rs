@@ -185,7 +185,7 @@ fn extract_core_mod_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec
                     .ok()
                     .flatten()
                     .and_then(|v| v.extract::<String>().ok()),
-                exclude_when: exclude_when_from_pydict(&dict),
+                exclude_when: exclude_when_from_pydict(dict),
             })
         })
         .collect()
@@ -562,7 +562,7 @@ impl PyAnalysisConfig {
                             .ok()
                             .flatten()
                             .and_then(|v| v.extract::<String>().ok()),
-                        exclude_when: exclude_when_from_pydict(&dict),
+                        exclude_when: exclude_when_from_pydict(dict),
                     })
                 })
                 .collect();

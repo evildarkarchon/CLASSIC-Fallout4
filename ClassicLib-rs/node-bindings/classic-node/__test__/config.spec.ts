@@ -492,7 +492,7 @@ describe("YamlData missing keys", () => {
     expect(data.ignoreList).toEqual([]);
     expect(data.xseAcronym).toBe("");
     expect(Object.keys(data.suspectsErrorList).length).toBe(0);
-    expect(Object.keys(data.gameModsCore).length).toBe(0);
+    expect(data.gameModsCoreCount).toBe(0);
   });
 });
 

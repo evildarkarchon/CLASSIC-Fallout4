@@ -139,7 +139,8 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
         for (const auto& p : args.input_paths) {
             rust_inputs.push_back(rust::String(p));
         }
-        auto resolution = classic::files::resolve_targeted_inputs(rust_inputs);
+        auto resolution = classic::files::resolve_targeted_inputs(
+            rust::Slice<const rust::String>(rust_inputs.data(), rust_inputs.size()));
         log_paths = std::move(resolution.logs);
 
         if (!resolution.rejected_paths.empty()) {
