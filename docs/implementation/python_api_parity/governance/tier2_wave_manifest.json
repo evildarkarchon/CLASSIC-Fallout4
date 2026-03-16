@@ -1,8 +1,8 @@
 {
   "manifest_version": "1.0",
-  "generated_at_utc": "2026-03-07T11:38:28.520335+00:00",
+  "generated_at_utc": "2026-03-16T08:08:10.586372+00:00",
   "source": {
-    "parity_diff_report_path": "ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.json"
+    "parity_diff_report_path": "docs/implementation/python_api_parity/baseline/parity_diff_report.json"
   },
   "wave_labels": {
     "wave1": "scanlog deferred runtime backlog",
@@ -28,7 +28,7 @@
       "ordinal_in_module": 2,
       "gap_type": "rust_unmapped",
       "tier": "tier2",
-      "rust_symbol": "CrashgenEntryRaw",
+      "rust_symbol": "CoreModEntry",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave2"
@@ -39,7 +39,7 @@
       "ordinal_in_module": 3,
       "gap_type": "rust_unmapped",
       "tier": "tier2",
-      "rust_symbol": "config",
+      "rust_symbol": "CoreModExclude",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave2"
@@ -50,7 +50,7 @@
       "ordinal_in_module": 4,
       "gap_type": "rust_unmapped",
       "tier": "tier2",
-      "rust_symbol": "format_registry_game_version",
+      "rust_symbol": "CrashgenEntryRaw",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave2"
@@ -61,7 +61,7 @@
       "ordinal_in_module": 5,
       "gap_type": "rust_unmapped",
       "tier": "tier2",
-      "rust_symbol": "get_runtime",
+      "rust_symbol": "ModConflictEntry",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave2"
@@ -72,7 +72,7 @@
       "ordinal_in_module": 6,
       "gap_type": "rust_unmapped",
       "tier": "tier2",
-      "rust_symbol": "resolve_registry_version_info",
+      "rust_symbol": "config",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave2"
@@ -81,6 +81,39 @@
       "gap_id": "config-007",
       "owner_module": "config",
       "ordinal_in_module": 7,
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "rust_symbol": "format_registry_game_version",
+      "python_module": null,
+      "python_export_path": null,
+      "wave": "wave2"
+    },
+    {
+      "gap_id": "config-008",
+      "owner_module": "config",
+      "ordinal_in_module": 8,
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "rust_symbol": "get_runtime",
+      "python_module": null,
+      "python_export_path": null,
+      "wave": "wave2"
+    },
+    {
+      "gap_id": "config-009",
+      "owner_module": "config",
+      "ordinal_in_module": 9,
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "rust_symbol": "resolve_registry_version_info",
+      "python_module": null,
+      "python_export_path": null,
+      "wave": "wave2"
+    },
+    {
+      "gap_id": "config-010",
+      "owner_module": "config",
+      "ordinal_in_module": 10,
       "gap_type": "rust_unmapped",
       "tier": "tier2",
       "rust_symbol": "yamldata",
@@ -804,39 +837,6 @@
       "wave": "wave3"
     },
     {
-      "gap_id": "config-008",
-      "owner_module": "config",
-      "ordinal_in_module": 8,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "ClassicConfig.__init__",
-      "wave": "wave2"
-    },
-    {
-      "gap_id": "config-009",
-      "owner_module": "config",
-      "ordinal_in_module": 9,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "ClassicConfig.__repr__",
-      "wave": "wave2"
-    },
-    {
-      "gap_id": "config-010",
-      "owner_module": "config",
-      "ordinal_in_module": 10,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "PathConfig.__init__",
-      "wave": "wave2"
-    },
-    {
       "gap_id": "config-011",
       "owner_module": "config",
       "ordinal_in_module": 11,
@@ -844,7 +844,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "PathConfig.__repr__",
+      "python_export_path": "ClassicConfig.__init__",
       "wave": "wave2"
     },
     {
@@ -855,7 +855,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "YamlData.__init__",
+      "python_export_path": "ClassicConfig.__repr__",
       "wave": "wave2"
     },
     {
@@ -866,7 +866,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "YamlData.__repr__",
+      "python_export_path": "PathConfig.__init__",
       "wave": "wave2"
     },
     {
@@ -877,7 +877,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "YamlSource.__eq__",
+      "python_export_path": "PathConfig.__repr__",
       "wave": "wave2"
     },
     {
@@ -888,7 +888,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "YamlSource.__hash__",
+      "python_export_path": "YamlData.__init__",
       "wave": "wave2"
     },
     {
@@ -899,7 +899,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "YamlSource.__repr__",
+      "python_export_path": "YamlData.__repr__",
       "wave": "wave2"
     },
     {
@@ -910,13 +910,46 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_config",
-      "python_export_path": "YamlSource.__str__",
+      "python_export_path": "YamlSource.__eq__",
       "wave": "wave2"
     },
     {
       "gap_id": "config-018",
       "owner_module": "config",
       "ordinal_in_module": 18,
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "rust_symbol": null,
+      "python_module": "classic_config",
+      "python_export_path": "YamlSource.__hash__",
+      "wave": "wave2"
+    },
+    {
+      "gap_id": "config-019",
+      "owner_module": "config",
+      "ordinal_in_module": 19,
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "rust_symbol": null,
+      "python_module": "classic_config",
+      "python_export_path": "YamlSource.__repr__",
+      "wave": "wave2"
+    },
+    {
+      "gap_id": "config-020",
+      "owner_module": "config",
+      "ordinal_in_module": 20,
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "rust_symbol": null,
+      "python_module": "classic_config",
+      "python_export_path": "YamlSource.__str__",
+      "wave": "wave2"
+    },
+    {
+      "gap_id": "config-021",
+      "owner_module": "config",
+      "ordinal_in_module": 21,
       "gap_type": "python_unmapped",
       "tier": "tier2",
       "rust_symbol": null,
@@ -1757,7 +1790,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.detect_folon",
+      "python_export_path": "Orchestrator.has_database_pool",
       "wave": "wave1"
     },
     {
@@ -1768,7 +1801,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.has_database_pool",
+      "python_export_path": "Orchestrator.is_feature_complete",
       "wave": "wave1"
     },
     {
@@ -1779,7 +1812,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.is_feature_complete",
+      "python_export_path": "Orchestrator.is_initialized",
       "wave": "wave1"
     },
     {
@@ -1790,7 +1823,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.is_initialized",
+      "python_export_path": "Orchestrator.load_loadorder",
       "wave": "wave1"
     },
     {
@@ -1801,7 +1834,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.load_loadorder",
+      "python_export_path": "Orchestrator.process_logs_parallel",
       "wave": "wave1"
     },
     {
@@ -1812,7 +1845,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.process_logs_parallel",
+      "python_export_path": "Orchestrator.write_reports_batch",
       "wave": "wave1"
     },
     {
@@ -1823,7 +1856,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.write_reports_batch",
+      "python_export_path": "PapyrusAnalyzer.__init__",
       "wave": "wave1"
     },
     {
@@ -1834,7 +1867,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.__init__",
+      "python_export_path": "PapyrusAnalyzer.analyze_to_string",
       "wave": "wave1"
     },
     {
@@ -1845,7 +1878,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.analyze_to_string",
+      "python_export_path": "PapyrusAnalyzer.check_for_updates",
       "wave": "wave1"
     },
     {
@@ -1856,7 +1889,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.check_for_updates",
+      "python_export_path": "PapyrusAnalyzer.log_exists",
       "wave": "wave1"
     },
     {
@@ -1867,7 +1900,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.log_exists",
+      "python_export_path": "PapyrusAnalyzer.log_path",
       "wave": "wave1"
     },
     {
@@ -1878,7 +1911,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.log_path",
+      "python_export_path": "PapyrusAnalyzer.reset",
       "wave": "wave1"
     },
     {
@@ -1889,7 +1922,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.reset",
+      "python_export_path": "PapyrusAnalyzer.start_monitoring",
       "wave": "wave1"
     },
     {
@@ -1900,7 +1933,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.start_monitoring",
+      "python_export_path": "PapyrusAnalyzer.stats",
       "wave": "wave1"
     },
     {
@@ -1911,7 +1944,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusAnalyzer.stats",
+      "python_export_path": "PapyrusStats",
       "wave": "wave1"
     },
     {
@@ -1922,7 +1955,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusStats",
+      "python_export_path": "PapyrusStats.__init__",
       "wave": "wave1"
     },
     {
@@ -1933,7 +1966,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusStats.__init__",
+      "python_export_path": "PapyrusStats.dumps_to_stacks_ratio",
       "wave": "wave1"
     },
     {
@@ -1944,7 +1977,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PapyrusStats.dumps_to_stacks_ratio",
+      "python_export_path": "ParallelReportProcessor",
       "wave": "wave1"
     },
     {
@@ -1955,7 +1988,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ParallelReportProcessor",
+      "python_export_path": "ParallelReportProcessor.__init__",
       "wave": "wave1"
     },
     {
@@ -1966,7 +1999,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ParallelReportProcessor.__init__",
+      "python_export_path": "ParallelReportProcessor.combine_fragments",
       "wave": "wave1"
     },
     {
@@ -1977,7 +2010,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ParallelReportProcessor.combine_fragments",
+      "python_export_path": "ParallelReportProcessor.process_batch",
       "wave": "wave1"
     },
     {
@@ -1988,7 +2021,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ParallelReportProcessor.process_batch",
+      "python_export_path": "PatternMatcher.__init__",
       "wave": "wave1"
     },
     {
@@ -1999,7 +2032,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PatternMatcher.__init__",
+      "python_export_path": "PatternMatcher.clear_cache",
       "wave": "wave1"
     },
     {
@@ -2010,7 +2043,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PatternMatcher.clear_cache",
+      "python_export_path": "PatternMatcher.get_stats",
       "wave": "wave1"
     },
     {
@@ -2021,7 +2054,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PatternMatcher.get_stats",
+      "python_export_path": "PatternMatcher.replace_all",
       "wave": "wave1"
     },
     {
@@ -2032,7 +2065,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PatternMatcher.replace_all",
+      "python_export_path": "PluginAnalyzer",
       "wave": "wave1"
     },
     {
@@ -2043,7 +2076,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PluginAnalyzer",
+      "python_export_path": "PluginAnalyzer.__init__",
       "wave": "wave1"
     },
     {
@@ -2054,7 +2087,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PluginAnalyzer.__init__",
+      "python_export_path": "PluginAnalyzer.check_plugin_limit",
       "wave": "wave1"
     },
     {
@@ -2065,7 +2098,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PluginAnalyzer.check_plugin_limit",
+      "python_export_path": "PluginAnalyzer.filter_ignored_plugins",
       "wave": "wave1"
     },
     {
@@ -2076,7 +2109,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PluginAnalyzer.filter_ignored_plugins",
+      "python_export_path": "PluginAnalyzer.loadorder_scan_log",
       "wave": "wave1"
     },
     {
@@ -2087,7 +2120,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PluginAnalyzer.loadorder_scan_log",
+      "python_export_path": "PluginAnalyzer.plugin_match",
       "wave": "wave1"
     },
     {
@@ -2098,7 +2131,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "PluginAnalyzer.plugin_match",
+      "python_export_path": "RecordScanner",
       "wave": "wave1"
     },
     {
@@ -2109,7 +2142,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "RecordScanner",
+      "python_export_path": "RecordScanner.__init__",
       "wave": "wave1"
     },
     {
@@ -2120,7 +2153,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "RecordScanner.__init__",
+      "python_export_path": "RecordScanner.clear_cache",
       "wave": "wave1"
     },
     {
@@ -2131,7 +2164,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "RecordScanner.clear_cache",
+      "python_export_path": "RecordScanner.extract_records",
       "wave": "wave1"
     },
     {
@@ -2142,7 +2175,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "RecordScanner.extract_records",
+      "python_export_path": "RecordScanner.scan_named_records",
       "wave": "wave1"
     },
     {
@@ -2153,7 +2186,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "RecordScanner.scan_named_records",
+      "python_export_path": "ReportComposer",
       "wave": "wave1"
     },
     {
@@ -2164,7 +2197,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer",
+      "python_export_path": "ReportComposer.__init__",
       "wave": "wave1"
     },
     {
@@ -2175,7 +2208,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.__init__",
+      "python_export_path": "ReportComposer.add",
       "wave": "wave1"
     },
     {
@@ -2186,7 +2219,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.add",
+      "python_export_path": "ReportComposer.add_many",
       "wave": "wave1"
     },
     {
@@ -2197,7 +2230,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.add_many",
+      "python_export_path": "ReportComposer.build_string",
       "wave": "wave1"
     },
     {
@@ -2208,7 +2241,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.build_string",
+      "python_export_path": "ReportComposer.compose",
       "wave": "wave1"
     },
     {
@@ -2219,7 +2252,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.compose",
+      "python_export_path": "ReportComposer.compose_optimized",
       "wave": "wave1"
     },
     {
@@ -2230,7 +2263,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.compose_optimized",
+      "python_export_path": "ReportComposer.fragment_count",
       "wave": "wave1"
     },
     {
@@ -2241,7 +2274,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.fragment_count",
+      "python_export_path": "ReportComposer.pool_stats",
       "wave": "wave1"
     },
     {
@@ -2252,7 +2285,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportComposer.pool_stats",
+      "python_export_path": "ReportFragment",
       "wave": "wave1"
     },
     {
@@ -2263,7 +2296,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment",
+      "python_export_path": "ReportFragment.__init__",
       "wave": "wave1"
     },
     {
@@ -2274,7 +2307,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.__init__",
+      "python_export_path": "ReportFragment.combine",
       "wave": "wave1"
     },
     {
@@ -2285,7 +2318,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.combine",
+      "python_export_path": "ReportFragment.empty",
       "wave": "wave1"
     },
     {
@@ -2296,7 +2329,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.empty",
+      "python_export_path": "ReportFragment.from_lines",
       "wave": "wave1"
     },
     {
@@ -2307,7 +2340,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.from_lines",
+      "python_export_path": "ReportFragment.is_empty",
       "wave": "wave1"
     },
     {
@@ -2318,7 +2351,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.is_empty",
+      "python_export_path": "ReportFragment.len",
       "wave": "wave1"
     },
     {
@@ -2329,7 +2362,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.len",
+      "python_export_path": "ReportFragment.to_list",
       "wave": "wave1"
     },
     {
@@ -2340,7 +2373,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.to_list",
+      "python_export_path": "ReportFragment.with_header",
       "wave": "wave1"
     },
     {
@@ -2351,7 +2384,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportFragment.with_header",
+      "python_export_path": "ReportGenerator",
       "wave": "wave1"
     },
     {
@@ -2362,7 +2395,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator",
+      "python_export_path": "ReportGenerator.__init__",
       "wave": "wave1"
     },
     {
@@ -2373,7 +2406,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.__init__",
+      "python_export_path": "ReportGenerator.generate_error_section",
       "wave": "wave1"
     },
     {
@@ -2384,7 +2417,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_error_section",
+      "python_export_path": "ReportGenerator.generate_footer",
       "wave": "wave1"
     },
     {
@@ -2395,7 +2428,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_footer",
+      "python_export_path": "ReportGenerator.generate_formid_section_header",
       "wave": "wave1"
     },
     {
@@ -2406,7 +2439,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_formid_section_header",
+      "python_export_path": "ReportGenerator.generate_header",
       "wave": "wave1"
     },
     {
@@ -2417,7 +2450,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_header",
+      "python_export_path": "ReportGenerator.generate_mod_check_header",
       "wave": "wave1"
     },
     {
@@ -2428,7 +2461,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_mod_check_header",
+      "python_export_path": "ReportGenerator.generate_plugin_suspect_header",
       "wave": "wave1"
     },
     {
@@ -2439,7 +2472,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_plugin_suspect_header",
+      "python_export_path": "ReportGenerator.generate_record_section_header",
       "wave": "wave1"
     },
     {
@@ -2450,7 +2483,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_record_section_header",
+      "python_export_path": "ReportGenerator.generate_settings_section_header",
       "wave": "wave1"
     },
     {
@@ -2461,7 +2494,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_settings_section_header",
+      "python_export_path": "ReportGenerator.generate_suspect_found_footer",
       "wave": "wave1"
     },
     {
@@ -2472,7 +2505,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_suspect_found_footer",
+      "python_export_path": "ReportGenerator.generate_suspect_section",
       "wave": "wave1"
     },
     {
@@ -2483,7 +2516,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_suspect_section",
+      "python_export_path": "ReportGenerator.generate_suspect_section_header",
       "wave": "wave1"
     },
     {
@@ -2494,7 +2527,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.generate_suspect_section_header",
+      "python_export_path": "ReportGenerator.with_config",
       "wave": "wave1"
     },
     {
@@ -2505,7 +2538,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ReportGenerator.with_config",
+      "python_export_path": "ScanOutput",
       "wave": "wave1"
     },
     {
@@ -2516,7 +2549,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "ScanOutput",
+      "python_export_path": "SettingsValidator",
       "wave": "wave1"
     },
     {
@@ -2527,7 +2560,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator",
+      "python_export_path": "SettingsValidator.__init__",
       "wave": "wave1"
     },
     {
@@ -2538,7 +2571,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.__init__",
+      "python_export_path": "SettingsValidator.check_disabled_settings",
       "wave": "wave1"
     },
     {
@@ -2549,7 +2582,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.check_disabled_settings",
+      "python_export_path": "SettingsValidator.scan_all_settings",
       "wave": "wave1"
     },
     {
@@ -2560,7 +2593,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_all_settings",
+      "python_export_path": "SettingsValidator.scan_archivelimit_setting",
       "wave": "wave1"
     },
     {
@@ -2571,7 +2604,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_archivelimit_setting",
+      "python_export_path": "SettingsValidator.scan_buffout_achievements_setting",
       "wave": "wave1"
     },
     {
@@ -2582,7 +2615,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_buffout_achievements_setting",
+      "python_export_path": "SettingsValidator.scan_buffout_looksmenu_setting",
       "wave": "wave1"
     },
     {
@@ -2593,7 +2626,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_buffout_looksmenu_setting",
+      "python_export_path": "SettingsValidator.scan_buffout_memorymanagement_settings",
       "wave": "wave1"
     },
     {
@@ -2604,7 +2637,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_buffout_memorymanagement_settings",
+      "python_export_path": "StringPool",
       "wave": "wave1"
     },
     {
@@ -2615,7 +2648,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "StringPool",
+      "python_export_path": "StringPool.__init__",
       "wave": "wave1"
     },
     {
@@ -2626,7 +2659,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "StringPool.__init__",
+      "python_export_path": "StringPool.clear",
       "wave": "wave1"
     },
     {
@@ -2637,7 +2670,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "StringPool.clear",
+      "python_export_path": "StringPool.get_stats",
       "wave": "wave1"
     },
     {
@@ -2648,7 +2681,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "StringPool.get_stats",
+      "python_export_path": "StringPool.intern",
       "wave": "wave1"
     },
     {
@@ -2659,7 +2692,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "StringPool.intern",
+      "python_export_path": "StringPool.intern_batch",
       "wave": "wave1"
     },
     {
@@ -2670,7 +2703,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "StringPool.intern_batch",
+      "python_export_path": "SuspectScanner",
       "wave": "wave1"
     },
     {
@@ -2681,7 +2714,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner",
+      "python_export_path": "SuspectScanner.__init__",
       "wave": "wave1"
     },
     {
@@ -2692,7 +2725,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.__init__",
+      "python_export_path": "SuspectScanner.check_dll_crash",
       "wave": "wave1"
     },
     {
@@ -2703,7 +2736,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.check_dll_crash",
+      "python_export_path": "SuspectScanner.scan_suspects_batch",
       "wave": "wave1"
     },
     {
@@ -2714,7 +2747,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.scan_suspects_batch",
+      "python_export_path": "SuspectScanner.suspect_scan_mainerror",
       "wave": "wave1"
     },
     {
@@ -2725,7 +2758,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.suspect_scan_mainerror",
+      "python_export_path": "SuspectScanner.suspect_scan_stack",
       "wave": "wave1"
     },
     {
@@ -2736,7 +2769,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.suspect_scan_stack",
+      "python_export_path": "contains_plugin",
       "wave": "wave1"
     },
     {
@@ -2747,7 +2780,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "contains_plugin",
+      "python_export_path": "contains_record",
       "wave": "wave1"
     },
     {
@@ -2758,7 +2791,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "contains_record",
+      "python_export_path": "detect_mods_batch",
       "wave": "wave1"
     },
     {
@@ -2769,7 +2802,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "detect_mods_batch",
+      "python_export_path": "detect_mods_double",
       "wave": "wave1"
     },
     {
@@ -2780,7 +2813,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "detect_mods_double",
+      "python_export_path": "detect_mods_important",
       "wave": "wave1"
     },
     {
@@ -2791,7 +2824,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "detect_mods_important",
+      "python_export_path": "detect_mods_single",
       "wave": "wave1"
     },
     {
@@ -2802,7 +2835,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "detect_mods_single",
+      "python_export_path": "detect_plugins_batch",
       "wave": "wave1"
     },
     {
@@ -2813,7 +2846,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "detect_plugins_batch",
+      "python_export_path": "is_valid_formid",
       "wave": "wave1"
     },
     {
@@ -2824,7 +2857,7 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "is_valid_formid",
+      "python_export_path": "papyrus_logging",
       "wave": "wave1"
     },
     {
@@ -2835,24 +2868,13 @@
       "tier": "tier2",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export_path": "papyrus_logging",
+      "python_export_path": "scan_records_batch",
       "wave": "wave1"
     },
     {
       "gap_id": "scanlog-227",
       "owner_module": "scanlog",
       "ordinal_in_module": 227,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "scan_records_batch",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-228",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 228,
       "gap_type": "python_unmapped",
       "tier": "tier2",
       "rust_symbol": null,

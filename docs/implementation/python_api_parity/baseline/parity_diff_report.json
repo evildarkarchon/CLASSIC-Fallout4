@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-07T11:38:42.350098+00:00",
+  "generated_at_utc": "2026-03-16T08:08:31.178641+00:00",
   "summary": {
     "tier1_contract_total": 60,
     "tier1_matched": 60,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 293,
+    "total_gaps": 295,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 293
+    "tier2_gap_total": 295
   },
   "contract_results": [
     {
@@ -930,7 +930,43 @@
       "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModEntry",
+      "python_module": null,
+      "python_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModExclude",
+      "python_module": null,
+      "python_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "CrashgenEntryRaw",
+      "python_module": null,
+      "python_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModConflictEntry",
       "python_module": null,
       "python_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -2900,18 +2936,6 @@
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
       "python_module": "classic_scanlog",
-      "python_export": "detect_folon",
-      "python_export_path": "Orchestrator.detect_folon",
-      "reason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "kind": "method"
-    },
-    {
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
       "python_export": "has_database_pool",
       "python_export_path": "Orchestrator.has_database_pool",
       "reason": "Python export is outside Tier-1 mapping scope (deferred).",
@@ -4432,10 +4456,10 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 18
+      "tier2": 21
     },
     "scanlog": {
-      "tier2": 232
+      "tier2": 231
     },
     "version_registry": {
       "tier2": 35

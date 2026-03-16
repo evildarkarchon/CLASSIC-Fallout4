@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-07T11:38:42.345612+00:00",
+  "generated_at_utc": "2026-03-16T08:08:31.174494+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -29,8 +29,28 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ConfigError",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CoreModEntry",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::CoreModEntry",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CoreModExclude",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::CoreModExclude",
       "tier": "tier2"
     },
     {
@@ -39,8 +59,18 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::CrashgenEntryRaw",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ModConflictEntry",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::ModConflictEntry",
       "tier": "tier2"
     },
     {
@@ -59,7 +89,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::YamlDataCore",
       "tier": "tier1"
     },
@@ -98,7 +128,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::format_registry_game_version",
       "tier": "tier2"
     },
@@ -118,7 +148,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::resolve_registry_version_info",
       "tier": "tier2"
     },

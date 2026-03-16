@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-07T11:38:42.349798+00:00",
+  "generated_at_utc": "2026-03-16T08:08:31.178324+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -898,7 +898,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, show_formid_values: bool, crashgen_name: str, important_mods: dict[str, str], mods_single: dict[str, str], mods_double: dict[str, str], ) -> None:"
+      "signature": "def __init__( self, show_formid_values: bool, crashgen_name: str, important_mods: dict[str, str], mods_single: dict[str, str], mods_double: list[dict[str, str | None]], ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -1405,18 +1405,6 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def check_loadorder_exists(dir_path: str) -> bool:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "detect_folon",
-      "export_path": "Orchestrator.detect_folon",
-      "parent_class": "Orchestrator",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_folon(self, plugins: dict[str, str]) -> bool:"
     },
     {
       "module": "classic_scanlog",
@@ -2609,7 +2597,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_double( yaml_dict: dict[str, str], crashlog_plugins: dict[str, str] ) -> list[str]:"
+      "signature": "def detect_mods_double( entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str] ) -> list[str]:"
     },
     {
       "module": "classic_scanlog",
@@ -2620,7 +2608,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_important( yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: str | None = None, xse_modules: set[str] = ..., ) -> list[str]:"
+      "signature": "def detect_mods_important( entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str], user_gpu: str | None = None, xse_modules: set[str] = ..., ) -> list[str]:"
     },
     {
       "module": "classic_scanlog",
