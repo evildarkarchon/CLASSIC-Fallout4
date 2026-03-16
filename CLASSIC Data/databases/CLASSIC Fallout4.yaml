@@ -478,7 +478,7 @@ Crashlog_Error_Check:
 
   5 | Null Crash: "0x000000000000"
 
-  1 | *[Creation Club Crash]: 01B59A4
+  1 | *[Localized Mod Crash]: 01B59A4
 
 # CRASH SUSPECTS WITH ITEMS IN CALL STACK AND / OR MAIN ERROR | SPECIAL ITEM CONDITIONS:
 # Add ME-REQ if item is required to show up in Main Error, otherwise add ME-OPT if optional.
@@ -801,126 +801,178 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         -----
 
 Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
-  betterpowerarmor | Knockout Framework: |
-    Better Power Armor Redux ❌ CONFLICTS WITH : Knockout Framework
-        Both mods use the same script hooks. This can crash the game or cause weird mod behavior.
-        If you encounter problems, use only one of these mods, not both at the same time.
-        -----
+  - mod_a: betterpowerarmor
+    mod_b: Knockout Framework
+    name_a: Better Power Armor Redux
+    name_b: Knockout Framework
+    description: "Both mods use the same script hooks. This can crash the game or cause weird mod behavior."
+    fix: "If you encounter problems, use only one of these mods, not both at the same time."
 
-  betterpowerarmor | FloatingDamage: |
-    Better Power Armor Redux ❌ CONFLICTS WITH : Floating Damage
-        Both mods use the same script hooks. This can crash the game or cause weird mod behavior.
-        If you encounter problems, use only one of these mods, not both at the same time.
-        -----
+  - mod_a: betterpowerarmor
+    mod_b: FloatingDamage
+    name_a: Better Power Armor Redux
+    name_b: Floating Damage
+    description: "Both mods use the same script hooks. This can crash the game or cause weird mod behavior."
+    fix: "If you encounter problems, use only one of these mods, not both at the same time."
 
-  bostonfpsfix | prp.esp: |
-    Boston Fps Fix ❌ CONFLICTS WITH : Previs Repair Pack
-        Using both mods can break precombines. CLASSIC suggests using Previs Repair Pack only.
-        -----
+  - mod_a: bostonfpsfix
+    mod_b: prp.esp
+    name_a: Boston Fps Fix
+    name_b: Previs Repair Pack
+    description: "Using both mods can break precombines."
+    fix: "CLASSIC suggests using Previs Repair Pack only."
 
-  ExtendedWeaponSystem | tacticalreload: |
-    Extended Weapon Systems ❌ CONFLICTS WITH : Tactical Reload
-        Using both mods can frequently crash the game.
-        Use only one of these mods, not both at the same time.
-        -----
+  - mod_a: ExtendedWeaponSystem
+    mod_b: tacticalreload
+    name_a: Extended Weapon Systems
+    name_b: Tactical Reload
+    description: "Using both mods can frequently crash the game."
+    fix: "Use only one of these mods, not both at the same time."
 
-  FROST.esp | prp.esp: |
-    Frost Survival Simulator ❌ CONFLICTS WITH : Previs Repair Pack
-        For precombine fixes, remove PRP and switch to FROST Cell Fixes (FCF).
-        FROST Cell Fixes: https://www.nexusmods.com/fallout4/mods/59652?tab=files
-        -----
+  - mod_a: FROST.esp
+    mod_b: prp.esp
+    name_a: Frost Survival Simulator
+    name_b: Previs Repair Pack
+    description: "Using both mods can break precombines."
+    fix: "For precombine fixes, remove PRP and switch to FROST Cell Fixes (FCF)."
+    link: https://www.nexusmods.com/fallout4/mods/59652?tab=files
 
-  DCGuard_Overhaul | Guards.esp: |
-    The Fens Sheriff's Department ❌ CONFLICTS WITH : Varied Diamond City Guards
-        Both mods heavily modify Diamond City Guards records.
-        Use only one of these mods, not both at the same time.
-        -----
+  - mod_a: DCGuard_Overhaul
+    mod_b: Guards.esp
+    name_a: The Fens Sheriff's Department
+    name_b: Varied Diamond City Guards
+    description: "Both mods heavily modify Diamond City Guards records."
+    fix: "Use only one of these mods, not both at the same time."
 
-  Fallout4Upscaler | NVIDIA_Reflex: |
-    Fallout 4 Upscaler ❌ CONFLICTS WITH : Nvidia Reflex Support
-        Both mods likely use the same DLL hooks. This can crash the game or cause weird mod behavior.
-        If you encounter problems or crashes, use only one of these mods, not both at the same time.
-        -----
+  - mod_a: Fallout4Upscaler
+    mod_b: NVIDIA_Reflex
+    name_a: Fallout 4 Upscaler
+    name_b: Nvidia Reflex Support
+    description: "Both mods likely use the same DLL hooks. This can crash the game or cause weird mod behavior."
+    fix: "If you encounter problems or crashes, use only one of these mods, not both at the same time."
 
-  vulkan | NVIDIA_Reflex: |
-    Vulkan Renderer ❌ CONFLICTS WITH : Nvidia Reflex Support
-        Vulkan Renderer can break GPU recognition from NV Reflex Support. This can crash the game or cause weird mod behavior.
-        If you encounter Nvidia Driver crashes, CLASSIC suggests using Vulkan Render only. Otherwise, use Nvidia Reflex Support.
-        -----
+  - mod_a: vulkan
+    mod_b: NVIDIA_Reflex
+    name_a: Vulkan Renderer
+    name_b: Nvidia Reflex Support
+    description: "Vulkan Renderer can break GPU recognition from NV Reflex Support. This can crash the game or cause weird mod behavior."
+    fix: "If you encounter Nvidia Driver crashes, CLASSIC suggests using Vulkan Render only. Otherwise, use Nvidia Reflex Support."
 
-  CustomCamera | CameraTweaks: |
-    Custom Camera ❌ CONFLICTS WITH : Camera Tweaks
-        Both mods make changes to the in-game camera. CLASSIC suggests using Camera Tweaks only, since it's an updated alternative.
-        -----
+  - mod_a: CustomCamera
+    mod_b: CameraTweaks
+    name_a: Custom Camera
+    name_b: Camera Tweaks
+    description: "Both mods make changes to the in-game camera."
+    fix: "CLASSIC suggests using Camera Tweaks only, since it's an updated alternative."
 
-  UniquePlayer | ClassicHolsteredWeapons: |
-    Unique Player ❌ CONFLICTS WITH : Classic Holstered Weapons
-        Classic Holstered Weapons will not work correctly with mods that modify the player skeleton or add new skeleton paths.
-        If you encounter problems or crashes, see here how to add additional skeletons: https://www.nexusmods.com/fallout4/articles/2496
-        -----
+  - mod_a: UniquePlayer
+    mod_b: ClassicHolsteredWeapons
+    name_a: Unique Player
+    name_b: Classic Holstered Weapons
+    description: "Classic Holstered Weapons will not work correctly with mods that modify the player skeleton or add new skeleton paths."
+    fix: "If you encounter problems or crashes, see here how to add additional skeletons."
+    link: https://www.nexusmods.com/fallout4/articles/2496
 
-  HHS | ClassicHolsteredWeapons: |
-    High Heels System ❌ CONFLICTS WITH : Classic Holstered Weapons
-        Classic Holstered Weapons will not work correctly with mods that modify the player skeleton or add new skeleton paths.
-        If you encounter problems or crashes, see here how to add additional skeletons: https://www.nexusmods.com/fallout4/articles/2496
-        -----
+  - mod_a: HHS
+    mod_b: ClassicHolsteredWeapons
+    name_a: High Heels System
+    name_b: Classic Holstered Weapons
+    description: "Classic Holstered Weapons will not work correctly with mods that modify the player skeleton or add new skeleton paths."
+    fix: "If you encounter problems or crashes, see here how to add additional skeletons."
+    link: https://www.nexusmods.com/fallout4/articles/2496
 
-  cbp | ClassicHolsteredWeapons: |
-    CBP Physics ❌ CONFLICTS WITH : Classic Holstered Weapons
-        Classic Holstered Weapons will not work correctly with mods that modify the player skeleton or add new skeleton paths.
-        If you encounter problems or crashes, see here how to add additional skeletons: https://www.nexusmods.com/fallout4/articles/2496
-        -----
+  - mod_a: cbp
+    mod_b: ClassicHolsteredWeapons
+    name_a: CBP Physics
+    name_b: Classic Holstered Weapons
+    description: "Classic Holstered Weapons will not work correctly with mods that modify the player skeleton or add new skeleton paths."
+    fix: "If you encounter problems or crashes, see here how to add additional skeletons."
+    link: https://www.nexusmods.com/fallout4/articles/2496
 
-  ArmorKeywords | SKKCraftableWeaponsAmmo: |
-    Armor And Weapon Keywords ❌ CONFLICTS WITH : SKK Craft Weapons And Scrap Ammo
-        SKK Craft Weapons & Ammo Version 008 is incompatible with AWKCR and will cause crashes while saving the game.
-        If you encounter problems or crashes, remove AWKCR and / or switch to Equipment and Crafting Overhaul instead.
-        -----
-  fallrimpriority | x-cell: |
-    Fallout Priority ❌ CONFLICTS WITH : X-Cell
-        X-Cell has equivalent functionality to Fallout Priority when the threads feature is enabled.
-        -----
-  prioritymod | x-cell: |
-    Fallout Priority ❌ CONFLICTS WITH : X-Cell
-        X-Cell has equivalent functionality to Fallout Priority when the threads feature is enabled.
-        -----
-  bakascrapheap | x-cell: |
-    Baka ScrapHeap ❌ CONFLICTS WITH : X-Cell
-        X-Cell has equivalent functionality to Baka ScrapHeap when the memory feature is enabled.
-        -----
-  PrivateProfileRedirector | x-cell: |
-    Private Profile Redirector ❌ CONFLICTS WITH : X-Cell
-        X-Cell has equivalent functionality to Private Profile Redirector when the io feature (changed to profile in v1.2-b2+) is enabled.
-        -----
-  libdiskCacheEnabler | x-cell: |
-    Disk Cache Enabler ❌ CONFLICTS WITH : X-Cell
-        X-Cell has equivalent functionality to Disk Cache Enabler when the io feature is enabled.
-        -----
-  fallrimpriority | addictol: |
-    Fallout Priority ❌ CONFLICTS WITH : Addictol
-        Addictol has equivalent functionality to Fallout Priority when bThreads feature is enabled.
-        -----
-  prioritymod | addictol: |
-    Fallout Priority ❌ CONFLICTS WITH : Addictol
-        Addictol has equivalent functionality to Fallout Priority when bThreads is enabled.
-        -----
-  bakascrapheap | addictol: |
-    Baka ScrapHeap ❌ CONFLICTS WITH : Addictol
-        X-Cell/Addictol has equivalent functionality to Baka ScrapHeap when bMemoryManager is enabled.
-        -----
-  PrivateProfileRedirector | addictol: |
-    Private Profile Redirector ❌ CONFLICTS WITH : Addictol
-        X-Cell/Addictol has equivalent functionality to Private Profile Redirector when bProfile is enabled.
-        -----
-  libdiskCacheEnabler | addictol: |
-    Disk Cache Enabler ❌ CONFLICTS WITH : Addictol
-        X-Cell/Addictol has equivalent functionality to Disk Cache Enabler when bIOCacher is enabled.
-        -----
-  SovietPowerArmor | OpenLexington: |
-    Soviet Power Armor ❌ CONFLICTS WITH : Open Lexington
-        Both mods modify the same location and can cause crashes.
-        You can download a compatibility patch here: https://www.nexusmods.com/fallout4/mods/84930
-        -----
+  - mod_a: ArmorKeywords
+    mod_b: SKKCraftableWeaponsAmmo
+    name_a: Armor And Weapon Keywords
+    name_b: SKK Craft Weapons And Scrap Ammo
+    description: "SKK Craft Weapons & Ammo Version 008 is incompatible with AWKCR and will cause crashes while saving the game."
+    fix: "If you encounter problems or crashes, remove AWKCR and / or switch to Equipment and Crafting Overhaul instead."
+
+  - mod_a: fallrimpriority
+    mod_b: x-cell
+    name_a: Fallout Priority
+    name_b: X-Cell
+    description: "X-Cell has equivalent functionality to Fallout Priority when the threads feature is enabled."
+    fix: "Remove Fallout Priority to avoid conflicts with X-Cell."
+
+  - mod_a: prioritymod
+    mod_b: x-cell
+    name_a: Fallout Priority
+    name_b: X-Cell
+    description: "X-Cell has equivalent functionality to Fallout Priority when the threads feature is enabled."
+    fix: "Remove Fallout Priority to avoid conflicts with X-Cell."
+
+  - mod_a: bakascrapheap
+    mod_b: x-cell
+    name_a: Baka ScrapHeap
+    name_b: X-Cell
+    description: "X-Cell has equivalent functionality to Baka ScrapHeap when the memory feature is enabled."
+    fix: "Remove Baka ScrapHeap to avoid conflicts with X-Cell."
+
+  - mod_a: PrivateProfileRedirector
+    mod_b: x-cell
+    name_a: Private Profile Redirector
+    name_b: X-Cell
+    description: "X-Cell has equivalent functionality to Private Profile Redirector when the io feature (changed to profile in v1.2-b2+) is enabled."
+    fix: "Remove Private Profile Redirector to avoid conflicts with X-Cell."
+
+  - mod_a: libdiskCacheEnabler
+    mod_b: x-cell
+    name_a: Disk Cache Enabler
+    name_b: X-Cell
+    description: "X-Cell has equivalent functionality to Disk Cache Enabler when the io feature is enabled."
+    fix: "Remove Disk Cache Enabler to avoid conflicts with X-Cell."
+
+  - mod_a: fallrimpriority
+    mod_b: addictol
+    name_a: Fallout Priority
+    name_b: Addictol
+    description: "Addictol has equivalent functionality to Fallout Priority when bThreads feature is enabled."
+    fix: "Remove Fallout Priority to avoid conflicts with Addictol."
+
+  - mod_a: prioritymod
+    mod_b: addictol
+    name_a: Fallout Priority
+    name_b: Addictol
+    description: "Addictol has equivalent functionality to Fallout Priority when bThreads is enabled."
+    fix: "Remove Fallout Priority to avoid conflicts with Addictol."
+
+  - mod_a: bakascrapheap
+    mod_b: addictol
+    name_a: Baka ScrapHeap
+    name_b: Addictol
+    description: "X-Cell/Addictol has equivalent functionality to Baka ScrapHeap when bMemoryManager is enabled."
+    fix: "Remove Baka ScrapHeap to avoid conflicts with Addictol."
+
+  - mod_a: PrivateProfileRedirector
+    mod_b: addictol
+    name_a: Private Profile Redirector
+    name_b: Addictol
+    description: "X-Cell/Addictol has equivalent functionality to Private Profile Redirector when bProfile is enabled."
+    fix: "Remove Private Profile Redirector to avoid conflicts with Addictol."
+
+  - mod_a: libdiskCacheEnabler
+    mod_b: addictol
+    name_a: Disk Cache Enabler
+    name_b: Addictol
+    description: "X-Cell/Addictol has equivalent functionality to Disk Cache Enabler when bIOCacher is enabled."
+    fix: "Remove Disk Cache Enabler to avoid conflicts with Addictol."
+
+  - mod_a: SovietPowerArmor
+    mod_b: OpenLexington
+    name_a: Soviet Power Armor
+    name_b: Open Lexington
+    description: "Both mods modify the same location and can cause crashes."
+    fix: "You can download a compatibility patch."
+    link: https://www.nexusmods.com/fallout4/mods/84930
 
 Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
   DLCUltraHighResolution: |

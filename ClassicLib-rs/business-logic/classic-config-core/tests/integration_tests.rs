@@ -56,7 +56,12 @@ Crashlog_Error_Check:
 Crashlog_Stack_Check:
   StackPattern1: "Stack description 1"
 Mods_CONF:
-  ModA: "Config for ModA"
+  - mod_a: modA
+    mod_b: modB
+    name_a: Mod A
+    name_b: Mod B
+    description: "Config for ModA"
+    fix: "Remove one."
 Mods_CORE:
   ModB: "Core mod B"
 Mods_CORE_FOLON:
@@ -403,10 +408,9 @@ mod from_content_workflows {
         .expect("from_yaml_content should succeed");
 
         // All mod databases should be populated
-        assert_eq!(
-            config.game_mods_conf.get("ModA"),
-            Some(&"Config for ModA".to_string())
-        );
+        assert_eq!(config.game_mods_conf.len(), 1);
+        assert_eq!(config.game_mods_conf[0].mod_a, "modA");
+        assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
         assert_eq!(
             config.game_mods_core.get("ModB"),
             Some(&"Core mod B".to_string())

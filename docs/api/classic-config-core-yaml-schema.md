@@ -140,7 +140,7 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `Crashlog_Records_Exclude` | sequence of strings | populates `game_ignore_records` |
 | `Crashlog_Error_Check` | mapping of string -> string | populates `suspects_error_list`; key order is preserved |
 | `Crashlog_Stack_Check` | mapping of string -> sequence of strings | populates `suspects_stack_list`; key order is preserved |
-| `Mods_CONF` | mapping of string -> string | populates `game_mods_conf`; key order is preserved |
+| `Mods_CONF` | sequence of `ModConflictEntry` mappings | populates `game_mods_conf` (`Vec<ModConflictEntry>`); deduplicated at parse time by canonical pair order |
 | `Mods_CORE` | mapping of string -> string | populates `game_mods_core`; key order is preserved |
 | `Mods_CORE_FOLON` | mapping of string -> string | populates `game_mods_core_folon`; key order is preserved |
 | `Mods_FREQ` | mapping of string -> string | populates `game_mods_freq`; key order is preserved |
@@ -170,6 +170,20 @@ Recognized nested settings-rules keys from current source include:
 
 - `settings` - default bucket when omitted or malformed
 - `error_information` - promotes the rendered notice or issue into the autoscan error-information section for bucket-aware callers
+
+`Mods_CONF[]` entry shape (`ModConflictEntry`):
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `mod_a` | string | yes | identifier matched case-insensitively as substring against plugin filenames |
+| `mod_b` | string | yes | identifier matched case-insensitively as substring against plugin filenames |
+| `name_a` | string | yes | human-readable display name for mod A |
+| `name_b` | string | yes | human-readable display name for mod B |
+| `description` | string | yes | why the conflict matters |
+| `fix` | string | yes | what the user should do |
+| `link` | string | no | optional URL for patch or alternative |
+
+Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), max(mod_a, mod_b))` using case-insensitive comparison. If a duplicate canonical pair is found, it is skipped with a warning log.
 
 ### Ignore YAML
 

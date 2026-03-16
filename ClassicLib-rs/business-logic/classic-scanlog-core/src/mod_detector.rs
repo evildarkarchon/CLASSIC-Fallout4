@@ -4,6 +4,7 @@
 //! while leveraging Rust's performance optimizations.
 
 use crate::error::{Result, ScanLogError};
+use classic_config_core::ModConflictEntry;
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
@@ -201,11 +202,12 @@ pub fn detect_mods_single(
 /// Detects conflicting mod combinations where two specific mods cause problems together.
 ///
 /// This function identifies known problematic mod pairs by checking if both mods from a
-/// conflict definition are present in the crash log plugins. Conflict pairs are defined
-/// in the YAML database using the format "ModA | ModB" as the key.
+/// conflict definition are present in the crash log plugins. Each conflict entry carries
+/// structured fields (identifiers, display names, description, fix, optional link) so the
+/// output is formatted consistently by code rather than stored as freeform text.
 ///
 /// The detection process:
-/// 1. Parses mod pair definitions from the YAML dictionary
+/// 1. Collects all unique mod identifiers from the conflict entries
 /// 2. Builds a single regex pattern for all unique mod names
 /// 3. Scans plugins to find which mods are present
 /// 4. Checks if both mods from any conflict pair are installed
@@ -213,7 +215,7 @@ pub fn detect_mods_single(
 ///
 /// # Arguments
 ///
-/// * `yaml_dict` - HashMap of mod pair patterns ("ModA | ModB") to warning text
+/// * `entries` - Slice of `ModConflictEntry` conflict pair definitions
 /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from crash log
 ///   (preserves load order for deterministic matching)
 ///
@@ -222,14 +224,14 @@ pub fn detect_mods_single(
 /// Returns `Ok(Vec<String>)` containing formatted caution messages for each detected conflict.
 /// Each conflict report includes:
 /// - "[!] CAUTION : Conflicting mods detected" header
-/// - Detailed warning text explaining the conflict
+/// - Display names of the conflicting mods
+/// - Description and fix text
+/// - Optional link
 /// - Empty vector if no conflicts detected
 ///
 /// # Errors
 ///
-/// Returns `Err(ScanLogError)` if:
-/// - A conflict pair has empty warning text (database configuration error)
-/// - Regex compilation fails for pattern matching
+/// Returns `Err(ScanLogError)` if regex compilation fails for pattern matching.
 ///
 /// # Performance
 ///
@@ -241,56 +243,48 @@ pub fn detect_mods_single(
 ///
 /// ```rust
 /// use classic_scanlog_core::mod_detector::detect_mods_double;
+/// use classic_config_core::ModConflictEntry;
 /// use indexmap::IndexMap;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let mut yaml_dict = IndexMap::new();
-/// yaml_dict.insert(
-///     "modA | modB".to_string(),
-///     "These two mods conflict and will cause crashes!".to_string()
-/// );
+/// let entries = vec![ModConflictEntry {
+///     mod_a: "modA".to_string(),
+///     mod_b: "modB".to_string(),
+///     name_a: "Mod A".to_string(),
+///     name_b: "Mod B".to_string(),
+///     description: "These two mods conflict!".to_string(),
+///     fix: "Remove one of them.".to_string(),
+///     link: None,
+/// }];
 ///
 /// let mut plugins = IndexMap::new();
 /// plugins.insert("ModA.esp".to_string(), "12".to_string());
 /// plugins.insert("ModB.esp".to_string(), "13".to_string());
 ///
-/// let report = detect_mods_double(yaml_dict, plugins)?;
+/// let report = detect_mods_double(&entries, plugins)?;
 ///
 /// assert!(!report.is_empty()); // Conflict should be detected
 /// # Ok(())
 /// # }
 /// ```
 pub fn detect_mods_double(
-    yaml_dict: IndexMap<String, String>,
+    entries: &[ModConflictEntry],
     crashlog_plugins: IndexMap<String, String>,
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
-    // IndexMap preserves YAML key order for Python parity
-    let yaml_dict_lower = convert_indexmap_to_lowercase(&yaml_dict);
-    // IndexMap preserves load order for deterministic matching
+
+    if entries.is_empty() {
+        return Ok(lines);
+    }
+
     let crashlog_plugins_lower = convert_indexmap_to_lowercase(&crashlog_plugins);
 
-    // Build a set of all unique mod names from the pairs, preserving YAML order for conflict checking
     let mut all_mod_names: HashSet<String> = HashSet::new();
-    // IndexMap preserves YAML order for conflict reporting
-    let mut mod_pairs_map: IndexMap<(String, String), String> = IndexMap::new();
-
-    for (mod_pair, mod_warning) in yaml_dict_lower.iter() {
-        let parts: Vec<&str> = mod_pair.split(" | ").collect();
-        if parts.len() == 2 {
-            let mod1 = parts[0].to_string();
-            let mod2 = parts[1].to_string();
-            all_mod_names.insert(mod1.clone());
-            all_mod_names.insert(mod2.clone());
-            mod_pairs_map.insert((mod1, mod2), mod_warning.clone());
-        }
+    for entry in entries {
+        all_mod_names.insert(entry.mod_a.to_lowercase());
+        all_mod_names.insert(entry.mod_b.to_lowercase());
     }
 
-    if all_mod_names.is_empty() {
-        return Ok(vec![]);
-    }
-
-    // Create a single regex pattern to find all mods in one pass
     let mod_patterns: Vec<String> = all_mod_names
         .iter()
         .map(|mod_name| regex::escape(mod_name))
@@ -298,7 +292,6 @@ pub fn detect_mods_double(
     let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
         .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
-    // Find which mods are present in the plugins
     let mut mods_present: HashSet<String> = HashSet::new();
     for plugin_name in crashlog_plugins_lower.keys() {
         for mat in combined_pattern.find_iter(plugin_name) {
@@ -306,16 +299,22 @@ pub fn detect_mods_double(
         }
     }
 
-    // Check for conflicting pairs in YAML order for Python parity
-    for ((mod1, mod2), mod_warning) in &mod_pairs_map {
-        if mods_present.contains(mod1) && mods_present.contains(mod2) {
-            validate_warning(&format!("{} | {}", mod1, mod2), mod_warning)?;
+    for entry in entries {
+        let a_lower = entry.mod_a.to_lowercase();
+        let b_lower = entry.mod_b.to_lowercase();
+
+        if mods_present.contains(&a_lower) && mods_present.contains(&b_lower) {
             lines.push("[!] CAUTION : Conflicting mods detected\n".to_string());
-            lines.push(mod_warning.clone());
-            if !mod_warning.ends_with('\n') {
-                lines.push("\n".to_string());
+            lines.push(format!(
+                "{} ❌ CONFLICTS WITH : {}\n",
+                entry.name_a, entry.name_b
+            ));
+            lines.push(format!("    {}\n", entry.description));
+            lines.push(format!("    {}\n", entry.fix));
+            if let Some(link) = &entry.link {
+                lines.push(format!("    Link: {}\n", link));
             }
-            lines.push("\n".to_string());
+            lines.push("    -----\n\n".to_string());
         }
     }
 
@@ -774,75 +773,84 @@ mod tests {
     // detect_mods_double tests
     // ============================================
 
+    fn make_conflict(mod_a: &str, mod_b: &str) -> ModConflictEntry {
+        ModConflictEntry {
+            mod_a: mod_a.to_string(),
+            mod_b: mod_b.to_string(),
+            name_a: format!("Mod {}", mod_a),
+            name_b: format!("Mod {}", mod_b),
+            description: "These mods conflict!".to_string(),
+            fix: "Remove one of them.".to_string(),
+            link: None,
+        }
+    }
+
     #[test]
     fn test_detect_mods_double_empty() {
-        let yaml_dict: IndexMap<String, String> = IndexMap::new();
+        let entries: Vec<ModConflictEntry> = Vec::new();
         let plugins: IndexMap<String, String> = IndexMap::new();
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_detect_mods_double_no_conflict() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "moda | modb".to_string(),
-            "These mods conflict!".to_string(),
-        );
+        let entries = vec![make_conflict("moda", "modb")];
 
         let mut plugins = IndexMap::new();
         plugins.insert("ModA.esp".to_string(), "10".to_string());
-        // ModB is NOT present
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_detect_mods_double_conflict_detected() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "moda | modb".to_string(),
-            "These mods conflict and cause crashes!".to_string(),
-        );
+        let entries = vec![make_conflict("moda", "modb")];
 
         let mut plugins = IndexMap::new();
         plugins.insert("ModA.esp".to_string(), "10".to_string());
         plugins.insert("ModB.esp".to_string(), "11".to_string());
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(!result.is_empty());
         let output = result.join("");
         assert!(output.contains("CAUTION"));
-        assert!(output.contains("conflict"));
+        assert!(output.contains("CONFLICTS WITH"));
     }
 
     #[test]
     fn test_detect_mods_double_case_insensitive() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert("moda | modb".to_string(), "Conflict warning.".to_string());
+        let entries = vec![make_conflict("moda", "modb")];
 
         let mut plugins = IndexMap::new();
         plugins.insert("MODA.esp".to_string(), "10".to_string());
         plugins.insert("MODB.esp".to_string(), "11".to_string());
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(!result.is_empty());
     }
 
     #[test]
-    fn test_detect_mods_double_invalid_format() {
-        let mut yaml_dict = IndexMap::new();
-        // Invalid format (no " | " separator)
-        yaml_dict.insert("modamodB".to_string(), "Invalid format.".to_string());
+    fn test_detect_mods_double_with_link() {
+        let entries = vec![ModConflictEntry {
+            mod_a: "modx".to_string(),
+            mod_b: "mody".to_string(),
+            name_a: "Mod X".to_string(),
+            name_b: "Mod Y".to_string(),
+            description: "They clash.".to_string(),
+            fix: "Get a patch.".to_string(),
+            link: Some("https://example.com/patch".to_string()),
+        }];
 
         let mut plugins = IndexMap::new();
-        plugins.insert("ModA.esp".to_string(), "10".to_string());
+        plugins.insert("ModX.esp".to_string(), "10".to_string());
+        plugins.insert("ModY.esp".to_string(), "11".to_string());
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
-        // Should not detect anything with invalid format
-        assert!(result.is_empty());
+        let result = detect_mods_double(&entries, plugins).unwrap();
+        let output = result.join("");
+        assert!(output.contains("https://example.com/patch"));
     }
 
     // ============================================

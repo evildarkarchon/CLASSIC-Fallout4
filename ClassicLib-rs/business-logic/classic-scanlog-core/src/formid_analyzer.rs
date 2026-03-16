@@ -5,6 +5,7 @@
 
 use crate::error::Result;
 use crate::mod_detector;
+use classic_config_core::ModConflictEntry;
 use classic_database_core::DatabasePool;
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
@@ -30,10 +31,9 @@ pub struct FormIDAnalyzerCore {
     db_pool: Option<Arc<DatabasePool>>,
     // Mod detection dictionaries (from YAML configuration)
     // These are used by the mod_detector module functions
-    // All use IndexMap to preserve YAML key order for Python parity
     important_mods: IndexMap<String, String>, // game_mods_core
     mods_single: IndexMap<String, String>,    // game_mods_freq, _solu, _opc2
-    mods_double: IndexMap<String, String>,    // game_mods_conf (conflicts)
+    mods_double: Vec<ModConflictEntry>,       // game_mods_conf (conflicts)
 }
 
 #[derive(Debug)]
@@ -60,7 +60,7 @@ impl FormIDAnalyzerCore {
     /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout 4") for report text
     /// * `important_mods` - Core/important mods dictionary for detection (game_mods_core)
     /// * `mods_single` - Single mod detection dictionary (game_mods_freq, _solu, _opc2)
-    /// * `mods_double` - Mod conflict detection dictionary (game_mods_conf)
+    /// * `mods_double` - Mod conflict detection entries (game_mods_conf)
     ///
     /// # Returns
     ///
@@ -85,7 +85,7 @@ impl FormIDAnalyzerCore {
     ///     "Buffout 4".to_string(),
     ///     IndexMap::new(), // Important mods (IndexMap for order preservation)
     ///     IndexMap::new(), // Single mods (IndexMap for order preservation)
-    ///     IndexMap::new(), // Conflict mods (IndexMap for order preservation)
+    ///     Vec::new(),      // Conflict entries
     /// )?;
     /// # Ok(())
     /// # }
@@ -96,7 +96,7 @@ impl FormIDAnalyzerCore {
         crashgen_name: String,
         important_mods: IndexMap<String, String>,
         mods_single: IndexMap<String, String>,
-        mods_double: IndexMap<String, String>,
+        mods_double: Vec<ModConflictEntry>,
     ) -> Result<Self> {
         Ok(Self {
             show_formid_values,
@@ -144,7 +144,7 @@ impl FormIDAnalyzerCore {
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), IndexMap::new()
+    ///     IndexMap::new(), IndexMap::new(), Vec::new()
     /// )?;
     ///
     /// let callstack = vec![
@@ -229,7 +229,7 @@ impl FormIDAnalyzerCore {
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), IndexMap::new()
+    ///     IndexMap::new(), IndexMap::new(), Vec::new()
     /// )?;
     ///
     /// let formids = vec![
@@ -412,7 +412,7 @@ impl FormIDAnalyzerCore {
     ///     None, // No database
     ///     false,
     ///     "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), IndexMap::new()
+    ///     IndexMap::new(), IndexMap::new(), Vec::new()
     /// )?;
     ///
     /// let result = analyzer.lookup_formid_value("012345", "Skyrim.esm").await;
@@ -464,7 +464,7 @@ impl FormIDAnalyzerCore {
     ///
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), mods_single, IndexMap::new()
+    ///     IndexMap::new(), mods_single, Vec::new()
     /// )?;
     ///
     /// let mut plugins = IndexMap::new();
@@ -484,11 +484,8 @@ impl FormIDAnalyzerCore {
     /// Detects conflicting mod combinations in the crash log plugins list.
     ///
     /// This function delegates to `mod_detector::detect_mods_double()` using the analyzer's
-    /// configured `mods_double` dictionary. It identifies known problematic mod combinations
+    /// configured `mods_double` entries. It identifies known problematic mod combinations
     /// where two specific mods installed together can cause crashes or issues.
-    ///
-    /// The detection checks for mod pairs (e.g., "ModA | ModB") and reports warnings when
-    /// both mods from a conflicting pair are present in the plugin list.
     ///
     /// # Arguments
     ///
@@ -501,22 +498,25 @@ impl FormIDAnalyzerCore {
     ///
     /// # Errors
     ///
-    /// Returns `Err(ScanLogError)` if:
-    /// - A conflict pair has no warning text in the database (configuration error)
-    /// - Regex pattern compilation fails
+    /// Returns `Err(ScanLogError)` if regex pattern compilation fails.
     ///
     /// # Example
     ///
     /// ```rust
     /// use classic_scanlog_core::FormIDAnalyzerCore;
+    /// use classic_config_core::ModConflictEntry;
     /// use indexmap::IndexMap;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut mods_double = IndexMap::new();
-    /// mods_double.insert(
-    ///     "modA | modB".to_string(),
-    ///     "These mods conflict and may cause crashes!".to_string()
-    /// );
+    /// let mods_double = vec![ModConflictEntry {
+    ///     mod_a: "modA".to_string(),
+    ///     mod_b: "modB".to_string(),
+    ///     name_a: "Mod A".to_string(),
+    ///     name_b: "Mod B".to_string(),
+    ///     description: "These mods conflict!".to_string(),
+    ///     fix: "Remove one.".to_string(),
+    ///     link: None,
+    /// }];
     ///
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
@@ -536,7 +536,7 @@ impl FormIDAnalyzerCore {
         &self,
         crashlog_plugins: &IndexMap<String, String>,
     ) -> Result<Vec<String>> {
-        mod_detector::detect_mods_double(self.mods_double.clone(), crashlog_plugins.clone())
+        mod_detector::detect_mods_double(&self.mods_double, crashlog_plugins.clone())
     }
 
     /// Detects important/recommended mods and checks GPU compatibility.
@@ -880,7 +880,7 @@ mod tests {
             "Buffout 4".to_string(),
             IndexMap::new(),
             IndexMap::new(),
-            IndexMap::new(),
+            Vec::new(),
         )
         .expect("failed to build test analyzer")
     }

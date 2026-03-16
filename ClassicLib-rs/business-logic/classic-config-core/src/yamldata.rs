@@ -17,9 +17,34 @@ use classic_version_registry_core::{
 };
 use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use yaml_rust2::Yaml;
+
+/// A single mod-conflict pair from the `Mods_CONF` YAML section.
+///
+/// Each entry describes two mods whose simultaneous presence causes
+/// crashes or other problems. The `mod_a` / `mod_b` identifiers are
+/// matched case-insensitively as substrings against plugin file names
+/// in crash logs, while `name_a` / `name_b` are the human-readable
+/// display names used in reports.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModConflictEntry {
+    /// Identifier matched against plugin filenames (case-insensitive substring)
+    pub mod_a: String,
+    /// Identifier matched against plugin filenames (case-insensitive substring)
+    pub mod_b: String,
+    /// Human-readable display name for mod A
+    pub name_a: String,
+    /// Human-readable display name for mod B
+    pub name_b: String,
+    /// Why the conflict matters
+    pub description: String,
+    /// What the user should do
+    pub fix: String,
+    /// Optional URL for patch or alternative
+    pub link: Option<String>,
+}
 
 /// Raw per-crashgen settings configuration deserialized from YAML.
 ///
@@ -421,6 +446,94 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
                 settings_rules,
             },
         );
+    }
+
+    result
+}
+
+/// Parse the `Mods_CONF` top-level key from a game YAML document.
+///
+/// Reads a sequence of structured conflict-pair mappings and returns
+/// deduplicated `ModConflictEntry` values. Pairs are canonicalized to
+/// `(min, max)` order (case-insensitive) so that `(A, B)` and `(B, A)`
+/// are treated as the same logical conflict; the second occurrence is
+/// skipped with a warning log.
+fn parse_mods_conf(game_data: &Yaml) -> Vec<ModConflictEntry> {
+    let Some(entries) = game_data["Mods_CONF"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+    let mut seen_pairs: HashSet<(String, String)> = HashSet::new();
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Mods_CONF[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let get_str = |key: &str| -> Option<String> {
+            map.iter()
+                .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(|s| s.trim().to_string())
+        };
+
+        let (mod_a, mod_b, name_a, name_b, description, fix) = match (
+            get_str("mod_a"),
+            get_str("mod_b"),
+            get_str("name_a"),
+            get_str("name_b"),
+            get_str("description"),
+            get_str("fix"),
+        ) {
+            (Some(a), Some(b), Some(na), Some(nb), Some(desc), Some(fx)) => {
+                (a, b, na, nb, desc, fx)
+            }
+            _ => {
+                log::debug!(
+                    "Skipping Mods_CONF[{}]: missing required field(s) (mod_a, mod_b, name_a, name_b, description, fix)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let link = get_str("link");
+
+        let canonical = {
+            let a_lower = mod_a.to_lowercase();
+            let b_lower = mod_b.to_lowercase();
+            if a_lower <= b_lower {
+                (a_lower, b_lower)
+            } else {
+                (b_lower, a_lower)
+            }
+        };
+
+        if !seen_pairs.insert(canonical.clone()) {
+            log::warn!(
+                "Skipping duplicate Mods_CONF[{}]: pair ({}, {}) already defined",
+                index,
+                mod_a,
+                mod_b
+            );
+            continue;
+        }
+
+        result.push(ModConflictEntry {
+            mod_a,
+            mod_b,
+            name_a,
+            name_b,
+            description,
+            fix,
+            link,
+        });
     }
 
     result
@@ -849,7 +962,7 @@ Crashgen_Registry:
 /// * `suspects_error_list` - An `IndexMap<String, String>` containing suspect error patterns mapped to descriptive explanations or identifiers.
 /// * `suspects_stack_list` - An `IndexMap<String, Vec<String>>` mapping suspect stack traces to their corresponding pattern lists.
 ///
-/// * `game_mods_conf` - An `IndexMap<String, String>` holding configuration settings for game modification databases.
+/// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
 /// * `game_mods_core` - An `IndexMap<String, String>` storing core mod databases information.
 /// * `game_mods_core_folon` - An `IndexMap<String, String>` specific to the `Folon` core mod configuration.
 /// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
@@ -930,8 +1043,8 @@ pub struct YamlDataCore {
     pub suspects_stack_list: IndexMap<String, Vec<String>>,
 
     // Mod databases (IndexMap preserves YAML key order for Python parity)
-    /// Configuration settings for game modification databases
-    pub game_mods_conf: IndexMap<String, String>,
+    /// Mod conflict pairs parsed from `Mods_CONF` (deduplicated at load time)
+    pub game_mods_conf: Vec<ModConflictEntry>,
     /// Core mod databases information
     pub game_mods_core: IndexMap<String, String>,
     /// Folon core mod configuration
@@ -1043,7 +1156,7 @@ impl YamlDataCore {
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
             suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
             suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
+            game_mods_conf: parse_mods_conf(game_data),
             game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
             game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
@@ -1364,7 +1477,12 @@ Crashlog_Error_Check:
 Crashlog_Stack_Check:
   StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
 Mods_CONF:
-  ModA: "Config for ModA"
+  - mod_a: modA
+    mod_b: modB
+    name_a: Mod A
+    name_b: Mod B
+    description: "Config for ModA"
+    fix: "Remove one."
 Mods_CORE:
   ModB: "Core mod B"
 Mods_CORE_FOLON:
@@ -1554,10 +1672,9 @@ CLASSIC_Ignore_Skyrim:
         )
         .unwrap();
 
-        assert_eq!(
-            config.game_mods_conf.get("ModA"),
-            Some(&"Config for ModA".to_string())
-        );
+        assert_eq!(config.game_mods_conf.len(), 1);
+        assert_eq!(config.game_mods_conf[0].mod_a, "modA");
+        assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
         assert_eq!(
             config.game_mods_core.get("ModB"),
             Some(&"Core mod B".to_string())

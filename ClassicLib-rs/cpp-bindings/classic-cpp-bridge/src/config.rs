@@ -171,12 +171,36 @@ fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String> {
     data.inner.game_mods_freq.values().cloned().collect()
 }
 
-fn yaml_data_mods_conf_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.keys().cloned().collect()
+fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.mod_a.clone()).collect()
 }
 
-fn yaml_data_mods_conf_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.values().cloned().collect()
+fn yaml_data_mods_conf_mod_b(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.mod_b.clone()).collect()
+}
+
+fn yaml_data_mods_conf_name_a(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.name_a.clone()).collect()
+}
+
+fn yaml_data_mods_conf_name_b(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.name_b.clone()).collect()
+}
+
+fn yaml_data_mods_conf_descriptions(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.description.clone()).collect()
+}
+
+fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.fix.clone()).collect()
+}
+
+fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_conf.iter().map(|e| e.link.clone().unwrap_or_default()).collect()
+}
+
+fn yaml_data_mods_conf_count(data: &YamlData) -> usize {
+    data.inner.game_mods_conf.len()
 }
 
 fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String> {
@@ -255,8 +279,14 @@ mod ffi {
         fn yaml_data_mods_core_values(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_conf_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_conf_values(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_mod_b(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_name_a(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_name_b(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_descriptions(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
         fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String>;

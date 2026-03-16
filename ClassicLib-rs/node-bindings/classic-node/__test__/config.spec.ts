@@ -62,7 +62,12 @@ Crashlog_Error_Check:
 Crashlog_Stack_Check:
   StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
 Mods_CONF:
-  ModA: "Config for ModA"
+  - mod_a: modA
+    mod_b: modB
+    name_a: Mod A
+    name_b: Mod B
+    description: "Config for ModA"
+    fix: "Remove one."
 Mods_CORE:
   ModB: "Core mod B"
 Mods_CORE_FOLON:
@@ -371,8 +376,10 @@ describe("YamlData mod databases", () => {
     );
   });
 
-  test("gameModsConf returns correct map", () => {
-    expect(data.gameModsConf["ModA"]).toBe("Config for ModA");
+  test("gameModsConf returns structured entries", () => {
+    expect(data.gameModsConf).toHaveLength(1);
+    expect(data.gameModsConf[0].modA).toBe("modA");
+    expect(data.gameModsConf[0].description).toBe("Config for ModA");
   });
 
   test("gameModsCore returns correct map", () => {

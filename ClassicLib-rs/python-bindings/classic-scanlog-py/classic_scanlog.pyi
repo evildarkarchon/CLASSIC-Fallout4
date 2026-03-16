@@ -174,7 +174,7 @@ class FormIDAnalyzerCore:
         crashgen_name: str,
         important_mods: dict[str, str],
         mods_single: dict[str, str],
-        mods_double: dict[str, str],
+        mods_double: list[dict[str, str | None]],
     ) -> None:
         """Create FormID analyzer core.
 
@@ -183,7 +183,8 @@ class FormIDAnalyzerCore:
             crashgen_name: Name of the crash generator (e.g., "Buffout 4")
             important_mods: Dictionary of important/problematic plugins
             mods_single: Single-pass mod detection database
-            mods_double: Double-pass mod detection database
+            mods_double: List of mod conflict entry dicts with keys:
+                mod_a, mod_b, name_a, name_b, description, fix, link (optional)
 
         """
 
@@ -886,7 +887,7 @@ class AnalysisConfig:
     suspects_stack: dict[str, list[str]]
     mods_core: dict[str, str]
     mods_freq: dict[str, str]
-    mods_conf: dict[str, str]
+    mods_conf: list[dict[str, str | None]]
     mods_solu: dict[str, str]
     mods_opc2: dict[str, str]
     mods_core_folon: dict[str, str]  # FOLON-specific mods
@@ -1465,14 +1466,15 @@ def detect_mods_single(
     """
 
 def detect_mods_double(
-    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]
+    entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str]
 ) -> list[str]:
-    """Detect mods using double-pass algorithm.
+    """Detect conflicting mod pairs from structured conflict entries.
 
-    More accurate detection using two-stage matching for conflict detection.
+    Checks if both mods from any conflict entry are present in the plugin list.
 
     Args:
-        yaml_dict: Mod conflict database dictionary {mod1+mod2: warning_message}
+        entries: List of mod conflict entry dicts with keys:
+            mod_a, mod_b, name_a, name_b, description, fix, link (optional)
         crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
 
     Returns:

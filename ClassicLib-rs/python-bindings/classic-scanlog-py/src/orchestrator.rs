@@ -1,6 +1,6 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
-use classic_config_core::{CrashgenEntryRaw, YamlDataCore};
+use classic_config_core::{CrashgenEntryRaw, ModConflictEntry, YamlDataCore};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
@@ -122,6 +122,33 @@ fn extract_indexmap_vecstr_attr(
         .unwrap_or_default()
 }
 
+fn extract_mod_conflict_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<ModConflictEntry> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Vec::new();
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            Some(ModConflictEntry {
+                mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                link: dict
+                    .get_item("link")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+            })
+        })
+        .collect()
+}
+
 fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
     let crashgen_registry = yamldata
         .getattr("crashgen_registry")
@@ -149,7 +176,7 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
         ignore_list: extract_vec_string_attr(yamldata, "ignore_list"),
         suspects_error_list: extract_indexmap_str_attr(yamldata, "suspects_error_list"),
         suspects_stack_list: extract_indexmap_vecstr_attr(yamldata, "suspects_stack_list"),
-        game_mods_conf: extract_indexmap_str_attr(yamldata, "game_mods_conf"),
+        game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
         game_mods_core: extract_indexmap_str_attr(yamldata, "game_mods_core"),
         game_mods_core_folon: extract_indexmap_str_attr(yamldata, "game_mods_core_folon"),
         game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
@@ -481,20 +508,50 @@ impl PyAnalysisConfig {
         self.inner.mods_freq = pyany_to_indexmap_str(value);
     }
 
-    /// Get the mod conflicts database
+    /// Get the mod conflicts database as a list of dicts
     #[getter]
-    pub fn mods_conf(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_conf {
-            dict.set_item(key, value)?;
+    pub fn mods_conf(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_conf {
+            let dict = pyo3::types::PyDict::new(py);
+            dict.set_item("mod_a", &entry.mod_a)?;
+            dict.set_item("mod_b", &entry.mod_b)?;
+            dict.set_item("name_a", &entry.name_a)?;
+            dict.set_item("name_b", &entry.name_b)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("fix", &entry.fix)?;
+            dict.set_item("link", &entry.link)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
-    /// Set the mod conflicts database (preserves insertion order)
+    /// Set the mod conflicts database from a list of dicts
     #[setter]
     pub fn set_mods_conf(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_conf = pyany_to_indexmap_str(value);
+        let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() else {
+            self.inner.mods_conf = Vec::new();
+            return;
+        };
+        self.inner.mods_conf = list
+            .iter()
+            .filter_map(|item| {
+                let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                Some(ModConflictEntry {
+                    mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                    mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                    name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                    name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                    description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                    fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                    link: dict
+                        .get_item("link")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<String>().ok()),
+                })
+            })
+            .collect();
     }
 
     /// Get the mod solutions database

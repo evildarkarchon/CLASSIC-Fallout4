@@ -183,7 +183,7 @@ fn formid_extraction_benchmarks(c: &mut Criterion) {
                     "Buffout 4".to_string(),
                     IndexMap::new(),
                     IndexMap::new(),
-                    IndexMap::new(),
+                    Vec::new(),
                 )
                 .expect("analyzer creation should succeed");
 
@@ -235,7 +235,7 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
         "Buffout 4".to_string(),
         IndexMap::new(),
         IndexMap::new(),
-        IndexMap::new(),
+        Vec::new(),
     )
     .expect("analyzer creation should succeed");
 
@@ -489,7 +489,7 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
                     "Buffout 4".to_string(),
                     IndexMap::new(),
                     IndexMap::new(),
-                    IndexMap::new(),
+                    Vec::new(),
                 )
                 .expect("analyzer creation should succeed");
 
@@ -548,7 +548,7 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
                 "Buffout 4".to_string(),
                 IndexMap::new(),
                 IndexMap::new(),
-                IndexMap::new(),
+                Vec::new(),
             )
             .expect("should succeed")
         });

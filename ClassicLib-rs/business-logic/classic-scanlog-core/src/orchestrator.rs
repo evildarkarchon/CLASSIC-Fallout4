@@ -26,6 +26,7 @@ use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
 };
+use classic_config_core::ModConflictEntry;
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
@@ -214,8 +215,8 @@ pub struct AnalysisConfig {
     pub mods_core: IndexMap<String, String>,
     /// Frequently problematic mods database for crash analysis (IndexMap preserves YAML key order)
     pub mods_freq: IndexMap<String, String>,
-    /// Mod conflict database for compatibility analysis (IndexMap preserves YAML key order)
-    pub mods_conf: IndexMap<String, String>,
+    /// Mod conflict entries for compatibility analysis
+    pub mods_conf: Vec<ModConflictEntry>,
     /// Mod solutions database for providing fixes and workarounds (IndexMap preserves YAML key order)
     pub mods_solu: IndexMap<String, String>,
     /// Outdated, redundant, or community patch mods database (IndexMap preserves YAML key order)
@@ -289,7 +290,7 @@ impl AnalysisConfig {
             suspects_stack: IndexMap::new(),
             mods_core: IndexMap::new(),
             mods_freq: IndexMap::new(),
-            mods_conf: IndexMap::new(),
+            mods_conf: Vec::new(),
             mods_solu: IndexMap::new(),
             mods_opc2: IndexMap::new(),
             mods_core_folon: IndexMap::new(),
@@ -1286,7 +1287,7 @@ impl OrchestratorCore {
             // Check for conflicting mods
             if !self.config.mods_conf.is_empty() {
                 if let Ok(conflict_lines) =
-                    detect_mods_double(self.config.mods_conf.clone(), plugins.clone())
+                    detect_mods_double(&self.config.mods_conf, plugins.clone())
                 {
                     if !conflict_lines.is_empty() {
                         composer.add(
@@ -2165,7 +2166,7 @@ mod tests {
             ignore_list: Vec::new(),
             suspects_error_list: IndexMap::new(),
             suspects_stack_list: IndexMap::new(),
-            game_mods_conf: IndexMap::new(),
+            game_mods_conf: Vec::new(),
             game_mods_core: IndexMap::new(),
             game_mods_core_folon: IndexMap::new(),
             game_mods_freq: IndexMap::new(),

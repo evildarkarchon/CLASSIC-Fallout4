@@ -12,8 +12,8 @@
 //!    `clearYamlCache()`, convenience accessors.
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, PathConfig as CorePathConfig, YamlDataCore,
-    YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry,
+    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
@@ -23,6 +23,31 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js};
+
+#[napi(object)]
+pub struct JsModConflictEntry {
+    pub mod_a: String,
+    pub mod_b: String,
+    pub name_a: String,
+    pub name_b: String,
+    pub description: String,
+    pub fix: String,
+    pub link: Option<String>,
+}
+
+impl From<&ModConflictEntry> for JsModConflictEntry {
+    fn from(e: &ModConflictEntry) -> Self {
+        Self {
+            mod_a: e.mod_a.clone(),
+            mod_b: e.mod_b.clone(),
+            name_a: e.name_a.clone(),
+            name_b: e.name_b.clone(),
+            description: e.description.clone(),
+            fix: e.fix.clone(),
+            link: e.link.clone(),
+        }
+    }
+}
 
 fn config_error_status(err: &ConfigError) -> Status {
     match err {
@@ -287,11 +312,11 @@ impl YamlData {
 
     /// Conflicting mod pairs database.
     #[napi(getter)]
-    pub fn game_mods_conf(&self) -> HashMap<String, String> {
+    pub fn game_mods_conf(&self) -> Vec<JsModConflictEntry> {
         self.inner
             .game_mods_conf
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsModConflictEntry::from)
             .collect()
     }
 

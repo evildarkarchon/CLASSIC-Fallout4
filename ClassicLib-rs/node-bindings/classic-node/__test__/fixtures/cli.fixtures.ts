@@ -24,7 +24,7 @@ Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
 Crashlog_Error_Check: {}
 Crashlog_Stack_Check: {}
-Mods_CONF: {}
+Mods_CONF: []
 Mods_CORE: {}
 Mods_CORE_FOLON: {}
 Mods_FREQ: {}

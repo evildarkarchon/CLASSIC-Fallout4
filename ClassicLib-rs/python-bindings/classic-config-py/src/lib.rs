@@ -913,12 +913,20 @@ impl PyYamlData {
     // ========================================================================
 
     #[getter]
-    fn game_mods_conf(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_conf {
-            dict.set_item(k, v)?;
+    fn game_mods_conf(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for entry in &self.inner.game_mods_conf {
+            let dict = PyDict::new(py);
+            dict.set_item("mod_a", &entry.mod_a)?;
+            dict.set_item("mod_b", &entry.mod_b)?;
+            dict.set_item("name_a", &entry.name_a)?;
+            dict.set_item("name_b", &entry.name_b)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("fix", &entry.fix)?;
+            dict.set_item("link", &entry.link)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]

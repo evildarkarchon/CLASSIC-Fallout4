@@ -1,10 +1,11 @@
 //! Python bindings for FormIDAnalyzerCore - Thin wrapper over classic-scanlog-core
 
+use classic_config_core::ModConflictEntry;
 use classic_scanlog_core::FormIDAnalyzerCore;
 use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyAny, PyDict, PyList};
 
 /// Python wrapper for FormIDAnalyzerCore
 #[pyclass(name = "FormIDAnalyzerCore")]
@@ -22,7 +23,7 @@ impl PyFormIDAnalyzerCore {
     /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout 4")
     /// * `important_mods` - Map of important mod names to their identifiers (order preserved)
     /// * `mods_single` - Map of single-byte mod identifiers
-    /// * `mods_double` - Map of double-byte mod identifiers
+    /// * `mods_double` - List of mod conflict entry dicts
     ///
     /// # Returns
     ///
@@ -38,18 +39,36 @@ impl PyFormIDAnalyzerCore {
         crashgen_name: String,
         important_mods: Option<&Bound<'_, PyDict>>,
         mods_single: Option<&Bound<'_, PyDict>>,
-        mods_double: Option<&Bound<'_, PyDict>>,
+        mods_double: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         let important_mods_map = pydict_to_indexmap_str_optional(important_mods);
         let mods_single_map = pydict_to_indexmap_str_optional(mods_single);
-        let mods_double_map = pydict_to_indexmap_str_optional(mods_double);
+        let mods_double_vec: Vec<ModConflictEntry> = mods_double
+            .and_then(|v| v.cast::<PyList>().ok())
+            .map(|list| {
+                list.iter()
+                    .filter_map(|item| {
+                        let dict = item.cast::<PyDict>().ok()?;
+                        Some(ModConflictEntry {
+                            mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                            mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                            name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                            name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                            description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                            fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                            link: dict.get_item("link").ok().flatten().and_then(|v| v.extract::<String>().ok()),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let inner = FormIDAnalyzerCore::new(
-            None, // db_pool not exposed to Python API (would need wrapper)
+            None,
             show_formid_values,
             crashgen_name,
             important_mods_map,
             mods_single_map,
-            mods_double_map,
+            mods_double_vec,
         )
         .map_err(crate::to_pyerr)?;
         Ok(Self { inner })
