@@ -397,15 +397,15 @@ pub fn detect_mods_important(
         if mod_found {
             if gpu_mismatch {
                 if let Some(ref warning) = entry.gpu_mismatch_warning {
-                    lines.push(format!("❓ {}\n", warning));
-                    lines.push("\n\n".to_string());
+                    let warning_md = warning.trim_end().replace('\n', "\n\n");
+                    lines.push(format!("❓ {}\n\n", warning_md));
                 } else {
                     let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
                     lines.push(format!(
-                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n",
+                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
                         entry.name, gpu_label
                     ));
-                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n".to_string());
+                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
                 }
             } else {
                 lines.push(format!("✔️ {} is installed!\n\n", entry.name));
@@ -413,9 +413,21 @@ pub fn detect_mods_important(
         } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
             // Show "not installed" for universal mods and mods matching the user's GPU
             if !entry.description.is_empty() {
-                lines.push(format!("❌ {} is not installed!\n", entry.name));
-                lines.push(entry.description.clone());
-                lines.push("\n\n".to_string());
+                let desc_lines: Vec<&str> = entry.description.trim_end().lines().collect();
+                let first_line = desc_lines.first().map(|s| s.trim()).unwrap_or("");
+
+                lines.push(format!(
+                    "❌ {} is not installed! {}  \n",
+                    entry.name, first_line
+                ));
+
+                for line in desc_lines.iter().skip(1) {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() {
+                        lines.push(format!("{}  \n", trimmed));
+                    }
+                }
+                lines.push("\n".to_string());
             }
         }
     }
@@ -879,7 +891,7 @@ mod tests {
         let entries = vec![make_core_entry(
             "enginefixes.esp",
             "Engine Fixes",
-            "Highly recommended for stability.",
+            "Highly recommended for stability.\nLink: https://example.com/mod",
         )];
 
         let plugins: IndexMap<String, String> = IndexMap::new();
@@ -892,6 +904,19 @@ mod tests {
         assert!(output.contains("❌"));
         assert!(output.contains("Engine Fixes"));
         assert!(output.contains("not installed"));
+
+        // Description text should be on the same line as the "not installed" message
+        assert!(
+            output.contains("not installed! Highly recommended"),
+            "Description should follow the not-installed message on the same line"
+        );
+
+        // Link must appear on its own line (after a hard line break)
+        assert!(
+            output.contains("  \nLink: https://example.com/mod"),
+            "Link should be on a new line via hard line break, got: {:?}",
+            output
+        );
 
         let result_no_gpu =
             detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
