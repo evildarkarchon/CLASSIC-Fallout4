@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-07T12:21:12.222211+00:00",
+  "generated_at_utc": "2026-03-16T08:27:40.380803+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -627,6 +627,14 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsMessageType {"
+    },
+    {
+      "export": "JsModConflictEntry",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModConflictEntry {"
     },
     {
       "export": "JsModDuplicateEntry",

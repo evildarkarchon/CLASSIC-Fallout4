@@ -1,10 +1,10 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-03-07T12:21:12.224637+00:00`
-- Tracked surfaces: **365**
+- Generated: `2026-03-16T08:27:40.382719+00:00`
+- Tracked surfaces: **369**
 - Runtime verified: **272**
 - Contract mapped only: **0**
-- Deferred: **93**
+- Deferred: **97**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -12,8 +12,8 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|
-| `aux` | 141 | 0 | 6 | 0 | 147 |
-| `config` | 53 | 0 | 18 | 0 | 71 |
+| `aux` | 141 | 0 | 7 | 0 | 148 |
+| `config` | 53 | 0 | 21 | 0 | 74 |
 | `scanlog` | 22 | 0 | 65 | 0 | 87 |
 | `version_registry` | 56 | 0 | 4 | 0 | 60 |
 

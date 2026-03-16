@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-07T12:21:12.224637+00:00",
+  "generated_at_utc": "2026-03-16T08:27:40.382719+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,10 +8,10 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 365,
+    "tracked_surface_total": 369,
     "runtime_verified_total": 272,
     "contract_mapped_total": 0,
-    "deferred_total": 93,
+    "deferred_total": 97,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 262,
     "tier1_missing_runtime_total": 0,
@@ -21,13 +21,13 @@
   "perOwnerModule": {
     "aux": {
       "runtime_verified": 141,
-      "total": 147,
-      "deferred": 6
+      "total": 148,
+      "deferred": 7
     },
     "config": {
       "runtime_verified": 53,
-      "total": 71,
-      "deferred": 18
+      "total": 74,
+      "deferred": 21
     },
     "scanlog": {
       "runtime_verified": 22,
@@ -4791,6 +4791,44 @@
       "notes": null
     },
     {
+      "trackedId": "binding:rust:CoreModEntry",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "CoreModEntry",
+      "bindingIdentifier": null,
+      "coverageId": "node-deferred-config-102",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:rust:CoreModExclude",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "CoreModExclude",
+      "bindingIdentifier": null,
+      "coverageId": "node-deferred-config-103",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
       "trackedId": "binding:rust:CrashgenEntryRaw",
       "trackedType": "gap",
       "ownerModule": "config",
@@ -4805,6 +4843,25 @@
       "testCaseId": null,
       "fixtureRefs": [],
       "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:rust:ModConflictEntry",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "ModConflictEntry",
+      "bindingIdentifier": null,
+      "coverageId": "node-deferred-config-104",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": null,
       "owner": "Squad A",
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "notes": null
@@ -6332,6 +6389,25 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
+      "notes": null
+    },
+    {
+      "trackedId": "binding:JsModConflictEntry",
+      "trackedType": "gap",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "deferred",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsModConflictEntry",
+      "coverageId": "node-deferred-config-105",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Node export is outside Tier-1 mapping scope (deferred).",
       "notes": null
     },
     {

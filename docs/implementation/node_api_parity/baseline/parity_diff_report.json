@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-07T12:21:12.222614+00:00",
+  "generated_at_utc": "2026-03-16T08:27:40.381169+00:00",
   "summary": {
     "tier1_contract_total": 262,
     "tier1_matched": 262,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 103,
+    "total_gaps": 107,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 103
+    "tier2_gap_total": 107
   },
   "contract_results": [
     {
@@ -3435,7 +3435,40 @@
       "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModEntry",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModExclude",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "CrashgenEntryRaw",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModConflictEntry",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-config-core",
@@ -4302,6 +4335,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsModConflictEntry",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -4512,13 +4555,13 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 21
+      "tier2": 24
     },
     "scanlog": {
       "tier2": 71
     },
     "aux": {
-      "tier2": 7
+      "tier2": 8
     },
     "version_registry": {
       "tier2": 4
