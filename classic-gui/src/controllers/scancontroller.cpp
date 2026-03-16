@@ -38,8 +38,8 @@ QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& ga
             }
         }
 
-        const QString docsRoot = cleanDirectoryPath(
-            classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
+        const QString docsRoot =
+            cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
         if (!docsRoot.isEmpty()) {
             return QDir(docsRoot).filePath(QStringLiteral("F4SE"));
         }
@@ -69,7 +69,8 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
 
 void ScanController::startScan(const QString& yamlRoot, const QString& yamlData, const QString& game,
                                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                               bool moveUnsolvedLogs, int maxConcurrentScans, const QString& customFolder)
+                               bool moveUnsolvedLogs, int maxConcurrentScans, const QString& customFolder,
+                               const QStringList& targetedInputs)
 {
     if (m_scanning) {
         return;
@@ -81,21 +82,45 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
         emit m_signalHub->scanStarted();
     }
 
-    // Collect crash logs via Rust file collector
+    // Collect crash logs -- targeted mode or standard discovery
     QStringList logPathsList;
     try {
-        const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-        auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
-        auto collector = classic::files::log_collector_new(classic::toRustString(baseDir),
-                                                           classic::toRustString(xseFolder),
-                                                           classic::toRustString(customFolder));
-        auto rustPaths = classic::files::log_collector_collect_all(*collector);
+        if (!targetedInputs.isEmpty()) {
+            rust::Vec<rust::String> rustInputs;
+            rustInputs.reserve(static_cast<size_t>(targetedInputs.size()));
+            for (const auto& p : targetedInputs) {
+                rustInputs.push_back(classic::toRustString(p));
+            }
+            auto resolution = classic::files::resolve_targeted_inputs({rustInputs.data(), rustInputs.size()});
 
-        logPathsList.reserve(static_cast<int>(rustPaths.size()));
-        for (const auto& rpath : rustPaths) {
-            const QString qpath = classic::toQString(rpath);
-            if (isCrashLogPath(qpath)) {
-                logPathsList.append(qpath);
+            logPathsList.reserve(static_cast<int>(resolution.logs.size()));
+            for (const auto& rpath : resolution.logs) {
+                const QString qpath = classic::toQString(rpath);
+                if (isCrashLogPath(qpath)) {
+                    logPathsList.append(qpath);
+                }
+            }
+
+            if (!resolution.rejected_paths.empty()) {
+                for (size_t i = 0; i < resolution.rejected_paths.size(); ++i) {
+                    qWarning("Targeted input rejected: %s (%s)",
+                             qPrintable(classic::toQString(resolution.rejected_paths[i])),
+                             qPrintable(classic::toQString(resolution.rejected_reasons[i])));
+                }
+            }
+        } else {
+            const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
+            auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
+            auto collector = classic::files::log_collector_new(
+                classic::toRustString(baseDir), classic::toRustString(xseFolder), classic::toRustString(customFolder));
+            auto rustPaths = classic::files::log_collector_collect_all(*collector);
+
+            logPathsList.reserve(static_cast<int>(rustPaths.size()));
+            for (const auto& rpath : rustPaths) {
+                const QString qpath = classic::toQString(rpath);
+                if (isCrashLogPath(qpath)) {
+                    logPathsList.append(qpath);
+                }
             }
         }
     } catch (const rust::Error& e) {

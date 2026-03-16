@@ -83,6 +83,9 @@ Crash-log organization helpers.
 
 - `LogCollector` - moves/copies logs into the standard `Crash Logs` layout
 - `CRASH_LOG_PATTERN` and `CRASH_AUTOSCAN_PATTERN` - glob patterns used by collection helpers
+- `resolve_targeted_inputs(inputs)` - resolves explicit user-supplied file and directory paths into a deduplicated crash-log list without moving files or creating directories
+- `TargetedResolution` - result struct with accepted `logs` and `rejected` inputs
+- `RejectedInput` - rejected input with `path` and human-readable `reason`
 
 ### `backup`
 
@@ -282,6 +285,30 @@ Behavior worth knowing:
 - XSE-folder files are copied only when the destination path does not already exist.
 - `collect_crash_logs()` searches `Crash Logs` recursively, but the optional custom folder only with a non-recursive `crash-*.log` glob.
 - autoscan markdown files are organized by `move_from_base_folder()`, but `collect_crash_logs()` returns only `.log` files.
+
+## `resolve_targeted_inputs`
+
+Standalone async function for targeted scan mode. Accepts explicit user-supplied file and directory paths and resolves them into a deduplicated crash-log list.
+
+- `resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution`
+
+`TargetedResolution` fields:
+
+- `logs: Vec<PathBuf>` - deduplicated crash-log paths in first-seen order
+- `rejected: Vec<RejectedInput>` - inputs that could not be resolved
+
+`RejectedInput` fields:
+
+- `path: PathBuf` - the original user-supplied path
+- `reason: String` - human-readable explanation
+
+Behavior worth knowing:
+
+- file inputs matching `crash-*.log` are accepted directly
+- directory inputs are searched recursively with `**/crash-*.log`
+- paths are canonicalized for deduplication while preserving first-seen order
+- non-existent paths, non-crash-log files, and empty directories are rejected with specific reasons
+- no directories are created and no files are moved or copied
 
 ## Backup and game-file management APIs
 
@@ -540,6 +567,7 @@ If the caller needs a guaranteed fresh read after out-of-band file changes, call
 - `write_file()` does not create parent directories even though some other write helpers do.
 - `walk_directory()` can hide unreadable-entry problems because it drops traversal errors.
 - `LogCollector::collect_crash_logs()` does not deduplicate paths across sources.
+- `resolve_targeted_inputs()` does deduplicate via canonicalization, but `LogCollector` methods do not use it.
 - `BackupManager` and `GameFilesManager` only scan top-level entries of their configured roots; they do not recursively discover nested matches before copying a matched directory tree.
 - `calculate_similarity()` is text-oriented and uses lossy UTF-8 conversion, so it is not a binary diff API.
 

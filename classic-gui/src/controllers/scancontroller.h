@@ -24,7 +24,8 @@ public:
                    bool simplifyLogs,
                    bool moveUnsolvedLogs,
                    int maxConcurrentScans,
-                   const QString& customFolder);
+                   const QString& customFolder,
+                   const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 

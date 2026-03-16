@@ -3,11 +3,16 @@
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QPushButton>
 #include <QLabel>
 #include <QStatusBar>
 #include <QElapsedTimer>
+#include <QStringList>
 #include "widgets/adaptiveprogressbar.h"
+
+class QDragEnterEvent;
+class QDropEvent;
 
 class SignalHub;
 class ScanController;
@@ -50,8 +55,14 @@ private:
     QString readCrashLogsDir() const;
     bool loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const;
     void checkForUpdates(bool explicitCheck);
+    void updateTargetedInputUi();
+
+protected:
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 
 private slots:
+    void onClearTargetedInputs();
     void onBrowseStaging();
     void onBrowseCustom();
     void onCustomFolderEdited();
@@ -104,6 +115,13 @@ private:
     ReportListWidget* m_reportList = nullptr;
     MarkdownViewer* m_markdownViewer = nullptr;
     ReportMetadataWidget* m_reportMetadata = nullptr;
+
+    // Targeted scan input state (ephemeral, not persisted)
+    QStringList m_targetedInputPaths;
+    QWidget* m_targetedInputContainer = nullptr;
+    QListWidget* m_targetedInputList = nullptr;
+    QLabel* m_targetedInputLabel = nullptr;
+    QPushButton* m_btnClearTargeted = nullptr;
 
     // Papyrus monitoring state
     PapyrusDialog* m_papyrusDialog = nullptr;

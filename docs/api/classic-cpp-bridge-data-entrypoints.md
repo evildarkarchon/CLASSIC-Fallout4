@@ -217,6 +217,25 @@ Bridge narrowing:
 - returned paths are lossy UTF-8 strings
 - the bridge does not expose `move_from_base_folder()`, `copy_from_xse_folder()`, `crash_logs_dir()`, or `pastebin_dir()` separately
 
+## Targeted input resolution
+
+### `resolve_targeted_inputs(input_paths) -> TargetedResolutionDto`
+
+Forwards to `classic_file_io_core::log_collection::resolve_targeted_inputs(...)`.
+
+Bridge DTO shape (`TargetedResolutionDto`):
+
+- `logs: Vec<String>` - deduplicated crash-log paths that were accepted
+- `rejected_paths: Vec<String>` - original paths of rejected inputs (parallel with `rejected_reasons`)
+- `rejected_reasons: Vec<String>` - human-readable rejection reasons (parallel with `rejected_paths`)
+
+Current bridge behavior:
+
+- converts `&[String]` input paths to `Vec<PathBuf>` for the Rust call
+- runs the async resolver on the shared runtime with `block_on(...)`
+- returned paths are lossy UTF-8 strings
+- `RejectedInput` structs are flattened into parallel path and reason vectors, matching the bridge's existing pattern for map-like data
+
 ## Standalone file helpers
 
 ### `calculate_file_similarity(path1, path2) -> Result<f64>`
@@ -517,6 +536,7 @@ Several entry points erase typed errors and return defaults instead:
 - narrows `FileOperationResult` to a summary string, dropping structured partial-failure detail
 - fixes `FileIOCore` configuration instead of exposing it
 - adds report-file helpers that are bridge-local and therefore do not expand the underlying crate API
+- flattens `TargetedResolution` into `TargetedResolutionDto` with parallel path and reason vectors for rejected inputs
 
 ## `src/database.rs`
 
@@ -553,6 +573,7 @@ When file helper output looks weaker than the Rust crate API:
 2. check whether `write_file_string()` failed because parent directories do not exist
 3. remember that `GameFilesManager` pattern matching is case-insensitive substring matching over direct children of `game_root`
 4. remember that `discover_report_files()` is non-recursive and silently returns empty on unreadable directories
+5. for targeted scans, check that `resolve_targeted_inputs()` returned non-empty `logs` and inspect `rejected_paths`/`rejected_reasons` for inputs that did not resolve
 
 ## Database flow
 
@@ -590,6 +611,7 @@ When Papyrus monitoring looks stale:
 - `src/config.rs` is a narrow read bridge over `YamlDataCore`, not a general config bridge
 - `src/config.rs` does not expose `YamlDataCore.suspects_stack_list` values, only keys
 - `src/files.rs::write_file_string()` does not create parent directories because it uses `FileIOCore::write_file()`
+- `src/files.rs::resolve_targeted_inputs()` flattens `RejectedInput` structs into parallel vectors; callers must zip `rejected_paths` and `rejected_reasons` to reconstruct per-input context
 - `src/files.rs::discover_report_files()` is bridge-local, non-recursive, and fail-soft on unreadable directories
 - `src/database.rs::db_pool_get_entry()` cannot distinguish miss, closed pool, and query failure
 - `src/database.rs::db_pool_get_entries_batch()` fixes batch size at `50` and flattens `formid:plugin` keys into tab-delimited strings

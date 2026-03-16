@@ -25,6 +25,10 @@ private slots:
     void scan_controller_treats_blank_xse_paths_as_missing();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
+    void mainwindow_enables_drag_and_drop();
+    void mainwindow_passes_targeted_inputs_to_scan_controller();
+    void scan_controller_routes_targeted_inputs_through_bridge_resolver();
+    void mainwindow_has_clear_targeted_inputs_slot();
 };
 
 void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config()
@@ -353,7 +357,8 @@ void ScanSettingsWiringTests::scan_controller_treats_blank_xse_paths_as_missing(
     QVERIFY2(sourceText.contains(QStringLiteral("const QString trimmed = classic::toQString(value).trimmed();")),
              "ScanController should trim YAML directory values before deciding whether they are present");
     QVERIFY2(sourceText.contains(QStringLiteral("return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);")),
-             "ScanController should keep blank Docs_Folder_XSE values empty instead of normalizing them to the current directory");
+             "ScanController should keep blank Docs_Folder_XSE values empty instead of normalizing them to the current "
+             "directory");
 }
 
 void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()
@@ -401,6 +406,66 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
              "SettingsDialog should reset stale game executable paths when the stored executable no longer exists");
     QVERIFY2(body.contains(QStringLiteral("Qt::CaseInsensitive")),
              "SettingsDialog should compare executable parent and selected game folder case-insensitively");
+}
+
+void ScanSettingsWiringTests::mainwindow_enables_drag_and_drop()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("setAcceptDrops(true)")),
+             "MainWindow should enable drag-and-drop via setAcceptDrops(true)");
+    QVERIFY2(sourceText.contains(QStringLiteral("dropEvent")),
+             "MainWindow should override dropEvent to handle dropped files");
+    QVERIFY2(sourceText.contains(QStringLiteral("dragEnterEvent")),
+             "MainWindow should override dragEnterEvent to accept file drops");
+    QVERIFY2(sourceText.contains(QStringLiteral("currentIndex() == 0")),
+             "Drag-and-drop should be restricted to the Main Options tab (index 0)");
+}
+
+void ScanSettingsWiringTests::mainwindow_passes_targeted_inputs_to_scan_controller()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("m_targetedInputPaths")),
+             "MainWindow should pass m_targetedInputPaths to ScanController");
+}
+
+void ScanSettingsWiringTests::scan_controller_routes_targeted_inputs_through_bridge_resolver()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("resolve_targeted_inputs")),
+             "ScanController should call resolve_targeted_inputs for targeted mode");
+    QVERIFY2(sourceText.contains(QStringLiteral("targetedInputs")),
+             "ScanController::startScan should accept targetedInputs parameter");
+    QVERIFY2(sourceText.contains(QStringLiteral("log_collector_collect_all")),
+             "ScanController should still use log_collector_collect_all for default discovery");
+}
+
+void ScanSettingsWiringTests::mainwindow_has_clear_targeted_inputs_slot()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("onClearTargetedInputs")),
+             "MainWindow should have an onClearTargetedInputs slot");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_targetedInputPaths.clear()")),
+             "onClearTargetedInputs should clear the targeted input paths list");
 }
 
 QTEST_MAIN(ScanSettingsWiringTests)

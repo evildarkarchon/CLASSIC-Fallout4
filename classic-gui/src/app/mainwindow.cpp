@@ -4,12 +4,15 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDir>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QTextStream>
@@ -269,6 +272,7 @@ bool saveLocalYamlPaths(const QString& dataDir, const QString& game, const QStri
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+    setAcceptDrops(true);
     setupUi();
     loadStylesheet();
     loadSettings();
@@ -394,6 +398,36 @@ void MainWindow::setupMainOptionsTab()
         mainLayout->addLayout(rowLayout);
 
         connect(btnBrowse, &QPushButton::clicked, this, &MainWindow::onBrowseCustom);
+    }
+
+    // ── Targeted scan drop zone ───────────────────────────────────
+    {
+        m_targetedInputContainer = new QWidget();
+        auto* containerLayout = new QVBoxLayout(m_targetedInputContainer);
+        containerLayout->setContentsMargins(0, 4, 0, 0);
+        containerLayout->setSpacing(4);
+
+        auto* headerRow = new QHBoxLayout();
+        m_targetedInputLabel = new QLabel(QStringLiteral("Targeted Scan: drop files or folders here"));
+        m_targetedInputLabel->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
+        headerRow->addWidget(m_targetedInputLabel);
+        headerRow->addStretch();
+
+        m_btnClearTargeted = new QPushButton(QStringLiteral("Clear"));
+        m_btnClearTargeted->setObjectName(QStringLiteral("btnClearTargeted"));
+        m_btnClearTargeted->setFixedWidth(60);
+        m_btnClearTargeted->setVisible(false);
+        headerRow->addWidget(m_btnClearTargeted);
+        containerLayout->addLayout(headerRow);
+
+        m_targetedInputList = new QListWidget();
+        m_targetedInputList->setMaximumHeight(90);
+        m_targetedInputList->setVisible(false);
+        containerLayout->addWidget(m_targetedInputList);
+
+        mainLayout->addWidget(m_targetedInputContainer);
+
+        connect(m_btnClearTargeted, &QPushButton::clicked, this, &MainWindow::onClearTargetedInputs);
     }
 
     // Spacer before primary buttons
@@ -1466,7 +1500,7 @@ void MainWindow::onScanCrashLogs()
 
     m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
                                 m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_maxConcurrentScans,
-                                m_editCustomFolder->text());
+                                m_editCustomFolder->text(), m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1905,5 +1939,61 @@ void MainWindow::onTogglePapyrusMonitor()
             m_papyrusDialog->deleteLater();
             m_papyrusDialog = nullptr;
         }
+    }
+}
+
+// ── Drag-and-drop for targeted scan inputs ─────────────────────────
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (m_tabWidget && m_tabWidget->currentIndex() == 0 && event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent* event)
+{
+    if (!m_tabWidget || m_tabWidget->currentIndex() != 0) {
+        return;
+    }
+
+    const auto urls = event->mimeData()->urls();
+    for (const auto& url : urls) {
+        if (url.isLocalFile()) {
+            const QString path = QDir::toNativeSeparators(url.toLocalFile());
+            if (!m_targetedInputPaths.contains(path)) {
+                m_targetedInputPaths.append(path);
+            }
+        }
+    }
+    updateTargetedInputUi();
+    event->acceptProposedAction();
+}
+
+void MainWindow::onClearTargetedInputs()
+{
+    m_targetedInputPaths.clear();
+    updateTargetedInputUi();
+}
+
+void MainWindow::updateTargetedInputUi()
+{
+    const bool hasInputs = !m_targetedInputPaths.isEmpty();
+    m_targetedInputList->setVisible(hasInputs);
+    m_btnClearTargeted->setVisible(hasInputs);
+
+    if (hasInputs) {
+        m_targetedInputLabel->setText(QStringLiteral("Targeted Scan: %1 path%2 selected")
+                                          .arg(m_targetedInputPaths.size())
+                                          .arg(m_targetedInputPaths.size() == 1 ? "" : "s"));
+        m_targetedInputLabel->setStyleSheet(QStringLiteral("font-weight: bold;"));
+
+        m_targetedInputList->clear();
+        for (const auto& p : m_targetedInputPaths) {
+            m_targetedInputList->addItem(p);
+        }
+    } else {
+        m_targetedInputLabel->setText(QStringLiteral("Targeted Scan: drop files or folders here"));
+        m_targetedInputLabel->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
     }
 }
