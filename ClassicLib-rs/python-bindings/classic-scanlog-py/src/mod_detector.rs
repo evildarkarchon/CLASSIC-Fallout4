@@ -1,5 +1,6 @@
 //! Python bindings for mod detection functions - Thin wrapper over classic-scanlog-core
 
+use crate::core_mod_convert::exclude_when_from_pydict;
 use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_shared::{pydict_to_indexmap_str, without_gil};
 use indexmap::IndexMap;
@@ -105,7 +106,7 @@ pub fn detect_mods_important(
                     .ok()
                     .flatten()
                     .and_then(|v| v.extract::<String>().ok()),
-                exclude_when: None,
+                exclude_when: exclude_when_from_pydict(&dict),
             })
         })
         .collect();

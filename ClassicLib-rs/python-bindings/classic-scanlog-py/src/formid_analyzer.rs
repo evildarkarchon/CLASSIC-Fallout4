@@ -1,5 +1,6 @@
 //! Python bindings for FormIDAnalyzerCore - Thin wrapper over classic-scanlog-core
 
+use crate::core_mod_convert::exclude_when_from_pydict;
 use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_scanlog_core::FormIDAnalyzerCore;
 use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
@@ -65,7 +66,7 @@ impl PyFormIDAnalyzerCore {
                                 .ok()
                                 .flatten()
                                 .and_then(|v| v.extract::<String>().ok()),
-                            exclude_when: None,
+                            exclude_when: exclude_when_from_pydict(&dict),
                         })
                     })
                     .collect()

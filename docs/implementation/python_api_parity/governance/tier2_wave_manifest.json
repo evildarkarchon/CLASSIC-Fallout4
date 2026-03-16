@@ -1,6 +1,6 @@
 {
   "manifest_version": "1.0",
-  "generated_at_utc": "2026-03-16T08:08:10.586372+00:00",
+  "generated_at_utc": "2026-03-16T08:53:10.357489+00:00",
   "source": {
     "parity_diff_report_path": "docs/implementation/python_api_parity/baseline/parity_diff_report.json"
   },

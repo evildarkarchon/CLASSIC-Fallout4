@@ -16,6 +16,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
+use crate::core_mod_convert::{exclude_when_from_pydict, exclude_when_to_pydict};
 use crate::crashgen_rules::parse_settings_rules;
 
 fn parse_crashgen_registry_from_py(
@@ -179,8 +180,12 @@ fn extract_core_mod_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec
                     .ok()
                     .flatten()
                     .and_then(|v| v.extract::<String>().ok()),
-                gpu_mismatch_warning: None,
-                exclude_when: None,
+                gpu_mismatch_warning: dict
+                    .get_item("gpu_mismatch_warning")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+                exclude_when: exclude_when_from_pydict(&dict),
             })
         })
         .collect()
@@ -522,6 +527,10 @@ impl PyAnalysisConfig {
             dict.set_item("name", &entry.name)?;
             dict.set_item("description", &entry.description)?;
             dict.set_item("gpu", &entry.gpu)?;
+            dict.set_item("gpu_mismatch_warning", &entry.gpu_mismatch_warning)?;
+            if let Some(ew_dict) = exclude_when_to_pydict(py, &entry.exclude_when)? {
+                dict.set_item("exclude_when", ew_dict)?;
+            }
             list.append(dict)?;
         }
         Ok(list.into())
@@ -548,8 +557,12 @@ impl PyAnalysisConfig {
                             .ok()
                             .flatten()
                             .and_then(|v| v.extract::<String>().ok()),
-                        gpu_mismatch_warning: None,
-                        exclude_when: None,
+                        gpu_mismatch_warning: dict
+                            .get_item("gpu_mismatch_warning")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<String>().ok()),
+                        exclude_when: exclude_when_from_pydict(&dict),
                     })
                 })
                 .collect();

@@ -92,6 +92,8 @@ define_exceptions!(
 );
 
 // Import all wrapper modules
+/// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
+pub mod core_mod_convert;
 /// Crashgen settings rule parsing helpers for Python inputs.
 pub mod crashgen_rules;
 pub mod fcx_handler;

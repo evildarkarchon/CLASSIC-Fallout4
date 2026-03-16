@@ -80,8 +80,8 @@
 //! ```
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, PathConfig as CorePathConfig, YamlDataCore,
-    YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, PathConfig as CorePathConfig,
+    YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_crashgen_settings_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
@@ -938,6 +938,12 @@ impl PyYamlData {
             dict.set_item("name", &entry.name)?;
             dict.set_item("description", &entry.description)?;
             dict.set_item("gpu", &entry.gpu)?;
+            dict.set_item("gpu_mismatch_warning", &entry.gpu_mismatch_warning)?;
+            if let Some(CoreModExclude::PluginAny(ref plugins)) = entry.exclude_when {
+                let ew_dict = PyDict::new(py);
+                ew_dict.set_item("plugin_any", plugins)?;
+                dict.set_item("exclude_when", ew_dict)?;
+            }
             list.append(dict)?;
         }
         Ok(list.unbind())
