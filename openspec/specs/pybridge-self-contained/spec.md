@@ -1,49 +1,34 @@
 ## Purpose
 
-Define requirements for making `classic-pybridge-py` self-contained while preserving the existing Python API behavior.
+Define requirements for retiring obsolete `classic-pybridge-py` now that the Python application it supported no longer exists.
 
 ## Requirements
 
-### Requirement: classic-pybridge-py is self-contained
-`classic-pybridge-py` SHALL own its bridge metrics and runtime helper logic directly, with no separate `-core` counterpart crate. The `classic-pybridge-core` crate SHALL NOT exist in the workspace.
+### Requirement: classic-pybridge-py is removed from the active workspace
+`classic-pybridge-py` SHALL NOT remain a maintained Python binding crate in the workspace, CI, or parity toolchain.
 
 #### Scenario: Workspace member absent
 - **WHEN** the workspace `Cargo.toml` is inspected
-- **THEN** `"business-logic/classic-pybridge-core"` SHALL NOT appear in the `members` array
+- **THEN** `"python-bindings/classic-pybridge-py"` SHALL NOT appear in the `members` array
 
 #### Scenario: Crate directory absent
-- **WHEN** the `ClassicLib-rs/business-logic/` directory is listed
-- **THEN** no `classic-pybridge-core/` subdirectory SHALL exist
+- **WHEN** the `ClassicLib-rs/python-bindings/` directory is listed
+- **THEN** no `classic-pybridge-py/` subdirectory SHALL exist
 
-### Requirement: Bridge metrics use a single lock layer
-The global metrics store SHALL use a `DashMap` directly, without an outer `RwLock` or `Mutex` wrapper, to avoid redundant lock acquisitions.
+### Requirement: Python parity tooling no longer expects classic_pybridge
+The Python parity baselines, smoke tests, and generation scripts SHALL NOT treat `classic_pybridge` as a maintained module.
 
-#### Scenario: Metric record path acquires one lock
-- **WHEN** `record_bridge_operation()` is called
-- **THEN** only the `DashMap` shard lock SHALL be acquired (no outer lock)
+#### Scenario: Smoke tests skip removed module
+- **WHEN** Python binding smoke tests are executed
+- **THEN** they SHALL NOT import or assert behavior for `classic_pybridge`
 
-#### Scenario: Metrics are still thread-safe
-- **WHEN** multiple Tokio tasks call `record_bridge_operation()` concurrently
-- **THEN** all operations SHALL complete without data races or panics
+#### Scenario: Parity generator omits removed module
+- **WHEN** parity baselines are regenerated
+- **THEN** `classic_pybridge` SHALL NOT appear in maintained-surface outputs or runtime coverage manifests
 
-### Requirement: Python API surface is unchanged
-The `classic_pybridge` Python extension module SHALL expose the same functions, classes, and behaviour as before this change.
+### Requirement: Documentation reflects removal
+Repo docs and agent guidance SHALL stop describing `classic-pybridge-py` as an intentional exception or maintained binding surface.
 
-#### Scenario: Module imports successfully
-- **WHEN** Python executes `import classic_pybridge`
-- **THEN** the import SHALL succeed and `classic_pybridge.__version__` SHALL be accessible
-
-#### Scenario: Record and retrieve metrics
-- **WHEN** Python calls `classic_pybridge.record_operation(BridgeOperationType.RunAsync, 0.1, True)`
-- **THEN** a subsequent call to `classic_pybridge.get_metrics()` SHALL return a `BridgeMetrics` with `run_async_count >= 1`
-
-#### Scenario: Runtime info available
-- **WHEN** Python calls `classic_pybridge.is_runtime_available()`
-- **THEN** the return value SHALL be `True`
-
-### Requirement: Architecture documentation reflects the exception
-CLAUDE.md, AGENTS.md, and GEMINI.md SHALL document that `classic-pybridge-py` is an explicit exception to the `*-core -> *-py` pairing rule.
-
-#### Scenario: Exception documented in agent files
-- **WHEN** the architecture section of any agent instruction file is read
-- **THEN** it SHALL note that `classic-pybridge-py` contains its own logic directly, with no `-core` counterpart, and that this is intentional
+#### Scenario: Architecture docs no longer mention exception
+- **WHEN** the architecture section of any maintained repo guidance file is read
+- **THEN** it SHALL NOT describe `classic-pybridge-py` as an active exception to the `*-core -> *-py` pairing rule

@@ -4,6 +4,7 @@ use classic_config_core::{CoreModEntry, CrashgenEntryRaw, ModConflictEntry, Yaml
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+    resolve_batch_concurrency,
 };
 use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gil};
 use classic_shared_core::get_runtime;
@@ -754,22 +755,6 @@ impl PyAnalysisConfig {
     pub fn set_classic_records_list(&mut self, value: Vec<String>) {
         self.inner.classic_records_list = value;
     }
-
-    /// Get the list of crashgen settings to ignore during validation.
-    ///
-    /// Deprecated: Returns an empty list. Use the Crashgen_Registry in YAML instead.
-    #[getter]
-    pub fn crashgen_ignore(&self) -> Vec<String> {
-        Vec::new() // Superseded by per-crashgen registry entries
-    }
-
-    /// Set the list of crashgen settings to ignore during validation.
-    ///
-    /// Deprecated: No-op. Use the Crashgen_Registry in YAML instead.
-    #[setter]
-    pub fn set_crashgen_ignore(&mut self, _value: Vec<String>) {
-        // No-op: superseded by per-crashgen registry entries
-    }
 }
 
 /// Python wrapper for AnalysisResult
@@ -963,18 +948,7 @@ impl PyRustOrchestrator {
             progress_callback.map(|cb| Arc::new(cb.clone_ref(py)));
 
         // Determine concurrency level
-        let concurrency = match max_concurrent {
-            Some(n) => n.max(1), // User-specified, minimum 1
-            None => {
-                // Adaptive concurrency: start with CPU count, scale based on batch size
-                let num_cpus = num_cpus::get();
-                if total < num_cpus {
-                    total.max(1) // Small batch: process all concurrently, min 1
-                } else {
-                    num_cpus.max(4) // Large batch: use CPU count (min 4 for good throughput)
-                }
-            }
-        };
+        let concurrency = resolve_batch_concurrency(total, max_concurrent);
 
         // Clone log_paths for use inside the closure (needed for placeholder generation)
         let log_paths_clone = log_paths.clone();

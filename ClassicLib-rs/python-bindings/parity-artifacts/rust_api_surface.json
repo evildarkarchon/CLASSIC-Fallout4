@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-16T08:53:21.896621+00:00",
+  "generated_at_utc": "2026-03-16T11:19:32.203677+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -167,7 +167,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisConfig",
       "tier": "tier1"
     },
@@ -177,7 +177,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisResult",
       "tier": "tier2"
     },
@@ -327,7 +327,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::OrchestratorCore",
       "tier": "tier1"
     },
@@ -447,7 +447,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::ScanProgressPhase",
       "tier": "tier2"
     },
@@ -507,7 +507,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::build_analysis_config_from_yaml",
       "tier": "tier1"
     },
@@ -755,6 +755,16 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod report;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "resolve_batch_concurrency",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::resolve_batch_concurrency",
       "tier": "tier2"
     },
     {

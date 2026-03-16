@@ -134,6 +134,21 @@ pub struct ModScanResult {
     pub errors: Vec<String>,
 }
 
+/// Detect configuration issues (read-only, FCX mode).
+#[must_use]
+pub fn detect_config_issues(game_path: &Path, game_name: &str) -> Vec<ConfigIssue> {
+    let mut cache = match ConfigFileCache::new(game_path, &[]) {
+        Ok(c) => c,
+        Err(_) => return Vec::new(),
+    };
+
+    if let Ok(result) = ModIniScanner::scan_with_cache(&mut cache, game_name) {
+        return result.issues;
+    }
+
+    Vec::new()
+}
+
 /// Game Scan Orchestrator
 ///
 /// Coordinates concurrent execution of game integrity checks and mod scans.
@@ -362,18 +377,7 @@ impl GameScanOrchestrator {
     ///
     /// Scans mod INI files for known problematic settings without modifying files.
     fn detect_config_issues(&self) -> Vec<ConfigIssue> {
-        let game_root = &self.config.game_path;
-        let mut cache = match ConfigFileCache::new(game_root, &[]) {
-            Ok(c) => c,
-            Err(_) => return Vec::new(),
-        };
-
-        // Collect mod INI issues using the cache
-        if let Ok(result) = ModIniScanner::scan_with_cache(&mut cache, &self.config.game_name) {
-            return result.issues;
-        }
-
-        Vec::new()
+        detect_config_issues(&self.config.game_path, &self.config.game_name)
     }
 
     /// Run mod file scans (unpacked + archived) concurrently.
@@ -819,9 +823,7 @@ mod tests {
 
     #[test]
     fn test_detect_config_issues_nonexistent_path() {
-        let config = default_config(PathBuf::from("nonexistent_path_12345"));
-        let orch = GameScanOrchestrator::new(config);
-        let issues = orch.detect_config_issues();
+        let issues = detect_config_issues(Path::new("nonexistent_path_12345"), "Fallout4");
         // Should return empty list, not panic
         assert!(issues.is_empty());
     }

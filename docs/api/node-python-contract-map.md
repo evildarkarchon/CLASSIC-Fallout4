@@ -52,14 +52,14 @@ The active Python public contract is split across per-module binding crates unde
 The first contract files to treat as public-facing are:
 
 - [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings/) - module root; one `classic-*-py` crate per Python extension module
-- matching `classic_*.pyi` stub files such as [`ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi`](../../ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi) and [`ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi`](../../ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi) - fastest contributor view of exported Python names and signatures
-- matching Rust wrapper sources such as [`ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs) and [`ClassicLib-rs/python-bindings/classic-pybridge-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-pybridge-py/src/lib.rs)
+- matching `classic_*.pyi` stub files such as [`ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi`](../../ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi) and [`ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi`](../../ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi) - fastest contributor view of exported Python names and signatures
+- matching Rust wrapper sources such as [`ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs) and [`ClassicLib-rs/python-bindings/classic-scanlog-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-scanlog-py/src/lib.rs)
 
 Current shape notes:
 
 - Python has no single package-level contract file comparable to Node's `index.d.ts`
 - most Python public surface is crate-shaped: `classic_path`, `classic_scanlog`, `classic_scangame`, `classic_version_registry`, and so on
-- there are also support-oriented modules such as `classic_pybridge`, so do not assume every Python module maps one-to-one to a business-logic crate name
+- some Python modules are support-oriented rather than one-to-one mirrors of a single business-logic crate, so check the binding crate before assuming ownership
 
 ---
 

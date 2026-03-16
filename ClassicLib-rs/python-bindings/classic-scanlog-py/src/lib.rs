@@ -22,8 +22,8 @@
 //!     with open("crash-2024-01-01.log", "r") as f:
 //!         lines = f.readlines()
 //!
-//!     # Parse segments (20-40x faster than Python)
-//!     segments = parser.parse_segments(lines)
+//!     # Parse named sections (20-40x faster than Python)
+//!     segments = parser.parse_all_sections(lines)
 //!     print(f"Found {len(segments)} segments")
 //!
 //!     # Extract FormIDs (25x faster than Python regex)

@@ -1121,45 +1121,6 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-aux-087",
-      "classification": "deferred",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "wave": "wave4",
-      "owner": "Squad B",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_pybridge.BridgeMetrics"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-aux-088",
-      "classification": "deferred",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "wave": "wave4",
-      "owner": "Squad B",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_pybridge.BridgeOperationType"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-aux-089",
-      "classification": "deferred",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "wave": "wave4",
-      "owner": "Squad B",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_pybridge.RuntimeInfo"
-      ],
-      "rustSymbols": []
-    },
-    {
       "coverageId": "python-deferred-scanlog-095",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -2356,19 +2317,6 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-189",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.ParallelReportProcessor.process_batch"
-      ],
-      "rustSymbols": []
-    },
-    {
       "coverageId": "python-deferred-scanlog-190",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -3394,6 +3342,19 @@
         "classic_scanlog.validate_formids_batch"
       ],
       "rustSymbols": []
+    },
+    {
+      "coverageId": "python-deferred-scanlog-271",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "resolve_batch_concurrency"
+      ]
     },
     {
       "coverageId": "python-deferred-version_registry-271",

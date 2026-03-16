@@ -75,7 +75,6 @@ Builds the following modules:
 - `classic-config-py`
 - `classic-registry-py`
 - `classic-perf-py`
-- `classic-pybridge-py`
 - `classic-settings-py`
 - `classic-message-py`
 - `classic-path-py`

@@ -95,7 +95,7 @@ jobs:
       # `rebuild_rust.ps1` invokes `uv run maturin ...`, so no global PATH install is required.
       - name: Build and install required Python bindings
         shell: pwsh
-        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
+        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 
       - name: Run Python bindings smoke tests
         run: uv run python -m pytest ClassicLib-rs/python-bindings/tests -q

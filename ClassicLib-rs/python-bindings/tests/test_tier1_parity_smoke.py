@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 import pytest
@@ -19,14 +20,15 @@ THIS_SUITE = "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py"
 
 def test_imports_and_versions() -> None:
     import classic_config
-    import classic_pybridge
     import classic_scanlog
     import classic_version_registry
 
     assert isinstance(classic_config.__version__, str)
-    assert isinstance(classic_pybridge.__version__, str)
     assert isinstance(classic_scanlog.__version__, str)
     assert isinstance(classic_version_registry.__version__, str)
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("classic_pybridge")
 
 
 def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -147,7 +149,7 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert "CLASSIC-Fallout4" not in cache_path
 
 
-def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import classic_config
     import classic_scanlog
 
@@ -197,7 +199,12 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -
     )
     assert config.remove_list == ["skip-me"]
 
-    assert isinstance(parser.parse_segments(log_lines), list)
+    assert hasattr(parser, "parse_segments") is False
+    assert hasattr(classic_scanlog.ParallelReportProcessor, "process_batch") is False
+    assert hasattr(config, "crashgen_ignore") is False
+
+    sections = parser.parse_all_sections(log_lines)
+    assert isinstance(sections, dict)
     assert isinstance(parser.extract_formids(log_lines), list)
     assert isinstance(parser.extract_plugins(log_lines), list)
 
@@ -231,6 +238,37 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -
 
     batch_results = orchestrator.process_logs_batch([str(log_path)], max_concurrent=1)
     assert len(batch_results) == 1
+
+    game_root = tmp_path / "GameRoot"
+    docs_root = tmp_path / "DocsRoot"
+    game_root.mkdir()
+    docs_root.mkdir()
+    (game_root / "Fallout4.exe").write_text("stub", encoding="utf-8")
+
+    appdata_root = tmp_path / "scanlog-appdata"
+    monkeypatch.setenv("APPDATA", str(appdata_root))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.delenv("HOME", raising=False)
+
+    settings_path = Path(classic_config.ClassicConfig().get_config_path())
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings = classic_config.ClassicConfig()
+    settings.fcx_mode = True
+    settings.paths = classic_config.PathConfig(
+        game_root=str(game_root),
+        docs_root=str(docs_root),
+    )
+    settings.save_to_yaml(str(settings_path))
+
+    classic_scanlog.FcxModeHandler.reset_fcx_checks()
+    first_handler = classic_scanlog.FcxModeHandler(True)
+    first_handler.check_fcx_mode()
+    first_messages = first_handler.get_fcx_messages()
+    assert first_handler.has_results() is True
+
+    second_handler = classic_scanlog.FcxModeHandler(True)
+    second_handler.check_fcx_mode()
+    assert second_handler.get_fcx_messages() == first_messages
 
 
 def _run_version_registry_tier1_smoke(
@@ -322,21 +360,6 @@ def _run_version_registry_tier2_smoke(
     assert base.semantic_distance(newer) > 0
 
 
-def _run_aux_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
-    import classic_pybridge
-
-    classic_pybridge.clear_metrics()
-    classic_pybridge.record_operation(
-        classic_pybridge.BridgeOperationType.RunAsync, 0.01, True
-    )
-    metrics = classic_pybridge.get_metrics()
-    assert metrics.run_async_count >= 1
-    assert classic_pybridge.is_runtime_available() is True
-
-    info = classic_pybridge.get_runtime_info()
-    assert info.available is True
-
-
 CASE_RUNNERS = {
     "config-tier1-smoke": _run_config_tier1_smoke,
     "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
@@ -344,7 +367,6 @@ CASE_RUNNERS = {
     "config-tier2-smoke": _run_config_tier2_smoke,
     "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
     "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
-    "aux-tier2-smoke": _run_aux_tier2_smoke,
 }
 
 

@@ -318,9 +318,6 @@ class LogParser:
     def clear_caches(self) -> None:
         """Clear all caches to free memory."""
 
-    def parse_segments(self, lines: list[str]) -> list[list[str]]:
-        """Parse log into segments using SIMD-optimized boundary detection."""
-
     def parse_segments_parallel(
         self, lines: list[str], chunk_size: int | None = None
     ) -> list[list[str]]:
@@ -356,8 +353,6 @@ class LogParser:
     def parse_complete(
         self,
         lines: list[str],
-        segment_boundaries: list[tuple[str, str]],
-        xse_acronym: str,
     ) -> ScanOutput:
         """Optimized batch operation: complete log analysis in single FFI call.
 
@@ -880,8 +875,6 @@ class AnalysisConfig:
     mods_solu: dict[str, str]
     mods_opc2: dict[str, str]
     classic_records_list: list[str]  # Named records to scan
-    crashgen_ignore: list[str]  # Settings to ignore during validation
-
     def __init__(self, game: str, game_version: str = "auto") -> None:
         """Create analysis config.
 
@@ -1318,19 +1311,6 @@ class ParallelReportProcessor:
 
     def __init__(self) -> None:
         """Create parallel processor."""
-
-    @staticmethod
-    def process_batch(reports: list[list[str]], processor_fn: Any) -> list[list[str]]:
-        """Process multiple reports in parallel.
-
-        Args:
-            reports: List of report fragments (each is a list of strings)
-            processor_fn: Processing function to apply
-
-        Returns:
-            List of processed report fragments
-
-        """
 
     @staticmethod
     def combine_fragments(fragments: list[ReportFragment]) -> ReportFragment:
@@ -1871,10 +1851,11 @@ class FcxModeHandler:
         """
 
     def check_fcx_mode(self) -> None:
-        """Check and update FCX mode state by calling Python code.
+        """Check and update FCX mode state with Rust core checks.
 
-        This method imports Python modules and runs file checks,
-        then stores the results in the handler.
+        This method loads the current CLASSIC configuration, runs the
+        corresponding Rust setup/config checks, and stores the results
+        in the handler.
 
         IMPORTANT: This method assumes game paths have already been generated
         via game_generate_paths() before being called.

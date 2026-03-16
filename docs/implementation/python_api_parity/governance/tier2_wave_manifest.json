@@ -958,39 +958,6 @@
       "wave": "wave2"
     },
     {
-      "gap_id": "aux-001",
-      "owner_module": "aux",
-      "ordinal_in_module": 1,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_pybridge",
-      "python_export_path": "BridgeMetrics",
-      "wave": "wave4"
-    },
-    {
-      "gap_id": "aux-002",
-      "owner_module": "aux",
-      "ordinal_in_module": 2,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_pybridge",
-      "python_export_path": "BridgeOperationType",
-      "wave": "wave4"
-    },
-    {
-      "gap_id": "aux-003",
-      "owner_module": "aux",
-      "ordinal_in_module": 3,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_pybridge",
-      "python_export_path": "RuntimeInfo",
-      "wave": "wave4"
-    },
-    {
       "gap_id": "scanlog-056",
       "owner_module": "scanlog",
       "ordinal_in_module": 56,
@@ -2003,17 +1970,6 @@
       "wave": "wave1"
     },
     {
-      "gap_id": "scanlog-148",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 148,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "ParallelReportProcessor.process_batch",
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-149",
       "owner_module": "scanlog",
       "ordinal_in_module": 149,
@@ -2880,6 +2836,17 @@
       "rust_symbol": null,
       "python_module": "classic_scanlog",
       "python_export_path": "validate_formids_batch",
+      "wave": "wave1"
+    },
+    {
+      "gap_id": "scanlog-228",
+      "owner_module": "scanlog",
+      "ordinal_in_module": 228,
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "rust_symbol": "resolve_batch_concurrency",
+      "python_module": null,
+      "python_export_path": null,
       "wave": "wave1"
     },
     {
