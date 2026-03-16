@@ -501,9 +501,9 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
             for entry in entries {
                 let Ok(path) = entry else { continue };
                 let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+                found_any = true;
                 if seen.insert(canonical) {
                     logs.push(path);
-                    found_any = true;
                 }
             }
 
