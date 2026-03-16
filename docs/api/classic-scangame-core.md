@@ -68,6 +68,7 @@ This crate exposes public modules directly and also re-exports most contributor-
 `lib.rs` re-exports the main integration types, including:
 
 - `GameScanOrchestrator`, `GameScanConfig`, `GameScanResult`, `ModScanResult`
+- `detect_config_issues(game_path, game_name)`
 - `CrashgenCheckOrchestrator`, `CrashgenReport`
 - `SetupCheckConfig`, `SetupCheckResults`, `run_combined_checks()`
 - `GameIntegrityChecker`, `IntegrityConfig`
@@ -113,9 +114,18 @@ Behavior worth knowing from the source:
 
 - `run_game_checks()` starts independent tasks for XSE, crashgen TOML, ENB, docs logs, game logs, Wrye Bash, and mod INI scanning
 - per-task failures are collected into `GameScanResult.errors`; one failed sub-check does not abort the whole `run_game_checks()` call
+- the read-only config-issue portion of `run_game_checks()` now shares the public `detect_config_issues(game_path, game_name)` helper
 - `run_mod_scans()` returns a soft failure payload when `mods_path` is missing or nonexistent instead of throwing an orchestrator error
 - loose-file DDS dimension validation is delegated to [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) `DDSAnalyzer`
 - BA2 archive findings are converted into the same category map used by `ScanReportBuilder`
+
+## `detect_config_issues()`
+
+This standalone helper exposes the same read-only FCX/config-issue scan used by `GameScanOrchestrator`.
+
+- `detect_config_issues(game_path, game_name) -> Vec<ConfigIssue>`
+- it builds a `ConfigFileCache` with no duplicate whitelist overrides and delegates to `ModIniScanner::scan_with_cache()`
+- invalid paths or cache/scan failures collapse to an empty `Vec` instead of an orchestrator error
 
 ## `GameScanResult`, `ModScanResult`, and `CheckResult`
 
@@ -301,7 +311,7 @@ Platform and behavior notes:
 
 ### `ConfigFileCache` and `CachedConfigFile`
 
-`ConfigFileCache` is the main cache-oriented config reader used by `ModIniScanner` and orchestrator FCX-style issue detection.
+`ConfigFileCache` is the main cache-oriented config reader used by `ModIniScanner` and the public `detect_config_issues()` helper that powers orchestrator FCX-style issue detection.
 
 Important methods:
 

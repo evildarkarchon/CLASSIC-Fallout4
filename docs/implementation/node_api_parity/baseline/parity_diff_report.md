@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-03-16T08:27:40.381169+00:00`
+- Generated: `2026-03-16T11:51:36.539329+00:00`
 - Tier-1 contract rows: **262**
 - Tier-1 matched: **262**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **107**
+- Total gaps (Tier-1 + Tier-2): **108**
 
 ## Tier-1 Contract Evaluation
 
@@ -279,7 +279,7 @@
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `scanlog` | 0 | 71 |
+| `scanlog` | 0 | 72 |
 | `config` | 0 | 24 |
 | `version_registry` | 0 | 4 |
 | `aux` | 0 | 8 |

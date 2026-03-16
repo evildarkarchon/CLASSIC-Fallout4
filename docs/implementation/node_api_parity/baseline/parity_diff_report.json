@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-16T08:27:40.381169+00:00",
+  "generated_at_utc": "2026-03-16T11:51:36.539329+00:00",
   "summary": {
     "tier1_contract_total": 262,
     "tier1_matched": 262,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 107,
+    "total_gaps": 108,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 107
+    "tier2_gap_total": 108
   },
   "contract_results": [
     {
@@ -4051,6 +4051,17 @@
       "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "resolve_batch_concurrency",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-scanlog-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "scan_records_batch",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -4558,7 +4569,7 @@
       "tier2": 24
     },
     "scanlog": {
-      "tier2": 71
+      "tier2": 72
     },
     "aux": {
       "tier2": 8

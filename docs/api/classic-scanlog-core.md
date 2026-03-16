@@ -47,6 +47,7 @@ Top-level scan pipeline and the main integration surface.
 - `OrchestratorCore` - async scan runner and report writer
 - `ScanProgressPhase` - coarse phase callbacks for progress reporting
 - `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core)
+- `resolve_batch_concurrency()` - public helper for the same batch-concurrency policy used by `process_logs_batch()`
 
 ### `parser`
 
@@ -142,6 +143,7 @@ Important methods:
 Useful helpers that are part of the public surface:
 
 - `config()`
+- `resolve_batch_concurrency(total_logs, max_concurrent) -> usize`
 - `reformat_crash_data_inline()`
 - `detect_incomplete_log()` / `detect_incomplete_log_slice()`
 - `detect_failed_log()`
@@ -156,6 +158,7 @@ Behavior worth knowing:
 
 - `process_logs_batch()` is fail-soft: per-log failures become `AnalysisResult::failure(...)` entries instead of aborting the batch.
 - Batch result order is not guaranteed to match input order because it uses unordered buffering.
+- `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
 - `is_feature_complete()` currently means plugin analyzer and suspect scanner are present; a database pool is optional.
 
@@ -374,7 +377,7 @@ This crate exposes async APIs but does not create its own runtime.
 Internal concurrency/performance patterns visible in the source:
 
 - Rayon is used for CPU-bound parsing and batch helpers.
-- `process_logs_batch()` uses bounded async concurrency with `buffer_unordered()`.
+- `process_logs_batch()` uses bounded async concurrency with `buffer_unordered()` and resolves its worker count through `resolve_batch_concurrency()`.
 - `LogParser` maintains bounded LRU caches for segments and pattern matches.
 - `ReportComposer` switches to parallel composition when fragment count crosses its threshold.
 
