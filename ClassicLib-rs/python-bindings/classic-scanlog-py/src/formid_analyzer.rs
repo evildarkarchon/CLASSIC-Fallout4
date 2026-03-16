@@ -1,6 +1,6 @@
 //! Python bindings for FormIDAnalyzerCore - Thin wrapper over classic-scanlog-core
 
-use classic_config_core::ModConflictEntry;
+use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_scanlog_core::FormIDAnalyzerCore;
 use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
 use classic_shared_core::get_runtime;
@@ -37,11 +37,28 @@ impl PyFormIDAnalyzerCore {
     pub fn new(
         show_formid_values: bool,
         crashgen_name: String,
-        important_mods: Option<&Bound<'_, PyDict>>,
+        important_mods: Option<&Bound<'_, PyAny>>,
         mods_single: Option<&Bound<'_, PyDict>>,
         mods_double: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
-        let important_mods_map = pydict_to_indexmap_str_optional(important_mods);
+        let important_mods_entries: Vec<CoreModEntry> = important_mods
+            .and_then(|v| v.extract::<Vec<Bound<'_, PyAny>>>().ok())
+            .map(|list| {
+                list.iter()
+                    .filter_map(|item| {
+                        let dict = item.cast::<PyDict>().ok()?;
+                        Some(CoreModEntry {
+                            detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                            name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                            description: dict.get_item("description").ok()??.extract::<String>().ok()?,
+                            gpu: dict.get_item("gpu").ok().flatten().and_then(|v| v.extract::<String>().ok()),
+                            gpu_mismatch_warning: dict.get_item("gpu_mismatch_warning").ok().flatten().and_then(|v| v.extract::<String>().ok()),
+                            exclude_when: None,
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let mods_single_map = pydict_to_indexmap_str_optional(mods_single);
         let mods_double_vec: Vec<ModConflictEntry> = mods_double
             .and_then(|v| v.cast::<PyList>().ok())
@@ -66,7 +83,7 @@ impl PyFormIDAnalyzerCore {
             None,
             show_formid_values,
             crashgen_name,
-            important_mods_map,
+            important_mods_entries,
             mods_single_map,
             mods_double_vec,
         )

@@ -156,11 +156,27 @@ fn yaml_data_suspects_stack_keys(data: &YamlData) -> Vec<String> {
 }
 
 fn yaml_data_mods_core_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.keys().cloned().collect()
+    data.inner.game_mods_core.iter().map(|e| e.detect.clone()).collect()
 }
 
 fn yaml_data_mods_core_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.values().cloned().collect()
+    data.inner.game_mods_core.iter().map(|e| e.description.clone()).collect()
+}
+
+fn yaml_data_mods_core_names(data: &YamlData) -> Vec<String> {
+    data.inner.game_mods_core.iter().map(|e| e.name.clone()).collect()
+}
+
+fn yaml_data_mods_core_gpus(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.gpu.clone().unwrap_or_default())
+        .collect()
+}
+
+fn yaml_data_mods_core_count(data: &YamlData) -> usize {
+    data.inner.game_mods_core.len()
 }
 
 fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String> {
@@ -219,14 +235,6 @@ fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String> {
     data.inner.game_mods_opc2.values().cloned().collect()
 }
 
-fn yaml_data_mods_folon_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core_folon.keys().cloned().collect()
-}
-
-fn yaml_data_mods_folon_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core_folon.values().cloned().collect()
-}
-
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
     extern "Rust" {
@@ -277,6 +285,9 @@ mod ffi {
         fn yaml_data_suspects_stack_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_core_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_core_values(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_core_names(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_core_gpus(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_core_count(data: &YamlData) -> usize;
         fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String>;
@@ -291,8 +302,6 @@ mod ffi {
         fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_folon_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_folon_values(data: &YamlData) -> Vec<String>;
     }
 }
 

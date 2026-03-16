@@ -141,8 +141,7 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `Crashlog_Error_Check` | mapping of string -> string | populates `suspects_error_list`; key order is preserved |
 | `Crashlog_Stack_Check` | mapping of string -> sequence of strings | populates `suspects_stack_list`; key order is preserved |
 | `Mods_CONF` | sequence of `ModConflictEntry` mappings | populates `game_mods_conf` (`Vec<ModConflictEntry>`); deduplicated at parse time by canonical pair order |
-| `Mods_CORE` | mapping of string -> string | populates `game_mods_core`; key order is preserved |
-| `Mods_CORE_FOLON` | mapping of string -> string | populates `game_mods_core_folon`; key order is preserved |
+| `Mods_CORE` | sequence of `CoreModEntry` mappings | populates `game_mods_core` (`Vec<CoreModEntry>`); entries with missing required fields are skipped |
 | `Mods_FREQ` | mapping of string -> string | populates `game_mods_freq`; key order is preserved |
 | `Mods_OPC2` | mapping of string -> string | populates `game_mods_opc2`; key order is preserved |
 | `Mods_SOLU` | mapping of string -> string | populates `game_mods_solu`; key order is preserved |
@@ -184,6 +183,23 @@ Recognized nested settings-rules keys from current source include:
 | `link` | string | no | optional URL for patch or alternative |
 
 Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), max(mod_a, mod_b))` using case-insensitive comparison. If a duplicate canonical pair is found, it is skipped with a warning log.
+
+`Mods_CORE[]` entry shape (`CoreModEntry`):
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `detect` | string | yes | substring matched case-insensitively against plugin / XSE module names |
+| `name` | string | yes | human-readable display name shown in the report |
+| `description` | string | yes | recommendation text shown when the mod is missing |
+| `gpu` | string | no | GPU vendor this mod is for (`"nvidia"` or `"amd"`); used for GPU-specific install/uninstall logic |
+| `gpu_mismatch_warning` | string | no | custom warning text shown when the mod is installed but the user does NOT have the GPU specified by `gpu`; falls back to a generic message when absent |
+| `exclude_when` | mapping | no | condition under which this entry is skipped entirely |
+
+`exclude_when` currently supports one predicate:
+
+| Key | Type / shape | Behavior |
+|---|---|---|
+| `plugin_any` | sequence of strings | exclude when any of the listed plugins are present (case-insensitive) |
 
 ### Ignore YAML
 

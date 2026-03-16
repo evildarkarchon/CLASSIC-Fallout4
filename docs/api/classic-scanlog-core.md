@@ -106,7 +106,8 @@ Important fields include:
 - identity and version data: `game`, `crashgen_name`, `crashgen_latest`, `game_version`, `game_version_vr`, `xse_acronym`, `classic_version`
 - behavior flags: `show_formid_values`, `fcx_mode`, `simplify_logs`
 - scan inputs: `ignore_plugins`, `ignore_records`, `ignore_list`, `remove_list`
-- YAML-derived maps: `suspects_error`, `suspects_stack`, `mods_core`, `mods_freq`, `mods_solu`, `mods_opc2`, `mods_core_folon`
+- YAML-derived maps: `suspects_error`, `suspects_stack`, `mods_freq`, `mods_solu`, `mods_opc2`
+- structured core mod entries: `mods_core` (`Vec<CoreModEntry>`)
 - structured mod conflict entries: `mods_conf` (`Vec<ModConflictEntry>`)
 - named-record and settings inputs: `classic_records_list`, `crashgen_registry`
 

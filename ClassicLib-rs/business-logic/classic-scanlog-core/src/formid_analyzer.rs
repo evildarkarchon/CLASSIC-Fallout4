@@ -5,7 +5,7 @@
 
 use crate::error::Result;
 use crate::mod_detector;
-use classic_config_core::ModConflictEntry;
+use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_database_core::DatabasePool;
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
@@ -31,7 +31,7 @@ pub struct FormIDAnalyzerCore {
     db_pool: Option<Arc<DatabasePool>>,
     // Mod detection dictionaries (from YAML configuration)
     // These are used by the mod_detector module functions
-    important_mods: IndexMap<String, String>, // game_mods_core
+    important_mods: Vec<CoreModEntry>,        // game_mods_core
     mods_single: IndexMap<String, String>,    // game_mods_freq, _solu, _opc2
     mods_double: Vec<ModConflictEntry>,       // game_mods_conf (conflicts)
 }
@@ -58,7 +58,7 @@ impl FormIDAnalyzerCore {
     /// * `show_formid_values` - Whether to include FormID value descriptions in reports
     ///   (requires a database pool)
     /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout 4") for report text
-    /// * `important_mods` - Core/important mods dictionary for detection (game_mods_core)
+    /// * `important_mods` - Structured core mod entries for recommended-mod detection
     /// * `mods_single` - Single mod detection dictionary (game_mods_freq, _solu, _opc2)
     /// * `mods_double` - Mod conflict detection entries (game_mods_conf)
     ///
@@ -70,31 +70,11 @@ impl FormIDAnalyzerCore {
     ///
     /// This function currently always succeeds, returning `Ok(_)`. The `Result` return type
     /// is provided for API consistency and future error handling.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::FormIDAnalyzerCore;
-    /// use std::collections::HashMap;
-    /// use indexmap::IndexMap;
-    ///
-    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let analyzer = FormIDAnalyzerCore::new(
-    ///     None, // No database for this example
-    ///     false, // Don't show values
-    ///     "Buffout 4".to_string(),
-    ///     IndexMap::new(), // Important mods (IndexMap for order preservation)
-    ///     IndexMap::new(), // Single mods (IndexMap for order preservation)
-    ///     Vec::new(),      // Conflict entries
-    /// )?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn new(
         db_pool: Option<Arc<DatabasePool>>,
         show_formid_values: bool,
         crashgen_name: String,
-        important_mods: IndexMap<String, String>,
+        important_mods: Vec<CoreModEntry>,
         mods_single: IndexMap<String, String>,
         mods_double: Vec<ModConflictEntry>,
     ) -> Result<Self> {
@@ -144,7 +124,7 @@ impl FormIDAnalyzerCore {
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), Vec::new()
+    ///     Vec::new(), IndexMap::new(), Vec::new()
     /// )?;
     ///
     /// let callstack = vec![
@@ -229,7 +209,7 @@ impl FormIDAnalyzerCore {
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), Vec::new()
+    ///     Vec::new(), IndexMap::new(), Vec::new()
     /// )?;
     ///
     /// let formids = vec![
@@ -412,7 +392,7 @@ impl FormIDAnalyzerCore {
     ///     None, // No database
     ///     false,
     ///     "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), Vec::new()
+    ///     Vec::new(), IndexMap::new(), Vec::new()
     /// )?;
     ///
     /// let result = analyzer.lookup_formid_value("012345", "Skyrim.esm").await;
@@ -464,7 +444,7 @@ impl FormIDAnalyzerCore {
     ///
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), mods_single, Vec::new()
+    ///     Vec::new(), mods_single, Vec::new()
     /// )?;
     ///
     /// let mut plugins = IndexMap::new();
@@ -520,7 +500,7 @@ impl FormIDAnalyzerCore {
     ///
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, false, "Buffout 4".to_string(),
-    ///     IndexMap::new(), IndexMap::new(), mods_double
+    ///     Vec::new(), IndexMap::new(), mods_double
     /// )?;
     ///
     /// let mut plugins = IndexMap::new();
@@ -552,7 +532,7 @@ impl FormIDAnalyzerCore {
     /// # Arguments
     ///
     /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
-    /// * `gpu_rival` - Optional GPU vendor for compatibility checking (e.g., "nvidia", "amd")
+    /// * `user_gpu` - Optional GPU vendor the user has (e.g., "nvidia", "amd")
     /// * `xse_modules` - Set of XSE module names (DLLs) loaded by the script extender
     ///
     /// # Returns
@@ -567,44 +547,17 @@ impl FormIDAnalyzerCore {
     ///
     /// Returns `Err(ScanLogError)` if regex pattern compilation fails.
     ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::FormIDAnalyzerCore;
-    /// use std::collections::HashSet;
-    /// use indexmap::IndexMap;
-    ///
-    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut important_mods = IndexMap::new();
-    /// important_mods.insert(
-    ///     "enginefixes | Engine Fixes".to_string(),
-    ///     "Install from Nexus Mods for better stability".to_string()
-    /// );
-    ///
-    /// let analyzer = FormIDAnalyzerCore::new(
-    ///     None, false, "Buffout 4".to_string(),
-    ///     important_mods, Default::default(), Default::default()
-    /// )?;
-    ///
-    /// let mut plugins = IndexMap::new();
-    /// plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-    ///
-    /// let xse_modules = HashSet::new();
-    /// let report = analyzer.detect_mods_important_basic(&plugins, Some("nvidia"), &xse_modules)?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn detect_mods_important_basic(
         &self,
         crashlog_plugins: &IndexMap<String, String>,
-        gpu_rival: Option<&str>,
+        user_gpu: Option<&str>,
         xse_modules: &HashSet<String>,
     ) -> Result<Vec<String>> {
         mod_detector::detect_mods_important(
-            self.important_mods.clone(),
-            crashlog_plugins.clone(),
-            gpu_rival,
-            xse_modules.clone(),
+            &self.important_mods,
+            crashlog_plugins,
+            user_gpu,
+            xse_modules,
         )
     }
 }
@@ -878,7 +831,7 @@ mod tests {
             db_pool,
             show_formid_values,
             "Buffout 4".to_string(),
-            IndexMap::new(),
+            Vec::new(),
             IndexMap::new(),
             Vec::new(),
         )

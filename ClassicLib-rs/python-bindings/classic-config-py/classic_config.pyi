@@ -202,20 +202,11 @@ class YamlData:
 
     # Mod detection lists
     @property
-    def game_mods_core(self) -> dict[str, Any]:
+    def game_mods_core(self) -> list[dict[str, str | None]]:
         """Core/essential mods configuration.
 
         Returns:
-            Dictionary mapping mod names to detection patterns
-
-        """
-
-    @property
-    def game_mods_core_folon(self) -> dict[str, Any]:
-        """Fallout London (FOLON) specific mods configuration.
-
-        Returns:
-            Dictionary mapping FOLON mod names to detection patterns
+            List of dicts with keys: detect, name, description, gpu (optional)
 
         """
 

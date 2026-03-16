@@ -1,6 +1,6 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
-use classic_config_core::{CrashgenEntryRaw, ModConflictEntry, YamlDataCore};
+use classic_config_core::{CoreModEntry, CrashgenEntryRaw, ModConflictEntry, YamlDataCore};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
@@ -149,6 +149,36 @@ fn extract_mod_conflict_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) ->
         .collect()
 }
 
+fn extract_core_mod_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<CoreModEntry> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Vec::new();
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            Some(CoreModEntry {
+                detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+                gpu: dict
+                    .get_item("gpu")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+                gpu_mismatch_warning: None,
+                exclude_when: None,
+            })
+        })
+        .collect()
+}
+
 fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
     let crashgen_registry = yamldata
         .getattr("crashgen_registry")
@@ -177,8 +207,7 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
         suspects_error_list: extract_indexmap_str_attr(yamldata, "suspects_error_list"),
         suspects_stack_list: extract_indexmap_vecstr_attr(yamldata, "suspects_stack_list"),
         game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
-        game_mods_core: extract_indexmap_str_attr(yamldata, "game_mods_core"),
-        game_mods_core_folon: extract_indexmap_str_attr(yamldata, "game_mods_core_folon"),
+        game_mods_core: extract_core_mod_entries(yamldata, "game_mods_core"),
         game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
         game_mods_opc2: extract_indexmap_str_attr(yamldata, "game_mods_opc2"),
         game_mods_solu: extract_indexmap_str_attr(yamldata, "game_mods_solu"),
@@ -476,20 +505,48 @@ impl PyAnalysisConfig {
         self.inner.suspects_stack = pyany_to_indexmap_vecstr(value);
     }
 
-    /// Get the core mods database
+    /// Get the core mods database as a list of dicts
     #[getter]
-    pub fn mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_core {
-            dict.set_item(key, value)?;
+    pub fn mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_core {
+            let dict = pyo3::types::PyDict::new(py);
+            dict.set_item("detect", &entry.detect)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("gpu", &entry.gpu)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
-    /// Set the core mods database (preserves dict order)
+    /// Set the core mods database from a list of dicts
     #[setter]
     pub fn set_mods_core(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_core = pyany_to_indexmap_str(value);
+        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
+            self.inner.mods_core = list
+                .iter()
+                .filter_map(|item| {
+                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                    Some(CoreModEntry {
+                        detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                        description: dict
+                            .get_item("description")
+                            .ok()??
+                            .extract::<String>()
+                            .ok()?,
+                        gpu: dict
+                            .get_item("gpu")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<String>().ok()),
+                        gpu_mismatch_warning: None,
+                        exclude_when: None,
+                    })
+                })
+                .collect();
+        }
     }
 
     /// Get the frequently problematic mods database
@@ -660,22 +717,6 @@ impl PyAnalysisConfig {
     #[setter]
     pub fn set_remove_list(&mut self, value: Vec<String>) {
         self.inner.remove_list = value;
-    }
-
-    /// Get the FOLON-specific mods database
-    #[getter]
-    pub fn mods_core_folon(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_core_folon {
-            dict.set_item(key, value)?;
-        }
-        Ok(dict.into())
-    }
-
-    /// Set the FOLON-specific mods database (preserves dict order)
-    #[setter]
-    pub fn set_mods_core_folon(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_core_folon = pyany_to_indexmap_str(value);
     }
 
     /// Get the list of named records to scan for
@@ -1133,14 +1174,4 @@ impl PyRustOrchestrator {
         Ok((result.0, result.1.to_list()))
     }
 
-    /// Detect if FOLON (Fallout: London) is loaded based on plugins.
-    ///
-    /// # Arguments
-    /// * `plugins` - Dictionary of plugin names to data
-    ///
-    /// # Returns
-    /// True if londonworldspace.esm is detected
-    pub fn detect_folon(&self, plugins: std::collections::HashMap<String, String>) -> bool {
-        self.inner.detect_folon(&plugins)
-    }
 }

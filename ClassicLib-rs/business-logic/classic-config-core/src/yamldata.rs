@@ -46,6 +46,42 @@ pub struct ModConflictEntry {
     pub link: Option<String>,
 }
 
+/// Condition under which a [`CoreModEntry`] should be excluded from processing.
+///
+/// Currently supports only plugin-presence checks. New variants can be added
+/// (e.g., `All`, `Any`, `Not` combinators) without breaking existing YAML.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CoreModExclude {
+    /// Exclude this entry when any of the listed plugins are present.
+    PluginAny(Vec<String>),
+}
+
+/// A single entry from the `Mods_CORE` YAML section.
+///
+/// Each entry describes an important / recommended mod that the scanner
+/// checks for in the crash log plugin list. The structured format replaces
+/// the old flat `"detect_id | Display Name" -> description` mapping and
+/// supports declarative GPU affinity and exclusion conditions.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CoreModEntry {
+    /// Substring matched case-insensitively against plugin / XSE module names.
+    pub detect: String,
+    /// Human-readable display name shown in the report.
+    pub name: String,
+    /// Recommendation text shown when the mod is missing or installed.
+    pub description: String,
+    /// GPU vendor this mod is for (`"nvidia"` or `"amd"`).
+    /// When set, the runtime uses this for GPU-specific behavior instead of
+    /// text-matching inside the description.
+    pub gpu: Option<String>,
+    /// Warning text shown when this mod is installed but the user does NOT
+    /// have the GPU specified by [`gpu`]. Falls back to a generic message
+    /// when absent.
+    pub gpu_mismatch_warning: Option<String>,
+    /// Optional condition that causes this entry to be skipped entirely.
+    pub exclude_when: Option<CoreModExclude>,
+}
+
 /// Raw per-crashgen settings configuration deserialized from YAML.
 ///
 /// This is a simple transport type used to carry `Crashgen_Registry` data
@@ -539,6 +575,85 @@ fn parse_mods_conf(game_data: &Yaml) -> Vec<ModConflictEntry> {
     result
 }
 
+/// Parse the `Mods_CORE` YAML section into a `Vec<CoreModEntry>`.
+///
+/// Expects a YAML sequence of mappings, each with `detect`, `name`, and
+/// `description` (required), plus optional `gpu` and `exclude_when` fields.
+/// Malformed entries are skipped with a debug log.
+fn parse_mods_core(game_data: &Yaml) -> Vec<CoreModEntry> {
+    let Some(entries) = game_data["Mods_CORE"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Mods_CORE[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let get_str = |key: &str| -> Option<String> {
+            map.iter()
+                .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(|s| s.trim().to_string())
+        };
+
+        let (detect, name, description) = match (
+            get_str("detect"),
+            get_str("name"),
+            get_str("description"),
+        ) {
+            (Some(d), Some(n), Some(desc)) => (d, n, desc),
+            _ => {
+                log::debug!(
+                    "Skipping Mods_CORE[{}]: missing required field(s) (detect, name, description)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let gpu = get_str("gpu");
+        let gpu_mismatch_warning = get_str("gpu_mismatch_warning");
+
+        let exclude_when = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("exclude_when")).then_some(v))
+            .and_then(|ew| ew.as_hash())
+            .and_then(|ew_map| {
+                ew_map
+                    .iter()
+                    .find_map(|(k, v)| (k.as_str() == Some("plugin_any")).then_some(v))
+                    .and_then(Yaml::as_vec)
+                    .map(|items| {
+                        CoreModExclude::PluginAny(
+                            items
+                                .iter()
+                                .filter_map(|item| item.as_str().map(ToString::to_string))
+                                .collect(),
+                        )
+                    })
+            });
+
+        result.push(CoreModEntry {
+            detect,
+            name,
+            description,
+            gpu,
+            gpu_mismatch_warning,
+            exclude_when,
+        });
+    }
+
+    result
+}
+
 fn normalize_registry_key(value: &str) -> String {
     value
         .chars()
@@ -963,8 +1078,7 @@ Crashgen_Registry:
 /// * `suspects_stack_list` - An `IndexMap<String, Vec<String>>` mapping suspect stack traces to their corresponding pattern lists.
 ///
 /// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
-/// * `game_mods_core` - An `IndexMap<String, String>` storing core mod databases information.
-/// * `game_mods_core_folon` - An `IndexMap<String, String>` specific to the `Folon` core mod configuration.
+/// * `game_mods_core` - A `Vec<CoreModEntry>` of structured core/important mod entries from `Mods_CORE`.
 /// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
 /// * `game_mods_opc2` - An `IndexMap<String, String>` for a specific feature or mod database identified as `opc2`.
 /// * `game_mods_solu` - An `IndexMap<String, String>` representing solution-related game mod configurations.
@@ -1045,10 +1159,8 @@ pub struct YamlDataCore {
     // Mod databases (IndexMap preserves YAML key order for Python parity)
     /// Mod conflict pairs parsed from `Mods_CONF` (deduplicated at load time)
     pub game_mods_conf: Vec<ModConflictEntry>,
-    /// Core mod databases information
-    pub game_mods_core: IndexMap<String, String>,
-    /// Folon core mod configuration
-    pub game_mods_core_folon: IndexMap<String, String>,
+    /// Core / important mod entries parsed from `Mods_CORE` (structured sequence)
+    pub game_mods_core: Vec<CoreModEntry>,
     /// Frequently used game mod entries
     pub game_mods_freq: IndexMap<String, String>,
     /// Specific feature or mod database identified as opc2
@@ -1157,8 +1269,7 @@ impl YamlDataCore {
             suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
             suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
             game_mods_conf: parse_mods_conf(game_data),
-            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
-            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_core: parse_mods_core(game_data),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
             game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
             game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
@@ -1484,9 +1595,18 @@ Mods_CONF:
     description: "Config for ModA"
     fix: "Remove one."
 Mods_CORE:
-  ModB: "Core mod B"
-Mods_CORE_FOLON:
-  FolonMod: "Folon specific mod"
+  - detect: ModB
+    name: Core Mod B
+    description: "Core mod B"
+  - detect: GpuMod.dll
+    name: GPU Mod
+    description: "GPU-specific mod"
+    gpu: nvidia
+  - detect: ExcludedMod.esp
+    name: Excluded Mod
+    description: "Excluded mod"
+    exclude_when:
+      plugin_any: [SomeWorldspace.esm]
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_OPC2:
@@ -1675,13 +1795,26 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(config.game_mods_conf.len(), 1);
         assert_eq!(config.game_mods_conf[0].mod_a, "modA");
         assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
+
+        assert_eq!(config.game_mods_core.len(), 3);
+        assert_eq!(config.game_mods_core[0].detect, "ModB");
+        assert_eq!(config.game_mods_core[0].name, "Core Mod B");
+        assert_eq!(config.game_mods_core[0].description, "Core mod B");
+        assert_eq!(config.game_mods_core[0].gpu, None);
+        assert_eq!(config.game_mods_core[0].exclude_when, None);
+
+        assert_eq!(config.game_mods_core[1].detect, "GpuMod.dll");
         assert_eq!(
-            config.game_mods_core.get("ModB"),
-            Some(&"Core mod B".to_string())
+            config.game_mods_core[1].gpu,
+            Some("nvidia".to_string())
         );
+
+        assert_eq!(config.game_mods_core[2].detect, "ExcludedMod.esp");
         assert_eq!(
-            config.game_mods_core_folon.get("FolonMod"),
-            Some(&"Folon specific mod".to_string())
+            config.game_mods_core[2].exclude_when,
+            Some(CoreModExclude::PluginAny(vec![
+                "SomeWorldspace.esm".to_string()
+            ]))
         );
         assert_eq!(
             config.game_mods_freq.get("FreqMod"),

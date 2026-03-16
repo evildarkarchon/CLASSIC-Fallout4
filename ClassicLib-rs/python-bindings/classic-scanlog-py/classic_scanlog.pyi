@@ -849,17 +849,6 @@ class Orchestrator:
 
         """
 
-    def detect_folon(self, plugins: dict[str, str]) -> bool:
-        """Detect if FOLON (Fallout: London) is loaded based on plugins.
-
-        Args:
-            plugins: Dictionary of plugin names to data
-
-        Returns:
-            True if londonworldspace.esm is detected
-
-        """
-
 class AnalysisConfig:
     """Analysis configuration.
 
@@ -885,12 +874,11 @@ class AnalysisConfig:
     remove_list: list[str]  # Strings to remove when simplifying
     suspects_error: dict[str, str]
     suspects_stack: dict[str, list[str]]
-    mods_core: dict[str, str]
+    mods_core: list[dict[str, str | None]]
     mods_freq: dict[str, str]
     mods_conf: list[dict[str, str | None]]
     mods_solu: dict[str, str]
     mods_opc2: dict[str, str]
-    mods_core_folon: dict[str, str]  # FOLON-specific mods
     classic_records_list: list[str]  # Named records to scan
     crashgen_ignore: list[str]  # Settings to ignore during validation
 
@@ -1483,9 +1471,9 @@ def detect_mods_double(
     """
 
 def detect_mods_important(
-    yaml_dict: dict[str, str],
+    entries: list[dict[str, str | None]],
     crashlog_plugins: dict[str, str],
-    gpu_rival: str | None = None,
+    user_gpu: str | None = None,
     xse_modules: set[str] = ...,
 ) -> list[str]:
     """Detect important mods (core mods, framework mods).
@@ -1493,9 +1481,9 @@ def detect_mods_important(
     Prioritizes detection of essential mods that affect stability.
 
     Args:
-        yaml_dict: Important mods database dictionary {mod_signature: warning_message}
+        entries: List of core mod entry dicts with keys: detect, name, description, gpu (optional)
         crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
-        gpu_rival: Optional GPU vendor filter ("nvidia" or "amd")
+        user_gpu: Optional GPU vendor the user has ("nvidia", "amd", "intel")
         xse_modules: Set of XSE module names for additional checking
 
     Returns:

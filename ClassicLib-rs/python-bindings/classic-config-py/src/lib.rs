@@ -930,21 +930,17 @@ impl PyYamlData {
     }
 
     #[getter]
-    fn game_mods_core(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_core {
-            dict.set_item(k, v)?;
+    fn game_mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.game_mods_core {
+            let dict = PyDict::new(py);
+            dict.set_item("detect", &entry.detect)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("gpu", &entry.gpu)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
-    }
-
-    #[getter]
-    fn game_mods_core_folon(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_core_folon {
-            dict.set_item(k, v)?;
-        }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]

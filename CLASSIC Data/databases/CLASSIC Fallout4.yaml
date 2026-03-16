@@ -686,36 +686,43 @@ Crashlog_Stack_Check:
 # IMPORTANT: AVOID KEY NESTING BY JUST SPLITTING THE KEY WITH A SPECIFIC CHAR
 
 Mods_CORE: # 0) MODS THAT EVERY PLAYER SHOULD HAVE INSTALLED
-  CanarySaveFileMonitor | Canary Save File Monitor: |
-    This is a highly recommended mod that can detect save file corruption.
-    Link: https://www.nexusmods.com/fallout4/mods/44949?tab=files
+  - detect: CanarySaveFileMonitor
+    name: Canary Save File Monitor
+    description: |
+      This is a highly recommended mod that can detect save file corruption.
+      Link: https://www.nexusmods.com/fallout4/mods/44949?tab=files
 
-  HighFPSPhysicsFix | High FPS Physics Fix: |
-    This is a mandatory patch / fix that prevents game engine problems.
-    Link: https://www.nexusmods.com/fallout4/mods/44798?tab=files
+  - detect: HighFPSPhysicsFix
+    name: High FPS Physics Fix
+    description: |
+      This is a mandatory patch / fix that prevents game engine problems.
+      Link: https://www.nexusmods.com/fallout4/mods/44798?tab=files
 
-  PRP.esp | Previs Repair Pack (PRP): |
-    This is a highly recommended mod that can vastly improve performance.
-    Link: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+  - detect: PRP.esp
+    name: Previs Repair Pack (PRP)
+    description: |
+      This is a highly recommended mod that can vastly improve performance.
+      Link: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+    exclude_when:
+      plugin_any: [LondonWorldspace.esm]
 
-  Unofficial Fallout 4 Patch | Unofficial Fallout 4 Patch: |
-    If you own all DLCs, make sure that the Unofficial Patch is installed.
-    Link: https://www.nexusmods.com/fallout4/mods/4598?tab=files
+  - detect: Unofficial Fallout 4 Patch
+    name: Unofficial Fallout 4 Patch
+    description: |
+      If you own all DLCs, make sure that the Unofficial Patch is installed.
+      Link: https://www.nexusmods.com/fallout4/mods/4598?tab=files
+    exclude_when:
+      plugin_any: [LondonWorldspace.esm]
 
-  WeaponDebrisCrashFix.dll | Nvidia Weapon Debris Fix: |
-    This is a mandatory patch / fix required for almost all Nvidia GPUs.
-    Link: https://www.nexusmods.com/fallout4/mods/48078?tab=files
-
-Mods_CORE_FOLON:
-  CanarySaveFileMonitor | Canary Save File Monitor: |
-    This is a highly recommended mod that can detect save file corruption.
-    Link: https://www.nexusmods.com/fallout4/mods/44949?tab=files
-  HighFPSPhysicsFix | High FPS Physics Fix: |
-    This is a mandatory patch / fix that prevents game engine problems.
-    Link: https://www.nexusmods.com/fallout4/mods/44798?tab=filess
-  WeaponDebrisCrashFix.dll | Nvidia Weapon Debris Fix: |
-    This is a mandatory patch / fix required for almost all Nvidia GPUs.
-    Link: https://www.nexusmods.com/fallout4/mods/48078?tab=files
+  - detect: WeaponDebrisCrashFix.dll
+    name: Nvidia Weapon Debris Fix
+    description: |
+      This is a mandatory patch / fix required for almost all Nvidia GPUs.
+      Link: https://www.nexusmods.com/fallout4/mods/48078?tab=files
+    gpu: nvidia
+    gpu_mismatch_warning: |
+      Nvidia Weapon Debris Fix is installed, but you don't seem to have an Nvidia GPU.
+      If this is correct, completely uninstall this mod to avoid any problems!
 
 Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
   DamageThresholdFramework: |

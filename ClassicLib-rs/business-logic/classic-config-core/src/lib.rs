@@ -15,7 +15,7 @@ pub mod yamldata;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
 pub use yamldata::{
-    ConfigError, CrashgenEntryRaw, ModConflictEntry, YamlDataCore,
+    ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore,
     format_registry_game_version, resolve_registry_version_info,
 };
 

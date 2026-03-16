@@ -144,7 +144,7 @@ Forwarding notes:
 These functions flatten `IndexMap` fields into paired vectors because the bridge does not share map wrapper types across modules:
 
 - suspects error map: `yaml_data_suspects_error_keys()` and `yaml_data_suspects_error_values()`
-- mods maps: `yaml_data_mods_core_*`, `yaml_data_mods_freq_*`, `yaml_data_mods_solu_*`, `yaml_data_mods_opc2_*`, and `yaml_data_mods_folon_*`
+- mods maps: `yaml_data_mods_core_*` (structured), `yaml_data_mods_freq_*`, `yaml_data_mods_solu_*`, `yaml_data_mods_opc2_*`
 - mod conflict entries (structured): `yaml_data_mods_conf_mod_a()`, `yaml_data_mods_conf_mod_b()`, `yaml_data_mods_conf_name_a()`, `yaml_data_mods_conf_name_b()`, `yaml_data_mods_conf_descriptions()`, `yaml_data_mods_conf_fixes()`, `yaml_data_mods_conf_links()`, `yaml_data_mods_conf_count()`
 
 Important current boundary:

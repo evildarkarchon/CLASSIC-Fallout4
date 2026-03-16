@@ -69,9 +69,9 @@ Mods_CONF:
     description: "Config for ModA"
     fix: "Remove one."
 Mods_CORE:
-  ModB: "Core mod B"
-Mods_CORE_FOLON:
-  FolonMod: "Folon specific mod"
+  - detect: ModB
+    name: Core Mod B
+    description: "Core mod B"
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_OPC2:
@@ -382,12 +382,20 @@ describe("YamlData mod databases", () => {
     expect(data.gameModsConf[0].description).toBe("Config for ModA");
   });
 
-  test("gameModsCore returns correct map", () => {
-    expect(data.gameModsCore["ModB"]).toBe("Core mod B");
+  test("gameModsCoreCount returns correct count", () => {
+    expect(data.gameModsCoreCount).toBe(1);
   });
 
-  test("gameModsCoreFolon returns correct map", () => {
-    expect(data.gameModsCoreFolon["FolonMod"]).toBe("Folon specific mod");
+  test("gameModsCoreDetects returns detect ids", () => {
+    expect(data.gameModsCoreDetects).toEqual(["ModB"]);
+  });
+
+  test("gameModsCoreNames returns display names", () => {
+    expect(data.gameModsCoreNames).toEqual(["Core Mod B"]);
+  });
+
+  test("gameModsCoreDescriptions returns descriptions", () => {
+    expect(data.gameModsCoreDescriptions).toEqual(["Core mod B"]);
   });
 
   test("gameModsFreq returns correct map", () => {

@@ -322,21 +322,47 @@ impl YamlData {
 
     /// Core/essential mods database.
     #[napi(getter)]
-    pub fn game_mods_core(&self) -> HashMap<String, String> {
+    pub fn game_mods_core_count(&self) -> u32 {
+        self.inner.game_mods_core.len() as u32
+    }
+
+    /// Core mods detect ids.
+    #[napi(getter)]
+    pub fn game_mods_core_detects(&self) -> Vec<String> {
         self.inner
             .game_mods_core
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(|e| e.detect.clone())
             .collect()
     }
 
-    /// FOLON core mods database.
+    /// Core mods display names.
     #[napi(getter)]
-    pub fn game_mods_core_folon(&self) -> HashMap<String, String> {
+    pub fn game_mods_core_names(&self) -> Vec<String> {
         self.inner
-            .game_mods_core_folon
+            .game_mods_core
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(|e| e.name.clone())
+            .collect()
+    }
+
+    /// Core mods descriptions.
+    #[napi(getter)]
+    pub fn game_mods_core_descriptions(&self) -> Vec<String> {
+        self.inner
+            .game_mods_core
+            .iter()
+            .map(|e| e.description.clone())
+            .collect()
+    }
+
+    /// Core mods GPU fields (empty string if not set).
+    #[napi(getter)]
+    pub fn game_mods_core_gpus(&self) -> Vec<String> {
+        self.inner
+            .game_mods_core
+            .iter()
+            .map(|e| e.gpu.clone().unwrap_or_default())
             .collect()
     }
 

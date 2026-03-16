@@ -4,11 +4,11 @@
 //! while leveraging Rust's performance optimizations.
 
 use crate::error::{Result, ScanLogError};
-use classic_config_core::ModConflictEntry;
+use classic_config_core::{CoreModEntry, CoreModExclude, ModConflictEntry};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 /// Convert IndexMap keys to lowercase, preserving insertion order
 fn convert_indexmap_to_lowercase(data: &IndexMap<String, String>) -> IndexMap<String, String> {
@@ -332,6 +332,10 @@ pub fn detect_mods_double(
 /// may not have traditional plugin files but still provide functionality through script
 /// extender plugins.
 ///
+/// Entries with `exclude_when` conditions are evaluated against the plugin list and skipped
+/// when the condition is met (e.g., FOLON plugins present). Entries with a `gpu` field are
+/// compared against `user_gpu` for GPU-specific behavior.
+///
 /// The report includes:
 /// - ✔️ Installed recommended mods (green checkmarks)
 /// - ❌ Missing recommended mods with installation instructions (red X marks)
@@ -339,128 +343,101 @@ pub fn detect_mods_double(
 ///
 /// # Arguments
 ///
-/// * `yaml_dict` - HashMap of important mod patterns ("mod_id | Mod Name") to recommendation text
-/// * `crashlog_plugins` - HashMap of plugin names to load order IDs from crash log
-/// * `gpu_rival` - Optional GPU vendor name for compatibility checking (e.g., "nvidia", "amd")
+/// * `entries` - Structured core mod entries from `Mods_CORE` YAML section
+/// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from crash log
+/// * `user_gpu` - Optional GPU vendor the user has (e.g., "nvidia", "amd")
 /// * `xse_modules` - Set of XSE module/DLL names from the script extender
 ///
 /// # Returns
 ///
-/// Returns `Ok(Vec<String>)` containing a formatted report with:
-/// - "### Checking for Important Mods" header
-/// - Status indicators for each important mod (✔️/❌/❓)
-/// - Installation instructions for missing mods
-/// - GPU compatibility warnings where applicable
+/// Returns `Ok(Vec<String>)` containing a formatted report with status indicators for
+/// each important mod (✔️/❌/❓), installation instructions for missing mods, and GPU
+/// compatibility warnings where applicable.
 ///
 /// # Errors
 ///
 /// Returns `Err(ScanLogError)` if regex pattern compilation fails.
-///
-/// # Performance
-///
-/// - Pre-compiled patterns for efficient matching
-/// - Single pass through plugins and modules
-/// - Typical processing: 5-10ms for 50 important mods
-///
-/// # Example
-///
-/// ```rust
-/// use classic_scanlog_core::mod_detector::detect_mods_important;
-/// use std::collections::HashSet;
-/// use indexmap::IndexMap;
-///
-/// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let mut yaml_dict = IndexMap::new();
-/// yaml_dict.insert(
-///     "enginefixes | Engine Fixes".to_string(),
-///     "Highly recommended for stability!".to_string()
-/// );
-///
-/// let mut plugins = IndexMap::new();
-/// plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-///
-/// let xse_modules = HashSet::new();
-///
-/// let report = detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules)?;
-/// # Ok(())
-/// # }
-/// ```
 pub fn detect_mods_important(
-    yaml_dict: IndexMap<String, String>,
-    crashlog_plugins: IndexMap<String, String>,
-    gpu_rival: Option<&str>,
-    xse_modules: HashSet<String>,
+    entries: &[CoreModEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+    user_gpu: Option<&str>,
+    xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    // Don't add header here - let the orchestrator add it if there's content
     let mut lines = Vec::new();
 
-    // Convert plugin names to lowercase once
     let plugin_names_lower: Vec<String> =
         crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
     let plugins_text = plugin_names_lower.join(" ");
 
-    // Convert XSE module names to lowercase
     let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
     let modules_text = module_names_lower.join(" ");
 
-    // Combined text for matching against both plugins and XSE modules
     let all_text = format!("{} {}", plugins_text, modules_text);
 
-    // Build patterns for all mod IDs
-    let mut mod_patterns: HashMap<String, Regex> = HashMap::new();
-    for mod_entry in yaml_dict.keys() {
-        let parts: Vec<&str> = mod_entry.split(" | ").collect();
-        if parts.len() == 2 {
-            let mod_id = parts[0];
-            let pattern = Regex::new(&format!("(?i){}", regex::escape(&mod_id.to_lowercase())))
-                .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
-            mod_patterns.insert(mod_entry.clone(), pattern);
-        }
-    }
-
-    // Iterate in YAML key order (IndexMap preserves insertion order for Python parity)
-    for (mod_entry, mod_warning) in yaml_dict.iter() {
-        let parts: Vec<&str> = mod_entry.split(" | ").collect();
-        if parts.len() != 2 {
+    for entry in entries {
+        if is_excluded(&entry.exclude_when, crashlog_plugins) {
             continue;
         }
 
-        let mod_display_name = parts[1];
+        let pattern = Regex::new(&format!("(?i){}", regex::escape(&entry.detect.to_lowercase())))
+            .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
-        let mod_found = mod_patterns
-            .get(mod_entry)
-            .map(|pattern| pattern.is_match(&all_text))
-            .unwrap_or(false);
+        let mod_found = pattern.is_match(&all_text);
+
+        // gpu_mismatch: entry is for a specific GPU that the user does NOT have
+        let gpu_mismatch = entry.gpu.as_ref().is_some_and(|mod_gpu| {
+            user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug))
+        });
+
+        // gpu_matches_user: entry is for a specific GPU that the user DOES have
+        let gpu_matches_user = entry.gpu.as_ref().is_some_and(|mod_gpu| {
+            user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug))
+        });
 
         if mod_found {
-            // Mod is installed
-            if let Some(gpu) = gpu_rival {
-                if mod_warning.to_lowercase().contains(gpu) {
-                    // GPU mismatch warning (e.g., NVIDIA mod installed but user has AMD)
+            if gpu_mismatch {
+                if let Some(ref warning) = entry.gpu_mismatch_warning {
+                    lines.push(format!("❓ {}\n", warning));
+                    lines.push("\n\n".to_string());
+                } else {
+                    let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
                     lines.push(format!(
                         "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n",
-                        mod_display_name,
-                        gpu.to_uppercase()
+                        entry.name, gpu_label
                     ));
                     lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n".to_string());
-                } else {
-                    lines.push(format!("✔️ {} is installed!\n\n", mod_display_name));
                 }
             } else {
-                lines.push(format!("✔️ {} is installed!\n\n", mod_display_name));
+                lines.push(format!("✔️ {} is installed!\n\n", entry.name));
             }
-        } else if let Some(gpu) = gpu_rival {
-            // Mod not installed - show warning if gpu_rival is set and mod is NOT for the rival GPU
-            // (i.e., show "not installed" for non-GPU mods and for mods matching user's GPU)
-            if !mod_warning.is_empty() && !mod_warning.to_lowercase().contains(gpu) {
-                lines.push(format!("❌ {} is not installed!\n", mod_display_name));
-                lines.push(mod_warning.to_string());
+        } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
+            // Show "not installed" for universal mods and mods matching the user's GPU
+            if !entry.description.is_empty() {
+                lines.push(format!("❌ {} is not installed!\n", entry.name));
+                lines.push(entry.description.clone());
                 lines.push("\n\n".to_string());
             }
         }
     }
 
     Ok(lines)
+}
+
+/// Checks whether a `CoreModExclude` condition is met by the current plugin list.
+fn is_excluded(
+    exclude: &Option<CoreModExclude>,
+    plugins: &IndexMap<String, String>,
+) -> bool {
+    match exclude {
+        Some(CoreModExclude::PluginAny(required_plugins)) => {
+            let plugin_names_lower: HashSet<String> =
+                plugins.keys().map(|k| k.to_lowercase()).collect();
+            required_plugins
+                .iter()
+                .any(|p| plugin_names_lower.contains(&p.to_lowercase()))
+        }
+        None => false,
+    }
 }
 
 /// Detects single mods across multiple crash logs in parallel using Rayon.
@@ -857,31 +834,40 @@ mod tests {
     // detect_mods_important tests
     // ============================================
 
+    fn make_core_entry(detect: &str, name: &str, desc: &str) -> CoreModEntry {
+        CoreModEntry {
+            detect: detect.to_string(),
+            name: name.to_string(),
+            description: desc.to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        }
+    }
+
     #[test]
     fn test_detect_mods_important_empty() {
-        let yaml_dict: IndexMap<String, String> = IndexMap::new();
+        let entries: Vec<CoreModEntry> = vec![];
         let plugins: IndexMap<String, String> = IndexMap::new();
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
-        // With empty inputs and no plugin-based mods installed, section is empty
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_detect_mods_important_installed() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "enginefixes.esp | Engine Fixes".to_string(),
-            "Highly recommended for stability.".to_string(),
-        );
+        let entries = vec![make_core_entry(
+            "enginefixes.esp",
+            "Engine Fixes",
+            "Highly recommended for stability.",
+        )];
 
         let mut plugins = IndexMap::new();
         plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("✔️"));
         assert!(output.contains("Engine Fixes"));
@@ -890,50 +876,46 @@ mod tests {
 
     #[test]
     fn test_detect_mods_important_not_installed() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "enginefixes.esp | Engine Fixes".to_string(),
-            "Highly recommended for stability.".to_string(),
-        );
+        let entries = vec![make_core_entry(
+            "enginefixes.esp",
+            "Engine Fixes",
+            "Highly recommended for stability.",
+        )];
 
         let plugins: IndexMap<String, String> = IndexMap::new();
         let xse_modules: HashSet<String> = HashSet::new();
 
-        // When gpu_rival is set and mod warning doesn't contain the GPU type,
-        // the function shows "not installed" warnings for recommended mods
-        let result = detect_mods_important(
-            yaml_dict.clone(),
-            plugins.clone(),
-            Some("nvidia"),
-            xse_modules.clone(),
-        )
-        .unwrap();
+        // user_gpu is known → "not installed" warnings are shown for universal mods
+        let result =
+            detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❌"));
         assert!(output.contains("Engine Fixes"));
         assert!(output.contains("not installed"));
 
-        // When gpu_rival is None, no "not installed" warnings are shown for missing mods
-        let result_no_gpu = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let result_no_gpu =
+            detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         assert!(result_no_gpu.is_empty());
     }
 
     #[test]
     fn test_detect_mods_important_gpu_mismatch() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "nvidiapatch.esp | NVIDIA Patch".to_string(),
-            "For NVIDIA GPUs only!".to_string(),
-        );
+        let entries = vec![CoreModEntry {
+            detect: "nvidiapatch.esp".to_string(),
+            name: "NVIDIA Patch".to_string(),
+            description: "For NVIDIA GPUs only!".to_string(),
+            gpu: Some("nvidia".to_string()),
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        }];
 
         let mut plugins = IndexMap::new();
         plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
-
         let xse_modules: HashSet<String> = HashSet::new();
 
-        // User has AMD but NVIDIA mod is installed
+        // User has AMD, nvidia mod is installed → mismatch warning
         let result =
-            detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules).unwrap();
+            detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❓"));
         assert!(output.contains("UNINSTALL"));
@@ -941,16 +923,14 @@ mod tests {
 
     #[test]
     fn test_detect_mods_important_xse_module() {
-        let mut yaml_dict = IndexMap::new();
-        // Need at least one plugin-based mod installed for section to show
-        yaml_dict.insert(
-            "someplugin.esp | Some Plugin".to_string(),
-            "A plugin.".to_string(),
-        );
-        yaml_dict.insert(
-            "addresslib.dll | Address Library".to_string(),
-            "Required for many F4SE plugins.".to_string(),
-        );
+        let entries = vec![
+            make_core_entry("someplugin.esp", "Some Plugin", "A plugin."),
+            make_core_entry(
+                "addresslib.dll",
+                "Address Library",
+                "Required for many F4SE plugins.",
+            ),
+        ];
 
         let mut plugins = IndexMap::new();
         plugins.insert("SomePlugin.esp".to_string(), "05".to_string());
@@ -958,30 +938,122 @@ mod tests {
         let mut xse_modules = HashSet::new();
         xse_modules.insert("AddressLibrary.dll".to_string());
 
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("✔️"));
-        // Should have at least one installed mod shown
         assert!(output.contains("installed"));
     }
 
     #[test]
     fn test_detect_mods_important_no_leading_newline_before_first_entry() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "enginefixes.esp | Engine Fixes".to_string(),
-            "Highly recommended for stability.".to_string(),
-        );
+        let entries = vec![make_core_entry(
+            "enginefixes.esp",
+            "Engine Fixes",
+            "Highly recommended for stability.",
+        )];
 
         let mut plugins = IndexMap::new();
         plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-
         let xse_modules: HashSet<String> = HashSet::new();
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
-        let output = result.join("");
 
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
+        let output = result.join("");
         assert!(!output.starts_with('\n'));
         assert!(output.starts_with("✔️ "));
+    }
+
+    #[test]
+    fn test_detect_mods_important_exclude_when_plugin_any() {
+        let entries = vec![CoreModEntry {
+            detect: "UFO4P.esp".to_string(),
+            name: "Unofficial Patch".to_string(),
+            description: "Install this patch.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: Some(CoreModExclude::PluginAny(vec![
+                "LondonWorldspace.esm".to_string(),
+            ])),
+        }];
+
+        let mut plugins_without_folon = IndexMap::new();
+        plugins_without_folon.insert("SomeMod.esp".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result = detect_mods_important(
+            &entries,
+            &plugins_without_folon,
+            Some("amd"),
+            &xse_modules,
+        )
+        .unwrap();
+        assert!(
+            !result.is_empty(),
+            "Entry should be shown when exclusion plugin is absent"
+        );
+
+        let mut plugins_with_folon = IndexMap::new();
+        plugins_with_folon.insert("LondonWorldspace.esm".to_string(), "01".to_string());
+
+        let result = detect_mods_important(
+            &entries,
+            &plugins_with_folon,
+            Some("amd"),
+            &xse_modules,
+        )
+        .unwrap();
+        assert!(
+            result.is_empty(),
+            "Entry should be skipped when exclusion plugin is present"
+        );
+    }
+
+    #[test]
+    fn test_detect_mods_important_gpu_not_rival_shows_installed() {
+        let entries = vec![CoreModEntry {
+            detect: "nvidiapatch.esp".to_string(),
+            name: "NVIDIA Patch".to_string(),
+            description: "For NVIDIA GPUs only!".to_string(),
+            gpu: Some("nvidia".to_string()),
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        // User has NVIDIA, mod is for nvidia -> shows installed
+        let result =
+            detect_mods_important(&entries, &plugins, Some("nvidia"), &xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("✔️"));
+        assert!(output.contains("installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_custom_gpu_mismatch_warning() {
+        let entries = vec![CoreModEntry {
+            detect: "nvidiapatch.esp".to_string(),
+            name: "NVIDIA Patch".to_string(),
+            description: "For NVIDIA GPUs only!".to_string(),
+            gpu: Some("nvidia".to_string()),
+            gpu_mismatch_warning: Some(
+                "Custom warning: you don't have NVIDIA, remove this mod!".to_string(),
+            ),
+            exclude_when: None,
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        // User has AMD, nvidia mod is installed → custom mismatch warning
+        let result =
+            detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("❓"));
+        assert!(output.contains("Custom warning: you don't have NVIDIA"));
+        assert!(!output.contains("BUT IT SEEMS"));
     }
 
     // ============================================

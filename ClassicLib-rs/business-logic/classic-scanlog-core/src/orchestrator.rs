@@ -26,7 +26,7 @@ use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
 };
-use classic_config_core::ModConflictEntry;
+use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
@@ -211,8 +211,8 @@ pub struct AnalysisConfig {
     /// Stack-based suspect patterns for crash analysis (IndexMap preserves YAML key order for Python parity)
     pub suspects_stack: IndexMap<String, Vec<String>>,
 
-    /// Mod databases (IndexMap preserves YAML key order for Python parity)
-    pub mods_core: IndexMap<String, String>,
+    /// Structured core / important mod entries for recommended-mod checks
+    pub mods_core: Vec<CoreModEntry>,
     /// Frequently problematic mods database for crash analysis (IndexMap preserves YAML key order)
     pub mods_freq: IndexMap<String, String>,
     /// Mod conflict entries for compatibility analysis
@@ -221,8 +221,6 @@ pub struct AnalysisConfig {
     pub mods_solu: IndexMap<String, String>,
     /// Outdated, redundant, or community patch mods database (IndexMap preserves YAML key order)
     pub mods_opc2: IndexMap<String, String>,
-    /// FOLON (Fallout: London) specific mods database (IndexMap preserves YAML key order)
-    pub mods_core_folon: IndexMap<String, String>,
 
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
@@ -288,12 +286,11 @@ impl AnalysisConfig {
             remove_list: Vec::new(),
             suspects_error: IndexMap::new(),
             suspects_stack: IndexMap::new(),
-            mods_core: IndexMap::new(),
+            mods_core: Vec::new(),
             mods_freq: IndexMap::new(),
             mods_conf: Vec::new(),
             mods_solu: IndexMap::new(),
             mods_opc2: IndexMap::new(),
-            mods_core_folon: IndexMap::new(),
             classic_records_list: Vec::new(),
             crashgen_registry: CrashgenRegistry::default(),
         }
@@ -398,7 +395,6 @@ pub fn build_analysis_config_from_yaml(
         mods_conf: yaml.game_mods_conf.clone(),
         mods_solu: yaml.game_mods_solu.clone(),
         mods_opc2: yaml.game_mods_opc2.clone(),
-        mods_core_folon: yaml.game_mods_core_folon.clone(),
         classic_records_list: yaml.classic_records_list.clone(),
         crashgen_registry: build_crashgen_registry(&yaml.crashgen_registry),
     }
@@ -1272,16 +1268,17 @@ impl OrchestratorCore {
 
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
-            // Extract GPU info from system segment (task 4.3)
-            let gpu_rival_string: Option<String> = {
+            // Extract GPU vendor from system segment
+            let user_gpu_string: Option<String> = {
                 if context.system_segment_lines.is_empty() {
                     None
                 } else {
                     let gpu_info = GpuDetector::get_gpu_info(&context.system_segment_lines);
-                    gpu_info.rival
+                    let mfr = gpu_info.manufacturer.as_str();
+                    if mfr == "Unknown" { None } else { Some(mfr.to_lowercase()) }
                 }
             };
-            let gpu_rival = gpu_rival_string.as_deref();
+            let user_gpu = user_gpu_string.as_deref();
 
             // Extract XSE modules from combined MODULES+XSE_MODULES (task 4.5)
             // Check for conflicting mods
@@ -1327,10 +1324,10 @@ impl OrchestratorCore {
             // Check for important core mods with GPU considerations
             if !self.config.mods_core.is_empty() {
                 if let Ok(important_lines) = detect_mods_important(
-                    self.config.mods_core.clone(),
-                    plugins.clone(),
-                    gpu_rival,
-                    context.xse_modules_for_settings.clone(),
+                    &self.config.mods_core,
+                    plugins,
+                    user_gpu,
+                    &context.xse_modules_for_settings,
                 ) {
                     if !important_lines.is_empty() {
                         // Use direct header to match Python format exactly
@@ -1884,44 +1881,6 @@ impl OrchestratorCore {
         }
     }
 
-    /// Checks if the game is running FOLON (Fallout: London) based on plugins.
-    ///
-    /// # Arguments
-    ///
-    /// * `plugins` - Map of plugin names to their data
-    ///
-    /// # Returns
-    ///
-    /// `true` if FOLON (londonworldspace.esm) is detected.
-    pub fn detect_folon(&self, plugins: &HashMap<String, String>) -> bool {
-        plugins
-            .keys()
-            .any(|name| name.to_lowercase().contains("londonworldspace.esm"))
-    }
-
-    /// Returns the appropriate mods_core database based on whether FOLON is detected.
-    ///
-    /// When FOLON (Fallout: London) is detected and a FOLON-specific mod database is
-    /// available, returns that database. Otherwise, returns the standard mods_core.
-    ///
-    /// # Arguments
-    ///
-    /// * `plugins` - Map of plugin names to their data (used to detect FOLON)
-    ///
-    /// # Returns
-    ///
-    /// Reference to the appropriate mods_core database (IndexMap preserves YAML order).
-    pub fn get_mods_core_for_plugins(
-        &self,
-        plugins: &HashMap<String, String>,
-    ) -> &IndexMap<String, String> {
-        if self.detect_folon(plugins) && !self.config.mods_core_folon.is_empty() {
-            &self.config.mods_core_folon
-        } else {
-            &self.config.mods_core
-        }
-    }
-
     // ============================================================================
     // Loadorder.txt support
     // ============================================================================
@@ -2167,8 +2126,7 @@ mod tests {
             suspects_error_list: IndexMap::new(),
             suspects_stack_list: IndexMap::new(),
             game_mods_conf: Vec::new(),
-            game_mods_core: IndexMap::new(),
-            game_mods_core_folon: IndexMap::new(),
+            game_mods_core: Vec::new(),
             game_mods_freq: IndexMap::new(),
             game_mods_opc2: IndexMap::new(),
             game_mods_solu: IndexMap::new(),

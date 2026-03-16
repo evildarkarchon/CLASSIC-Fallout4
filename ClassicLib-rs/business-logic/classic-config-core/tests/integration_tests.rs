@@ -63,9 +63,9 @@ Mods_CONF:
     description: "Config for ModA"
     fix: "Remove one."
 Mods_CORE:
-  ModB: "Core mod B"
-Mods_CORE_FOLON:
-  FolonMod: "Folon specific mod"
+  - detect: ModB
+    name: Core Mod B
+    description: "Core mod B"
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_OPC2:
@@ -411,14 +411,10 @@ mod from_content_workflows {
         assert_eq!(config.game_mods_conf.len(), 1);
         assert_eq!(config.game_mods_conf[0].mod_a, "modA");
         assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
-        assert_eq!(
-            config.game_mods_core.get("ModB"),
-            Some(&"Core mod B".to_string())
-        );
-        assert_eq!(
-            config.game_mods_core_folon.get("FolonMod"),
-            Some(&"Folon specific mod".to_string())
-        );
+        assert_eq!(config.game_mods_core.len(), 1);
+        assert_eq!(config.game_mods_core[0].detect, "ModB");
+        assert_eq!(config.game_mods_core[0].name, "Core Mod B");
+        assert_eq!(config.game_mods_core[0].description, "Core mod B");
         assert_eq!(
             config.game_mods_freq.get("FreqMod"),
             Some(&"Frequently used mod".to_string())
