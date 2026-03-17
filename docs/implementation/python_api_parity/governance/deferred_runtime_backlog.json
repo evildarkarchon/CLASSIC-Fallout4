@@ -25,7 +25,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "CrashgenEntryRaw"
+        "CoreModEntry"
       ]
     },
     {
@@ -38,7 +38,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "config"
+        "CoreModExclude"
       ]
     },
     {
@@ -51,7 +51,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "format_registry_game_version"
+        "CrashgenEntryRaw"
       ]
     },
     {
@@ -64,7 +64,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "get_runtime"
+        "ModConflictEntry"
       ]
     },
     {
@@ -77,7 +77,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "resolve_registry_version_info"
+        "config"
       ]
     },
     {
@@ -90,46 +90,46 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
+        "format_registry_game_version"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-config-008",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "get_runtime"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-config-009",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "resolve_registry_version_info"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-config-010",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
         "yamldata"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-scanlog-008",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "AnalysisResult"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-scanlog-009",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CheckId"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-scanlog-010",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ConfigIssue"
       ]
     },
     {
@@ -142,7 +142,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "CrashgenEntry"
+        "AnalysisResult"
       ]
     },
     {
@@ -155,7 +155,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "CrashgenRegistry"
+        "CheckId"
       ]
     },
     {
@@ -168,7 +168,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "FcxModeHandler"
+        "ConfigIssue"
       ]
     },
     {
@@ -181,7 +181,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "FormIDAnalyzer"
+        "CrashgenEntry"
       ]
     },
     {
@@ -194,7 +194,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "FormIDAnalyzerCore"
+        "CrashgenRegistry"
       ]
     },
     {
@@ -207,7 +207,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "GLOBAL_FCX_HANDLER"
+        "FcxModeHandler"
       ]
     },
     {
@@ -220,7 +220,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "GpuInfo"
+        "FormIDAnalyzer"
       ]
     },
     {
@@ -233,7 +233,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "GpuVendor"
+        "FormIDAnalyzerCore"
       ]
     },
     {
@@ -246,7 +246,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "PapyrusError"
+        "GLOBAL_FCX_HANDLER"
       ]
     },
     {
@@ -259,7 +259,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "PapyrusStats"
+        "GpuInfo"
       ]
     },
     {
@@ -272,7 +272,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "PluginAnalyzer"
+        "GpuVendor"
       ]
     },
     {
@@ -285,7 +285,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "RecordScanner"
+        "PapyrusError"
       ]
     },
     {
@@ -298,7 +298,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "ReportComposer"
+        "PapyrusStats"
       ]
     },
     {
@@ -311,7 +311,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "ReportFragment"
+        "PluginAnalyzer"
       ]
     },
     {
@@ -324,7 +324,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "ReportGenerator"
+        "RecordScanner"
       ]
     },
     {
@@ -337,7 +337,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "RustFormIDAnalyzer"
+        "ReportComposer"
       ]
     },
     {
@@ -350,7 +350,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "ScanLogError"
+        "ReportFragment"
       ]
     },
     {
@@ -363,7 +363,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "SettingsValidator"
+        "ReportGenerator"
       ]
     },
     {
@@ -376,7 +376,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "StreamingIteratorParser"
+        "RustFormIDAnalyzer"
       ]
     },
     {
@@ -389,7 +389,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "StreamingLogParser"
+        "ScanLogError"
       ]
     },
     {
@@ -402,7 +402,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "StringPool"
+        "ScanProgressPhase"
       ]
     },
     {
@@ -415,7 +415,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "SuspectScanner"
+        "SettingsValidator"
       ]
     },
     {
@@ -428,7 +428,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "contains_plugin"
+        "StreamingIteratorParser"
       ]
     },
     {
@@ -441,7 +441,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "contains_record"
+        "StreamingLogParser"
       ]
     },
     {
@@ -454,7 +454,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "crashgen_registry"
+        "StringPool"
       ]
     },
     {
@@ -467,7 +467,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "crashgen_version_gen"
+        "SuspectScanner"
       ]
     },
     {
@@ -480,7 +480,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "detect_mods_batch"
+        "contains_plugin"
       ]
     },
     {
@@ -493,7 +493,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "detect_mods_double"
+        "contains_record"
       ]
     },
     {
@@ -506,7 +506,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "detect_mods_important"
+        "crashgen_registry"
       ]
     },
     {
@@ -519,7 +519,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "detect_mods_single"
+        "crashgen_version_gen"
       ]
     },
     {
@@ -532,7 +532,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "detect_plugins_batch"
+        "detect_mods_batch"
       ]
     },
     {
@@ -545,7 +545,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "error"
+        "detect_mods_double"
       ]
     },
     {
@@ -558,7 +558,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "fcx_handler"
+        "detect_mods_important"
       ]
     },
     {
@@ -571,7 +571,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "formid"
+        "detect_mods_single"
       ]
     },
     {
@@ -584,7 +584,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "formid_analyzer"
+        "detect_plugins_batch"
       ]
     },
     {
@@ -597,7 +597,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "gpu_detector"
+        "error"
       ]
     },
     {
@@ -610,7 +610,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "is_valid_formid"
+        "fcx_handler"
       ]
     },
     {
@@ -623,7 +623,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "mod_detector"
+        "formid"
       ]
     },
     {
@@ -636,7 +636,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "orchestrator"
+        "formid_analyzer"
       ]
     },
     {
@@ -649,7 +649,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "papyrus"
+        "gpu_detector"
       ]
     },
     {
@@ -662,7 +662,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "parser"
+        "is_valid_formid"
       ]
     },
     {
@@ -675,7 +675,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "patterns"
+        "mod_detector"
       ]
     },
     {
@@ -688,7 +688,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "plugin_analyzer"
+        "orchestrator"
       ]
     },
     {
@@ -701,7 +701,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "record_scanner"
+        "papyrus"
       ]
     },
     {
@@ -714,7 +714,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "report"
+        "parser"
       ]
     },
     {
@@ -727,7 +727,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "scan_records_batch"
+        "patterns"
       ]
     },
     {
@@ -740,7 +740,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "segment_key"
+        "plugin_analyzer"
       ]
     },
     {
@@ -753,7 +753,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "settings_validator"
+        "record_scanner"
       ]
     },
     {
@@ -766,7 +766,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "suspect_scanner"
+        "report"
       ]
     },
     {
@@ -779,7 +779,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "validate_formids_batch"
+        "scan_records_batch"
       ]
     },
     {
@@ -792,59 +792,59 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
+        "segment_key"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-scanlog-062",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "settings_validator"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-scanlog-063",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "suspect_scanner"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-scanlog-064",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "validate_formids_batch"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-scanlog-065",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
         "version"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-version_registry-062",
-      "classification": "deferred",
-      "ownerModule": "version_registry",
-      "tier": "tier2",
-      "wave": "wave3",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "AddressLibFormat"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-version_registry-063",
-      "classification": "deferred",
-      "ownerModule": "version_registry",
-      "tier": "tier2",
-      "wave": "wave3",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "AddressLibraryConfig"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-version_registry-064",
-      "classification": "deferred",
-      "ownerModule": "version_registry",
-      "tier": "tier2",
-      "wave": "wave3",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CompatibleRange"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-version_registry-065",
-      "classification": "deferred",
-      "ownerModule": "version_registry",
-      "tier": "tier2",
-      "wave": "wave3",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CrashgenConfig"
       ]
     },
     {
@@ -857,7 +857,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "LogLevel"
+        "AddressLibFormat"
       ]
     },
     {
@@ -870,7 +870,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "Result"
+        "AddressLibraryConfig"
       ]
     },
     {
@@ -883,7 +883,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "UnknownVersionStrategy"
+        "CompatibleRange"
       ]
     },
     {
@@ -896,7 +896,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "VersionMatcher"
+        "CrashgenConfig"
       ]
     },
     {
@@ -909,7 +909,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "VersionRegistryError"
+        "LogLevel"
       ]
     },
     {
@@ -922,11 +922,63 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
+        "Result"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-version_registry-072",
+      "classification": "deferred",
+      "ownerModule": "version_registry",
+      "tier": "tier2",
+      "wave": "wave3",
+      "owner": "Squad B",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "UnknownVersionStrategy"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-version_registry-073",
+      "classification": "deferred",
+      "ownerModule": "version_registry",
+      "tier": "tier2",
+      "wave": "wave3",
+      "owner": "Squad B",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "VersionMatcher"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-version_registry-074",
+      "classification": "deferred",
+      "ownerModule": "version_registry",
+      "tier": "tier2",
+      "wave": "wave3",
+      "owner": "Squad B",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "VersionRegistryError"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-version_registry-075",
+      "classification": "deferred",
+      "ownerModule": "version_registry",
+      "tier": "tier2",
+      "wave": "wave3",
+      "owner": "Squad B",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
         "XseConfig"
       ]
     },
     {
-      "coverageId": "python-deferred-config-072",
+      "coverageId": "python-deferred-config-076",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -939,7 +991,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-073",
+      "coverageId": "python-deferred-config-077",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -952,7 +1004,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-074",
+      "coverageId": "python-deferred-config-078",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -965,7 +1017,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-075",
+      "coverageId": "python-deferred-config-079",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -978,7 +1030,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-076",
+      "coverageId": "python-deferred-config-080",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -991,7 +1043,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-077",
+      "coverageId": "python-deferred-config-081",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -1004,7 +1056,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-078",
+      "coverageId": "python-deferred-config-082",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -1017,7 +1069,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-079",
+      "coverageId": "python-deferred-config-083",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -1030,7 +1082,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-080",
+      "coverageId": "python-deferred-config-084",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -1043,7 +1095,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-081",
+      "coverageId": "python-deferred-config-085",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -1056,7 +1108,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-config-082",
+      "coverageId": "python-deferred-config-086",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -1069,46 +1121,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-aux-083",
-      "classification": "deferred",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "wave": "wave4",
-      "owner": "Squad B",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_pybridge.BridgeMetrics"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-aux-084",
-      "classification": "deferred",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "wave": "wave4",
-      "owner": "Squad B",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_pybridge.BridgeOperationType"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-aux-085",
-      "classification": "deferred",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "wave": "wave4",
-      "owner": "Squad B",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_pybridge.RuntimeInfo"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-091",
+      "coverageId": "python-deferred-scanlog-095",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1121,7 +1134,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-092",
+      "coverageId": "python-deferred-scanlog-096",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1134,7 +1147,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-093",
+      "coverageId": "python-deferred-scanlog-097",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1147,7 +1160,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-094",
+      "coverageId": "python-deferred-scanlog-098",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1160,7 +1173,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-095",
+      "coverageId": "python-deferred-scanlog-099",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1173,7 +1186,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-096",
+      "coverageId": "python-deferred-scanlog-100",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1186,7 +1199,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-097",
+      "coverageId": "python-deferred-scanlog-101",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1199,7 +1212,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-098",
+      "coverageId": "python-deferred-scanlog-102",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1212,7 +1225,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-099",
+      "coverageId": "python-deferred-scanlog-103",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1225,7 +1238,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-100",
+      "coverageId": "python-deferred-scanlog-104",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1238,7 +1251,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-101",
+      "coverageId": "python-deferred-scanlog-105",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1251,7 +1264,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-102",
+      "coverageId": "python-deferred-scanlog-106",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1264,7 +1277,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-103",
+      "coverageId": "python-deferred-scanlog-107",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1277,7 +1290,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-104",
+      "coverageId": "python-deferred-scanlog-108",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1290,7 +1303,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-105",
+      "coverageId": "python-deferred-scanlog-109",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1303,7 +1316,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-106",
+      "coverageId": "python-deferred-scanlog-110",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1316,7 +1329,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-108",
+      "coverageId": "python-deferred-scanlog-112",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1329,7 +1342,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-109",
+      "coverageId": "python-deferred-scanlog-113",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1342,7 +1355,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-110",
+      "coverageId": "python-deferred-scanlog-114",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1355,7 +1368,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-111",
+      "coverageId": "python-deferred-scanlog-115",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1368,7 +1381,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-112",
+      "coverageId": "python-deferred-scanlog-116",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1381,7 +1394,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-113",
+      "coverageId": "python-deferred-scanlog-117",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1394,7 +1407,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-114",
+      "coverageId": "python-deferred-scanlog-118",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1407,7 +1420,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-115",
+      "coverageId": "python-deferred-scanlog-119",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1420,7 +1433,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-116",
+      "coverageId": "python-deferred-scanlog-120",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1433,7 +1446,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-117",
+      "coverageId": "python-deferred-scanlog-121",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1446,7 +1459,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-118",
+      "coverageId": "python-deferred-scanlog-122",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1459,7 +1472,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-119",
+      "coverageId": "python-deferred-scanlog-123",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1472,7 +1485,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-120",
+      "coverageId": "python-deferred-scanlog-124",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1485,7 +1498,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-121",
+      "coverageId": "python-deferred-scanlog-125",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1498,7 +1511,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-122",
+      "coverageId": "python-deferred-scanlog-126",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1511,7 +1524,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-123",
+      "coverageId": "python-deferred-scanlog-127",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1524,7 +1537,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-124",
+      "coverageId": "python-deferred-scanlog-128",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1537,7 +1550,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-125",
+      "coverageId": "python-deferred-scanlog-129",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1550,7 +1563,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-126",
+      "coverageId": "python-deferred-scanlog-130",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1563,7 +1576,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-127",
+      "coverageId": "python-deferred-scanlog-131",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1576,7 +1589,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-128",
+      "coverageId": "python-deferred-scanlog-132",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1589,7 +1602,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-129",
+      "coverageId": "python-deferred-scanlog-133",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1602,7 +1615,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-130",
+      "coverageId": "python-deferred-scanlog-134",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1615,7 +1628,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-131",
+      "coverageId": "python-deferred-scanlog-135",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1628,7 +1641,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-132",
+      "coverageId": "python-deferred-scanlog-136",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1641,7 +1654,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-133",
+      "coverageId": "python-deferred-scanlog-137",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1654,7 +1667,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-134",
+      "coverageId": "python-deferred-scanlog-138",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1667,7 +1680,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-135",
+      "coverageId": "python-deferred-scanlog-139",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1680,7 +1693,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-136",
+      "coverageId": "python-deferred-scanlog-140",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1693,7 +1706,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-137",
+      "coverageId": "python-deferred-scanlog-141",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1706,7 +1719,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-138",
+      "coverageId": "python-deferred-scanlog-142",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1719,7 +1732,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-139",
+      "coverageId": "python-deferred-scanlog-143",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1732,7 +1745,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-140",
+      "coverageId": "python-deferred-scanlog-144",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1745,7 +1758,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-141",
+      "coverageId": "python-deferred-scanlog-145",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1758,7 +1771,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-142",
+      "coverageId": "python-deferred-scanlog-146",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1771,7 +1784,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-143",
+      "coverageId": "python-deferred-scanlog-147",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1784,7 +1797,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-144",
+      "coverageId": "python-deferred-scanlog-148",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1797,7 +1810,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-145",
+      "coverageId": "python-deferred-scanlog-149",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1810,7 +1823,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-146",
+      "coverageId": "python-deferred-scanlog-150",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1823,7 +1836,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-147",
+      "coverageId": "python-deferred-scanlog-151",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1836,7 +1849,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-148",
+      "coverageId": "python-deferred-scanlog-152",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1849,7 +1862,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-149",
+      "coverageId": "python-deferred-scanlog-153",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1862,7 +1875,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-150",
+      "coverageId": "python-deferred-scanlog-154",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1875,7 +1888,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-151",
+      "coverageId": "python-deferred-scanlog-155",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1888,7 +1901,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-153",
+      "coverageId": "python-deferred-scanlog-157",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1901,7 +1914,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-154",
+      "coverageId": "python-deferred-scanlog-158",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1914,7 +1927,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-155",
+      "coverageId": "python-deferred-scanlog-159",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1927,7 +1940,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-156",
+      "coverageId": "python-deferred-scanlog-160",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1940,7 +1953,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-157",
+      "coverageId": "python-deferred-scanlog-161",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1953,7 +1966,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-158",
+      "coverageId": "python-deferred-scanlog-162",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1966,7 +1979,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-159",
+      "coverageId": "python-deferred-scanlog-163",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1979,7 +1992,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-160",
+      "coverageId": "python-deferred-scanlog-164",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -1992,7 +2005,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-161",
+      "coverageId": "python-deferred-scanlog-165",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2005,7 +2018,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-162",
+      "coverageId": "python-deferred-scanlog-166",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2018,7 +2031,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-163",
+      "coverageId": "python-deferred-scanlog-167",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2031,7 +2044,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-164",
+      "coverageId": "python-deferred-scanlog-168",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2044,20 +2057,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-165",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.detect_folon"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-166",
+      "coverageId": "python-deferred-scanlog-169",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2070,7 +2070,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-167",
+      "coverageId": "python-deferred-scanlog-170",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2083,7 +2083,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-168",
+      "coverageId": "python-deferred-scanlog-171",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2096,7 +2096,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-169",
+      "coverageId": "python-deferred-scanlog-172",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2109,7 +2109,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-170",
+      "coverageId": "python-deferred-scanlog-173",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2122,7 +2122,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-171",
+      "coverageId": "python-deferred-scanlog-174",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2135,7 +2135,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-172",
+      "coverageId": "python-deferred-scanlog-175",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2148,7 +2148,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-173",
+      "coverageId": "python-deferred-scanlog-176",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2161,7 +2161,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-174",
+      "coverageId": "python-deferred-scanlog-177",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2174,7 +2174,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-175",
+      "coverageId": "python-deferred-scanlog-178",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2187,7 +2187,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-176",
+      "coverageId": "python-deferred-scanlog-179",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2200,7 +2200,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-177",
+      "coverageId": "python-deferred-scanlog-180",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2213,7 +2213,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-178",
+      "coverageId": "python-deferred-scanlog-181",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2226,7 +2226,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-179",
+      "coverageId": "python-deferred-scanlog-182",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2239,7 +2239,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-180",
+      "coverageId": "python-deferred-scanlog-183",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2252,7 +2252,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-181",
+      "coverageId": "python-deferred-scanlog-184",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2265,7 +2265,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-182",
+      "coverageId": "python-deferred-scanlog-185",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2278,7 +2278,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-183",
+      "coverageId": "python-deferred-scanlog-186",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2291,7 +2291,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-184",
+      "coverageId": "python-deferred-scanlog-187",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2304,7 +2304,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-185",
+      "coverageId": "python-deferred-scanlog-188",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2317,20 +2317,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-186",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.ParallelReportProcessor.process_batch"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-187",
+      "coverageId": "python-deferred-scanlog-190",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2343,7 +2330,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-188",
+      "coverageId": "python-deferred-scanlog-191",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2356,7 +2343,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-190",
+      "coverageId": "python-deferred-scanlog-193",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2369,7 +2356,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-192",
+      "coverageId": "python-deferred-scanlog-195",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2382,7 +2369,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-193",
+      "coverageId": "python-deferred-scanlog-196",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2395,7 +2382,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-194",
+      "coverageId": "python-deferred-scanlog-197",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2408,7 +2395,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-195",
+      "coverageId": "python-deferred-scanlog-198",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2421,7 +2408,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-196",
+      "coverageId": "python-deferred-scanlog-199",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2434,7 +2421,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-197",
+      "coverageId": "python-deferred-scanlog-200",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2447,7 +2434,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-198",
+      "coverageId": "python-deferred-scanlog-201",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2460,7 +2447,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-199",
+      "coverageId": "python-deferred-scanlog-202",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2473,7 +2460,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-200",
+      "coverageId": "python-deferred-scanlog-203",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2486,7 +2473,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-201",
+      "coverageId": "python-deferred-scanlog-204",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2499,7 +2486,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-202",
+      "coverageId": "python-deferred-scanlog-205",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2512,7 +2499,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-203",
+      "coverageId": "python-deferred-scanlog-206",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2525,7 +2512,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-204",
+      "coverageId": "python-deferred-scanlog-207",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2538,7 +2525,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-205",
+      "coverageId": "python-deferred-scanlog-208",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2551,7 +2538,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-206",
+      "coverageId": "python-deferred-scanlog-209",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2564,7 +2551,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-207",
+      "coverageId": "python-deferred-scanlog-210",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2577,7 +2564,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-208",
+      "coverageId": "python-deferred-scanlog-211",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2590,7 +2577,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-209",
+      "coverageId": "python-deferred-scanlog-212",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2603,7 +2590,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-210",
+      "coverageId": "python-deferred-scanlog-213",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2616,7 +2603,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-211",
+      "coverageId": "python-deferred-scanlog-214",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2629,7 +2616,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-212",
+      "coverageId": "python-deferred-scanlog-215",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2642,7 +2629,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-213",
+      "coverageId": "python-deferred-scanlog-216",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2655,7 +2642,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-214",
+      "coverageId": "python-deferred-scanlog-217",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2668,7 +2655,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-215",
+      "coverageId": "python-deferred-scanlog-218",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2681,7 +2668,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-216",
+      "coverageId": "python-deferred-scanlog-219",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2694,7 +2681,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-217",
+      "coverageId": "python-deferred-scanlog-220",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2707,7 +2694,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-218",
+      "coverageId": "python-deferred-scanlog-221",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2720,7 +2707,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-219",
+      "coverageId": "python-deferred-scanlog-222",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2733,7 +2720,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-220",
+      "coverageId": "python-deferred-scanlog-223",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2746,7 +2733,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-221",
+      "coverageId": "python-deferred-scanlog-224",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2759,7 +2746,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-222",
+      "coverageId": "python-deferred-scanlog-225",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2772,7 +2759,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-223",
+      "coverageId": "python-deferred-scanlog-226",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2785,7 +2772,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-224",
+      "coverageId": "python-deferred-scanlog-227",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2798,7 +2785,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-225",
+      "coverageId": "python-deferred-scanlog-228",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2811,7 +2798,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-226",
+      "coverageId": "python-deferred-scanlog-229",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2824,7 +2811,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-227",
+      "coverageId": "python-deferred-scanlog-230",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2837,7 +2824,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-228",
+      "coverageId": "python-deferred-scanlog-231",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2850,7 +2837,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-229",
+      "coverageId": "python-deferred-scanlog-232",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2863,7 +2850,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-230",
+      "coverageId": "python-deferred-scanlog-233",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2876,7 +2863,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-231",
+      "coverageId": "python-deferred-scanlog-234",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2889,7 +2876,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-232",
+      "coverageId": "python-deferred-scanlog-235",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2902,7 +2889,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-233",
+      "coverageId": "python-deferred-scanlog-236",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2915,7 +2902,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-234",
+      "coverageId": "python-deferred-scanlog-237",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2928,7 +2915,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-235",
+      "coverageId": "python-deferred-scanlog-238",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2941,7 +2928,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-236",
+      "coverageId": "python-deferred-scanlog-239",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2954,7 +2941,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-237",
+      "coverageId": "python-deferred-scanlog-240",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2967,7 +2954,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-238",
+      "coverageId": "python-deferred-scanlog-241",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2980,7 +2967,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-239",
+      "coverageId": "python-deferred-scanlog-242",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -2993,7 +2980,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-240",
+      "coverageId": "python-deferred-scanlog-243",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3006,7 +2993,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-241",
+      "coverageId": "python-deferred-scanlog-244",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3019,7 +3006,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-242",
+      "coverageId": "python-deferred-scanlog-245",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3032,7 +3019,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-243",
+      "coverageId": "python-deferred-scanlog-246",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3045,7 +3032,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-244",
+      "coverageId": "python-deferred-scanlog-247",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3058,7 +3045,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-245",
+      "coverageId": "python-deferred-scanlog-248",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3071,7 +3058,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-246",
+      "coverageId": "python-deferred-scanlog-249",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3084,7 +3071,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-247",
+      "coverageId": "python-deferred-scanlog-250",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3097,7 +3084,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-248",
+      "coverageId": "python-deferred-scanlog-251",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3110,7 +3097,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-249",
+      "coverageId": "python-deferred-scanlog-252",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3123,7 +3110,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-250",
+      "coverageId": "python-deferred-scanlog-253",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3136,7 +3123,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-251",
+      "coverageId": "python-deferred-scanlog-254",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3149,7 +3136,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-252",
+      "coverageId": "python-deferred-scanlog-255",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3162,7 +3149,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-253",
+      "coverageId": "python-deferred-scanlog-256",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3175,7 +3162,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-254",
+      "coverageId": "python-deferred-scanlog-257",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3188,7 +3175,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-255",
+      "coverageId": "python-deferred-scanlog-258",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3201,7 +3188,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-256",
+      "coverageId": "python-deferred-scanlog-259",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3214,7 +3201,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-257",
+      "coverageId": "python-deferred-scanlog-260",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3227,7 +3214,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-258",
+      "coverageId": "python-deferred-scanlog-261",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3240,7 +3227,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-259",
+      "coverageId": "python-deferred-scanlog-262",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3253,7 +3240,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-260",
+      "coverageId": "python-deferred-scanlog-263",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3266,7 +3253,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-261",
+      "coverageId": "python-deferred-scanlog-264",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3279,7 +3266,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-262",
+      "coverageId": "python-deferred-scanlog-265",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3292,7 +3279,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-263",
+      "coverageId": "python-deferred-scanlog-266",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3305,7 +3292,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-264",
+      "coverageId": "python-deferred-scanlog-267",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3318,7 +3305,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-265",
+      "coverageId": "python-deferred-scanlog-268",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3331,7 +3318,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-266",
+      "coverageId": "python-deferred-scanlog-269",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3344,7 +3331,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-267",
+      "coverageId": "python-deferred-scanlog-270",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3357,7 +3344,20 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-268",
+      "coverageId": "python-deferred-scanlog-271",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "resolve_batch_concurrency"
+      ]
+    },
+    {
+      "coverageId": "python-deferred-version_registry-271",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3370,7 +3370,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-269",
+      "coverageId": "python-deferred-version_registry-272",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3383,7 +3383,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-270",
+      "coverageId": "python-deferred-version_registry-273",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3396,7 +3396,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-271",
+      "coverageId": "python-deferred-version_registry-274",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3409,7 +3409,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-272",
+      "coverageId": "python-deferred-version_registry-275",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3422,7 +3422,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-273",
+      "coverageId": "python-deferred-version_registry-276",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3435,7 +3435,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-274",
+      "coverageId": "python-deferred-version_registry-277",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3448,7 +3448,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-275",
+      "coverageId": "python-deferred-version_registry-278",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3461,7 +3461,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-276",
+      "coverageId": "python-deferred-version_registry-279",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3474,7 +3474,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-277",
+      "coverageId": "python-deferred-version_registry-280",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3487,7 +3487,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-278",
+      "coverageId": "python-deferred-version_registry-281",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3500,7 +3500,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-279",
+      "coverageId": "python-deferred-version_registry-282",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3513,7 +3513,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-280",
+      "coverageId": "python-deferred-version_registry-283",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3526,7 +3526,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-282",
+      "coverageId": "python-deferred-version_registry-285",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3539,7 +3539,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-283",
+      "coverageId": "python-deferred-version_registry-286",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3552,7 +3552,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-284",
+      "coverageId": "python-deferred-version_registry-287",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3565,7 +3565,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-285",
+      "coverageId": "python-deferred-version_registry-288",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3578,7 +3578,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-286",
+      "coverageId": "python-deferred-version_registry-289",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3591,7 +3591,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-287",
+      "coverageId": "python-deferred-version_registry-290",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3604,7 +3604,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-288",
+      "coverageId": "python-deferred-version_registry-291",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3617,7 +3617,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-289",
+      "coverageId": "python-deferred-version_registry-292",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3630,7 +3630,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-290",
+      "coverageId": "python-deferred-version_registry-293",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3643,7 +3643,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-291",
+      "coverageId": "python-deferred-version_registry-294",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -3656,7 +3656,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-version_registry-292",
+      "coverageId": "python-deferred-version_registry-295",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",

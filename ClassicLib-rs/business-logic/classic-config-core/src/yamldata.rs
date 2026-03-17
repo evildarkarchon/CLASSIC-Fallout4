@@ -8,16 +8,79 @@
 
 use classic_crashgen_settings_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
+    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
+    TargetValueType,
 };
+use classic_settings_core::{SettingsError, merge_yaml_documents, parse_yaml_content};
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
 use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use yaml_rust2::{Yaml, YamlLoader};
+use yaml_rust2::Yaml;
+
+/// A single mod-conflict pair from the `Mods_CONF` YAML section.
+///
+/// Each entry describes two mods whose simultaneous presence causes
+/// crashes or other problems. The `mod_a` / `mod_b` identifiers are
+/// matched case-insensitively as substrings against plugin file names
+/// in crash logs, while `name_a` / `name_b` are the human-readable
+/// display names used in reports.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModConflictEntry {
+    /// Identifier matched against plugin filenames (case-insensitive substring)
+    pub mod_a: String,
+    /// Identifier matched against plugin filenames (case-insensitive substring)
+    pub mod_b: String,
+    /// Human-readable display name for mod A
+    pub name_a: String,
+    /// Human-readable display name for mod B
+    pub name_b: String,
+    /// Why the conflict matters
+    pub description: String,
+    /// What the user should do
+    pub fix: String,
+    /// Optional URL for patch or alternative
+    pub link: Option<String>,
+}
+
+/// Condition under which a [`CoreModEntry`] should be excluded from processing.
+///
+/// Currently supports only plugin-presence checks. New variants can be added
+/// (e.g., `All`, `Any`, `Not` combinators) without breaking existing YAML.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CoreModExclude {
+    /// Exclude this entry when any of the listed plugins are present.
+    PluginAny(Vec<String>),
+}
+
+/// A single entry from the `Mods_CORE` YAML section.
+///
+/// Each entry describes an important / recommended mod that the scanner
+/// checks for in the crash log plugin list. The structured format replaces
+/// the old flat `"detect_id | Display Name" -> description` mapping and
+/// supports declarative GPU affinity and exclusion conditions.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CoreModEntry {
+    /// Substring matched case-insensitively against plugin / XSE module names.
+    pub detect: String,
+    /// Human-readable display name shown in the report.
+    pub name: String,
+    /// Recommendation text shown when the mod is missing or installed.
+    pub description: String,
+    /// GPU vendor this mod is for (`"nvidia"` or `"amd"`).
+    /// When set, the runtime uses this for GPU-specific behavior instead of
+    /// text-matching inside the description.
+    pub gpu: Option<String>,
+    /// Warning text shown when this mod is installed but the user does NOT
+    /// have the GPU specified by [`gpu`]. Falls back to a generic message
+    /// when absent.
+    pub gpu_mismatch_warning: Option<String>,
+    /// Optional condition that causes this entry to be skipped entirely.
+    pub exclude_when: Option<CoreModExclude>,
+}
 
 /// Raw per-crashgen settings configuration deserialized from YAML.
 ///
@@ -206,6 +269,13 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
             .and_then(PreflightActionKind::parse)
             .unwrap_or(PreflightActionKind::Notice);
 
+        let bucket = action_map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("bucket")).then_some(v))
+            .and_then(Yaml::as_str)
+            .and_then(RuleReportBucket::parse)
+            .unwrap_or_default();
+
         let severity = action_map
             .iter()
             .find_map(|(k, v)| (k.as_str() == Some("severity")).then_some(v))
@@ -229,6 +299,7 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
             when,
             action: PreflightAction {
                 kind,
+                bucket,
                 severity,
                 message,
                 fix,
@@ -416,6 +487,173 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
     result
 }
 
+/// Parse the `Mods_CONF` top-level key from a game YAML document.
+///
+/// Reads a sequence of structured conflict-pair mappings and returns
+/// deduplicated `ModConflictEntry` values. Pairs are canonicalized to
+/// `(min, max)` order (case-insensitive) so that `(A, B)` and `(B, A)`
+/// are treated as the same logical conflict; the second occurrence is
+/// skipped with a warning log.
+fn parse_mods_conf(game_data: &Yaml) -> Vec<ModConflictEntry> {
+    let Some(entries) = game_data["Mods_CONF"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+    let mut seen_pairs: HashSet<(String, String)> = HashSet::new();
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Mods_CONF[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let get_str = |key: &str| -> Option<String> {
+            map.iter()
+                .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(|s| s.trim().to_string())
+        };
+
+        let (mod_a, mod_b, name_a, name_b, description, fix) = match (
+            get_str("mod_a"),
+            get_str("mod_b"),
+            get_str("name_a"),
+            get_str("name_b"),
+            get_str("description"),
+            get_str("fix"),
+        ) {
+            (Some(a), Some(b), Some(na), Some(nb), Some(desc), Some(fx)) => {
+                (a, b, na, nb, desc, fx)
+            }
+            _ => {
+                log::debug!(
+                    "Skipping Mods_CONF[{}]: missing required field(s) (mod_a, mod_b, name_a, name_b, description, fix)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let link = get_str("link");
+
+        let canonical = {
+            let a_lower = mod_a.to_lowercase();
+            let b_lower = mod_b.to_lowercase();
+            if a_lower <= b_lower {
+                (a_lower, b_lower)
+            } else {
+                (b_lower, a_lower)
+            }
+        };
+
+        if !seen_pairs.insert(canonical.clone()) {
+            log::warn!(
+                "Skipping duplicate Mods_CONF[{}]: pair ({}, {}) already defined",
+                index,
+                mod_a,
+                mod_b
+            );
+            continue;
+        }
+
+        result.push(ModConflictEntry {
+            mod_a,
+            mod_b,
+            name_a,
+            name_b,
+            description,
+            fix,
+            link,
+        });
+    }
+
+    result
+}
+
+/// Parse the `Mods_CORE` YAML section into a `Vec<CoreModEntry>`.
+///
+/// Expects a YAML sequence of mappings, each with `detect`, `name`, and
+/// `description` (required), plus optional `gpu` and `exclude_when` fields.
+/// Malformed entries are skipped with a debug log.
+fn parse_mods_core(game_data: &Yaml) -> Vec<CoreModEntry> {
+    let Some(entries) = game_data["Mods_CORE"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Mods_CORE[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let get_str = |key: &str| -> Option<String> {
+            map.iter()
+                .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(|s| s.trim().to_string())
+        };
+
+        let (detect, name, description) = match (
+            get_str("detect"),
+            get_str("name"),
+            get_str("description"),
+        ) {
+            (Some(d), Some(n), Some(desc)) => (d, n, desc),
+            _ => {
+                log::debug!(
+                    "Skipping Mods_CORE[{}]: missing required field(s) (detect, name, description)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let gpu = get_str("gpu");
+        let gpu_mismatch_warning = get_str("gpu_mismatch_warning");
+
+        let exclude_when = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("exclude_when")).then_some(v))
+            .and_then(|ew| ew.as_hash())
+            .and_then(|ew_map| {
+                ew_map
+                    .iter()
+                    .find_map(|(k, v)| (k.as_str() == Some("plugin_any")).then_some(v))
+                    .and_then(Yaml::as_vec)
+                    .map(|items| {
+                        CoreModExclude::PluginAny(
+                            items
+                                .iter()
+                                .filter_map(|item| item.as_str().map(ToString::to_string))
+                                .collect(),
+                        )
+                    })
+            });
+
+        result.push(CoreModEntry {
+            detect,
+            name,
+            description,
+            gpu,
+            gpu_mismatch_warning,
+            exclude_when,
+        });
+    }
+
+    result
+}
+
 fn normalize_registry_key(value: &str) -> String {
     value
         .chars()
@@ -546,16 +784,78 @@ fn resolve_crashgen_ignore_fallback(
         .map(|entry| entry.ignore_keys.clone())
 }
 
+fn map_settings_error(
+    parse_context: &str,
+    empty_context: &str,
+    error: SettingsError,
+) -> ConfigError {
+    match error {
+        SettingsError::IoError { path, source } => ConfigError::IOError {
+            context: format!("Failed to read {}", path.display()),
+            source,
+        },
+        SettingsError::YamlParseError { message, .. } => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message,
+        },
+        SettingsError::InvalidYamlStructure {
+            source,
+            index,
+            found,
+        } => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message: format!(
+                "Invalid YAML structure in {}: document {} must be a mapping, found {}",
+                source, index, found
+            ),
+        },
+        SettingsError::EmptyDocument { .. } => {
+            ConfigError::EmptyDocument(empty_context.to_string())
+        }
+        SettingsError::TaskJoinError { path, source } => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message: format!(
+                "Task join error while loading {}: {}",
+                path.display(),
+                source
+            ),
+        },
+        SettingsError::KeyNotFound(key) => ConfigError::ParseError {
+            context: parse_context.to_string(),
+            message: format!("Cache key not found: {}", key),
+        },
+    }
+}
+
+fn parse_and_merge_yaml_content(
+    source_label: &str,
+    empty_label: &str,
+    content: &str,
+) -> Result<Yaml, ConfigError> {
+    let docs = parse_yaml_content(source_label, content).map_err(|error| {
+        map_settings_error(
+            &format!("Failed to parse {source_label}"),
+            empty_label,
+            error,
+        )
+    })?;
+
+    merge_yaml_documents(source_label, &docs).map_err(|error| {
+        map_settings_error(
+            &format!("Failed to parse {source_label}"),
+            empty_label,
+            error,
+        )
+    })
+}
+
 #[cfg(test)]
 mod crashgen_registry_tests {
     use super::*;
 
     fn parse_yaml_document(yaml_content: &str) -> Yaml {
-        YamlLoader::load_from_str(yaml_content)
-            .unwrap()
-            .into_iter()
-            .next()
-            .unwrap()
+        let docs = parse_yaml_content("memory://crashgen_registry", yaml_content).unwrap();
+        merge_yaml_documents("memory://crashgen_registry", &docs).unwrap()
     }
 
     #[test]
@@ -679,6 +979,7 @@ Crashgen_Registry:
             plugin_any: ["addictol.dll"]
           action:
             kind: notice_and_skip_remaining
+            bucket: error_information
             severity: info
             message: "skip"
       checks:
@@ -709,6 +1010,10 @@ Crashgen_Registry:
         assert_eq!(rules.version, 2);
         assert_eq!(rules.preflight.len(), 1);
         assert_eq!(rules.checks.len(), 1);
+        assert_eq!(
+            rules.preflight[0].action.bucket,
+            RuleReportBucket::ErrorInformation
+        );
         assert_eq!(rules.checks[0].target.key, "Achievements");
     }
 
@@ -739,6 +1044,7 @@ Crashgen_Registry:
             .expect("expected parsed settings rules");
         assert_eq!(rules.version, 1);
         assert_eq!(rules.preflight.len(), 1);
+        assert_eq!(rules.preflight[0].action.bucket, RuleReportBucket::Settings);
         assert!(rules.checks.is_empty());
     }
 }
@@ -771,9 +1077,8 @@ Crashgen_Registry:
 /// * `suspects_error_list` - An `IndexMap<String, String>` containing suspect error patterns mapped to descriptive explanations or identifiers.
 /// * `suspects_stack_list` - An `IndexMap<String, Vec<String>>` mapping suspect stack traces to their corresponding pattern lists.
 ///
-/// * `game_mods_conf` - An `IndexMap<String, String>` holding configuration settings for game modification databases.
-/// * `game_mods_core` - An `IndexMap<String, String>` storing core mod databases information.
-/// * `game_mods_core_folon` - An `IndexMap<String, String>` specific to the `Folon` core mod configuration.
+/// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
+/// * `game_mods_core` - A `Vec<CoreModEntry>` of structured core/important mod entries from `Mods_CORE`.
 /// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
 /// * `game_mods_opc2` - An `IndexMap<String, String>` for a specific feature or mod database identified as `opc2`.
 /// * `game_mods_solu` - An `IndexMap<String, String>` representing solution-related game mod configurations.
@@ -852,12 +1157,10 @@ pub struct YamlDataCore {
     pub suspects_stack_list: IndexMap<String, Vec<String>>,
 
     // Mod databases (IndexMap preserves YAML key order for Python parity)
-    /// Configuration settings for game modification databases
-    pub game_mods_conf: IndexMap<String, String>,
-    /// Core mod databases information
-    pub game_mods_core: IndexMap<String, String>,
-    /// Folon core mod configuration
-    pub game_mods_core_folon: IndexMap<String, String>,
+    /// Mod conflict pairs parsed from `Mods_CONF` (deduplicated at load time)
+    pub game_mods_conf: Vec<ModConflictEntry>,
+    /// Core / important mod entries parsed from `Mods_CORE` (structured sequence)
+    pub game_mods_core: Vec<CoreModEntry>,
     /// Frequently used game mod entries
     pub game_mods_freq: IndexMap<String, String>,
     /// Specific feature or mod database identified as opc2
@@ -965,9 +1268,8 @@ impl YamlDataCore {
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
             suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
             suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
-            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
-            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_conf: parse_mods_conf(game_data),
+            game_mods_core: parse_mods_core(game_data),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
             game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
             game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
@@ -1117,38 +1419,15 @@ impl YamlDataCore {
             source: e,
         })?;
 
-        // Parse YAML contents using yaml-rust2
-        let main_docs =
-            YamlLoader::load_from_str(&main_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse main YAML".to_string(),
-                source: e,
-            })?;
-        let game_docs =
-            YamlLoader::load_from_str(&game_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse game YAML".to_string(),
-                source: e,
-            })?;
-        let ignore_docs =
-            YamlLoader::load_from_str(&ignore_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse ignore YAML".to_string(),
-                source: e,
-            })?;
-
-        // Get first document from each file
-        let main_data = main_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Main YAML".to_string()))?;
-        let game_data = game_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Game YAML".to_string()))?;
-        let ignore_data = ignore_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
+        let main_data = parse_and_merge_yaml_content("main YAML", "Main YAML", &main_content)?;
+        let game_data = parse_and_merge_yaml_content("game YAML", "Game YAML", &game_content)?;
+        let ignore_data =
+            parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", &ignore_content)?;
 
         Ok(Self::build_from_yaml_documents(
-            main_data,
-            game_data,
-            ignore_data,
+            &main_data,
+            &game_data,
+            &ignore_data,
             &game,
             &selected_game_version,
         ))
@@ -1208,38 +1487,15 @@ impl YamlDataCore {
         game: String,
         selected_game_version: String,
     ) -> Result<Self, ConfigError> {
-        // Parse YAML contents using yaml-rust2
-        let main_docs =
-            YamlLoader::load_from_str(main_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse main YAML".to_string(),
-                source: e,
-            })?;
-        let game_docs =
-            YamlLoader::load_from_str(game_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse game YAML".to_string(),
-                source: e,
-            })?;
-        let ignore_docs =
-            YamlLoader::load_from_str(ignore_content).map_err(|e| ConfigError::ParseError {
-                context: "Failed to parse ignore YAML".to_string(),
-                source: e,
-            })?;
-
-        // Get first document from each file
-        let main_data = main_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Main YAML".to_string()))?;
-        let game_data = game_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Game YAML".to_string()))?;
-        let ignore_data = ignore_docs
-            .first()
-            .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
+        let main_data = parse_and_merge_yaml_content("main YAML", "Main YAML", main_content)?;
+        let game_data = parse_and_merge_yaml_content("game YAML", "Game YAML", game_content)?;
+        let ignore_data =
+            parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", ignore_content)?;
 
         Ok(Self::build_from_yaml_documents(
-            main_data,
-            game_data,
-            ignore_data,
+            &main_data,
+            &game_data,
+            &ignore_data,
             &game,
             &selected_game_version,
         ))
@@ -1264,22 +1520,17 @@ pub enum ConfigError {
     },
 
     /// Error parsing YAML configuration content
-    #[error("{context}: {source}")]
+    #[error("{context}: {message}")]
     ParseError {
         /// Contextual information about which file failed to parse
         context: String,
-        /// The underlying YAML parse error
-        #[source]
-        source: yaml_rust2::ScanError,
+        /// The underlying parse or merge failure message
+        message: String,
     },
 
     /// YAML document is empty (no content to parse)
     #[error("Empty YAML document: {0}")]
     EmptyDocument(String),
-
-    /// Runtime error during configuration processing
-    #[error("Runtime error: {0}")]
-    RuntimeError(String),
 }
 
 #[cfg(test)]
@@ -1337,11 +1588,25 @@ Crashlog_Error_Check:
 Crashlog_Stack_Check:
   StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
 Mods_CONF:
-  ModA: "Config for ModA"
+  - mod_a: modA
+    mod_b: modB
+    name_a: Mod A
+    name_b: Mod B
+    description: "Config for ModA"
+    fix: "Remove one."
 Mods_CORE:
-  ModB: "Core mod B"
-Mods_CORE_FOLON:
-  FolonMod: "Folon specific mod"
+  - detect: ModB
+    name: Core Mod B
+    description: "Core mod B"
+  - detect: GpuMod.dll
+    name: GPU Mod
+    description: "GPU-specific mod"
+    gpu: nvidia
+  - detect: ExcludedMod.esp
+    name: Excluded Mod
+    description: "Excluded mod"
+    exclude_when:
+      plugin_any: [SomeWorldspace.esm]
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_OPC2:
@@ -1527,17 +1792,26 @@ CLASSIC_Ignore_Skyrim:
         )
         .unwrap();
 
+        assert_eq!(config.game_mods_conf.len(), 1);
+        assert_eq!(config.game_mods_conf[0].mod_a, "modA");
+        assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
+
+        assert_eq!(config.game_mods_core.len(), 3);
+        assert_eq!(config.game_mods_core[0].detect, "ModB");
+        assert_eq!(config.game_mods_core[0].name, "Core Mod B");
+        assert_eq!(config.game_mods_core[0].description, "Core mod B");
+        assert_eq!(config.game_mods_core[0].gpu, None);
+        assert_eq!(config.game_mods_core[0].exclude_when, None);
+
+        assert_eq!(config.game_mods_core[1].detect, "GpuMod.dll");
+        assert_eq!(config.game_mods_core[1].gpu, Some("nvidia".to_string()));
+
+        assert_eq!(config.game_mods_core[2].detect, "ExcludedMod.esp");
         assert_eq!(
-            config.game_mods_conf.get("ModA"),
-            Some(&"Config for ModA".to_string())
-        );
-        assert_eq!(
-            config.game_mods_core.get("ModB"),
-            Some(&"Core mod B".to_string())
-        );
-        assert_eq!(
-            config.game_mods_core_folon.get("FolonMod"),
-            Some(&"Folon specific mod".to_string())
+            config.game_mods_core[2].exclude_when,
+            Some(CoreModExclude::PluginAny(vec![
+                "SomeWorldspace.esm".to_string()
+            ]))
         );
         assert_eq!(
             config.game_mods_freq.get("FreqMod"),
@@ -1683,7 +1957,7 @@ CLASSIC_Ignore_Skyrim:
         assert!(matches!(err, ConfigError::ParseError { .. }));
         match err {
             ConfigError::ParseError { context, .. } => {
-                assert!(context.contains("main YAML"));
+                assert!(context.to_lowercase().contains("main yaml"));
             }
             _ => panic!("Expected ParseError"),
         }
@@ -1706,7 +1980,7 @@ CLASSIC_Ignore_Skyrim:
         assert!(matches!(err, ConfigError::ParseError { .. }));
         match err {
             ConfigError::ParseError { context, .. } => {
-                assert!(context.contains("game YAML"));
+                assert!(context.to_lowercase().contains("game yaml"));
             }
             _ => panic!("Expected ParseError"),
         }
@@ -1729,7 +2003,7 @@ CLASSIC_Ignore_Skyrim:
         assert!(matches!(err, ConfigError::ParseError { .. }));
         match err {
             ConfigError::ParseError { context, .. } => {
-                assert!(context.contains("ignore YAML"));
+                assert!(context.to_lowercase().contains("ignore yaml"));
             }
             _ => panic!("Expected ParseError"),
         }
@@ -2298,11 +2572,14 @@ CLASSIC_Ignore_TestGame:
     }
 
     #[test]
-    fn test_config_error_runtime_error_display() {
-        let err = ConfigError::RuntimeError("something went wrong".to_string());
+    fn test_config_error_parse_error_display() {
+        let err = ConfigError::ParseError {
+            context: "Failed to parse game YAML".to_string(),
+            message: "document 1 must be a mapping".to_string(),
+        };
         let display = format!("{}", err);
-        assert!(display.contains("Runtime error"));
-        assert!(display.contains("something went wrong"));
+        assert!(display.contains("Failed to parse game YAML"));
+        assert!(display.contains("document 1 must be a mapping"));
     }
 
     #[test]

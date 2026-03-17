@@ -298,7 +298,7 @@ Top suspects:
 - Simplify Logs
 - Update Check
 
-**Persistence:** Settings are saved to `CLASSIC Settings.yaml`
+**Persistence:** Settings are saved to the active settings file. CLASSIC prefers the application directory first, then the user config directory under `dirs::config_dir()/CLASSIC/`, and it may keep updating an existing writable legacy `CLASSIC_Settings.yaml` in place.
 
 ---
 
@@ -599,8 +599,9 @@ ClassicLib-rs/ui-applications/classic-tui  # Works great!
 CLASSIC TUI is interactive, but you can script initial setup:
 
 ```bash
-# Configure via YAML before launching TUI
-cat > "CLASSIC Settings.yaml" <<EOF
+# Configure via YAML before launching TUI.
+# Put the file next to the TUI binary or in your platform's config dir under CLASSIC/.
+cat > "<config dir>/CLASSIC/CLASSIC Settings.yaml" <<EOF
 fcx_mode: true
 stat_logging: true
 paths:

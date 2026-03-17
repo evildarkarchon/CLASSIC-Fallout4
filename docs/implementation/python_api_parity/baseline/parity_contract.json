@@ -193,17 +193,6 @@
       "pythonKind": "class"
     },
     {
-      "id": "scanlog-logparser-parse-segments",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "LogParser",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "LogParser.parse_segments",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
       "id": "scanlog-logparser-extract-formids",
       "tier": "tier1",
       "ownerModule": "scanlog",

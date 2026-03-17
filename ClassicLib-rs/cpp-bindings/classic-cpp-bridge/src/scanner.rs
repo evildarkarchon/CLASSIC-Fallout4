@@ -8,16 +8,17 @@ use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+    AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase,
+    build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;
 use classic_yaml_core::YamlOperations;
 use log::info;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
@@ -38,6 +39,229 @@ const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
 const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
 const SHORT_SCAN_CACHE_TTL_SECS: u64 = BATCH_CACHE_TTL_SECS;
 const DB_COUNTER_LOG_INTERVAL_DEFAULT: u64 = 25;
+
+fn diagnostics_enabled() -> bool {
+    std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some()
+}
+
+fn map_progress_phase(phase: ScanProgressPhase) -> ffi::BatchProgressPhase {
+    match phase {
+        ScanProgressPhase::Setup => ffi::BatchProgressPhase::Setup,
+        ScanProgressPhase::Parse => ffi::BatchProgressPhase::Parse,
+        ScanProgressPhase::Analyze => ffi::BatchProgressPhase::Analyze,
+        ScanProgressPhase::Finalize => ffi::BatchProgressPhase::Finalize,
+    }
+}
+
+fn event_rank(kind: ffi::BatchProgressEventKind, phase: ffi::BatchProgressPhase) -> u8 {
+    match kind {
+        ffi::BatchProgressEventKind::Queued => 0,
+        ffi::BatchProgressEventKind::Started => 1,
+        ffi::BatchProgressEventKind::Phase => match phase {
+            ffi::BatchProgressPhase::Setup => 2,
+            ffi::BatchProgressPhase::Parse => 3,
+            ffi::BatchProgressPhase::Analyze => 4,
+            ffi::BatchProgressPhase::Finalize => 5,
+            _ => 5,
+        },
+        ffi::BatchProgressEventKind::Completed | ffi::BatchProgressEventKind::Failed => 6,
+        _ => 6,
+    }
+}
+
+fn make_progress_event(
+    event_kind: ffi::BatchProgressEventKind,
+    phase: ffi::BatchProgressPhase,
+    completed: u32,
+    total: u32,
+    input_index: u32,
+    log_path: &str,
+    success: bool,
+) -> ffi::BatchProgressEvent {
+    ffi::BatchProgressEvent {
+        completed,
+        total,
+        input_index,
+        log_path: log_path.to_string(),
+        event_kind,
+        phase,
+        success,
+    }
+}
+
+fn make_progress_event_with_current_completed(
+    event_kind: ffi::BatchProgressEventKind,
+    phase: ffi::BatchProgressPhase,
+    completed_counter: &AtomicU32,
+    total: u32,
+    input_index: u32,
+    log_path: &str,
+    success: bool,
+) -> ffi::BatchProgressEvent {
+    make_progress_event(
+        event_kind,
+        phase,
+        completed_counter.load(Ordering::Relaxed),
+        total,
+        input_index,
+        log_path,
+        success,
+    )
+}
+
+#[derive(Default)]
+struct BatchProgressDiagnostics {
+    queued_events: u32,
+    started_events: u32,
+    phase_events: u32,
+    completed_events: u32,
+    failed_events: u32,
+    in_flight_logs: HashSet<u32>,
+    max_in_flight: usize,
+}
+
+impl BatchProgressDiagnostics {
+    fn record(&mut self, event: &ffi::BatchProgressEvent) {
+        match event.event_kind {
+            ffi::BatchProgressEventKind::Queued => {
+                self.queued_events += 1;
+            }
+            ffi::BatchProgressEventKind::Started => {
+                self.started_events += 1;
+                self.in_flight_logs.insert(event.input_index);
+            }
+            ffi::BatchProgressEventKind::Phase => {
+                self.phase_events += 1;
+            }
+            ffi::BatchProgressEventKind::Completed => {
+                self.completed_events += 1;
+                self.in_flight_logs.remove(&event.input_index);
+            }
+            ffi::BatchProgressEventKind::Failed => {
+                self.failed_events += 1;
+                self.in_flight_logs.remove(&event.input_index);
+            }
+            _ => {}
+        }
+        self.max_in_flight = self.max_in_flight.max(self.in_flight_logs.len());
+    }
+
+    fn log_summary(&self, total: usize) {
+        info!(
+            "Batch progress diagnostics: total_logs={}, queued={}, started={}, phase={}, completed={}, failed={}, max_in_flight={}",
+            total,
+            self.queued_events,
+            self.started_events,
+            self.phase_events,
+            self.completed_events,
+            self.failed_events,
+            self.max_in_flight,
+        );
+    }
+}
+
+fn emit_progress_event(
+    callback: &ffi::ScanBatchProgressCallback,
+    diagnostics: Option<&mut BatchProgressDiagnostics>,
+    event: ffi::BatchProgressEvent,
+) {
+    if let Some(diagnostics) = diagnostics {
+        diagnostics.record(&event);
+        info!(
+            "Batch progress event: idx={}, kind={:?}, phase={:?}, completed={}/{}, success={}, log={}",
+            event.input_index,
+            event.event_kind,
+            event.phase,
+            event.completed,
+            event.total,
+            event.success,
+            event.log_path,
+        );
+    }
+    callback.on_batch_progress(&event);
+}
+
+type BatchTaskResult = (u32, String, ffi::BatchProgressPhase, AnalysisResult);
+
+const READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS: usize = 2;
+
+enum BatchUpdate {
+    Progress(ffi::BatchProgressEvent),
+    Result(BatchTaskResult),
+    TasksExhausted,
+}
+
+/// Drain all progress currently visible to preserve global event ordering before emitting the
+/// terminal Completed/Failed event for a finished task.
+async fn drain_ready_progress_events(
+    pending_progress_events: &mut VecDeque<ffi::BatchProgressEvent>,
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<ffi::BatchProgressEvent>,
+) -> Vec<ffi::BatchProgressEvent> {
+    let mut events = Vec::new();
+
+    while let Some(event) = pending_progress_events.pop_front() {
+        events.push(event);
+    }
+
+    let mut empty_yields_remaining = READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+    loop {
+        match progress_rx.try_recv() {
+            Ok(event) => {
+                events.push(event);
+                empty_yields_remaining = READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) if empty_yields_remaining > 0 => {
+                // A same-log phase send can be queued a couple runtime turns after the task
+                // result becomes visible. Yield a small, bounded number of times so already-
+                // scheduled sends can land before the terminal event without paying the old
+                // eight-yield busy-poll cost on every empty drain.
+                empty_yields_remaining -= 1;
+                tokio::task::yield_now().await;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => break,
+            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => {
+                // The sender side is gone, so only already-buffered task results remain.
+                break;
+            }
+        }
+    }
+
+    events
+}
+
+async fn next_batch_update<S>(
+    pending_progress_events: &mut VecDeque<ffi::BatchProgressEvent>,
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<ffi::BatchProgressEvent>,
+    tasks: &mut S,
+) -> BatchUpdate
+where
+    S: futures::stream::Stream<Item = BatchTaskResult> + Unpin,
+{
+    use futures::StreamExt;
+
+    if let Some(event) = pending_progress_events.pop_front() {
+        return BatchUpdate::Progress(event);
+    }
+
+    tokio::select! {
+        biased;
+        maybe_event = progress_rx.recv() => {
+            match maybe_event {
+                Some(event) => BatchUpdate::Progress(event),
+                None => match tasks.next().await {
+                    Some(result) => BatchUpdate::Result(result),
+                    None => BatchUpdate::TasksExhausted,
+                },
+            }
+        }
+        maybe_result = tasks.next() => {
+            match maybe_result {
+                Some(result) => BatchUpdate::Result(result),
+                None => BatchUpdate::TasksExhausted,
+            }
+        }
+    }
+}
 
 fn parse_db_counter_interval(raw: Option<&str>) -> u64 {
     raw.and_then(|value| value.trim().parse::<u64>().ok())
@@ -248,6 +472,7 @@ fn orchestrator_process_logs_batch_with_progress(
     callback: &ffi::ScanBatchProgressCallback,
 ) -> Vec<ffi::BatchScanResult> {
     use futures::stream::{self, StreamExt};
+    use tokio::sync::mpsc;
 
     let total = log_paths.len();
     if total == 0 {
@@ -255,6 +480,7 @@ fn orchestrator_process_logs_batch_with_progress(
     }
 
     let concurrency = effective_batch_concurrency(total, max_concurrent);
+    let diagnostics_enabled = diagnostics_enabled();
     let indexed_paths: Vec<(u32, String)> = log_paths
         .iter()
         .cloned()
@@ -264,37 +490,135 @@ fn orchestrator_process_logs_batch_with_progress(
 
     get_runtime().block_on(async {
         let mut completed = 0_u32;
+        let completed_counter = Arc::new(AtomicU32::new(0));
         let mut batch_results = Vec::with_capacity(indexed_paths.len());
+        let mut diagnostics = diagnostics_enabled.then(BatchProgressDiagnostics::default);
+        let mut pending_progress_events = VecDeque::new();
+
+        for (input_index, log_path) in &indexed_paths {
+            emit_progress_event(
+                callback,
+                diagnostics.as_mut(),
+                // Queued events announce discovered work before any log has finished, so
+                // their completed count intentionally stays at the batch-level snapshot of 0.
+                make_progress_event(
+                    ffi::BatchProgressEventKind::Queued,
+                    ffi::BatchProgressPhase::Setup,
+                    completed,
+                    total as u32,
+                    *input_index,
+                    log_path,
+                    false,
+                ),
+            );
+        }
+
+        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel::<ffi::BatchProgressEvent>();
 
         let mut tasks = stream::iter(indexed_paths)
             .map(|(input_index, log_path)| {
                 let log_path_for_error = log_path.clone();
+                let completed_counter = Arc::clone(&completed_counter);
+                let progress_tx = progress_tx.clone();
                 async move {
-                    let result = match orch.inner.process_log(log_path.clone()).await {
+                    let started_event = make_progress_event_with_current_completed(
+                        ffi::BatchProgressEventKind::Started,
+                        ffi::BatchProgressPhase::Setup,
+                        completed_counter.as_ref(),
+                        total as u32,
+                        input_index,
+                        &log_path,
+                        false,
+                    );
+                    let _ = progress_tx.send(started_event);
+
+                    let mut last_phase = ffi::BatchProgressPhase::Setup;
+                    let result = match orch
+                        .inner
+                        .process_log_with_progress(log_path.clone(), |phase| {
+                            last_phase = map_progress_phase(phase);
+                            let _ = progress_tx.send(make_progress_event_with_current_completed(
+                                ffi::BatchProgressEventKind::Phase,
+                                last_phase,
+                                completed_counter.as_ref(),
+                                total as u32,
+                                input_index,
+                                &log_path,
+                                false,
+                            ));
+                        })
+                        .await
+                    {
                         Ok(result) => result,
                         Err(e) => AnalysisResult::failure(log_path_for_error, e.to_string()),
                     };
-                    (input_index, log_path, result)
+                    (input_index, log_path, last_phase, result)
                 }
             })
             .buffer_unordered(concurrency);
 
-        while let Some((input_index, scanned_path, result)) = tasks.next().await {
-            completed += 1;
-            maybe_log_db_perf_counters(orch, scanned_path.as_str());
-            callback.on_batch_progress(
-                completed,
-                total as u32,
-                input_index,
-                scanned_path.as_str(),
-                result.success,
-            );
-            batch_results.push(analysis_result_to_batch_dto(
-                input_index,
-                completed,
-                total as u32,
-                result,
-            ));
+        while completed < total as u32 {
+            match next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await
+            {
+                BatchUpdate::Progress(event) => {
+                    emit_progress_event(callback, diagnostics.as_mut(), event);
+                }
+                BatchUpdate::Result((input_index, scanned_path, last_phase, result)) => {
+                    for event in
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await
+                    {
+                        emit_progress_event(callback, diagnostics.as_mut(), event);
+                    }
+
+                    completed += 1;
+                    completed_counter.store(completed, Ordering::Relaxed);
+                    maybe_log_db_perf_counters(orch, scanned_path.as_str());
+                    emit_progress_event(
+                        callback,
+                        diagnostics.as_mut(),
+                        make_progress_event(
+                            if result.success {
+                                ffi::BatchProgressEventKind::Completed
+                            } else {
+                                ffi::BatchProgressEventKind::Failed
+                            },
+                            last_phase,
+                            completed,
+                            total as u32,
+                            input_index,
+                            &result.log_path,
+                            result.success,
+                        ),
+                    );
+                    batch_results.push(analysis_result_to_batch_dto(
+                        input_index,
+                        completed,
+                        total as u32,
+                        result,
+                    ));
+                }
+                BatchUpdate::TasksExhausted => break,
+            }
+        }
+
+        drop(tasks);
+        drop(progress_tx);
+
+        // Any events left here come from an abnormal shutdown path where some task results never
+        // surfaced. Keep emitting them for diagnostics, even though they may be orphaned from a
+        // terminal Completed/Failed event; under the normal invariant, all logs finish above.
+        while let Some(event) = pending_progress_events.pop_front() {
+            emit_progress_event(callback, diagnostics.as_mut(), event);
+        }
+
+        while let Some(event) = progress_rx.recv().await {
+            emit_progress_event(callback, diagnostics.as_mut(), event);
+        }
+
+        if let Some(diagnostics) = diagnostics.as_ref() {
+            diagnostics.log_summary(total);
         }
 
         batch_results
@@ -502,6 +826,33 @@ fn papyrus_reset(analyzer: &mut CxxPapyrusAnalyzer) {
 
 #[cxx::bridge(namespace = "classic::scanner")]
 mod ffi {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum BatchProgressEventKind {
+        Queued = 0,
+        Started = 1,
+        Phase = 2,
+        Completed = 3,
+        Failed = 4,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum BatchProgressPhase {
+        Setup = 0,
+        Parse = 1,
+        Analyze = 2,
+        Finalize = 3,
+    }
+
+    struct BatchProgressEvent {
+        completed: u32,
+        total: u32,
+        input_index: u32,
+        log_path: String,
+        event_kind: BatchProgressEventKind,
+        phase: BatchProgressPhase,
+        success: bool,
+    }
+
     /// Result of scanning a single crash log.
     struct ScanResult {
         log_path: String,
@@ -542,14 +893,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("classic_cxx_bridge/scan_progress_callback.h");
         type ScanBatchProgressCallback;
-        fn on_batch_progress(
-            self: &ScanBatchProgressCallback,
-            completed: u32,
-            total: u32,
-            input_index: u32,
-            log_path: &str,
-            success: bool,
-        );
+        fn on_batch_progress(self: &ScanBatchProgressCallback, event: &BatchProgressEvent);
     }
 
     extern "Rust" {
@@ -740,6 +1084,520 @@ mod tests {
         assert!(dto.success);
         assert_eq!(dto.report_lines, vec!["line1"]);
         assert!(dto.error_message.is_empty());
+    }
+
+    #[test]
+    fn test_event_rank_stays_monotonic_for_successful_lifecycle() {
+        let events = [
+            (
+                ffi::BatchProgressEventKind::Queued,
+                ffi::BatchProgressPhase::Setup,
+            ),
+            (
+                ffi::BatchProgressEventKind::Started,
+                ffi::BatchProgressPhase::Setup,
+            ),
+            (
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Setup,
+            ),
+            (
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Parse,
+            ),
+            (
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Analyze,
+            ),
+            (
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Finalize,
+            ),
+            (
+                ffi::BatchProgressEventKind::Completed,
+                ffi::BatchProgressPhase::Finalize,
+            ),
+        ];
+
+        let mut previous = 0;
+        for (kind, phase) in events {
+            let rank = event_rank(kind, phase);
+            assert!(rank >= previous, "event rank should not regress");
+            previous = rank;
+        }
+    }
+
+    #[test]
+    fn test_make_progress_event_with_current_completed_uses_emit_time_snapshot() {
+        let completed_counter = AtomicU32::new(2);
+
+        let started = make_progress_event_with_current_completed(
+            ffi::BatchProgressEventKind::Started,
+            ffi::BatchProgressPhase::Setup,
+            &completed_counter,
+            5,
+            1,
+            "first.log",
+            false,
+        );
+        assert_eq!(started.completed, 2);
+
+        completed_counter.store(3, Ordering::Relaxed);
+        let phase = make_progress_event_with_current_completed(
+            ffi::BatchProgressEventKind::Phase,
+            ffi::BatchProgressPhase::Analyze,
+            &completed_counter,
+            5,
+            1,
+            "first.log",
+            false,
+        );
+        assert_eq!(phase.completed, 3);
+    }
+
+    #[test]
+    fn test_next_batch_update_prefers_progress_events_when_both_are_ready() {
+        use futures::stream;
+        use tokio::sync::mpsc;
+
+        get_runtime().block_on(async {
+            let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::new();
+            progress_tx
+                .send(make_progress_event(
+                    ffi::BatchProgressEventKind::Started,
+                    ffi::BatchProgressPhase::Setup,
+                    0,
+                    1,
+                    0,
+                    "test.log",
+                    false,
+                ))
+                .expect("progress event should send");
+
+            let mut tasks = stream::iter(vec![(
+                0,
+                "test.log".to_string(),
+                ffi::BatchProgressPhase::Setup,
+                AnalysisResult::success("test.log".to_string(), vec![], 0),
+            )]);
+
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
+            assert!(matches!(update, BatchUpdate::Progress(event) if event.event_kind == ffi::BatchProgressEventKind::Started));
+
+            drop(progress_tx);
+
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_flushes_phase_emitted_during_result_poll() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+
+        struct ResultAfterPhaseStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultAfterPhaseStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                self.progress_tx
+                    .send(make_progress_event(
+                        ffi::BatchProgressEventKind::Phase,
+                        ffi::BatchProgressPhase::Finalize,
+                        0,
+                        1,
+                        0,
+                        "test.log",
+                        false,
+                    ))
+                    .expect("phase event should send");
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "test.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("test.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::new();
+            let mut tasks = ResultAfterPhaseStream {
+                emitted: false,
+                progress_tx: progress_tx.clone(),
+            };
+
+            let update =
+                next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks).await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+            let drained =
+                drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx).await;
+            assert_eq!(drained.len(), 1);
+            assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+            assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
+            assert_eq!(drained[0].input_index, 0);
+            assert_eq!(drained[0].log_path, "test.log");
+            assert!(!drained[0].success);
+            assert!(pending_progress_events.is_empty());
+            assert!(progress_rx.try_recv().is_err());
+
+            drop(progress_tx);
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_flushes_phase_scheduled_for_next_tick() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+        use tokio::task::LocalSet;
+
+        struct ResultBeforeScheduledPhaseStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultBeforeScheduledPhaseStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                let progress_tx = self.progress_tx.clone();
+                tokio::task::spawn_local(async move {
+                    tokio::task::yield_now().await;
+                    progress_tx
+                        .send(make_progress_event(
+                            ffi::BatchProgressEventKind::Phase,
+                            ffi::BatchProgressPhase::Finalize,
+                            0,
+                            1,
+                            0,
+                            "test.log",
+                            false,
+                        ))
+                        .expect("scheduled phase event should send");
+                });
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "test.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("test.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            LocalSet::new()
+                .run_until(async {
+                    let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+                    let mut pending_progress_events = VecDeque::new();
+                    let mut tasks = ResultBeforeScheduledPhaseStream {
+                        emitted: false,
+                        progress_tx: progress_tx.clone(),
+                    };
+
+                    let update = next_batch_update(
+                        &mut pending_progress_events,
+                        &mut progress_rx,
+                        &mut tasks,
+                    )
+                    .await;
+                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+                    let drained =
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await;
+                    assert_eq!(drained.len(), 1);
+                    assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+                    assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
+                    assert_eq!(drained[0].input_index, 0);
+                    assert_eq!(drained[0].log_path, "test.log");
+                    assert!(pending_progress_events.is_empty());
+                    assert!(progress_rx.try_recv().is_err());
+
+                    drop(progress_tx);
+                })
+                .await;
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_flushes_phase_scheduled_after_multiple_yields() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+        use tokio::task::LocalSet;
+
+        struct ResultBeforeDelayedPhaseStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultBeforeDelayedPhaseStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                let progress_tx = self.progress_tx.clone();
+                tokio::task::spawn_local(async move {
+                    tokio::task::yield_now().await;
+                    tokio::task::spawn_local(async move {
+                        progress_tx
+                            .send(make_progress_event(
+                                ffi::BatchProgressEventKind::Phase,
+                                ffi::BatchProgressPhase::Finalize,
+                                0,
+                                1,
+                                0,
+                                "test.log",
+                                false,
+                            ))
+                            .expect("delayed phase event should send");
+                    });
+                });
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "test.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("test.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            LocalSet::new()
+                .run_until(async {
+                    let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+                    let mut pending_progress_events = VecDeque::new();
+                    let mut tasks = ResultBeforeDelayedPhaseStream {
+                        emitted: false,
+                        progress_tx: progress_tx.clone(),
+                    };
+
+                    let update = next_batch_update(
+                        &mut pending_progress_events,
+                        &mut progress_rx,
+                        &mut tasks,
+                    )
+                    .await;
+                    assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+                    let drained =
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await;
+                    assert_eq!(drained.len(), 1);
+                    assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+                    assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Finalize);
+                    assert_eq!(drained[0].input_index, 0);
+                    assert_eq!(drained[0].log_path, "test.log");
+                    assert!(pending_progress_events.is_empty());
+                    assert!(progress_rx.try_recv().is_err());
+
+                    drop(progress_tx);
+                })
+                .await;
+        });
+    }
+
+    #[test]
+    fn test_drain_ready_progress_events_emits_other_logs_without_rebuffering() {
+        use futures::stream::Stream;
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+        use tokio::sync::mpsc;
+
+        struct ResultAfterCrossLogPhasesStream {
+            emitted: bool,
+            progress_tx: mpsc::UnboundedSender<ffi::BatchProgressEvent>,
+        }
+
+        impl Stream for ResultAfterCrossLogPhasesStream {
+            type Item = BatchTaskResult;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                if self.emitted {
+                    return Poll::Ready(None);
+                }
+
+                self.progress_tx
+                    .send(make_progress_event(
+                        ffi::BatchProgressEventKind::Phase,
+                        ffi::BatchProgressPhase::Analyze,
+                        0,
+                        2,
+                        1,
+                        "other.log",
+                        false,
+                    ))
+                    .expect("other log phase event should send");
+                self.progress_tx
+                    .send(make_progress_event(
+                        ffi::BatchProgressEventKind::Phase,
+                        ffi::BatchProgressPhase::Finalize,
+                        0,
+                        2,
+                        0,
+                        "target.log",
+                        false,
+                    ))
+                    .expect("target log phase event should send");
+
+                self.emitted = true;
+
+                Poll::Ready(Some((
+                    0,
+                    "target.log".to_string(),
+                    ffi::BatchProgressPhase::Finalize,
+                    AnalysisResult::success("target.log".to_string(), vec![], 0),
+                )))
+            }
+        }
+
+        get_runtime().block_on(async {
+            let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::new();
+            let mut tasks = ResultAfterCrossLogPhasesStream {
+                emitted: false,
+                progress_tx: progress_tx.clone(),
+            };
+
+            let update =
+                next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks).await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+
+            let drained =
+                drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx).await;
+            assert_eq!(
+                drained.len(),
+                2,
+                "other-log progress should be forwarded immediately instead of rebuffered"
+            );
+            assert_eq!(drained[0].input_index, 1);
+            assert_eq!(drained[0].log_path, "other.log");
+            assert_eq!(drained[0].event_kind, ffi::BatchProgressEventKind::Phase);
+            assert_eq!(drained[0].phase, ffi::BatchProgressPhase::Analyze);
+
+            assert_eq!(drained[1].input_index, 0);
+            assert_eq!(drained[1].log_path, "target.log");
+            assert_eq!(drained[1].event_kind, ffi::BatchProgressEventKind::Phase);
+            assert_eq!(drained[1].phase, ffi::BatchProgressPhase::Finalize);
+
+            assert!(pending_progress_events.is_empty());
+            assert!(progress_rx.try_recv().is_err());
+
+            drop(progress_tx);
+        });
+    }
+
+    #[test]
+    fn test_next_batch_update_prefers_buffered_progress_events_before_results() {
+        use futures::stream;
+        use tokio::sync::mpsc;
+
+        get_runtime().block_on(async {
+            let (_progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+            let mut pending_progress_events = VecDeque::from([make_progress_event(
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Analyze,
+                0,
+                2,
+                1,
+                "buffered.log",
+                false,
+            )]);
+            let mut tasks = stream::iter(vec![(
+                0,
+                "result.log".to_string(),
+                ffi::BatchProgressPhase::Finalize,
+                AnalysisResult::success("result.log".to_string(), vec![], 0),
+            )]);
+
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
+            assert!(matches!(update, BatchUpdate::Progress(event) if event.input_index == 1 && event.log_path == "buffered.log"));
+
+            let update = next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await;
+            assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
+        });
+    }
+
+    #[test]
+    fn test_event_rank_stays_monotonic_for_failed_lifecycle() {
+        let events = [
+            (
+                ffi::BatchProgressEventKind::Queued,
+                ffi::BatchProgressPhase::Setup,
+            ),
+            (
+                ffi::BatchProgressEventKind::Started,
+                ffi::BatchProgressPhase::Setup,
+            ),
+            (
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Setup,
+            ),
+            (
+                ffi::BatchProgressEventKind::Phase,
+                ffi::BatchProgressPhase::Analyze,
+            ),
+            (
+                ffi::BatchProgressEventKind::Failed,
+                ffi::BatchProgressPhase::Analyze,
+            ),
+        ];
+
+        let mut previous = 0;
+        for (kind, phase) in events {
+            let rank = event_rank(kind, phase);
+            assert!(rank >= previous, "failed event rank should not regress");
+            previous = rank;
+        }
     }
 
     #[test]

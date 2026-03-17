@@ -31,8 +31,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 21,
-      "contractIdsHash": "f388a8e30dbf3648f472881619ae5727d7f80d7a23c1f7163077f9cdb31d0915",
+      "contractCount": 20,
+      "contractIdsHash": "105cad21350d2ba23ea21970c430a2e9e6b845740ea02edac967fb02cc31bc24",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -97,22 +97,6 @@
       "verificationMode": "direct_call",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier2-smoke"
-    },
-    {
-      "coverageId": "python-tier2-aux-runtime",
-      "classification": "runtime_verified",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "bindingIdentifiers": [
-        "classic_pybridge.clear_metrics",
-        "classic_pybridge.record_operation",
-        "classic_pybridge.get_metrics",
-        "classic_pybridge.is_runtime_available",
-        "classic_pybridge.get_runtime_info"
-      ],
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "aux-tier2-smoke"
     }
   ]
 }

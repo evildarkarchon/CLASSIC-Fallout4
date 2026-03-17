@@ -31,6 +31,8 @@ qt_add_executable(ClassicGui WIN32
     core/threadmanager.cpp
 
     # Workers (QThread worker objects)
+    workers/scanprogressmodel.h
+    workers/scanprogressmodel.cpp
     workers/scanworker.h
     workers/scanworker.cpp
     workers/gamefilesworker.h
@@ -203,16 +205,41 @@ if(WINDEPLOYQT_EXECUTABLE)
     # vcpkg builds Qt against additional runtime DLLs (zlib/pcre/libpng/md4c
     # and double-conversion) that windeployqt does not copy in this setup.
     # Install them explicitly so CLASSIC.exe is portable on clean systems.
-    if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+    set(_classic_vcpkg_installed_dir "")
+    if(DEFINED VCPKG_INSTALLED_DIR)
+        set(_classic_vcpkg_installed_dir "${VCPKG_INSTALLED_DIR}")
+    elseif(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/installed")
+        set(_classic_vcpkg_installed_dir "$ENV{VCPKG_ROOT}/installed")
+    elseif(DEFINED CMAKE_TOOLCHAIN_FILE AND EXISTS "${CMAKE_TOOLCHAIN_FILE}")
+        get_filename_component(_classic_gui_toolchain_dir "${CMAKE_TOOLCHAIN_FILE}" DIRECTORY)
+        get_filename_component(_classic_gui_vcpkg_scripts_dir "${_classic_gui_toolchain_dir}" DIRECTORY)
+        get_filename_component(_classic_gui_vcpkg_root "${_classic_gui_vcpkg_scripts_dir}" DIRECTORY)
+        if(EXISTS "${_classic_gui_vcpkg_root}/installed")
+            set(_classic_vcpkg_installed_dir "${_classic_gui_vcpkg_root}/installed")
+        endif()
+    endif()
+
+    set(_classic_vcpkg_triplet "")
+    if(DEFINED VCPKG_TARGET_TRIPLET)
+        set(_classic_vcpkg_triplet "${VCPKG_TARGET_TRIPLET}")
+    elseif(DEFINED ENV{VCPKG_DEFAULT_TRIPLET})
+        set(_classic_vcpkg_triplet "$ENV{VCPKG_DEFAULT_TRIPLET}")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(_classic_vcpkg_triplet "x64-windows")
+    else()
+        set(_classic_vcpkg_triplet "x86-windows")
+    endif()
+
+    if(NOT _classic_vcpkg_installed_dir STREQUAL "" AND NOT _classic_vcpkg_triplet STREQUAL "")
         install(CODE "
-            set(_classic_vcpkg_bin \"${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\")
+            set(_classic_vcpkg_bin \"${_classic_vcpkg_installed_dir}/${_classic_vcpkg_triplet}/bin\")
             set(_classic_qt_runtime_dlls
                 double-conversion.dll
                 md4c.dll
             )
 
             if(\"\${CMAKE_INSTALL_CONFIG_NAME}\" STREQUAL \"Debug\")
-                set(_classic_vcpkg_bin \"${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/bin\")
+                set(_classic_vcpkg_bin \"${_classic_vcpkg_installed_dir}/${_classic_vcpkg_triplet}/debug/bin\")
                 list(APPEND _classic_qt_runtime_dlls
                     libpng16d.dll
                     pcre2-16d.dll
@@ -236,7 +263,7 @@ if(WINDEPLOYQT_EXECUTABLE)
             endforeach()
         ")
     else()
-        message(WARNING "VCPKG runtime paths are undefined; some Qt dependency DLLs may be missing from install output.")
+        message(STATUS "Skipping optional VCPKG runtime DLL copy; no usable vcpkg installed directory was detected.")
     endif()
 else()
     message(WARNING "windeployqt was not found; install output will miss required Qt runtime files.")

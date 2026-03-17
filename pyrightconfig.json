@@ -4,6 +4,8 @@
         "**/node_modules",
         "**/examples",
         "**/.venv",
-        "**/vcpkg_installed"
+        "**/vcpkg_installed",
+        "**/_internal",
+        "**/tests"
     ]
 }

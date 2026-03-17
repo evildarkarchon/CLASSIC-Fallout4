@@ -80,15 +80,15 @@
 //! ```
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, PathConfig as CorePathConfig, YamlDataCore,
-    YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, PathConfig as CorePathConfig,
+    YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_crashgen_settings_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
 };
+use classic_settings_core::SettingsError;
 use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};
 use classic_shared_core::get_runtime;
-use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::collections::HashMap;
@@ -205,31 +205,63 @@ define_exceptions!(
 // Wrapper to satisfy orphan rules
 struct PyConfigError(ConfigError);
 
-// Implement ToPyErr for the local wrapper
-impl ToPyErr for PyConfigError {
-    type BaseException = PyRuntimeError;
-    type IOException = PyIOError;
-    type ParseException = PyValueError;
-
-    fn to_pyerr(self) -> PyErr {
-        match self.0 {
-            ConfigError::IOError { context, source } => {
-                Self::io_err(format!("{}: {}", context, source))
-            }
-            ConfigError::ParseError { context, source } => {
-                Self::parse_err(format!("{}: {}", context, source))
-            }
-            ConfigError::EmptyDocument(doc_name) => {
-                Self::parse_err(format!("Empty YAML document: {}", doc_name))
-            }
-            ConfigError::InvalidInput(msg) => Self::parse_err(format!("Invalid input: {}", msg)),
-            ConfigError::RuntimeError(msg) => Self::base_err(format!("Runtime error: {}", msg)),
+fn config_error_to_pyerr(err: &ConfigError) -> PyErr {
+    match err {
+        ConfigError::IOError { context, source } => {
+            RustConfigIOError::new_err(format!("{}: {}", context, source))
+        }
+        ConfigError::ParseError { context, message } => {
+            RustConfigParseError::new_err(format!("{}: {}", context, message))
+        }
+        ConfigError::EmptyDocument(doc_name) => {
+            RustConfigParseError::new_err(format!("Empty YAML document: {}", doc_name))
+        }
+        ConfigError::InvalidInput(msg) => {
+            RustConfigParseError::new_err(format!("Invalid input: {}", msg))
         }
     }
 }
 
-fn runtime_to_pyerr(err: impl std::fmt::Display) -> PyErr {
-    RustConfigError::new_err(err.to_string())
+fn settings_error_to_pyerr(err: &SettingsError, message: &str) -> PyErr {
+    match err {
+        SettingsError::IoError { .. } => RustConfigIOError::new_err(message.to_string()),
+        SettingsError::YamlParseError { .. }
+        | SettingsError::EmptyDocument { .. }
+        | SettingsError::InvalidYamlStructure { .. }
+        | SettingsError::KeyNotFound(_) => RustConfigParseError::new_err(message.to_string()),
+        SettingsError::TaskJoinError { .. } => RustConfigError::new_err(message.to_string()),
+    }
+}
+
+// Implement ToPyErr for the local wrapper
+impl ToPyErr for PyConfigError {
+    type BaseException = RustConfigError;
+    type IOException = RustConfigIOError;
+    type ParseException = RustConfigParseError;
+
+    fn to_pyerr(self) -> PyErr {
+        config_error_to_pyerr(&self.0)
+    }
+}
+
+fn runtime_to_pyerr(err: anyhow::Error) -> PyErr {
+    let display = format!("{err:#}");
+    let mut current: Option<&(dyn std::error::Error + 'static)> = Some(err.as_ref());
+
+    while let Some(cause) = current {
+        if let Some(config_err) = cause.downcast_ref::<ConfigError>() {
+            return config_error_to_pyerr(config_err);
+        }
+        if let Some(settings_err) = cause.downcast_ref::<SettingsError>() {
+            return settings_error_to_pyerr(settings_err, &display);
+        }
+        if cause.downcast_ref::<std::io::Error>().is_some() {
+            return RustConfigIOError::new_err(display);
+        }
+        current = cause.source();
+    }
+
+    RustConfigError::new_err(display)
 }
 
 fn pathbuf_to_string(path: &std::path::Path) -> String {
@@ -881,30 +913,40 @@ impl PyYamlData {
     // ========================================================================
 
     #[getter]
-    fn game_mods_conf(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_conf {
-            dict.set_item(k, v)?;
+    fn game_mods_conf(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for entry in &self.inner.game_mods_conf {
+            let dict = PyDict::new(py);
+            dict.set_item("mod_a", &entry.mod_a)?;
+            dict.set_item("mod_b", &entry.mod_b)?;
+            dict.set_item("name_a", &entry.name_a)?;
+            dict.set_item("name_b", &entry.name_b)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("fix", &entry.fix)?;
+            dict.set_item("link", &entry.link)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]
-    fn game_mods_core(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_core {
-            dict.set_item(k, v)?;
+    fn game_mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.game_mods_core {
+            let dict = PyDict::new(py);
+            dict.set_item("detect", &entry.detect)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("gpu", &entry.gpu)?;
+            dict.set_item("gpu_mismatch_warning", &entry.gpu_mismatch_warning)?;
+            if let Some(CoreModExclude::PluginAny(ref plugins)) = entry.exclude_when {
+                let ew_dict = PyDict::new(py);
+                ew_dict.set_item("plugin_any", plugins)?;
+                dict.set_item("exclude_when", ew_dict)?;
+            }
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
-    }
-
-    #[getter]
-    fn game_mods_core_folon(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_core_folon {
-            dict.set_item(k, v)?;
-        }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]

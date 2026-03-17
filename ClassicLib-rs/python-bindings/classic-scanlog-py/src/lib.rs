@@ -22,8 +22,8 @@
 //!     with open("crash-2024-01-01.log", "r") as f:
 //!         lines = f.readlines()
 //!
-//!     # Parse segments (20-40x faster than Python)
-//!     segments = parser.parse_segments(lines)
+//!     # Parse named sections (20-40x faster than Python)
+//!     segments = parser.parse_all_sections(lines)
 //!     print(f"Found {len(segments)} segments")
 //!
 //!     # Extract FormIDs (25x faster than Python regex)
@@ -92,6 +92,8 @@ define_exceptions!(
 );
 
 // Import all wrapper modules
+/// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
+pub mod core_mod_convert;
 /// Crashgen settings rule parsing helpers for Python inputs.
 pub mod crashgen_rules;
 pub mod fcx_handler;

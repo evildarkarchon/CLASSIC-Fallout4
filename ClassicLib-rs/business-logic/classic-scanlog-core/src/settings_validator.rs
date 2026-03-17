@@ -14,12 +14,29 @@ use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
 use crate::report::ReportFragment;
 use classic_crashgen_settings_core::{
-    ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
+    ConfigLayout, EvaluationContext, EvaluationOutcome, OutcomeKind, RuleReportBucket,
+    RuleSeverity, evaluate_rules,
 };
 use log::warn;
 use std::collections::{HashMap, HashSet};
 
 const DEFAULT_DISPLAY_SECTION: &str = "[Compatibility]";
+
+#[derive(Clone, Debug)]
+pub(crate) struct BucketedSettingsFragment {
+    pub bucket: RuleReportBucket,
+    pub fragment: ReportFragment,
+}
+
+impl BucketedSettingsFragment {
+    fn new(bucket: RuleReportBucket, fragment: ReportFragment) -> Self {
+        Self { bucket, fragment }
+    }
+
+    fn settings(fragment: ReportFragment) -> Self {
+        Self::new(RuleReportBucket::Settings, fragment)
+    }
+}
 
 /// Settings validator driven by per-crashgen registry entries.
 ///
@@ -56,6 +73,20 @@ impl SettingsValidator {
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: ConfigLayout,
     ) -> Result<Vec<ReportFragment>> {
+        Ok(self
+            .scan_all_settings_bucketed(crashgen, xse_modules, crashgen_version, config_layout)?
+            .into_iter()
+            .map(|fragment| fragment.fragment)
+            .collect())
+    }
+
+    pub(crate) fn scan_all_settings_bucketed(
+        &self,
+        crashgen: &HashMap<String, String>,
+        xse_modules: &HashSet<String>,
+        crashgen_version: Option<(u32, u32, u32)>,
+        config_layout: ConfigLayout,
+    ) -> Result<Vec<BucketedSettingsFragment>> {
         if let Some(rules) = self.entry.settings_rules.as_ref() {
             let context = EvaluationContext {
                 crashgen_name: self.crashgen_name.clone(),
@@ -89,35 +120,16 @@ impl SettingsValidator {
                     }
                 }
 
-                match outcome.kind {
-                    OutcomeKind::Issue => {
-                        lines.push(format!("# ❌ CAUTION : {} # \n", outcome.message));
-                        if let Some(fix) = outcome.fix {
-                            lines.push(format!(" FIX: {}\n\n-----\n", fix));
-                        } else {
-                            lines.push("\n-----\n".to_string());
-                        }
+                lines.extend(match outcome.bucket {
+                    RuleReportBucket::Settings => self.render_settings_bucket_lines(&outcome),
+                    RuleReportBucket::ErrorInformation => {
+                        self.render_error_information_bucket_lines(&outcome)
                     }
-                    OutcomeKind::Notice => {
-                        let icon = if outcome.severity == RuleSeverity::Error {
-                            "❌"
-                        } else if outcome.severity == RuleSeverity::Warning {
-                            "⚠️"
-                        } else {
-                            "[!]"
-                        };
-                        lines.push(format!("# {} NOTICE : {} # \n", icon, outcome.message));
-                        if let Some(fix) = outcome.fix {
-                            lines.push(format!(" {}\n\n-----\n", fix));
-                        } else {
-                            lines.push("\n-----\n".to_string());
-                        }
-                    }
-                    OutcomeKind::Success => {
-                        lines.push(format!("✔️ {}\n\n-----\n", outcome.message));
-                    }
-                }
-                fragments.push(ReportFragment::from_lines(lines));
+                });
+                fragments.push(BucketedSettingsFragment::new(
+                    outcome.bucket,
+                    ReportFragment::from_lines(lines),
+                ));
             }
 
             if evaluation.skip_remaining {
@@ -128,7 +140,7 @@ impl SettingsValidator {
                 let achievements_fragment =
                     self.scan_buffout_achievements_setting(xse_modules.clone(), crashgen)?;
                 if !achievements_fragment.is_empty() {
-                    fragments.push(achievements_fragment);
+                    fragments.push(BucketedSettingsFragment::settings(achievements_fragment));
                 }
             }
 
@@ -150,7 +162,7 @@ impl SettingsValidator {
                     has_baka_scrapheap,
                 )?;
                 if !memory_fragment.is_empty() {
-                    fragments.push(memory_fragment);
+                    fragments.push(BucketedSettingsFragment::settings(memory_fragment));
                 }
             }
 
@@ -158,7 +170,7 @@ impl SettingsValidator {
                 let archive_fragment =
                     self.scan_archivelimit_setting(crashgen, crashgen_version)?;
                 if !archive_fragment.is_empty() {
-                    fragments.push(archive_fragment);
+                    fragments.push(BucketedSettingsFragment::settings(archive_fragment));
                 }
             }
 
@@ -166,41 +178,43 @@ impl SettingsValidator {
                 let looksmenu_fragment =
                     self.scan_buffout_looksmenu_setting(crashgen, xse_modules.clone())?;
                 if !looksmenu_fragment.is_empty() {
-                    fragments.push(looksmenu_fragment);
+                    fragments.push(BucketedSettingsFragment::settings(looksmenu_fragment));
                 }
             }
 
             return Ok(fragments);
         }
 
-        self.scan_all_settings_legacy(crashgen, xse_modules, crashgen_version)
+        self.scan_all_settings_legacy_bucketed(crashgen, xse_modules, crashgen_version)
     }
 
-    fn scan_all_settings_legacy(
+    fn scan_all_settings_legacy_bucketed(
         &self,
         crashgen: &HashMap<String, String>,
         xse_modules: &HashSet<String>,
         crashgen_version: Option<(u32, u32, u32)>,
-    ) -> Result<Vec<ReportFragment>> {
+    ) -> Result<Vec<BucketedSettingsFragment>> {
         let has_addictol = xse_modules.contains("addictol.dll");
         let has_buffout = xse_modules.contains("buffout4.dll");
         let mut settings_fragments = Vec::new();
 
         if has_addictol {
             if has_buffout {
-                settings_fragments.push(ReportFragment::from_lines(vec![
-                    format!(
-                        "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
-                        self.crashgen_name
-                    ),
-                    "  Running Addictol TOML checks scaffold instead of default crashgen checks.\n\n-----\n"
-                        .to_string(),
-                ]));
+                settings_fragments.push(BucketedSettingsFragment::settings(
+                    ReportFragment::from_lines(vec![
+                        format!(
+                            "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
+                            self.crashgen_name
+                        ),
+                        "  Running Addictol TOML checks scaffold instead of default crashgen checks.\n\n-----\n"
+                            .to_string(),
+                    ]),
+                ));
             }
 
             let addictol_fragment = self.scan_addictol_settings_scaffold(crashgen)?;
             if !addictol_fragment.is_empty() {
-                settings_fragments.push(addictol_fragment);
+                settings_fragments.push(BucketedSettingsFragment::settings(addictol_fragment));
             }
             return Ok(settings_fragments);
         }
@@ -208,7 +222,7 @@ impl SettingsValidator {
         let achievements_fragment =
             self.scan_buffout_achievements_setting(xse_modules.clone(), crashgen)?;
         if !achievements_fragment.is_empty() {
-            settings_fragments.push(achievements_fragment);
+            settings_fragments.push(BucketedSettingsFragment::settings(achievements_fragment));
         }
 
         let has_xcell = [
@@ -228,21 +242,87 @@ impl SettingsValidator {
             has_baka_scrapheap,
         )?;
         if !memory_fragment.is_empty() {
-            settings_fragments.push(memory_fragment);
+            settings_fragments.push(BucketedSettingsFragment::settings(memory_fragment));
         }
 
         let archive_fragment = self.scan_archivelimit_setting(crashgen, crashgen_version)?;
         if !archive_fragment.is_empty() {
-            settings_fragments.push(archive_fragment);
+            settings_fragments.push(BucketedSettingsFragment::settings(archive_fragment));
         }
 
         let looksmenu_fragment =
             self.scan_buffout_looksmenu_setting(crashgen, xse_modules.clone())?;
         if !looksmenu_fragment.is_empty() {
-            settings_fragments.push(looksmenu_fragment);
+            settings_fragments.push(BucketedSettingsFragment::settings(looksmenu_fragment));
         }
 
         Ok(settings_fragments)
+    }
+
+    fn render_settings_bucket_lines(&self, outcome: &EvaluationOutcome) -> Vec<String> {
+        let mut lines = Vec::new();
+        match outcome.kind {
+            OutcomeKind::Issue => {
+                lines.push(format!("# ❌ CAUTION : {} # \n", outcome.message));
+                if let Some(fix) = outcome.fix.as_deref() {
+                    lines.push(format!(" FIX: {}\n\n-----\n", fix));
+                } else {
+                    lines.push("\n-----\n".to_string());
+                }
+            }
+            OutcomeKind::Notice => {
+                lines.push(format!(
+                    "# {} NOTICE : {} # \n",
+                    Self::notice_icon(outcome.severity),
+                    outcome.message
+                ));
+                if let Some(fix) = outcome.fix.as_deref() {
+                    lines.push(format!(" {}\n\n-----\n", fix));
+                } else {
+                    lines.push("\n-----\n".to_string());
+                }
+            }
+            OutcomeKind::Success => {
+                lines.push(format!("✔️ {}\n\n-----\n", outcome.message));
+            }
+        }
+        lines
+    }
+
+    fn render_error_information_bucket_lines(&self, outcome: &EvaluationOutcome) -> Vec<String> {
+        let mut lines = Vec::new();
+        match outcome.kind {
+            OutcomeKind::Issue => {
+                lines.push(format!("**# ❌ CAUTION : {} #**\n\n", outcome.message));
+                if let Some(fix) = outcome.fix.as_deref() {
+                    lines.push(format!("FIX: {}\n\n", fix));
+                }
+            }
+            OutcomeKind::Notice => {
+                lines.push(format!(
+                    "**# {} NOTICE : {} #**\n\n",
+                    Self::notice_icon(outcome.severity),
+                    outcome.message
+                ));
+                if let Some(fix) = outcome.fix.as_deref() {
+                    lines.push(format!("{}\n\n", fix));
+                }
+            }
+            OutcomeKind::Success => {
+                lines.push(format!("**✔️ {}**\n\n", outcome.message));
+            }
+        }
+        lines
+    }
+
+    fn notice_icon(severity: RuleSeverity) -> &'static str {
+        if severity == RuleSeverity::Error {
+            "❌"
+        } else if severity == RuleSeverity::Warning {
+            "⚠️"
+        } else {
+            "[!]"
+        }
     }
 
     /// Scan for Achievements mod conflicts.
@@ -619,8 +699,8 @@ mod tests {
     use crate::crashgen_registry::{CheckId, CrashgenEntry};
     use classic_crashgen_settings_core::{
         CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-        PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget,
-        TargetValueType,
+        PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity,
+        RuleTarget, TargetValueType,
     };
 
     fn make_buffout_entry() -> CrashgenEntry {
@@ -1168,6 +1248,7 @@ mod tests {
                     when: Predicate::Always,
                     action: PreflightAction {
                         kind: PreflightActionKind::NoticeAndSkipRemaining,
+                        bucket: RuleReportBucket::Settings,
                         severity: RuleSeverity::Warning,
                         message: "skip remaining".to_string(),
                         fix: None,

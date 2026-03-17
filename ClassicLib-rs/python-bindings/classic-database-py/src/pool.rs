@@ -202,46 +202,6 @@ impl PyDatabasePool {
         })
     }
 
-    /// Alternative batch lookup method (for backward compatibility)
-    ///
-    /// Returns a Python coroutine - use with await in Python.
-    #[pyo3(name = "batch_lookup", signature = (formid_plugin_pairs, table=None))]
-    pub fn py_batch_lookup<'py>(
-        &self,
-        py: Python<'py>,
-        formid_plugin_pairs: &Bound<'_, PyList>,
-        table: Option<String>,
-    ) -> PyResult<Bound<'py, PyAny>> {
-        let inner = self.inner.clone();
-
-        // Parse Python list of tuples (requires GIL)
-        let len = formid_plugin_pairs.len();
-        let mut pairs: Vec<(String, String)> = Vec::with_capacity(len);
-        for item in formid_plugin_pairs.iter() {
-            let tuple = item.extract::<(String, String)>()?;
-            pairs.push(tuple);
-        }
-
-        // Returns Python coroutine immediately - no blocking!
-        future_into_py(py, async move {
-            let result = inner
-                .get_entries_batch(pairs, table.as_deref(), 100)
-                .await
-                .map_err(to_pyerr)?;
-
-            // Convert format from "formid:plugin" -> (formid, plugin)
-            let mut converted_result = HashMap::new();
-            for (key, value) in result {
-                let parts: Vec<&str> = key.split(':').collect();
-                if parts.len() == 2 {
-                    converted_result.insert((parts[0].to_string(), parts[1].to_string()), value);
-                }
-            }
-
-            Ok(converted_result)
-        })
-    }
-
     /// Set the game table name dynamically
     #[pyo3(name = "set_game_table")]
     pub fn py_set_game_table(&self, table: String) {

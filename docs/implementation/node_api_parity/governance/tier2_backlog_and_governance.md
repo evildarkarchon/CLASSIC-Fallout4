@@ -81,6 +81,8 @@ Run parity maintenance whenever one or more of these occur:
 - Regeneration of `ClassicLib-rs/node-bindings/classic-node/index.d.ts`.
 - Release branch cut, RC preparation, or version tag preparation.
 
+For maintainer-facing refresh guidance that cross-references Python stub upkeep without changing these Node gates, see [`docs/api/binding-contract-refresh-note.md`](../../../api/binding-contract-refresh-note.md).
+
 ### Loop Cadence
 
 1. **PR-time check (required)**: contributor runs `bun run parity:gate:local` and updates contract/tests when promoting APIs.

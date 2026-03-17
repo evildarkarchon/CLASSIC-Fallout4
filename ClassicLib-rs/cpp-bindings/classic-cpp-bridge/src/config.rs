@@ -2,14 +2,14 @@
 //!
 //! Bridges `classic_config_core::YamlDataCore` which loads all CLASSIC YAML
 //! configuration files (main, game, ignore) into a structured Rust type.
-//! Provides 30+ getter functions for all fields.
+//! Provides bulk YAML getters plus Local-YAML path persistence helpers.
 //!
 //! IndexMap fields are exposed as paired key/value vectors since CXX bridges
 //! are isolated and can't share opaque types across modules.
 
-use classic_config_core::YamlDataCore;
+use classic_config_core::{ClassicConfig, YamlDataCore};
 use classic_shared_core::get_runtime;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around `YamlDataCore` for CXX FFI.
 pub struct YamlData {
@@ -33,6 +33,28 @@ fn yaml_data_load(
         ))
         .map_err(|e| format!("{e}"))?;
     Ok(Box::new(YamlData { inner }))
+}
+
+fn save_local_yaml_paths(
+    local_yaml_path: &str,
+    game_root: &str,
+    docs_root: &str,
+) -> Result<(), String> {
+    // This helper only persists Local.yaml path fields, so a default config is
+    // enough as long as that save path stays scoped to `paths` state.
+    let mut config = ClassicConfig::default();
+
+    if !game_root.is_empty() {
+        config.paths.game_root = PathBuf::from(game_root);
+    }
+
+    if !docs_root.is_empty() {
+        config.paths.docs_root = Some(PathBuf::from(docs_root));
+    }
+
+    get_runtime()
+        .block_on(config.save_local_yaml_paths_to(Path::new(local_yaml_path)))
+        .map_err(|e| format!("{e}"))
 }
 
 // ── String getters ──────────────────────────────────────────────────
@@ -134,11 +156,39 @@ fn yaml_data_suspects_stack_keys(data: &YamlData) -> Vec<String> {
 }
 
 fn yaml_data_mods_core_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.keys().cloned().collect()
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.detect.clone())
+        .collect()
 }
 
 fn yaml_data_mods_core_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core.values().cloned().collect()
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.description.clone())
+        .collect()
+}
+
+fn yaml_data_mods_core_names(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.name.clone())
+        .collect()
+}
+
+fn yaml_data_mods_core_gpus(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_core
+        .iter()
+        .map(|e| e.gpu.clone().unwrap_or_default())
+        .collect()
+}
+
+fn yaml_data_mods_core_count(data: &YamlData) -> usize {
+    data.inner.game_mods_core.len()
 }
 
 fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String> {
@@ -149,12 +199,64 @@ fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String> {
     data.inner.game_mods_freq.values().cloned().collect()
 }
 
-fn yaml_data_mods_conf_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.keys().cloned().collect()
+fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.mod_a.clone())
+        .collect()
 }
 
-fn yaml_data_mods_conf_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_conf.values().cloned().collect()
+fn yaml_data_mods_conf_mod_b(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.mod_b.clone())
+        .collect()
+}
+
+fn yaml_data_mods_conf_name_a(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.name_a.clone())
+        .collect()
+}
+
+fn yaml_data_mods_conf_name_b(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.name_b.clone())
+        .collect()
+}
+
+fn yaml_data_mods_conf_descriptions(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.description.clone())
+        .collect()
+}
+
+fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.fix.clone())
+        .collect()
+}
+
+fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.link.clone().unwrap_or_default())
+        .collect()
+}
+
+fn yaml_data_mods_conf_count(data: &YamlData) -> usize {
+    data.inner.game_mods_conf.len()
 }
 
 fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String> {
@@ -173,14 +275,6 @@ fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String> {
     data.inner.game_mods_opc2.values().cloned().collect()
 }
 
-fn yaml_data_mods_folon_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core_folon.keys().cloned().collect()
-}
-
-fn yaml_data_mods_folon_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_core_folon.values().cloned().collect()
-}
-
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
     extern "Rust" {
@@ -193,6 +287,12 @@ mod ffi {
             game: &str,
             game_version: &str,
         ) -> Result<Box<YamlData>>;
+
+        fn save_local_yaml_paths(
+            local_yaml_path: &str,
+            game_root: &str,
+            docs_root: &str,
+        ) -> Result<()>;
 
         // String getters
         fn yaml_data_classic_version(data: &YamlData) -> &str;
@@ -225,16 +325,23 @@ mod ffi {
         fn yaml_data_suspects_stack_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_core_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_core_values(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_core_names(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_core_gpus(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_core_count(data: &YamlData) -> usize;
         fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_conf_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_conf_values(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_mod_b(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_name_a(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_name_b(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_descriptions(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
         fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_folon_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_folon_values(data: &YamlData) -> Vec<String>;
     }
 }
 
@@ -339,5 +446,33 @@ CLASSIC_Ignore_Fallout4: []
             vec!["BuffoutSpecificIgnore".to_string()]
         );
         assert!(!yaml_data_game_version(&data).is_empty());
+    }
+
+    #[test]
+    fn test_save_local_yaml_paths_creates_file() {
+        let temp = tempdir().expect("failed to create temp dir");
+        let local_yaml_path = temp
+            .path()
+            .join("CLASSIC Data")
+            .join("CLASSIC Fallout4 Local.yaml");
+
+        save_local_yaml_paths(
+            &local_yaml_path.to_string_lossy(),
+            "C:/Games/Fallout4",
+            "C:/Users/Test/Documents/My Games/Fallout4",
+        )
+        .expect("save_local_yaml_paths should succeed");
+
+        let yaml = classic_yaml_core::YamlOperations::new()
+            .load_yaml_file(&local_yaml_path)
+            .expect("load local yaml");
+        assert_eq!(
+            yaml["Game_Info"]["Root_Folder_Game"].as_str(),
+            Some("C:/Games/Fallout4")
+        );
+        assert_eq!(
+            yaml["Game_Info"]["Root_Folder_Docs"].as_str(),
+            Some("C:/Users/Test/Documents/My Games/Fallout4")
+        );
     }
 }

@@ -255,7 +255,6 @@
 | classic-web-py | URL utilities only (async for actual network) |
 | classic-xse-py | Fast XSE checks |
 | classic-update-py | Uses async for network operations |
-| classic-pybridge-py | Bridge utilities only |
 
 ## Implementation Notes
 

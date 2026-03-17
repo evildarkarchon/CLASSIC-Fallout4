@@ -109,7 +109,7 @@ impl PyPluginAnalyzer {
         // Release GIL during plugin scanning
         let (plugins, limit_triggered, limit_disabled) = without_gil(py, || {
             self.inner.loadorder_scan_log(
-                segment_plugins,
+                &segment_plugins,
                 game_version.as_deref(),
                 version_current.as_deref(),
             )
@@ -135,7 +135,7 @@ impl PyPluginAnalyzer {
     ) -> PyResult<(bool, bool)> {
         without_gil(py, || {
             self.inner
-                .check_plugin_limit(segment_plugins, &game_version, &version_current)
+                .check_plugin_limit(&segment_plugins, &game_version, &version_current)
         })
         .map_err(crate::to_pyerr)
     }

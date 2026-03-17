@@ -8,27 +8,45 @@
 #include "classic_cxx_bridge/yaml.h"
 #include "rust/cxx.h"
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QThread>
 
 namespace {
 
-rust::String resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game, const QString& gameVersion)
+QString cleanDirectoryPath(const rust::String& value)
 {
+    const QString trimmed = classic::toQString(value).trimmed();
+    return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);
+}
+
+QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game, const QString& gameVersion)
+{
+    Q_UNUSED(gameVersion);
+
     const QString localYamlPath = QDir(yamlData).filePath(QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
 
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
 
-        const char* keyPath = gameVersion.compare(QStringLiteral("VR"), Qt::CaseInsensitive) == 0
-                                  ? "GameVR_Info.Docs_Folder_XSE"
-                                  : "Game_Info.Docs_Folder_XSE";
-        auto xsePath = classic::yaml::yaml_ops_get_string(*ops, keyPath, "");
-        return xsePath;
+        for (const char* keyPath : {"Game_Info.Docs_Folder_XSE", "GameVR_Info.Docs_Folder_XSE"}) {
+            const QString xsePath = cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, keyPath, ""));
+            if (!xsePath.isEmpty()) {
+                return xsePath;
+            }
+        }
+
+        const QString docsRoot =
+            cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
+        if (!docsRoot.isEmpty()) {
+            return QDir(docsRoot).filePath(QStringLiteral("F4SE"));
+        }
+
+        return {};
     } catch (const rust::Error&) {
-        return rust::String();
+        return {};
     }
 }
 
@@ -51,7 +69,8 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
 
 void ScanController::startScan(const QString& yamlRoot, const QString& yamlData, const QString& game,
                                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                               bool moveUnsolvedLogs, int maxConcurrentScans, const QString& customFolder)
+                               bool moveUnsolvedLogs, int maxConcurrentScans, const QString& customFolder,
+                               const QStringList& targetedInputs)
 {
     if (m_scanning) {
         return;
@@ -63,20 +82,45 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
         emit m_signalHub->scanStarted();
     }
 
-    // Collect crash logs via Rust file collector
+    // Collect crash logs -- targeted mode or standard discovery
     QStringList logPathsList;
     try {
-        auto baseDir = QDir::currentPath();
-        auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
-        auto collector = classic::files::log_collector_new(classic::toRustString(baseDir), xseFolder,
-                                                           classic::toRustString(customFolder));
-        auto rustPaths = classic::files::log_collector_collect_all(*collector);
+        if (!targetedInputs.isEmpty()) {
+            rust::Vec<rust::String> rustInputs;
+            rustInputs.reserve(static_cast<size_t>(targetedInputs.size()));
+            for (const auto& p : targetedInputs) {
+                rustInputs.push_back(classic::toRustString(p));
+            }
+            auto resolution = classic::files::resolve_targeted_inputs({rustInputs.data(), rustInputs.size()});
 
-        logPathsList.reserve(static_cast<int>(rustPaths.size()));
-        for (const auto& rpath : rustPaths) {
-            const QString qpath = classic::toQString(rpath);
-            if (isCrashLogPath(qpath)) {
-                logPathsList.append(qpath);
+            logPathsList.reserve(static_cast<int>(resolution.logs.size()));
+            for (const auto& rpath : resolution.logs) {
+                const QString qpath = classic::toQString(rpath);
+                if (isCrashLogPath(qpath)) {
+                    logPathsList.append(qpath);
+                }
+            }
+
+            if (!resolution.rejected_paths.empty()) {
+                for (size_t i = 0; i < resolution.rejected_paths.size(); ++i) {
+                    qWarning("Targeted input rejected: %s (%s)",
+                             qPrintable(classic::toQString(resolution.rejected_paths[i])),
+                             qPrintable(classic::toQString(resolution.rejected_reasons[i])));
+                }
+            }
+        } else {
+            const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
+            auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
+            auto collector = classic::files::log_collector_new(
+                classic::toRustString(baseDir), classic::toRustString(xseFolder), classic::toRustString(customFolder));
+            auto rustPaths = classic::files::log_collector_collect_all(*collector);
+
+            logPathsList.reserve(static_cast<int>(rustPaths.size()));
+            for (const auto& rpath : rustPaths) {
+                const QString qpath = classic::toQString(rpath);
+                if (isCrashLogPath(qpath)) {
+                    logPathsList.append(qpath);
+                }
             }
         }
     } catch (const rust::Error& e) {
@@ -104,7 +148,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     m_currentWorker = worker;
 
     // Connect worker signals to controller slots
-    connect(worker, &ScanWorker::progress, this, &ScanController::scanProgress);
+    connect(worker, &ScanWorker::progressDetailed, this, &ScanController::scanProgress);
     connect(worker, &ScanWorker::logScanned, this, &ScanController::scanLogScanned);
     connect(worker, &ScanWorker::finished, this, &ScanController::onWorkerFinished);
     connect(worker, &ScanWorker::error, this, &ScanController::onWorkerError);

@@ -12,19 +12,87 @@
 //!    `clearYamlCache()`, convenience accessors.
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, PathConfig as CorePathConfig, YamlDataCore,
-    YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry,
+    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
 };
+use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
+use napi::Status;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js};
 
-/// Convert any Display error to a napi::Error
-fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
-    napi::Error::from_reason(format!("{err}"))
+#[napi(object)]
+pub struct JsModConflictEntry {
+    pub mod_a: String,
+    pub mod_b: String,
+    pub name_a: String,
+    pub name_b: String,
+    pub description: String,
+    pub fix: String,
+    pub link: Option<String>,
+}
+
+impl From<&ModConflictEntry> for JsModConflictEntry {
+    fn from(e: &ModConflictEntry) -> Self {
+        Self {
+            mod_a: e.mod_a.clone(),
+            mod_b: e.mod_b.clone(),
+            name_a: e.name_a.clone(),
+            name_b: e.name_b.clone(),
+            description: e.description.clone(),
+            fix: e.fix.clone(),
+            link: e.link.clone(),
+        }
+    }
+}
+
+fn config_error_status(err: &ConfigError) -> Status {
+    match err {
+        ConfigError::IOError { .. } => Status::GenericFailure,
+        ConfigError::ParseError { .. }
+        | ConfigError::EmptyDocument(_)
+        | ConfigError::InvalidInput(_) => Status::InvalidArg,
+    }
+}
+
+fn config_error_to_napi_err(err: &ConfigError, message: &str) -> napi::Error {
+    napi::Error::new(config_error_status(err), message.to_string())
+}
+
+fn settings_error_to_napi_err(err: &SettingsError, message: &str) -> napi::Error {
+    let status = match err {
+        SettingsError::IoError { .. } => Status::GenericFailure,
+        SettingsError::YamlParseError { .. }
+        | SettingsError::EmptyDocument { .. }
+        | SettingsError::InvalidYamlStructure { .. }
+        | SettingsError::KeyNotFound(_) => Status::InvalidArg,
+        SettingsError::TaskJoinError { .. } => Status::GenericFailure,
+    };
+    napi::Error::new(status, message.to_string())
+}
+
+/// Convert config/runtime errors to a classified napi::Error.
+fn runtime_to_napi_err(err: anyhow::Error) -> napi::Error {
+    let display = format!("{err:#}");
+    let mut current: Option<&(dyn std::error::Error + 'static)> = Some(err.as_ref());
+
+    while let Some(cause) = current {
+        if let Some(config_err) = cause.downcast_ref::<ConfigError>() {
+            return config_error_to_napi_err(config_err, &display);
+        }
+        if let Some(settings_err) = cause.downcast_ref::<SettingsError>() {
+            return settings_error_to_napi_err(settings_err, &display);
+        }
+        if cause.downcast_ref::<std::io::Error>().is_some() {
+            return napi::Error::new(Status::GenericFailure, display);
+        }
+        current = cause.source();
+    }
+
+    napi::Error::new(Status::GenericFailure, display)
 }
 
 // ============================================================================
@@ -59,7 +127,7 @@ impl YamlData {
         let dirs: Vec<PathBuf> = yaml_dirs.into_iter().map(PathBuf::from).collect();
         let inner = get_runtime()
             .block_on(async { YamlDataCore::load_from_yaml_files(dirs, game, game_version).await })
-            .map_err(to_napi_err)?;
+            .map_err(|err| config_error_to_napi_err(&err, &err.to_string()))?;
         Ok(Self { inner })
     }
 
@@ -87,7 +155,7 @@ impl YamlData {
             game,
             game_version,
         )
-        .map_err(to_napi_err)?;
+        .map_err(|err| config_error_to_napi_err(&err, &err.to_string()))?;
         Ok(Self { inner })
     }
 
@@ -244,31 +312,57 @@ impl YamlData {
 
     /// Conflicting mod pairs database.
     #[napi(getter)]
-    pub fn game_mods_conf(&self) -> HashMap<String, String> {
+    pub fn game_mods_conf(&self) -> Vec<JsModConflictEntry> {
         self.inner
             .game_mods_conf
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsModConflictEntry::from)
             .collect()
     }
 
     /// Core/essential mods database.
     #[napi(getter)]
-    pub fn game_mods_core(&self) -> HashMap<String, String> {
+    pub fn game_mods_core_count(&self) -> u32 {
+        self.inner.game_mods_core.len() as u32
+    }
+
+    /// Core mods detect ids.
+    #[napi(getter)]
+    pub fn game_mods_core_detects(&self) -> Vec<String> {
         self.inner
             .game_mods_core
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(|e| e.detect.clone())
             .collect()
     }
 
-    /// FOLON core mods database.
+    /// Core mods display names.
     #[napi(getter)]
-    pub fn game_mods_core_folon(&self) -> HashMap<String, String> {
+    pub fn game_mods_core_names(&self) -> Vec<String> {
         self.inner
-            .game_mods_core_folon
+            .game_mods_core
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(|e| e.name.clone())
+            .collect()
+    }
+
+    /// Core mods descriptions.
+    #[napi(getter)]
+    pub fn game_mods_core_descriptions(&self) -> Vec<String> {
+        self.inner
+            .game_mods_core
+            .iter()
+            .map(|e| e.description.clone())
+            .collect()
+    }
+
+    /// Core mods GPU fields (empty string if not set).
+    #[napi(getter)]
+    pub fn game_mods_core_gpus(&self) -> Vec<String> {
+        self.inner
+            .game_mods_core
+            .iter()
+            .map(|e| e.gpu.clone().unwrap_or_default())
             .collect()
     }
 
@@ -466,7 +560,7 @@ impl ClassicConfigJs {
         let p = PathBuf::from(&path);
         let inner = get_runtime()
             .block_on(async { CoreClassicConfig::load_from_yaml(&p).await })
-            .map_err(to_napi_err)?;
+            .map_err(runtime_to_napi_err)?;
         Ok(Self { inner })
     }
 
@@ -475,7 +569,7 @@ impl ClassicConfigJs {
     pub fn load_or_default() -> Result<Self> {
         let inner = get_runtime()
             .block_on(async { CoreClassicConfig::load_or_default().await })
-            .map_err(to_napi_err)?;
+            .map_err(runtime_to_napi_err)?;
         Ok(Self { inner })
     }
 
@@ -490,7 +584,7 @@ impl ClassicConfigJs {
         let p = PathBuf::from(&path);
         get_runtime()
             .block_on(async { self.inner.save_to_yaml(&p).await })
-            .map_err(to_napi_err)
+            .map_err(runtime_to_napi_err)
     }
 
     /// Get the default config file path.
@@ -504,7 +598,7 @@ impl ClassicConfigJs {
     /// @throws if any configured path does not exist.
     #[napi]
     pub fn validate_paths(&self) -> Result<()> {
-        self.inner.validate_paths().map_err(to_napi_err)
+        self.inner.validate_paths().map_err(runtime_to_napi_err)
     }
 
     /// Load paths from the game's Local.yaml file.
@@ -517,7 +611,7 @@ impl ClassicConfigJs {
     pub fn load_local_yaml_paths(&mut self, game: String) -> Result<()> {
         get_runtime()
             .block_on(async { self.inner.load_local_yaml_paths(&game).await })
-            .map_err(to_napi_err)
+            .map_err(runtime_to_napi_err)
     }
 
     // ========================================================================
@@ -714,7 +808,7 @@ pub enum JsYamlSource {
     GameLocal,
     /// Test settings: tests/test_settings.yaml
     Test,
-    /// Cache: User config dir/CLASSIC-Fallout4/cache.yaml
+    /// Cache: user config dir/CLASSIC/cache.yaml
     Cache,
 }
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 import pytest
@@ -19,14 +20,15 @@ THIS_SUITE = "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py"
 
 def test_imports_and_versions() -> None:
     import classic_config
-    import classic_pybridge
     import classic_scanlog
     import classic_version_registry
 
     assert isinstance(classic_config.__version__, str)
-    assert isinstance(classic_pybridge.__version__, str)
     assert isinstance(classic_scanlog.__version__, str)
     assert isinstance(classic_version_registry.__version__, str)
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("classic_pybridge")
 
 
 def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -44,9 +46,29 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert data.crashgen_name == "Buffout 4"
     classic_config.clear_yaml_cache()
 
+    with pytest.raises(classic_config.RustConfigParseError) as exc_info:
+        classic_config.YamlData.from_yaml_content(
+            "{ invalid: yaml: content: }}}",
+            PARITY_GAME_YAML,
+            PARITY_IGNORE_YAML,
+            "Fallout4",
+            "auto",
+        )
+    assert "Failed to parse main YAML:" in str(exc_info.value)
+
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.YamlData.from_yaml_content(
+            "",
+            PARITY_GAME_YAML,
+            PARITY_IGNORE_YAML,
+            "Fallout4",
+            "auto",
+        )
+
     config = classic_config.ClassicConfig()
     assert config.game_version == "auto"
     assert config.get_config_path().endswith("CLASSIC Settings.yaml")
+    assert "CLASSIC-Fallout4" not in config.get_config_path()
 
     config.paths = classic_config.PathConfig(game_root=str(tmp_path))
     config.validate_paths()
@@ -56,13 +78,42 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     loaded = classic_config.ClassicConfig.load_from_yaml(str(config_path))
     assert loaded.paths.game_root == str(tmp_path)
 
-    monkeypatch.chdir(tmp_path)
-    default_settings = tmp_path / "CLASSIC Settings.yaml"
-    default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
+    invalid_config_path = tmp_path / "invalid-classic-settings.yaml"
+    invalid_config_path.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.ClassicConfig.load_from_yaml(str(invalid_config_path))
+
+    with pytest.raises(classic_config.RustConfigIOError):
+        classic_config.ClassicConfig.load_from_yaml(
+            str(tmp_path / "missing-settings.yaml")
+        )
+
+    blocked_parent = tmp_path / "not-a-directory"
+    blocked_parent.write_text("content", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigIOError):
+        config.save_to_yaml(str(blocked_parent / "child.yaml"))
+
+    appdata_root = tmp_path / "appdata"
+    monkeypatch.setenv("APPDATA", str(appdata_root))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.delenv("HOME", raising=False)
+    resolved_default_settings = Path(classic_config.ClassicConfig().get_config_path())
+    resolved_default_settings.parent.mkdir(parents=True, exist_ok=True)
+    resolved_default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
     auto_loaded = classic_config.ClassicConfig.load_or_default()
     assert auto_loaded.fcx_mode is True
+    assert auto_loaded.get_config_path() == str(resolved_default_settings)
+    assert "CLASSIC-Fallout4" not in auto_loaded.get_config_path()
 
-    local_yaml_dir = tmp_path / "CLASSIC Data"
+    resolved_default_settings.write_text(
+        "{ invalid: yaml: content: }}}", encoding="utf-8"
+    )
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.ClassicConfig.load_or_default()
+    resolved_default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+    local_yaml_dir = Path("CLASSIC Data")
     local_yaml_dir.mkdir()
     local_yaml = local_yaml_dir / "CLASSIC Fallout4 Local.yaml"
     local_yaml.write_text(
@@ -80,6 +131,10 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert config.paths.game_root == "C:/Games/Fallout4"
     assert config.paths.docs_root == "C:/Users/Test/Documents/My Games/Fallout4"
 
+    local_yaml.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigParseError):
+        config.load_local_yaml_paths("Fallout4")
+
     assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
     assert (
         classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
@@ -88,9 +143,13 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
         "CLASSIC Fallout4.yaml"
     )
+    cache_path = classic_config.YamlSource.CACHE.path("")
+    assert cache_path.endswith("cache.yaml")
+    assert "CLASSIC" in cache_path
+    assert "CLASSIC-Fallout4" not in cache_path
 
 
-def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
+def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import classic_config
     import classic_scanlog
 
@@ -140,7 +199,12 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -
     )
     assert config.remove_list == ["skip-me"]
 
-    assert isinstance(parser.parse_segments(log_lines), list)
+    assert hasattr(parser, "parse_segments") is False
+    assert hasattr(classic_scanlog.ParallelReportProcessor, "process_batch") is False
+    assert hasattr(config, "crashgen_ignore") is False
+
+    sections = parser.parse_all_sections(log_lines)
+    assert isinstance(sections, dict)
     assert isinstance(parser.extract_formids(log_lines), list)
     assert isinstance(parser.extract_plugins(log_lines), list)
 
@@ -174,6 +238,37 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -
 
     batch_results = orchestrator.process_logs_batch([str(log_path)], max_concurrent=1)
     assert len(batch_results) == 1
+
+    game_root = tmp_path / "GameRoot"
+    docs_root = tmp_path / "DocsRoot"
+    game_root.mkdir()
+    docs_root.mkdir()
+    (game_root / "Fallout4.exe").write_text("stub", encoding="utf-8")
+
+    appdata_root = tmp_path / "scanlog-appdata"
+    monkeypatch.setenv("APPDATA", str(appdata_root))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.delenv("HOME", raising=False)
+
+    settings_path = Path(classic_config.ClassicConfig().get_config_path())
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings = classic_config.ClassicConfig()
+    settings.fcx_mode = True
+    settings.paths = classic_config.PathConfig(
+        game_root=str(game_root),
+        docs_root=str(docs_root),
+    )
+    settings.save_to_yaml(str(settings_path))
+
+    classic_scanlog.FcxModeHandler.reset_fcx_checks()
+    first_handler = classic_scanlog.FcxModeHandler(True)
+    first_handler.check_fcx_mode()
+    first_messages = first_handler.get_fcx_messages()
+    assert first_handler.has_results() is True
+
+    second_handler = classic_scanlog.FcxModeHandler(True)
+    second_handler.check_fcx_mode()
+    assert second_handler.get_fcx_messages() == first_messages
 
 
 def _run_version_registry_tier1_smoke(
@@ -265,21 +360,6 @@ def _run_version_registry_tier2_smoke(
     assert base.semantic_distance(newer) > 0
 
 
-def _run_aux_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) -> None:
-    import classic_pybridge
-
-    classic_pybridge.clear_metrics()
-    classic_pybridge.record_operation(
-        classic_pybridge.BridgeOperationType.RunAsync, 0.01, True
-    )
-    metrics = classic_pybridge.get_metrics()
-    assert metrics.run_async_count >= 1
-    assert classic_pybridge.is_runtime_available() is True
-
-    info = classic_pybridge.get_runtime_info()
-    assert info.available is True
-
-
 CASE_RUNNERS = {
     "config-tier1-smoke": _run_config_tier1_smoke,
     "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
@@ -287,7 +367,6 @@ CASE_RUNNERS = {
     "config-tier2-smoke": _run_config_tier2_smoke,
     "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
     "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
-    "aux-tier2-smoke": _run_aux_tier2_smoke,
 }
 
 

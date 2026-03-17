@@ -125,3 +125,47 @@ TEST_CASE("CliArgs combined flags", "[cli_args]") {
     REQUIRE(args.scan_path == "/tmp/crashes");
     REQUIRE(args.max_concurrent == 4);
 }
+
+TEST_CASE("CliArgs positional input paths", "[cli_args]") {
+    SECTION("single positional path") {
+        ArgvBuilder ab({"classic-cli", "C:/my/crash-2024-01-01.log"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.input_paths.size() == 1);
+        REQUIRE(args.input_paths[0] == "C:/my/crash-2024-01-01.log");
+        REQUIRE(args.scan_path.empty());
+    }
+
+    SECTION("multiple positional paths") {
+        ArgvBuilder ab({"classic-cli", "C:/logs/crash-a.log", "D:/other/dir"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.input_paths.size() == 2);
+        REQUIRE(args.input_paths[0] == "C:/logs/crash-a.log");
+        REQUIRE(args.input_paths[1] == "D:/other/dir");
+    }
+
+    SECTION("no positional paths leaves input_paths empty") {
+        ArgvBuilder ab({"classic-cli"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.input_paths.empty());
+    }
+
+    SECTION("positional paths with flags") {
+        ArgvBuilder ab({"classic-cli", "--fcx-mode", "C:/logs/crash-a.log", "--max-concurrent", "4"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.fcx_mode == true);
+        REQUIRE(args.max_concurrent == 4);
+        REQUIRE(args.input_paths.size() == 1);
+        REQUIRE(args.input_paths[0] == "C:/logs/crash-a.log");
+    }
+}
+
+TEST_CASE("CliArgs scan-path still works without positional inputs", "[cli_args]") {
+    ArgvBuilder ab({"classic-cli", "--scan-path", "D:/custom"});
+    CliArgs args = parse_args(ab.argc(), ab.argv());
+    REQUIRE(args.scan_path == "D:/custom");
+    REQUIRE(args.input_paths.empty());
+}
+
+// NOTE: Mixed --scan-path + positional inputs causes std::exit(1)
+// inside parse_args, so we cannot test it with Catch2 in-process.
+// That scenario is validated by the PowerShell integration test.

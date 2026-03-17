@@ -22,6 +22,8 @@ Observed baseline result:
 
 Use `per_wave_acceptance_template.md` for every wave/subwave promotion PR.
 
+For companion guidance on when contract refresh work also needs Python stub follow-up, see [`docs/api/binding-contract-refresh-note.md`](../../../api/binding-contract-refresh-note.md). That note supplements this gate contract; it does not replace any Node acceptance requirement here.
+
 ## Enforced Gate Contract
 
 Each wave/subwave is accepted only when all are true:

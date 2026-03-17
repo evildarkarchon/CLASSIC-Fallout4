@@ -125,7 +125,9 @@ class DatabasePool:
 
         """
 
-    async def get_entry(self, formid: str, plugin: str, table: str | None = None) -> dict[str, Any] | None:
+    async def get_entry(
+        self, formid: str, plugin: str, table: str | None = None
+    ) -> dict[str, Any] | None:
         """Lookup a single FormID in the database.
 
         Queries the database for a FormID entry. Uses caching to avoid
@@ -149,7 +151,10 @@ class DatabasePool:
         """
 
     async def get_entries_batch(
-        self, formid_plugin_pairs: list[tuple[str, str]], table: str | None = None, batch_size: int | None = None
+        self,
+        formid_plugin_pairs: list[tuple[str, str]],
+        table: str | None = None,
+        batch_size: int | None = None,
     ) -> dict[str, dict[str, Any]]:
         """Batch lookup multiple FormID-plugin pairs in optimized queries.
 
@@ -172,31 +177,6 @@ class DatabasePool:
             >>> results = await pool.get_entries_batch(pairs, batch_size=100)
             >>> for key, entry in results.items():
             ...     print(f"{key}: {entry}")
-
-        """
-
-    async def batch_lookup(
-        self, formid_plugin_pairs: list[tuple[str, str]], table: str | None = None
-    ) -> dict[tuple[str, str], dict[str, Any]]:
-        """Alternative batch lookup method (backward compatibility).
-
-        Similar to get_entries_batch but returns results with tuple keys
-        instead of string keys for backward compatibility.
-
-        Args:
-            formid_plugin_pairs: List of (formid, plugin) tuples to lookup
-            table: Optional table name override (uses game_table if not specified)
-
-        Returns:
-            Dictionary mapping (formid, plugin) tuples to their database entries
-
-        Example:
-            >>> pool = DatabasePool()
-            >>> await pool.initialize(["formids.db"])
-            >>> pairs = [("00012E46", "Plugin1.esp"), ("FF000800", "Plugin2.esp")]
-            >>> results = await pool.batch_lookup(pairs)
-            >>> for (formid, plugin), entry in results.items():
-            ...     print(f"{formid} from {plugin}: {entry}")
 
         """
 

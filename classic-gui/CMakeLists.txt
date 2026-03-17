@@ -9,7 +9,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # ── Qt 6 ──────────────────────────────────────────────────────────────
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ClassicGuiQt.cmake)
+classic_gui_find_qt6()
 
 qt_standard_project_setup()
 

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-06T06:47:30.492927+00:00",
+  "generated_at_utc": "2026-03-16T11:19:26.101919+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -29,8 +29,28 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ConfigError",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CoreModEntry",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::CoreModEntry",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "CoreModExclude",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::CoreModExclude",
       "tier": "tier2"
     },
     {
@@ -39,8 +59,18 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::CrashgenEntryRaw",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "ModConflictEntry",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_expr": "yamldata::ModConflictEntry",
       "tier": "tier2"
     },
     {
@@ -59,7 +89,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::YamlDataCore",
       "tier": "tier1"
     },
@@ -98,7 +128,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::format_registry_game_version",
       "tier": "tier2"
     },
@@ -118,7 +148,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use yamldata::{ ConfigError, CrashgenEntryRaw, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
+      "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::resolve_registry_version_info",
       "tier": "tier2"
     },
@@ -137,7 +167,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisConfig",
       "tier": "tier1"
     },
@@ -147,7 +177,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisResult",
       "tier": "tier2"
     },
@@ -297,7 +327,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::OrchestratorCore",
       "tier": "tier1"
     },
@@ -412,6 +442,16 @@
       "tier": "tier2"
     },
     {
+      "symbol": "ScanProgressPhase",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::ScanProgressPhase",
+      "tier": "tier2"
+    },
+    {
       "symbol": "SettingsValidator",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -467,7 +507,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::build_analysis_config_from_yaml",
       "tier": "tier1"
     },
@@ -715,6 +755,16 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod report;",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "resolve_batch_concurrency",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::resolve_batch_concurrency",
       "tier": "tier2"
     },
     {

@@ -330,17 +330,6 @@ impl PyParallelReportProcessor {
     }
 
     #[staticmethod]
-    /// Process multiple reports in parallel
-    pub fn process_batch(
-        reports: Vec<Vec<String>>,
-        _processor_fn: Py<PyAny>,
-    ) -> PyResult<Vec<Vec<String>>> {
-        // For now, just return the reports as-is since we can't call Python functions from Rust easily
-        // This would need more complex PyO3 integration to work properly
-        Ok(reports)
-    }
-
-    #[staticmethod]
     /// Combine multiple report fragments in parallel
     pub fn combine_fragments(fragments: Vec<PyReportFragment>) -> PyReportFragment {
         // Combine fragments by folding them together

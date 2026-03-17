@@ -171,6 +171,27 @@ fn log_collector_collect_crash_logs(collector: &CxxLogCollector) -> Result<Vec<S
         .collect())
 }
 
+// ── Targeted input resolution ───────────────────────────────────────
+
+fn resolve_targeted_inputs(input_paths: &[String]) -> ffi::TargetedResolutionDto {
+    let paths: Vec<PathBuf> = input_paths.iter().map(PathBuf::from).collect();
+    let resolution = get_runtime()
+        .block_on(classic_file_io_core::log_collection::resolve_targeted_inputs(paths));
+    ffi::TargetedResolutionDto {
+        logs: resolution
+            .logs
+            .into_iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect(),
+        rejected_paths: resolution
+            .rejected
+            .iter()
+            .map(|r| r.path.to_string_lossy().to_string())
+            .collect(),
+        rejected_reasons: resolution.rejected.into_iter().map(|r| r.reason).collect(),
+    }
+}
+
 // ── Standalone file utilities ───────────────────────────────────────
 
 fn calculate_file_similarity(path1: &str, path2: &str) -> Result<f64, String> {
@@ -255,6 +276,16 @@ fn read_report_file(path: &str) -> Result<String, String> {
 
 #[cxx::bridge(namespace = "classic::files")]
 mod ffi {
+    /// Resolved targeted-input result passed across the FFI boundary.
+    struct TargetedResolutionDto {
+        /// Deduplicated crash-log paths that were accepted.
+        logs: Vec<String>,
+        /// Original paths of rejected inputs (parallel with `rejected_reasons`).
+        rejected_paths: Vec<String>,
+        /// Human-readable rejection reasons (parallel with `rejected_paths`).
+        rejected_reasons: Vec<String>,
+    }
+
     extern "Rust" {
         type CxxBackupManager;
         type CxxGameFilesManager;
@@ -293,6 +324,9 @@ mod ffi {
         ) -> Box<CxxLogCollector>;
         fn log_collector_collect_all(collector: &CxxLogCollector) -> Result<Vec<String>>;
         fn log_collector_collect_crash_logs(collector: &CxxLogCollector) -> Result<Vec<String>>;
+
+        // Targeted input resolution
+        fn resolve_targeted_inputs(input_paths: &[String]) -> TargetedResolutionDto;
 
         // Standalone utilities
         fn calculate_file_similarity(path1: &str, path2: &str) -> Result<f64>;

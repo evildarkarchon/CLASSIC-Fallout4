@@ -135,11 +135,34 @@ impl PreflightActionKind {
     }
 }
 
+/// Report bucket used to place rendered rule outcomes in a final report.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum RuleReportBucket {
+    /// Default settings-related destination.
+    #[default]
+    Settings,
+    /// Promoted placement inside the `Error Information` section.
+    ErrorInformation,
+}
+
+impl RuleReportBucket {
+    /// Parse report bucket from text.
+    pub fn parse(value: &str) -> Option<Self> {
+        match value.trim().to_lowercase().as_str() {
+            "settings" => Some(Self::Settings),
+            "error_information" | "errorinformation" => Some(Self::ErrorInformation),
+            _ => None,
+        }
+    }
+}
+
 /// Preflight action payload.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PreflightAction {
     /// Action kind.
     pub kind: PreflightActionKind,
+    /// Report bucket for the rendered message.
+    pub bucket: RuleReportBucket,
     /// Severity.
     pub severity: RuleSeverity,
     /// Message text.
@@ -244,6 +267,8 @@ pub struct EvaluationOutcome {
     pub id: String,
     /// Outcome kind.
     pub kind: OutcomeKind,
+    /// Report bucket for the rendered message.
+    pub bucket: RuleReportBucket,
     /// Severity.
     pub severity: RuleSeverity,
     /// Rendered message.
@@ -293,6 +318,7 @@ pub fn evaluate_rules(
                         OutcomeKind::Notice
                     }
                 },
+                bucket: rule.action.bucket,
                 severity: rule.action.severity,
                 message,
                 fix,
@@ -325,6 +351,7 @@ pub fn evaluate_rules(
             result.outcomes.push(EvaluationOutcome {
                 id: rule.id.clone(),
                 kind: OutcomeKind::Issue,
+                bucket: RuleReportBucket::Settings,
                 severity: rule.severity,
                 message: apply_template(&rule.messages.fail, context, token_setting),
                 fix: rule
@@ -341,6 +368,7 @@ pub fn evaluate_rules(
             result.outcomes.push(EvaluationOutcome {
                 id: rule.id.clone(),
                 kind: OutcomeKind::Success,
+                bucket: RuleReportBucket::Settings,
                 severity: RuleSeverity::Info,
                 message: apply_template(pass_message, context, token_setting),
                 fix: None,
@@ -421,6 +449,20 @@ fn apply_template(template: &str, context: &EvaluationContext, setting: Option<&
 mod tests {
     use super::*;
 
+    #[test]
+    fn rule_report_bucket_parses_known_values_and_defaults_to_settings() {
+        assert_eq!(
+            RuleReportBucket::parse("settings"),
+            Some(RuleReportBucket::Settings)
+        );
+        assert_eq!(
+            RuleReportBucket::parse("error_information"),
+            Some(RuleReportBucket::ErrorInformation)
+        );
+        assert_eq!(RuleReportBucket::parse("unknown"), None);
+        assert_eq!(RuleReportBucket::default(), RuleReportBucket::Settings);
+    }
+
     fn base_context() -> EvaluationContext {
         EvaluationContext {
             crashgen_name: "Buffout 4".to_string(),
@@ -441,6 +483,7 @@ mod tests {
                 when: Predicate::PluginAny(vec!["addictol.dll".to_string()]),
                 action: PreflightAction {
                     kind: PreflightActionKind::NoticeAndSkipRemaining,
+                    bucket: RuleReportBucket::ErrorInformation,
                     severity: RuleSeverity::Info,
                     message: "Addictol detected - skipping {crashgen_name} checks".to_string(),
                     fix: None,
@@ -474,6 +517,10 @@ mod tests {
         assert!(result.skip_remaining);
         assert_eq!(result.outcomes.len(), 1);
         assert_eq!(result.outcomes[0].kind, OutcomeKind::Notice);
+        assert_eq!(
+            result.outcomes[0].bucket,
+            RuleReportBucket::ErrorInformation
+        );
     }
 
     #[test]
@@ -509,6 +556,7 @@ mod tests {
         let fail_result = evaluate_rules(&rules, &fail_context);
         assert_eq!(fail_result.outcomes.len(), 1);
         assert_eq!(fail_result.outcomes[0].kind, OutcomeKind::Issue);
+        assert_eq!(fail_result.outcomes[0].bucket, RuleReportBucket::Settings);
 
         let mut pass_context = base_context();
         pass_context
@@ -520,5 +568,6 @@ mod tests {
         let pass_result = evaluate_rules(&rules, &pass_context);
         assert_eq!(pass_result.outcomes.len(), 1);
         assert_eq!(pass_result.outcomes[0].kind, OutcomeKind::Success);
+        assert_eq!(pass_result.outcomes[0].bucket, RuleReportBucket::Settings);
     }
 }
