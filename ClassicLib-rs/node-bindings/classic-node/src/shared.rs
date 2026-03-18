@@ -333,30 +333,3 @@ pub fn registry_get_game_version() -> Option<String> {
         }
     }
 }
-
-/// Check if the current game version is a VR version.
-///
-/// Reads the game version from the registry and checks if it represents
-/// a VR variant. Returns `false` if no version is set.
-#[napi]
-pub fn registry_is_vr_version() -> bool {
-    let value: Option<serde_json::Value> =
-        classic_registry_core::get(classic_registry_core::Keys::GAME_VERSION);
-    match value {
-        Some(serde_json::Value::String(ref s)) => {
-            let lower = s.to_lowercase();
-            lower == "vr" || lower.contains("vr")
-        }
-        _ => {
-            // Try raw String type
-            if let Some(s) =
-                classic_registry_core::get::<_, String>(classic_registry_core::Keys::GAME_VERSION)
-            {
-                let lower = s.to_lowercase();
-                lower == "vr" || lower.contains("vr")
-            } else {
-                false
-            }
-        }
-    }
-}

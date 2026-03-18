@@ -21,21 +21,17 @@ QString cleanDirectoryPath(const rust::String& value)
     return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);
 }
 
-QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game, const QString& gameVersion)
+QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game)
 {
-    Q_UNUSED(gameVersion);
-
     const QString localYamlPath = QDir(yamlData).filePath(QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
 
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
 
-        for (const char* keyPath : {"Game_Info.Docs_Folder_XSE", "GameVR_Info.Docs_Folder_XSE"}) {
-            const QString xsePath = cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, keyPath, ""));
-            if (!xsePath.isEmpty()) {
-                return xsePath;
-            }
+        const QString xsePath = cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
+        if (!xsePath.isEmpty()) {
+            return xsePath;
         }
 
         const QString docsRoot =
@@ -109,8 +105,11 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
                 }
             }
         } else {
+            // Intentionally collect under the portable app root. CLASSIC is distributed as a
+            // portable app, so the application directory is expected to be writable and we do
+            // not use a separate per-user/AppData fallback here.
             const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-            auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, gameVersion);
+            auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game);
             auto collector = classic::files::log_collector_new(
                 classic::toRustString(baseDir), classic::toRustString(xseFolder), classic::toRustString(customFolder));
             auto rustPaths = classic::files::log_collector_collect_all(*collector);

@@ -20,7 +20,7 @@ import {
   checkCrashgenConfig,
   checkCrashgenFull,
   scanModInis,
-  migrateVrSetting,
+  migrateGameVersionSetting,
   resolveEffectiveGameVersion,
   needsPathDetection,
   getAddressLibInfo,
@@ -853,27 +853,27 @@ describe("scanModInis", () => {
 });
 
 // ============================================================================
-// VR Setting Migration
+// Game Version Setting Migration
 // ============================================================================
 
-describe("migrateVrSetting", () => {
+describe("migrateGameVersionSetting", () => {
   test("preserves explicit original mode", () => {
-    const result = migrateVrSetting("Original");
+    const result = migrateGameVersionSetting("Original");
     expect(result).toBe("Original");
   });
 
   test("returns null when no setting is provided", () => {
-    const result = migrateVrSetting(null);
+    const result = migrateGameVersionSetting(null);
     expect(result).toBeNull();
   });
 
   test("preserves auto mode", () => {
-    const result = migrateVrSetting("auto");
+    const result = migrateGameVersionSetting("auto");
     expect(result).toBe("auto");
   });
 
   test("normalizes AE alias to AnniversaryEdition", () => {
-    const result = migrateVrSetting("AE");
+    const result = migrateGameVersionSetting("AE");
     expect(result).toBe("AnniversaryEdition");
   });
 });

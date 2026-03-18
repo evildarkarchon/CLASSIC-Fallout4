@@ -662,11 +662,7 @@ fn normalize_registry_key(value: &str) -> String {
         .collect()
 }
 
-fn is_vr_selected_game_version(selected_game_version: &str) -> bool {
-    selected_game_version.eq_ignore_ascii_case("VR")
-}
-
-fn selected_non_vr_short_name(selected_game_version: &str) -> Option<&'static str> {
+fn selected_short_name(selected_game_version: &str) -> Option<&'static str> {
     let normalized: String = selected_game_version
         .chars()
         .filter(|ch| ch.is_ascii_alphanumeric())
@@ -676,6 +672,7 @@ fn selected_non_vr_short_name(selected_game_version: &str) -> Option<&'static st
         "original" | "og" => Some("OG"),
         "nextgen" | "ng" => Some("NG"),
         "anniversaryedition" | "anniversary" | "ae" => Some("AE"),
+        "vr" => Some("VR"),
         _ => None,
     }
 }
@@ -700,15 +697,12 @@ pub fn resolve_registry_version_info(
     }
 
     let registry = get_version_registry();
-    let is_vr_mode = is_vr_selected_game_version(selected_game_version);
-    let selected_short_name = if is_vr_mode {
-        None
-    } else {
-        selected_non_vr_short_name(selected_game_version)
-    };
+    let selected_short_name = selected_short_name(selected_game_version);
+    let selected_version_is_vr = selected_short_name.is_some_and(|short_name| short_name == "VR");
 
     // Explicit non-VR mode selection should prefer matching short_name first.
     if let Some(short_name) = selected_short_name
+        && short_name != "VR"
         && let Some(info) = registry.get_all().into_iter().find(|info| {
             !info.is_vr
                 && info.short_name.eq_ignore_ascii_case(short_name)
@@ -728,16 +722,13 @@ pub fn resolve_registry_version_info(
         if key_base.is_empty() {
             continue;
         }
-        if is_vr_mode {
-            default_keys.push(format!("{key_base}VR"));
-        }
         default_keys.push(key_base.to_string());
     }
 
     for key in &default_keys {
         if let Some(default_id) = registry.unknown_version_handling().get_default(key)
             && let Some(info) = registry.get_by_id(default_id)
-            && info.is_vr == is_vr_mode
+            && info.is_vr == selected_version_is_vr
             && main_root_matches_registry_info(main_root_name, info)
         {
             return Some(info.clone());
@@ -749,7 +740,8 @@ pub fn resolve_registry_version_info(
         .get_all()
         .into_iter()
         .find(|info| {
-            info.is_vr == is_vr_mode && main_root_matches_registry_info(main_root_name, info)
+            info.is_vr == selected_version_is_vr
+                && main_root_matches_registry_info(main_root_name, info)
         })
         .map(|info| (*info).clone())
 }

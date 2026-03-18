@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-03-16T11:51:36.540653+00:00`
-- Tracked surfaces: **370**
-- Runtime verified: **272**
+- Generated: `2026-03-18T01:50:14.728536+00:00`
+- Tracked surfaces: **369**
+- Runtime verified: **271**
 - Contract mapped only: **0**
 - Deferred: **98**
 - Newly uncovered: **0**
@@ -14,7 +14,7 @@
 |---|---:|---:|---:|---:|---:|
 | `aux` | 141 | 0 | 7 | 0 | 148 |
 | `config` | 53 | 0 | 21 | 0 | 74 |
-| `scanlog` | 22 | 0 | 66 | 0 | 88 |
+| `scanlog` | 21 | 0 | 66 | 0 | 87 |
 | `version_registry` | 56 | 0 | 4 | 0 | 60 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.

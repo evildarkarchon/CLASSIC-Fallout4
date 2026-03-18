@@ -199,8 +199,6 @@ pub enum ValidationResult {
 pub struct XseChecker {
     /// Path to the plugins directory
     plugins_path: PathBuf,
-    /// Whether running in VR mode
-    is_vr_mode: bool,
     /// Detected game version
     game_version: GameVersion,
 }
@@ -211,7 +209,6 @@ impl XseChecker {
     /// # Arguments
     ///
     /// * `plugins_path` - Path to the F4SE/SKSE plugins directory
-    /// * `is_vr_mode` - Whether the game is running in VR mode
     /// * `game_version` - Detected game version
     ///
     /// # Errors
@@ -219,7 +216,6 @@ impl XseChecker {
     /// Returns an error if the plugins path is invalid.
     pub fn new(
         plugins_path: impl AsRef<Path>,
-        is_vr_mode: bool,
         game_version: GameVersion,
     ) -> Result<Self, XseError> {
         let plugins_path = plugins_path.as_ref().to_path_buf();
@@ -233,14 +229,13 @@ impl XseChecker {
 
         Ok(Self {
             plugins_path,
-            is_vr_mode,
             game_version,
         })
     }
 
-    /// Determine the correct and wrong Address Library versions based on VR mode.
+    /// Determine the correct and wrong Address Library versions for the selected game version.
     fn determine_relevant_versions(&self) -> (Vec<AddressLibInfo>, Vec<AddressLibInfo>) {
-        if self.is_vr_mode {
+        if matches!(self.game_version, GameVersion::Vr) {
             // VR mode: correct = VR, wrong = OG + NG + AE
             let correct = vec![AddressLibInfo::vr()];
             let wrong = vec![
@@ -408,8 +403,7 @@ mod tests {
     #[test]
     fn test_correct_version_non_vr_ae() {
         let temp_dir = setup_test_plugins_dir(&["version-1-11-191-0.bin"]);
-        let checker =
-            XseChecker::new(temp_dir.path(), false, GameVersion::AnniversaryEdition).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::AnniversaryEdition).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::CorrectVersion);
@@ -418,7 +412,7 @@ mod tests {
     #[test]
     fn test_correct_version_vr_mode() {
         let temp_dir = setup_test_plugins_dir(&["version-1-2-72-0.csv"]);
-        let checker = XseChecker::new(temp_dir.path(), true, GameVersion::Vr).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Vr).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::CorrectVersion);
@@ -427,7 +421,7 @@ mod tests {
     #[test]
     fn test_correct_version_non_vr_og() {
         let temp_dir = setup_test_plugins_dir(&["version-1-10-163-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::CorrectVersion);
@@ -436,7 +430,7 @@ mod tests {
     #[test]
     fn test_correct_version_non_vr_ng() {
         let temp_dir = setup_test_plugins_dir(&["version-1-10-984-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::NextGen).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::NextGen).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::CorrectVersion);
@@ -445,7 +439,7 @@ mod tests {
     #[test]
     fn test_wrong_version_vr_has_og() {
         let temp_dir = setup_test_plugins_dir(&["version-1-10-163-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), true, GameVersion::Vr).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Vr).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::WrongVersion);
@@ -454,7 +448,7 @@ mod tests {
     #[test]
     fn test_wrong_version_non_vr_has_vr() {
         let temp_dir = setup_test_plugins_dir(&["version-1-2-72-0.csv"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::WrongVersion);
@@ -463,7 +457,7 @@ mod tests {
     #[test]
     fn test_not_found() {
         let temp_dir = setup_test_plugins_dir(&[]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::NotFound);
@@ -472,7 +466,7 @@ mod tests {
     #[test]
     fn test_version_not_detected() {
         let temp_dir = setup_test_plugins_dir(&["version-1-10-163-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Null).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Null).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::VersionNotDetected);
@@ -480,14 +474,14 @@ mod tests {
 
     #[test]
     fn test_invalid_plugins_path() {
-        let result = XseChecker::new("/nonexistent/path", false, GameVersion::Original);
+        let result = XseChecker::new("/nonexistent/path", GameVersion::Original);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_message_formatting_correct() {
         let temp_dir = setup_test_plugins_dir(&["version-1-10-163-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let message = checker.validate();
         assert!(message.contains("✔️"));
@@ -497,7 +491,7 @@ mod tests {
     #[test]
     fn test_message_formatting_wrong() {
         let temp_dir = setup_test_plugins_dir(&["version-1-2-72-0.csv"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let message = checker.validate();
         assert!(message.contains("❌"));
@@ -509,7 +503,7 @@ mod tests {
     #[test]
     fn test_message_formatting_not_found() {
         let temp_dir = setup_test_plugins_dir(&[]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let message = checker.validate();
         assert!(message.contains("❓"));
@@ -519,7 +513,7 @@ mod tests {
     #[test]
     fn test_message_formatting_version_not_detected() {
         let temp_dir = setup_test_plugins_dir(&["version-1-10-163-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Null).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Null).unwrap();
 
         let message = checker.validate();
         assert!(message.contains("❓"));
@@ -531,7 +525,7 @@ mod tests {
         // Non-VR can have either OG or NG - both are correct
         let temp_dir =
             setup_test_plugins_dir(&["version-1-10-163-0.bin", "version-1-10-984-0.bin"]);
-        let checker = XseChecker::new(temp_dir.path(), false, GameVersion::Original).unwrap();
+        let checker = XseChecker::new(temp_dir.path(), GameVersion::Original).unwrap();
 
         let result = checker.check();
         assert_eq!(result, ValidationResult::CorrectVersion);

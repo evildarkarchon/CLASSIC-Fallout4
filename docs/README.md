@@ -64,12 +64,12 @@ bun run test:node
 ### Python bindings (when touching PyO3 surface)
 
 ```powershell
-uv venv
-uv pip install maturin pytest
+uv venv ClassicLib-rs/python-bindings/.venv
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
 
 ---

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-16T11:51:36.540653+00:00",
+  "generated_at_utc": "2026-03-18T01:50:14.728536+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,12 +8,12 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 370,
-    "runtime_verified_total": 272,
+    "tracked_surface_total": 369,
+    "runtime_verified_total": 271,
     "contract_mapped_total": 0,
     "deferred_total": 98,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 262,
+    "tier1_contract_total": 261,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -30,8 +30,8 @@
       "deferred": 21
     },
     "scanlog": {
-      "runtime_verified": 22,
-      "total": 88,
+      "runtime_verified": 21,
+      "total": 87,
       "deferred": 66
     },
     "version_registry": {
@@ -2249,25 +2249,6 @@
       "classification": "runtime_verified",
       "rustSymbol": "VersionRegistry",
       "bindingIdentifier": "registryGetGameVersion",
-      "coverageId": "node-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-registry-tier1-parity",
-      "fixtureRefs": [
-        "versionRegistryCases"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:version-registry-promote-registry-is-vr-version",
-      "trackedType": "contract_row",
-      "contractId": "version-registry-promote-registry-is-vr-version",
-      "ownerModule": "version_registry",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "VersionRegistry",
-      "bindingIdentifier": "registryIsVrVersion",
       "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
@@ -6734,14 +6715,14 @@
       "notes": null
     },
     {
-      "trackedId": "binding:migrateVrSetting",
+      "trackedId": "binding:migrateGameVersionSetting",
       "trackedType": "gap",
-      "ownerModule": "scanlog",
+      "ownerModule": "version_registry",
       "tier": "tier2",
       "gapType": "node_unmapped",
       "classification": "runtime_verified",
       "rustSymbol": null,
-      "bindingIdentifier": "migrateVrSetting",
+      "bindingIdentifier": "migrateGameVersionSetting",
       "coverageId": "node-tier2-config-runtime",
       "verificationMode": "direct_call",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scangame.spec.ts",

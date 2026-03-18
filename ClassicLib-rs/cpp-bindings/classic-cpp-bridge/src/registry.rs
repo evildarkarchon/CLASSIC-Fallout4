@@ -59,20 +59,12 @@ fn registry_get_game() -> String {
     reg::get_game()
 }
 
-fn registry_is_vr_version() -> bool {
-    reg::is_vr_version()
-}
-
 fn registry_is_gui_mode() -> bool {
     reg::is_gui_mode()
 }
 
 fn registry_key_game() -> String {
     Keys::GAME.to_string()
-}
-
-fn registry_key_vr() -> String {
-    Keys::GAME_VERSION.to_string()
 }
 
 fn registry_key_is_gui_mode() -> String {
@@ -102,12 +94,10 @@ mod ffi {
         // Convenience
         fn registry_set_game(game: &str);
         fn registry_get_game() -> String;
-        fn registry_is_vr_version() -> bool;
         fn registry_is_gui_mode() -> bool;
 
         // Key constants
         fn registry_key_game() -> String;
-        fn registry_key_vr() -> String;
         fn registry_key_is_gui_mode() -> String;
     }
 }
@@ -190,13 +180,6 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_is_vr_version() {
-        // Just verify the function doesn't panic
-        let _ = registry_is_vr_version();
-    }
-
-    #[test]
-    #[serial]
     fn test_is_gui_mode() {
         registry_set_bool(&registry_key_is_gui_mode(), true);
         assert!(registry_is_gui_mode());
@@ -208,7 +191,6 @@ mod tests {
     #[serial]
     fn test_key_constants() {
         assert!(!registry_key_game().is_empty());
-        assert!(!registry_key_vr().is_empty());
         assert!(!registry_key_is_gui_mode().is_empty());
     }
 }

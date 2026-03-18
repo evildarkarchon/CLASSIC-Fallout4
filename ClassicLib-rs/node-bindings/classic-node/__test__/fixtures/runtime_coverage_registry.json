@@ -49,8 +49,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 56,
-      "contractIdsHash": "36cc7bc21f519f13b43059ac46507987c7f384f3e353e2b877296ba27a15a116",
+      "contractCount": 55,
+      "contractIdsHash": "1c6543dffd5cf4b6a1ea54faa8db2813075f53796ed62539967dd103d045b587",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",
@@ -97,7 +97,7 @@
       "bindingIdentifiers": [
         "JsConfigDuplicateDetector",
         "detectConfigDuplicates",
-        "migrateVrSetting",
+        "migrateGameVersionSetting",
         "needsPathDetection"
       ],
       "verificationMode": "direct_call",

@@ -215,10 +215,9 @@ impl GameScanOrchestrator {
         // 1. XSE plugins check
         {
             let plugins_path = config.plugins_path.clone();
-            let is_vr = config.is_vr;
             let game_version = config.game_version;
             join_set.spawn_blocking(move || match plugins_path {
-                Some(path) => match XseChecker::new(&path, is_vr, game_version) {
+                Some(path) => match XseChecker::new(&path, game_version) {
                     Ok(checker) => Ok(CheckResult {
                         name: "xse_plugins".to_string(),
                         output: checker.validate(),

@@ -94,21 +94,15 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
-static bool is_vr_game_version(const std::string& game_version) {
-    return game_version == "VR";
-}
-
 static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDirs& dirs) {
     // Mirror Python: read Docs_Folder_XSE from CLASSIC <Game> Local.yaml.
-    // Key path depends on selected game version mode.
     fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
 
     try {
         auto yaml = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*yaml, local_yaml.string());
 
-        std::string key_path =
-            is_vr_game_version(args.game_version) ? "GameVR_Info.Docs_Folder_XSE" : "Game_Info.Docs_Folder_XSE";
+        std::string key_path = "Game_Info.Docs_Folder_XSE";
         auto xse_path = classic::yaml::yaml_ops_get_string(*yaml, key_path, "");
         return std::string(xse_path.data(), xse_path.size());
     } catch (const rust::Error&) {

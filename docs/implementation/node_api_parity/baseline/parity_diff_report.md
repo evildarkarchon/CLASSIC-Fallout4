@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-03-16T11:51:36.539329+00:00`
-- Tier-1 contract rows: **262**
-- Tier-1 matched: **262**
+- Generated: `2026-03-18T01:50:14.726672+00:00`
+- Tier-1 contract rows: **261**
+- Tier-1 matched: **261**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -127,7 +127,6 @@
 | `version-registry-promote-is-known-fallout4-version` | `version_registry` | `GameVersion` | `isKnownFallout4Version` | `matched` |
 | `version-registry-promote-parse-version` | `version_registry` | `VersionRegistryError` | `parseVersion` | `matched` |
 | `version-registry-promote-registry-get-game-version` | `version_registry` | `VersionRegistry` | `registryGetGameVersion` | `matched` |
-| `version-registry-promote-registry-is-vr-version` | `version_registry` | `VersionRegistry` | `registryIsVrVersion` | `matched` |
 | `version-registry-promote-resolve-effective-game-version` | `version_registry` | `MatchConfidence` | `resolveEffectiveGameVersion` | `matched` |
 | `version-registry-promote-try-parse-version` | `version_registry` | `GameVersion` | `tryParseVersion` | `matched` |
 | `aux-phase4a-backup-manager` | `aux` | `BackupManager` | `BackupManager` | `matched` |
@@ -279,9 +278,9 @@
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `scanlog` | 0 | 72 |
+| `scanlog` | 0 | 71 |
 | `config` | 0 | 24 |
-| `version_registry` | 0 | 4 |
+| `version_registry` | 0 | 5 |
 | `aux` | 0 | 8 |
 
 Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.

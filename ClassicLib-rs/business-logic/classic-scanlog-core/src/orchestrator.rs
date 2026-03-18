@@ -29,7 +29,9 @@ use crate::version::{
 use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
-use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
+use classic_version_registry_core::{
+    GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
+};
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -177,11 +179,8 @@ pub struct AnalysisConfig {
     /// Game name (e.g., "Fallout4")
     pub game: String,
 
-    /// Selected game-version mode state (derived from caller input).
-    ///
-    /// This is intentionally not exposed publicly; public callers configure
-    /// mode via `game_version` selection APIs.
-    is_vr_mode: bool,
+    /// Registry-backed selected version metadata, if available.
+    selected_version: Option<VersionInfo>,
 
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
@@ -286,9 +285,12 @@ impl AnalysisConfig {
     /// config.ignore_plugins = vec!["Fallout4.esm".to_string()];
     /// ```
     pub fn new(game: String, selected_game_version: String) -> Self {
+        let selected_version =
+            classic_config_core::resolve_registry_version_info(&game, &selected_game_version);
+
         Self {
             game,
-            is_vr_mode: selected_game_version.eq_ignore_ascii_case("VR"),
+            selected_version,
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
             crashgen_latest_vr: String::new(),
@@ -315,20 +317,6 @@ impl AnalysisConfig {
             crashgen_registry: CrashgenRegistry::default(),
         }
     }
-
-    #[must_use]
-    fn is_vr_mode(&self) -> bool {
-        self.is_vr_mode
-    }
-}
-
-/// Resolve VR game version string for a game from Version Registry.
-///
-/// This is used to preserve plugin-limit matching behavior where callers may
-/// provide a VR game version string directly (e.g., "1.2.72" for Fallout 4 VR).
-fn resolve_registry_game_version_vr(registry_game_id: &str) -> Option<String> {
-    classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
-        .map(|info| classic_config_core::format_registry_game_version(&info.version))
 }
 
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
@@ -356,15 +344,17 @@ pub fn build_analysis_config_from_yaml(
     simplify_logs: bool,
     remove_list: Vec<String>,
 ) -> AnalysisConfig {
-    let is_vr_mode = selected_game_version.eq_ignore_ascii_case("VR");
     let registry_game_id = match yaml.get_game_root_name().trim() {
         "" => game,
         root_name => root_name,
     };
-    let registry_info =
+    let selected_version =
         classic_config_core::resolve_registry_version_info(registry_game_id, selected_game_version);
-    let game_version_vr = resolve_registry_game_version_vr(registry_game_id).unwrap_or_default();
-    let registry_crashgen = registry_info
+    let game_version_vr =
+        classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
+            .map(|info| classic_config_core::format_registry_game_version(&info.version))
+            .unwrap_or_default();
+    let registry_crashgen = selected_version
         .as_ref()
         .and_then(|info| info.crashgen_versions.first());
 
@@ -378,21 +368,21 @@ pub fn build_analysis_config_from_yaml(
         .filter(|version| !version.is_empty())
         .unwrap_or(yaml.crashgen_latest_og.as_str())
         .to_string();
-    let xse_acronym = registry_info
+    let xse_acronym = selected_version
         .as_ref()
         .and_then(|info| info.xse.as_ref())
         .map(|xse| xse.acronym.as_str())
         .filter(|acronym| !acronym.is_empty())
         .unwrap_or(yaml.xse_acronym.as_str())
         .to_string();
-    let game_version = registry_info
+    let game_version = selected_version
         .as_ref()
         .map(|info| classic_config_core::format_registry_game_version(&info.version))
         .unwrap_or_else(|| yaml.game_version.clone());
 
     AnalysisConfig {
         game: game.to_string(),
-        is_vr_mode,
+        selected_version,
         crashgen_name,
         crashgen_latest,
         crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
@@ -1852,7 +1842,10 @@ impl OrchestratorCore {
         let match_result = registry.match_version(
             &detected_game_version,
             &self.config.game,
-            self.config.is_vr_mode(),
+            self.config
+                .selected_version
+                .as_ref()
+                .is_some_and(|info| info.is_vr),
         );
 
         let valid_versions: Vec<&str> = match match_result.version_info {

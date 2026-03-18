@@ -93,8 +93,6 @@ function createCliWorkspace() {
   const localYaml = `
 Game_Info:
   Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
-GameVR_Info:
-  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
 `;
   const gameYaml = `
 Game_Info:

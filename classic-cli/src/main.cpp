@@ -52,9 +52,7 @@ int main(int argc, char* argv[]) {
 
     // Print banner
     std::string mode_suffix;
-    if (args.game_version == "VR") {
-        mode_suffix += " VR";
-    } else if (args.game_version != "auto") {
+    if (args.game_version != "auto") {
         mode_suffix += " " + args.game_version;
     }
     if (args.fcx_mode)     mode_suffix += " [FCX]";

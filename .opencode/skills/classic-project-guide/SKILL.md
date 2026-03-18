@@ -42,6 +42,7 @@ Use this skill when a task needs CLASSIC-specific repo knowledge that should not
    - Native frontend changes usually want the repo PowerShell build/test scripts.
    - Rust changes usually want `cargo fmt`, `cargo clippy`, and relevant `cargo test` commands.
    - Binding-surface changes often require parity artifacts and binding-specific tests in the same change.
+   - Python binding validation uses `ClassicLib-rs/python-bindings/.venv`, not a repo-root `.venv`.
 
 5. Call out skipped repo-specific follow-up.
    - If parity artifacts, CI-relevant checks, or docs should be updated but were not run, say so clearly in the final handoff.

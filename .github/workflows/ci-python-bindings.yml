@@ -85,17 +85,17 @@ jobs:
             ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-python-
 
-      - name: Create uv virtual environment
-        run: uv venv
+      - name: Create Python bindings virtual environment
+        run: uv venv ClassicLib-rs/python-bindings/.venv
 
       - name: Install Python build and test dependencies
-        run: uv pip install maturin pytest
+        run: uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
 
-      # `maturin` is intentionally installed into the repo `.venv`.
-      # `rebuild_rust.ps1` invokes `uv run maturin ...`, so no global PATH install is required.
+      # `maturin` is intentionally installed into `ClassicLib-rs/python-bindings/.venv`.
+      # `rebuild_rust.ps1` targets that interpreter explicitly for Python binding builds.
       - name: Build and install required Python bindings
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 
       - name: Run Python bindings smoke tests
-        run: uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+        run: uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q

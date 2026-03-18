@@ -1,5 +1,7 @@
 # Performance Monitoring Guide for CLASSIC Rust Components
 
+Note: this guide includes material from the earlier Python-facing Rust acceleration model. For the current maintained contributor workflow, prefer the modular `ClassicLib-rs/` guides and the active binding validation docs.
+
 ## Overview
 
 This guide provides comprehensive information on monitoring, measuring, and optimizing the performance of CLASSIC's Rust acceleration components. Whether you're a user wanting to verify performance gains or a developer optimizing the system, this guide covers all aspects of performance monitoring.

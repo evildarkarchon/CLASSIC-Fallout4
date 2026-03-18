@@ -955,7 +955,7 @@ void MainWindow::checkFirstRunPaths()
     // Read current game and docs paths from YAML settings
     QString gamePath;
     QString docsPath;
-    bool isVrMode = false;
+    QString gameVersion = QStringLiteral("auto");
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
@@ -971,10 +971,8 @@ void MainWindow::checkFirstRunPaths()
             docsPath = classic::toQString(dp);
         }
 
-        auto gameVersion = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
-        if (gameVersion == "VR") {
-            isVrMode = true;
-        }
+        gameVersion = classic::toQString(
+            classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
 
     } catch (...) {
         // If settings can't be read, fall through to path detection
@@ -1019,14 +1017,18 @@ void MainWindow::checkFirstRunPaths()
 
     // Fallback: use Rust auto-detection (registry / docs discovery).
     if (gamePath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_game_path(std::string(gamePath.toUtf8().constData()), isVrMode);
+        auto detected = classic::path::detect_fallout4_game_path(
+            std::string(gamePath.toUtf8().constData()),
+            std::string(gameVersion.toUtf8().constData()));
         if (!detected.empty()) {
             gamePath = classic::toQString(detected);
             resolvedFromFallbacks = true;
         }
     }
     if (docsPath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_docs_path(std::string(docsPath.toUtf8().constData()), isVrMode);
+        auto detected = classic::path::detect_fallout4_docs_path(
+            std::string(docsPath.toUtf8().constData()),
+            std::string(gameVersion.toUtf8().constData()));
         if (!detected.empty()) {
             docsPath = classic::toQString(detected);
             resolvedFromFallbacks = true;
@@ -1044,7 +1046,9 @@ void MainWindow::checkFirstRunPaths()
 
                 auto exePath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
                 if (exePath.empty()) {
-                    auto defaultExe = gamePath + QStringLiteral("/Fallout4.exe");
+                    auto exeName = classic::path::resolve_fallout4_exe_name(
+                        std::string(gameVersion.toUtf8().constData()));
+                    auto defaultExe = gamePath + QStringLiteral("/") + classic::toQString(exeName);
                     classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
                                                                std::string(defaultExe.toUtf8().constData()));
                 }

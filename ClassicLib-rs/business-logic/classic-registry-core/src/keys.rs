@@ -58,14 +58,6 @@ impl Keys {
     /// encoding handling.
     pub const OPEN_FILE_FUNC: &'static str = "open_file_with_encoding";
 
-    /// VR game variant identifier.
-    ///
-    /// Stores the VR variant of the game (e.g., "SkyrimVR", "Fallout4VR").
-    ///
-    /// Used by `get_vr()` to check legacy VR mode. Callers that need to
-    /// distinguish game versions should prefer [`Keys::GAME_VERSION`].
-    pub const VR: &'static str = "gamevars_vr";
-
     /// Current game identifier.
     ///
     /// Stores the current game name (e.g., "Fallout4", "Skyrim").
@@ -151,7 +143,6 @@ mod tests {
             Keys::DOCS_PATH,
             Keys::IS_GUI_MODE,
             Keys::OPEN_FILE_FUNC,
-            Keys::VR,
             Keys::GAME,
             Keys::GAME_VERSION,
             Keys::VERSION_AUTO_DETECTED,
@@ -178,10 +169,5 @@ mod tests {
         assert_eq!(Keys::LOCAL_DIR, "local_dir");
         assert_eq!(Keys::GAME_VERSION, "gamevars_version");
         assert_eq!(Keys::VERSION_AUTO_DETECTED, "gamevars_version_auto");
-    }
-
-    #[test]
-    fn test_vr_key_accessible() {
-        assert_eq!(Keys::VR, "gamevars_vr");
     }
 }

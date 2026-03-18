@@ -117,13 +117,15 @@ bun run test:node
 ### Python bindings
 
 ```powershell
-uv venv
-uv pip install maturin pytest
+uv venv ClassicLib-rs/python-bindings/.venv
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
+
+Use a bindings-local virtual environment at `ClassicLib-rs/python-bindings/.venv`; do not rely on a repo-root `.venv` for Python binding smoke tests.
 
 ## Repo Conventions and Constraints
 
@@ -191,9 +193,12 @@ Required follow-up in the same change:
    - `docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json`
    - `docs/implementation/python_api_parity/governance/tier2_wave_manifest.json`
 5. Run:
+   - `uv venv ClassicLib-rs/python-bindings/.venv`
+   - `uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest`
    - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
    - `python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
-   - `uv run python -m pytest ClassicLib-rs/python-bindings/tests -q`
+   - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry`
+   - `uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q`
 6. Make sure `ci-python-bindings.yml` jobs pass before merge.
 
 ## CI and Platform Notes

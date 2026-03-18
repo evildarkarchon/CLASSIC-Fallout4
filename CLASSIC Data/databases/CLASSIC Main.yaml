@@ -74,9 +74,6 @@ CLASSIC_Info:
     Game_Info:
       Root_Folder_Game:
 
-    GameVR_Info:
-      Root_Folder_Game:
-
   default_ignorefile: |
     # This file contains plugin names that CLASSIC will IGNORE while scanning your crash logs and mod files.
     # When adding plugin names, make sure you add it under the correct game list, same applies to VR plugins.

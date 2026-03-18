@@ -1,191 +1,65 @@
 # Rust-Python Test Parity
 
-This document tracks the parity between Rust unit tests and Python integration tests for the CLASSIC project's Rust acceleration layer.
+This document describes the current parity model for CLASSIC's maintained Python bindings.
 
-## Overview
+## Current parity model
 
-All Rust components have corresponding Python integration tests to ensure that the PyO3 bindings work correctly and maintain functional parity with the Rust implementations.
+CLASSIC no longer tracks Python parity against a monolithic `classic-rust/` test tree.
+The maintained parity workflow is contract-based and lives around the modular bindings in
+`ClassicLib-rs/python-bindings/`.
 
-## Test Coverage
+## Source of truth
 
-### 1. Pattern Matcher (`PatternMatcher`)
+- Tier-1 contract: `docs/implementation/python_api_parity/baseline/parity_contract.json`
+- Runtime coverage registry: `ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json`
+- Generated parity artifacts: `ClassicLib-rs/python-bindings/parity-artifacts/`
+- Smoke/parity tests: `ClassicLib-rs/python-bindings/tests/`
 
-**Rust Tests**: `classic-rust/tests/test_patterns.rs`
-**Python Tests**: `tests/rust_integration/test_pattern_matcher_parity.py`
+## Maintained Python test entry points
 
-Coverage:
-- ✅ Basic pattern creation and matching
-- ✅ Multi-pattern matching with Aho-Corasick
-- ✅ Cache effectiveness and management
-- ✅ Case-insensitive matching
-- ✅ Edge cases (empty patterns, special characters, unicode)
-- ✅ Performance characteristics
-- ✅ PyO3 integration and error handling
+- `ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py`
+- `ClassicLib-rs/python-bindings/tests/test_python_parity_tooling.py`
+- `ClassicLib-rs/python-bindings/tests/test_binding_coverage_tooling.py`
 
-**Test Count**: 43 Python tests
+These tests validate the active Python binding surfaces such as:
 
-### 2. Mod Detector (`detect_mods_*`)
+- `classic_config`
+- `classic_scanlog`
+- `classic_version_registry`
 
-**Rust Tests**: `classic-rust/tests/test_mod_detector.rs`
-**Python Tests**: `tests/rust_integration/test_mod_detector_parity.py`
+Additional binding crates are validated through stubs, parity metadata, and targeted rebuild/install workflows.
 
-Coverage:
-- ✅ Single mod detection with pattern matching
-- ✅ Mod conflict detection (double mods)
-- ✅ Important mod detection with GPU compatibility
-- ✅ Batch processing capabilities
-- ✅ Case sensitivity and pattern matching
-- ✅ Edge cases and error handling
+## Required workflow when Python binding APIs change
 
-**Test Count**: 25 Python tests
+1. Update the Rust binding crate and its `.pyi` stub.
+2. If the public surface changed, update `docs/implementation/python_api_parity/baseline/parity_contract.json` as needed.
+3. Update `ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json` for newly runtime-verified or deferred surfaces.
+4. Refresh parity artifacts and run the smoke tests.
 
-### 3. Record Scanner (`RecordScanner`)
+## Local commands
 
-**Rust Tests**: `classic-rust/tests/test_record_scanner.rs`
-**Python Tests**: `tests/rust_integration/test_record_scanner_parity.py`
+Use the Python bindings virtual environment at `ClassicLib-rs/python-bindings/.venv`.
 
-Coverage:
-- ✅ Basic record scanning and extraction
-- ✅ Record validation and filtering
-- ✅ Aho-Corasick multi-pattern matching
-- ✅ Batch processing with parallel operations
-- ✅ RSP marker detection and offset extraction
-- ✅ Edge cases and error handling
-- ✅ Performance tests (40x speedup target)
-
-**Test Count**: 30 Python tests
-
-### 4. YAML Operations (`RustYamlOperations`)
-
-**Rust Tests**: `classic-rust/tests/test_yaml.rs`
-**Python Tests**: `tests/rust_integration/test_yaml_parity.py`
-
-Coverage:
-- ✅ Basic YAML parsing and dumping
-- ✅ Python type conversions (null, bool, number, string, list, dict)
-- ✅ File operations with caching
-- ✅ Settings navigation (get/set with dot notation)
-- ✅ Cache management
-- ✅ Error handling
-
-**Test Count**: 28 Python tests
-
-## Total Coverage
-
-- **Total Rust Test Files**: 11 files
-- **Total Python Integration Test Files**: 15+ files
-- **New Parity Test Files**: 4 files
-- **New Python Tests Added**: 126 tests
-
-## Running the Tests
-
-### Run All Rust-Python Parity Tests
-```bash
-pytest tests/rust_integration/ -v -m rust
+```powershell
+uv venv ClassicLib-rs/python-bindings/.venv
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
+uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
 
-### Run Specific Parity Tests
-```bash
-# Pattern Matcher
-pytest tests/rust_integration/test_pattern_matcher_parity.py -v
+## Relationship to Rust tests
 
-# Mod Detector
-pytest tests/rust_integration/test_mod_detector_parity.py -v
+- Core behavior should be tested first in Rust crates under `ClassicLib-rs/business-logic/`.
+- Python tests should verify that the PyO3 binding surface is callable, correctly typed, and aligned with the parity contract.
+- Binding tests should not reimplement large amounts of core-business-logic coverage that already belongs in Rust.
 
-# Record Scanner
-pytest tests/rust_integration/test_record_scanner_parity.py -v
+## Practical rule
 
-# YAML Operations
-pytest tests/rust_integration/test_yaml_parity.py -v
-```
+If a change affects a maintained Python binding surface, the expected evidence is:
 
-### Run Performance Tests
-```bash
-pytest tests/rust_integration/ -v -m "rust and slow"
-```
-
-## Test Markers
-
-All parity tests use the following pytest markers:
-
-- `@pytest.mark.rust` - Identifies Rust integration tests
-- `@pytest.mark.slow` - Marks performance/benchmark tests
-- `@pytest.mark.skipif(not RUST_AVAILABLE, ...)` - Skips when Rust unavailable
-
-## Building Rust for Testing
-
-Before running the tests, ensure the Rust extension is built:
-
-```bash
-# Method 1: Build wheel (RECOMMENDED)
-cd classic-rust
-maturin build --release --out dist
-uv pip install dist/classic-*.whl --force-reinstall
-
-# Method 2: Editable install (DEVELOPMENT)
-rm .venv/Lib/site-packages/classic_core.pyd  # Remove old FIRST
-uv pip install -e . --force-reinstall
-
-# Verify Rust acceleration is working
-python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
-```
-
-## Test Structure
-
-Each parity test file follows this structure:
-
-1. **Imports and Availability Check**
-   - Try importing Rust components
-   - Set `RUST_AVAILABLE` flag
-   - All tests skip if Rust unavailable
-
-2. **Test Data Helpers**
-   - Factory functions for test data
-   - Match Rust test data structures
-
-3. **Test Classes**
-   - Organized by functionality
-   - Mirror Rust test organization
-   - Comprehensive edge case coverage
-
-4. **Performance Tests**
-   - Marked with `@pytest.mark.slow`
-   - Verify speedup targets (10-150x)
-   - Measure cache effectiveness
-
-## Maintaining Parity
-
-When adding new Rust functionality:
-
-1. ✅ Write Rust unit tests in `classic-rust/tests/`
-2. ✅ Write corresponding Python integration tests
-3. ✅ Ensure both test suites pass
-4. ✅ Update this document
-
-When modifying existing Rust code:
-
-1. ✅ Update Rust unit tests
-2. ✅ Update Python integration tests
-3. ✅ Verify parity still maintained
-4. ✅ Check performance hasn't regressed
-
-## Known Issues
-
-None currently. All tests pass when Rust components are available.
-
-## Future Enhancements
-
-Potential areas for additional test coverage:
-
-- [ ] Fuzz testing for edge cases
-- [ ] More comprehensive property-based tests
-- [ ] Cross-platform behavior verification
-- [ ] Memory leak detection tests
-- [ ] Thread safety stress tests
-
-## References
-
-- [Rust Documentation Index](RUST_DOCUMENTATION_INDEX.md)
-- [Rust Usage Guide](rust_usage_guide.md)
-- [Performance Monitoring](performance_monitoring.md)
-- [Troubleshooting Guide](troubleshooting_rust.md)
+- Rust tests pass for the affected core crate(s)
+- Python parity gate passes
+- Stub validation passes
+- Python smoke tests pass in `ClassicLib-rs/python-bindings/.venv`

@@ -194,7 +194,7 @@ Important types and methods:
 - `GameVersion` variants: `Null`, `Original`, `NextGen`, `AnniversaryEdition`, `Vr`
 - `GameVersion::is_null()` and `description()`
 - `AddressLibInfo::{vr, original, next_gen, anniversary_edition}()`
-- `XseChecker::new(plugins_path, is_vr_mode, game_version)`
+- `XseChecker::new(plugins_path, game_version)`
 - `check() -> ValidationResult`
 - `format_message(result)`
 - `validate()`
@@ -242,7 +242,7 @@ This module packages setup-time checks and migration helpers.
 Important items:
 
 - `run_combined_checks(config) -> SetupCheckResults`
-- `migrate_vr_setting(game_version, legacy_vr_mode)`
+- `migrate_game_version_setting(game_version, legacy_vr_mode)`
 - `resolve_effective_game_version(game_version)`
 - `needs_path_detection(game_path, docs_path)`
 
@@ -256,7 +256,7 @@ Behavior worth knowing:
 
 - `run_combined_checks()` currently runs game integrity and documents-folder checks; `SetupCheckConfig.xse_hashes` exists in the public struct but is not consumed by the current implementation
 - `resolve_effective_game_version()` canonicalizes to `Original`, `NextGen`, `AnniversaryEdition`, `VR`, or `auto`
-- `migrate_vr_setting()` lets explicit non-`auto` game-version strings win over the legacy VR boolean
+- `migrate_game_version_setting()` lets explicit non-`auto` game-version strings win over the legacy VR boolean
 
 ## Loose-file and archive scanning APIs
 

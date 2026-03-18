@@ -43,10 +43,11 @@ For crate-level behavior, see:
 
 This file exposes Fallout 4-specific convenience detection only:
 
-- `detect_fallout4_game_path(cached_path, is_vr) -> String`
-- `detect_fallout4_docs_path(cached_path, is_vr) -> String`
+- `detect_fallout4_game_path(cached_path, selected_game_version) -> String`
+- `resolve_fallout4_exe_name(selected_game_version) -> String`
+- `detect_fallout4_docs_path(cached_path, selected_game_version) -> String`
 
-It wraps `classic-path-core` directly and hardcodes Fallout 4 / Fallout 4 VR names.
+It wraps `classic-path-core` directly and resolves Fallout 4 names from version-registry metadata.
 
 ## `src/game.rs` -> `classic::game`
 
@@ -75,7 +76,7 @@ It does **not** expose full `classic-scangame-core` orchestration, Address Libra
 
 ## `classic::path` entry points
 
-### `detect_fallout4_game_path(cached_path, is_vr) -> String`
+### `detect_fallout4_game_path(cached_path, selected_game_version) -> String`
 
 Forwards to:
 
@@ -84,7 +85,7 @@ Forwards to:
 
 Current bridge choices:
 
-- uses `Fallout4.exe` for non-VR and `Fallout4VR.exe` for VR
+- resolves the executable name from version-registry metadata (`docs_name + ".exe"`)
 - passes `None` for `xse_loader`, so detection validates only the game executable, not `f4se_loader.exe` or `f4sevr_loader.exe`
 - passes `None` for the XSE log path, so the bridge uses only cached-path and platform path-discovery strategies
 - returns the detected path as a lossy UTF-8 `String`
@@ -94,7 +95,11 @@ Practical contributor implication:
 
 - this helper is narrower than `GamePathFinder`; callers cannot request loader-aware validation or XSE-log fallback through this bridge entry point
 
-### `detect_fallout4_docs_path(cached_path, is_vr) -> String`
+### `resolve_fallout4_exe_name(selected_game_version) -> String`
+
+Returns the expected Fallout 4 executable filename for the selected version by resolving version-registry metadata.
+
+### `detect_fallout4_docs_path(cached_path, selected_game_version) -> String`
 
 Forwards to:
 
@@ -103,7 +108,7 @@ Forwards to:
 
 Current bridge choices:
 
-- hardcodes `My Games\Fallout4` or `My Games\Fallout4VR`
+- resolves the documents subfolder from version-registry metadata (`docs_name`)
 - accepts a cached string path and otherwise uses the crate's platform-specific discovery flow
 - does not expose `validate_ini_files()` or `DocumentsChecker`
 - returns `""` on failure instead of surfacing `DocsPathError`
@@ -414,7 +419,7 @@ These are the main current narrowing points contributors should keep in mind.
 ## `src/scangame.rs`
 
 - exposes only `run_combined_checks()` and `needs_path_detection()` from the setup module
-- does not expose `resolve_effective_game_version()` or `migrate_vr_setting()`
+- does not expose `resolve_effective_game_version()` or `migrate_game_version_setting()`
 - passes empty executable hashes and empty XSE hashes instead of feeding registry-backed expectations into `SetupCheckConfig`
 - does not expose `GameScanOrchestrator`, `CrashgenCheckOrchestrator`, `XseChecker`, `GameVersion`, or any mod-scan APIs
 

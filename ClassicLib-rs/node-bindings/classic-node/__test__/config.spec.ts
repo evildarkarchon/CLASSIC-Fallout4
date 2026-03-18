@@ -40,12 +40,6 @@ Game_Info:
   GameVersionNEW: "1.10.984"
   CRASHGEN_LatestVer: "4.0.0"
   CRASHGEN_LogName: "crash-og"
-GameVR_Info:
-  GameVersion: "1.2.72"
-  CRASHGEN_LatestVer: "3.0.0"
-  CRASHGEN_LogName: "crash-vr"
-  CRASHGEN_Ignore:
-    - "VRIgnoreItem1"
 Game_Hints:
   - "Hint 1"
   - "Hint 2"

@@ -39,8 +39,6 @@ CLASSIC_Ignore_Fallout4:
 export const CLI_LOCAL_YAML = `
 Game_Info:
   Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
-GameVR_Info:
-  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
 `;
 
 export const CLI_SAMPLE_LOG = `Fallout 4 v1.10.163

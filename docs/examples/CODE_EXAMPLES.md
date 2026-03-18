@@ -2,6 +2,8 @@
 
 > Practical examples for common development patterns
 
+Note: many examples in this file target the legacy Python runtime/orchestration layer under `deprecated/` and older migration helpers. They are not the default path for current product work, which centers on `ClassicLib-rs/`, the maintained bindings, and the C++ frontends.
+
 This document provides ready-to-use code examples for common tasks in CLASSIC development.
 
 ---

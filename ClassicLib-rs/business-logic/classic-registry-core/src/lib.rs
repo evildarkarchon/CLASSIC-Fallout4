@@ -45,17 +45,15 @@ pub use registry::{clear_all, get, is_registered, register, unregister};
 
 // Convenience functions matching Python API
 pub use registry::{
-    get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_vr, get_yaml_cache,
-    is_gui_mode, set_game,
+    get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode,
+    set_game,
 };
 
 // New version-aware convenience functions
 pub use registry::{get_game_version, is_version_auto_detected};
 
 // Additional convenience functions
-pub use registry::{
-    get_config_suffix, get_game_version_string, is_enb_present, is_vr_version, is_xse_valid,
-};
+pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};
 
 #[cfg(test)]
 mod tests {

@@ -1172,3 +1172,60 @@ impl PyRustOrchestrator {
         Ok((result.0, result.1.to_list()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use classic_config_core::CoreModExclude;
+    use pyo3::types::{PyDict, PyList, PyModule};
+
+    #[test]
+    fn from_yamldata_preserves_core_mod_exclusion_metadata() {
+        Python::attach(|py| -> PyResult<()> {
+            let entry = PyDict::new(py);
+            entry.set_item("detect", "prp.esp")?;
+            entry.set_item("name", "PRP")?;
+            entry.set_item("description", "Install PRP when London is not present")?;
+            entry.set_item("gpu_mismatch_warning", "PRP is tuned for NVIDIA users")?;
+
+            let exclude_when = PyDict::new(py);
+            exclude_when.set_item("plugin_any", vec!["LondonWorldspace.esm"])?;
+            entry.set_item("exclude_when", exclude_when)?;
+
+            let game_mods_core = PyList::empty(py);
+            game_mods_core.append(entry)?;
+
+            let kwargs = PyDict::new(py);
+            kwargs.set_item("game_mods_core", game_mods_core)?;
+
+            let types = PyModule::import(py, "types")?;
+            let yamldata = types.getattr("SimpleNamespace")?.call((), Some(&kwargs))?;
+
+            let config = PyAnalysisConfig::from_yamldata(
+                &yamldata,
+                "Fallout4".to_string(),
+                "Original".to_string(),
+                false,
+                false,
+                false,
+                Vec::new(),
+            )?;
+
+            assert_eq!(config.inner.mods_core.len(), 1);
+            let entry = &config.inner.mods_core[0];
+            assert_eq!(
+                entry.gpu_mismatch_warning.as_deref(),
+                Some("PRP is tuned for NVIDIA users")
+            );
+            assert_eq!(
+                entry.exclude_when,
+                Some(CoreModExclude::PluginAny(vec![
+                    "LondonWorldspace.esm".to_string(),
+                ]))
+            );
+
+            Ok(())
+        })
+        .expect("Python core-mod metadata round-trip should succeed");
+    }
+}

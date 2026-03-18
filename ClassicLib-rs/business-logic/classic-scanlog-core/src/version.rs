@@ -176,7 +176,7 @@ impl CrashgenVersion {
     ///
     /// * `latest` - The latest non-VR version
     /// * `latest_vr` - The latest VR version
-    /// * `is_vr_mode` - Whether the game is in VR mode
+    /// * `selected_version_is_vr` - Whether the selected version is VR
     ///
     /// # Returns
     ///
@@ -205,14 +205,14 @@ impl CrashgenVersion {
         &self,
         latest: &CrashgenVersion,
         latest_vr: &CrashgenVersion,
-        is_vr_mode: bool,
+        selected_version_is_vr: bool,
     ) -> bool {
         // Port of Python logic:
         // if (version_current < version_latest_vr and version_current != version_latest) or
         //    (not game_is_vr and version_current < version_latest):
         //     # outdated
 
-        if is_vr_mode {
+        if selected_version_is_vr {
             // VR mode: Check against VR version, but allow if matches non-VR latest
             self < latest_vr && self != latest
         } else {

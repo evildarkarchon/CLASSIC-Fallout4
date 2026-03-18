@@ -62,12 +62,9 @@ This crate has two internal modules, but the public API is re-exported from the 
 - `get_yaml_cache<T>()`
 - `get_manual_docs_gui<T>()`
 - `get_game_path_gui<T>()`
-- `get_vr()`
 - `get_game_version<T>()`
 - `is_version_auto_detected()`
 - `get_local_dir()`
-- `get_config_suffix()`
-- `is_vr_version()`
 - `is_xse_valid()`
 - `is_enb_present()`
 - `get_game_version_string()`
@@ -93,7 +90,6 @@ Current public constants include:
 - `DOCS_PATH`
 - `IS_GUI_MODE`
 - `OPEN_FILE_FUNC`
-- `VR`
 - `GAME`
 - `GAME_VERSION`
 - `VERSION_AUTO_DETECTED`
@@ -223,15 +219,10 @@ These helpers do not enforce a specific concrete type themselves; they are conve
 
 - `is_version_auto_detected() -> bool` reads `Keys::VERSION_AUTO_DETECTED` and defaults to `false`
 - `get_game_version_string() -> String` reads `Keys::GAME_VERSION` as `String` and defaults to `"auto"`
-- `get_config_suffix() -> String` returns `"VR"` only when `Keys::GAME_VERSION` or legacy `Keys::VR` is stored as the exact string `"VR"`
-- `is_vr_version() -> bool` is just `get_config_suffix() == "VR"`
-- `get_vr() -> String` reads only the legacy `Keys::VR` key and defaults to `""`
-
 Important limitation from the current implementation:
 
-- `Keys::GAME_VERSION` comments describe storing a `Fallout4Version` enum, but `get_config_suffix()`, `is_vr_version()`, and `get_game_version_string()` only look for a stored `String`
-- if a caller stores an enum or some wrapper type under `Keys::GAME_VERSION`, those string-oriented helpers will behave as if no matching string value exists
-- `get_vr()`'s doc comment says it can derive VR state from `GAME_VERSION`, but the implementation currently only reads the legacy `Keys::VR` entry
+- `Keys::GAME_VERSION` comments describe storing a `Fallout4Version` enum, but `get_game_version_string()` only looks for a stored `String`
+- if a caller stores an enum or some wrapper type under `Keys::GAME_VERSION`, that string-oriented helper will behave as if no matching string value exists
 
 ## Small status helpers
 
@@ -341,8 +332,7 @@ That final pair of assertions captures an important contract: this registry is t
 - `Keys` provides naming conventions only, not enforced schemas
 - `get(...)` cannot distinguish missing keys from wrong requested types
 - convenience helpers use defaults heavily, so absent state can be masked
-- several Fallout 4 version helpers are string-oriented even though comments describe enum-oriented storage under `Keys::GAME_VERSION`
-- `get_vr()` still behaves as a legacy helper over `Keys::VR` only
+- `get_game_version_string()` remains string-oriented even though comments describe enum-oriented storage under `Keys::GAME_VERSION`
 - `clear_all()` is useful for tests but risky in shared process flows
 - `thiserror` is declared as a dependency even though no public error type is currently exposed
 

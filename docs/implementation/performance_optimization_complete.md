@@ -1,5 +1,7 @@
 # CLASSIC ScanLog Performance Optimization - COMPLETE
 
+Note: this is a historical implementation report. Some examples reference the older Python orchestration layer and the pre-split `classic_core` naming. For current contributor workflow and maintained bindings, prefer the modular `ClassicLib-rs/` guidance in `docs/development/` and `docs/implementation/python_api_parity/`.
+
 **Date**: 2025-10-29
 **Status**: ✅ **FULLY IMPLEMENTED AND VERIFIED**
 **Overall Impact**: **50-150x speedup** for crash log processing

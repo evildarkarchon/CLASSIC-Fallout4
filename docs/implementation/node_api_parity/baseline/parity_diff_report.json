@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-03-16T11:51:36.539329+00:00",
+  "generated_at_utc": "2026-03-18T01:50:14.726672+00:00",
   "summary": {
-    "tier1_contract_total": 262,
-    "tier1_matched": 262,
+    "tier1_contract_total": 261,
+    "tier1_matched": 261,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -1500,19 +1500,6 @@
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "VersionRegistry",
       "node_export": "registryGetGameVersion",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 0,
-      "actual_node_arity": 0
-    },
-    {
-      "id": "version-registry-promote-registry-is-vr-version",
-      "tier": "tier1",
-      "owner_module": "version_registry",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "VersionRegistry",
-      "node_export": "registryIsVrVersion",
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",
@@ -4516,10 +4503,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
-      "node_export": "migrateVrSetting",
+      "node_export": "migrateGameVersionSetting",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
     },
@@ -4569,13 +4556,13 @@
       "tier2": 24
     },
     "scanlog": {
-      "tier2": 72
+      "tier2": 71
     },
     "aux": {
       "tier2": 8
     },
     "version_registry": {
-      "tier2": 4
+      "tier2": 5
     }
   }
 }
