@@ -39,11 +39,6 @@ Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>
 - [Crash Logger AE for VR](https://www.nexusmods.com/skyrimspecialedition/mods/59818?tab=files)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files)
 
-For both games, install:
-
-- [Microsoft Visual C++ Redistributable All-In-One](https://github.com/abbodi1406/vcredist)
-- [DirectX Redist (June 2010)](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
-
 ---
 
 ## Installation
@@ -64,6 +59,7 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 #### Prerequisites
 
 - Visual Studio with C++ Desktop workload (MSVC toolchain)
+- [vcpkg](https://vcpkg.io/)
 - `VCPKG_ROOT` environment variable configured (example: `C:\vcpkg`)
 - Rust toolchain (`cargo`)
 - CMake 3.25+
@@ -142,7 +138,6 @@ GitHub Actions workflows:
 - `classic-gui/` — C++ Qt 6 desktop GUI
 - `ClassicLib-rs/` — Rust business logic + bindings
 - `CLASSIC Data/` — runtime data, databases, help, graphics
-- `deprecated/` — legacy Python codebase (deprecated)
 
 ---
 
