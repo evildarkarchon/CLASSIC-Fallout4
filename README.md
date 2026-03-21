@@ -29,7 +29,7 @@ Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>
 
 - [Fallout 4 Script Extender](https://www.nexusmods.com/fallout4/mods/42147?tab=files)
 - [Address Library for F4SE Plugins](https://www.nexusmods.com/fallout4/mods/47327?tab=files)
-- [Buffout 4 NG](https://www.nexusmods.com/fallout4/mods/64880?tab=files) (OG/NG/VR) or [Buffout 4](https://www.nexusmods.com/fallout4/mods/47359) (OG)
+- [Buffout 4 NG](https://www.nexusmods.com/fallout4/mods/64880?tab=files) (OG/NG/VR), [Buffout 4](https://www.nexusmods.com/fallout4/mods/47359) (OG), or [Addictol](https://www.nexusmods.com/fallout4/mods/84214)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files) (required for some file scan workflows)
 
 ### Skyrim (work in progress)
