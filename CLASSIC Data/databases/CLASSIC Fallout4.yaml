@@ -76,6 +76,7 @@ Crashgen_Registry:
                     ]
           action:
             kind: issue
+            bucket: error_information
             severity: error
             message: "Baka ScrapHeap is redundant with {crashgen_name}"
             fix: "Uninstall Baka ScrapHeap to prevent conflicts with {crashgen_name}."
@@ -224,6 +225,7 @@ Crashgen_Registry:
             plugin_any: [bakascrapheap.dll]
           action:
             kind: notice
+            bucket: error_information
             severity: error
             message: "Baka ScrapHeap is redundant with Addictol"
             fix: "Uninstall Baka ScrapHeap to prevent conflicts with Addictol."
