@@ -37,9 +37,8 @@ Rust workspace layout:
 
 Placement guidance:
 
-- Keep all business logic in Rust core. Shared behavior, state transitions, data mutation, persistence rules, and validation belong in Rust unless the task is explicitly interface-only.
+- Put new product behavior in Rust core when it should be shared across frontends or bindings.
 - Keep `classic-cli/` and `classic-gui/` focused on frontend and integration concerns.
-- Keep C++, Python, Node, and other UI or binding layers thin wrappers over Rust APIs rather than reimplementing logic, unless the performance cost of FFI bridging is demonstrated to be too high for that specific path.
 - Treat Python bindings as compatibility work, not the default place for new features.
 
 ## Build, Test, and Validation Commands
@@ -129,7 +128,6 @@ Use a bindings-local virtual environment at `ClassicLib-rs/python-bindings/.venv
 
 ## Repo Conventions and Constraints
 
-- Keep business logic in Rust and treat non-interface layers as thin wrappers unless measured FFI overhead justifies local implementation.
 - Maintain one shared Tokio runtime from the Rust core runtime facilities.
 - Rust edition is 2024.
 - Rust workspace policy denies `unsafe_code`.

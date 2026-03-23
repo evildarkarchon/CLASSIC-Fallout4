@@ -1,59 +1,47 @@
 ---
 name: classic-project-guide
-description: Use this skill for CLASSIC-specific repo guidance: deciding whether work belongs in `ClassicLib-rs`, `classic-cli`, `classic-gui`, or `deprecated/`; choosing the right repo build, test, lint, package, or CI-validation commands; checking Windows/MSVC and platform constraints; and handling Node or Python parity updates when Rust APIs touch bindings. Reach for it whenever the user asks how CLASSIC is structured, which repo workflow or release gates apply, what parity artifacts or docs must change, or how to validate changes in this repository. Skip it for generic coding, design, or debugging tasks that do not depend on CLASSIC-specific architecture or workflow.
-license: MIT
-compatibility: Works best with file search/read tools and terminal access for repo commands.
-metadata:
-  author: OpenCode
-  version: "1.0"
+description: CLASSIC-specific repository guidance for architecture routing, repo-approved build/test/package commands, Windows/MSVC constraints, Node and Python parity workflows, and repo-specific docs or CI follow-up. Use when work depends on where code belongs in CLASSIC, which local validation commands or release gates apply, which parity artifacts or docs must change, or how repository runtime/platform rules affect implementation. Skip for generic coding, debugging, design, or language-only tasks that do not depend on CLASSIC-specific workflow or architecture.
 ---
 
-Use this skill when a task needs CLASSIC-specific repo knowledge that should not live in the always-on prompt.
+Use this skill only when the task depends on CLASSIC-specific repository policy or structure.
 
-## What This Skill Is For
+## Route The Work
 
-- Route work to the right part of the repo.
-- Pick the right build, test, lint, and parity commands.
-- Preserve repo-specific architectural rules and platform constraints.
-- Recognize when documentation or parity artifacts must change with the code.
+Classify the request before editing or recommending commands.
 
-## How To Use It
+- Put shared product behavior in `ClassicLib-rs/`, especially business logic, validation, persistence rules, runtime facilities, and binding-facing behavior.
+- Keep `classic-cli/` and `classic-gui/` focused on native frontend and integration concerns.
+- Keep `ClassicLib-rs/node-bindings/` and `ClassicLib-rs/python-bindings/` aligned with Rust APIs instead of reimplementing logic.
 
-1. Classify the request before editing anything.
-   - `classic-cli/` -> C++ CLI frontend work.
-   - `classic-gui/` -> Qt desktop frontend work.
-   - `ClassicLib-rs/` -> Rust core, bindings, or shared logic.
+## Read Only What You Need
 
-2. Read only the relevant parts of `references/repo-guide.md`.
-   - Use `Architecture Map` when deciding where code belongs.
-   - Use `Build, Test, and Validation Commands` before running repo commands.
-   - Use `Node API Parity Workflow` or `Python API Parity Workflow` when changing binding-exposed Rust APIs.
-   - Use `CI and Platform Notes` when platform or pipeline constraints matter.
+Load `references/repo-guide.md` selectively.
 
-3. Apply the repo guardrails while implementing.
-   - Preserve the single shared Tokio runtime; do not introduce another independent runtime.
-   - Run C++ tests through CTest or the provided PowerShell wrappers, not by calling test binaries directly.
-   - Keep docs in sync when architecture, public behavior, or contributor workflow changes.
-   - Never write to `NUL` or `nul` as if it were a file path.
+- Read `Architecture Map` when deciding where code belongs.
+- Read `Build, Test, and Validation Commands` before suggesting or running repo commands.
+- Read `Node API Parity Workflow` when Node-exposed Rust APIs or generated TypeScript artifacts may change.
+- Read `Python API Parity Workflow` when Python-exposed Rust APIs, stubs, or parity artifacts may change.
+- Read `CI and Platform Notes` when workflow expectations, portability, or Windows/MSVC constraints matter.
 
-4. Match validation to the touched surface.
-    - Native frontend changes usually want the repo PowerShell build/test scripts.
-    - Rust changes usually want `cargo fmt`, `cargo clippy`, and relevant `cargo test` commands.
-    - Binding-surface changes often require parity artifacts and binding-specific tests in the same change.
-    - Python binding validation uses `ClassicLib-rs/python-bindings/.venv`, not a repo-root `.venv`.
+## Apply Repo Guardrails
 
-5. Call out skipped repo-specific follow-up.
-   - If parity artifacts, CI-relevant checks, or docs should be updated but were not run, say so clearly in the final handoff.
+- Keep business logic in Rust and keep non-interface layers thin unless the task is explicitly interface-only.
+- Maintain the single shared Tokio runtime from Rust core facilities; do not introduce a separate runtime.
+- Consult `docs/api/README.md` before changing public Rust, bridge, GUI-consumer, or binding-facing APIs. If the contract changes, update the affected `docs/api/` pages in the same change.
+- Run native C++ tests through CTest or the repo PowerShell wrappers, not by invoking test binaries directly.
+- If running Rust or MSVC-targeted C++ commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it so Git's `usr/bin/link.exe` does not shadow the Visual Studio linker.
+- Never write to `NUL` or `nul` as if it were a normal file path on Windows.
 
-## Quick Decision Rules
+## Match Validation To The Touched Surface
 
-- If the user is adding or changing product behavior, Rust core plus the C++ frontends, Node, and Python bindings are all in scope.
-- If the task touches Node bindings, treat parity gates and generated artifacts as part of the same unit of work.
-- If the task touches Python bindings, remember they are still supported for future projects and should be kept in sync.
-- If Linux or cloud execution comes up, remember the native C++ apps are Windows/MSVC-oriented and some Rust crates may need subset builds.
+- For `classic-cli/` or `classic-gui/`, prefer the repo PowerShell wrapper scripts from the reference guide for build, test, install, package, and clean rebuild flows.
+- For Rust workspace changes, expect `cargo fmt`, `cargo clippy`, and the relevant `cargo test` commands from `ClassicLib-rs/Cargo.toml`.
+- For Node binding changes, treat parity artifacts and binding tests as part of the same change and use the local parity gate plus Bun and Node test commands from the reference guide.
+- For Python binding changes, use `ClassicLib-rs/python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, rebuild, and pytest steps from the reference guide.
+- For Linux or cloud validation, prefer portable Rust-only subsets when native Windows-focused surfaces are not practical to build.
 
-## Output Expectations
+## State Repo-Specific Follow-Up Explicitly
 
-- Be explicit about which repo surface you chose and why.
-- Mention the exact validation commands that fit the changed area.
-- Mention parity/doc follow-up when relevant instead of assuming the reader remembers repo policy.
+- Name the repo surface you chose and why.
+- Name the exact validation commands that fit the touched area.
+- Call out skipped parity artifacts, docs, packaging, or CI-relevant checks instead of implying they were handled.
