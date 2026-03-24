@@ -376,16 +376,6 @@ impl YamlData {
             .collect()
     }
 
-    /// OPC2 mods database.
-    #[napi(getter)]
-    pub fn game_mods_opc2(&self) -> HashMap<String, String> {
-        self.inner
-            .game_mods_opc2
-            .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect()
-    }
-
     /// Solution mods database.
     #[napi(getter)]
     pub fn game_mods_solu(&self) -> HashMap<String, String> {

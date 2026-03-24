@@ -873,7 +873,6 @@ class AnalysisConfig:
     mods_freq: dict[str, str]
     mods_conf: list[dict[str, str | None]]
     mods_solu: dict[str, str]
-    mods_opc2: dict[str, str]
     classic_records_list: list[str]  # Named records to scan
     def __init__(self, game: str, game_version: str = "auto") -> None:
         """Create analysis config.

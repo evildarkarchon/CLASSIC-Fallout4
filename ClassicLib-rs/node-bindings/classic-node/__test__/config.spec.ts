@@ -68,8 +68,6 @@ Mods_CORE:
     description: "Core mod B"
 Mods_FREQ:
   FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
 Mods_SOLU:
   SoluMod: "Solution mod"
 `;
@@ -396,8 +394,8 @@ describe("YamlData mod databases", () => {
     expect(data.gameModsFreq["FreqMod"]).toBe("Frequently used mod");
   });
 
-  test("gameModsOpc2 returns correct map", () => {
-    expect(data.gameModsOpc2["OpcMod"]).toBe("OPC2 mod");
+  test("legacy OPC2 YAML is not exposed through YamlData", () => {
+    expect("gameModsOpc2" in data).toBe(false);
   });
 
   test("gameModsSolu returns correct map", () => {

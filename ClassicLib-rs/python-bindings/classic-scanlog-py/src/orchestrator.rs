@@ -222,7 +222,6 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
         game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
         game_mods_core: extract_core_mod_entries(yamldata, "game_mods_core"),
         game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
-        game_mods_opc2: extract_indexmap_str_attr(yamldata, "game_mods_opc2"),
         game_mods_solu: extract_indexmap_str_attr(yamldata, "game_mods_solu"),
         autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
         game_version: extract_string_attr(yamldata, "game_version"),
@@ -650,22 +649,6 @@ impl PyAnalysisConfig {
     #[setter]
     pub fn set_mods_solu(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
         self.inner.mods_solu = pyany_to_indexmap_str(value);
-    }
-
-    /// Get the outdated/redundant/community patch mods database
-    #[getter]
-    pub fn mods_opc2(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_opc2 {
-            dict.set_item(key, value)?;
-        }
-        Ok(dict.into())
-    }
-
-    /// Set the outdated/redundant/community patch mods database (preserves insertion order)
-    #[setter]
-    pub fn set_mods_opc2(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_opc2 = pyany_to_indexmap_str(value);
     }
 
     // ============================================================================

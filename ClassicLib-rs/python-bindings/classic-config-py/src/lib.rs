@@ -959,15 +959,6 @@ impl PyYamlData {
     }
 
     #[getter]
-    fn game_mods_opc2(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_opc2 {
-            dict.set_item(k, v)?;
-        }
-        Ok(dict.unbind())
-    }
-
-    #[getter]
     fn game_mods_solu(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
         let dict = PyDict::new(py);
         for (k, v) in &self.inner.game_mods_solu {

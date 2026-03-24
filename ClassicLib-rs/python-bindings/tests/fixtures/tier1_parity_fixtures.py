@@ -29,7 +29,6 @@ Mods_CONF: []
 Mods_CORE: {}
 Mods_CORE_FOLON: {}
 Mods_FREQ: {}
-Mods_OPC2: {}
 Mods_SOLU: {}
 """
 

@@ -267,14 +267,6 @@ fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String> {
     data.inner.game_mods_solu.values().cloned().collect()
 }
 
-fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_opc2.keys().cloned().collect()
-}
-
-fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_opc2.values().cloned().collect()
-}
-
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
     extern "Rust" {
@@ -340,8 +332,6 @@ mod ffi {
         fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
         fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String>;
     }
 }
 

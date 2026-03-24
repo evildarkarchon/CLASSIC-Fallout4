@@ -229,15 +229,6 @@ class YamlData:
         """
 
     @property
-    def game_mods_opc2(self) -> dict[str, Any]:
-        """Optimization/performance mods configuration (OPC2).
-
-        Returns:
-            Dictionary mapping optimization mod names to detection patterns
-
-        """
-
-    @property
     def game_mods_conf(self) -> list[dict[str, str | None]]:
         """Mod conflict entries.
 

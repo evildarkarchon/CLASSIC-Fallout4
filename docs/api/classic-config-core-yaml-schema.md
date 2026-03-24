@@ -143,7 +143,6 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `Mods_CONF` | sequence of `ModConflictEntry` mappings | populates `game_mods_conf` (`Vec<ModConflictEntry>`); deduplicated at parse time by canonical pair order |
 | `Mods_CORE` | sequence of `CoreModEntry` mappings | populates `game_mods_core` (`Vec<CoreModEntry>`); entries with missing required fields are skipped |
 | `Mods_FREQ` | mapping of string -> string | populates `game_mods_freq`; key order is preserved |
-| `Mods_OPC2` | mapping of string -> string | populates `game_mods_opc2`; key order is preserved |
 | `Mods_SOLU` | mapping of string -> string | populates `game_mods_solu`; key order is preserved |
 | `Crashgen_Registry` | mapping of crashgen name -> mapping | parsed into `HashMap<String, CrashgenEntryRaw>`; malformed entries are skipped rather than failing the whole file |
 

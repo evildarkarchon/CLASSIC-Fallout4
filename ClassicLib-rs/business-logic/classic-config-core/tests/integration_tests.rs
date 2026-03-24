@@ -68,8 +68,6 @@ Mods_CORE:
     description: "Core mod B"
 Mods_FREQ:
   FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
 Mods_SOLU:
   SoluMod: "Solution mod"
 "#
@@ -418,10 +416,6 @@ mod from_content_workflows {
         assert_eq!(
             config.game_mods_freq.get("FreqMod"),
             Some(&"Frequently used mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_opc2.get("OpcMod"),
-            Some(&"OPC2 mod".to_string())
         );
         assert_eq!(
             config.game_mods_solu.get("SoluMod"),

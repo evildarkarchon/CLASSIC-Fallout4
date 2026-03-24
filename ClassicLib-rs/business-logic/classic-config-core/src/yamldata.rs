@@ -1072,7 +1072,6 @@ Crashgen_Registry:
 /// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
 /// * `game_mods_core` - A `Vec<CoreModEntry>` of structured core/important mod entries from `Mods_CORE`.
 /// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
-/// * `game_mods_opc2` - An `IndexMap<String, String>` for a specific feature or mod database identified as `opc2`.
 /// * `game_mods_solu` - An `IndexMap<String, String>` representing solution-related game mod configurations.
 ///
 /// * `autoscan_text` - A `String` defining the text used in the "autoscan" UI component.
@@ -1155,8 +1154,6 @@ pub struct YamlDataCore {
     pub game_mods_core: Vec<CoreModEntry>,
     /// Frequently used game mod entries
     pub game_mods_freq: IndexMap<String, String>,
-    /// Specific feature or mod database identified as opc2
-    pub game_mods_opc2: IndexMap<String, String>,
     /// Solution-related game mod configurations
     pub game_mods_solu: IndexMap<String, String>,
 
@@ -1263,7 +1260,6 @@ impl YamlDataCore {
             game_mods_conf: parse_mods_conf(game_data),
             game_mods_core: parse_mods_core(game_data),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
-            game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
             game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
 
@@ -1601,8 +1597,6 @@ Mods_CORE:
       plugin_any: [SomeWorldspace.esm]
 Mods_FREQ:
   FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
 Mods_SOLU:
   SoluMod: "Solution mod"
 "#
@@ -1808,10 +1802,6 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(
             config.game_mods_freq.get("FreqMod"),
             Some(&"Frequently used mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_opc2.get("OpcMod"),
-            Some(&"OPC2 mod".to_string())
         );
         assert_eq!(
             config.game_mods_solu.get("SoluMod"),
