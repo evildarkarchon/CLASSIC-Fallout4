@@ -3,8 +3,21 @@
 use classic_config_core::{SuspectErrorRule, SuspectStackCountRule, SuspectStackRule};
 use classic_scanlog_core::SuspectScanner;
 use classic_shared::without_gil;
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
+
+macro_rules! required_field {
+    ($dict:expr, $key:literal, $context:expr, $ty:ty) => {{
+        $dict
+            .get_item($key)?
+            .ok_or_else(|| PyValueError::new_err(format!("missing {}.{}", $context, $key)))?
+            .extract::<$ty>()
+            .map_err(|err| {
+                PyTypeError::new_err(format!("invalid {}.{}: {}", $context, $key, err))
+            })?
+    }};
+}
 
 /// Python wrapper for SuspectScanner
 #[pyclass(name = "SuspectScanner")]
@@ -27,76 +40,96 @@ impl PySuspectScanner {
         let error_rules = suspect_error_rules
             .extract::<Vec<Bound<'_, PyAny>>>()?
             .iter()
-            .filter_map(|item| {
-                let dict = item.cast::<PyDict>().ok()?;
-                Some(SuspectErrorRule {
-                    id: dict.get_item("id").ok()??.extract::<String>().ok()?,
-                    name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                    severity: dict.get_item("severity").ok()??.extract::<i32>().ok()?,
-                    main_error_contains_any: dict
-                        .get_item("main_error_contains_any")
-                        .ok()??
-                        .extract::<Vec<String>>()
-                        .ok()?,
+            .enumerate()
+            .map(|(index, item)| -> PyResult<_> {
+                let context = format!("suspect_error_rules[{index}]");
+                let dict = item
+                    .cast::<PyDict>()
+                    .map_err(|_| PyTypeError::new_err(format!("{context} must be a dict")))?;
+
+                Ok(SuspectErrorRule {
+                    id: required_field!(dict, "id", context.as_str(), String),
+                    name: required_field!(dict, "name", context.as_str(), String),
+                    severity: required_field!(dict, "severity", context.as_str(), i32),
+                    main_error_contains_any: required_field!(
+                        dict,
+                        "main_error_contains_any",
+                        context.as_str(),
+                        Vec<String>
+                    ),
                 })
             })
-            .collect();
+            .collect::<PyResult<Vec<_>>>()?;
         let stack_rules = suspect_stack_rules
             .extract::<Vec<Bound<'_, PyAny>>>()?
             .iter()
-            .filter_map(|item| {
-                let dict = item.cast::<PyDict>().ok()?;
-                let count_rules = dict
-                    .get_item("stack_contains_at_least")
-                    .ok()??
-                    .extract::<Vec<Bound<'_, PyAny>>>()
-                    .ok()?
-                    .iter()
-                    .filter_map(|count_item| {
-                        let count_dict = count_item.cast::<PyDict>().ok()?;
-                        Some(SuspectStackCountRule {
-                            substring: count_dict
-                                .get_item("substring")
-                                .ok()??
-                                .extract::<String>()
-                                .ok()?,
-                            count: count_dict
-                                .get_item("count")
-                                .ok()??
-                                .extract::<usize>()
-                                .ok()?,
-                        })
-                    })
-                    .collect();
+            .enumerate()
+            .map(|(index, item)| -> PyResult<_> {
+                let context = format!("suspect_stack_rules[{index}]");
+                let dict = item
+                    .cast::<PyDict>()
+                    .map_err(|_| PyTypeError::new_err(format!("{context} must be a dict")))?;
+                let count_rules = required_field!(
+                    dict,
+                    "stack_contains_at_least",
+                    context.as_str(),
+                    Vec<Bound<'_, PyAny>>
+                )
+                .iter()
+                .enumerate()
+                .map(|(count_index, count_item)| -> PyResult<_> {
+                    let count_context = format!(
+                        "{}.stack_contains_at_least[{count_index}]",
+                        context.as_str()
+                    );
+                    let count_dict = count_item.cast::<PyDict>().map_err(|_| {
+                        PyTypeError::new_err(format!("{count_context} must be a dict"))
+                    })?;
 
-                Some(SuspectStackRule {
-                    id: dict.get_item("id").ok()??.extract::<String>().ok()?,
-                    name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                    severity: dict.get_item("severity").ok()??.extract::<i32>().ok()?,
-                    main_error_required_any: dict
-                        .get_item("main_error_required_any")
-                        .ok()??
-                        .extract::<Vec<String>>()
-                        .ok()?,
-                    main_error_optional_any: dict
-                        .get_item("main_error_optional_any")
-                        .ok()??
-                        .extract::<Vec<String>>()
-                        .ok()?,
-                    stack_contains_any: dict
-                        .get_item("stack_contains_any")
-                        .ok()??
-                        .extract::<Vec<String>>()
-                        .ok()?,
-                    exclude_if_stack_contains_any: dict
-                        .get_item("exclude_if_stack_contains_any")
-                        .ok()??
-                        .extract::<Vec<String>>()
-                        .ok()?,
+                    Ok(SuspectStackCountRule {
+                        substring: required_field!(
+                            count_dict,
+                            "substring",
+                            count_context.as_str(),
+                            String
+                        ),
+                        count: required_field!(count_dict, "count", count_context.as_str(), usize),
+                    })
+                })
+                .collect::<PyResult<Vec<_>>>()?;
+
+                Ok(SuspectStackRule {
+                    id: required_field!(dict, "id", context.as_str(), String),
+                    name: required_field!(dict, "name", context.as_str(), String),
+                    severity: required_field!(dict, "severity", context.as_str(), i32),
+                    main_error_required_any: required_field!(
+                        dict,
+                        "main_error_required_any",
+                        context.as_str(),
+                        Vec<String>
+                    ),
+                    main_error_optional_any: required_field!(
+                        dict,
+                        "main_error_optional_any",
+                        context.as_str(),
+                        Vec<String>
+                    ),
+                    stack_contains_any: required_field!(
+                        dict,
+                        "stack_contains_any",
+                        context.as_str(),
+                        Vec<String>
+                    ),
+                    exclude_if_stack_contains_any: required_field!(
+                        dict,
+                        "exclude_if_stack_contains_any",
+                        context.as_str(),
+                        Vec<String>
+                    ),
                     stack_contains_at_least: count_rules,
                 })
             })
-            .collect();
+            .collect::<PyResult<Vec<_>>>()?;
         Ok(Self {
             inner: SuspectScanner::new(error_rules, stack_rules),
         })
@@ -168,5 +201,68 @@ impl PySuspectScanner {
         let fragment = classic_scanlog_core::SuspectScanner::check_dll_crash(&crashlog_mainerror)
             .map_err(crate::to_pyerr)?;
         Ok(fragment.to_list())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pyo3::types::{PyDict, PyList};
+
+    #[test]
+    fn new_rejects_malformed_error_rule_payloads() {
+        Python::attach(|py| -> PyResult<()> {
+            let error_rule = PyDict::new(py);
+            error_rule.set_item("id", "rule-id")?;
+            error_rule.set_item("name", "Missing matcher")?;
+            error_rule.set_item("severity", 1)?;
+
+            let error_rules = PyList::empty(py);
+            error_rules.append(&error_rule)?;
+            let stack_rules = PyList::empty(py);
+
+            let err = match PySuspectScanner::new(error_rules.as_any(), stack_rules.as_any()) {
+                Ok(_) => panic!("missing main_error_contains_any should fail"),
+                Err(err) => err,
+            };
+
+            assert!(err.to_string().contains("main_error_contains_any"));
+            Ok(())
+        })
+        .expect("malformed error rules should produce a Python error");
+    }
+
+    #[test]
+    fn new_rejects_malformed_stack_rule_payloads() {
+        Python::attach(|py| -> PyResult<()> {
+            let count_rule = PyDict::new(py);
+            count_rule.set_item("substring", "foo")?;
+
+            let count_rules = PyList::empty(py);
+            count_rules.append(&count_rule)?;
+
+            let stack_rule = PyDict::new(py);
+            stack_rule.set_item("id", "stack-rule")?;
+            stack_rule.set_item("name", "Missing count")?;
+            stack_rule.set_item("severity", 2)?;
+            stack_rule.set_item("main_error_required_any", vec!["foo"])?;
+            stack_rule.set_item("main_error_optional_any", Vec::<String>::new())?;
+            stack_rule.set_item("stack_contains_any", vec!["foo"])?;
+            stack_rule.set_item("exclude_if_stack_contains_any", Vec::<String>::new())?;
+            stack_rule.set_item("stack_contains_at_least", count_rules)?;
+
+            let error_rules = PyList::empty(py);
+            let stack_rules = PyList::empty(py);
+            stack_rules.append(&stack_rule)?;
+
+            let err = match PySuspectScanner::new(error_rules.as_any(), stack_rules.as_any()) {
+                Ok(_) => panic!("missing nested count field should fail"),
+                Err(err) => err,
+            };
+
+            assert!(err.to_string().contains("count"));
+            Ok(())
+        })
+        .expect("malformed stack rules should produce a Python error");
     }
 }
