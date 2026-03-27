@@ -2034,6 +2034,34 @@ CLASSIC_Ignore_Skyrim:
     }
 
     #[test]
+    fn test_from_yaml_content_preserves_quoted_hex_markers_in_stack_rules() {
+        let game_yaml = minimal_game_yaml().replacen(
+            "    main_error_optional_any:\n      - \"Main error optional\"",
+            "    main_error_optional_any: [\"3A0000\", \"AD0000\", \"8E0000\", \"F4EE\"]",
+            1,
+        );
+
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            &game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            config.suspect_stack_rules[0].main_error_optional_any,
+            vec![
+                "3A0000".to_string(),
+                "AD0000".to_string(),
+                "8E0000".to_string(),
+                "F4EE".to_string(),
+            ]
+        );
+    }
+
+    #[test]
     fn test_from_yaml_content_skips_zero_string_stack_count_rules() {
         let game_yaml = minimal_game_yaml().replacen("count: 2", "count: \"0\"", 1);
 

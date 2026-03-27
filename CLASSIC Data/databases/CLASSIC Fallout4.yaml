@@ -584,7 +584,7 @@ Crashlog_Stack_Check:
     name: Antivirus Crash
     severity: 5
     main_error_required_any: []
-    main_error_optional_any: [24A48D48, bdhkm64.dll]
+    main_error_optional_any: ["24A48D48", bdhkm64.dll]
     stack_contains_any: [usvfs::hook_DeleteFileW, ::Manager, ::zlibStreamDetail]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -665,7 +665,7 @@ Crashlog_Stack_Check:
     name: NPC Pathing Crash (F)
     severity: 3
     main_error_required_any: []
-    main_error_optional_any: [248B26A]
+    main_error_optional_any: ["248B26A"]
     stack_contains_any:
       [MovementAgentPathFollowerVirtual, PathingStreamSaveGame, BGSProcedurePatrolExecState, CustomActorPackageData]
     exclude_if_stack_contains_any: []
@@ -693,7 +693,7 @@ Crashlog_Stack_Check:
     name: Leveled List Crash
     severity: 3
     main_error_required_any: []
-    main_error_optional_any: [0D09AB7]
+    main_error_optional_any: ["0D09AB7"]
     stack_contains_any: [TESLevItem]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -711,7 +711,7 @@ Crashlog_Stack_Check:
     name: Load Order Crash
     severity: 5
     main_error_required_any: []
-    main_error_optional_any: [0DB9300]
+    main_error_optional_any: ["0DB9300"]
     stack_contains_any: [GamebryoSequenceGenerator]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -729,7 +729,7 @@ Crashlog_Stack_Check:
     name: Nvidia Debris Crash
     severity: 5
     main_error_required_any: []
-    main_error_optional_any: [03EE452, flexRelease_x64]
+    main_error_optional_any: ["03EE452", flexRelease_x64]
     stack_contains_any: [flexRelease_x64.dll, CheckRefAgainstConditionsFunc]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -751,7 +751,7 @@ Crashlog_Stack_Check:
     name: Nvidia Reflex Crash
     severity: 4
     main_error_required_any: []
-    main_error_optional_any: [3A0000, AD0000, 8E0000, NVIDIA_Reflex, Buffout4]
+    main_error_optional_any: ["3A0000", "AD0000", "8E0000", NVIDIA_Reflex, Buffout4]
     stack_contains_any: [NVIDIA_Reflex.dll]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -769,7 +769,7 @@ Crashlog_Stack_Check:
     name: Vulkan Settings Crash
     severity: 5
     main_error_required_any: []
-    main_error_optional_any: [00CD99B, amdvlk64]
+    main_error_optional_any: ["00CD99B", amdvlk64]
     stack_contains_any: [amdvlk64.dll, dxvk::DXGIAdapter, dxvk::DXGIFactory, VirtualLinearAllocatorWithNode]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -829,7 +829,7 @@ Crashlog_Stack_Check:
     name: Animation / Physics Crash
     severity: 5
     main_error_required_any: []
-    main_error_optional_any: [1FCC07E]
+    main_error_optional_any: ["1FCC07E"]
     stack_contains_any:
       [BSAnimationGraphManager, hkbVariableBindingSet, hkbHandIkControlsModifier, hkbBehaviorGraph, hkbModifierList]
     exclude_if_stack_contains_any: []
@@ -839,7 +839,7 @@ Crashlog_Stack_Check:
     name: Animation Corruption Crash
     severity: 5
     main_error_required_any: []
-    main_error_optional_any: [1B938F0]
+    main_error_optional_any: ["1B938F0"]
     stack_contains_any: [AnimTextData\\AnimationFileData, AnimationFileLookupSingletonHelper]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -857,7 +857,7 @@ Crashlog_Stack_Check:
     name: "*[Item Crash]"
     severity: 1
     main_error_required_any: []
-    main_error_optional_any: [0B2C44B]
+    main_error_optional_any: ["0B2C44B"]
     stack_contains_any:
       [TESObjectARMO, TESObjectWEAP, BGSMod::Attachment, BGSMod::Template, BGSMod::Template::Item]
     exclude_if_stack_contains_any: []
@@ -867,7 +867,7 @@ Crashlog_Stack_Check:
     name: "*[Save Crash]"
     severity: 1
     main_error_required_any: []
-    main_error_optional_any: [0CDAD30]
+    main_error_optional_any: ["0CDAD30"]
     stack_contains_any: [BGSSaveLoadManager, BGSSaveLoadThread, BGSSaveFormBuffer]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -885,7 +885,7 @@ Crashlog_Stack_Check:
     name: "*[SS2 / WF Crash]"
     severity: 1
     main_error_required_any: []
-    main_error_optional_any: [01F498D, 03F89A3]
+    main_error_optional_any: ["01F498D", "03F89A3"]
     stack_contains_any: [StartWorkshop, IsWithinBuildableArea, PlayerControls, DXGISwapChain]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -894,7 +894,7 @@ Crashlog_Stack_Check:
     name: "*[Looks Menu Crash]"
     severity: 1
     main_error_required_any: []
-    main_error_optional_any: [1D13DA7, F4EE]
+    main_error_optional_any: ["1D13DA7", "F4EE"]
     stack_contains_any: [BSShader, BSBatchRenderer, ShadowSceneNode]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
