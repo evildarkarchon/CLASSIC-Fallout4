@@ -26,7 +26,7 @@ use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
 };
-use classic_config_core::{CoreModEntry, ModConflictEntry};
+use classic_config_core::{CoreModEntry, ModConflictEntry, SuspectErrorRule, SuspectStackRule};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
@@ -225,10 +225,10 @@ pub struct AnalysisConfig {
     /// List of strings to remove from crash logs when simplify_logs is enabled
     pub remove_list: Vec<String>,
 
-    /// Pattern dictionaries for suspect detection (IndexMap preserves YAML key order for Python parity)
-    pub suspects_error: IndexMap<String, String>,
-    /// Stack-based suspect patterns for crash analysis (IndexMap preserves YAML key order for Python parity)
-    pub suspects_stack: IndexMap<String, Vec<String>>,
+    /// Structured main-error suspect rules.
+    pub suspect_error_rules: Vec<SuspectErrorRule>,
+    /// Structured stack suspect rules.
+    pub suspect_stack_rules: Vec<SuspectStackRule>,
 
     /// Structured core / important mod entries for recommended-mod checks
     pub mods_core: Vec<CoreModEntry>,
@@ -303,8 +303,8 @@ impl AnalysisConfig {
             fcx_mode: false,
             simplify_logs: false,
             remove_list: Vec::new(),
-            suspects_error: IndexMap::new(),
-            suspects_stack: IndexMap::new(),
+            suspect_error_rules: Vec::new(),
+            suspect_stack_rules: Vec::new(),
             mods_core: Vec::new(),
             mods_freq: IndexMap::new(),
             mods_conf: Vec::new(),
@@ -394,8 +394,8 @@ pub fn build_analysis_config_from_yaml(
         fcx_mode,
         simplify_logs,
         remove_list,
-        suspects_error: yaml.suspects_error_list.clone(),
-        suspects_stack: yaml.suspects_stack_list.clone(),
+        suspect_error_rules: yaml.suspect_error_rules.clone(),
+        suspect_stack_rules: yaml.suspect_stack_rules.clone(),
         mods_core: yaml.game_mods_core.clone(),
         mods_freq: yaml.game_mods_freq.clone(),
         mods_conf: yaml.game_mods_conf.clone(),
@@ -779,10 +779,10 @@ impl OrchestratorCore {
 
         // Initialize suspect scanner if suspect patterns are available
         let suspect_scanner =
-            if !config.suspects_error.is_empty() || !config.suspects_stack.is_empty() {
+            if !config.suspect_error_rules.is_empty() || !config.suspect_stack_rules.is_empty() {
                 Some(SuspectScanner::new(
-                    config.suspects_error.clone(),
-                    config.suspects_stack.clone(),
+                    config.suspect_error_rules.clone(),
+                    config.suspect_stack_rules.clone(),
                 ))
             } else {
                 None
@@ -2110,8 +2110,8 @@ mod tests {
             game_ignore_plugins: Vec::new(),
             game_ignore_records: Vec::new(),
             ignore_list: Vec::new(),
-            suspects_error_list: IndexMap::new(),
-            suspects_stack_list: IndexMap::new(),
+            suspect_error_rules: Vec::new(),
+            suspect_stack_rules: Vec::new(),
             game_mods_conf: Vec::new(),
             game_mods_core: Vec::new(),
             game_mods_freq: IndexMap::new(),

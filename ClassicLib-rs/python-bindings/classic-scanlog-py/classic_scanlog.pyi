@@ -867,8 +867,8 @@ class AnalysisConfig:
     fcx_mode: bool  # FCX mode enabled
     simplify_logs: bool  # Whether to simplify logs
     remove_list: list[str]  # Strings to remove when simplifying
-    suspects_error: dict[str, str]
-    suspects_stack: dict[str, list[str]]
+    suspect_error_rules: list[dict[str, Any]]
+    suspect_stack_rules: list[dict[str, Any]]
     mods_core: list[dict[str, str | None]]
     mods_freq: dict[str, str]
     mods_conf: list[dict[str, str | None]]
@@ -1491,24 +1491,18 @@ def detect_mods_batch(
 # =============================================================================
 
 class SuspectScanner:
-    """Suspect pattern matching with signal modifiers (40x speedup).
-
-    Supports three pattern modifier types:
-    - ME-REQ: Main error required (must match in main error)
-    - ME-OPT: Main error optional (bonus if in main error)
-    - NOT: Negative pattern (excludes if matched)
-    """
+    """Suspect pattern matching using structured crash suspect rules."""
 
     def __init__(
         self,
-        suspects_error_list: dict[str, str],
-        suspects_stack_list: dict[str, list[str]],
+        suspect_error_rules: list[dict[str, Any]],
+        suspect_stack_rules: list[dict[str, Any]],
     ) -> None:
         """Create suspect scanner.
 
         Args:
-            suspects_error_list: Dictionary mapping error patterns to descriptions
-            suspects_stack_list: Dictionary mapping stack patterns to descriptions
+            suspect_error_rules: Structured main-error suspect rules
+            suspect_stack_rules: Structured stack suspect rules
 
         """
 

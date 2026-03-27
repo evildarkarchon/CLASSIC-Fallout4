@@ -22,8 +22,8 @@ Warnings_CRASHGEN:
   Warn_Outdated: "Outdated"
 Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
-Crashlog_Error_Check: {}
-Crashlog_Stack_Check: {}
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
 Mods_CONF: []
 Mods_CORE: []
 Mods_FREQ: {}

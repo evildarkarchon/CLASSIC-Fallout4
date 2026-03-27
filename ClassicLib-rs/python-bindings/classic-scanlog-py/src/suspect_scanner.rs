@@ -1,9 +1,10 @@
 //! Python bindings for SuspectScanner - Thin wrapper over classic-scanlog-core
 
+use classic_config_core::{SuspectErrorRule, SuspectStackCountRule, SuspectStackRule};
 use classic_scanlog_core::SuspectScanner;
-use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_vecstr, without_gil};
+use classic_shared::without_gil;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyAny, PyDict};
 
 /// Python wrapper for SuspectScanner
 #[pyclass(name = "SuspectScanner")]
@@ -16,17 +17,88 @@ impl PySuspectScanner {
     /// Create a new instance
     ///
     /// Args:
-    ///     suspects_error_list: Dict of error patterns (order preserved)
-    ///     suspects_stack_list: Dict of stack patterns (order preserved)
+    ///     suspect_error_rules: List of structured main-error rules
+    ///     suspect_stack_rules: List of structured stack rules
     #[new]
     pub fn new(
-        suspects_error_list: &Bound<'_, PyDict>,
-        suspects_stack_list: &Bound<'_, PyDict>,
+        suspect_error_rules: &Bound<'_, PyAny>,
+        suspect_stack_rules: &Bound<'_, PyAny>,
     ) -> PyResult<Self> {
-        let error_map = pydict_to_indexmap_str(suspects_error_list)?;
-        let stack_map = pydict_to_indexmap_vecstr(suspects_stack_list)?;
+        let error_rules = suspect_error_rules
+            .extract::<Vec<Bound<'_, PyAny>>>()?
+            .iter()
+            .filter_map(|item| {
+                let dict = item.cast::<PyDict>().ok()?;
+                Some(SuspectErrorRule {
+                    id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                    name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                    severity: dict.get_item("severity").ok()??.extract::<i32>().ok()?,
+                    main_error_contains_any: dict
+                        .get_item("main_error_contains_any")
+                        .ok()??
+                        .extract::<Vec<String>>()
+                        .ok()?,
+                })
+            })
+            .collect();
+        let stack_rules = suspect_stack_rules
+            .extract::<Vec<Bound<'_, PyAny>>>()?
+            .iter()
+            .filter_map(|item| {
+                let dict = item.cast::<PyDict>().ok()?;
+                let count_rules = dict
+                    .get_item("stack_contains_at_least")
+                    .ok()??
+                    .extract::<Vec<Bound<'_, PyAny>>>()
+                    .ok()?
+                    .iter()
+                    .filter_map(|count_item| {
+                        let count_dict = count_item.cast::<PyDict>().ok()?;
+                        Some(SuspectStackCountRule {
+                            substring: count_dict
+                                .get_item("substring")
+                                .ok()??
+                                .extract::<String>()
+                                .ok()?,
+                            count: count_dict
+                                .get_item("count")
+                                .ok()??
+                                .extract::<usize>()
+                                .ok()?,
+                        })
+                    })
+                    .collect();
+
+                Some(SuspectStackRule {
+                    id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                    name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                    severity: dict.get_item("severity").ok()??.extract::<i32>().ok()?,
+                    main_error_required_any: dict
+                        .get_item("main_error_required_any")
+                        .ok()??
+                        .extract::<Vec<String>>()
+                        .ok()?,
+                    main_error_optional_any: dict
+                        .get_item("main_error_optional_any")
+                        .ok()??
+                        .extract::<Vec<String>>()
+                        .ok()?,
+                    stack_contains_any: dict
+                        .get_item("stack_contains_any")
+                        .ok()??
+                        .extract::<Vec<String>>()
+                        .ok()?,
+                    exclude_if_stack_contains_any: dict
+                        .get_item("exclude_if_stack_contains_any")
+                        .ok()??
+                        .extract::<Vec<String>>()
+                        .ok()?,
+                    stack_contains_at_least: count_rules,
+                })
+            })
+            .collect();
         Ok(Self {
-            inner: SuspectScanner::new(error_map, stack_map),
+            inner: SuspectScanner::new(error_rules, stack_rules),
         })
     }
 

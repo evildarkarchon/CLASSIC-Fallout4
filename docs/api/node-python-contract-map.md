@@ -163,6 +163,7 @@ Repo workflow also points at the contributor-facing baseline docs under [`docs/i
 
 - missing or renamed Node export: start in [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts)
 - wrong Node DTO shape or async/sync behavior: check the owning file in [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/)
+- suspect-rule contract questions: start with `classic-node/src/config.rs`, `classic-config-py/src/lib.rs`, and `classic-scanlog-py/src/orchestrator.rs` because those wrappers reshape the structured `Crashlog_*_Check` YAML rule lists for each binding
 - missing or renamed Python export: start in the module's `.pyi` file
 - Python runtime exports do not match the stub: check the module's `src/lib.rs`, then `stub_validation_report.json`
 - parity gate or coverage report changed unexpectedly: inspect the binding-local `parity-artifacts/` first, then the matching `docs/implementation/*_api_parity/` baseline docs

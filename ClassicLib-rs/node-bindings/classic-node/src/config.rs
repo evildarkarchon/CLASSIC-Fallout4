@@ -13,7 +13,8 @@
 
 use classic_config_core::{
     ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry,
-    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
+    PathConfig as CorePathConfig, SuspectErrorRule, SuspectStackRule, YamlDataCore,
+    YamlSource as CoreYamlSource,
 };
 use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
@@ -33,6 +34,65 @@ pub struct JsModConflictEntry {
     pub description: String,
     pub fix: String,
     pub link: Option<String>,
+}
+
+#[napi(object)]
+pub struct JsSuspectErrorRule {
+    pub id: String,
+    pub name: String,
+    pub severity: i32,
+    pub main_error_contains_any: Vec<String>,
+}
+
+impl From<&SuspectErrorRule> for JsSuspectErrorRule {
+    fn from(rule: &SuspectErrorRule) -> Self {
+        Self {
+            id: rule.id.clone(),
+            name: rule.name.clone(),
+            severity: rule.severity,
+            main_error_contains_any: rule.main_error_contains_any.clone(),
+        }
+    }
+}
+
+#[napi(object)]
+pub struct JsSuspectStackCountRule {
+    pub substring: String,
+    pub count: u32,
+}
+
+#[napi(object)]
+pub struct JsSuspectStackRule {
+    pub id: String,
+    pub name: String,
+    pub severity: i32,
+    pub main_error_required_any: Vec<String>,
+    pub main_error_optional_any: Vec<String>,
+    pub stack_contains_any: Vec<String>,
+    pub exclude_if_stack_contains_any: Vec<String>,
+    pub stack_contains_at_least: Vec<JsSuspectStackCountRule>,
+}
+
+impl From<&SuspectStackRule> for JsSuspectStackRule {
+    fn from(rule: &SuspectStackRule) -> Self {
+        Self {
+            id: rule.id.clone(),
+            name: rule.name.clone(),
+            severity: rule.severity,
+            main_error_required_any: rule.main_error_required_any.clone(),
+            main_error_optional_any: rule.main_error_optional_any.clone(),
+            stack_contains_any: rule.stack_contains_any.clone(),
+            exclude_if_stack_contains_any: rule.exclude_if_stack_contains_any.clone(),
+            stack_contains_at_least: rule
+                .stack_contains_at_least
+                .iter()
+                .map(|count_rule| JsSuspectStackCountRule {
+                    substring: count_rule.substring.clone(),
+                    count: count_rule.count as u32,
+                })
+                .collect(),
+        }
+    }
 }
 
 impl From<&ModConflictEntry> for JsModConflictEntry {
@@ -279,30 +339,26 @@ impl YamlData {
     }
 
     // ========================================================================
-    // Suspect Pattern Dictionaries
+    // Suspect Rules
     // ========================================================================
 
-    /// Suspect error patterns mapped to descriptive explanations.
-    ///
-    /// Returns a `Record<string, string>` preserving YAML source order.
+    /// Structured main-error suspect rules.
     #[napi(getter)]
-    pub fn suspects_error_list(&self) -> HashMap<String, String> {
+    pub fn suspect_error_rules(&self) -> Vec<JsSuspectErrorRule> {
         self.inner
-            .suspects_error_list
+            .suspect_error_rules
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsSuspectErrorRule::from)
             .collect()
     }
 
-    /// Suspect stack trace patterns mapped to pattern lists.
-    ///
-    /// Returns a `Record<string, string[]>` preserving YAML source order.
+    /// Structured stack suspect rules.
     #[napi(getter)]
-    pub fn suspects_stack_list(&self) -> HashMap<String, Vec<String>> {
+    pub fn suspect_stack_rules(&self) -> Vec<JsSuspectStackRule> {
         self.inner
-            .suspects_stack_list
+            .suspect_stack_rules
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsSuspectStackRule::from)
             .collect()
     }
 

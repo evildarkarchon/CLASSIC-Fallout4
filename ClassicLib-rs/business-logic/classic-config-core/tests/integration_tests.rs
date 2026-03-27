@@ -765,7 +765,7 @@ mod clone_debug {
         assert_eq!(cloned.xse_acronym, config.xse_acronym);
         assert_eq!(cloned.ignore_list, config.ignore_list);
         assert_eq!(cloned.game_mods_conf, config.game_mods_conf);
-        assert_eq!(cloned.suspects_error_list, config.suspects_error_list);
+        assert_eq!(cloned.suspect_error_rules, config.suspect_error_rules);
     }
 
     /// Test debug format

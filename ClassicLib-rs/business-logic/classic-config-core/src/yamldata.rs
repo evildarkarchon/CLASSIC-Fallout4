@@ -82,6 +82,49 @@ pub struct CoreModEntry {
     pub exclude_when: Option<CoreModExclude>,
 }
 
+/// A single entry from the `Crashlog_Error_Check` YAML section.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SuspectErrorRule {
+    /// Stable machine-readable identifier for the rule.
+    pub id: String,
+    /// Human-readable display name shown in reports.
+    pub name: String,
+    /// Severity used for sorting and report display.
+    pub severity: i32,
+    /// Main-error substrings that may trigger this rule.
+    pub main_error_contains_any: Vec<String>,
+}
+
+/// A minimum-occurrence stack-match requirement for a suspect rule.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SuspectStackCountRule {
+    /// Substring that must appear in the call stack.
+    pub substring: String,
+    /// Minimum number of occurrences required.
+    pub count: usize,
+}
+
+/// A single entry from the `Crashlog_Stack_Check` YAML section.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SuspectStackRule {
+    /// Stable machine-readable identifier for the rule.
+    pub id: String,
+    /// Human-readable display name shown in reports.
+    pub name: String,
+    /// Severity used for sorting and report display.
+    pub severity: i32,
+    /// Main-error substrings where any match is required before the rule can match.
+    pub main_error_required_any: Vec<String>,
+    /// Main-error substrings where any match is optional but can trigger the rule.
+    pub main_error_optional_any: Vec<String>,
+    /// Stack substrings where any match can trigger the rule.
+    pub stack_contains_any: Vec<String>,
+    /// Stack substrings that suppress the rule when found.
+    pub exclude_if_stack_contains_any: Vec<String>,
+    /// Stack substrings that must appear at least `count` times.
+    pub stack_contains_at_least: Vec<SuspectStackCountRule>,
+}
+
 /// Raw per-crashgen settings configuration deserialized from YAML.
 ///
 /// This is a simple transport type used to carry `Crashgen_Registry` data
@@ -677,6 +720,175 @@ fn selected_short_name(selected_game_version: &str) -> Option<&'static str> {
     }
 }
 
+fn yaml_map_get<'a>(map: &'a yaml_rust2::yaml::Hash, key: &str) -> Option<&'a Yaml> {
+    map.iter()
+        .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
+}
+
+fn yaml_map_get_trimmed_string(map: &yaml_rust2::yaml::Hash, key: &str) -> Option<String> {
+    yaml_map_get(map, key)
+        .and_then(Yaml::as_str)
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+}
+
+fn yaml_map_get_i32(map: &yaml_rust2::yaml::Hash, key: &str) -> Option<i32> {
+    match yaml_map_get(map, key) {
+        Some(Yaml::Integer(value)) => i32::try_from(*value).ok(),
+        Some(Yaml::String(value)) => value.trim().parse::<i32>().ok(),
+        _ => None,
+    }
+}
+
+fn yaml_map_get_string_vec(map: &yaml_rust2::yaml::Hash, key: &str) -> Vec<String> {
+    yaml_map_get(map, key)
+        .and_then(Yaml::as_vec)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Yaml::as_str)
+                .map(|value| value.trim().to_string())
+                .filter(|value| !value.is_empty())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn parse_suspect_error_rules(game_data: &Yaml) -> Vec<SuspectErrorRule> {
+    let Some(entries) = game_data["Crashlog_Error_Check"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Crashlog_Error_Check[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let (id, name, severity) = match (
+            yaml_map_get_trimmed_string(map, "id"),
+            yaml_map_get_trimmed_string(map, "name"),
+            yaml_map_get_i32(map, "severity"),
+        ) {
+            (Some(id), Some(name), Some(severity)) => (id, name, severity),
+            _ => {
+                log::debug!(
+                    "Skipping Crashlog_Error_Check[{}]: missing required field(s) (id, name, severity)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let main_error_contains_any = yaml_map_get_string_vec(map, "main_error_contains_any");
+        if main_error_contains_any.is_empty() {
+            log::debug!(
+                "Skipping Crashlog_Error_Check[{}]: main_error_contains_any must contain at least one string",
+                index
+            );
+            continue;
+        }
+
+        result.push(SuspectErrorRule {
+            id,
+            name,
+            severity,
+            main_error_contains_any,
+        });
+    }
+
+    result
+}
+
+fn parse_stack_count_rules(items: &[Yaml]) -> Vec<SuspectStackCountRule> {
+    items
+        .iter()
+        .enumerate()
+        .filter_map(|(index, item)| {
+            let Some(map) = item.as_hash() else {
+                log::debug!(
+                    "Skipping stack_contains_at_least[{}]: expected mapping, got {:?}",
+                    index,
+                    item
+                );
+                return None;
+            };
+
+            let substring = yaml_map_get_trimmed_string(map, "substring")?;
+            let count = match yaml_map_get(map, "count") {
+                Some(Yaml::Integer(value)) if *value > 0 => usize::try_from(*value).ok()?,
+                Some(Yaml::String(value)) => value.trim().parse::<usize>().ok()?,
+                _ => return None,
+            };
+
+            Some(SuspectStackCountRule { substring, count })
+        })
+        .collect()
+}
+
+fn parse_suspect_stack_rules(game_data: &Yaml) -> Vec<SuspectStackRule> {
+    let Some(entries) = game_data["Crashlog_Stack_Check"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Crashlog_Stack_Check[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let (id, name, severity) = match (
+            yaml_map_get_trimmed_string(map, "id"),
+            yaml_map_get_trimmed_string(map, "name"),
+            yaml_map_get_i32(map, "severity"),
+        ) {
+            (Some(id), Some(name), Some(severity)) => (id, name, severity),
+            _ => {
+                log::debug!(
+                    "Skipping Crashlog_Stack_Check[{}]: missing required field(s) (id, name, severity)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let main_error_required_any = yaml_map_get_string_vec(map, "main_error_required_any");
+        let main_error_optional_any = yaml_map_get_string_vec(map, "main_error_optional_any");
+        let stack_contains_any = yaml_map_get_string_vec(map, "stack_contains_any");
+        let exclude_if_stack_contains_any =
+            yaml_map_get_string_vec(map, "exclude_if_stack_contains_any");
+        let stack_contains_at_least = yaml_map_get(map, "stack_contains_at_least")
+            .and_then(Yaml::as_vec)
+            .map(|items| parse_stack_count_rules(items))
+            .unwrap_or_default();
+
+        result.push(SuspectStackRule {
+            id,
+            name,
+            severity,
+            main_error_required_any,
+            main_error_optional_any,
+            stack_contains_any,
+            exclude_if_stack_contains_any,
+            stack_contains_at_least,
+        });
+    }
+
+    result
+}
+
 fn main_root_matches_registry_info(main_root_name: &str, info: &VersionInfo) -> bool {
     let normalized_root = normalize_registry_key(main_root_name);
     !normalized_root.is_empty()
@@ -1066,8 +1278,8 @@ Crashgen_Registry:
 /// * `game_ignore_records` - A `Vec<String>` containing records to be ignored.
 /// * `ignore_list` - A `Vec<String>` listing entries to be collectively ignored.
 ///
-/// * `suspects_error_list` - An `IndexMap<String, String>` containing suspect error patterns mapped to descriptive explanations or identifiers.
-/// * `suspects_stack_list` - An `IndexMap<String, Vec<String>>` mapping suspect stack traces to their corresponding pattern lists.
+/// * `suspect_error_rules` - Structured main-error suspect rules.
+/// * `suspect_stack_rules` - Structured stack suspect rules.
 ///
 /// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
 /// * `game_mods_core` - A `Vec<CoreModEntry>` of structured core/important mod entries from `Mods_CORE`.
@@ -1141,11 +1353,11 @@ pub struct YamlDataCore {
     /// Entries to be collectively ignored
     pub ignore_list: Vec<String>,
 
-    // Suspect patterns (IndexMap preserves YAML key order for deterministic matching priority)
-    /// Suspect error patterns mapped to descriptive explanations or identifiers
-    pub suspects_error_list: IndexMap<String, String>,
-    /// Suspect stack traces mapped to pattern lists for matching
-    pub suspects_stack_list: IndexMap<String, Vec<String>>,
+    // Suspect patterns
+    /// Structured suspect rules for main-error matching.
+    pub suspect_error_rules: Vec<SuspectErrorRule>,
+    /// Structured suspect rules for stack and main-error matching.
+    pub suspect_stack_rules: Vec<SuspectStackRule>,
 
     // Mod databases (IndexMap preserves YAML key order for Python parity)
     /// Mod conflict pairs parsed from `Mods_CONF` (deduplicated at load time)
@@ -1255,8 +1467,8 @@ impl YamlDataCore {
             xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
-            suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
+            suspect_error_rules: parse_suspect_error_rules(game_data),
+            suspect_stack_rules: parse_suspect_stack_rules(game_data),
             game_mods_conf: parse_mods_conf(game_data),
             game_mods_core: parse_mods_core(game_data),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
@@ -1571,10 +1783,32 @@ Crashlog_Plugins_Exclude:
 Crashlog_Records_Exclude:
   - "RecordType1"
 Crashlog_Error_Check:
-  ErrorPattern1: "Error description 1"
-  ErrorPattern2: "Error description 2"
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
 Mods_CONF:
   - mod_a: modA
     mod_b: modB
@@ -1752,18 +1986,46 @@ CLASSIC_Ignore_Skyrim:
         )
         .unwrap();
 
-        assert_eq!(config.suspects_error_list.len(), 2);
+        assert_eq!(config.suspect_error_rules.len(), 2);
+        assert_eq!(config.suspect_error_rules[0].id, "error_pattern_1");
+        assert_eq!(config.suspect_error_rules[0].name, "Error Pattern 1");
+        assert_eq!(config.suspect_error_rules[0].severity, 4);
         assert_eq!(
-            config.suspects_error_list.get("ErrorPattern1"),
-            Some(&"Error description 1".to_string())
+            config.suspect_error_rules[0].main_error_contains_any,
+            vec!["Error description 1".to_string()]
         );
-        assert_eq!(config.suspects_stack_list.len(), 1);
+
+        assert_eq!(config.suspect_stack_rules.len(), 1);
+        assert_eq!(config.suspect_stack_rules[0].id, "stack_pattern_1");
+        assert_eq!(config.suspect_stack_rules[0].name, "Stack Pattern 1");
+        assert_eq!(config.suspect_stack_rules[0].severity, 3);
         assert_eq!(
-            config.suspects_stack_list.get("StackPattern1"),
-            Some(&vec![
-                "Stack pattern 1".to_string(),
-                "Stack pattern 2".to_string()
-            ])
+            config.suspect_stack_rules[0].main_error_required_any,
+            vec!["Main error required".to_string()]
+        );
+        assert_eq!(
+            config.suspect_stack_rules[0].main_error_optional_any,
+            vec!["Main error optional".to_string()]
+        );
+        assert_eq!(
+            config.suspect_stack_rules[0].stack_contains_any,
+            vec!["Stack pattern 1".to_string(), "Stack pattern 2".to_string()]
+        );
+        assert_eq!(
+            config.suspect_stack_rules[0].exclude_if_stack_contains_any,
+            vec!["Excluded pattern".to_string()]
+        );
+        assert_eq!(
+            config.suspect_stack_rules[0].stack_contains_at_least.len(),
+            1
+        );
+        assert_eq!(
+            config.suspect_stack_rules[0].stack_contains_at_least[0].substring,
+            "Repeated pattern"
+        );
+        assert_eq!(
+            config.suspect_stack_rules[0].stack_contains_at_least[0].count,
+            2
         );
     }
 
