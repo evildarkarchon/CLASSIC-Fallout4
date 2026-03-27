@@ -332,3 +332,4 @@ build-*/
 # CocoIndex Code (ccc)
 /.cocoindex_code/
 !.agents/skills/
+opencode.json
