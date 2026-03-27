@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -20,16 +21,47 @@ PYTHON_CHECK_PARITY_GATE = (
 
 
 def load_module(module_name: str, module_path: Path):
-    sys.modules.pop("generate_baseline", None)
-    sys.path.insert(0, str(module_path.parent.parent))
-    sys.path.insert(0, str(module_path.parent))
-    spec = importlib.util.spec_from_file_location(module_name, module_path)
-    assert spec is not None
-    assert spec.loader is not None
+    original_generate_baseline = sys.modules.pop("generate_baseline", None)
+    original_sys_path = list(sys.path)
 
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    try:
+        sys.path.insert(0, str(module_path.parent.parent))
+        sys.path.insert(0, str(module_path.parent))
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        assert spec is not None
+        assert spec.loader is not None
+
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        sys.path[:] = original_sys_path
+        if original_generate_baseline is None:
+            sys.modules.pop("generate_baseline", None)
+        else:
+            sys.modules["generate_baseline"] = original_generate_baseline
+
+
+def test_load_module_restores_import_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module_dir = tmp_path / "tools" / "python_api_parity"
+    module_dir.mkdir(parents=True)
+    module_path = module_dir / "temp_module.py"
+    module_path.write_text("VALUE = 1\n", encoding="utf-8")
+
+    original_sys_path = list(sys.path)
+    original_generate_baseline = types.ModuleType("generate_baseline")
+    monkeypatch.setitem(sys.modules, "generate_baseline", original_generate_baseline)
+
+    try:
+        module = load_module("temp_module", module_path)
+
+        assert module.VALUE == 1
+        assert sys.path == original_sys_path
+        assert sys.modules["generate_baseline"] is original_generate_baseline
+    finally:
+        sys.path[:] = original_sys_path
 
 
 def write_json(path: Path, payload: dict) -> None:

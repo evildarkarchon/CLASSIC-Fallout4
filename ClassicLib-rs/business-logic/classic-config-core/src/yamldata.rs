@@ -823,7 +823,11 @@ fn parse_stack_count_rules(items: &[Yaml]) -> Vec<SuspectStackCountRule> {
             let substring = yaml_map_get_trimmed_string(map, "substring")?;
             let count = match yaml_map_get(map, "count") {
                 Some(Yaml::Integer(value)) if *value > 0 => usize::try_from(*value).ok()?,
-                Some(Yaml::String(value)) => value.trim().parse::<usize>().ok()?,
+                Some(Yaml::String(value)) => value
+                    .trim()
+                    .parse::<usize>()
+                    .ok()
+                    .filter(|value| *value > 0)?,
                 _ => return None,
             };
 
@@ -2026,6 +2030,26 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(
             config.suspect_stack_rules[0].stack_contains_at_least[0].count,
             2
+        );
+    }
+
+    #[test]
+    fn test_from_yaml_content_skips_zero_string_stack_count_rules() {
+        let game_yaml = minimal_game_yaml().replacen("count: 2", "count: \"0\"", 1);
+
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            &game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .unwrap();
+
+        assert!(
+            config.suspect_stack_rules[0]
+                .stack_contains_at_least
+                .is_empty()
         );
     }
 

@@ -1,0 +1,11 @@
+{
+  "mcp": {
+    "cocoindex-code": {
+      "type": "local",
+      "command": [
+        "ccc",
+        "mcp"
+      ]
+    }
+  }
+}
