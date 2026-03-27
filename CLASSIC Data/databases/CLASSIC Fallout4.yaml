@@ -462,7 +462,7 @@ Crashlog_Plugins_Exclude: # EXCLUDE *these* plugins from Crash Logs when perform
   - Unofficial Fallout 4 Patch.esp
 
 # CRASH SUSPECTS WITH ITEMS IN MAIN ERROR ONLY.
-# Reminder: Items starting with 0x should remain quoted so they stay strings.
+# Reminder: Hex values or digit-leading values should be quoted so they return as strings.
 Crashlog_Error_Check:
   - id: stack_overflow_crash
     name: Stack Overflow Crash
@@ -502,10 +502,11 @@ Crashlog_Error_Check:
   - id: localized_mod_crash
     name: "*[Localized Mod Crash]"
     severity: 1
-    main_error_contains_any: [01B59A4]
+    main_error_contains_any: ["01B59A4"]
 
 # CRASH SUSPECTS WITH ITEMS IN CALL STACK AND / OR MAIN ERROR.
 # `main_error_required_any` preserves the old ME-REQ behavior: any listed item can satisfy the requirement.
+# Reminder: Hex values or digit-leading values should be quoted so they return as strings.
 Crashlog_Stack_Check:
   - id: scaleform_gfx_crash
     name: Scaleform Gfx Crash
