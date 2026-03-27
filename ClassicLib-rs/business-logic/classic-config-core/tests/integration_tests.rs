@@ -51,10 +51,32 @@ Crashlog_Plugins_Exclude:
 Crashlog_Records_Exclude:
   - "RecordType1"
 Crashlog_Error_Check:
-  ErrorPattern1: "Error description 1"
-  ErrorPattern2: "Error description 2"
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: "Stack description 1"
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
 Mods_CONF:
   - mod_a: modA
     mod_b: modB

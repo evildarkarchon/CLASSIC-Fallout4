@@ -754,9 +754,47 @@ fn yaml_map_get_string_vec(map: &yaml_rust2::yaml::Hash, key: &str) -> Vec<Strin
         .unwrap_or_default()
 }
 
-fn parse_suspect_error_rules(game_data: &Yaml) -> Vec<SuspectErrorRule> {
-    let Some(entries) = game_data["Crashlog_Error_Check"].as_vec() else {
-        return Vec::new();
+fn yaml_node_kind(value: &Yaml) -> &'static str {
+    match value {
+        Yaml::Real(_) => "real",
+        Yaml::Integer(_) => "integer",
+        Yaml::String(_) => "string",
+        Yaml::Boolean(_) => "boolean",
+        Yaml::Array(_) => "sequence",
+        Yaml::Hash(_) => "mapping",
+        Yaml::Alias(_) => "alias",
+        Yaml::Null => "null",
+        Yaml::BadValue => "missing",
+    }
+}
+
+fn parse_suspect_rule_entries<'a>(
+    game_data: &'a Yaml,
+    section_name: &'static str,
+) -> Result<Option<&'a [Yaml]>, ConfigError> {
+    let section = &game_data[section_name];
+    match section {
+        Yaml::BadValue | Yaml::Null => Ok(None),
+        Yaml::Array(entries) => Ok(Some(entries.as_slice())),
+        Yaml::Hash(_) => Err(ConfigError::ParseError {
+            context: "Failed to parse game YAML".to_string(),
+            message: format!(
+                "{section_name} uses retired legacy map format; expected a YAML sequence of rule objects"
+            ),
+        }),
+        other => Err(ConfigError::ParseError {
+            context: "Failed to parse game YAML".to_string(),
+            message: format!(
+                "{section_name} must be a YAML sequence of rule objects, found {}",
+                yaml_node_kind(other)
+            ),
+        }),
+    }
+}
+
+fn parse_suspect_error_rules(game_data: &Yaml) -> Result<Vec<SuspectErrorRule>, ConfigError> {
+    let Some(entries) = parse_suspect_rule_entries(game_data, "Crashlog_Error_Check")? else {
+        return Ok(Vec::new());
     };
 
     let mut result = Vec::with_capacity(entries.len());
@@ -803,7 +841,7 @@ fn parse_suspect_error_rules(game_data: &Yaml) -> Vec<SuspectErrorRule> {
         });
     }
 
-    result
+    Ok(result)
 }
 
 fn parse_stack_count_rules(items: &[Yaml]) -> Vec<SuspectStackCountRule> {
@@ -836,9 +874,9 @@ fn parse_stack_count_rules(items: &[Yaml]) -> Vec<SuspectStackCountRule> {
         .collect()
 }
 
-fn parse_suspect_stack_rules(game_data: &Yaml) -> Vec<SuspectStackRule> {
-    let Some(entries) = game_data["Crashlog_Stack_Check"].as_vec() else {
-        return Vec::new();
+fn parse_suspect_stack_rules(game_data: &Yaml) -> Result<Vec<SuspectStackRule>, ConfigError> {
+    let Some(entries) = parse_suspect_rule_entries(game_data, "Crashlog_Stack_Check")? else {
+        return Ok(Vec::new());
     };
 
     let mut result = Vec::with_capacity(entries.len());
@@ -890,7 +928,7 @@ fn parse_suspect_stack_rules(game_data: &Yaml) -> Vec<SuspectStackRule> {
         });
     }
 
-    result
+    Ok(result)
 }
 
 fn main_root_matches_registry_info(main_root_name: &str, info: &VersionInfo) -> bool {
@@ -1423,7 +1461,7 @@ impl YamlDataCore {
         ignore_data: &Yaml,
         game: &str,
         selected_game_version: &str,
-    ) -> Self {
+    ) -> Result<Self, ConfigError> {
         let yaml_ops = YamlOperations::new();
 
         let crashgen_ignore_is_configured = yaml_ops
@@ -1471,8 +1509,8 @@ impl YamlDataCore {
             xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
-            suspect_error_rules: parse_suspect_error_rules(game_data),
-            suspect_stack_rules: parse_suspect_stack_rules(game_data),
+            suspect_error_rules: parse_suspect_error_rules(game_data)?,
+            suspect_stack_rules: parse_suspect_stack_rules(game_data)?,
             game_mods_conf: parse_mods_conf(game_data),
             game_mods_core: parse_mods_core(game_data),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
@@ -1487,7 +1525,7 @@ impl YamlDataCore {
         };
 
         data.apply_metadata_fallbacks(selected_game_version, crashgen_ignore_is_configured);
-        data
+        Ok(data)
     }
 
     fn apply_metadata_fallbacks(
@@ -1628,13 +1666,13 @@ impl YamlDataCore {
         let ignore_data =
             parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", &ignore_content)?;
 
-        Ok(Self::build_from_yaml_documents(
+        Self::build_from_yaml_documents(
             &main_data,
             &game_data,
             &ignore_data,
             &game,
             &selected_game_version,
-        ))
+        )
     }
 
     /// Create YamlData from YAML content strings (for testing without file I/O).
@@ -1696,13 +1734,13 @@ impl YamlDataCore {
         let ignore_data =
             parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", ignore_content)?;
 
-        Ok(Self::build_from_yaml_documents(
+        Self::build_from_yaml_documents(
             &main_data,
             &game_data,
             &ignore_data,
             &game,
             &selected_game_version,
-        ))
+        )
     }
 }
 
@@ -2300,6 +2338,96 @@ CLASSIC_Ignore_Skyrim:
         match err {
             ConfigError::ParseError { context, .. } => {
                 assert!(context.to_lowercase().contains("ignore yaml"));
+            }
+            _ => panic!("Expected ParseError"),
+        }
+    }
+
+    #[test]
+    fn test_from_yaml_content_rejects_legacy_suspect_error_map_format() {
+        let legacy_game_yaml = minimal_game_yaml().replacen(
+            r#"Crashlog_Error_Check:
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
+"#,
+            r#"Crashlog_Error_Check:
+  ErrorPattern1: "Error description 1"
+  ErrorPattern2: "Error description 2"
+"#,
+            1,
+        );
+
+        let result = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            &legacy_game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, ConfigError::ParseError { .. }));
+        match err {
+            ConfigError::ParseError { context, message } => {
+                assert!(context.to_lowercase().contains("game yaml"));
+                assert!(message.contains("Crashlog_Error_Check"));
+                assert!(message.to_lowercase().contains("legacy map format"));
+            }
+            _ => panic!("Expected ParseError"),
+        }
+    }
+
+    #[test]
+    fn test_from_yaml_content_rejects_legacy_suspect_stack_map_format() {
+        let legacy_game_yaml = minimal_game_yaml().replacen(
+            r#"Crashlog_Stack_Check:
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
+"#,
+            r#"Crashlog_Stack_Check:
+  StackPattern1: "Stack description 1"
+"#,
+            1,
+        );
+
+        let result = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            &legacy_game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, ConfigError::ParseError { .. }));
+        match err {
+            ConfigError::ParseError { context, message } => {
+                assert!(context.to_lowercase().contains("game yaml"));
+                assert!(message.contains("Crashlog_Stack_Check"));
+                assert!(message.to_lowercase().contains("legacy map format"));
             }
             _ => panic!("Expected ParseError"),
         }
