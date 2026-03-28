@@ -144,15 +144,27 @@ fn yaml_data_ignore_list(data: &YamlData) -> Vec<String> {
 // opaque StringMap/StringVecMap types from the types module.
 
 fn yaml_data_suspects_error_keys(data: &YamlData) -> Vec<String> {
-    data.inner.suspects_error_list.keys().cloned().collect()
+    data.inner
+        .suspect_error_rules
+        .iter()
+        .map(|rule| rule.id.clone())
+        .collect()
 }
 
 fn yaml_data_suspects_error_values(data: &YamlData) -> Vec<String> {
-    data.inner.suspects_error_list.values().cloned().collect()
+    data.inner
+        .suspect_error_rules
+        .iter()
+        .map(|rule| rule.name.clone())
+        .collect()
 }
 
 fn yaml_data_suspects_stack_keys(data: &YamlData) -> Vec<String> {
-    data.inner.suspects_stack_list.keys().cloned().collect()
+    data.inner
+        .suspect_stack_rules
+        .iter()
+        .map(|rule| rule.id.clone())
+        .collect()
 }
 
 fn yaml_data_mods_core_keys(data: &YamlData) -> Vec<String> {
@@ -267,14 +279,6 @@ fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String> {
     data.inner.game_mods_solu.values().cloned().collect()
 }
 
-fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_opc2.keys().cloned().collect()
-}
-
-fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_opc2.values().cloned().collect()
-}
-
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
     extern "Rust" {
@@ -340,8 +344,6 @@ mod ffi {
         fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
         fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_opc2_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_opc2_values(data: &YamlData) -> Vec<String>;
     }
 }
 

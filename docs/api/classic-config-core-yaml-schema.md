@@ -138,12 +138,40 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `Warnings_CRASHGEN.Warn_Outdated` | string | populates `warn_outdated` |
 | `Crashlog_Plugins_Exclude` | sequence of strings | populates `game_ignore_plugins` |
 | `Crashlog_Records_Exclude` | sequence of strings | populates `game_ignore_records` |
-| `Crashlog_Error_Check` | mapping of string -> string | populates `suspects_error_list`; key order is preserved |
-| `Crashlog_Stack_Check` | mapping of string -> sequence of strings | populates `suspects_stack_list`; key order is preserved |
+| `Crashlog_Error_Check` | sequence of `SuspectErrorRule` mappings | populates `suspect_error_rules`; source order is preserved |
+| `Crashlog_Stack_Check` | sequence of `SuspectStackRule` mappings | populates `suspect_stack_rules`; source order is preserved |
+
+`SuspectErrorRule` entry shape:
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier |
+| `name` | string | yes | report display name |
+| `severity` | integer or numeric string | yes | severity used for sorting and display |
+| `main_error_contains_any` | sequence of strings | yes | rule matches when any listed main-error substring is present |
+
+`SuspectStackRule` entry shape:
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier |
+| `name` | string | yes | report display name |
+| `severity` | integer or numeric string | yes | severity used for sorting and display |
+| `main_error_required_any` | sequence of strings | no | if non-empty, any listed main-error substring must be present before the rule can match |
+| `main_error_optional_any` | sequence of strings | no | optional main-error hints that can trigger the rule when no required list is present |
+| `stack_contains_any` | sequence of strings | no | stack substrings where any match can trigger the rule |
+| `exclude_if_stack_contains_any` | sequence of strings | no | suppresses the rule when any listed stack substring is present |
+| `stack_contains_at_least` | sequence of `SuspectStackCountRule` mappings | no | minimum occurrence stack checks |
+
+`SuspectStackCountRule` entry shape:
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `substring` | string | yes | substring counted inside the stack dump |
+| `count` | positive integer or numeric string | yes | minimum number of occurrences required |
 | `Mods_CONF` | sequence of `ModConflictEntry` mappings | populates `game_mods_conf` (`Vec<ModConflictEntry>`); deduplicated at parse time by canonical pair order |
 | `Mods_CORE` | sequence of `CoreModEntry` mappings | populates `game_mods_core` (`Vec<CoreModEntry>`); entries with missing required fields are skipped |
 | `Mods_FREQ` | mapping of string -> string | populates `game_mods_freq`; key order is preserved |
-| `Mods_OPC2` | mapping of string -> string | populates `game_mods_opc2`; key order is preserved |
 | `Mods_SOLU` | mapping of string -> string | populates `game_mods_solu`; key order is preserved |
 | `Crashgen_Registry` | mapping of crashgen name -> mapping | parsed into `HashMap<String, CrashgenEntryRaw>`; malformed entries are skipped rather than failing the whole file |
 

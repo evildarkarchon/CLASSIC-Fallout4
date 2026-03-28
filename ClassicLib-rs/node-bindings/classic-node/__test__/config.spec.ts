@@ -51,10 +51,32 @@ Crashlog_Plugins_Exclude:
 Crashlog_Records_Exclude:
   - "RecordType1"
 Crashlog_Error_Check:
-  ErrorPattern1: "Error description 1"
-  ErrorPattern2: "Error description 2"
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
 Mods_CONF:
   - mod_a: modA
     mod_b: modB
@@ -68,8 +90,6 @@ Mods_CORE:
     description: "Core mod B"
 Mods_FREQ:
   FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
 Mods_SOLU:
   SoluMod: "Solution mod"
 `;
@@ -335,20 +355,32 @@ describe("YamlData suspect patterns", () => {
     );
   });
 
-  test("suspectsErrorList returns correct map", () => {
-    const errors = data.suspectsErrorList;
-    expect(errors["ErrorPattern1"]).toBe("Error description 1");
-    expect(errors["ErrorPattern2"]).toBe("Error description 2");
-    expect(Object.keys(errors).length).toBe(2);
+  test("suspectErrorRules returns structured rules", () => {
+    const rules = data.suspectErrorRules;
+    expect(rules).toHaveLength(2);
+    expect(rules[0]).toMatchObject({
+      id: "error_pattern_1",
+      name: "Error Pattern 1",
+      severity: 4,
+      mainErrorContainsAny: ["Error description 1"],
+    });
   });
 
-  test("suspectsStackList returns correct map with arrays", () => {
-    const stacks = data.suspectsStackList;
-    expect(stacks["StackPattern1"]).toEqual([
-      "Stack pattern 1",
-      "Stack pattern 2",
+  test("suspectStackRules returns structured rules", () => {
+    const rules = data.suspectStackRules;
+    expect(rules).toHaveLength(1);
+    expect(rules[0]).toMatchObject({
+      id: "stack_pattern_1",
+      name: "Stack Pattern 1",
+      severity: 3,
+      mainErrorRequiredAny: ["Main error required"],
+      mainErrorOptionalAny: ["Main error optional"],
+      stackContainsAny: ["Stack pattern 1", "Stack pattern 2"],
+      excludeIfStackContainsAny: ["Excluded pattern"],
+    });
+    expect(rules[0].stackContainsAtLeast).toEqual([
+      { substring: "Repeated pattern", count: 2 },
     ]);
-    expect(Object.keys(stacks).length).toBe(1);
   });
 });
 
@@ -396,8 +428,8 @@ describe("YamlData mod databases", () => {
     expect(data.gameModsFreq["FreqMod"]).toBe("Frequently used mod");
   });
 
-  test("gameModsOpc2 returns correct map", () => {
-    expect(data.gameModsOpc2["OpcMod"]).toBe("OPC2 mod");
+  test("legacy OPC2 YAML is not exposed through YamlData", () => {
+    expect("gameModsOpc2" in data).toBe(false);
   });
 
   test("gameModsSolu returns correct map", () => {
@@ -485,7 +517,7 @@ describe("YamlData missing keys", () => {
     expect(data.classicRecordsList).toEqual([]);
     expect(data.ignoreList).toEqual([]);
     expect(data.xseAcronym).toBe("");
-    expect(Object.keys(data.suspectsErrorList).length).toBe(0);
+    expect(data.suspectErrorRules).toEqual([]);
     expect(data.gameModsCoreCount).toBe(0);
   });
 });

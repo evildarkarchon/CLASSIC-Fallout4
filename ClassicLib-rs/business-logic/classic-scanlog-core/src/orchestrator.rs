@@ -26,7 +26,7 @@ use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
 };
-use classic_config_core::{CoreModEntry, ModConflictEntry};
+use classic_config_core::{CoreModEntry, ModConflictEntry, SuspectErrorRule, SuspectStackRule};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
@@ -225,10 +225,10 @@ pub struct AnalysisConfig {
     /// List of strings to remove from crash logs when simplify_logs is enabled
     pub remove_list: Vec<String>,
 
-    /// Pattern dictionaries for suspect detection (IndexMap preserves YAML key order for Python parity)
-    pub suspects_error: IndexMap<String, String>,
-    /// Stack-based suspect patterns for crash analysis (IndexMap preserves YAML key order for Python parity)
-    pub suspects_stack: IndexMap<String, Vec<String>>,
+    /// Structured main-error suspect rules.
+    pub suspect_error_rules: Vec<SuspectErrorRule>,
+    /// Structured stack suspect rules.
+    pub suspect_stack_rules: Vec<SuspectStackRule>,
 
     /// Structured core / important mod entries for recommended-mod checks
     pub mods_core: Vec<CoreModEntry>,
@@ -238,9 +238,6 @@ pub struct AnalysisConfig {
     pub mods_conf: Vec<ModConflictEntry>,
     /// Mod solutions database for providing fixes and workarounds (IndexMap preserves YAML key order)
     pub mods_solu: IndexMap<String, String>,
-    /// Outdated, redundant, or community patch mods database (IndexMap preserves YAML key order)
-    pub mods_opc2: IndexMap<String, String>,
-
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
 
@@ -306,13 +303,12 @@ impl AnalysisConfig {
             fcx_mode: false,
             simplify_logs: false,
             remove_list: Vec::new(),
-            suspects_error: IndexMap::new(),
-            suspects_stack: IndexMap::new(),
+            suspect_error_rules: Vec::new(),
+            suspect_stack_rules: Vec::new(),
             mods_core: Vec::new(),
             mods_freq: IndexMap::new(),
             mods_conf: Vec::new(),
             mods_solu: IndexMap::new(),
-            mods_opc2: IndexMap::new(),
             classic_records_list: Vec::new(),
             crashgen_registry: CrashgenRegistry::default(),
         }
@@ -398,13 +394,12 @@ pub fn build_analysis_config_from_yaml(
         fcx_mode,
         simplify_logs,
         remove_list,
-        suspects_error: yaml.suspects_error_list.clone(),
-        suspects_stack: yaml.suspects_stack_list.clone(),
+        suspect_error_rules: yaml.suspect_error_rules.clone(),
+        suspect_stack_rules: yaml.suspect_stack_rules.clone(),
         mods_core: yaml.game_mods_core.clone(),
         mods_freq: yaml.game_mods_freq.clone(),
         mods_conf: yaml.game_mods_conf.clone(),
         mods_solu: yaml.game_mods_solu.clone(),
-        mods_opc2: yaml.game_mods_opc2.clone(),
         classic_records_list: yaml.classic_records_list.clone(),
         crashgen_registry: build_crashgen_registry(&yaml.crashgen_registry),
     }
@@ -784,10 +779,10 @@ impl OrchestratorCore {
 
         // Initialize suspect scanner if suspect patterns are available
         let suspect_scanner =
-            if !config.suspects_error.is_empty() || !config.suspects_stack.is_empty() {
+            if !config.suspect_error_rules.is_empty() || !config.suspect_stack_rules.is_empty() {
                 Some(SuspectScanner::new(
-                    config.suspects_error.clone(),
-                    config.suspects_stack.clone(),
+                    config.suspect_error_rules.clone(),
+                    config.suspect_stack_rules.clone(),
                 ))
             } else {
                 None
@@ -1349,20 +1344,6 @@ impl OrchestratorCore {
                             "### Checking for Important Mods\n\n".to_string(),
                         ]));
                         composer.add(ReportFragment::from_lines(important_lines));
-                    }
-                }
-            }
-
-            // Check for OPC2 mods (outdated, redundant, or have community patches)
-            if !self.config.mods_opc2.is_empty() {
-                if let Ok(opc2_lines) =
-                    detect_mods_single(self.config.mods_opc2.clone(), plugins.clone())
-                {
-                    if !opc2_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header(
-                            "Are Outdated, Redundant, or Have Community Patches",
-                        ));
-                        composer.add(ReportFragment::from_lines(opc2_lines));
                     }
                 }
             }
@@ -2129,12 +2110,11 @@ mod tests {
             game_ignore_plugins: Vec::new(),
             game_ignore_records: Vec::new(),
             ignore_list: Vec::new(),
-            suspects_error_list: IndexMap::new(),
-            suspects_stack_list: IndexMap::new(),
+            suspect_error_rules: Vec::new(),
+            suspect_stack_rules: Vec::new(),
             game_mods_conf: Vec::new(),
             game_mods_core: Vec::new(),
             game_mods_freq: IndexMap::new(),
-            game_mods_opc2: IndexMap::new(),
             game_mods_solu: IndexMap::new(),
             autoscan_text: String::new(),
             game_version: String::new(),
@@ -2740,6 +2720,78 @@ mod tests {
         assert!(report_text.contains("Generated by CLASSIC"));
         assert!(report_text.contains("Checking for Known Crash Messages, Errors and Suspects"));
         assert!(report_text.contains("### End of Report"));
+    }
+
+    #[test]
+    fn process_log_ignores_legacy_mods_opc2_yaml_entries() {
+        let main_yaml = concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"7.31.0\"\n",
+            "  version_date: \"2024-01-15\"\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+        );
+        let game_yaml = concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "  GameVersion: \"1.10.163\"\n",
+            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+            "  CRASHGEN_LogName: \"Buffout 4\"\n",
+            "  Main_Root_Name: \"Fallout4\"\n",
+            "Mods_OPC2:\n",
+            "  OpcMod: \"OPC2 mod\"\n",
+        );
+        let ignore_yaml = "CLASSIC_Ignore_Fallout4: []\n";
+        let yaml = classic_config_core::YamlDataCore::from_yaml_content(
+            main_yaml,
+            game_yaml,
+            ignore_yaml,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("yaml fixture should load");
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+        let orchestrator = OrchestratorCore::new(config).expect("orchestrator should build");
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Buffout 4 v1.28.6",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "buffout4.dll v1.28.6",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "[01] OpcMod.esp",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log("legacy-opc2.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(!report_text.contains(
+            "### Checking For Mods That Are Outdated, Redundant, or Have Community Patches"
+        ));
     }
 
     #[test]

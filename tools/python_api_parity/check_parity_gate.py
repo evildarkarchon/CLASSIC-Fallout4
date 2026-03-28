@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import shutil
 from typing import Any
 import sys
 
@@ -103,6 +104,15 @@ def artifacts_match(expected: Path, actual: Path) -> bool:
     return expected_lines == actual_lines
 
 
+def sync_baseline_artifacts(
+    output_dir: Path, baseline_output_dir: Path, artifact_names: tuple[str, ...]
+) -> None:
+    """Copy generated artifacts into the checked-in baseline directory."""
+    baseline_output_dir.mkdir(parents=True, exist_ok=True)
+    for name in artifact_names:
+        shutil.copyfile(output_dir / name, baseline_output_dir / name)
+
+
 def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -137,6 +147,11 @@ def main() -> int:
         "--baseline-output-dir",
         default="docs/implementation/python_api_parity/baseline",
         help="Directory containing checked-in baseline artifacts, relative to repo root.",
+    )
+    parser.add_argument(
+        "--update-baseline",
+        action="store_true",
+        help="Refresh checked-in baseline artifacts from generated outputs before comparing them.",
     )
     args = parser.parse_args()
 
@@ -191,14 +206,19 @@ def main() -> int:
     )
     coverage_totals = coverage_summary["summary"]
 
+    tracked_artifact_names = (
+        "parity_diff_report.json",
+        "parity_diff_report.md",
+        "runtime_coverage_summary.json",
+        "runtime_coverage_summary.md",
+    )
+
+    if args.update_baseline:
+        sync_baseline_artifacts(output_dir, baseline_output_dir, tracked_artifact_names)
+
     stale_artifacts = [
         name
-        for name in (
-            "parity_diff_report.json",
-            "parity_diff_report.md",
-            "runtime_coverage_summary.json",
-            "runtime_coverage_summary.md",
-        )
+        for name in tracked_artifact_names
         if not artifacts_match(baseline_output_dir / name, output_dir / name)
     ]
 

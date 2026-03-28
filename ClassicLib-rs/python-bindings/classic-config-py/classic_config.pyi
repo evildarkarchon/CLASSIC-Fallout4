@@ -229,15 +229,6 @@ class YamlData:
         """
 
     @property
-    def game_mods_opc2(self) -> dict[str, Any]:
-        """Optimization/performance mods configuration (OPC2).
-
-        Returns:
-            Dictionary mapping optimization mod names to detection patterns
-
-        """
-
-    @property
     def game_mods_conf(self) -> list[dict[str, str | None]]:
         """Mod conflict entries.
 
@@ -257,22 +248,24 @@ class YamlData:
 
         """
 
-    # Suspect detection lists
+    # Suspect detection rules
     @property
-    def suspects_error_list(self) -> dict[str, Any]:
-        """Suspect patterns for error detection.
+    def suspect_error_rules(self) -> list[dict[str, Any]]:
+        """Structured suspect rules for main-error detection.
 
         Returns:
-            Dictionary mapping error categories to detection patterns
+            List of dicts with keys: id, name, severity, main_error_contains_any
 
         """
 
     @property
-    def suspects_stack_list(self) -> dict[str, list[str]]:
-        """Suspect patterns for callstack analysis.
+    def suspect_stack_rules(self) -> list[dict[str, Any]]:
+        """Structured suspect rules for callstack analysis.
 
         Returns:
-            Dictionary mapping callstack categories to pattern lists
+            List of dicts with keys: id, name, severity, main_error_required_any,
+            main_error_optional_any, stack_contains_any,
+            exclude_if_stack_contains_any, stack_contains_at_least
 
         """
 

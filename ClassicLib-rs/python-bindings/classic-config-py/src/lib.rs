@@ -35,9 +35,9 @@
 //! conf_mods = yamldata.game_mods_conf  # Conflicting mod pairs
 //! solu_mods = yamldata.game_mods_solu  # Solution mods
 //!
-//! # Access suspect pattern dictionaries
-//! error_patterns = yamldata.suspects_error_list  # Error message patterns
-//! stack_patterns = yamldata.suspects_stack_list  # Stack trace patterns
+//! # Access suspect rules
+//! error_rules = yamldata.suspect_error_rules  # Main error suspect rules
+//! stack_rules = yamldata.suspect_stack_rules  # Stack suspect rules
 //!
 //! # Access CLASSIC metadata
 //! print(f"CLASSIC Version: {yamldata.classic_version}")
@@ -887,25 +887,49 @@ impl PyYamlData {
     }
 
     // ========================================================================
-    // Suspect Pattern Dictionaries
+    // Suspect Rules
     // ========================================================================
 
     #[getter]
-    fn suspects_error_list(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.suspects_error_list {
-            dict.set_item(k, v)?;
+    fn suspect_error_rules(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for rule in &self.inner.suspect_error_rules {
+            let dict = PyDict::new(py);
+            dict.set_item("id", &rule.id)?;
+            dict.set_item("name", &rule.name)?;
+            dict.set_item("severity", rule.severity)?;
+            dict.set_item("main_error_contains_any", &rule.main_error_contains_any)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]
-    fn suspects_stack_list(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.suspects_stack_list {
-            dict.set_item(k, v)?;
+    fn suspect_stack_rules(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for rule in &self.inner.suspect_stack_rules {
+            let dict = PyDict::new(py);
+            let count_rules = PyList::empty(py);
+            for count_rule in &rule.stack_contains_at_least {
+                let count_dict = PyDict::new(py);
+                count_dict.set_item("substring", &count_rule.substring)?;
+                count_dict.set_item("count", count_rule.count)?;
+                count_rules.append(count_dict)?;
+            }
+            dict.set_item("id", &rule.id)?;
+            dict.set_item("name", &rule.name)?;
+            dict.set_item("severity", rule.severity)?;
+            dict.set_item("main_error_required_any", &rule.main_error_required_any)?;
+            dict.set_item("main_error_optional_any", &rule.main_error_optional_any)?;
+            dict.set_item("stack_contains_any", &rule.stack_contains_any)?;
+            dict.set_item(
+                "exclude_if_stack_contains_any",
+                &rule.exclude_if_stack_contains_any,
+            )?;
+            dict.set_item("stack_contains_at_least", count_rules)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     // ========================================================================
@@ -953,15 +977,6 @@ impl PyYamlData {
     fn game_mods_freq(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
         let dict = PyDict::new(py);
         for (k, v) in &self.inner.game_mods_freq {
-            dict.set_item(k, v)?;
-        }
-        Ok(dict.unbind())
-    }
-
-    #[getter]
-    fn game_mods_opc2(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_opc2 {
             dict.set_item(k, v)?;
         }
         Ok(dict.unbind())

@@ -7,21 +7,16 @@
 //! - YAML-defined suspect pattern matching
 
 use crate::error::Result;
-use indexmap::IndexMap;
+use classic_config_core::{SuspectErrorRule, SuspectStackRule};
 use rayon::prelude::*;
 
 use crate::report::ReportFragment;
-
-/// Signal modifiers for suspect detection
-const MAIN_ERROR_REQUIRED: &str = "ME-REQ";
-const MAIN_ERROR_OPTIONAL: &str = "ME-OPT";
-const CALLSTACK_NEGATIVE: &str = "NOT";
 
 /// Match status for suspect scanning
 #[derive(Debug, Clone)]
 struct MatchStatus {
     has_required_item: bool,
-    error_req_found: bool,
+    required_main_error_found: bool,
     error_opt_found: bool,
     stack_found: bool,
 }
@@ -30,7 +25,7 @@ impl MatchStatus {
     fn new() -> Self {
         Self {
             has_required_item: false,
-            error_req_found: false,
+            required_main_error_found: false,
             error_opt_found: false,
             stack_found: false,
         }
@@ -39,7 +34,7 @@ impl MatchStatus {
     /// Check if this represents a suspect match
     fn is_suspect(&self) -> bool {
         if self.has_required_item {
-            self.error_req_found
+            self.required_main_error_found
         } else {
             self.error_opt_found || self.stack_found
         }
@@ -49,8 +44,8 @@ impl MatchStatus {
 /// High-performance suspect scanner (40x speedup)
 #[derive(Clone)]
 pub struct SuspectScanner {
-    suspects_error_list: IndexMap<String, String>,
-    suspects_stack_list: IndexMap<String, Vec<String>>,
+    suspect_error_rules: Vec<SuspectErrorRule>,
+    suspect_stack_rules: Vec<SuspectStackRule>,
 }
 
 impl SuspectScanner {
@@ -58,13 +53,13 @@ impl SuspectScanner {
     ///
     /// This constructor initializes a scanner that can detect known crash suspects
     /// by matching patterns against crash log main errors and call stacks. The scanner
-    /// supports signal modifiers like `ME-REQ` (main error required), `ME-OPT` (main error
-    /// optional), `NOT` (callstack negative), and numeric occurrence counts.
+    /// supports structured rule fields for main-error requirements, exclusions,
+    /// and minimum occurrence counts.
     ///
     /// # Arguments
     ///
-    /// * `suspects_error_list` - Map of error signatures to pattern strings for main error matching
-    /// * `suspects_stack_list` - Map of error signatures to pattern lists for call stack matching
+    /// * `suspect_error_rules` - Ordered main-error suspect rules
+    /// * `suspect_stack_rules` - Ordered stack suspect rules
     ///
     /// # Returns
     ///
@@ -74,29 +69,34 @@ impl SuspectScanner {
     ///
     /// ```rust
     /// use classic_scanlog_core::suspect_scanner::SuspectScanner;
-    /// use indexmap::IndexMap;
+    /// use classic_config_core::{SuspectErrorRule, SuspectStackRule};
     ///
-    /// let mut error_list = IndexMap::new();
-    /// error_list.insert(
-    ///     "Critical | Memory Access Violation".to_string(),
-    ///     "ACCESS_VIOLATION".to_string()
+    /// let scanner = SuspectScanner::new(
+    ///     vec![SuspectErrorRule {
+    ///         id: "memory_access_violation".to_string(),
+    ///         name: "Memory Access Violation".to_string(),
+    ///         severity: 5,
+    ///         main_error_contains_any: vec!["ACCESS_VIOLATION".to_string()],
+    ///     }],
+    ///     vec![SuspectStackRule {
+    ///         id: "stack_overflow".to_string(),
+    ///         name: "Stack Overflow".to_string(),
+    ///         severity: 6,
+    ///         main_error_required_any: vec!["EXCEPTION_STACK_OVERFLOW".to_string()],
+    ///         main_error_optional_any: Vec::new(),
+    ///         stack_contains_any: Vec::new(),
+    ///         exclude_if_stack_contains_any: Vec::new(),
+    ///         stack_contains_at_least: Vec::new(),
+    ///     }],
     /// );
-    ///
-    /// let mut stack_list = IndexMap::new();
-    /// stack_list.insert(
-    ///     "High | Stack Overflow".to_string(),
-    ///     vec!["ME-REQ|EXCEPTION_STACK_OVERFLOW".to_string()]
-    /// );
-    ///
-    /// let scanner = SuspectScanner::new(error_list, stack_list);
     /// ```
     pub fn new(
-        suspects_error_list: IndexMap<String, String>,
-        suspects_stack_list: IndexMap<String, Vec<String>>,
+        suspect_error_rules: Vec<SuspectErrorRule>,
+        suspect_stack_rules: Vec<SuspectStackRule>,
     ) -> Self {
         Self {
-            suspects_error_list,
-            suspects_stack_list,
+            suspect_error_rules,
+            suspect_stack_rules,
         }
     }
 
@@ -117,27 +117,22 @@ impl SuspectScanner {
         // Tuple: (severity_num, error_name_for_tiebreak, formatted_name, severity_str)
         let mut suspects: Vec<(i32, String, String, String)> = Vec::new();
 
-        for (error_key, signal) in &self.suspects_error_list {
-            // Skip if signal not in crash log
-            if !crashlog_mainerror.contains(signal.as_str()) {
+        for rule in &self.suspect_error_rules {
+            if !rule
+                .main_error_contains_any
+                .iter()
+                .any(|signal| crashlog_mainerror.contains(signal.as_str()))
+            {
                 continue;
             }
 
-            // Parse error information (format: "Severity | Error Name")
-            if let Some((error_severity, error_name)) = error_key.split_once(" | ") {
-                // Format error name for report
-                let formatted_error_name =
-                    format!("{:.<width$}", error_name, width = max_warn_length);
-
-                // Parse severity as integer for sorting
-                let severity_num = error_severity.trim().parse::<i32>().unwrap_or(0);
-                suspects.push((
-                    severity_num,
-                    error_name.to_string(),
-                    formatted_error_name,
-                    error_severity.to_string(),
-                ));
-            }
+            let formatted_error_name = format!("{:.<width$}", rule.name, width = max_warn_length);
+            suspects.push((
+                rule.severity,
+                rule.name.clone(),
+                formatted_error_name,
+                rule.severity.to_string(),
+            ));
         }
 
         // Sort by severity descending (highest first), then alphabetically by error name for determinism
@@ -182,46 +177,44 @@ impl SuspectScanner {
         // Tuple: (severity_num, error_name_for_tiebreak, formatted_name, severity_str)
         let mut suspects: Vec<(i32, String, String, String)> = Vec::new();
 
-        for (error_key, signal_list) in &self.suspects_stack_list {
-            // Parse error information (format: "Severity | Error Name")
-            let (error_severity, error_name) = match error_key.split_once(" | ") {
-                Some(parts) => parts,
-                None => continue,
-            };
-
-            // Track match status
-            let mut match_status = MatchStatus::new();
-            let mut should_skip = false;
-
-            // Process each signal
-            for signal in signal_list {
-                if Self::process_signal(
-                    signal,
-                    crashlog_mainerror,
-                    segment_callstack_intact,
-                    &mut match_status,
-                ) {
-                    // NOT condition met, skip this error
-                    should_skip = true;
-                    break;
-                }
-            }
-
-            if should_skip {
+        for rule in &self.suspect_stack_rules {
+            if rule
+                .exclude_if_stack_contains_any
+                .iter()
+                .any(|signal| segment_callstack_intact.contains(signal))
+            {
                 continue;
             }
 
-            // Check if we have a suspect match
+            let mut match_status = MatchStatus::new();
+            match_status.has_required_item = !rule.main_error_required_any.is_empty();
+            match_status.required_main_error_found = rule
+                .main_error_required_any
+                .iter()
+                .any(|signal| crashlog_mainerror.contains(signal));
+            match_status.error_opt_found = rule
+                .main_error_optional_any
+                .iter()
+                .any(|signal| crashlog_mainerror.contains(signal));
+            match_status.stack_found = rule
+                .stack_contains_any
+                .iter()
+                .any(|signal| segment_callstack_intact.contains(signal))
+                || rule.stack_contains_at_least.iter().any(|count_rule| {
+                    segment_callstack_intact
+                        .matches(&count_rule.substring)
+                        .count()
+                        >= count_rule.count
+                });
+
             if match_status.is_suspect() {
                 let formatted_error_name =
-                    format!("{:.<width$}", error_name, width = max_warn_length);
-                // Parse severity as integer for sorting
-                let severity_num = error_severity.trim().parse::<i32>().unwrap_or(0);
+                    format!("{:.<width$}", rule.name, width = max_warn_length);
                 suspects.push((
-                    severity_num,
-                    error_name.to_string(),
+                    rule.severity,
+                    rule.name.clone(),
                     formatted_error_name,
-                    error_severity.to_string(),
+                    rule.severity.to_string(),
                 ));
             }
         }
@@ -272,63 +265,6 @@ impl SuspectScanner {
 }
 
 impl SuspectScanner {
-    /// Process an individual signal and update match status
-    ///
-    /// Returns:
-    ///     true if processing should stop (NOT condition met)
-    fn process_signal(
-        signal: &str,
-        crashlog_mainerror: &str,
-        segment_callstack_intact: &str,
-        match_status: &mut MatchStatus,
-    ) -> bool {
-        // Check if signal has modifier
-        if !signal.contains('|') {
-            // Simple case: direct string match in callstack
-            if segment_callstack_intact.contains(signal) {
-                match_status.stack_found = true;
-            }
-            return false;
-        }
-
-        // Parse signal modifier and string
-        let (signal_modifier, signal_string) = match signal.split_once('|') {
-            Some(parts) => parts,
-            None => return false,
-        };
-
-        // Process based on signal modifier
-        match signal_modifier {
-            MAIN_ERROR_REQUIRED => {
-                match_status.has_required_item = true;
-                if crashlog_mainerror.contains(signal_string) {
-                    match_status.error_req_found = true;
-                }
-            }
-            MAIN_ERROR_OPTIONAL => {
-                if crashlog_mainerror.contains(signal_string) {
-                    match_status.error_opt_found = true;
-                }
-            }
-            CALLSTACK_NEGATIVE => {
-                // Return true to break if NOT condition is met
-                return segment_callstack_intact.contains(signal_string);
-            }
-            modifier if modifier.chars().all(|c| c.is_ascii_digit()) => {
-                // Check for minimum occurrences
-                if let Ok(min_occurrences) = modifier.parse::<usize>() {
-                    let count = segment_callstack_intact.matches(signal_string).count();
-                    if count >= min_occurrences {
-                        match_status.stack_found = true;
-                    }
-                }
-            }
-            _ => {}
-        }
-
-        false
-    }
-
     /// Batch process multiple crash logs for suspects (parallel)
     ///
     /// This provides significant speedup for batch operations
@@ -362,16 +298,19 @@ impl SuspectScanner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_config_core::{SuspectErrorRule, SuspectStackCountRule, SuspectStackRule};
 
     #[test]
     fn test_suspect_scan_mainerror() {
-        let mut error_list = IndexMap::new();
-        error_list.insert(
-            "Critical | Memory Access Violation".to_string(),
-            "ACCESS_VIOLATION".to_string(),
+        let scanner = SuspectScanner::new(
+            vec![SuspectErrorRule {
+                id: "memory_access_violation".to_string(),
+                name: "Memory Access Violation".to_string(),
+                severity: 5,
+                main_error_contains_any: vec!["ACCESS_VIOLATION".to_string()],
+            }],
+            Vec::new(),
         );
-
-        let scanner = SuspectScanner::new(error_list, IndexMap::new());
 
         let (fragment, found) = scanner
             .suspect_scan_mainerror("Error: ACCESS_VIOLATION at 0x12345", 50)
@@ -395,34 +334,57 @@ mod tests {
     }
 
     #[test]
-    fn test_signal_processing() {
-        let mut match_status = MatchStatus::new();
-
-        // Test ME-REQ signal
-        SuspectScanner::process_signal(
-            "ME-REQ|OutOfMemory",
-            "OutOfMemory error occurred",
-            "callstack here",
-            &mut match_status,
+    fn test_suspect_scan_stack_with_structured_conditions() {
+        let scanner = SuspectScanner::new(
+            Vec::new(),
+            vec![SuspectStackRule {
+                id: "structured_stack_rule".to_string(),
+                name: "Structured Stack Rule".to_string(),
+                severity: 4,
+                main_error_required_any: vec!["OutOfMemory".to_string()],
+                main_error_optional_any: vec!["MaybeRelated".to_string()],
+                stack_contains_any: vec!["SomePattern".to_string()],
+                exclude_if_stack_contains_any: Vec::new(),
+                stack_contains_at_least: vec![SuspectStackCountRule {
+                    substring: "RepeatedPattern".to_string(),
+                    count: 3,
+                }],
+            }],
         );
 
-        assert!(match_status.has_required_item);
-        assert!(match_status.error_req_found);
-        assert!(match_status.is_suspect());
+        let (fragment, found) = scanner
+            .suspect_scan_stack(
+                "OutOfMemory error occurred",
+                "SomePattern\nRepeatedPattern\nRepeatedPattern\nRepeatedPattern",
+                50,
+            )
+            .unwrap();
+
+        assert!(found);
+        assert!(!fragment.is_empty());
     }
 
     #[test]
-    fn test_occurrence_count() {
-        let mut match_status = MatchStatus::new();
-
-        // Test occurrence count signal (3|pattern means pattern must appear 3+ times)
-        SuspectScanner::process_signal(
-            "3|SomePattern",
-            "main error",
-            "SomePattern\nSomePattern\nSomePattern\ndata",
-            &mut match_status,
+    fn test_suspect_scan_stack_exclusion_condition() {
+        let scanner = SuspectScanner::new(
+            Vec::new(),
+            vec![SuspectStackRule {
+                id: "excluded_rule".to_string(),
+                name: "Excluded Rule".to_string(),
+                severity: 2,
+                main_error_required_any: Vec::new(),
+                main_error_optional_any: Vec::new(),
+                stack_contains_any: vec!["TargetPattern".to_string()],
+                exclude_if_stack_contains_any: vec!["SkipPattern".to_string()],
+                stack_contains_at_least: Vec::new(),
+            }],
         );
 
-        assert!(match_status.stack_found);
+        let (fragment, found) = scanner
+            .suspect_scan_stack("main error", "TargetPattern\nSkipPattern", 50)
+            .unwrap();
+
+        assert!(!found);
+        assert!(fragment.is_empty());
     }
 }

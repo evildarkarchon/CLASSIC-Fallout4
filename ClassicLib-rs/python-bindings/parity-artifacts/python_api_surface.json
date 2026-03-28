@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-18T01:54:01.995354+00:00",
+  "generated_at_utc": "2026-03-27T06:53:01.797138+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -2383,7 +2383,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, suspects_error_list: dict[str, str], suspects_stack_list: dict[str, list[str]], ) -> None:"
+      "signature": "def __init__( self, suspect_error_rules: list[dict[str, Any]], suspect_stack_rules: list[dict[str, Any]], ) -> None:"
     },
     {
       "module": "classic_scanlog",

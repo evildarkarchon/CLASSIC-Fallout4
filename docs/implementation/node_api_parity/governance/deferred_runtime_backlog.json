@@ -1275,6 +1275,36 @@
       "rustSymbols": [
         "resolve_batch_concurrency"
       ]
+    },
+    {
+      "coverageId": "node-deferred-config-107",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "SuspectErrorRule",
+        "SuspectStackCountRule",
+        "SuspectStackRule"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-aux-108",
+      "classification": "deferred",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad B",
+      "deferReason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [
+        "JsSuspectErrorRule",
+        "JsSuspectStackCountRule",
+        "JsSuspectStackRule"
+      ],
+      "rustSymbols": []
     }
   ]
 }

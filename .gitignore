@@ -329,3 +329,7 @@ build-debug/
 !.opencode/skills/
 !.opencode/skills/**
 build-*/
+# CocoIndex Code (ccc)
+/.cocoindex_code/
+!.agents/skills/
+opencode.json
