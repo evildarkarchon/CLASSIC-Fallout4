@@ -367,6 +367,7 @@ pub fn detect_mods_important(
 
     let plugin_names_lower: Vec<String> =
         crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
+    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
     let plugins_text = plugin_names_lower.join(" ");
 
     let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
@@ -375,7 +376,7 @@ pub fn detect_mods_important(
     let all_text = format!("{} {}", plugins_text, modules_text);
 
     for entry in entries {
-        if is_excluded(&entry.exclude_when, crashlog_plugins) {
+        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
             continue;
         }
 
@@ -441,15 +442,11 @@ pub fn detect_mods_important(
 }
 
 /// Checks whether a `CoreModExclude` condition is met by the current plugin list.
-fn is_excluded(exclude: &Option<CoreModExclude>, plugins: &IndexMap<String, String>) -> bool {
+fn is_excluded(exclude: &Option<CoreModExclude>, plugin_names_lower: &HashSet<String>) -> bool {
     match exclude {
-        Some(CoreModExclude::PluginAny(required_plugins)) => {
-            let plugin_names_lower: HashSet<String> =
-                plugins.keys().map(|k| k.to_lowercase()).collect();
-            required_plugins
-                .iter()
-                .any(|p| plugin_names_lower.contains(&p.to_lowercase()))
-        }
+        Some(CoreModExclude::PluginAny(required_plugins)) => required_plugins
+            .iter()
+            .any(|p| plugin_names_lower.contains(&p.to_lowercase())),
         None => false,
     }
 }
@@ -1020,6 +1017,30 @@ mod tests {
         assert!(
             result.is_empty(),
             "Entry should be skipped when exclusion plugin is present"
+        );
+    }
+
+    #[test]
+    fn test_detect_mods_important_exclude_when_plugin_any_is_case_insensitive() {
+        let entries = vec![CoreModEntry {
+            detect: "UFO4P.esp".to_string(),
+            name: "Unofficial Patch".to_string(),
+            description: "Install this patch.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: Some(CoreModExclude::PluginAny(vec![
+                "londonworldspace.esm".to_string(),
+            ])),
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("LondonWorldspace.esm".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        assert!(
+            result.is_empty(),
+            "Entry should be skipped even when exclusion plugin casing differs"
         );
     }
 
