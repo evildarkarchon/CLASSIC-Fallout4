@@ -16,15 +16,12 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
 
       - name: Run Tier-1 Python parity and runtime coverage gate
         run: python tools/python_api_parity/check_parity_gate.py --repo-root .
@@ -34,7 +31,7 @@ jobs:
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: python-parity-diagnostics
           path: ClassicLib-rs/python-bindings/parity-artifacts/
@@ -47,21 +44,24 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: ClassicLib-rs/python-bindings/requirements-ci.txt
 
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -69,7 +69,7 @@ jobs:
             ${{ runner.os }}-cargo-registry-
 
       - name: Cache cargo index
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
@@ -77,7 +77,7 @@ jobs:
             ${{ runner.os }}-cargo-index-
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ClassicLib-rs/target
           key: ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
@@ -89,7 +89,7 @@ jobs:
         run: uv venv ClassicLib-rs/python-bindings/.venv
 
       - name: Install Python build and test dependencies
-        run: uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
+        run: uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
 
       # `maturin` is intentionally installed into `ClassicLib-rs/python-bindings/.venv`.
       # `rebuild_rust.ps1` targets that interpreter explicitly for Python binding builds.

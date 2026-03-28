@@ -30,7 +30,7 @@ Performance optimization in CLASSIC follows a systematic four-step process:
 ```bash
 # Ensure Python bindings environment is ready
 uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
 
 # Build Rust extensions used by the maintained Python smoke/parity workflow
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry

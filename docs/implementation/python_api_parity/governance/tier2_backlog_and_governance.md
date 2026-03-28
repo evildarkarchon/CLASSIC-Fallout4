@@ -40,7 +40,7 @@ An API can be promoted when all are true:
 
 ```powershell
 uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe maturin pytest
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
 python tools/python_api_parity/generate_baseline.py --repo-root .
 python tools/python_api_parity/generate_wave_manifest.py --repo-root .
 python tools/python_api_parity/check_parity_gate.py --repo-root .
