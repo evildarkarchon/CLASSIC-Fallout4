@@ -2777,7 +2777,7 @@ mod tests {
         assert!(result.success);
         assert!(report_text.contains("Bot Compatible Mode"));
         assert!(
-            report_text.contains("Version checks and settings checks are disabled"),
+            report_text.contains("Version and Settings checks are disabled"),
             "report should explain why checks were skipped"
         );
         assert!(

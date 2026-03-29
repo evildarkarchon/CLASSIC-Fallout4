@@ -479,7 +479,7 @@ impl ReportGenerator {
         ];
 
         if fake_bot_compatible_mode {
-            lines.push("**# ⚠️ NOTICE : This report was generated in Bot Compatible Mode. Version and settings checks are disabled. #**\n\n".to_string());
+            lines.push("**# ⚠️ NOTICE : This report was generated in Bot Compatible Mode. Version and Settings checks are disabled. #**\n\n".to_string());
         } else {
             match status {
                 Some(CrashgenVersionStatus::Valid) => {
@@ -568,7 +568,7 @@ impl ReportGenerator {
     /// A `ReportFragment` containing the settings section header.
     pub fn generate_settings_section_header(&self) -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "### Checking for Settings-related Issues\n\n".to_string(),
+            "### Checking for Settings-related Issues\n\n".to_string()
         ])
     }
 
@@ -599,7 +599,7 @@ impl ReportGenerator {
     /// A `ReportFragment` containing the plugin suspect header.
     pub fn generate_plugin_suspect_header(&self) -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "### Checking for Plugin-related Errors\n\n".to_string(),
+            "### Checking for Plugin-related Errors\n\n".to_string()
         ])
     }
 
@@ -751,7 +751,7 @@ mod tests {
 
         let text = section.to_list().join("");
         assert!(text.contains("Bot Compatible Mode"));
-        assert!(text.contains("Version and settings checks are disabled"));
+        assert!(text.contains("Version and Settings checks are disabled"));
         assert!(!text.contains("Unable to verify Buffout 4 version"));
     }
 }
