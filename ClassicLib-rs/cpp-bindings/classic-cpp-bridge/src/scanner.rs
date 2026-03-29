@@ -702,16 +702,11 @@ fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
 }
 
 fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
-    let settings = PathBuf::from(yaml_dir_root).join("CLASSIC Settings.yaml");
-    let legacy_settings = PathBuf::from(yaml_dir_root).join("CLASSIC_Settings.yaml");
+    let settings_path = PathBuf::from(yaml_dir_root).join("CLASSIC Settings.yaml");
 
-    let settings_path = if settings.exists() {
-        settings
-    } else if legacy_settings.exists() {
-        legacy_settings
-    } else {
+    if !settings_path.exists() {
         return Vec::new();
-    };
+    }
 
     let ops = YamlOperations::new();
     let doc = match ops.load_yaml_file(Path::new(&settings_path)) {
@@ -1055,6 +1050,23 @@ mod tests {
         let folon = data.join("databases").join("FOLON FormIDs.db");
 
         assert_eq!(paths, vec![main, folon, custom]);
+    }
+
+    #[test]
+    fn test_load_user_formid_db_paths_ignores_legacy_underscore_settings_filename() {
+        let temp = tempdir().unwrap();
+        let root = temp.path();
+        let data = root.join("CLASSIC Data");
+        std::fs::create_dir_all(data.join("databases")).unwrap();
+
+        let settings_yaml =
+            "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4:\n      - databases/custom.db\n";
+        std::fs::write(root.join("CLASSIC_Settings.yaml"), settings_yaml).unwrap();
+
+        let paths =
+            load_user_formid_db_paths(&root.to_string_lossy(), &data.to_string_lossy(), "Fallout4");
+
+        assert!(paths.is_empty());
     }
 
     #[test]

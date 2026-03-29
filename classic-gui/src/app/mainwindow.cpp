@@ -98,20 +98,6 @@ bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, Q
         return true;
     }
 
-    // Migration path: if an older build wrote settings under CLASSIC Data,
-    // copy that file back to the canonical root location.
-    const QString legacySettingsPath = dataDir + QStringLiteral("/CLASSIC Settings.yaml");
-    if (QFile::exists(legacySettingsPath)) {
-        if (QFile::copy(legacySettingsPath, settingsPath)) {
-            return true;
-        }
-        if (errorOut) {
-            *errorOut = QStringLiteral("Failed to migrate settings from ") + legacySettingsPath +
-                        QStringLiteral(" to ") + settingsPath;
-        }
-        return false;
-    }
-
     const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
     if (!QFile::exists(mainYamlPath)) {
         if (errorOut) {

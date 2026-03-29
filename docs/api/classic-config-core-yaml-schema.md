@@ -10,15 +10,12 @@ Reference: [`classic-config-core.md`](classic-config-core.md).
 
 - `ClassicConfig::load_or_default()` reads settings in this order:
   1. application directory: `CLASSIC Settings.yaml`
-  2. application directory: `CLASSIC_Settings.yaml`
-  3. user config directory: `dirs::config_dir()/CLASSIC/CLASSIC Settings.yaml`
-  4. user config directory: `dirs::config_dir()/CLASSIC/CLASSIC_Settings.yaml`
 - If none of those files exist, the crate returns `ClassicConfig::default()`.
 - `ClassicConfig::get_config_path()` is best-effort and non-fallible:
-  - it first tries to update the first existing writable settings file in the normal search order, including an existing writable legacy `CLASSIC_Settings.yaml`
-  - if no existing candidate is writable, it tries to create `CLASSIC Settings.yaml` in the application directory, then in `dirs::config_dir()/CLASSIC/`
-  - if those writability checks fail but at least one directory can still be resolved, it returns the preferred `CLASSIC Settings.yaml` target for that resolved directory anyway
-  - it falls back to the plain relative filename `CLASSIC Settings.yaml` only when neither the application directory nor the user config directory can be resolved
+  - it first tries to update an existing writable `CLASSIC Settings.yaml` in the application directory
+  - if that file does not exist, it tries to create `CLASSIC Settings.yaml` in the application directory
+  - if those writability checks fail but the application directory can still be resolved, it returns that preferred `CLASSIC Settings.yaml` target anyway
+  - it falls back to the plain relative filename `CLASSIC Settings.yaml` only when the application directory cannot be resolved
 - `YamlSource::Cache` and cache helpers use the `CLASSIC` base directory, not `CLASSIC-Fallout4`:
   - preferred: `dirs::config_dir()/CLASSIC/cache.yaml`
   - compatibility fallback when no user config dir is available: `<application-dir>/CLASSIC/cache.yaml`

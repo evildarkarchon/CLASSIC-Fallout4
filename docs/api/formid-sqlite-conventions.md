@@ -133,7 +133,7 @@ The current C++ bridge is what actually assembles DB paths for production scan s
 
 1. main DB: `CLASSIC Data/databases/{game} FormIDs Main.db`
 2. hardcoded extras from `hardcoded_formid_db_relpaths(game)`
-3. user-configured entries from `CLASSIC_Settings.FormID Databases.{game}` in `CLASSIC Settings.yaml` or `CLASSIC_Settings.yaml`
+3. user-configured entries from `CLASSIC_Settings.FormID Databases.{game}` in `CLASSIC Settings.yaml`
 4. de-duplicate while preserving first occurrence
 
 Current hardcoded extras:
@@ -154,7 +154,7 @@ That behavior is covered by bridge tests.
 
 Current scan-time path handling in `classic-cpp-bridge`:
 
-- settings file search order is `CLASSIC Settings.yaml`, then `CLASSIC_Settings.yaml`
+- settings file path is `CLASSIC Settings.yaml` next to the executable / root install directory
 - user-configured absolute DB paths are used as-is after normalization
 - user-configured relative DB paths are resolved against `yaml_dir_data` (the `CLASSIC Data` directory), not the settings-file directory or repo root
 - path normalization is component-based (`path.components().collect()`), mainly for de-duplication and path-shape cleanup

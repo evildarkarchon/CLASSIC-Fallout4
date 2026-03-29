@@ -128,10 +128,7 @@ Behavior worth knowing:
 - missing scalar keys mostly fall back to defaults instead of erroring
 - `load_or_default()` searches in this order:
   - `CLASSIC Settings.yaml`
-  - `CLASSIC_Settings.yaml` (legacy fallback)
-  - `dirs::config_dir()/CLASSIC/CLASSIC Settings.yaml`
-  - `dirs::config_dir()/CLASSIC/CLASSIC_Settings.yaml`
-- `get_config_path()` is best-effort: it prefers the first writable existing settings file in that order, otherwise the preferred `CLASSIC Settings.yaml` target for the resolved application or user config directory, with a final relative fallback only when neither directory can be resolved
+- `get_config_path()` is best-effort: it uses the application-directory `CLASSIC Settings.yaml` target when the executable directory can be resolved, with a final relative fallback only when that directory cannot be resolved
 - `save_to_yaml()` creates parent directories if needed
 - `save_to_yaml()` serializes YAML in `spawn_blocking()` because `YamlEmitter` is not `Send`
 - `load_local_yaml_paths()` is non-fatal when `CLASSIC Data/CLASSIC {game} Local.yaml` does not exist
