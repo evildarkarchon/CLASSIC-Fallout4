@@ -994,87 +994,151 @@ Mods_CORE: # 0) MODS THAT EVERY PLAYER SHOULD HAVE INSTALLED
       If this is correct, completely uninstall this mod to avoid any problems!
 
 Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
-  DamageThresholdFramework: |
-    Damage Threshold Framework
-        - Can cause crashes in combat on some occasions due to how damage calculations are done.
-        -----
+  - id: damage-threshold-framework
+    criteria:
+      any:
+        - DamageThresholdFramework
+    name: Damage Threshold Framework
+    description: |
+          - Can cause crashes in combat on some occasions due to how damage calculations are done.
+          -----
 
-  Endless Warfare: |
-    Endless Warfare
-        - Some enemy spawn points could be bugged or crash the game due to scripts or pathfinding.
-        -----
+  - id: endless-warfare
+    criteria:
+      any:
+        - Endless Warfare
+    name: Endless Warfare
+    description: |
+          - Some enemy spawn points could be bugged or crash the game due to scripts or pathfinding.
+          -----
 
-  EPO.esp: |
-    Extreme Particles Overhaul
-        - Can cause particle effects related crashes, consider switching to Burst Impact Blast FX.
-          Burst Impact Blast FX: https://www.nexusmods.com/fallout4/mods/57789?tab=files
-        -----
+  - id: extreme-particles-overhaul
+    criteria:
+      any:
+        - EPO.esp
+    name: Extreme Particles Overhaul
+    description: |
+          - Can cause particle effects related crashes, consider switching to Burst Impact Blast FX.
+            Burst Impact Blast FX: https://www.nexusmods.com/fallout4/mods/57789?tab=files
+          -----
 
-  SakhalinWasteland: |
-    Fallout Sakhalin
-        - Breaks the precombine system all across Far Harbor which will randomly crash your game.
-        -----
+  - id: fallout-sakhalin
+    criteria:
+      any:
+        - SakhalinWasteland
+    name: Fallout Sakhalin
+    description: |
+          - Breaks the precombine system all across Far Harbor which will randomly crash your game.
+          -----
 
-  76HUD: |
-    HUD76 Hud Replacer
-        - Can sometimes cause interface and pip-boy related bugs, glitches and crashes.
-        -----
+  - id: hud76-hud-replacer
+    criteria:
+      any:
+        - 76HUD
+    name: HUD76 Hud Replacer
+    description: |
+          - Can sometimes cause interface and pip-boy related bugs, glitches and crashes.
+          -----
 
-  NCRenegade: |
-    NCR Renegade Armor
-        - Broken outfit mesh that crashes the game in 3rd person or when NPCs wearing it are hit.
-        -----
+  - id: ncr-renegade-armor
+    criteria:
+      any:
+        - NCRenegade
+    name: NCR Renegade Armor
+    description: |
+          - Broken outfit mesh that crashes the game in 3rd person or when NPCs wearing it are hit.
+          -----
 
-  Respawnable Legendary Bosses: |
-    Respawnable Legendary Bosses
-        - Can sometimes cause Deathclaw / Behemoth boulder projectile crashes for unknown reasons.
-        -----
+  - id: respawnable-legendary-bosses
+    criteria:
+      any:
+        - Respawnable Legendary Bosses
+    name: Respawnable Legendary Bosses
+    description: |
+          - Can sometimes cause Deathclaw / Behemoth boulder projectile crashes for unknown reasons.
+          -----
 
-  Scrap Everything: |
-    Scrap Everything (Core Or Ultimate)
-        - Weird crashes and issues due to multiple unknown problems. This mod must be always last in your load order.
-        -----
+  - id: scrap-everything
+    criteria:
+      any:
+        - Scrap Everything
+    name: Scrap Everything (Core Or Ultimate)
+    description: |
+          - Weird crashes and issues due to multiple unknown problems. This mod must be always last in your load order.
+          -----
 
-  Shade Girl Leather Outfits: |
-    Shade Girl Leather Outfits
-        - Outfits can crash the game while browsing the armor workbench or upon starting a new game due to bad meshes.
-        -----
+  - id: shade-girl-leather-outfits
+    criteria:
+      any:
+        - Shade Girl Leather Outfits
+    name: Shade Girl Leather Outfits
+    description: |
+          - Outfits can crash the game while browsing the armor workbench or upon starting a new game due to bad meshes.
+          -----
 
-  SpringCleaning: |
-    Spring Cleaning
-        - Abandoned and severely outdated mod that breaks precombines and could potentially even break your save file.
-        -----
+  - id: spring-cleaning
+    criteria:
+      any:
+        - SpringCleaning
+    name: Spring Cleaning
+    description: |
+          - Abandoned and severely outdated mod that breaks precombines and could potentially even break your save file.
+          -----
 
-  (STO) NO: |
-    Stalker Texture Overhaul
-        - Doesn't work due to incorrect folder structure and has a corrupted dds file that causes Create2DTexture crashes.
-        -----
+  - id: stalker-texture-overhaul
+    criteria:
+      any:
+        - (STO) NO
+    name: Stalker Texture Overhaul
+    description: |
+          - Doesn't work due to incorrect folder structure and has a corrupted dds file that causes Create2DTexture crashes.
+          -----
 
-  TacticalTablet: |
-    Tactical Tablet
-        - Can cause flickering with certain scopes or crashes while browsing workbenches, most commonly with ECO.
-        -----
+  - id: tactical-tablet
+    criteria:
+      any:
+        - TacticalTablet
+    name: Tactical Tablet
+    description: |
+          - Can cause flickering with certain scopes or crashes while browsing workbenches, most commonly with ECO.
+          -----
 
-  True Nights v03: |
-    True Nights
-        - Has an invalid Image Space Adapter (IMAD) Record that will corrupt your save memory and has to be manually fixed.
-        -----
+  - id: true-nights
+    criteria:
+      any:
+        - True Nights v03
+    name: True Nights
+    description: |
+          - Has an invalid Image Space Adapter (IMAD) Record that will corrupt your save memory and has to be manually fixed.
+          -----
 
-  WeaponsFramework: |
-    Weapons Framework Beta
-        - Will randomly cause crashes when used with Tactical Reload and possibly other weapon or combat related mods.
-          Visit Important Patches List article for possible solutions: https://www.nexusmods.com/fallout4/articles/3769
-        -----
+  - id: weapons-framework-beta
+    criteria:
+      any:
+        - WeaponsFramework
+    name: Weapons Framework Beta
+    description: |
+          - Will randomly cause crashes when used with Tactical Reload and possibly other weapon or combat related mods.
+            Visit Important Patches List article for possible solutions: https://www.nexusmods.com/fallout4/articles/3769
+          -----
 
-  WOTC: |
-    War Of The Commonwealth
-        - Seems responsible for consistent crashes with specific spawn points or random ones during settlement attacks.
-        -----
+  - id: war-of-the-commonwealth
+    criteria:
+      any:
+        - WOTC
+    name: War Of The Commonwealth
+    description: |
+          - Seems responsible for consistent crashes with specific spawn points or random ones during settlement attacks.
+          -----
 
-  NewCalibers_Modern: |
-    Modern Firearms - New Calibers Patch
-        - New Calibers Patch for this mod is outdated and can frequently crash the game. Check if there is a newer patch.
-        -----
+  - id: modern-firearms-new-calibers-patch
+    criteria:
+      any:
+        - NewCalibers_Modern
+    name: Modern Firearms - New Calibers Patch
+    description: |
+          - New Calibers Patch for this mod is outdated and can frequently crash the game. Check if there is a newer patch.
+          -----
 
 Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
   - mod_a: betterpowerarmor

@@ -16,7 +16,7 @@ use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
 use crate::gpu_detector::GpuDetector;
 use crate::mod_detector::{
-    detect_mods_double, detect_mods_important, detect_mods_single, detect_mods_solutions,
+    detect_mods_double, detect_mods_freq, detect_mods_important, detect_mods_solutions,
 };
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
@@ -237,8 +237,8 @@ pub struct AnalysisConfig {
 
     /// Structured core / important mod entries for recommended-mod checks
     pub mods_core: Vec<CoreModEntry>,
-    /// Frequently problematic mods database for crash analysis (IndexMap preserves YAML key order)
-    pub mods_freq: IndexMap<String, String>,
+    /// Structured frequently problematic mods database for crash analysis.
+    pub mods_freq: Vec<ModSolutionEntry>,
     /// Mod conflict entries for compatibility analysis
     pub mods_conf: Vec<ModConflictEntry>,
     /// Structured mod solution entries for fixes and workarounds.
@@ -311,7 +311,7 @@ impl AnalysisConfig {
             suspect_error_rules: Vec::new(),
             suspect_stack_rules: Vec::new(),
             mods_core: Vec::new(),
-            mods_freq: IndexMap::new(),
+            mods_freq: Vec::new(),
             mods_conf: Vec::new(),
             mods_solu: Vec::new(),
             classic_records_list: Vec::new(),
@@ -1334,9 +1334,7 @@ impl OrchestratorCore {
 
             // Check for frequently problematic mods
             if !self.config.mods_freq.is_empty() {
-                if let Ok(freq_lines) =
-                    detect_mods_single(self.config.mods_freq.clone(), plugins.clone())
-                {
+                if let Ok(freq_lines) = detect_mods_freq(&self.config.mods_freq, plugins) {
                     if !freq_lines.is_empty() {
                         composer.add(
                             report_gen.generate_mod_check_header("Can Cause Frequent Crashes"),
@@ -2140,7 +2138,7 @@ mod tests {
             suspect_stack_rules: Vec::new(),
             game_mods_conf: Vec::new(),
             game_mods_core: Vec::new(),
-            game_mods_freq: IndexMap::new(),
+            game_mods_freq: Vec::new(),
             game_mods_solu: Vec::new(),
             autoscan_text: String::new(),
             game_version: String::new(),

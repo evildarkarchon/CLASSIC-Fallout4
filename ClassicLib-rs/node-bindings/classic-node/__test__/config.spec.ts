@@ -89,7 +89,12 @@ Mods_CORE:
     name: Core Mod B
     description: "Core mod B"
 Mods_FREQ:
-  FreqMod: "Frequently used mod"
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
 Mods_SOLU:
   - id: solu-mod
     criteria:
@@ -429,8 +434,12 @@ describe("YamlData mod databases", () => {
     expect(data.gameModsCoreDescriptions).toEqual(["Core mod B"]);
   });
 
-  test("gameModsFreq returns correct map", () => {
-    expect(data.gameModsFreq["FreqMod"]).toBe("Frequently used mod");
+  test("gameModsFreq returns structured entries", () => {
+    expect(data.gameModsFreq).toHaveLength(1);
+    expect(data.gameModsFreq[0].id).toBe("freq-mod");
+    expect(data.gameModsFreq[0].criteria.any).toEqual(["FreqMod"]);
+    expect(data.gameModsFreq[0].name).toBe("Frequent Mod");
+    expect(data.gameModsFreq[0].description).toBe("Frequently used mod");
   });
 
   test("legacy OPC2 YAML is not exposed through YamlData", () => {

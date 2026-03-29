@@ -870,7 +870,7 @@ class AnalysisConfig:
     suspect_error_rules: list[dict[str, Any]]
     suspect_stack_rules: list[dict[str, Any]]
     mods_core: list[dict[str, str | None]]
-    mods_freq: dict[str, str]
+    mods_freq: list[dict[str, Any]]
     mods_conf: list[dict[str, str | None]]
     mods_solu: list[dict[str, Any]]
     classic_records_list: list[str]  # Named records to scan

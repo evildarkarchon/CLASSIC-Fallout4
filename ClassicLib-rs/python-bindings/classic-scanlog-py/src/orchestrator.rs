@@ -9,9 +9,8 @@ use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
     resolve_batch_concurrency,
 };
-use classic_shared::{pyany_to_indexmap_str, without_gil};
+use classic_shared::without_gil;
 use classic_shared_core::get_runtime;
-use indexmap::IndexMap;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
@@ -117,16 +116,6 @@ fn extract_vec_string_attr(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<
         .getattr(attr_name)
         .ok()
         .and_then(|attr| attr.extract::<Vec<String>>().ok())
-        .unwrap_or_default()
-}
-
-fn extract_indexmap_str_attr(
-    yamldata: &Bound<'_, PyAny>,
-    attr_name: &str,
-) -> IndexMap<String, String> {
-    yamldata
-        .getattr(attr_name)
-        .map(|attr| pyany_to_indexmap_str(&attr))
         .unwrap_or_default()
 }
 
@@ -420,7 +409,7 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> PyResult<YamlDataCore>
         suspect_stack_rules: extract_suspect_stack_rules(yamldata, "suspect_stack_rules")?,
         game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
         game_mods_core: extract_core_mod_entries(yamldata, "game_mods_core"),
-        game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
+        game_mods_freq: extract_mod_solution_entries(yamldata, "game_mods_freq"),
         game_mods_solu: extract_mod_solution_entries(yamldata, "game_mods_solu"),
         autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
         game_version: extract_string_attr(yamldata, "game_version"),
@@ -802,18 +791,74 @@ impl PyAnalysisConfig {
 
     /// Get the frequently problematic mods database
     #[getter]
-    pub fn mods_freq(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_freq {
-            dict.set_item(key, value)?;
+    pub fn mods_freq(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_freq {
+            let dict = pyo3::types::PyDict::new(py);
+            let criteria = pyo3::types::PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
     /// Set the frequently problematic mods database (preserves insertion order)
     #[setter]
     pub fn set_mods_freq(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_freq = pyany_to_indexmap_str(value);
+        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
+            self.inner.mods_freq = list
+                .iter()
+                .filter_map(|item| {
+                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria_value = dict.get_item("criteria").ok()??;
+                    let criteria_dict = criteria_value.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria = if let Some(any_values) = criteria_dict
+                        .get_item("any")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::Any(any_values)
+                    } else if let Some(all_values) = criteria_dict
+                        .get_item("all")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::All(all_values)
+                    } else {
+                        return None;
+                    };
+
+                    Some(ModSolutionEntry {
+                        id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                        criteria,
+                        exceptions: dict
+                            .get_item("exceptions")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<Vec<String>>().ok())
+                            .unwrap_or_default(),
+                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                        description: dict
+                            .get_item("description")
+                            .ok()??
+                            .extract::<String>()
+                            .ok()?,
+                    })
+                })
+                .collect();
+        }
     }
 
     /// Get the mod conflicts database as a list of dicts

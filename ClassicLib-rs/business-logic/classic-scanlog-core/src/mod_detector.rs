@@ -212,8 +212,7 @@ pub fn detect_mods_single(
     Ok(lines)
 }
 
-/// Detect structured `Mods_SOLU` entries against the installed plugin list.
-pub(crate) fn detect_mods_solutions(
+fn detect_structured_mod_entries(
     entries: &[ModSolutionEntry],
     crashlog_plugins: &IndexMap<String, String>,
 ) -> Result<Vec<String>> {
@@ -319,6 +318,22 @@ pub(crate) fn detect_mods_solutions(
     }
 
     Ok(lines)
+}
+
+/// Detect structured `Mods_FREQ` entries against the installed plugin list.
+pub(crate) fn detect_mods_freq(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    detect_structured_mod_entries(entries, crashlog_plugins)
+}
+
+/// Detect structured `Mods_SOLU` entries against the installed plugin list.
+pub(crate) fn detect_mods_solutions(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    detect_structured_mod_entries(entries, crashlog_plugins)
 }
 
 /// Detects conflicting mod combinations where two specific mods cause problems together.
@@ -737,6 +752,7 @@ pub fn detect_mods_batch(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
 
     // ============================================
     // Helper function tests
@@ -877,6 +893,58 @@ mod tests {
         let output = result.join("");
         // The longer pattern should match
         assert!(output.contains("Mod Extended") || output.contains("modextended"));
+    }
+
+    #[test]
+    fn test_detect_mods_freq_any_match() {
+        let entries = vec![make_solution_entry(
+            "freq-test",
+            ModSolutionCriteria::Any(vec!["FreqMod".to_string(), "FallbackToken".to_string()]),
+            vec![],
+            "Frequent Mod",
+            "This mod can frequently crash the game.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("FreqMod.esp".to_string(), "06".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [06] Frequent Mod"));
+        assert!(output.contains("frequently crash the game"));
+    }
+
+    #[test]
+    fn test_detect_mods_freq_all_requires_every_criterion() {
+        let entries = vec![make_solution_entry(
+            "freq-all",
+            ModSolutionCriteria::All(vec!["LooksMenu".to_string(), "CBBE".to_string()]),
+            vec![],
+            "Combined Setup",
+            "Only report when both mods are installed.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("LooksMenu.esp".to_string(), "07".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_freq_exception_suppresses_match() {
+        let entries = vec![make_solution_entry(
+            "freq-exception",
+            ModSolutionCriteria::Any(vec!["ProblematicMod".to_string()]),
+            vec!["PatchForProblematicMod"],
+            "Problematic Mod",
+            "Skip this warning when the patch is installed.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("ProblematicMod.esp".to_string(), "08".to_string());
+        plugins.insert("PatchForProblematicMod.esp".to_string(), "09".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
     }
 
     // ============================================

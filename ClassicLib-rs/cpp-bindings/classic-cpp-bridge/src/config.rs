@@ -203,12 +203,35 @@ fn yaml_data_mods_core_count(data: &YamlData) -> usize {
     data.inner.game_mods_core.len()
 }
 
-fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_freq.keys().cloned().collect()
+fn yaml_data_mod_entry(
+    entry: &classic_config_core::ModSolutionEntry,
+) -> ffi::YamlDataModSolutionEntry {
+    let criteria = match &entry.criteria {
+        ModSolutionCriteria::Any(values) => ffi::YamlDataModSolutionCriteria {
+            any: values.clone(),
+            all: Vec::new(),
+        },
+        ModSolutionCriteria::All(values) => ffi::YamlDataModSolutionCriteria {
+            any: Vec::new(),
+            all: values.clone(),
+        },
+    };
+
+    ffi::YamlDataModSolutionEntry {
+        id: entry.id.clone(),
+        criteria,
+        exceptions: entry.exceptions.clone(),
+        name: entry.name.clone(),
+        description: entry.description.clone(),
+    }
 }
 
-fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_freq.values().cloned().collect()
+fn yaml_data_mods_freq_entries(data: &YamlData) -> Vec<ffi::YamlDataModSolutionEntry> {
+    data.inner
+        .game_mods_freq
+        .iter()
+        .map(yaml_data_mod_entry)
+        .collect()
 }
 
 fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String> {
@@ -275,26 +298,7 @@ fn yaml_data_mods_solu_entries(data: &YamlData) -> Vec<ffi::YamlDataModSolutionE
     data.inner
         .game_mods_solu
         .iter()
-        .map(|entry| {
-            let criteria = match &entry.criteria {
-                ModSolutionCriteria::Any(values) => ffi::YamlDataModSolutionCriteria {
-                    any: values.clone(),
-                    all: Vec::new(),
-                },
-                ModSolutionCriteria::All(values) => ffi::YamlDataModSolutionCriteria {
-                    any: Vec::new(),
-                    all: values.clone(),
-                },
-            };
-
-            ffi::YamlDataModSolutionEntry {
-                id: entry.id.clone(),
-                criteria,
-                exceptions: entry.exceptions.clone(),
-                name: entry.name.clone(),
-                description: entry.description.clone(),
-            }
-        })
+        .map(yaml_data_mod_entry)
         .collect()
 }
 
@@ -364,8 +368,7 @@ mod ffi {
         fn yaml_data_mods_core_names(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_core_gpus(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_core_count(data: &YamlData) -> usize;
-        fn yaml_data_mods_freq_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_freq_values(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_freq_entries(data: &YamlData) -> Vec<YamlDataModSolutionEntry>;
         fn yaml_data_mods_conf_mod_a(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_mod_b(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_name_a(data: &YamlData) -> Vec<String>;
@@ -405,6 +408,7 @@ mod tests {
             assert!(!yaml_data_xse_acronym(&data).is_empty());
             assert!(!yaml_data_crashgen_name_field(&data).is_empty());
             assert!(!yaml_data_game_version(&data).is_empty());
+            assert!(!yaml_data_mods_freq_entries(&data).is_empty());
             assert!(!yaml_data_mods_solu_entries(&data).is_empty());
 
             let name = yaml_data_get_crashgen_name(&data);

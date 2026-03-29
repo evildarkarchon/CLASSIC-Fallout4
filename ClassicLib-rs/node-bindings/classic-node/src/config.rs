@@ -462,11 +462,11 @@ impl YamlData {
 
     /// Frequently problematic mods database.
     #[napi(getter)]
-    pub fn game_mods_freq(&self) -> HashMap<String, String> {
+    pub fn game_mods_freq(&self) -> Vec<JsModSolutionEntry> {
         self.inner
             .game_mods_freq
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsModSolutionEntry::from)
             .collect()
     }
 

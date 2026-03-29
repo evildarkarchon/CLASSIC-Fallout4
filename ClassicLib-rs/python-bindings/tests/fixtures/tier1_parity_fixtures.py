@@ -28,7 +28,7 @@ Crashlog_Stack_Check: []
 Mods_CONF: []
 Mods_CORE: {}
 Mods_CORE_FOLON: {}
-Mods_FREQ: {}
+Mods_FREQ: []
 Mods_SOLU: []
 """
 

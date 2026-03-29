@@ -211,11 +211,12 @@ class YamlData:
         """
 
     @property
-    def game_mods_freq(self) -> dict[str, Any]:
+    def game_mods_freq(self) -> list[dict[str, Any]]:
         """Frequently problematic mods configuration.
 
         Returns:
-            Dictionary mapping mod names to detection patterns
+            List of structured mod entries with `id`, `criteria`, `exceptions`, `name`,
+            and `description`
 
         """
 

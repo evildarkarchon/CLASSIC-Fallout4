@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-03-29T02:51:17.511022+00:00`
+- Generated: `2026-03-29T07:57:15.928140+00:00`
 - Tier-1 contract rows: **261**
 - Tier-1 matched: **261**
 - Tier-1 missing Rust: **0**

@@ -1,12 +1,38 @@
 //! Python bindings for FormIDAnalyzerCore - Thin wrapper over classic-scanlog-core
 
 use crate::core_mod_convert::exclude_when_from_pydict;
-use classic_config_core::{CoreModEntry, ModConflictEntry};
+use classic_config_core::{CoreModEntry, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry};
 use classic_scanlog_core::FormIDAnalyzerCore;
 use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList};
+
+fn legacy_mod_map_to_entries(
+    mods_single_map: indexmap::IndexMap<String, String>,
+) -> Vec<ModSolutionEntry> {
+    mods_single_map
+        .into_iter()
+        .map(|(key, value)| {
+            let mut lines = value.lines();
+            let name = lines
+                .next()
+                .map(str::trim)
+                .filter(|line| !line.is_empty())
+                .unwrap_or(&key)
+                .to_string();
+            let description = lines.collect::<Vec<_>>().join("\n");
+
+            ModSolutionEntry {
+                id: key.to_lowercase(),
+                criteria: ModSolutionCriteria::Any(vec![key]),
+                exceptions: Vec::new(),
+                name,
+                description,
+            }
+        })
+        .collect()
+}
 
 /// Python wrapper for FormIDAnalyzerCore
 #[pyclass(name = "FormIDAnalyzerCore")]
@@ -72,7 +98,8 @@ impl PyFormIDAnalyzerCore {
                     .collect()
             })
             .unwrap_or_default();
-        let mods_single_map = pydict_to_indexmap_str_optional(mods_single);
+        let mods_single_entries =
+            legacy_mod_map_to_entries(pydict_to_indexmap_str_optional(mods_single));
         let mods_double_vec: Vec<ModConflictEntry> = mods_double
             .and_then(|v| v.cast::<PyList>().ok())
             .map(|list| {
@@ -105,7 +132,7 @@ impl PyFormIDAnalyzerCore {
             show_formid_values,
             crashgen_name,
             important_mods_entries,
-            mods_single_map,
+            mods_single_entries,
             mods_double_vec,
         )
         .map_err(crate::to_pyerr)?;

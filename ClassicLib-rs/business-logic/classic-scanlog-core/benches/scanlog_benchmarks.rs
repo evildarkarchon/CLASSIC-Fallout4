@@ -182,7 +182,7 @@ fn formid_extraction_benchmarks(c: &mut Criterion) {
                     false,
                     "Buffout 4".to_string(),
                     Vec::new(),
-                    IndexMap::new(),
+                    Vec::new(),
                     Vec::new(),
                 )
                 .expect("analyzer creation should succeed");
@@ -234,7 +234,7 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
         true, // show_formid_values=true to force DB-backed value resolution path
         "Buffout 4".to_string(),
         Vec::new(),
-        IndexMap::new(),
+        Vec::new(),
         Vec::new(),
     )
     .expect("analyzer creation should succeed");
@@ -488,7 +488,7 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
                     false,
                     "Buffout 4".to_string(),
                     Vec::new(),
-                    IndexMap::new(),
+                    Vec::new(),
                     Vec::new(),
                 )
                 .expect("analyzer creation should succeed");
@@ -547,7 +547,7 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
                 false,
                 "Buffout 4".to_string(),
                 Vec::new(),
-                IndexMap::new(),
+                Vec::new(),
                 Vec::new(),
             )
             .expect("should succeed")

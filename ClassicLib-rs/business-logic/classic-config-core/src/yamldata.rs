@@ -16,7 +16,6 @@ use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
 use classic_yaml_core::YamlOperations;
-use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use yaml_rust2::Yaml;
@@ -82,7 +81,7 @@ pub struct CoreModEntry {
     pub exclude_when: Option<CoreModExclude>,
 }
 
-/// Grouped match criteria for a structured `Mods_SOLU` entry.
+/// Grouped match criteria for a structured mod entry.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ModSolutionCriteria {
     /// Match when any listed substring appears in installed plugin filenames.
@@ -100,7 +99,7 @@ impl ModSolutionCriteria {
     }
 }
 
-/// A structured entry from the `Mods_SOLU` YAML section.
+/// A structured entry from a structured mod YAML section.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModSolutionEntry {
     /// Stable machine-readable identifier for the entry.
@@ -730,13 +729,36 @@ fn parse_mods_core(game_data: &Yaml) -> Vec<CoreModEntry> {
     result
 }
 
-/// Parse the `Mods_SOLU` YAML section into a `Vec<ModSolutionEntry>`.
-///
-/// Expects a YAML sequence of mappings, each with `id`, `criteria`, `name`, and
-/// `description` (required), plus optional `exceptions`.
-fn parse_mods_solu(game_data: &Yaml) -> Vec<ModSolutionEntry> {
-    let Some(entries) = game_data["Mods_SOLU"].as_vec() else {
-        return Vec::new();
+fn parse_structured_section_entries<'a>(
+    game_data: &'a Yaml,
+    section_name: &'static str,
+) -> Result<Option<&'a [Yaml]>, ConfigError> {
+    let section = &game_data[section_name];
+    match section {
+        Yaml::BadValue | Yaml::Null => Ok(None),
+        Yaml::Array(entries) => Ok(Some(entries.as_slice())),
+        Yaml::Hash(_) => Err(ConfigError::ParseError {
+            context: "Failed to parse game YAML".to_string(),
+            message: format!(
+                "{section_name} uses retired legacy map format; expected a YAML sequence of structured entries"
+            ),
+        }),
+        other => Err(ConfigError::ParseError {
+            context: "Failed to parse game YAML".to_string(),
+            message: format!(
+                "{section_name} must be a YAML sequence of structured entries, found {}",
+                yaml_node_kind(other)
+            ),
+        }),
+    }
+}
+
+fn parse_mod_check_entries(
+    game_data: &Yaml,
+    section_name: &'static str,
+) -> Result<Vec<ModSolutionEntry>, ConfigError> {
+    let Some(entries) = parse_structured_section_entries(game_data, section_name)? else {
+        return Ok(Vec::new());
     };
 
     let mut result = Vec::with_capacity(entries.len());
@@ -744,7 +766,8 @@ fn parse_mods_solu(game_data: &Yaml) -> Vec<ModSolutionEntry> {
     for (index, entry_yaml) in entries.iter().enumerate() {
         let Some(map) = entry_yaml.as_hash() else {
             log::debug!(
-                "Skipping Mods_SOLU[{}]: expected mapping, got {:?}",
+                "Skipping {}[{}]: expected mapping, got {:?}",
+                section_name,
                 index,
                 entry_yaml
             );
@@ -775,7 +798,8 @@ fn parse_mods_solu(game_data: &Yaml) -> Vec<ModSolutionEntry> {
             (Some(id), Some(name), Some(description)) => (id, name, description),
             _ => {
                 log::debug!(
-                    "Skipping Mods_SOLU[{}]: missing required field(s) (id, name, description)",
+                    "Skipping {}[{}]: missing required field(s) (id, name, description)",
+                    section_name,
                     index
                 );
                 continue;
@@ -807,7 +831,8 @@ fn parse_mods_solu(game_data: &Yaml) -> Vec<ModSolutionEntry> {
 
         let Some(criteria) = criteria else {
             log::debug!(
-                "Skipping Mods_SOLU[{}]: criteria must define exactly one non-empty group (`any` or `all`)",
+                "Skipping {}[{}]: criteria must define exactly one non-empty group (`any` or `all`)",
+                section_name,
                 index
             );
             continue;
@@ -828,7 +853,17 @@ fn parse_mods_solu(game_data: &Yaml) -> Vec<ModSolutionEntry> {
         });
     }
 
-    result
+    Ok(result)
+}
+
+/// Parse the `Mods_FREQ` YAML section into a structured `Vec<ModSolutionEntry>`.
+fn parse_mods_freq(game_data: &Yaml) -> Result<Vec<ModSolutionEntry>, ConfigError> {
+    parse_mod_check_entries(game_data, "Mods_FREQ")
+}
+
+/// Parse the `Mods_SOLU` YAML section into a `Vec<ModSolutionEntry>`.
+fn parse_mods_solu(game_data: &Yaml) -> Result<Vec<ModSolutionEntry>, ConfigError> {
+    parse_mod_check_entries(game_data, "Mods_SOLU")
 }
 
 fn normalize_registry_key(value: &str) -> String {
@@ -1459,7 +1494,7 @@ Crashgen_Registry:
 ///
 /// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
 /// * `game_mods_core` - A `Vec<CoreModEntry>` of structured core/important mod entries from `Mods_CORE`.
-/// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
+/// * `game_mods_freq` - A `Vec<ModSolutionEntry>` of structured frequent-crash mod entries.
 /// * `game_mods_solu` - A `Vec<ModSolutionEntry>` of structured solution-related mod entries.
 ///
 /// * `autoscan_text` - A `String` defining the text used in the "autoscan" UI component.
@@ -1540,8 +1575,8 @@ pub struct YamlDataCore {
     pub game_mods_conf: Vec<ModConflictEntry>,
     /// Core / important mod entries parsed from `Mods_CORE` (structured sequence)
     pub game_mods_core: Vec<CoreModEntry>,
-    /// Frequently used game mod entries
-    pub game_mods_freq: IndexMap<String, String>,
+    /// Frequent-crash game mod entries parsed from `Mods_FREQ` (structured sequence)
+    pub game_mods_freq: Vec<ModSolutionEntry>,
     /// Solution-related game mod entries parsed from `Mods_SOLU` (structured sequence)
     pub game_mods_solu: Vec<ModSolutionEntry>,
 
@@ -1647,8 +1682,8 @@ impl YamlDataCore {
             suspect_stack_rules: parse_suspect_stack_rules(game_data)?,
             game_mods_conf: parse_mods_conf(game_data),
             game_mods_core: parse_mods_core(game_data),
-            game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
-            game_mods_solu: parse_mods_solu(game_data),
+            game_mods_freq: parse_mods_freq(game_data)?,
+            game_mods_solu: parse_mods_solu(game_data)?,
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
 
             // Ignore YAML values
@@ -2006,7 +2041,12 @@ Mods_CORE:
     exclude_when:
       plugin_any: [SomeWorldspace.esm]
 Mods_FREQ:
-  FreqMod: "Frequently used mod"
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
 Mods_SOLU:
   - id: solu-mod
     criteria:
@@ -2290,10 +2330,15 @@ CLASSIC_Ignore_Skyrim:
                 "SomeWorldspace.esm".to_string()
             ]))
         );
+        assert_eq!(config.game_mods_freq.len(), 1);
+        assert_eq!(config.game_mods_freq[0].id, "freq-mod");
+        assert_eq!(config.game_mods_freq[0].name, "Frequent Mod");
+        assert_eq!(config.game_mods_freq[0].description, "Frequently used mod");
         assert_eq!(
-            config.game_mods_freq.get("FreqMod"),
-            Some(&"Frequently used mod".to_string())
+            config.game_mods_freq[0].criteria,
+            ModSolutionCriteria::Any(vec!["FreqMod".to_string()])
         );
+        assert!(config.game_mods_freq[0].exceptions.is_empty());
         assert_eq!(config.game_mods_solu.len(), 1);
         assert_eq!(config.game_mods_solu[0].id, "solu-mod");
         assert_eq!(config.game_mods_solu[0].name, "Solution Mod");
@@ -2366,6 +2411,44 @@ CLASSIC_Ignore_Skyrim:
             first < second,
             "Mods_SOLU entry order should follow YAML order"
         );
+    }
+
+    #[test]
+    fn test_from_yaml_content_rejects_legacy_mods_freq_map_format() {
+        let legacy_game_yaml = minimal_game_yaml().replacen(
+            r#"Mods_FREQ:
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
+"#,
+            r#"Mods_FREQ:
+  FreqMod: "Frequently used mod"
+"#,
+            1,
+        );
+
+        let result = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            &legacy_game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, ConfigError::ParseError { .. }));
+        match err {
+            ConfigError::ParseError { context, message } => {
+                assert!(context.to_lowercase().contains("game yaml"));
+                assert!(message.contains("Mods_FREQ"));
+                assert!(message.to_lowercase().contains("legacy map format"));
+            }
+            _ => panic!("Expected ParseError"),
+        }
     }
 
     #[test]

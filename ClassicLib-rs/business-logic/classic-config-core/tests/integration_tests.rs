@@ -89,7 +89,12 @@ Mods_CORE:
     name: Core Mod B
     description: "Core mod B"
 Mods_FREQ:
-  FreqMod: "Frequently used mod"
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
 Mods_SOLU:
   - id: solu-mod
     criteria:
@@ -440,10 +445,10 @@ mod from_content_workflows {
         assert_eq!(config.game_mods_core[0].detect, "ModB");
         assert_eq!(config.game_mods_core[0].name, "Core Mod B");
         assert_eq!(config.game_mods_core[0].description, "Core mod B");
-        assert_eq!(
-            config.game_mods_freq.get("FreqMod"),
-            Some(&"Frequently used mod".to_string())
-        );
+        assert_eq!(config.game_mods_freq.len(), 1);
+        assert_eq!(config.game_mods_freq[0].id, "freq-mod");
+        assert_eq!(config.game_mods_freq[0].name, "Frequent Mod");
+        assert_eq!(config.game_mods_freq[0].description, "Frequently used mod");
         assert_eq!(config.game_mods_solu.len(), 1);
         assert_eq!(config.game_mods_solu[0].id, "solu-mod");
         assert_eq!(config.game_mods_solu[0].name, "Solution Mod");

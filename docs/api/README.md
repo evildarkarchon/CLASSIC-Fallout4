@@ -2,7 +2,7 @@
 
 Contributor-facing API guides for active Rust business-logic crates live here.
 
-Current contract note: `Mods_SOLU` is now documented as a structured ordered sequence across config, scanlog, and binding-facing surfaces rather than a key/value map.
+Current contract note: `Mods_FREQ` and `Mods_SOLU` are now documented as structured ordered sequences across config, scanlog, and binding-facing surfaces rather than key/value maps.
 
 Use this directory in this order:
 

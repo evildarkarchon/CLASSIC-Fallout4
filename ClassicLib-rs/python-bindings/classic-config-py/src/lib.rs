@@ -31,7 +31,7 @@
 //!
 //! # Access mod detection databases
 //! core_mods = yamldata.game_mods_core  # Essential mods
-//! freq_mods = yamldata.game_mods_freq  # Frequently problematic mods
+//! freq_mods = yamldata.game_mods_freq  # Frequently problematic structured mod entries
 //! conf_mods = yamldata.game_mods_conf  # Conflicting mod pairs
 //! solu_mods = yamldata.game_mods_solu  # Solution mods
 //!
@@ -974,12 +974,23 @@ impl PyYamlData {
     }
 
     #[getter]
-    fn game_mods_freq(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_freq {
-            dict.set_item(k, v)?;
+    fn game_mods_freq(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for entry in &self.inner.game_mods_freq {
+            let dict = PyDict::new(py);
+            let criteria = PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]
