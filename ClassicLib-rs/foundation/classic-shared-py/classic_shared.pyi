@@ -161,7 +161,9 @@ class PathHandler:
 
         """
 
-    def validate_paths_batch_fast(self, paths: list[str]) -> list[tuple[str, bool, str]]:
+    def validate_paths_batch_fast(
+        self, paths: list[str]
+    ) -> list[tuple[str, bool, str]]:
         """Validate multiple paths in batch (zero-copy optimization).
 
         Args:
@@ -370,7 +372,9 @@ class RustPerformanceMonitor:
 
         """
 
-    def stop_timer(self, timer_info: dict[str, object], bytes_processed: int | None = None) -> None:
+    def stop_timer(
+        self, timer_info: dict[str, object], bytes_processed: int | None = None
+    ) -> None:
         """Stop timing an operation and record metrics.
 
         Args:

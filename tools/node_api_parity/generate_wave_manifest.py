@@ -122,12 +122,18 @@ def classify_aux_subwave(entry_name: str) -> tuple[str, str]:
     return "wave4.3", "fallback:residual"
 
 
-def parse_handoff_map(markdown_text: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def parse_handoff_map(
+    markdown_text: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Parse `handoff_map.md` into normalized structured rows."""
     generated_match = re.search(r"- Generated:\s*`([^`]+)`", markdown_text)
-    declared_total_match = re.search(r"- Total gaps handed off:\s*\*\*(\d+)\*\*", markdown_text)
+    declared_total_match = re.search(
+        r"- Total gaps handed off:\s*\*\*(\d+)\*\*", markdown_text
+    )
     generated_at = generated_match.group(1) if generated_match else None
-    declared_total = int(declared_total_match.group(1)) if declared_total_match else None
+    declared_total = (
+        int(declared_total_match.group(1)) if declared_total_match else None
+    )
 
     current_module: str | None = None
     in_gap_table = False
@@ -158,11 +164,15 @@ def parse_handoff_map(markdown_text: str) -> tuple[list[dict[str, Any]], dict[st
             in_gap_table = False
             continue
         if current_module is None:
-            raise ValueError("Encountered gap row before module heading in handoff_map.md.")
+            raise ValueError(
+                "Encountered gap row before module heading in handoff_map.md."
+            )
 
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         if len(cells) != 4:
-            raise ValueError(f"Expected 4 cells in handoff_map row, got {len(cells)}: {line}")
+            raise ValueError(
+                f"Expected 4 cells in handoff_map row, got {len(cells)}: {line}"
+            )
 
         gap_type = clean_cell(cells[0])
         tier = clean_cell(cells[1])
@@ -223,7 +233,9 @@ def enrich_with_wave_membership(rows: list[dict[str, Any]]) -> list[dict[str, An
     return enriched
 
 
-def validate_baseline(rows: list[dict[str, Any]], declared_total_gaps: int | None) -> dict[str, Any]:
+def validate_baseline(
+    rows: list[dict[str, Any]], declared_total_gaps: int | None
+) -> dict[str, Any]:
     """Validate expected Phase 0 baseline invariants."""
     module_counts: dict[str, int] = defaultdict(int)
     tier_counts: dict[str, int] = defaultdict(int)
@@ -241,14 +253,20 @@ def validate_baseline(rows: list[dict[str, Any]], declared_total_gaps: int | Non
     errors: list[str] = []
 
     if declared_total_gaps is not None and declared_total_gaps != actual_total:
-        errors.append(f"Declared handoff total {declared_total_gaps} does not match parsed total {actual_total}.")
+        errors.append(
+            f"Declared handoff total {declared_total_gaps} does not match parsed total {actual_total}."
+        )
     if actual_total != EXPECTED_TOTAL_GAPS:
-        errors.append(f"Expected total gaps {EXPECTED_TOTAL_GAPS}, found {actual_total}.")
+        errors.append(
+            f"Expected total gaps {EXPECTED_TOTAL_GAPS}, found {actual_total}."
+        )
 
     for owner_module, expected_count in EXPECTED_MODULE_COUNTS.items():
         actual_count = module_counts.get(owner_module, 0)
         if actual_count != expected_count:
-            errors.append(f"Expected {expected_count} gaps for {owner_module}, found {actual_count}.")
+            errors.append(
+                f"Expected {expected_count} gaps for {owner_module}, found {actual_count}."
+            )
 
     if set(module_counts.keys()) != set(EXPECTED_MODULE_COUNTS.keys()):
         errors.append(f"Unexpected module set: {sorted(module_counts.keys())}")
@@ -284,7 +302,9 @@ def build_manifest_payload(
             "handoff_map_path": str(source_path).replace("\\", "/"),
             "handoff_map_sha256": sha256,
             "handoff_generated_at": handoff_metadata.get("handoff_generated_at"),
-            "handoff_declared_total_gaps": handoff_metadata.get("handoff_declared_total_gaps"),
+            "handoff_declared_total_gaps": handoff_metadata.get(
+                "handoff_declared_total_gaps"
+            ),
         },
         "phase0": {
             "objective": "Lock 315-item Tier-2 baseline and exact wave/subwave membership.",
@@ -299,12 +319,16 @@ def build_manifest_payload(
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     """Write stable JSON output."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> int:
     """CLI entrypoint."""
-    parser = argparse.ArgumentParser(description="Generate wave/subwave manifest from handoff_map.md.")
+    parser = argparse.ArgumentParser(
+        description="Generate wave/subwave manifest from handoff_map.md."
+    )
     parser.add_argument(
         "--repo-root",
         default=str(Path(__file__).resolve().parents[2]),
@@ -329,9 +353,13 @@ def main() -> int:
     markdown_text = handoff_map_path.read_text(encoding="utf-8")
     parsed_rows, handoff_metadata = parse_handoff_map(markdown_text)
     enriched_rows = enrich_with_wave_membership(parsed_rows)
-    validation = validate_baseline(enriched_rows, handoff_metadata.get("handoff_declared_total_gaps"))
+    validation = validate_baseline(
+        enriched_rows, handoff_metadata.get("handoff_declared_total_gaps")
+    )
 
-    manifest_payload = build_manifest_payload(enriched_rows, handoff_map_path, handoff_metadata, validation)
+    manifest_payload = build_manifest_payload(
+        enriched_rows, handoff_map_path, handoff_metadata, validation
+    )
     write_json(output_path, manifest_payload)
 
     print(f"- {output_path}")

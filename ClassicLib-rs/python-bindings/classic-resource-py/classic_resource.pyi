@@ -159,7 +159,9 @@ def parse_resource_type(type_name: str) -> ResourceType:
 
     """
 
-def enumerate_resources(root: str, filter_type: ResourceType | None = None) -> list[ResourceInfo]:
+def enumerate_resources(
+    root: str, filter_type: ResourceType | None = None
+) -> list[ResourceInfo]:
     """Enumerate resources in a directory.
 
     Recursively walks the directory tree and collects information about

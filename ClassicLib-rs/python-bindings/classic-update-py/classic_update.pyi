@@ -158,7 +158,9 @@ class GithubClient:
 
         """
 
-    async def get_all_releases(self, include_prereleases: bool = False, include_drafts: bool = False) -> list[GithubRelease]:
+    async def get_all_releases(
+        self, include_prereleases: bool = False, include_drafts: bool = False
+    ) -> list[GithubRelease]:
         """Get all releases from GitHub.
 
         Args:
