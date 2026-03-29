@@ -220,11 +220,12 @@ class YamlData:
         """
 
     @property
-    def game_mods_solu(self) -> dict[str, Any]:
+    def game_mods_solu(self) -> list[dict[str, Any]]:
         """Solution/fix mods configuration.
 
         Returns:
-            Dictionary mapping solution mod names to detection patterns
+            Ordered list of dicts with keys:
+                id, criteria, exceptions, name, description
 
         """
 

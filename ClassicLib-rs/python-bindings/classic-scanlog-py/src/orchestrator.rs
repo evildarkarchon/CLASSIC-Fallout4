@@ -1,8 +1,8 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_config_core::{
-    CoreModEntry, CrashgenEntryRaw, ModConflictEntry, SuspectErrorRule, SuspectStackCountRule,
-    SuspectStackRule, YamlDataCore,
+    CoreModEntry, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
+    SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore,
 };
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
@@ -336,6 +336,61 @@ fn extract_core_mod_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec
         .collect()
 }
 
+fn extract_mod_solution_entries(
+    yamldata: &Bound<'_, PyAny>,
+    attr_name: &str,
+) -> Vec<ModSolutionEntry> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Vec::new();
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            let criteria_value = dict.get_item("criteria").ok()??;
+            let criteria_dict = criteria_value.cast::<PyDict>().ok()?;
+            let criteria = if let Some(any_values) = criteria_dict
+                .get_item("any")
+                .ok()
+                .flatten()
+                .and_then(|v| v.extract::<Vec<String>>().ok())
+                .filter(|values| !values.is_empty())
+            {
+                ModSolutionCriteria::Any(any_values)
+            } else if let Some(all_values) = criteria_dict
+                .get_item("all")
+                .ok()
+                .flatten()
+                .and_then(|v| v.extract::<Vec<String>>().ok())
+                .filter(|values| !values.is_empty())
+            {
+                ModSolutionCriteria::All(all_values)
+            } else {
+                return None;
+            };
+
+            Some(ModSolutionEntry {
+                id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                criteria,
+                exceptions: dict
+                    .get_item("exceptions")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<Vec<String>>().ok())
+                    .unwrap_or_default(),
+                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+            })
+        })
+        .collect()
+}
+
 fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> PyResult<YamlDataCore> {
     let crashgen_registry = yamldata
         .getattr("crashgen_registry")
@@ -366,7 +421,7 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> PyResult<YamlDataCore>
         game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
         game_mods_core: extract_core_mod_entries(yamldata, "game_mods_core"),
         game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
-        game_mods_solu: extract_indexmap_str_attr(yamldata, "game_mods_solu"),
+        game_mods_solu: extract_mod_solution_entries(yamldata, "game_mods_solu"),
         autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
         game_version: extract_string_attr(yamldata, "game_version"),
         game_root_name: extract_string_attr(yamldata, "game_root_name"),
@@ -813,18 +868,76 @@ impl PyAnalysisConfig {
 
     /// Get the mod solutions database
     #[getter]
-    pub fn mods_solu(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_solu {
-            dict.set_item(key, value)?;
+    pub fn mods_solu(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_solu {
+            let dict = pyo3::types::PyDict::new(py);
+            let criteria = pyo3::types::PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
     /// Set the mod solutions database (preserves insertion order)
     #[setter]
     pub fn set_mods_solu(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_solu = pyany_to_indexmap_str(value);
+        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
+            self.inner.mods_solu = list
+                .iter()
+                .filter_map(|item| {
+                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria_value = dict.get_item("criteria").ok()??;
+                    let criteria_dict = criteria_value.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria = if let Some(any_values) = criteria_dict
+                        .get_item("any")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::Any(any_values)
+                    } else if let Some(all_values) = criteria_dict
+                        .get_item("all")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::All(all_values)
+                    } else {
+                        return None;
+                    };
+
+                    Some(ModSolutionEntry {
+                        id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                        criteria,
+                        exceptions: dict
+                            .get_item("exceptions")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<Vec<String>>().ok())
+                            .unwrap_or_default(),
+                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                        description: dict
+                            .get_item("description")
+                            .ok()??
+                            .extract::<String>()
+                            .ok()?,
+                    })
+                })
+                .collect();
+        } else {
+            self.inner.mods_solu = Vec::new();
+        }
     }
 
     // ============================================================================

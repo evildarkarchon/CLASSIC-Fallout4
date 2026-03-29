@@ -80,8 +80,8 @@
 //! ```
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, PathConfig as CorePathConfig,
-    YamlDataCore, YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, ModSolutionCriteria,
+    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_crashgen_settings_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
@@ -983,12 +983,23 @@ impl PyYamlData {
     }
 
     #[getter]
-    fn game_mods_solu(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_solu {
-            dict.set_item(k, v)?;
+    fn game_mods_solu(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for entry in &self.inner.game_mods_solu {
+            let dict = PyDict::new(py);
+            let criteria = PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     // ========================================================================

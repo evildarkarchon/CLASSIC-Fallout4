@@ -91,7 +91,12 @@ Mods_CORE:
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_SOLU:
-  SoluMod: "Solution mod"
+  - id: solu-mod
+    criteria:
+      any:
+        - SoluMod
+    name: Solution Mod
+    description: "Solution mod"
 "#
 }
 
@@ -439,10 +444,10 @@ mod from_content_workflows {
             config.game_mods_freq.get("FreqMod"),
             Some(&"Frequently used mod".to_string())
         );
-        assert_eq!(
-            config.game_mods_solu.get("SoluMod"),
-            Some(&"Solution mod".to_string())
-        );
+        assert_eq!(config.game_mods_solu.len(), 1);
+        assert_eq!(config.game_mods_solu[0].id, "solu-mod");
+        assert_eq!(config.game_mods_solu[0].name, "Solution Mod");
+        assert_eq!(config.game_mods_solu[0].description, "Solution mod");
     }
 }
 

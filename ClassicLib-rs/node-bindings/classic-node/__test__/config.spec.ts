@@ -91,7 +91,12 @@ Mods_CORE:
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_SOLU:
-  SoluMod: "Solution mod"
+  - id: solu-mod
+    criteria:
+      any:
+        - SoluMod
+    name: Solution Mod
+    description: "Solution mod"
 `;
 
 const IGNORE_YAML = `
@@ -432,8 +437,14 @@ describe("YamlData mod databases", () => {
     expect("gameModsOpc2" in data).toBe(false);
   });
 
-  test("gameModsSolu returns correct map", () => {
-    expect(data.gameModsSolu["SoluMod"]).toBe("Solution mod");
+  test("gameModsSolu returns structured entries", () => {
+    expect(data.gameModsSolu).toHaveLength(1);
+    expect(data.gameModsSolu[0].id).toBe("solu-mod");
+    expect(data.gameModsSolu[0].criteria.any).toEqual(["SoluMod"]);
+    expect(data.gameModsSolu[0].criteria.all).toBeUndefined();
+    expect(data.gameModsSolu[0].exceptions).toEqual([]);
+    expect(data.gameModsSolu[0].name).toBe("Solution Mod");
+    expect(data.gameModsSolu[0].description).toBe("Solution mod");
   });
 });
 

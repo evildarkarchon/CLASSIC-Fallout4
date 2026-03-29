@@ -139,12 +139,13 @@ Forwarding notes:
 - `yaml_data_get_crashgen_name()` and `yaml_data_get_game_root_name()` forward through `YamlDataCore` helper methods
 - `yaml_data_get_crashgen_ignore()` forwards through `YamlDataCore::get_crashgen_ignore()`
 
-### Flattened getters
+### Flattened and structured getters
 
-These functions flatten selected YAML-backed fields into vectors because the bridge does not share richer Rust types across modules:
+These functions flatten selected YAML-backed fields into vectors where needed, while `Mods_SOLU` now crosses the bridge as an explicit shared struct sequence:
 
 - suspect rule ids and names: `yaml_data_suspects_error_keys()` and `yaml_data_suspects_error_values()`
-- mods maps: `yaml_data_mods_core_*` (structured), `yaml_data_mods_freq_*`, `yaml_data_mods_solu_*`
+- mods maps: `yaml_data_mods_core_*` (structured), `yaml_data_mods_freq_*`
+- structured solution entries: `yaml_data_mods_solu_entries()` returns ordered `YamlDataModSolutionEntry` values with `id`, grouped `criteria`, `exceptions`, `name`, and `description`
 - mod conflict entries (structured): `yaml_data_mods_conf_mod_a()`, `yaml_data_mods_conf_mod_b()`, `yaml_data_mods_conf_name_a()`, `yaml_data_mods_conf_name_b()`, `yaml_data_mods_conf_descriptions()`, `yaml_data_mods_conf_fixes()`, `yaml_data_mods_conf_links()`, `yaml_data_mods_conf_count()`
 
 Important current boundary:

@@ -26,7 +26,7 @@ Crashlog_Stack_Check: []
 Mods_CONF: []
 Mods_CORE: []
 Mods_FREQ: {}
-Mods_SOLU: {}
+Mods_SOLU: []
 `;
 
 export const PARITY_IGNORE_YAML = `

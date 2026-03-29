@@ -1286,6 +1286,8 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
+        "ModSolutionCriteria",
+        "ModSolutionEntry",
         "SuspectErrorRule",
         "SuspectStackCountRule",
         "SuspectStackRule"
@@ -1300,6 +1302,8 @@
       "owner": "Squad B",
       "deferReason": "Node export is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [
+        "JsModSolutionCriteria",
+        "JsModSolutionEntry",
         "JsSuspectErrorRule",
         "JsSuspectStackCountRule",
         "JsSuspectStackRule"

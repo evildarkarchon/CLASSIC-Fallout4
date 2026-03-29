@@ -15,7 +15,9 @@ use crate::error::Result;
 use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
 use crate::gpu_detector::GpuDetector;
-use crate::mod_detector::{detect_mods_double, detect_mods_important, detect_mods_single};
+use crate::mod_detector::{
+    detect_mods_double, detect_mods_important, detect_mods_single, detect_mods_solutions,
+};
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
@@ -26,7 +28,9 @@ use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
 };
-use classic_config_core::{CoreModEntry, ModConflictEntry, SuspectErrorRule, SuspectStackRule};
+use classic_config_core::{
+    CoreModEntry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule, SuspectStackRule,
+};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
@@ -236,8 +240,8 @@ pub struct AnalysisConfig {
     pub mods_freq: IndexMap<String, String>,
     /// Mod conflict entries for compatibility analysis
     pub mods_conf: Vec<ModConflictEntry>,
-    /// Mod solutions database for providing fixes and workarounds (IndexMap preserves YAML key order)
-    pub mods_solu: IndexMap<String, String>,
+    /// Structured mod solution entries for fixes and workarounds.
+    pub mods_solu: Vec<ModSolutionEntry>,
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
 
@@ -308,7 +312,7 @@ impl AnalysisConfig {
             mods_core: Vec::new(),
             mods_freq: IndexMap::new(),
             mods_conf: Vec::new(),
-            mods_solu: IndexMap::new(),
+            mods_solu: Vec::new(),
             classic_records_list: Vec::new(),
             crashgen_registry: CrashgenRegistry::default(),
         }
@@ -763,19 +767,15 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub fn new(config: AnalysisConfig) -> Result<Self> {
-        // Initialize plugin analyzer if ignore lists are available
-        let plugin_analyzer = if !config.ignore_plugins.is_empty() || !config.ignore_list.is_empty()
-        {
-            Some(PluginAnalyzer::new(
-                config.ignore_plugins.clone(),
-                config.ignore_list.clone(),
-                config.crashgen_name.clone(),
-                config.game_version.clone(),
-                config.game_version_vr.clone(),
-            )?)
-        } else {
-            None
-        };
+        // Plugin parsing is needed for all mod-detection paths, even when the
+        // ignore lists are empty.
+        let plugin_analyzer = Some(PluginAnalyzer::new(
+            config.ignore_plugins.clone(),
+            config.ignore_list.clone(),
+            config.crashgen_name.clone(),
+            config.game_version.clone(),
+            config.game_version_vr.clone(),
+        )?);
 
         // Initialize suspect scanner if suspect patterns are available
         let suspect_scanner =
@@ -1320,9 +1320,7 @@ impl OrchestratorCore {
 
             // Check for mods with known solutions
             if !self.config.mods_solu.is_empty() {
-                if let Ok(solu_lines) =
-                    detect_mods_single(self.config.mods_solu.clone(), plugins.clone())
-                {
+                if let Ok(solu_lines) = detect_mods_solutions(&self.config.mods_solu, plugins) {
                     if !solu_lines.is_empty() {
                         composer.add(report_gen.generate_mod_check_header("HAVE SOLUTIONS"));
                         composer.add(ReportFragment::from_lines(solu_lines));
@@ -2115,12 +2113,86 @@ mod tests {
             game_mods_conf: Vec::new(),
             game_mods_core: Vec::new(),
             game_mods_freq: IndexMap::new(),
-            game_mods_solu: IndexMap::new(),
+            game_mods_solu: Vec::new(),
             autoscan_text: String::new(),
             game_version: String::new(),
             game_root_name: "Fallout4".to_string(),
             crashgen_registry: std::collections::HashMap::new(),
         }
+    }
+
+    fn build_orchestrator_with_structured_mods_solu(mods_solu_yaml: &str) -> OrchestratorCore {
+        let main_yaml = concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"7.31.0\"\n",
+            "  version_date: \"2024-01-15\"\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+        );
+        let game_yaml = format!(
+            concat!(
+                "Game_Info:\n",
+                "  XSE_Acronym: \"F4SE\"\n",
+                "  GameVersion: \"1.10.163\"\n",
+                "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+                "  CRASHGEN_LogName: \"Buffout 4\"\n",
+                "  Main_Root_Name: \"Fallout4\"\n",
+                "{}"
+            ),
+            mods_solu_yaml
+        );
+        let ignore_yaml = "CLASSIC_Ignore_Fallout4: []\n";
+        let yaml = classic_config_core::YamlDataCore::from_yaml_content(
+            main_yaml,
+            &game_yaml,
+            ignore_yaml,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("structured Mods_SOLU yaml should load");
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        OrchestratorCore::new(config).expect("orchestrator should build")
+    }
+
+    fn structured_mods_solu_log(plugins: &[(&str, &str)]) -> String {
+        let mut lines = vec![
+            "Fallout 4 v1.11.191".to_string(),
+            "Buffout 4 v1.28.6".to_string(),
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000"
+                .to_string(),
+            String::new(),
+            "PROBABLE CALL STACK:".to_string(),
+            "stack frame".to_string(),
+            "MODULES:".to_string(),
+            "kernel32.dll v10.0.0".to_string(),
+            "F4SE PLUGINS:".to_string(),
+            "buffout4.dll v1.28.6".to_string(),
+            "PLUGINS:".to_string(),
+        ];
+
+        lines.extend(
+            plugins
+                .iter()
+                .map(|(plugin_id, plugin_name)| format!("[{plugin_id}] {plugin_name}")),
+        );
+
+        lines.extend([
+            "REGISTERS:".to_string(),
+            "RAX 0x0".to_string(),
+            "STACK:".to_string(),
+            "stack dump line".to_string(),
+        ]);
+
+        lines.join("\n")
     }
 
     #[test]
@@ -2792,6 +2864,124 @@ mod tests {
         assert!(!report_text.contains(
             "### Checking For Mods That Are Outdated, Redundant, or Have Community Patches"
         ));
+    }
+
+    #[test]
+    fn process_log_renders_structured_mods_solu_any_matches() {
+        let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(
+            "Mods_SOLU:\n",
+            "  - id: high-resolution-dlc\n",
+            "    criteria:\n",
+            "      any:\n",
+            "        - DLCUltraHighResolution\n",
+            "        - HighResPack\n",
+            "    name: High Resolution DLC\n",
+            "    description: |\n",
+            "      Disable the official texture pack.\n",
+            "      It causes crashes and stutter.\n"
+        ));
+        let log_contents = structured_mods_solu_log(&[("01", "DLCUltraHighResolution.esp")]);
+        let processed_lines = orchestrator.reformat_crash_data_inline(
+            &log_contents.lines().map(str::to_string).collect::<Vec<_>>(),
+        );
+        let context =
+            ScanAnalysisContext::from_processed_lines(&orchestrator.parser, processed_lines);
+        assert!(
+            !context.plugin_lines.is_empty(),
+            "plugin segment should not be empty"
+        );
+
+        let analyzer = orchestrator
+            .plugin_analyzer
+            .as_ref()
+            .expect("orchestrator should have a plugin analyzer");
+        let (plugins, _limit_triggered, _limit_disabled) = analyzer
+            .loadorder_scan_log(
+                &context.plugin_lines,
+                Some(orchestrator.config.game_version.as_str()),
+                Some(orchestrator.config.crashgen_latest.as_str()),
+            )
+            .expect("plugin analyzer should parse the fixture plugins");
+        assert_eq!(
+            plugins.get("DLCUltraHighResolution.esp"),
+            Some(&"01".to_string())
+        );
+        assert!(
+            !detect_mods_solutions(&orchestrator.config.mods_solu, &plugins)
+                .expect("structured matcher should succeed")
+                .is_empty(),
+            "structured matcher should detect the configured entry"
+        );
+
+        let fixture = write_fixture_log("mods-solu-any.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
+        assert!(report_text.contains("FOUND : [01] High Resolution DLC"));
+        assert!(report_text.contains("Disable the official texture pack."));
+        assert!(report_text.contains("It causes crashes and stutter."));
+    }
+
+    #[test]
+    fn process_log_requires_all_structured_mods_solu_criteria() {
+        let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(
+            "Mods_SOLU:\n",
+            "  - id: bodyslide-patch\n",
+            "    criteria:\n",
+            "      all:\n",
+            "        - LooksMenu\n",
+            "        - CBBE\n",
+            "    name: BodySlide Patch\n",
+            "    description: |\n",
+            "      Install the compatibility patch.\n"
+        ));
+        let fixture = write_fixture_log(
+            "mods-solu-all.log",
+            &structured_mods_solu_log(&[("02", "LooksMenu.esp")]),
+        );
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(!report_text.contains("BodySlide Patch"));
+        assert!(!report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
+    }
+
+    #[test]
+    fn process_log_suppresses_structured_mods_solu_exceptions() {
+        let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(
+            "Mods_SOLU:\n",
+            "  - id: ebf-redux\n",
+            "    criteria:\n",
+            "      any:\n",
+            "        - EveryonesBestFriend\n",
+            "    exceptions:\n",
+            "      - UFO4P\n",
+            "    name: Everyone's Best Friend\n",
+            "    description: |\n",
+            "      Install the compatibility patch.\n"
+        ));
+        let fixture = write_fixture_log(
+            "mods-solu-exception.log",
+            &structured_mods_solu_log(&[("03", "EveryonesBestFriend.esp"), ("04", "UFO4P.esp")]),
+        );
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(!report_text.contains("Everyone's Best Friend"));
+        assert!(!report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
     }
 
     #[test]

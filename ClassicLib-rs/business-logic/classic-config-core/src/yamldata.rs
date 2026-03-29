@@ -82,6 +82,39 @@ pub struct CoreModEntry {
     pub exclude_when: Option<CoreModExclude>,
 }
 
+/// Grouped match criteria for a structured `Mods_SOLU` entry.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ModSolutionCriteria {
+    /// Match when any listed substring appears in installed plugin filenames.
+    Any(Vec<String>),
+    /// Match only when all listed substrings appear in installed plugin filenames.
+    All(Vec<String>),
+}
+
+impl ModSolutionCriteria {
+    /// Return the active criterion values.
+    pub fn values(&self) -> &[String] {
+        match self {
+            Self::Any(values) | Self::All(values) => values,
+        }
+    }
+}
+
+/// A structured entry from the `Mods_SOLU` YAML section.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModSolutionEntry {
+    /// Stable machine-readable identifier for the entry.
+    pub id: String,
+    /// Grouped match criteria used to detect this solution entry.
+    pub criteria: ModSolutionCriteria,
+    /// Optional plugin substrings that suppress the match when present.
+    pub exceptions: Vec<String>,
+    /// Human-readable display name shown in the report.
+    pub name: String,
+    /// Report body shown when the entry is detected.
+    pub description: String,
+}
+
 /// A single entry from the `Crashlog_Error_Check` YAML section.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SuspectErrorRule {
@@ -691,6 +724,107 @@ fn parse_mods_core(game_data: &Yaml) -> Vec<CoreModEntry> {
             gpu,
             gpu_mismatch_warning,
             exclude_when,
+        });
+    }
+
+    result
+}
+
+/// Parse the `Mods_SOLU` YAML section into a `Vec<ModSolutionEntry>`.
+///
+/// Expects a YAML sequence of mappings, each with `id`, `criteria`, `name`, and
+/// `description` (required), plus optional `exceptions`.
+fn parse_mods_solu(game_data: &Yaml) -> Vec<ModSolutionEntry> {
+    let Some(entries) = game_data["Mods_SOLU"].as_vec() else {
+        return Vec::new();
+    };
+
+    let mut result = Vec::with_capacity(entries.len());
+
+    for (index, entry_yaml) in entries.iter().enumerate() {
+        let Some(map) = entry_yaml.as_hash() else {
+            log::debug!(
+                "Skipping Mods_SOLU[{}]: expected mapping, got {:?}",
+                index,
+                entry_yaml
+            );
+            continue;
+        };
+
+        let get_str = |key: &str| -> Option<String> {
+            map.iter()
+                .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(|s| s.trim().to_string())
+        };
+
+        let get_string_list = |yaml: &Yaml| -> Vec<String> {
+            yaml.as_vec()
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter_map(|item| item.as_str().map(|s| s.trim().to_string()))
+                        .filter(|item| !item.is_empty())
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+
+        let (id, name, description) = match (get_str("id"), get_str("name"), get_str("description"))
+        {
+            (Some(id), Some(name), Some(description)) => (id, name, description),
+            _ => {
+                log::debug!(
+                    "Skipping Mods_SOLU[{}]: missing required field(s) (id, name, description)",
+                    index
+                );
+                continue;
+            }
+        };
+
+        let criteria = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("criteria")).then_some(v))
+            .and_then(Yaml::as_hash)
+            .and_then(|criteria_map| {
+                let any = criteria_map
+                    .iter()
+                    .find_map(|(k, v)| (k.as_str() == Some("any")).then_some(v))
+                    .map(get_string_list)
+                    .filter(|values| !values.is_empty());
+                let all = criteria_map
+                    .iter()
+                    .find_map(|(k, v)| (k.as_str() == Some("all")).then_some(v))
+                    .map(get_string_list)
+                    .filter(|values| !values.is_empty());
+
+                match (any, all) {
+                    (Some(values), None) => Some(ModSolutionCriteria::Any(values)),
+                    (None, Some(values)) => Some(ModSolutionCriteria::All(values)),
+                    _ => None,
+                }
+            });
+
+        let Some(criteria) = criteria else {
+            log::debug!(
+                "Skipping Mods_SOLU[{}]: criteria must define exactly one non-empty group (`any` or `all`)",
+                index
+            );
+            continue;
+        };
+
+        let exceptions = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("exceptions")).then_some(v))
+            .map(get_string_list)
+            .unwrap_or_default();
+
+        result.push(ModSolutionEntry {
+            id,
+            criteria,
+            exceptions,
+            name,
+            description,
         });
     }
 
@@ -1326,7 +1460,7 @@ Crashgen_Registry:
 /// * `game_mods_conf` - A `Vec<ModConflictEntry>` holding deduplicated mod conflict pairs from `Mods_CONF`.
 /// * `game_mods_core` - A `Vec<CoreModEntry>` of structured core/important mod entries from `Mods_CORE`.
 /// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
-/// * `game_mods_solu` - An `IndexMap<String, String>` representing solution-related game mod configurations.
+/// * `game_mods_solu` - A `Vec<ModSolutionEntry>` of structured solution-related mod entries.
 ///
 /// * `autoscan_text` - A `String` defining the text used in the "autoscan" UI component.
 ///
@@ -1401,15 +1535,15 @@ pub struct YamlDataCore {
     /// Structured suspect rules for stack and main-error matching.
     pub suspect_stack_rules: Vec<SuspectStackRule>,
 
-    // Mod databases (IndexMap preserves YAML key order for Python parity)
+    // Mod databases
     /// Mod conflict pairs parsed from `Mods_CONF` (deduplicated at load time)
     pub game_mods_conf: Vec<ModConflictEntry>,
     /// Core / important mod entries parsed from `Mods_CORE` (structured sequence)
     pub game_mods_core: Vec<CoreModEntry>,
     /// Frequently used game mod entries
     pub game_mods_freq: IndexMap<String, String>,
-    /// Solution-related game mod configurations
-    pub game_mods_solu: IndexMap<String, String>,
+    /// Solution-related game mod entries parsed from `Mods_SOLU` (structured sequence)
+    pub game_mods_solu: Vec<ModSolutionEntry>,
 
     // UI configuration
     /// Text used in the autoscan UI component
@@ -1514,7 +1648,7 @@ impl YamlDataCore {
             game_mods_conf: parse_mods_conf(game_data),
             game_mods_core: parse_mods_core(game_data),
             game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
-            game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
+            game_mods_solu: parse_mods_solu(game_data),
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
 
             // Ignore YAML values
@@ -1874,7 +2008,12 @@ Mods_CORE:
 Mods_FREQ:
   FreqMod: "Frequently used mod"
 Mods_SOLU:
-  SoluMod: "Solution mod"
+  - id: solu-mod
+    criteria:
+      any:
+        - SoluMod
+    name: Solution Mod
+    description: "Solution mod"
 "#
     }
 
@@ -2155,9 +2294,77 @@ CLASSIC_Ignore_Skyrim:
             config.game_mods_freq.get("FreqMod"),
             Some(&"Frequently used mod".to_string())
         );
+        assert_eq!(config.game_mods_solu.len(), 1);
+        assert_eq!(config.game_mods_solu[0].id, "solu-mod");
+        assert_eq!(config.game_mods_solu[0].name, "Solution Mod");
+        assert_eq!(config.game_mods_solu[0].description, "Solution mod");
         assert_eq!(
-            config.game_mods_solu.get("SoluMod"),
-            Some(&"Solution mod".to_string())
+            config.game_mods_solu[0].criteria,
+            ModSolutionCriteria::Any(vec!["SoluMod".to_string()])
+        );
+        assert!(config.game_mods_solu[0].exceptions.is_empty());
+    }
+
+    #[test]
+    fn test_from_yaml_content_parses_structured_mods_solu_entries() {
+        let game_yaml = minimal_game_yaml().replacen(
+            concat!(
+                "Mods_SOLU:\n",
+                "  - id: solu-mod\n",
+                "    criteria:\n",
+                "      any:\n",
+                "        - SoluMod\n",
+                "    name: Solution Mod\n",
+                "    description: \"Solution mod\"\n"
+            ),
+            concat!(
+                "Mods_SOLU:\n",
+                "  - id: high-resolution-dlc\n",
+                "    criteria:\n",
+                "      any:\n",
+                "        - DLCUltraHighResolution\n",
+                "    exceptions:\n",
+                "      - UHDTexturesFix.esp\n",
+                "    name: High Resolution DLC\n",
+                "    description: |\n",
+                "      Disable the High Resolution Texture Pack.\n",
+                "  - id: bodyslide-patch\n",
+                "    criteria:\n",
+                "      all:\n",
+                "        - LooksMenu\n",
+                "        - CBBE\n",
+                "    name: BodySlide Patch\n",
+                "    description: |\n",
+                "      Install the compatibility patch.\n"
+            ),
+            1,
+        );
+
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            &game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("from_yaml_content should parse structured Mods_SOLU entries");
+
+        let debug_output = format!("{:?}", config.game_mods_solu);
+        assert_eq!(config.game_mods_solu.len(), 2);
+        assert!(debug_output.contains("high-resolution-dlc"));
+        assert!(debug_output.contains("DLCUltraHighResolution"));
+        assert!(debug_output.contains("UHDTexturesFix.esp"));
+        assert!(debug_output.contains("BodySlide Patch"));
+
+        let first = debug_output
+            .find("high-resolution-dlc")
+            .expect("first entry id should appear in debug output");
+        let second = debug_output
+            .find("bodyslide-patch")
+            .expect("second entry id should appear in debug output");
+        assert!(
+            first < second,
+            "Mods_SOLU entry order should follow YAML order"
         );
     }
 

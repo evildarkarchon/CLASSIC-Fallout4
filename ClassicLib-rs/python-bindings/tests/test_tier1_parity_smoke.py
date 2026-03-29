@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -44,6 +45,32 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert data.classic_version == "9.0.0"
     assert data.xse_acronym == "F4SE"
     assert data.crashgen_name == "Buffout 4"
+
+    structured_game_yaml = PARITY_GAME_YAML.replace(
+        "Mods_SOLU: []",
+        "\n".join(
+            (
+                "Mods_SOLU:",
+                "  - id: solu-mod",
+                "    criteria:",
+                "      any:",
+                '        - "SoluMod"',
+                '    name: "Solution Mod"',
+                '    description: "Solution mod"',
+            )
+        ),
+    )
+    structured_data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        structured_game_yaml,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    solu_entries = cast(list[dict[str, Any]], structured_data.game_mods_solu)
+    assert solu_entries[0]["id"] == "solu-mod"
+    assert cast(dict[str, Any], solu_entries[0]["criteria"])["any"] == ["SoluMod"]
+    assert solu_entries[0]["name"] == "Solution Mod"
     classic_config.clear_yaml_cache()
 
     with pytest.raises(classic_config.RustConfigParseError) as exc_info:
@@ -198,6 +225,36 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
         remove_list=["skip-me"],
     )
     assert config.remove_list == ["skip-me"]
+
+    structured_game_yaml = PARITY_GAME_YAML.replace(
+        "Mods_SOLU: []",
+        "\n".join(
+            (
+                "Mods_SOLU:",
+                "  - id: solu-mod",
+                "    criteria:",
+                "      any:",
+                '        - "SoluMod"',
+                '    name: "Solution Mod"',
+                '    description: "Solution mod"',
+            )
+        ),
+    )
+    structured_yamldata = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        structured_game_yaml,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    structured_config = classic_scanlog.AnalysisConfig.from_yamldata(
+        structured_yamldata,
+        "Fallout4",
+        "auto",
+    )
+    solu_entries = cast(list[dict[str, Any]], structured_config.mods_solu)
+    assert solu_entries[0]["id"] == "solu-mod"
+    assert cast(dict[str, Any], solu_entries[0]["criteria"])["any"] == ["SoluMod"]
 
     assert hasattr(parser, "parse_segments") is False
     assert hasattr(classic_scanlog.ParallelReportProcessor, "process_batch") is False

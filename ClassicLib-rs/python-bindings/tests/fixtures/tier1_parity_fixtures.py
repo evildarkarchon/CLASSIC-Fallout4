@@ -29,7 +29,7 @@ Mods_CONF: []
 Mods_CORE: {}
 Mods_CORE_FOLON: {}
 Mods_FREQ: {}
-Mods_SOLU: {}
+Mods_SOLU: []
 """
 
 PARITY_IGNORE_YAML = """

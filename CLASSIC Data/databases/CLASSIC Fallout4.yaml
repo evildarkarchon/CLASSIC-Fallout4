@@ -1251,217 +1251,349 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     link: https://www.nexusmods.com/fallout4/mods/84930
 
 Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
-  DLCUltraHighResolution: |
-    High Resolution DLC. I STRONGLY ADVISE AGAINST USING IT, ESPECIALLY ON LOW-END GPUs!
-        - This DLC is overly large, does not provide any meaningful visual improvements, and has various issues of its own.
-          Right click on Fallout 4 in your Steam Library folder, then select Properties
-          Switch to the DLC tab and uncheck / disable the High Resolution Texture Pack.
-        -----
+  - id: dlc-ultra-high-resolution
+    criteria:
+      any:
+        - DLCUltraHighResolution
+    name: High Resolution DLC
+    description: |
+      I STRONGLY ADVISE AGAINST USING IT, ESPECIALLY ON LOW-END GPUs!
+          - This DLC is overly large, does not provide any meaningful visual improvements, and has various issues of its own.
+            Right click on Fallout 4 in your Steam Library folder, then select Properties
+            Switch to the DLC tab and uncheck / disable the High Resolution Texture Pack.
+          -----
 
-  AAF.esm: |
-    Advanced Animation Framework
-        - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
-          Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2
-        -----
-        - Looks Menu versions 1.6.20 & 1.6.19 can frequently break adult mod related (erection) morphs.
-          If you notice AAF related problems, remove latest version of Looks Menu and switch to 1.6.18.
-        -----
+  - id: aaf-esm
+    criteria:
+      any:
+        - AAF.esm
+    name: Advanced Animation Framework
+    description: |
+          - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
+            Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2
+          -----
+          - Looks Menu versions 1.6.20 & 1.6.19 can frequently break adult mod related (erection) morphs.
+            If you notice AAF related problems, remove latest version of Looks Menu and switch to 1.6.18.
+          -----
 
-  AnimeRace_Nanako: |
-    Anime Race Nanako Chan
-        - Make sure you have the Skeleton Fixes installed for this mod.
-          Read the fixes description carefully for installation info.
-          Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
-        -----
+  - id: anime-race-nanako
+    criteria:
+      any:
+        - AnimeRace_Nanako
+    name: Anime Race Nanako Chan
+    description: |
+          - Make sure you have the Skeleton Fixes installed for this mod.
+            Read the fixes description carefully for installation info.
+            Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
+          -----
 
-  ArmorKeywords: |
-    Armor And Weapons Keywords
-        - If you don't rely on AWKCR, consider switching to Equipment and Crafting Overhaul
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
-          Patches to remove AWKCR: https://www.nexusmods.com/fallout4/mods/40752?tab=files
-        -----
+  - id: armor-keywords
+    criteria:
+      any:
+        - ArmorKeywords
+    name: Armor And Weapons Keywords
+    description: |
+          - If you don't rely on AWKCR, consider switching to Equipment and Crafting Overhaul
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
+            Patches to remove AWKCR: https://www.nexusmods.com/fallout4/mods/40752?tab=files
+          -----
 
-  BTInteriors_Project: |
-    Beantown Interiors
-        - Usually causes fps drops, stuttering, crashing and culling issues in multiple locations.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/53894?tab=files
-        -----
+  - id: bt-interiors-project
+    criteria:
+      any:
+        - BTInteriors_Project
+    name: Beantown Interiors
+    description: |
+          - Usually causes fps drops, stuttering, crashing and culling issues in multiple locations.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/53894?tab=files
+          -----
 
-  CombatZoneRestored: |
-    Combat Zone Restored
-        - Contains few small issues and NPCs usually have trouble navigating the interior space.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/59329?tab=files
-        -----
+  - id: combat-zone-restored
+    criteria:
+      any:
+        - CombatZoneRestored
+    name: Combat Zone Restored
+    description: |
+          - Contains few small issues and NPCs usually have trouble navigating the interior space.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/59329?tab=files
+          -----
 
-  CaN.esm: |
-    Crimes Against Nature
-        - Make sure you have the Skeleton Fixes installed for this mod.
-          Read the fixes description carefully for installation info.
-          Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
-        -----
+  - id: ca-n-esm
+    criteria:
+      any:
+        - CaN.esm
+    name: Crimes Against Nature
+    description: |
+          - Make sure you have the Skeleton Fixes installed for this mod.
+            Read the fixes description carefully for installation info.
+            Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
+          -----
 
-  D.E.C.A.Y: |
-    Decay Better Ghouls
-        - You have to install DECAY Redux patch to prevent its audio files from crashing the game.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/59025?tab=files
-        -----
+  - id: d-e-c-a-y
+    criteria:
+      any:
+        - D.E.C.A.Y
+    name: Decay Better Ghouls
+    description: |
+          - You have to install DECAY Redux patch to prevent its audio files from crashing the game.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/59025?tab=files
+          -----
 
-  EveryonesBestFriend: |
-    Everyone's Best Friend
-        - An improved alternative with better compatibility is available:
-          Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
-          If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
-          Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
-          If you have Horizon installed or don't use UFO4P, this patch is not needed.
-        -----
+  - id: everyones-best-friend
+    criteria:
+      any:
+        - EveryonesBestFriend
+    name: Everyone's Best Friend
+    description: |
+          - An improved alternative with better compatibility is available:
+            Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
+            If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
+            Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
+            If you have Horizon installed or don't use UFO4P, this patch is not needed.
+          -----
 
-  FallSouls: |
-    Fallsouls Unpaused Game Menus
-        - Occasionally breaks the Quests menu, can cause crashes while changing MCM settings.
-          Advised Fix: Toggle PipboyMenu in FallSouls MCM settings or completely reinstall the mod.
-        -----
+  - id: fall-souls
+    criteria:
+      any:
+        - FallSouls
+    name: Fallsouls Unpaused Game Menus
+    description: |
+          - Occasionally breaks the Quests menu, can cause crashes while changing MCM settings.
+            Advised Fix: Toggle PipboyMenu in FallSouls MCM settings or completely reinstall the mod.
+          -----
 
-  M8r_Item_Tags: |
-    Fallui Item Sorter (OLD)
-        - This is an outdated item tagging / sorting patch that can cause crashes or conflicts in all kinds of situations.
-          I strongly recommend to instead generate your own sorting patch and place it last in your load order.
-          That way, you won't experience any conflicts / crashes and even modded items will be sorted.
-          Generate Sorting Patch With This: https://www.nexusmods.com/fallout4/mods/48826?tab=files
-        -----
+  - id: m8r-item-tags
+    criteria:
+      any:
+        - M8r_Item_Tags
+    name: Fallui Item Sorter (OLD)
+    description: |
+          - This is an outdated item tagging / sorting patch that can cause crashes or conflicts in all kinds of situations.
+            I strongly recommend to instead generate your own sorting patch and place it last in your load order.
+            That way, you won't experience any conflicts / crashes and even modded items will be sorted.
+            Generate Sorting Patch With This: https://www.nexusmods.com/fallout4/mods/48826?tab=files
+          -----
 
-  Fo4FI_FPS_fix: |
-    FO4FI FPS Fix
-        - This mod is severely outdated and will cause crashes even with compatibility patches.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
-        -----
+  - id: fo4-fi-fps-fix
+    criteria:
+      any:
+        - Fo4FI_FPS_fix
+    name: FO4FI FPS Fix
+    description: |
+          - This mod is severely outdated and will cause crashes even with compatibility patches.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+          -----
 
-  bostonfpsfix: |
-    Boston FPS Fix
-        - This mod is severely outdated. Either install the PRP patch or switch to PRP entirely.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/59021?tab=files
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
-        -----
+  - id: bostonfpsfix
+    criteria:
+      any:
+        - bostonfpsfix
+    name: Boston FPS Fix
+    description: |
+          - This mod is severely outdated. Either install the PRP patch or switch to PRP entirely.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/59021?tab=files
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+          -----
 
-  FunctionalDisplays: |
-    Functional Displays
-        - Frequently causes object model (nif) related crashes and this needs to be manually corrected.
-          Advised Fix: Open its Meshes folder and delete everything inside EXCEPT for the Functional Displays folder.
-        -----
+  - id: functional-displays
+    criteria:
+      any:
+        - FunctionalDisplays
+    name: Functional Displays
+    description: |
+          - Frequently causes object model (nif) related crashes and this needs to be manually corrected.
+            Advised Fix: Open its Meshes folder and delete everything inside EXCEPT for the Functional Displays folder.
+          -----
 
-  skeleton*player: |
-    Gender Specific Skeletons (Male/Female)
-        - High chance to cause a crash when starting a new game. Switch to Discrete Female Skeleton instead.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/56115?tab=files
-        -----
+  - id: skeleton-player
+    criteria:
+      any:
+        - skeleton*player
+    name: Gender Specific Skeletons (Male/Female)
+    description: |
+          - High chance to cause a crash when starting a new game. Switch to Discrete Female Skeleton instead.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/56115?tab=files
+          -----
 
-  Give Me That Bottle: |
-    Give Me That Bottle
-        - Can rarely cause crashes in the Pip-Boy inventory menu. Switch to Fill'em Up Again instead.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/12674?tab=files
-        -----
+  - id: give-me-that-bottle
+    criteria:
+      any:
+        - Give Me That Bottle
+    name: Give Me That Bottle
+    description: |
+          - Can rarely cause crashes in the Pip-Boy inventory menu. Switch to Fill'em Up Again instead.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/12674?tab=files
+          -----
 
-  CapsWidget: |
-    HUD Caps
-        - Often breaks the Save / Quicksave function due to poor script implementation.
-          Advised Fix: Download fixed pex file and place it into HUDCaps/Scripts folder.
-          Fix Link: https://drive.google.com/file/d/1egmtKVR7mSbjRgo106UbXv_ySKBg5az2
-        -----
+  - id: caps-widget
+    criteria:
+      any:
+        - CapsWidget
+    name: HUD Caps
+    description: |
+          - Often breaks the Save / Quicksave function due to poor script implementation.
+            Advised Fix: Download fixed pex file and place it into HUDCaps/Scripts folder.
+            Fix Link: https://drive.google.com/file/d/1egmtKVR7mSbjRgo106UbXv_ySKBg5az2
+          -----
 
-  Homemaker: |
-    Homemaker
-        - Causes a crash while scrolling over Military / BoS fences in the Settlement Menu.
-          Advised Fix: Make sure you are using at least version 1.73 of this mod.
-          Alternate Fix: https://www.nexusmods.com/fallout4/mods/41434?tab=files
-        -----
+  - id: homemaker
+    criteria:
+      any:
+        - Homemaker
+    name: Homemaker
+    description: |
+          - Causes a crash while scrolling over Military / BoS fences in the Settlement Menu.
+            Advised Fix: Make sure you are using at least version 1.73 of this mod.
+            Alternate Fix: https://www.nexusmods.com/fallout4/mods/41434?tab=files
+          -----
 
-  LegendaryModification: |
-    Legendary Modification
-        - Old mod plagued with all kinds of bugs and crashes, can conflict with some modded weapons.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
-        -----
+  - id: legendary-modification
+    criteria:
+      any:
+        - LegendaryModification
+    name: Legendary Modification
+    description: |
+          - Old mod plagued with all kinds of bugs and crashes, can conflict with some modded weapons.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
+          -----
 
-  LooksMenu Customization Compendium: |
-    Looks Menu Customization Compendium
-        - If you are getting broken hair colors, install this mod and make sure it loads after LMCC.
-          Mod Link: https://www.nexusmods.com/fallout4/mods/18287?tab=files
-        -----
+  - id: looks-menu-customization-compendium
+    criteria:
+      any:
+        - LooksMenu Customization Compendium
+    name: Looks Menu Customization Compendium
+    description: |
+          - If you are getting broken hair colors, install this mod and make sure it loads after LMCC.
+            Mod Link: https://www.nexusmods.com/fallout4/mods/18287?tab=files
+          -----
 
-  MilitarizedMinutemen: |
-    Militarized Minutemen
-        - Can occasionally crash the game due to a broken mesh on some minutemen outfits.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/32369?tab=files
-        -----
+  - id: militarized-minutemen
+    criteria:
+      any:
+        - MilitarizedMinutemen
+    name: Militarized Minutemen
+    description: |
+          - Can occasionally crash the game due to a broken mesh on some minutemen outfits.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/32369?tab=files
+          -----
 
-  MoreUniques: |
-    More Unique Weapons Expansion
-        - Causes crashes due to broken precombines and compatibility issues with other weapon mods.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/54848?tab=files
-        -----
+  - id: more-uniques
+    criteria:
+      any:
+        - MoreUniques
+    name: More Unique Weapons Expansion
+    description: |
+          - Causes crashes due to broken precombines and compatibility issues with other weapon mods.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/54848?tab=files
+          -----
 
-  NAC: |
-    Natural And Atmospheric Commonwealth
-        - If you notice weird looking skin tones with either NAC or NACX, install this patch.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/57052?tab=files
-        -----
+  - id: nac
+    criteria:
+      any:
+        - NAC
+    name: Natural And Atmospheric Commonwealth
+    description: |
+          - If you notice weird looking skin tones with either NAC or NACX, install this patch.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/57052?tab=files
+          -----
 
-  Northland Diggers New: |
-    Northland Diggers Resources
-        - Contains various bugs and issues that can cause crashes or negatively affect other mods.
-          Fix Link: https://www.nexusmods.com/fallout4/mods/53395?tab=files
-        -----
+  - id: northland-diggers-new
+    criteria:
+      any:
+        - Northland Diggers New
+    name: Northland Diggers Resources
+    description: |
+          - Contains various bugs and issues that can cause crashes or negatively affect other mods.
+            Fix Link: https://www.nexusmods.com/fallout4/mods/53395?tab=files
+          -----
 
-  Project Zeta: |
-    Project Zeta
-        - Invasion quests seem overly buggy or trigger too frequently, minor sound issues.
-          Fix Link: https://www.nexusmods.com/fallout4/mods/65166?tab=files
-        -----
+  - id: project-zeta
+    criteria:
+      any:
+        - Project Zeta
+    name: Project Zeta
+    description: |
+          - Invasion quests seem overly buggy or trigger too frequently, minor sound issues.
+            Fix Link: https://www.nexusmods.com/fallout4/mods/65166?tab=files
+          -----
 
-  RaiderOverhaul: |
-    Raider Overhaul
-        - Old mod that requires several patches to function as intended. Use ONE Version instead.
-          Updated ONE Version: https://www.nexusmods.com/fallout4/mods/51658?tab=files
-        -----
+  - id: raider-overhaul
+    criteria:
+      any:
+        - RaiderOverhaul
+    name: Raider Overhaul
+    description: |
+          - Old mod that requires several patches to function as intended. Use ONE Version instead.
+            Updated ONE Version: https://www.nexusmods.com/fallout4/mods/51658?tab=files
+          -----
 
-  Rusty Face Fix: |
-    Rusty Face Fix
-        - Make sure you have the latest 2.0 version installed or try the REDUX Version instead.
-          Original Rusty Face Fix: https://www.nexusmods.com/fallout4/mods/31028?tab=files
-          Alternative REDUX Version: https://www.nexusmods.com/fallout4/mods/64270?tab=files
-        -----
+  - id: rusty-face-fix
+    criteria:
+      any:
+        - Rusty Face Fix
+    name: Rusty Face Fix
+    description: |
+          - Make sure you have the latest 2.0 version installed or try the REDUX Version instead.
+            Original Rusty Face Fix: https://www.nexusmods.com/fallout4/mods/31028?tab=files
+            Alternative REDUX Version: https://www.nexusmods.com/fallout4/mods/64270?tab=files
+          -----
 
-  SOTS: |
-    South Of The Sea
-        - Very unstable mod that consistently and frequently causes strange problems and crashes.
-          Updated Version: https://www.nexusmods.com/fallout4/mods/63152?tab=files
-        -----
+  - id: sots
+    criteria:
+      any:
+        - SOTS
+    name: South Of The Sea
+    description: |
+          - Very unstable mod that consistently and frequently causes strange problems and crashes.
+            Updated Version: https://www.nexusmods.com/fallout4/mods/63152?tab=files
+          -----
 
-  StartMeUp: |
-    Start Me Up
-        - Abandoned mod that can cause infinite loading and other problems. Switch to REDUX Version instead.
-          Updated REDUX Version: https://www.nexusmods.com/fallout4/mods/56984?tab=files
-        -----
+  - id: start-me-up
+    criteria:
+      any:
+        - StartMeUp
+    name: Start Me Up
+    description: |
+          - Abandoned mod that can cause infinite loading and other problems. Switch to REDUX Version instead.
+            Updated REDUX Version: https://www.nexusmods.com/fallout4/mods/56984?tab=files
+          -----
 
-  SuperMutantRedux: |
-    Super Mutant Redux
-        - Causes crashes at specific locations or with certain Super Mutant enemies and items.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/51353?tab=files
-        -----
+  - id: super-mutant-redux
+    criteria:
+      any:
+        - SuperMutantRedux
+    name: Super Mutant Redux
+    description: |
+          - Causes crashes at specific locations or with certain Super Mutant enemies and items.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/51353?tab=files
+          -----
 
-  tacticalreload: |
-    Tactical Reload
-        - Can cause weapon and combat related crashes. TR Expansion For ECO is highly recommended.
-          TR Expansion For ECO Link: https://www.nexusmods.com/fallout4/mods/67716?tab=files
-        -----
+  - id: tacticalreload
+    criteria:
+      any:
+        - tacticalreload
+    name: Tactical Reload
+    description: |
+          - Can cause weapon and combat related crashes. TR Expansion For ECO is highly recommended.
+            TR Expansion For ECO Link: https://www.nexusmods.com/fallout4/mods/67716?tab=files
+          -----
 
-  Creatures and Monsters: |
-    Unique NPCs Creatures And Monsters
-        - Causes crashes and breaks precombines at specific locations, some creature spawns are too frequent.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/48637?tab=files
-        -----
+  - id: creatures-and-monsters
+    criteria:
+      any:
+        - Creatures and Monsters
+    name: Unique NPCs Creatures And Monsters
+    description: |
+          - Causes crashes and breaks precombines at specific locations, some creature spawns are too frequent.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/48637?tab=files
+          -----
 
-  Vault4: |
-    Fourville (Vault 4)
-        - Has various visual issues and quest glitches.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/61080?tab=files
-        -----
-
+  - id: vault4
+    criteria:
+      any:
+        - Vault4
+    name: Fourville (Vault 4)
+    description: |
+          - Has various visual issues and quest glitches.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/61080?tab=files
+          -----

@@ -7,7 +7,7 @@
 //! IndexMap fields are exposed as paired key/value vectors since CXX bridges
 //! are isolated and can't share opaque types across modules.
 
-use classic_config_core::{ClassicConfig, YamlDataCore};
+use classic_config_core::{ClassicConfig, ModSolutionCriteria, YamlDataCore};
 use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 
@@ -271,16 +271,48 @@ fn yaml_data_mods_conf_count(data: &YamlData) -> usize {
     data.inner.game_mods_conf.len()
 }
 
-fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_solu.keys().cloned().collect()
-}
+fn yaml_data_mods_solu_entries(data: &YamlData) -> Vec<ffi::YamlDataModSolutionEntry> {
+    data.inner
+        .game_mods_solu
+        .iter()
+        .map(|entry| {
+            let criteria = match &entry.criteria {
+                ModSolutionCriteria::Any(values) => ffi::YamlDataModSolutionCriteria {
+                    any: values.clone(),
+                    all: Vec::new(),
+                },
+                ModSolutionCriteria::All(values) => ffi::YamlDataModSolutionCriteria {
+                    any: Vec::new(),
+                    all: values.clone(),
+                },
+            };
 
-fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String> {
-    data.inner.game_mods_solu.values().cloned().collect()
+            ffi::YamlDataModSolutionEntry {
+                id: entry.id.clone(),
+                criteria,
+                exceptions: entry.exceptions.clone(),
+                name: entry.name.clone(),
+                description: entry.description.clone(),
+            }
+        })
+        .collect()
 }
 
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
+    struct YamlDataModSolutionCriteria {
+        any: Vec<String>,
+        all: Vec<String>,
+    }
+
+    struct YamlDataModSolutionEntry {
+        id: String,
+        criteria: YamlDataModSolutionCriteria,
+        exceptions: Vec<String>,
+        name: String,
+        description: String,
+    }
+
     extern "Rust" {
         type YamlData;
 
@@ -342,8 +374,7 @@ mod ffi {
         fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
-        fn yaml_data_mods_solu_keys(data: &YamlData) -> Vec<String>;
-        fn yaml_data_mods_solu_values(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_solu_entries(data: &YamlData) -> Vec<YamlDataModSolutionEntry>;
     }
 }
 
@@ -374,6 +405,7 @@ mod tests {
             assert!(!yaml_data_xse_acronym(&data).is_empty());
             assert!(!yaml_data_crashgen_name_field(&data).is_empty());
             assert!(!yaml_data_game_version(&data).is_empty());
+            assert!(!yaml_data_mods_solu_entries(&data).is_empty());
 
             let name = yaml_data_get_crashgen_name(&data);
             assert!(!name.is_empty());

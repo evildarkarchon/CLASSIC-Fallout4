@@ -2,6 +2,8 @@
 
 Contributor-facing API guides for active Rust business-logic crates live here.
 
+Current contract note: `Mods_SOLU` is now documented as a structured ordered sequence across config, scanlog, and binding-facing surfaces rather than a key/value map.
+
 Use this directory in this order:
 
 1. [`QUICK_START.md`](QUICK_START.md) - repo-level setup, build, and test workflow

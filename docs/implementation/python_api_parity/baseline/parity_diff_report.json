@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-27T06:53:01.797446+00:00",
+  "generated_at_utc": "2026-03-29T02:52:41.437555+00:00",
   "summary": {
     "tier1_contract_total": 59,
     "tier1_matched": 59,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 290,
+    "total_gaps": 292,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 290
+    "tier2_gap_total": 292
   },
   "contract_results": [
     {
@@ -952,6 +952,30 @@
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "ModConflictEntry",
+      "python_module": null,
+      "python_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModSolutionCriteria",
+      "python_module": null,
+      "python_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModSolutionEntry",
       "python_module": null,
       "python_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -4381,7 +4405,7 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 24
+      "tier2": 26
     },
     "scanlog": {
       "tier2": 231

@@ -172,7 +172,7 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `Mods_CONF` | sequence of `ModConflictEntry` mappings | populates `game_mods_conf` (`Vec<ModConflictEntry>`); deduplicated at parse time by canonical pair order |
 | `Mods_CORE` | sequence of `CoreModEntry` mappings | populates `game_mods_core` (`Vec<CoreModEntry>`); entries with missing required fields are skipped |
 | `Mods_FREQ` | mapping of string -> string | populates `game_mods_freq`; key order is preserved |
-| `Mods_SOLU` | mapping of string -> string | populates `game_mods_solu`; key order is preserved |
+| `Mods_SOLU` | sequence of `ModSolutionEntry` mappings | populates `game_mods_solu` (`Vec<ModSolutionEntry>`); YAML order is preserved |
 | `Crashgen_Registry` | mapping of crashgen name -> mapping | parsed into `HashMap<String, CrashgenEntryRaw>`; malformed entries are skipped rather than failing the whole file |
 
 `Crashgen_Registry.<name>` entry shape:
@@ -222,6 +222,23 @@ Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), 
 | `gpu` | string | no | GPU vendor this mod is for (`"nvidia"` or `"amd"`); used for GPU-specific install/uninstall logic |
 | `gpu_mismatch_warning` | string | no | custom warning text shown when the mod is installed but the user does NOT have the GPU specified by `gpu`; falls back to a generic message when absent |
 | `exclude_when` | mapping | no | condition under which this entry is skipped entirely |
+
+`Mods_SOLU[]` entry shape (`ModSolutionEntry`):
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier for the solution entry |
+| `criteria` | mapping with exactly one of `any` or `all` | yes | grouped plugin-substring matcher used for detection |
+| `exceptions` | sequence of strings | no | suppresses the entry when any listed substring matches an installed plugin filename |
+| `name` | string | yes | human-readable title rendered directly in reports |
+| `description` | string | yes | report body rendered directly without first-line splitting |
+
+`Mods_SOLU[].criteria` currently supports:
+
+| Key | Type / shape | Behavior |
+|---|---|---|
+| `any` | sequence of strings | reports the entry when at least one listed substring matches an installed plugin filename |
+| `all` | sequence of strings | reports the entry only when every listed substring matches an installed plugin filename |
 
 `exclude_when` currently supports one predicate:
 

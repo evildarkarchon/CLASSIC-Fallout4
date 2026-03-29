@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-27T06:53:01.800039+00:00",
+  "generated_at_utc": "2026-03-29T02:52:41.439705+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
@@ -7,10 +7,10 @@
     "deferred_registry": "docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json"
   },
   "summary": {
-    "tracked_surface_total": 349,
+    "tracked_surface_total": 351,
     "runtime_verified_total": 64,
     "contract_mapped_total": 0,
-    "deferred_total": 285,
+    "deferred_total": 287,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 59,
     "tier1_missing_runtime_total": 0,
@@ -20,8 +20,8 @@
   "perOwnerModule": {
     "config": {
       "runtime_verified": 15,
-      "total": 39,
-      "deferred": 24
+      "total": 41,
+      "deferred": 26
     },
     "scanlog": {
       "runtime_verified": 24,
@@ -1264,6 +1264,44 @@
       "rustSymbol": "ModConflictEntry",
       "bindingIdentifier": null,
       "coverageId": "python-deferred-config-005",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:rust:ModSolutionCriteria",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "ModSolutionCriteria",
+      "bindingIdentifier": null,
+      "coverageId": "python-deferred-config-296",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:rust:ModSolutionEntry",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "ModSolutionEntry",
+      "bindingIdentifier": null,
+      "coverageId": "python-deferred-config-296",
       "verificationMode": null,
       "testSuite": null,
       "testCaseId": null,

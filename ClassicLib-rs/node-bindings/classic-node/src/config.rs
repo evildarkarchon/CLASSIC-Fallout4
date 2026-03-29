@@ -12,9 +12,9 @@
 //!    `clearYamlCache()`, convenience accessors.
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry,
-    PathConfig as CorePathConfig, SuspectErrorRule, SuspectStackRule, YamlDataCore,
-    YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry, ModSolutionCriteria,
+    ModSolutionEntry, PathConfig as CorePathConfig, SuspectErrorRule, SuspectStackRule,
+    YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
@@ -34,6 +34,21 @@ pub struct JsModConflictEntry {
     pub description: String,
     pub fix: String,
     pub link: Option<String>,
+}
+
+#[napi(object)]
+pub struct JsModSolutionCriteria {
+    pub any: Option<Vec<String>>,
+    pub all: Option<Vec<String>>,
+}
+
+#[napi(object)]
+pub struct JsModSolutionEntry {
+    pub id: String,
+    pub criteria: JsModSolutionCriteria,
+    pub exceptions: Vec<String>,
+    pub name: String,
+    pub description: String,
 }
 
 #[napi(object)]
@@ -105,6 +120,29 @@ impl From<&ModConflictEntry> for JsModConflictEntry {
             description: e.description.clone(),
             fix: e.fix.clone(),
             link: e.link.clone(),
+        }
+    }
+}
+
+impl From<&ModSolutionEntry> for JsModSolutionEntry {
+    fn from(entry: &ModSolutionEntry) -> Self {
+        let criteria = match &entry.criteria {
+            ModSolutionCriteria::Any(values) => JsModSolutionCriteria {
+                any: Some(values.clone()),
+                all: None,
+            },
+            ModSolutionCriteria::All(values) => JsModSolutionCriteria {
+                any: None,
+                all: Some(values.clone()),
+            },
+        };
+
+        Self {
+            id: entry.id.clone(),
+            criteria,
+            exceptions: entry.exceptions.clone(),
+            name: entry.name.clone(),
+            description: entry.description.clone(),
         }
     }
 }
@@ -434,11 +472,11 @@ impl YamlData {
 
     /// Solution mods database.
     #[napi(getter)]
-    pub fn game_mods_solu(&self) -> HashMap<String, String> {
+    pub fn game_mods_solu(&self) -> Vec<JsModSolutionEntry> {
         self.inner
             .game_mods_solu
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsModSolutionEntry::from)
             .collect()
     }
 
