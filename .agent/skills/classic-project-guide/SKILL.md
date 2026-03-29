@@ -28,13 +28,13 @@ Load `references/repo-guide.md` selectively.
 - Keep business logic in Rust and keep non-interface layers thin unless the task is explicitly interface-only.
 - Maintain the single shared Tokio runtime from Rust core facilities; do not introduce a separate runtime.
 - Consult `docs/api/README.md` before changing public Rust, bridge, GUI-consumer, or binding-facing APIs. If the contract changes, update the affected `docs/api/` pages in the same change.
-- Run native C++ tests through CTest or the repo PowerShell wrappers, not by invoking test binaries directly.
+- NEVER run C++ tests by invoking test binaries or raw `ctest` directly. Always use the repo PowerShell C++ wrappers for test execution.
 - If running Rust or MSVC-targeted C++ commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it so Git's `usr/bin/link.exe` does not shadow the Visual Studio linker.
 - Never write to `NUL` or `nul` as if it were a normal file path on Windows.
 
 ## Match Validation To The Touched Surface
 
-- For `classic-cli/` or `classic-gui/`, prefer the repo PowerShell wrapper scripts from the reference guide for build, test, install, package, and clean rebuild flows.
+- For `classic-cli/` or `classic-gui/`, use the repo PowerShell wrapper scripts from the reference guide for build, install, package, clean rebuild, and all C++ test flows, including targeted runs via `-CTestName` and `-IntegrationTestName`.
 - For Rust workspace changes, expect `cargo fmt`, `cargo clippy`, and the relevant `cargo test` commands from `ClassicLib-rs/Cargo.toml`.
 - For Node binding changes, treat parity artifacts and binding tests as part of the same change and use the local parity gate plus Bun and Node test commands from the reference guide.
 - For Python binding changes, use `ClassicLib-rs/python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, rebuild, and pytest steps from the reference guide.

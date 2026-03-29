@@ -16,6 +16,7 @@
     .\test_cli.ps1 -BuildDir build-debug
     .\test_cli.ps1 -TestDataDir "D:\fixtures\classic-logs"
     .\test_cli.ps1 -MaxLogs 10
+    .\test_cli.ps1 -TestName help,version
     .\test_cli.ps1 -Verbose
 #>
 
@@ -23,6 +24,7 @@
 param(
     [string]$BuildDir = "build",
     [string]$TestDataDir,
+    [string[]]$TestName = @(),
     [ValidateRange(0, 500)]
     [int]$MaxLogs = 25
 )
@@ -36,6 +38,32 @@ $ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..")).Path
 $ClassicDataDir = Join-Path $ProjectRoot "CLASSIC Data"
 $LegacyTestDataDir = Join-Path $ScriptDir "test_data"
 $SubmoduleTestDataDir = Join-Path $ProjectRoot "sample_logs\FO4"
+$AvailableScenarioNames = @(
+    "help",
+    "version",
+    "single-scan",
+    "multi-scan",
+    "max-concurrent",
+    "empty-dir",
+    "invalid-game",
+    "report-content"
+)
+$WorkspaceScenarioNames = @("single-scan", "multi-scan", "max-concurrent", "empty-dir", "report-content")
+$TestDataScenarioNames = @("single-scan", "multi-scan", "max-concurrent", "report-content")
+$TestName = @($TestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
+if ($TestName.Count -gt 0) {
+    $unknownScenarioNames = @($TestName | Where-Object { $_ -notin $AvailableScenarioNames } | Select-Object -Unique)
+    if ($unknownScenarioNames.Count -gt 0) {
+        Write-Host "ERROR: Unknown integration test name(s): $($unknownScenarioNames -join ', ')" -ForegroundColor Red
+        Write-Host "Available integration test names: $($AvailableScenarioNames -join ', ')" -ForegroundColor Yellow
+        exit 1
+    }
+}
+
+$SelectedScenarioNames = if ($TestName.Count -gt 0) { $TestName } else { $AvailableScenarioNames }
+$NeedsWorkspace = @($SelectedScenarioNames | Where-Object { $_ -in $WorkspaceScenarioNames }).Count -gt 0
+$NeedsTestData = @($SelectedScenarioNames | Where-Object { $_ -in $TestDataScenarioNames }).Count -gt 0
 
 # ── Preflight checks ─────────────────────────────────────────────
 
@@ -45,9 +73,15 @@ if (-not (Test-Path $ExePath)) {
     exit 1
 }
 
-if (-not (Test-Path $ClassicDataDir)) {
+if ($NeedsWorkspace -and -not (Test-Path $ClassicDataDir)) {
     Write-Host "ERROR: CLASSIC Data directory not found at: $ClassicDataDir" -ForegroundColor Red
     exit 1
+}
+
+function Should-RunScenario {
+    param([string]$ScenarioName)
+
+    return $TestName.Count -eq 0 -or $ScenarioName -in $TestName
 }
 
 function Resolve-TestData {
@@ -95,29 +129,40 @@ function Resolve-TestData {
     }
 }
 
-$resolvedTestData = Resolve-TestData -ExplicitDir $TestDataDir -LegacyDir $LegacyTestDataDir -SubmoduleDir $SubmoduleTestDataDir
-if (-not $resolvedTestData.Path) {
-    Write-Host "ERROR: Could not find integration test data." -ForegroundColor Red
-    foreach ($line in $resolvedTestData.Diagnostics) {
-        Write-Host $line -ForegroundColor Yellow
-    }
-    Write-Host "Tip: initialize submodules (git submodule update --init --recursive) or pass -TestDataDir." -ForegroundColor Yellow
-    exit 1
-}
+$AllTestLogs = @()
+$TestLogs = @()
 
-$TestDataDir = $resolvedTestData.Path
-$AllTestLogs = $resolvedTestData.Logs
-$TestLogs = if ($MaxLogs -gt 0 -and $AllTestLogs.Count -gt $MaxLogs) {
-    $AllTestLogs | Select-Object -First $MaxLogs
-}
-else {
-    $AllTestLogs
+if ($NeedsTestData) {
+    $resolvedTestData = Resolve-TestData -ExplicitDir $TestDataDir -LegacyDir $LegacyTestDataDir -SubmoduleDir $SubmoduleTestDataDir
+    if (-not $resolvedTestData.Path) {
+        Write-Host "ERROR: Could not find integration test data." -ForegroundColor Red
+        foreach ($line in $resolvedTestData.Diagnostics) {
+            Write-Host $line -ForegroundColor Yellow
+        }
+        Write-Host "Tip: initialize submodules (git submodule update --init --recursive) or pass -TestDataDir." -ForegroundColor Yellow
+        exit 1
+    }
+
+    $TestDataDir = $resolvedTestData.Path
+    $AllTestLogs = $resolvedTestData.Logs
+    $TestLogs = if ($MaxLogs -gt 0 -and $AllTestLogs.Count -gt $MaxLogs) {
+        $AllTestLogs | Select-Object -First $MaxLogs
+    }
+    else {
+        $AllTestLogs
+    }
 }
 
 Write-Host "`n=== CLASSIC CLI Integration Tests ===" -ForegroundColor Cyan
 Write-Host "Executable:   $ExePath" -ForegroundColor DarkGray
-Write-Host "Test data:    $TestDataDir ($($AllTestLogs.Count) logs, source: $($resolvedTestData.Label))" -ForegroundColor DarkGray
-if ($MaxLogs -gt 0 -and $AllTestLogs.Count -gt $MaxLogs) {
+Write-Host "Scenarios:    $($SelectedScenarioNames -join ', ')" -ForegroundColor DarkGray
+if ($NeedsTestData) {
+    Write-Host "Test data:    $TestDataDir ($($AllTestLogs.Count) logs, source: $($resolvedTestData.Label))" -ForegroundColor DarkGray
+}
+else {
+    Write-Host "Test data:    not required for selected scenarios" -ForegroundColor DarkGray
+}
+if ($NeedsTestData -and $MaxLogs -gt 0 -and $AllTestLogs.Count -gt $MaxLogs) {
     Write-Host "Log limit:    Using first $($TestLogs.Count) logs (sorted by filename) due to -MaxLogs $MaxLogs" -ForegroundColor DarkGray
 }
 Write-Host "Project root: $ProjectRoot" -ForegroundColor DarkGray
@@ -211,304 +256,320 @@ function Test-Fail {
 
 # ── Test 1: --help flag ───────────────────────────────────────────
 
-Write-Host "Test 1: --help flag" -ForegroundColor Cyan
-try {
-    $r = Run-Cli -Arguments @("--help")
+if (Should-RunScenario "help") {
+    Write-Host "Test 1: --help flag" -ForegroundColor Cyan
+    try {
+        $r = Run-Cli -Arguments @("--help")
 
-    if ($r.ExitCode -ne 0) {
-        Test-Fail "help-exit-code" "Expected exit code 0, got $($r.ExitCode)"
-    }
-    else {
-        Test-Pass "help-exit-code"
-    }
-
-    $helpChecks = @("--game", "--scan-path", "--game-version")
-    foreach ($token in $helpChecks) {
-        if ($r.Output -match [regex]::Escape($token)) {
-            Test-Pass "help-contains-$token"
+        if ($r.ExitCode -ne 0) {
+            Test-Fail "help-exit-code" "Expected exit code 0, got $($r.ExitCode)"
         }
         else {
-            Test-Fail "help-contains-$token" "Output does not contain '$token'"
+            Test-Pass "help-exit-code"
+        }
+
+        $helpChecks = @("--game", "--scan-path", "--game-version")
+        foreach ($token in $helpChecks) {
+            if ($r.Output -match [regex]::Escape($token)) {
+                Test-Pass "help-contains-$token"
+            }
+            else {
+                Test-Fail "help-contains-$token" "Output does not contain '$token'"
+            }
         }
     }
-}
-catch {
-    Test-Fail "help-flag" "Exception: $_"
+    catch {
+        Test-Fail "help-flag" "Exception: $_"
+    }
 }
 
 # ── Test 2: --version flag ────────────────────────────────────────
 
-Write-Host "Test 2: --version flag" -ForegroundColor Cyan
-try {
-    $r = Run-Cli -Arguments @("--version")
+if (Should-RunScenario "version") {
+    Write-Host "Test 2: --version flag" -ForegroundColor Cyan
+    try {
+        $r = Run-Cli -Arguments @("--version")
 
-    if ($r.ExitCode -ne 0) {
-        Test-Fail "version-exit-code" "Expected exit code 0, got $($r.ExitCode)"
-    }
-    else {
-        Test-Pass "version-exit-code"
-    }
+        if ($r.ExitCode -ne 0) {
+            Test-Fail "version-exit-code" "Expected exit code 0, got $($r.ExitCode)"
+        }
+        else {
+            Test-Pass "version-exit-code"
+        }
 
-    if ($r.Output -match "CLASSIC CLI Scanner") {
-        Test-Pass "version-contains-banner"
+        if ($r.Output -match "CLASSIC CLI Scanner") {
+            Test-Pass "version-contains-banner"
+        }
+        else {
+            Test-Fail "version-contains-banner" "Output does not contain 'CLASSIC CLI Scanner'"
+        }
     }
-    else {
-        Test-Fail "version-contains-banner" "Output does not contain 'CLASSIC CLI Scanner'"
+    catch {
+        Test-Fail "version-flag" "Exception: $_"
     }
-}
-catch {
-    Test-Fail "version-flag" "Exception: $_"
 }
 
 # ── Test 3: Single crash log scan ────────────────────────────────
 
-Write-Host "Test 3: Single crash log scan" -ForegroundColor Cyan
-$workspace = $null
-$tmpDir = $null
-try {
-    $workspace = New-ScanWorkspace
-    $tmpDir = New-TestTempDir
-    $firstLog = $TestLogs[0]
-    Copy-Item $firstLog.FullName -Destination $tmpDir
+if (Should-RunScenario "single-scan") {
+    Write-Host "Test 3: Single crash log scan" -ForegroundColor Cyan
+    $workspace = $null
+    $tmpDir = $null
+    try {
+        $workspace = New-ScanWorkspace
+        $tmpDir = New-TestTempDir
+        $firstLog = $TestLogs[0]
+        Copy-Item $firstLog.FullName -Destination $tmpDir
 
-    $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
+        $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
 
-    if ($r.ExitCode -ne 0) {
-        Test-Fail "single-scan-exit-code" "Expected exit code 0, got $($r.ExitCode). Stderr: $($r.Stderr)"
-    }
-    else {
-        Test-Pass "single-scan-exit-code"
-    }
+        if ($r.ExitCode -ne 0) {
+            Test-Fail "single-scan-exit-code" "Expected exit code 0, got $($r.ExitCode). Stderr: $($r.Stderr)"
+        }
+        else {
+            Test-Pass "single-scan-exit-code"
+        }
 
-    if ($r.Output -match "Found 1 crash log") {
-        Test-Pass "single-scan-found-count"
-    }
-    else {
-        Test-Fail "single-scan-found-count" "Output does not contain 'Found 1 crash log'"
-    }
+        if ($r.Output -match "Found 1 crash log") {
+            Test-Pass "single-scan-found-count"
+        }
+        else {
+            Test-Fail "single-scan-found-count" "Output does not contain 'Found 1 crash log'"
+        }
 
-    $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
-    if ($autoscans.Count -eq 1) {
-        Test-Pass "single-scan-report-generated"
+        $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
+        if ($autoscans.Count -eq 1) {
+            Test-Pass "single-scan-report-generated"
+        }
+        else {
+            Test-Fail "single-scan-report-generated" "Expected 1 AUTOSCAN.md, found $($autoscans.Count)"
+        }
     }
-    else {
-        Test-Fail "single-scan-report-generated" "Expected 1 AUTOSCAN.md, found $($autoscans.Count)"
+    catch {
+        Test-Fail "single-scan" "Exception: $_"
     }
-}
-catch {
-    Test-Fail "single-scan" "Exception: $_"
-}
-finally {
-    Remove-TestTempDir $tmpDir
-    Remove-TestTempDir $workspace
+    finally {
+        Remove-TestTempDir $tmpDir
+        Remove-TestTempDir $workspace
+    }
 }
 
 # ── Test 4: Multi-log scan ───────────────────────────────────────
 
-Write-Host "Test 4: Multi-log scan" -ForegroundColor Cyan
-$workspace = $null
-$tmpDir = $null
-try {
-    $workspace = New-ScanWorkspace
-    $tmpDir = New-TestTempDir
-    foreach ($log in $TestLogs) {
-        Copy-Item $log.FullName -Destination $tmpDir
-    }
+if (Should-RunScenario "multi-scan") {
+    Write-Host "Test 4: Multi-log scan" -ForegroundColor Cyan
+    $workspace = $null
+    $tmpDir = $null
+    try {
+        $workspace = New-ScanWorkspace
+        $tmpDir = New-TestTempDir
+        foreach ($log in $TestLogs) {
+            Copy-Item $log.FullName -Destination $tmpDir
+        }
 
-    $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
+        $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
 
-    if ($r.ExitCode -ne 0) {
-        Test-Fail "multi-scan-exit-code" "Expected exit code 0, got $($r.ExitCode). Stderr: $($r.Stderr)"
-    }
-    else {
-        Test-Pass "multi-scan-exit-code"
-    }
+        if ($r.ExitCode -ne 0) {
+            Test-Fail "multi-scan-exit-code" "Expected exit code 0, got $($r.ExitCode). Stderr: $($r.Stderr)"
+        }
+        else {
+            Test-Pass "multi-scan-exit-code"
+        }
 
-    $expectedCount = $TestLogs.Count
-    if ($r.Output -match "Found $expectedCount crash logs") {
-        Test-Pass "multi-scan-found-count"
-    }
-    else {
-        Test-Fail "multi-scan-found-count" "Output does not contain 'Found $expectedCount crash logs'"
-    }
+        $expectedCount = $TestLogs.Count
+        if ($r.Output -match "Found $expectedCount crash logs") {
+            Test-Pass "multi-scan-found-count"
+        }
+        else {
+            Test-Fail "multi-scan-found-count" "Output does not contain 'Found $expectedCount crash logs'"
+        }
 
-    $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
-    if ($autoscans.Count -eq $expectedCount) {
-        Test-Pass "multi-scan-reports-generated"
+        $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
+        if ($autoscans.Count -eq $expectedCount) {
+            Test-Pass "multi-scan-reports-generated"
+        }
+        else {
+            Test-Fail "multi-scan-reports-generated" "Expected $expectedCount AUTOSCAN.md files, found $($autoscans.Count)"
+        }
     }
-    else {
-        Test-Fail "multi-scan-reports-generated" "Expected $expectedCount AUTOSCAN.md files, found $($autoscans.Count)"
+    catch {
+        Test-Fail "multi-scan" "Exception: $_"
     }
-}
-catch {
-    Test-Fail "multi-scan" "Exception: $_"
-}
-finally {
-    Remove-TestTempDir $tmpDir
-    Remove-TestTempDir $workspace
+    finally {
+        Remove-TestTempDir $tmpDir
+        Remove-TestTempDir $workspace
+    }
 }
 
 # ── Test 5: --max-concurrent 1 (single-threaded) ─────────────────
 
-Write-Host "Test 5: --max-concurrent 1" -ForegroundColor Cyan
-$workspace = $null
-$tmpDir = $null
-try {
-    $workspace = New-ScanWorkspace
-    $tmpDir = New-TestTempDir
-    $firstLog = $TestLogs[0]
-    Copy-Item $firstLog.FullName -Destination $tmpDir
+if (Should-RunScenario "max-concurrent") {
+    Write-Host "Test 5: --max-concurrent 1" -ForegroundColor Cyan
+    $workspace = $null
+    $tmpDir = $null
+    try {
+        $workspace = New-ScanWorkspace
+        $tmpDir = New-TestTempDir
+        $firstLog = $TestLogs[0]
+        Copy-Item $firstLog.FullName -Destination $tmpDir
 
-    $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto", "--max-concurrent", "1") -WorkingDirectory $workspace
+        $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto", "--max-concurrent", "1") -WorkingDirectory $workspace
 
-    if ($r.Output -match "1 worker thread[^s]") {
-        Test-Pass "max-concurrent-singular"
-    }
-    elseif ($r.Output -match "1 worker thread\s*$") {
-        Test-Pass "max-concurrent-singular"
-    }
-    else {
-        Test-Fail "max-concurrent-singular" "Output does not contain '1 worker thread' (singular)"
-    }
+        if ($r.Output -match "1 worker thread[^s]") {
+            Test-Pass "max-concurrent-singular"
+        }
+        elseif ($r.Output -match "1 worker thread\s*$") {
+            Test-Pass "max-concurrent-singular"
+        }
+        else {
+            Test-Fail "max-concurrent-singular" "Output does not contain '1 worker thread' (singular)"
+        }
 
-    $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
-    if ($autoscans.Count -ge 1) {
-        Test-Pass "max-concurrent-report-generated"
+        $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
+        if ($autoscans.Count -ge 1) {
+            Test-Pass "max-concurrent-report-generated"
+        }
+        else {
+            Test-Fail "max-concurrent-report-generated" "No AUTOSCAN.md generated"
+        }
     }
-    else {
-        Test-Fail "max-concurrent-report-generated" "No AUTOSCAN.md generated"
+    catch {
+        Test-Fail "max-concurrent" "Exception: $_"
     }
-}
-catch {
-    Test-Fail "max-concurrent" "Exception: $_"
-}
-finally {
-    Remove-TestTempDir $tmpDir
-    Remove-TestTempDir $workspace
+    finally {
+        Remove-TestTempDir $tmpDir
+        Remove-TestTempDir $workspace
+    }
 }
 
 # ── Test 6: No crash logs found ──────────────────────────────────
 
-Write-Host "Test 6: No crash logs found (empty dir)" -ForegroundColor Cyan
-$workspace = $null
-$tmpDir = $null
-try {
-    $workspace = New-ScanWorkspace
-    $tmpDir = New-TestTempDir
+if (Should-RunScenario "empty-dir") {
+    Write-Host "Test 6: No crash logs found (empty dir)" -ForegroundColor Cyan
+    $workspace = $null
+    $tmpDir = $null
+    try {
+        $workspace = New-ScanWorkspace
+        $tmpDir = New-TestTempDir
 
-    $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
+        $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
 
-    if ($r.ExitCode -ne 0) {
-        Test-Fail "empty-dir-exit-code" "Expected exit code 0, got $($r.ExitCode)"
-    }
-    else {
-        Test-Pass "empty-dir-exit-code"
-    }
+        if ($r.ExitCode -ne 0) {
+            Test-Fail "empty-dir-exit-code" "Expected exit code 0, got $($r.ExitCode)"
+        }
+        else {
+            Test-Pass "empty-dir-exit-code"
+        }
 
-    if ($r.Output -match "No crash logs found") {
-        Test-Pass "empty-dir-message"
+        if ($r.Output -match "No crash logs found") {
+            Test-Pass "empty-dir-message"
+        }
+        else {
+            Test-Fail "empty-dir-message" "Output does not contain 'No crash logs found'"
+        }
     }
-    else {
-        Test-Fail "empty-dir-message" "Output does not contain 'No crash logs found'"
+    catch {
+        Test-Fail "empty-dir" "Exception: $_"
     }
-}
-catch {
-    Test-Fail "empty-dir" "Exception: $_"
-}
-finally {
-    Remove-TestTempDir $tmpDir
-    Remove-TestTempDir $workspace
+    finally {
+        Remove-TestTempDir $tmpDir
+        Remove-TestTempDir $workspace
+    }
 }
 
 # ── Test 7: Invalid --game value ─────────────────────────────────
 
-Write-Host "Test 7: Invalid --game value" -ForegroundColor Cyan
-try {
-    $r = Run-Cli -Arguments @("--game", "InvalidGame")
+if (Should-RunScenario "invalid-game") {
+    Write-Host "Test 7: Invalid --game value" -ForegroundColor Cyan
+    try {
+        $r = Run-Cli -Arguments @("--game", "InvalidGame")
 
-    # CLI11 IsMember validator rejects invalid values with a non-zero exit
-    if ($r.ExitCode -ne 0) {
-        Test-Pass "invalid-game-rejected"
+        # CLI11 IsMember validator rejects invalid values with a non-zero exit
+        if ($r.ExitCode -ne 0) {
+            Test-Pass "invalid-game-rejected"
+        }
+        else {
+            Test-Fail "invalid-game-rejected" "Expected non-zero exit code for invalid game, got 0"
+        }
     }
-    else {
-        Test-Fail "invalid-game-rejected" "Expected non-zero exit code for invalid game, got 0"
+    catch {
+        Test-Fail "invalid-game" "Exception: $_"
     }
-}
-catch {
-    Test-Fail "invalid-game" "Exception: $_"
 }
 
 # ── Test 8: AUTOSCAN report content validation ────────────────────
 
-Write-Host "Test 8: AUTOSCAN report content validation" -ForegroundColor Cyan
-$workspace = $null
-$tmpDir = $null
-try {
-    $workspace = New-ScanWorkspace
-    $tmpDir = New-TestTempDir
-    $firstLog = $TestLogs[0]
-    Copy-Item $firstLog.FullName -Destination $tmpDir
+if (Should-RunScenario "report-content") {
+    Write-Host "Test 8: AUTOSCAN report content validation" -ForegroundColor Cyan
+    $workspace = $null
+    $tmpDir = $null
+    try {
+        $workspace = New-ScanWorkspace
+        $tmpDir = New-TestTempDir
+        $firstLog = $TestLogs[0]
+        Copy-Item $firstLog.FullName -Destination $tmpDir
 
-    $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
+        $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
 
-    $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
-    if ($autoscans.Count -eq 0) {
-        Test-Fail "report-content" "No AUTOSCAN.md generated to validate"
-    }
-    else {
-        $content = Get-Content -Path $autoscans[0].FullName -Raw -Encoding UTF8
+        $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
+        if ($autoscans.Count -eq 0) {
+            Test-Fail "report-content" "No AUTOSCAN.md generated to validate"
+        }
+        else {
+            $content = Get-Content -Path $autoscans[0].FullName -Raw -Encoding UTF8
 
-        $sections = @("AUTOSCAN REPORT", "Error Information", "End of Report")
-        foreach ($section in $sections) {
-            if ($content -match [regex]::Escape($section)) {
-                Test-Pass "report-contains-$($section -replace ' ', '-')"
+            $sections = @("AUTOSCAN REPORT", "Error Information", "End of Report")
+            foreach ($section in $sections) {
+                if ($content -match [regex]::Escape($section)) {
+                    Test-Pass "report-contains-$($section -replace ' ', '-')"
+                }
+                else {
+                    Test-Fail "report-contains-$($section -replace ' ', '-')" "Report does not contain '$section'"
+                }
             }
-            else {
-                Test-Fail "report-contains-$($section -replace ' ', '-')" "Report does not contain '$section'"
+
+            # Regression guard: Rust report lines already contain explicit newlines.
+            # C++ join paths must not append extra separators that inflate blank lines.
+            $spacingGuards = @(
+                @{
+                    Name    = "report-spacing-header"
+                    Pattern = "\*\*AUTOSCAN REPORT GENERATED BY[^\r\n]*\*\*\r?\n\r?\n\r?\n>"
+                    Reason  = "Header has excessive blank lines before viewing notice"
+                },
+                @{
+                    Name    = "report-spacing-error-information"
+                    Pattern = "### Error Information\r?\n\r?\n\r?\n\*\*Main Error:\*\*"
+                    Reason  = "Error Information section has excessive blank lines before Main Error"
+                },
+                @{
+                    Name    = "report-spacing-known-suspects"
+                    Pattern = "### Checking for Known Crash Messages, Errors and Suspects\r?\n\r?\n\r?\n\S"
+                    Reason  = "Known Crash Messages/Suspects section has excessive blank lines after heading"
+                },
+                @{
+                    Name    = "report-spacing-important-mods"
+                    Pattern = "### Checking for Important Mods\r?\n\r?\n\r?\n\S"
+                    Reason  = "Important Mods section has excessive blank lines after heading"
+                }
+            )
+
+            foreach ($guard in $spacingGuards) {
+                if ($content -match $guard.Pattern) {
+                    Test-Fail $guard.Name $guard.Reason
+                }
+                else {
+                    Test-Pass $guard.Name
+                }
             }
         }
-
-        # Regression guard: Rust report lines already contain explicit newlines.
-        # C++ join paths must not append extra separators that inflate blank lines.
-        $spacingGuards = @(
-            @{
-                Name    = "report-spacing-header"
-                Pattern = "\*\*AUTOSCAN REPORT GENERATED BY[^\r\n]*\*\*\r?\n\r?\n\r?\n>"
-                Reason  = "Header has excessive blank lines before viewing notice"
-            },
-            @{
-                Name    = "report-spacing-error-information"
-                Pattern = "### Error Information\r?\n\r?\n\r?\n\*\*Main Error:\*\*"
-                Reason  = "Error Information section has excessive blank lines before Main Error"
-            },
-            @{
-                Name    = "report-spacing-known-suspects"
-                Pattern = "### Checking for Known Crash Messages, Errors and Suspects\r?\n\r?\n\r?\n\S"
-                Reason  = "Known Crash Messages/Suspects section has excessive blank lines after heading"
-            },
-            @{
-                Name    = "report-spacing-important-mods"
-                Pattern = "### Checking for Important Mods\r?\n\r?\n\r?\n\S"
-                Reason  = "Important Mods section has excessive blank lines after heading"
-            }
-        )
-
-        foreach ($guard in $spacingGuards) {
-            if ($content -match $guard.Pattern) {
-                Test-Fail $guard.Name $guard.Reason
-            }
-            else {
-                Test-Pass $guard.Name
-            }
-        }
     }
-}
-catch {
-    Test-Fail "report-content" "Exception: $_"
-}
-finally {
-    Remove-TestTempDir $tmpDir
-    Remove-TestTempDir $workspace
+    catch {
+        Test-Fail "report-content" "Exception: $_"
+    }
+    finally {
+        Remove-TestTempDir $tmpDir
+        Remove-TestTempDir $workspace
+    }
 }
 
 # ── Summary ───────────────────────────────────────────────────────

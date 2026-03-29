@@ -11,6 +11,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QSet>
 #include <QThread>
 
 namespace {
@@ -54,6 +55,51 @@ bool isCrashLogPath(const QString& path)
            name.endsWith(QStringLiteral(".log"), Qt::CaseInsensitive);
 }
 
+QString formatTargetedRejectionMessage(const rust::Vec<rust::String>& rejectedPaths,
+                                       const rust::Vec<rust::String>& rejectedReasons)
+{
+    if (rejectedPaths.empty()) {
+        return {};
+    }
+
+    QStringList lines;
+    lines.append(QStringLiteral("Ignored %1 targeted input%2:")
+                     .arg(rejectedPaths.size())
+                     .arg(rejectedPaths.size() == 1 ? "" : "s"));
+
+    for (size_t i = 0; i < rejectedPaths.size(); ++i) {
+        const QString path = classic::toQString(rejectedPaths[i]);
+        const QString reason = i < rejectedReasons.size() ? classic::toQString(rejectedReasons[i])
+                                                          : QStringLiteral("unknown reason");
+        lines.append(QStringLiteral("- %1 (%2)").arg(path, reason));
+    }
+
+    return lines.join('\n');
+}
+
+QStringList collectReportDirectories(const QStringList& logPaths)
+{
+    QStringList reportDirs;
+    QSet<QString> seen;
+
+    for (const auto& logPath : logPaths) {
+        const QString reportDir = QDir::cleanPath(QFileInfo(logPath).absolutePath());
+        if (reportDir.isEmpty()) {
+            continue;
+        }
+
+        const QString key = reportDir.toLower();
+        if (seen.contains(key)) {
+            continue;
+        }
+
+        seen.insert(key);
+        reportDirs.append(reportDir);
+    }
+
+    return reportDirs;
+}
+
 } // namespace
 
 ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent)
@@ -78,10 +124,13 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
         emit m_signalHub->scanStarted();
     }
 
+    const bool targetedMode = !targetedInputs.isEmpty();
+
     // Collect crash logs -- targeted mode or standard discovery
     QStringList logPathsList;
+    QString targetedRejectionMessage;
     try {
-        if (!targetedInputs.isEmpty()) {
+        if (targetedMode) {
             rust::Vec<rust::String> rustInputs;
             rustInputs.reserve(static_cast<size_t>(targetedInputs.size()));
             for (const auto& p : targetedInputs) {
@@ -97,11 +146,16 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
                 }
             }
 
-            if (!resolution.rejected_paths.empty()) {
+            targetedRejectionMessage =
+                formatTargetedRejectionMessage(resolution.rejected_paths, resolution.rejected_reasons);
+            if (!targetedRejectionMessage.isEmpty()) {
                 for (size_t i = 0; i < resolution.rejected_paths.size(); ++i) {
+                    const QString reason = i < resolution.rejected_reasons.size()
+                                               ? classic::toQString(resolution.rejected_reasons[i])
+                                               : QStringLiteral("unknown reason");
                     qWarning("Targeted input rejected: %s (%s)",
                              qPrintable(classic::toQString(resolution.rejected_paths[i])),
-                             qPrintable(classic::toQString(resolution.rejected_reasons[i])));
+                             qPrintable(reason));
                 }
             }
         } else {
@@ -133,12 +187,26 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
 
     if (logPathsList.isEmpty()) {
         m_scanning = false;
-        emit scanError(QStringLiteral("No crash logs found"));
+        const QString errorMessage = targetedMode
+                                         ? (targetedRejectionMessage.isEmpty()
+                                                ? QStringLiteral("No crash logs resolved from targeted inputs.")
+                                                : QStringLiteral("No crash logs resolved from targeted inputs.\n\n%1")
+                                                      .arg(targetedRejectionMessage))
+                                         : QStringLiteral("No crash logs found");
+        emit scanError(errorMessage);
         if (m_signalHub) {
-            emit m_signalHub->scanError(QStringLiteral("No crash logs found"));
+            emit m_signalHub->scanError(errorMessage);
         }
         return;
     }
+
+    if (!targetedRejectionMessage.isEmpty()) {
+        emit scanWarning(targetedRejectionMessage);
+    }
+    if (targetedMode) {
+        emit scanReportDirectoriesResolved(collectReportDirectories(logPathsList));
+    }
+
     emit scanDiscovered(logPathsList.size());
 
     // Create worker and thread
@@ -160,10 +228,10 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     // Start the worker thread and invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
             [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs,
-             moveUnsolvedLogs, maxConcurrentScans]() {
-                worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
-                               simplifyLogs, moveUnsolvedLogs, maxConcurrentScans);
-            });
+             moveUnsolvedLogs, maxConcurrentScans, targetedMode]() {
+                 worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
+                                simplifyLogs, moveUnsolvedLogs, maxConcurrentScans, targetedMode);
+             });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);
 }

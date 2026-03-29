@@ -122,12 +122,15 @@ void ScanWorker::doScan(const QStringList& logPaths,
                         bool fcxMode,
                         bool simplifyLogs,
                         bool moveUnsolvedLogs,
-                        int maxConcurrentScans) {
+                        int maxConcurrentScans,
+                        bool targetedMode) {
     m_cancelled = false;
 
     int total = logPaths.size();
     int successCount = 0;
     int errorCount = 0;
+    // Targeted scans operate on user-selected source files and should not relocate them.
+    const bool shouldMoveUnsolvedLogs = moveUnsolvedLogs && !targetedMode;
 
     try {
         // rust::Box<T> is non-nullable and non-default-constructible.
@@ -188,7 +191,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     }
                 }
 
-                if (!scanSuccess && moveUnsolvedLogs) {
+                if (!scanSuccess && shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(reportLogPath, yamlRoot);
                 }
 
@@ -237,7 +240,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     }
                 }
 
-                if (!scan_success && moveUnsolvedLogs) {
+                if (!scan_success && shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(report_log_path, yamlRoot);
                 }
 
@@ -250,7 +253,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
 
             } catch (const rust::Error&) {
                 ++errorCount;
-                if (moveUnsolvedLogs) {
+                if (shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(std::string(logPaths[i].toUtf8().constData()), yamlRoot);
                 }
                 emit logScanned(i, false, logPaths[i]);

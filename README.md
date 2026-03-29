@@ -81,6 +81,11 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+
+# Selected C++ tests through the wrappers
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 ```
 
 CLI integration tests use crash-log fixtures from `sample_logs/FO4` (git submodule). Initialize submodules before running tests:
@@ -88,8 +93,6 @@ CLI integration tests use crash-log fixtures from `sample_logs/FO4` (git submodu
 ```powershell
 git submodule update --init --recursive
 ```
-
-Alternatively, run integration tests with an explicit fixture path via `classic-cli/test_cli.ps1 -TestDataDir <path>`.
 
 ---
 
@@ -114,7 +117,7 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 ```
 
-Use the build scripts instead of raw CMake commands so VS Dev Shell is initialized correctly.
+Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test executable launches so VS Dev Shell and C++ test environment setup stay correct.
 
 ---
 

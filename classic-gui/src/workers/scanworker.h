@@ -20,7 +20,8 @@ public slots:
                 bool fcxMode,
                 bool simplifyLogs,
                 bool moveUnsolvedLogs,
-                int maxConcurrentScans);
+                int maxConcurrentScans,
+                bool targetedMode);
     void requestCancel();
 
 signals:

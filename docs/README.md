@@ -38,7 +38,13 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 ```
+
+Use the PowerShell wrappers for all C++ testing. Do not invoke raw `ctest` or C++ test executables directly.
 
 ### Rust
 

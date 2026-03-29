@@ -13,6 +13,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QSet>
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QTextStream>
@@ -690,6 +691,9 @@ void MainWindow::connectSignals()
     connect(m_scanController, &ScanController::scanLogScanned, this, &MainWindow::onCrashLogScanned);
     connect(m_scanController, &ScanController::scanFinished, this, &MainWindow::onScanCompleted);
     connect(m_scanController, &ScanController::scanError, this, &MainWindow::onScanError);
+    connect(m_scanController, &ScanController::scanWarning, this, &MainWindow::onScanWarning);
+    connect(m_scanController, &ScanController::scanReportDirectoriesResolved,
+            this, &MainWindow::onScanReportDirectoriesResolved);
 
     // Settings button
     connect(m_btnSettings, &QPushButton::clicked, this, &MainWindow::onShowSettings);
@@ -920,13 +924,34 @@ void MainWindow::initResultsReportDir()
     QDir().mkpath(crashDir);
 
     QStringList reportDirs;
-    reportDirs.append(crashDir);
+    QSet<QString> seenReportDirs;
+
+    const auto appendUniqueReportDir = [&reportDirs, &seenReportDirs](const QString& rawDir) {
+        const QString cleanedDir = QDir::cleanPath(rawDir.trimmed());
+        if (cleanedDir.isEmpty()) {
+            return;
+        }
+
+        const QString key = cleanedDir.toLower();
+        if (seenReportDirs.contains(key)) {
+            return;
+        }
+
+        seenReportDirs.insert(key);
+        reportDirs.append(cleanedDir);
+    };
+
+    appendUniqueReportDir(crashDir);
 
     if (m_editCustomFolder) {
         const QString customDir = QDir::cleanPath(m_editCustomFolder->text().trimmed());
         if (!customDir.isEmpty() && QDir(customDir).exists() && customDir.compare(crashDir, Qt::CaseInsensitive) != 0) {
-            reportDirs.append(customDir);
+            appendUniqueReportDir(customDir);
         }
+    }
+
+    for (const auto& reportDir : m_lastScanReportDirs) {
+        appendUniqueReportDir(reportDir);
     }
 
     m_resultsController->setReportDirectories(reportDirs, crashDir);
@@ -1484,6 +1509,7 @@ void MainWindow::onScanCrashLogs()
     m_crashScanTotalLogs = 0;
     m_crashScanLogsCompleted = 0;
     m_crashScanInProgress = true;
+    m_lastScanReportDirs.clear();
     m_crashScanTimer.start();
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
@@ -1641,6 +1667,7 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
     m_crashScanInProgress = false;
     m_crashScanTotalLogs = total;
     m_crashScanLogsCompleted = total;
+    initResultsReportDir();
     setStatusMessage(QStringLiteral("Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)")
                          .arg(total)
                          .arg(format_elapsed_seconds(m_crashScanTimer))
@@ -1657,10 +1684,21 @@ void MainWindow::onScanError(const QString& message)
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
+    initResultsReportDir();
     setStatusMessage(
         QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message));
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
+}
+
+void MainWindow::onScanWarning(const QString& message)
+{
+    QMessageBox::warning(this, QStringLiteral("Scan Warning"), message);
+}
+
+void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
+{
+    m_lastScanReportDirs = reportDirs;
 }
 
 void MainWindow::onShowSettings()
