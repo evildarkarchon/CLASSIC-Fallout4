@@ -27,6 +27,7 @@ use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
+    is_fake_bot_compatible_buffout_version,
 };
 use classic_config_core::{
     CoreModEntry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule, SuspectStackRule,
@@ -689,6 +690,21 @@ pub struct OrchestratorCore {
 }
 
 impl OrchestratorCore {
+    fn has_real_buffout_module(xse_modules: &HashSet<String>) -> bool {
+        xse_modules.contains("buffout4.dll") || xse_modules.contains("buffout4ae.dll")
+    }
+
+    fn is_fake_bot_compatible_mode(
+        crashgen_version_str: &str,
+        xse_modules: &HashSet<String>,
+    ) -> bool {
+        is_fake_bot_compatible_buffout_version(crashgen_version_str)
+            || (crashgen_version_str
+                .to_ascii_lowercase()
+                .contains("buffout")
+                && !Self::has_real_buffout_module(xse_modules))
+    }
+
     /// Build a settings validator from `AnalysisConfig`.
     fn settings_validator_from_config(config: &AnalysisConfig) -> SettingsValidator {
         Self::settings_validator_for_crashgen(config, &config.crashgen_name)
@@ -717,7 +733,7 @@ impl OrchestratorCore {
         }
 
         let has_addictol = xse_modules.contains("addictol.dll");
-        let has_buffout = xse_modules.contains("buffout4.dll");
+        let has_buffout = Self::has_real_buffout_module(xse_modules);
         if has_addictol && !has_buffout {
             return "Addictol".to_string();
         }
@@ -1094,10 +1110,19 @@ impl OrchestratorCore {
             .cloned()
             .unwrap_or_default();
 
-        let effective_crashgen_name = self.resolve_effective_crashgen_name(
+        let fake_bot_compatible_mode = Self::is_fake_bot_compatible_mode(
             &crashgen_version_str,
             &context.xse_modules_for_settings,
         );
+
+        let effective_crashgen_name = if fake_bot_compatible_mode {
+            self.config.crashgen_name.clone()
+        } else {
+            self.resolve_effective_crashgen_name(
+                &crashgen_version_str,
+                &context.xse_modules_for_settings,
+            )
+        };
 
         // Create ReportGenerator for this log using effective crashgen name.
         let report_gen = self.create_report_generator_with_crashgen_name(&effective_crashgen_name);
@@ -1121,7 +1146,8 @@ impl OrchestratorCore {
         });
 
         // Check crashgen version status using list-based validation for the detected game version
-        let crashgen_status = if crashgen_version_str.trim().is_empty() {
+        let crashgen_status = if crashgen_version_str.trim().is_empty() || fake_bot_compatible_mode
+        {
             None
         } else {
             let (_parsed, status) = self.check_crashgen_version_for_detected_game(
@@ -1156,7 +1182,8 @@ impl OrchestratorCore {
 
         let mut error_information_fragments: Vec<ReportFragment> = Vec::new();
         let mut settings_fragments: Vec<ReportFragment> = Vec::new();
-        if !context.crashgen_settings.is_empty()
+        if !fake_bot_compatible_mode
+            && !context.crashgen_settings.is_empty()
             && let Ok(bucketed_settings_fragments) = settings_validator.scan_all_settings_bucketed(
                 &context.crashgen_settings,
                 &context.xse_modules_for_settings,
@@ -1177,10 +1204,11 @@ impl OrchestratorCore {
         }
 
         // Generate error section
-        let error_section = report_gen.generate_error_section_with_status(
+        let error_section = report_gen.generate_error_section_with_status_and_fake_mode(
             &main_error,
             &crashgen_version_str,
             crashgen_status,
+            fake_bot_compatible_mode,
         );
         composer.add(Self::append_error_information_fragments(
             error_section,
@@ -2476,6 +2504,17 @@ mod tests {
     }
 
     #[test]
+    fn fake_bot_mode_treats_buffout4ae_dll_as_real_buffout() {
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("buffout4ae.dll".to_string());
+
+        assert!(
+            !OrchestratorCore::is_fake_bot_compatible_mode("Buffout 4 v1.28.6", &xse_modules),
+            "buffout4ae.dll should count as a real Buffout module"
+        );
+    }
+
+    #[test]
     fn create_report_generator_with_crashgen_name_updates_error_section_label() {
         let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
         let orchestrator = OrchestratorCore::new(config).unwrap();
@@ -2695,6 +2734,111 @@ mod tests {
         let suspect_index = report_text.find(suspect_header).unwrap();
         assert!(status_index < notice_index);
         assert!(notice_index < suspect_index);
+    }
+
+    #[test]
+    fn process_log_skips_fake_bot_compatible_buffout_version_and_settings_checks() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Buffout 4 v1.1.0",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Compatibility]",
+            "Achievements: true",
+            "MemoryManager: true",
+            "ArchiveLimit: false",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "fake-buffout.dll v1.0.0",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log("fake-bot-compatible.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fake bot-compatible fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(report_text.contains("Bot Compatible Mode"));
+        assert!(
+            report_text.contains("Version checks and settings checks are disabled"),
+            "report should explain why checks were skipped"
+        );
+        assert!(
+            !report_text.contains("OUTDATED"),
+            "fake bot-compatible logs should not emit outdated-version warnings"
+        );
+        assert!(
+            !report_text.contains("### Checking for Settings-related Issues"),
+            "fake bot-compatible logs should skip settings validation"
+        );
+    }
+
+    #[test]
+    fn process_log_skips_checks_when_buffout_header_lacks_buffout_module() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Buffout 4 v1.28.6",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Compatibility]",
+            "Achievements: true",
+            "MemoryManager: true",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "addictol.dll v1.1.0",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log(
+            "fake-bot-compatible-missing-buffout-module.log",
+            &log_contents,
+        );
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("missing buffout module fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(
+            report_text.contains("Bot Compatible Mode"),
+            "logs claiming Buffout 4 without buffout4.dll should be treated as bot-compatible"
+        );
+        assert!(
+            !report_text.contains("### Checking for Settings-related Issues"),
+            "missing buffout4.dll should suppress settings validation for fake Buffout logs"
+        );
     }
 
     #[test]

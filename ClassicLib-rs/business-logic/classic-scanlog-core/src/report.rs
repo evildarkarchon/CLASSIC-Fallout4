@@ -453,6 +453,22 @@ impl ReportGenerator {
         crashgen_version: &str,
         status: Option<CrashgenVersionStatus>,
     ) -> ReportFragment {
+        self.generate_error_section_with_status_and_fake_mode(
+            main_error,
+            crashgen_version,
+            status,
+            false,
+        )
+    }
+
+    /// Generate an error section with optional fake bot-compatible mode notice.
+    pub fn generate_error_section_with_status_and_fake_mode(
+        &self,
+        main_error: &str,
+        crashgen_version: &str,
+        status: Option<CrashgenVersionStatus>,
+        fake_bot_compatible_mode: bool,
+    ) -> ReportFragment {
         let mut lines = vec![
             "### Error Information\n\n".to_string(),
             format!("**Main Error:** {}\n\n", main_error),
@@ -462,36 +478,40 @@ impl ReportGenerator {
             ),
         ];
 
-        match status {
-            Some(CrashgenVersionStatus::Valid) => {
-                lines.push(format!(
-                    "✅ *You have a valid version of {}!*\n\n",
-                    self.crashgen_name
-                ));
-            }
-            Some(CrashgenVersionStatus::NewerThanKnown) => {
-                lines.push(format!(
-                    "✅ *Your {} version is newer than known versions.*\n\n",
-                    self.crashgen_name
-                ));
-            }
-            Some(CrashgenVersionStatus::Outdated) => {
-                lines.push(format!(
-                    "***❌ WARNING: YOUR {} IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n\n",
-                    self.crashgen_name
-                ));
-            }
-            Some(CrashgenVersionStatus::NoSupportedVersion) => {
-                lines.push(
-                    "⚠️ *No supported crash log generator for this game version yet.*\n\n"
-                        .to_string(),
-                );
-            }
-            None => {
-                lines.push(format!(
-                    "⚠️ *Unable to verify {} version.*\n\n",
-                    self.crashgen_name
-                ));
+        if fake_bot_compatible_mode {
+            lines.push("**# ⚠️ NOTICE : This report was generated in Bot Compatible Mode. Version and settings checks are disabled. #**\n\n".to_string());
+        } else {
+            match status {
+                Some(CrashgenVersionStatus::Valid) => {
+                    lines.push(format!(
+                        "✅ *You have a valid version of {}!*\n\n",
+                        self.crashgen_name
+                    ));
+                }
+                Some(CrashgenVersionStatus::NewerThanKnown) => {
+                    lines.push(format!(
+                        "✅ *Your {} version is newer than known versions.*\n\n",
+                        self.crashgen_name
+                    ));
+                }
+                Some(CrashgenVersionStatus::Outdated) => {
+                    lines.push(format!(
+                        "***❌ WARNING: YOUR {} IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n\n",
+                        self.crashgen_name
+                    ));
+                }
+                Some(CrashgenVersionStatus::NoSupportedVersion) => {
+                    lines.push(
+                        "⚠️ *No supported crash log generator for this game version yet.*\n\n"
+                            .to_string(),
+                    );
+                }
+                None => {
+                    lines.push(format!(
+                        "⚠️ *Unable to verify {} version.*\n\n",
+                        self.crashgen_name
+                    ));
+                }
             }
         }
 
@@ -715,5 +735,23 @@ mod tests {
         let text = section.to_list().join("");
         assert!(text.contains("valid version of Buffout 4"));
         assert!(!text.contains("latest version of Buffout 4"));
+    }
+
+    #[test]
+    fn test_generate_error_section_fake_bot_mode_notice_replaces_version_status() {
+        let generator =
+            ReportGenerator::with_config("CLASSIC v9.0.0".to_string(), "Buffout 4".to_string());
+
+        let section = generator.generate_error_section_with_status_and_fake_mode(
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\"",
+            "Buffout 4 v1.1.0",
+            None,
+            true,
+        );
+
+        let text = section.to_list().join("");
+        assert!(text.contains("Bot Compatible Mode"));
+        assert!(text.contains("Version and settings checks are disabled"));
+        assert!(!text.contains("Unable to verify Buffout 4 version"));
     }
 }

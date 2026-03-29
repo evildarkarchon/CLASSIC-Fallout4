@@ -52,6 +52,10 @@ pub struct SettingsValidator {
 }
 
 impl SettingsValidator {
+    fn has_real_buffout_module(xse_modules: &HashSet<String>) -> bool {
+        xse_modules.contains("buffout4.dll") || xse_modules.contains("buffout4ae.dll")
+    }
+
     /// Creates a new settings validator from a pre-resolved crashgen name and entry.
     ///
     /// # Arguments
@@ -195,7 +199,7 @@ impl SettingsValidator {
         crashgen_version: Option<(u32, u32, u32)>,
     ) -> Result<Vec<BucketedSettingsFragment>> {
         let has_addictol = xse_modules.contains("addictol.dll");
-        let has_buffout = xse_modules.contains("buffout4.dll");
+        let has_buffout = Self::has_real_buffout_module(xse_modules);
         let mut settings_fragments = Vec::new();
 
         if has_addictol {
