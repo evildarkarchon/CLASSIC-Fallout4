@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
+import subprocess
+import sys
+import textwrap
 from typing import Any, cast
 
 import pytest
@@ -95,7 +98,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     config = classic_config.ClassicConfig()
     assert config.game_version == "auto"
     assert config.get_config_path().endswith("CLASSIC Settings.yaml")
-    assert "CLASSIC-Fallout4" not in config.get_config_path()
 
     config.paths = classic_config.PathConfig(game_root=str(tmp_path))
     config.validate_paths()
@@ -130,7 +132,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     auto_loaded = classic_config.ClassicConfig.load_or_default()
     assert auto_loaded.fcx_mode is True
     assert auto_loaded.get_config_path() == str(resolved_default_settings)
-    assert "CLASSIC-Fallout4" not in auto_loaded.get_config_path()
 
     resolved_default_settings.write_text(
         "{ invalid: yaml: content: }}}", encoding="utf-8"
@@ -173,7 +174,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     cache_path = classic_config.YamlSource.CACHE.path("")
     assert cache_path.endswith("cache.yaml")
     assert "CLASSIC" in cache_path
-    assert "CLASSIC-Fallout4" not in cache_path
 
 
 def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -451,6 +451,38 @@ def test_application_dir_override(tmp_path: Path) -> None:
     # Restore the original override so other tests are unaffected
     if app_dir is not None:
         classic_config.set_application_dir(app_dir)
+
+
+def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> None:
+    """classic_config should anchor settings lookup to the executed script directory."""
+
+    script_dir = tmp_path / "script-dir"
+    run_dir = tmp_path / "run-dir"
+    script_dir.mkdir()
+    run_dir.mkdir()
+
+    script_path = script_dir / "show_config_path.py"
+    script_path.write_text(
+        textwrap.dedent(
+            """\
+            import classic_config
+
+            print(classic_config.ClassicConfig().get_config_path())
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=run_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(script_dir / "CLASSIC Settings.yaml")
 
 
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))

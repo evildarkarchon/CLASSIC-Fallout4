@@ -1082,19 +1082,19 @@ pub fn clear_yaml_cache() {
 }
 
 /// Auto-register the application directory so settings resolve relative to the
-/// process working directory rather than the interpreter's install path.
-fn auto_init_application_dir() {
+/// executed Python file rather than the interpreter's install path.
+fn auto_init_application_dir(py: Python<'_>) {
     if classic_registry_core::get_application_dir().is_none() {
-        if let Ok(cwd) = std::env::current_dir() {
-            classic_registry_core::set_application_dir(cwd);
+        if let Some(app_dir) = classic_shared::resolve_python_entry_dir(py) {
+            classic_registry_core::set_application_dir(app_dir);
         }
     }
 }
 
 /// Override the directory used to resolve ``CLASSIC Settings.yaml`` and other
 /// application-local files.  Call before ``load_or_default()`` or
-/// ``get_config_path()`` if you need a directory other than ``os.getcwd()``
-/// at import time.
+/// ``get_config_path()`` if you need a directory other than the executed
+/// Python file's directory.
 #[pyfunction]
 fn set_application_dir(path: String) {
     classic_registry_core::set_application_dir(PathBuf::from(path));
@@ -1102,7 +1102,8 @@ fn set_application_dir(path: String) {
 
 /// Return the current application directory override, or ``None`` if no
 /// override has been registered (which should not happen after import,
-/// since the module auto-registers ``os.getcwd()``).
+/// since the module auto-registers the executed script directory when one is
+/// available).
 #[pyfunction]
 fn get_application_dir() -> Option<String> {
     classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
@@ -1111,7 +1112,7 @@ fn get_application_dir() -> Option<String> {
 /// Initialize the classic_config Python module
 #[pymodule]
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    auto_init_application_dir();
+    auto_init_application_dir(m.py());
 
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyPathConfig>()?;
@@ -1132,7 +1133,7 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 /// Public registration function for use by facade modules
 /// This allows classic-core to include config components in its submodule
 pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    auto_init_application_dir();
+    auto_init_application_dir(m.py());
 
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyPathConfig>()?;
