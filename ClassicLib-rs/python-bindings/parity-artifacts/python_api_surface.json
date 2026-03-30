@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-29T07:57:12.716052+00:00",
+  "generated_at_utc": "2026-03-30T12:25:29.785974+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -314,6 +314,28 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def create_yamldata( yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> YamlData:"
+    },
+    {
+      "module": "classic_config",
+      "export": "get_application_dir",
+      "export_path": "get_application_dir",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def get_application_dir() -> str | None:"
+    },
+    {
+      "module": "classic_config",
+      "export": "set_application_dir",
+      "export_path": "set_application_dir",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def set_application_dir(path: str | Path) -> None:"
     },
     {
       "module": "classic_scanlog",

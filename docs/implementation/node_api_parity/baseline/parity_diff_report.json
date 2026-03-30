@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-29T07:57:15.928140+00:00",
+  "generated_at_utc": "2026-03-30T12:22:20.268784+00:00",
   "summary": {
     "tier1_contract_total": 261,
     "tier1_matched": 261,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 118,
+    "total_gaps": 120,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 118
+    "tier2_gap_total": 120
   },
   "contract_results": [
     {
@@ -4578,6 +4578,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "getApplicationDir",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -4651,6 +4661,16 @@
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
+      "node_export": "setApplicationDir",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
       "node_export": "writeAutoscanReport",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
@@ -4664,7 +4684,7 @@
       "tier2": 71
     },
     "aux": {
-      "tier2": 13
+      "tier2": 15
     },
     "version_registry": {
       "tier2": 5

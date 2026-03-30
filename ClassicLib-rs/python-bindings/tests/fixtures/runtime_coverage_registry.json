@@ -72,6 +72,19 @@
       "testCaseId": "config-tier2-smoke"
     },
     {
+      "coverageId": "python-tier2-config-application-dir-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "classic_config.get_application_dir",
+        "classic_config.set_application_dir"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "application-dir-override"
+    },
+    {
       "coverageId": "python-tier2-scanlog-runtime",
       "classification": "runtime_verified",
       "ownerModule": "scanlog",

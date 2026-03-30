@@ -486,8 +486,13 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
                 });
             }
         } else if metadata.is_dir() {
-            let pattern = input.join("**").join(CRASH_LOG_PATTERN);
-            let pattern_str = pattern.to_string_lossy();
+            let escaped_input = glob::Pattern::escape(input.to_string_lossy().as_ref());
+            let pattern_str = format!(
+                "{escaped_input}{}**{}{}",
+                std::path::MAIN_SEPARATOR,
+                std::path::MAIN_SEPARATOR,
+                CRASH_LOG_PATTERN
+            );
 
             let Ok(entries) = glob::glob(&pattern_str) else {
                 rejected.push(RejectedInput {
@@ -658,6 +663,19 @@ mod tests {
 
         let res = resolve_targeted_inputs(vec![temp.path().to_path_buf()]).await;
         assert_eq!(res.logs.len(), 2);
+        assert!(res.rejected.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_targeted_directory_with_glob_metacharacters() {
+        let temp = TempDir::new().unwrap();
+        let sub = temp.path().join("mods[1]").join("nested");
+        tokio::fs::create_dir_all(&sub).await.unwrap();
+        let log = sub.join("crash-2024-01-01-12-00-00.log");
+        tokio::fs::write(&log, b"log1").await.unwrap();
+
+        let res = resolve_targeted_inputs(vec![temp.path().join("mods[1]")]).await;
+        assert_eq!(res.logs, vec![log]);
         assert!(res.rejected.is_empty());
     }
 

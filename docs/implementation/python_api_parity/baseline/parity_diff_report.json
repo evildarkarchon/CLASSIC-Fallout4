@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-29T02:52:41.437555+00:00",
+  "generated_at_utc": "2026-03-30T12:22:08.744654+00:00",
   "summary": {
     "tier1_contract_total": 59,
     "tier1_matched": 59,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 292,
+    "total_gaps": 294,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 292
+    "tier2_gap_total": 294
   },
   "contract_results": [
     {
@@ -1999,6 +1999,30 @@
       "python_module": "classic_config",
       "python_export": "create_yamldata",
       "python_export_path": "create_yamldata",
+      "reason": "Python export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "python_module": "classic_config",
+      "python_export": "get_application_dir",
+      "python_export_path": "get_application_dir",
+      "reason": "Python export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "python_module": "classic_config",
+      "python_export": "set_application_dir",
+      "python_export_path": "set_application_dir",
       "reason": "Python export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
     },
@@ -4405,7 +4429,7 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 26
+      "tier2": 28
     },
     "scanlog": {
       "tier2": 231

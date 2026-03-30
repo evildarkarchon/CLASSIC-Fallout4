@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -11,10 +11,17 @@ import {
   createYamlDataFromContent,
   createDefaultConfig,
   clearYamlCache,
+  registryClear,
+  getApplicationDir,
+  setApplicationDir,
   getYamlSourcePath,
   getYamlSourceDisplayName,
   getYamlSourceDisplayNameWithGame,
 } from "../index.js";
+import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
+
+const THIS_SUITE =
+  "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts";
 
 // ============================================================================
 // Test Fixtures
@@ -206,6 +213,38 @@ describe("YamlData construction", () => {
     expect(data.crashgenName.length).toBeGreaterThan(0);
     expect(data.xseAcronym.length).toBeGreaterThan(0);
     expect(data.gameVersion.length).toBeGreaterThan(0);
+  });
+});
+
+describe("runtime coverage metadata", () => {
+  test("tracks application directory overrides", () => {
+    const bindingIdentifiers = new Set(
+      getRuntimeCoverageEntries(THIS_SUITE).flatMap(
+        (entry) => entry.bindingIdentifiers ?? [],
+      ),
+    );
+
+    expect(bindingIdentifiers.has("getApplicationDir")).toBe(true);
+    expect(bindingIdentifiers.has("setApplicationDir")).toBe(true);
+  });
+});
+
+describe("application directory overrides", () => {
+  beforeEach(() => {
+    registryClear();
+  });
+
+  afterEach(() => {
+    registryClear();
+  });
+
+  test("setApplicationDir and getApplicationDir round-trip", () => {
+    expect(getApplicationDir()).toBeNull();
+
+    const appDir = mkdtempSync(join(tmpdir(), "classic-node-appdir-"));
+    setApplicationDir(appDir);
+
+    expect(getApplicationDir()).toBe(appDir);
   });
 });
 
@@ -702,12 +741,11 @@ describe("ClassicConfigJs FormID databases", () => {
 // ============================================================================
 
 describe("ClassicConfigJs config path", () => {
-  test("getConfigPath returns a CLASSIC-based default path", () => {
+  test("getConfigPath defaults to the process working directory", () => {
     const config = new ClassicConfigJs();
     const path = config.getConfigPath();
     expect(typeof path).toBe("string");
-    expect(path).toContain("CLASSIC Settings.yaml");
-    expect(path).not.toContain("CLASSIC-Fallout4");
+    expect(path).toBe(join(process.cwd(), "CLASSIC Settings.yaml"));
   });
 
   test("loadOrDefault reads from the resolved default settings path", () => {
@@ -728,7 +766,6 @@ describe("ClassicConfigJs config path", () => {
       const config = ClassicConfigJs.loadOrDefault();
       expect(config.fcxMode).toBe(true);
       expect(config.getConfigPath()).toBe(settingsPath);
-      expect(config.getConfigPath()).not.toContain("CLASSIC-Fallout4");
     } finally {
       if (originalAppData === undefined) {
         delete process.env.APPDATA;

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-29T07:57:15.930088+00:00",
+  "generated_at_utc": "2026-03-30T12:22:20.270588+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,8 +8,8 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 379,
-    "runtime_verified_total": 271,
+    "tracked_surface_total": 381,
+    "runtime_verified_total": 273,
     "contract_mapped_total": 0,
     "deferred_total": 108,
     "newly_uncovered_total": 0,
@@ -20,8 +20,8 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 141,
-      "total": 153,
+      "runtime_verified": 143,
+      "total": 155,
       "deferred": 12
     },
     "config": {
@@ -6848,6 +6848,25 @@
       "notes": null
     },
     {
+      "trackedId": "binding:getApplicationDir",
+      "trackedType": "gap",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "getApplicationDir",
+      "coverageId": "node-tier2-aux-application-dir-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "config-application-dir-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": null
+    },
+    {
       "trackedId": "binding:getDefaultCacheCleanupInterval",
       "trackedType": "gap",
       "ownerModule": "config",
@@ -6974,6 +6993,25 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scangame.spec.ts",
       "testCaseId": "scanlog-tier2-scangame",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": null
+    },
+    {
+      "trackedId": "binding:setApplicationDir",
+      "trackedType": "gap",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "setApplicationDir",
+      "coverageId": "node-tier2-aux-application-dir-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "config-application-dir-runtime",
       "fixtureRefs": [],
       "wave": null,
       "owner": null,

@@ -105,6 +105,19 @@
       "testCaseId": "config-tier2-scangame"
     },
     {
+      "coverageId": "node-tier2-aux-application-dir-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "getApplicationDir",
+        "setApplicationDir"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "config-application-dir-runtime"
+    },
+    {
       "coverageId": "node-tier2-aux-runtime",
       "classification": "runtime_verified",
       "ownerModule": "aux",

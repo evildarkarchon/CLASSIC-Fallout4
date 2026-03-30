@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-29T07:57:12.718637+00:00",
+  "generated_at_utc": "2026-03-30T12:25:29.788804+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
     "deferred_registry": "docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json"
   },
   "summary": {
-    "tracked_surface_total": 351,
-    "runtime_verified_total": 64,
+    "tracked_surface_total": 353,
+    "runtime_verified_total": 66,
     "contract_mapped_total": 0,
     "deferred_total": 287,
     "newly_uncovered_total": 0,
@@ -19,8 +19,8 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "config": {
-      "runtime_verified": 15,
-      "total": 41,
+      "runtime_verified": 17,
+      "total": 43,
       "deferred": 26
     },
     "scanlog": {
@@ -2924,6 +2924,44 @@
       "wave": "wave2",
       "owner": "Squad A",
       "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:classic_config.get_application_dir",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "python_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.get_application_dir",
+      "coverageId": "python-tier2-config-application-dir-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "application-dir-override",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": null
+    },
+    {
+      "trackedId": "binding:classic_config.set_application_dir",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "python_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.set_application_dir",
+      "coverageId": "python-tier2-config-application-dir-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "application-dir-override",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
       "notes": null
     },
     {

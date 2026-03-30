@@ -1642,9 +1642,9 @@ void MainWindow::onCrashScanProgress(float percent, const QString& status, int c
     if (m_crashScanInProgress) {
         if (total > 0) {
             m_crashScanTotalLogs = total;
-            m_crashScanLogsCompleted = qMin(completed, total);
+            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, qMin(completed, total));
         } else {
-            m_crashScanLogsCompleted = completed;
+            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, completed);
         }
     }
 

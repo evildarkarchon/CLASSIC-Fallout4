@@ -453,6 +453,15 @@ def test_application_dir_override(tmp_path: Path) -> None:
         classic_config.set_application_dir(app_dir)
 
 
+def _run_application_dir_override(
+    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_application_dir_override(tmp_path)
+
+
+CASE_RUNNERS["application-dir-override"] = _run_application_dir_override
+
+
 def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> None:
     """classic_config should anchor settings lookup to the executed script directory."""
 
