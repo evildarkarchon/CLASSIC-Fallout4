@@ -16,6 +16,7 @@ private slots:
     void scan_worker_defaults_to_batch_for_multi_log_scans();
     void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
+    void mainwindow_preserves_legacy_settings_on_failed_migration();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
     void mainwindow_uses_exe_relative_crash_logs_dir();
@@ -191,6 +192,26 @@ void ScanSettingsWiringTests::mainwindow_does_not_use_deprecated_vr_mode_setting
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(!sourceText.contains(QStringLiteral("CLASSIC_Settings.VR Mode")),
              "MainWindow should not read deprecated CLASSIC_Settings.VR Mode");
+}
+
+void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_migration()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const QRegularExpression successOnlyRemovalRegex(QStringLiteral(
+        R"(if\s*\(moved\s*&&\s*QFile::exists\(settingsPath\)\)\s*\{\s*QFile::remove\(legacySettingsPath\);(?:.|\n)*?return\s+true;\s*\})"));
+    QVERIFY2(successOnlyRemovalRegex.match(sourceText).hasMatch(),
+             "MainWindow settings bootstrap should only remove the legacy settings file after migration succeeds");
+    const QRegularExpression atomicFallbackRegex(QStringLiteral(
+        R"(QSaveFile\s+\w+\(settingsPath\);(?:.|\n)*?setDirectWriteFallback\(false\);(?:.|\n)*?commit\(\))"));
+    QVERIFY2(atomicFallbackRegex.match(sourceText).hasMatch(),
+             "MainWindow settings bootstrap should use QSaveFile for an atomic publish when rename fails");
+    QVERIFY2(!sourceText.contains(QStringLiteral("QFile::copy(legacySettingsPath, settingsPath)")),
+             "MainWindow settings bootstrap should not use QFile::copy directly for legacy settings migration");
 }
 
 void ScanSettingsWiringTests::mainwindow_blocks_game_files_scan_when_paths_unresolved()

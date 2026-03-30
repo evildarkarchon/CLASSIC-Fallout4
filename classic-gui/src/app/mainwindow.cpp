@@ -13,6 +13,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QSaveFile>
 #include <QSet>
 #include <QSpacerItem>
 #include <QSplitter>
@@ -79,8 +80,12 @@ QString localYamlFilePath(const QString& dataDir, const QString& game)
     return dataDir + QStringLiteral("/CLASSIC %1 Local.yaml").arg(game);
 }
 
-bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut)
+bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut,
+                              bool* migrationFailed = nullptr)
 {
+    if (migrationFailed) {
+        *migrationFailed = false;
+    }
     if (dataRoot.isEmpty()) {
         if (errorOut) {
             *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
@@ -97,6 +102,41 @@ bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, Q
     const QString settingsPath = settingsFilePath(dataRoot);
     if (QFile::exists(settingsPath)) {
         return true;
+    }
+
+    // Attempt to migrate settings from legacy location (CLASSIC Data/CLASSIC Settings.yaml).
+    // Older builds wrote the settings file under CLASSIC Data/; try to move it to the
+    // current root-level location before falling back to default generation.
+    const QString legacySettingsPath = dataDir + QStringLiteral("/CLASSIC Settings.yaml");
+    if (QFile::exists(legacySettingsPath)) {
+        bool moved = QFile::rename(legacySettingsPath, settingsPath);
+        if (!moved) {
+            // Preserve the legacy file unless the destination can be published atomically.
+            QFile legacySettingsFile(legacySettingsPath);
+            if (legacySettingsFile.open(QIODevice::ReadOnly)) {
+                QSaveFile migratedSettingsFile(settingsPath);
+                migratedSettingsFile.setDirectWriteFallback(false);
+                if (migratedSettingsFile.open(QIODevice::WriteOnly)) {
+                    const QByteArray legacyContents = legacySettingsFile.readAll();
+                    if (legacySettingsFile.error() == QFileDevice::NoError &&
+                        migratedSettingsFile.write(legacyContents) == legacyContents.size() &&
+                        migratedSettingsFile.commit()) {
+                        moved = true;
+                    } else {
+                        migratedSettingsFile.cancelWriting();
+                    }
+                }
+            }
+        }
+
+        if (moved && QFile::exists(settingsPath)) {
+            QFile::remove(legacySettingsPath);
+            return true;
+        }
+        // Migration failed — fall through to generate defaults, but flag the caller.
+        if (migrationFailed) {
+            *migrationFailed = true;
+        }
     }
 
     const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
@@ -779,8 +819,17 @@ void MainWindow::loadSettings()
     m_dataDir = m_dataRoot + QStringLiteral("/CLASSIC Data");
 
     QString bootstrapError;
-    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+    bool settingsMigrationFailed = false;
+    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError, &settingsMigrationFailed)) {
         setStatusMessage(QStringLiteral("Settings bootstrap failed: ") + bootstrapError);
+    }
+    if (settingsMigrationFailed) {
+        QMessageBox::warning(this, QStringLiteral("Settings Migration"),
+                             QStringLiteral("A settings file was found at the previous location "
+                                            "(CLASSIC Data/CLASSIC Settings.yaml), but migration to the "
+                                            "new location failed.\n\n"
+                                            "Your settings have been reverted to defaults. "
+                                            "Please reconfigure your paths and options in Settings."));
     }
     if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
         setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
