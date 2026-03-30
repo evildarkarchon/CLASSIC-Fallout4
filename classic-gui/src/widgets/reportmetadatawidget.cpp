@@ -33,13 +33,6 @@ void ReportMetadataWidget::setupUi()
     m_sizeLabel = makeField(QStringLiteral("Size:"));
 
     layout->addStretch();
-
-    // Give the widget a subtle bottom border via a frame-like style
-    setStyleSheet(QStringLiteral(
-        "ReportMetadataWidget {"
-        "  border-bottom: 1px solid #3c3c3c;"
-        "  background-color: transparent;"
-        "}"));
 }
 
 // ── Public interface ──────────────────────────────────────────────

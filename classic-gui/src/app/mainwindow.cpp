@@ -492,8 +492,8 @@ void MainWindow::setupFileBackupTab()
     // ── Header instruction labels ─────────────────────────────────
     {
         auto* headerLabel = new QLabel(QStringLiteral("BACKUP / RESTORE / REMOVE"));
+        headerLabel->setProperty("class", QStringLiteral("sectionHeader"));
         headerLabel->setAlignment(Qt::AlignCenter);
-        headerLabel->setStyleSheet(QStringLiteral("font-size: 14px; font-weight: bold;"));
         mainLayout->addWidget(headerLabel);
 
         auto* instructionLabel =
@@ -565,8 +565,8 @@ void MainWindow::setupArticlesTab()
 
     // Header
     auto* headerLabel = new QLabel(QStringLiteral("USEFUL RESOURCES & LINKS"));
+    headerLabel->setProperty("class", QStringLiteral("sectionHeader"));
     headerLabel->setAlignment(Qt::AlignCenter);
-    headerLabel->setStyleSheet(QStringLiteral("font-size: 14px; font-weight: bold;"));
     mainLayout->addWidget(headerLabel);
 
     // 3x3 grid of URL buttons
@@ -1919,7 +1919,6 @@ void MainWindow::onTogglePapyrusMonitor()
 
         // Update button appearance
         m_btnPapyrusMonitor->setText(QStringLiteral("STOP PAPYRUS MONITORING"));
-        m_btnPapyrusMonitor->setStyleSheet(QStringLiteral("background-color: #2E7D32;")); // green
         setStatusMessage(QStringLiteral("Papyrus monitoring active"));
 
         // Create worker + thread
@@ -1959,7 +1958,6 @@ void MainWindow::onTogglePapyrusMonitor()
         m_threadManager->stopWorker(QStringLiteral("papyrus"));
 
         m_btnPapyrusMonitor->setText(QStringLiteral("START PAPYRUS MONITORING"));
-        m_btnPapyrusMonitor->setStyleSheet(QString()); // reset to default
         setStatusMessage(QStringLiteral("Papyrus monitoring stopped"));
 
         if (m_papyrusDialog) {

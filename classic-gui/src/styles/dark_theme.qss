@@ -493,3 +493,24 @@ QMenu::separator {
     background-color: #3c3c3c;
     margin: 4px 8px;
 }
+
+/* ── Migrated inline styles ──────────────────────────────────────── */
+
+ReportMetadataWidget {
+    border-bottom: 1px solid #3c3c3c;
+    background-color: transparent;
+}
+
+QLabel#aboutTitle {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+QLabel[class="sectionHeader"] {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QLabel[class="fieldLabel"] {
+    font-weight: bold;
+}

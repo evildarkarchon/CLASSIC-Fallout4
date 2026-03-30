@@ -133,6 +133,7 @@ install(TARGETS ClassicGui RUNTIME DESTINATION .)
 # Stylesheet → styles/ alongside the exe (loadStylesheet() resolves
 # relative to QCoreApplication::applicationDirPath())
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/styles/dark_theme.qss
+              ${CMAKE_CURRENT_SOURCE_DIR}/styles/markdownviewer_content.css
         DESTINATION styles)
 
 # qt.conf (next to CLASSIC.exe) tells Qt to resolve runtime assets from

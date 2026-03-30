@@ -21,8 +21,8 @@ void PapyrusDialog::setupUi()
 
     // Header
     auto* headerLabel = new QLabel(QStringLiteral("PAPYRUS LOG MONITOR"));
+    headerLabel->setProperty("class", QStringLiteral("sectionHeader"));
     headerLabel->setAlignment(Qt::AlignCenter);
-    headerLabel->setStyleSheet(QStringLiteral("font-size: 14px; font-weight: bold;"));
     mainLayout->addWidget(headerLabel);
 
     // Stats grid: 2 columns (label | value)
@@ -31,7 +31,7 @@ void PapyrusDialog::setupUi()
 
     auto addStatRow = [&](int row, const QString& label, QLabel*& valueLabel) {
         auto* lbl = new QLabel(label);
-        lbl->setStyleSheet(QStringLiteral("font-weight: bold;"));
+        lbl->setProperty("class", QStringLiteral("fieldLabel"));
         valueLabel = new QLabel(QStringLiteral("0"));
         valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         grid->addWidget(lbl, row, 0);

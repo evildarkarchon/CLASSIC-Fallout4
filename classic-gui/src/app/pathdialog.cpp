@@ -35,7 +35,7 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
     // Game folder path row (only shown if needed)
     if (needsGamePath) {
         auto* label = new QLabel(QStringLiteral("Game Folder Path:"));
-        label->setStyleSheet(QStringLiteral("font-weight: bold;"));
+        label->setProperty("class", QStringLiteral("fieldLabel"));
         mainLayout->addWidget(label);
 
         auto* rowLayout = new QHBoxLayout();
@@ -56,7 +56,7 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
     // Documents/INI path row (only shown if needed)
     if (needsDocsPath) {
         auto* label = new QLabel(QStringLiteral("Documents / INI Folder Path:"));
-        label->setStyleSheet(QStringLiteral("font-weight: bold;"));
+        label->setProperty("class", QStringLiteral("fieldLabel"));
         mainLayout->addWidget(label);
 
         auto* rowLayout = new QHBoxLayout();
