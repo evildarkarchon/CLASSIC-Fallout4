@@ -269,6 +269,30 @@ def get_local_dir() -> str:
 
     """
 
+def set_application_dir(path: str) -> None:
+    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+
+    Binding layers auto-register ``os.getcwd()`` at import time.
+    Call this only if you need a different directory.
+
+    Args:
+        path: Absolute path to the desired application directory.
+
+    Example:
+        >>> from classic_registry import set_application_dir
+        >>> set_application_dir("/my/project")
+
+    """
+
+def get_application_dir() -> str | None:
+    """Return the current application directory override, or ``None``.
+
+    Example:
+        >>> from classic_registry import get_application_dir
+        >>> app_dir = get_application_dir()
+
+    """
+
 def is_version_auto_detected() -> bool:
     """Check if the game version was auto-detected.
 

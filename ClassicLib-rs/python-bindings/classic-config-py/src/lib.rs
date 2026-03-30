@@ -1081,15 +1081,46 @@ pub fn clear_yaml_cache() {
     classic_config_core::clear_global_yaml_cache();
 }
 
+/// Auto-register the application directory so settings resolve relative to the
+/// process working directory rather than the interpreter's install path.
+fn auto_init_application_dir() {
+    if classic_registry_core::get_application_dir().is_none() {
+        if let Ok(cwd) = std::env::current_dir() {
+            classic_registry_core::set_application_dir(cwd);
+        }
+    }
+}
+
+/// Override the directory used to resolve ``CLASSIC Settings.yaml`` and other
+/// application-local files.  Call before ``load_or_default()`` or
+/// ``get_config_path()`` if you need a directory other than ``os.getcwd()``
+/// at import time.
+#[pyfunction]
+fn set_application_dir(path: String) {
+    classic_registry_core::set_application_dir(PathBuf::from(path));
+}
+
+/// Return the current application directory override, or ``None`` if no
+/// override has been registered (which should not happen after import,
+/// since the module auto-registers ``os.getcwd()``).
+#[pyfunction]
+fn get_application_dir() -> Option<String> {
+    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
+}
+
 /// Initialize the classic_config Python module
 #[pymodule]
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    auto_init_application_dir();
+
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyPathConfig>()?;
     m.add_class::<PyYamlSource>()?;
     m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
+    m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     // Register custom exception types using the shared macro
@@ -1101,12 +1132,16 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 /// Public registration function for use by facade modules
 /// This allows classic-core to include config components in its submodule
 pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    auto_init_application_dir();
+
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyPathConfig>()?;
     m.add_class::<PyYamlSource>()?;
     m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
+    m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
 
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);

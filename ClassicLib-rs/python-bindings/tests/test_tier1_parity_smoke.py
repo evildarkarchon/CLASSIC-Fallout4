@@ -427,6 +427,32 @@ CASE_RUNNERS = {
 }
 
 
+def test_application_dir_override(tmp_path: Path) -> None:
+    """Settings resolution should honour the APP_DIR registry override."""
+    import classic_config
+
+    # Module auto-init should have set APP_DIR to cwd
+    app_dir = classic_config.get_application_dir()
+    assert app_dir is not None, "APP_DIR should be auto-set on import"
+
+    # Override to a custom directory and verify get_config_path reflects it
+    classic_config.set_application_dir(str(tmp_path))
+    assert classic_config.get_application_dir() == str(tmp_path)
+
+    config = classic_config.ClassicConfig()
+    config_path = Path(config.get_config_path())
+    assert config_path.parent == tmp_path
+
+    # Write a settings file there and verify load_or_default finds it
+    config_path.write_text("fcx_mode: true\n", encoding="utf-8")
+    loaded = classic_config.ClassicConfig.load_or_default()
+    assert loaded.fcx_mode is True
+
+    # Restore the original override so other tests are unaffected
+    if app_dir is not None:
+        classic_config.set_application_dir(app_dir)
+
+
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
 def test_runtime_coverage_registry_cases(
     case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

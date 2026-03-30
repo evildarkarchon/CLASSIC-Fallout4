@@ -369,6 +369,38 @@ fn get_local_dir(py: Python) -> String {
         .to_string()
 }
 
+/// Override the directory used to resolve ``CLASSIC Settings.yaml`` and other
+/// application-local files.  Binding layers auto-register this to
+/// ``os.getcwd()`` at import time; call this only if you need a different
+/// directory.
+///
+/// # Python Example
+///
+/// ```python
+/// from classic_core import registry
+///
+/// registry.set_application_dir("/my/project")
+/// ```
+#[pyfunction]
+fn set_application_dir(path: String) {
+    classic_registry_core::set_application_dir(std::path::PathBuf::from(path));
+}
+
+/// Return the current application directory override, or ``None`` if not set.
+///
+/// # Python Example
+///
+/// ```python
+/// from classic_core import registry
+///
+/// app_dir = registry.get_application_dir()
+/// print(f"Application directory: {app_dir}")
+/// ```
+#[pyfunction]
+fn get_application_dir() -> Option<String> {
+    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
+}
+
 /// Check if XSE validation passed.
 #[pyfunction]
 fn is_xse_valid(py: Python) -> bool {
@@ -457,6 +489,8 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_manual_docs_gui, m)?)?;
     m.add_function(wrap_pyfunction!(get_game_path_gui, m)?)?;
     m.add_function(wrap_pyfunction!(get_local_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
 
     // Add new version-aware functions
     m.add_function(wrap_pyfunction!(is_version_auto_detected, m)?)?;

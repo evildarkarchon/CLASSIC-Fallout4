@@ -49,6 +49,9 @@ pub use registry::{
     set_game,
 };
 
+// Application directory override for binding scenarios
+pub use registry::{get_application_dir, set_application_dir};
+
 // New version-aware convenience functions
 pub use registry::{get_game_version, is_version_auto_detected};
 
@@ -114,6 +117,13 @@ mod tests {
         let test_path = PathBuf::from("/test/path");
         register(Keys::LOCAL_DIR, test_path.clone());
         assert_eq!(get_local_dir(), test_path);
+
+        // Test application_dir override
+        clear_all();
+        assert_eq!(get_application_dir(), None);
+        let app_path = PathBuf::from("/my/app");
+        set_application_dir(app_path.clone());
+        assert_eq!(get_application_dir(), Some(app_path));
     }
 
     #[test]

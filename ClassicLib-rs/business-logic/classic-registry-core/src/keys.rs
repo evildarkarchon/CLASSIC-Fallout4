@@ -103,6 +103,16 @@ impl Keys {
     /// current working directory or installation location.
     pub const LOCAL_DIR: &'static str = "local_dir";
 
+    /// Application directory override for settings resolution.
+    ///
+    /// When set, `classic-config-core` uses this directory instead of
+    /// `current_exe().parent()` to anchor settings and data files.
+    ///
+    /// Binding layers (Python, Node) auto-register this to `current_dir()`
+    /// at module init so settings resolve relative to the working directory
+    /// rather than the interpreter's install directory.
+    pub const APP_DIR: &'static str = "app_dir";
+
     /// Prerelease flag.
     ///
     /// Boolean flag indicating whether this is a prerelease version.
@@ -147,6 +157,7 @@ mod tests {
             Keys::GAME_VERSION,
             Keys::VERSION_AUTO_DETECTED,
             Keys::LOCAL_DIR,
+            Keys::APP_DIR,
             Keys::IS_PRERELEASE,
             Keys::XSE_VALID,
             Keys::XSE_VERSION,

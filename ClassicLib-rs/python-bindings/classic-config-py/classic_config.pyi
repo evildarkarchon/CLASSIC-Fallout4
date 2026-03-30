@@ -515,3 +515,16 @@ def create_yamldata(
         '8.0.0'
 
     """
+
+def set_application_dir(path: str | Path) -> None:
+    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+
+    By default this is set to ``os.getcwd()`` at import time.  Call this
+    before ``ClassicConfig.load_or_default()`` if you need a different root.
+
+    Args:
+        path: Absolute path to the desired application directory.
+    """
+
+def get_application_dir() -> str | None:
+    """Return the current application directory override, or ``None``."""

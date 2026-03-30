@@ -21,9 +21,14 @@ fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
 }
 
 fn application_dir() -> Option<PathBuf> {
-    std::env::current_exe()
-        .ok()
-        .and_then(|path| resolve_application_dir(Some(path.as_path())))
+    // Binding layers (Python, Node) auto-register APP_DIR at module init
+    // so settings resolve relative to the working directory rather than
+    // the interpreter's install directory (python.exe, node.exe, etc.).
+    classic_registry_core::get_application_dir().or_else(|| {
+        std::env::current_exe()
+            .ok()
+            .and_then(|path| resolve_application_dir(Some(path.as_path())))
+    })
 }
 
 fn resolve_user_config_dir(config_dir: Option<&Path>) -> Option<PathBuf> {
@@ -1208,6 +1213,24 @@ mod tests {
     #[test]
     fn test_resolve_application_dir_returns_none_without_exe_path() {
         assert_eq!(resolve_application_dir(None), None);
+    }
+
+    #[test]
+    fn test_application_dir_uses_registry_override_when_set() {
+        let override_dir = PathBuf::from("C:/my/project");
+        classic_registry_core::set_application_dir(override_dir.clone());
+        assert_eq!(application_dir(), Some(override_dir));
+        // Clean up so other tests are not affected
+        classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
+    }
+
+    #[test]
+    fn test_application_dir_falls_back_to_current_exe_without_override() {
+        classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
+        // With no registry entry, should fall back to current_exe().parent()
+        let result = application_dir();
+        // We can't predict the exact path but it should be Some (tests run from a real exe)
+        assert!(result.is_some());
     }
 
     #[test]

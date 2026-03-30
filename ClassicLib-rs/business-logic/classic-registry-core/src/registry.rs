@@ -357,6 +357,48 @@ pub fn get_local_dir() -> PathBuf {
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
 }
 
+/// Set the application directory override for settings resolution.
+///
+/// When set, `classic-config-core` uses this directory instead of
+/// `current_exe().parent()` to anchor settings and data file lookups.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{set_application_dir, get_application_dir, clear_all};
+/// use std::path::PathBuf;
+///
+/// clear_all();
+/// assert_eq!(get_application_dir(), None);
+///
+/// set_application_dir(PathBuf::from("/my/app"));
+/// assert_eq!(get_application_dir(), Some(PathBuf::from("/my/app")));
+/// ```
+pub fn set_application_dir(dir: PathBuf) {
+    register(Keys::APP_DIR, dir);
+}
+
+/// Get the application directory override, if set.
+///
+/// Returns `None` when no override has been registered, signalling callers
+/// to fall back to their own default (e.g., `current_exe().parent()`).
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{set_application_dir, get_application_dir, clear_all};
+/// use std::path::PathBuf;
+///
+/// clear_all();
+/// assert_eq!(get_application_dir(), None);
+///
+/// set_application_dir(PathBuf::from("/my/app"));
+/// assert_eq!(get_application_dir(), Some(PathBuf::from("/my/app")));
+/// ```
+pub fn get_application_dir() -> Option<PathBuf> {
+    get::<_, PathBuf>(Keys::APP_DIR)
+}
+
 /// Check if XSE validation passed.
 ///
 /// # Returns

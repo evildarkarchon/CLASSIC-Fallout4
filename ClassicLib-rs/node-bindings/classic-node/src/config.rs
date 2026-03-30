@@ -22,6 +22,21 @@ use napi::Status;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Once;
+
+static INIT_APP_DIR: Once = Once::new();
+
+/// Ensure APP_DIR is registered so settings resolve relative to the process
+/// working directory rather than the interpreter install path (node/bun).
+fn ensure_app_dir_initialized() {
+    INIT_APP_DIR.call_once(|| {
+        if classic_registry_core::get_application_dir().is_none() {
+            if let Ok(cwd) = std::env::current_dir() {
+                classic_registry_core::set_application_dir(cwd);
+            }
+        }
+    });
+}
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js};
 
@@ -651,6 +666,7 @@ impl ClassicConfigJs {
     /// Load configuration from default location, or return defaults if no file exists.
     #[napi(factory)]
     pub fn load_or_default() -> Result<Self> {
+        ensure_app_dir_initialized();
         let inner = get_runtime()
             .block_on(async { CoreClassicConfig::load_or_default().await })
             .map_err(runtime_to_napi_err)?;
@@ -674,6 +690,7 @@ impl ClassicConfigJs {
     /// Get the default config file path.
     #[napi]
     pub fn get_config_path(&self) -> String {
+        ensure_app_dir_initialized();
         self.inner.get_config_path().to_string_lossy().to_string()
     }
 
@@ -939,6 +956,7 @@ pub fn create_yaml_data_from_content(
 /// Equivalent to `new ClassicConfig()`.
 #[napi]
 pub fn create_default_config() -> ClassicConfigJs {
+    ensure_app_dir_initialized();
     ClassicConfigJs::new()
 }
 
@@ -957,6 +975,7 @@ pub fn clear_yaml_cache() {
 /// @returns The file path as a string.
 #[napi]
 pub fn get_yaml_source_path(source: JsYamlSource, game: String) -> String {
+    ensure_app_dir_initialized();
     let core_source: CoreYamlSource = source.into();
     core_source.path(&game).to_string_lossy().to_string()
 }
@@ -980,4 +999,22 @@ pub fn get_yaml_source_display_name(source: JsYamlSource) -> String {
 pub fn get_yaml_source_display_name_with_game(source: JsYamlSource, game: String) -> String {
     let core_source: CoreYamlSource = source.into();
     core_source.display_name_with_game(&game)
+}
+
+/// Override the directory used to resolve `CLASSIC Settings.yaml` and other
+/// application-local files.  Call before `ClassicConfig.loadOrDefault()` or
+/// `getConfigPath()` if you need a directory other than `process.cwd()`
+/// captured at first use.
+///
+/// @param path - Absolute path to the desired application directory.
+#[napi]
+pub fn set_application_dir(path: String) {
+    classic_registry_core::set_application_dir(PathBuf::from(path));
+}
+
+/// Return the current application directory override, or `undefined` if no
+/// override has been registered yet.
+#[napi]
+pub fn get_application_dir() -> Option<String> {
+    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
 }
