@@ -231,6 +231,13 @@ try {
             exit $LASTEXITCODE
         }
         Write-Host "Installed to: $installDir" -ForegroundColor Green
+
+        # -- Step 5.5: Sign (optional, after install) --------------------
+        $signScript = Join-Path (Split-Path $ScriptDir -Parent) "tools" "sign-binaries.ps1"
+        if (Test-Path $signScript) {
+            . $signScript
+            Invoke-CodeSigning -InstallDir $installDir -Binaries @("CLASSIC.exe")
+        }
     }
 
     # ── Step 6: Package (optional) ──────────────────────────────────
