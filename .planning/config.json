@@ -1,5 +1,5 @@
 {
-  "mode": "yolo",
+  "mode": "interactive",
   "parallelization": true,
   "commit_docs": true,
   "model_profile": "quality",
@@ -8,5 +8,5 @@
     "plan_check": true,
     "verifier": true
   },
-  "granularity": "standard"
+  "granularity": "fine"
 }
