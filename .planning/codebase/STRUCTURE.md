@@ -1,328 +1,280 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-01-29
+**Analysis Date:** 2026-03-30
 
 ## Directory Layout
 
 ```
-CLASSIC-Fallout4/
-├── CLASSIC_Interface.py         # GUI entry point (Qt/PySide6)
-├── CLASSIC_ScanLogs.py          # CLI entry point (async)
-├── CLASSIC.spec                 # PyInstaller configuration
-├── ClassicLib/                  # Python library (core application)
-│   ├── __init__.py             # Public API, Rust component detection
-│   ├── core/                   # Infrastructure (async bridge, registry, logging)
-│   ├── integration/            # Rust/Python component selection (factory pattern)
-│   ├── Interface/              # Qt GUI implementation
-│   ├── io/                     # File I/O, database, YAML configuration
-│   ├── messaging/              # Message routing, progress context
-│   ├── scanning/               # Crash log and game file scanning logic
-│   ├── support/                # Setup, integrity checks, backup, versioning
-│   ├── TUI/                    # Text user interface (future)
-│   ├── Utils/                  # General-purpose utilities
-│   ├── acceleration/           # Workload distribution metrics
-│   ├── API/                    # Internal API definitions
-│   └── _async_utils/           # Async helper utilities
-├── rust/                       # Rust workspace (performance-critical)
-│   ├── Cargo.toml             # Workspace configuration
-│   ├── foundation/            # Shared runtime, error types
-│   │   ├── classic-shared-core/
-│   │   └── classic-shared-py/
-│   ├── business-logic/        # Pure Rust crates (-core suffix)
-│   │   ├── classic-yaml-core/
-│   │   ├── classic-scanlog-core/
-│   │   ├── classic-database-core/
-│   │   └── ... (15 more crates)
-│   └── python-bindings/       # PyO3 adapters (-py suffix)
-│       ├── classic-yaml-py/
-│       ├── classic-scanlog-py/
-│       └── ... (matching -py crates)
-├── tests/                      # Test suite (pytest)
-│   ├── fixtures/              # Shared test fixtures and factories
-│   ├── rust_integration/      # Rust FFI integration tests
-│   ├── unit/                  # Unit tests by component
-│   ├── integration/           # Cross-component tests
-│   ├── scanlog/               # Scanning logic tests
-│   ├── gui/                   # GUI widget/controller tests
-│   └── ... (20+ test directories)
-├── docs/                       # Documentation
-│   ├── architecture/          # Design documents
-│   ├── development/           # Dev guides (async, PyO3, testing)
-│   ├── rust/                  # Rust architecture and patterns
-│   └── testing/               # Testing standards and examples
-├── qml/                        # QML UI definitions (if used, currently optional)
-├── tools/                      # Development tools and scripts
-├── .claude/rules/              # Project guidelines (project-specific)
-│   ├── 01-project-overview.md
-│   ├── 02-architecture.md
-│   ├── 03-testing.md
-│   ├── 04-development.md
-│   └── 05-memories.md
-└── .planning/                  # GSD codebase mapping output
-    └── codebase/              # This file and related analysis
+CLASSIC-Fallout4/                      # Repo root / Windows working directory
+├── classic-cli/                       # C++20 CLI frontend
+│   ├── CMakeLists.txt                 # CMake project (links Rust via Corrosion)
+│   ├── build_cli.ps1                  # Canonical build script (always use this, not ctest directly)
+│   ├── test_cli.ps1                   # CLI integration test runner
+│   ├── src/                           # C++ source files
+│   └── tests/                         # Catch2 unit tests
+│
+├── classic-gui/                       # Qt 6 C++20 GUI frontend
+│   ├── CMakeLists.txt
+│   ├── build_gui.ps1                  # Canonical build script
+│   ├── cmake/                         # Qt-specific CMake modules
+│   ├── resources/                     # Qt resources (.qrc, icons)
+│   ├── src/                           # C++ source tree
+│   │   ├── main.cpp                   # Application entry point
+│   │   ├── app/                       # Top-level windows and dialogs
+│   │   ├── controllers/               # Business logic controllers (scan, backup, results, game files)
+│   │   ├── core/                      # Qt bridge utilities, signal hub, thread manager
+│   │   ├── widgets/                   # Custom Qt widgets (progress bar, markdown viewer, report list)
+│   │   └── workers/                   # QObject workers run on background threads
+│   └── tests/                         # Catch2 + Qt test suite
+│
+├── ClassicLib-rs/                     # Rust workspace root
+│   ├── Cargo.toml                     # Workspace manifest (all members listed here)
+│   ├── foundation/                    # Lowest-level shared crates
+│   │   ├── classic-shared-core/       # ONE RUNTIME RULE, errors, path/string/perf utils
+│   │   └── classic-shared-py/         # PyO3 utilities shared by all -py crates
+│   ├── business-logic/                # Pure Rust domain crates (no PyO3/CXX)
+│   │   ├── classic-config-core/       # YAML config loading and typed config structs
+│   │   ├── classic-constants-core/    # Game/version/YAML identifier enums
+│   │   ├── classic-crashgen-settings-core/ # Crashgen rule model and evaluator
+│   │   ├── classic-database-core/     # SQLite async pool for FormID lookups
+│   │   ├── classic-file-io-core/      # File I/O, hashing, log collection, DDS parsing
+│   │   ├── classic-message-core/      # Message DTOs, routing enums, log formatting
+│   │   ├── classic-path-core/         # Game/docs path detection, validation, backups
+│   │   ├── classic-perf-core/         # Global timing sample collection and scoped timers
+│   │   ├── classic-registry-core/     # Process-wide typed singleton registry
+│   │   ├── classic-resource-core/     # Resource classification and enumeration helpers
+│   │   ├── classic-scangame-core/     # Game installation validation, archive/file checks
+│   │   ├── classic-scanlog-core/      # Crash log analysis (primary feature)
+│   │   ├── classic-settings-core/     # YAML settings cache (sync/async)
+│   │   ├── classic-update-core/       # GitHub release/update-check client
+│   │   ├── classic-version-core/      # Version parsing, text extraction, PE-version helpers
+│   │   ├── classic-version-registry-core/ # Game version detection and OG/NG/AE/VR selection
+│   │   ├── classic-web-core/          # URL and mod-site helper layer
+│   │   ├── classic-xse-core/          # XSE loader/version detection
+│   │   └── classic-yaml-core/         # YAML parsing, caching, merge helpers
+│   ├── cpp-bindings/
+│   │   └── classic-cpp-bridge/        # CXX staticlib — 16 bridge modules
+│   │       ├── include/classic_cxx_bridge/  # Hand-written C++ headers
+│   │       └── src/                   # One .rs file per bridge module
+│   ├── python-bindings/               # PyO3 (-py) crates, one per -core crate
+│   │   ├── classic-*-py/              # Individual binding crates
+│   │   ├── tests/                     # Cross-crate parity smoke tests (pytest)
+│   │   └── parity-artifacts/          # Generated parity diff/coverage reports
+│   ├── node-bindings/
+│   │   └── classic-node/              # Single NAPI-RS crate (Bun/Node)
+│   │       ├── src/                   # One .rs module per feature area
+│   │       ├── __test__/              # Bun/Node runtime tests
+│   │       └── parity-artifacts/      # Generated parity reports
+│   ├── ui-applications/
+│   │   └── classic-tui/               # Ratatui terminal UI (Rust binary crate)
+│   │       └── src/
+│   │           ├── main.rs            # TUI entry point
+│   │           ├── app.rs             # App state machine
+│   │           ├── tabs/              # Tab views (main, results, backup, articles)
+│   │           └── widgets/           # Custom Ratatui widgets
+│   └── benches/                       # Workspace-level benchmarks
+│
+├── CLASSIC Data/                      # Runtime data directory (YAML configs, SQLite DBs)
+│   ├── CLASSIC Main.yaml              # Master YAML: version registry, crashgen settings
+│   ├── CLASSIC Fallout4.yaml          # Game-specific YAML: mod lists, suspect rules
+│   ├── databases/                     # SQLite FormID database files (.db)
+│   └── games/                         # Per-game YAML fragments
+│
+├── docs/                              # Contributor documentation
+│   ├── api/                           # Crate-level API contracts (primary reference)
+│   └── architecture/                  # Architecture overviews
+│
+├── tools/                             # Developer tooling (Python scripts)
+│   ├── python_api_parity/             # Python parity gate check scripts
+│   └── node_api_parity/               # Node parity gate check scripts
+│
+├── sample_logs/                       # Test fixture crash logs (git submodule: FO4/)
+├── scripts/                           # Benchmark and profiling helpers
+├── tests/                             # PowerShell-level build/integration tests
+├── .github/workflows/                 # CI pipelines (ci-cpp, ci-rust, ci-typescript, ci-python-bindings, benchmarks)
+├── rebuild_rust.ps1                   # Rebuild Python or Node bindings selectively
+├── rebuild_node.ps1                   # Rebuild Node bindings
+├── set_version.ps1                    # Version bump helper
+└── CLASSIC Settings.yaml              # User settings file (runtime, not tracked)
 ```
 
 ## Directory Purposes
 
-**ClassicLib/ (Python Core):**
-- Purpose: Main Python library containing UI, business logic, data access, and infrastructure
-- Contains: Application code (not tests)
-- Key files: `__init__.py` (public API), entry point integration
+**`classic-cli/src/`:**
+- Purpose: CLI application C++ source
+- Contains: `main.cpp`, `cli_args.{cpp,h}`, `scanner.{cpp,h}`, `progress.{cpp,h}`, `report_writer.{cpp,h}`, `thread_pool.{cpp,h}`
+- Key files: `classic-cli/src/main.cpp`, `classic-cli/src/scanner.cpp`
 
-**ClassicLib/core/:**
-- Purpose: Infrastructure shared by all layers (logging, registry, async bridge)
-- Contains: async_bridge.py (Qt sync/async bridge), registry.py (singleton pattern), logger.py, constants.py
-- Key files: `async_bridge.py` (AsyncBridge class), `registry.py` (GlobalRegistry)
+**`classic-gui/src/app/`:**
+- Purpose: Top-level Qt windows and dialogs
+- Contains: `MainWindow`, `AboutDialog`, `ErrorDialog`, `PapyrusDialog`, `PathDialog`, `SettingsDialog`
+- Key files: `classic-gui/src/app/mainwindow.{cpp,h}`
 
-**ClassicLib/integration/:**
-- Purpose: Rust component detection and factory pattern for component selection
-- Contains: detector.py (component availability check), factory/ (submodules for specific components)
-- Key files: `factory/core.py` (detection caching), individual factories (formid, database, file_io, etc.)
-- Pattern: Import Rust if available, fall back to Python
+**`classic-gui/src/controllers/`:**
+- Purpose: Qt controllers encapsulating scan, backup, results, and game-files workflows
+- Contains: `ScanController`, `BackupController`, `ResultsController`, `GameFilesController`
 
-**ClassicLib/Interface/:**
-- Purpose: Qt GUI implementation (PySide6)
-- Contains: Controllers, widgets, dialogs, thread workers, signal routing
-- Subdirs:
-  - `controllers/` - Feature controllers (ScanController, FolderManager, etc.)
-  - `shared/` - Shared infrastructure (FeatureContext DI, SignalHub event bus)
-  - `widgets/` - Custom Qt widgets
-  - `dialogs/` - Dialog windows
-  - `workers/` - QThread worker pool
-  - `Settings/` - Settings UI components
+**`classic-gui/src/workers/`:**
+- Purpose: QObject workers run on background threads via `ThreadManager`
+- Contains: `ScanWorker`, `GameFilesWorker`, `PapyrusWorker`, `UpdateWorker`, `ScanProgressModel`
 
-**ClassicLib/io/:**
-- Purpose: File I/O, database operations, YAML configuration
-- Contains: Async file operations, database connection pooling, settings caching
-- Subdirs:
-  - `files/` - FileIOCore (async file read/write)
-  - `database/` - AsyncDatabasePool (SQLite connection pooling)
-  - `yaml/` - YamlSettingsCache (load/save YAML settings)
-    - `sync/` - Synchronous wrappers for GUI
-    - `async_/` - Async implementations for CLI/TUI
+**`ClassicLib-rs/foundation/classic-shared-core/src/`:**
+- Purpose: Foundation utilities used by every crate
+- Key files: `lib.rs` (runtime), `errors.rs`, `path_core.rs`, `strings_core.rs`, `performance_core.rs`
 
-**ClassicLib/messaging/:**
-- Purpose: Central message routing (console, GUI, file logging)
-- Contains: Message types, backends (GUI, CLI, file), progress context
-- Key files: `handler.py` (MessageHandler singleton), `core/router.py`, backends for different output targets
+**`ClassicLib-rs/business-logic/classic-scanlog-core/src/`:**
+- Purpose: Primary feature — crash log parsing and analysis
+- Key files: `orchestrator.rs`, `parser.rs`, `report.rs`, `mod_detector.rs`, `formid_analyzer.rs`
 
-**ClassicLib/scanning/:**
-- Purpose: Crash log and game file scanning logic
-- Contains: Log parsing, mod detection, FormID analysis, report generation
-- Subdirs:
-  - `logs/` - Crash log scanning (executor, orchestrator, analyzers, report)
-  - `game/` - Game file scanning (plugins, settings, XSE)
-- Key classes: ScanLogsExecutor, OrchestratorCore, FormIDAnalyzer, SuspectScanner, ReportGenerator
+**`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`:**
+- Purpose: CXX bridge modules — one `.rs` file per feature area
+- Key files: `scanner.rs` (main scan pipeline), `game.rs`, `config.rs`, `files.rs`
 
-**ClassicLib/support/:**
-- Purpose: Setup, integrity checks, backup/restore, version management
-- Contains: SetupCoordinator (startup sequence), GameIntegrityChecker, BackupManager
-- Key files: `setup.py` (initialization coordinator), `game_path.py` (game detection), `versions/` (version matching)
+**`ClassicLib-rs/python-bindings/tests/`:**
+- Purpose: Pytest cross-crate parity smoke tests
+- Key files: `test_tier1_parity_smoke.py`, `fixtures/tier1_parity_fixtures.py`
 
-**ClassicLib/TUI/:**
-- Purpose: Text user interface (Ratatui-based, future implementation)
-- Contains: Screen layouts, input handling
-- Status: Currently minimal; full implementation in progress
-
-**ClassicLib/Utils/:**
-- Purpose: General-purpose utilities (file ops, string utils, version parsing, web)
-- Contains: No complex logic; pure helper functions
-- Pattern: Functions grouped by domain (file_utils.py, string_utils.py, etc.)
-
-**rust/ (Rust Workspace):**
-- Purpose: Performance-critical business logic and infrastructure
-- Structure: Three-layer architecture
-  - `foundation/` - Shared runtime (Tokio), error types, utilities
-  - `business-logic/` - Pure Rust crates (no PyO3), each `-core` crate is a separate binary
-  - `python-bindings/` - PyO3 adapter crates (each `-py` crate wraps corresponding `-core`)
-
-**rust/business-logic/ and rust/python-bindings/:**
-- Crates: 21 pairs (foundation + 20 domain-specific)
-  - classic-yaml-{core,py}: YAML operations (15-30x faster than ruamel)
-  - classic-scanlog-{core,py}: Log parsing and analysis
-  - classic-database-{core,py}: SQLite operations
-  - classic-file-io-{core,py}: File I/O with async support
-  - classic-registry-{core,py}: Global registry (15-25x faster)
-  - classic-settings-{core,py}: Settings cache operations
-  - classic-constants-{core,py}: Compile-time constants
-  - classic-message-{core,py}: Message routing
-  - classic-path-{core,py}: Path validation and manipulation
-  - classic-config-{core,py}: Configuration loading
-  - classic-perf-{core,py}: Performance measurement
-  - classic-version-{core,py}: Version parsing and matching
-  - classic-xse-{core,py}: XSE plugin detection
-  - classic-scangame-{core,py}: Game file scanning
-  - classic-web-{core,py}: Web operations
-  - classic-update-{core,py}: Update checking
-  - classic-pybridge-{core,py}: Async/sync bridging
-  - classic-resource-{core,py}: Resource loading
-  - classic-version-registry-{core,py}: Version registry
-- Pattern: -core crates have zero PyO3; -py crates are PyO3 wrappers only
-
-**tests/ (Test Suite):**
-- Purpose: Comprehensive test coverage across all layers
-- Organization: Domain-driven directories mirroring ClassicLib structure
-- Key directories:
-  - `fixtures/` - Shared fixtures (async, crash log data, mocks, etc.)
-  - `rust_integration/` - Rust FFI tests
-  - `unit/` - Individual component tests
-  - `integration/` - Cross-component tests
-  - `scanlog/`, `gui/`, `fileio/`, etc. - Domain-specific tests
-- Pattern: One test file per source file; `test_<module>_<type>.py` naming
-
-**docs/ (Documentation):**
-- Purpose: Developer guides, architecture decisions, API docs
-- Key files:
-  - `architecture/` - Design documents (async, hybrid architecture)
-  - `development/` - Dev guides (PyO3 patterns, async development)
-  - `rust/` - Rust architecture and crate descriptions
-  - `testing/` - Testing standards and examples
+**`CLASSIC Data/`:**
+- Purpose: Runtime YAML and SQLite data consumed at application startup
+- Contains: `CLASSIC Main.yaml`, `CLASSIC Fallout4.yaml`, FormID `.db` files
+- Generated: No — these are maintained data files
+- Committed: Yes (core YAML files)
 
 ## Key File Locations
 
 **Entry Points:**
-- `CLASSIC_Interface.py` - GUI main; calls SetupCoordinator, creates MainWindow
-- `CLASSIC_ScanLogs.py` - CLI main; async-first, calls asyncio.run(run_scan())
-- `ClassicLib/__init__.py` - Public API exports; Rust component detection
+- `classic-gui/src/main.cpp`: Qt GUI application start
+- `classic-cli/src/main.cpp`: CLI application start
+- `ClassicLib-rs/ui-applications/classic-tui/src/main.rs`: TUI binary entry point
 
-**Configuration:**
-- `ClassicLib/core/constants.py` - Application constants (YAML keys, database paths, game IDs)
-- `ClassicLib/io/yaml/` - Settings loading (async and sync)
-- `rust/Cargo.toml` - Rust workspace definition
-- `.claude/rules/` - Project guidelines (CLAUDE.md files)
+**Build Configuration:**
+- `classic-cli/build_cli.ps1`: C++ CLI build script (always use, not raw cmake/ctest)
+- `classic-gui/build_gui.ps1`: C++ GUI build script
+- `classic-cli/CMakeLists.txt`, `classic-gui/CMakeLists.txt`: CMake projects (use Corrosion for Rust)
+- `ClassicLib-rs/Cargo.toml`: Rust workspace manifest
 
 **Core Logic:**
-- `ClassicLib/scanning/logs/executor.py` - ScanLogsExecutor (main scanning entry point)
-- `ClassicLib/scanning/logs/orchestrator_core.py` - Parallel orchestration
-- `ClassicLib/scanning/logs/parser.py` - Crash log parsing
-- `ClassicLib/scanning/logs/analyzers/` - Individual analyzers (FormID, Settings, etc.)
-- `ClassicLib/support/setup.py` - SetupCoordinator (initialization sequence)
+- `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs`: Scan orchestration
+- `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs`: Typed YAML config
+- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`: CXX scan bridge
+- `ClassicLib-rs/foundation/classic-shared-core/src/lib.rs`: ONE RUNTIME RULE and `get_runtime()`
+
+**API Contracts:**
+- `docs/api/README.md`: Index to all crate API docs (read before changing public APIs)
+- `ClassicLib-rs/node-bindings/classic-node/index.d.ts`: Node TypeScript declarations
+- `ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.json`: Python parity report
 
 **Testing:**
-- `tests/fixtures/` - All fixtures (centralized; never in individual test files)
-- `tests/conftest.py` - Root pytest configuration
-- `tests/rust_integration/` - Rust FFI tests
-- `.pytest_cache/` - Pytest cache (gitignored)
-
-**Infrastructure:**
-- `ClassicLib/core/async_bridge.py` - Sync/async bridge for Qt
-- `ClassicLib/core/registry.py` - GlobalRegistry (singleton pattern)
-- `ClassicLib/messaging/handler.py` - MessageHandler (central routing)
-- `ClassicLib/Interface/shared/context.py` - FeatureContext (DI container)
-- `ClassicLib/Interface/shared/signal_hub.py` - SignalHub (event bus)
+- `classic-cli/tests/`: Catch2 C++ unit tests
+- `classic-gui/tests/`: Catch2 + Qt test suite
+- `ClassicLib-rs/python-bindings/tests/`: pytest parity tests
+- `ClassicLib-rs/node-bindings/classic-node/__test__/`: Bun/Node runtime tests
+- Per-crate `tests/` dirs inside each `*-core` crate (e.g., `classic-yaml-core/tests/`)
 
 ## Naming Conventions
 
-**Files:**
-- `snake_case.py` - Modules and packages
-- `ClassName.py` - One class per file (exception: small related helpers)
-- `test_<module>_<type>.py` - Tests (e.g., test_executor_unit.py, test_scanlog_integration.py)
-- `conftest.py` - Pytest fixtures (centralized in tests/fixtures/, not per-directory)
+**Files (Rust):**
+- `snake_case.rs` for all Rust source files
+- `lib.rs` is the crate root for every crate
+- `main.rs` for binary crates (TUI)
+- Test files in `tests/` subdirectory are named `test_*.rs`
 
-**Directories:**
-- `snake_case/` - Package directories
-- Plural names for collections: `analyzers/`, `controllers/`, `widgets/`, `fixtures/`
-- Functional grouping: `core/`, `io/`, `integration/`, `scanning/`, `support/`, `utils/`
+**Files (C++):**
+- `lowercase.{cpp,h}` for plain modules: `scanner.cpp`, `cli_args.h`
+- `lowercase{noun}.{cpp,h}` for Qt classes: `scanworker.cpp`, `mainwindow.h`
 
-**Python Identifiers:**
-- `snake_case` - Functions and variables
-- `UPPERCASE` - Module-level constants
-- `PascalCase` - Classes
-- `_private` - Internal/private (single underscore)
-- `__very_private__` - Name mangling (double underscore, double trailing; avoid)
+**Directories (Rust crates):**
+- `classic-{domain}-core` for pure Rust business logic
+- `classic-{domain}-py` for PyO3 Python bindings
+- `classic-{domain}` for Node bindings (single crate covers all domains)
 
-**Rust Identifiers:**
-- `snake_case` - Functions, variables, modules, directories
-- `PascalCase` - Types, traits, structs, enums
-- `UPPERCASE` - Constants
-- Crate names: `kebab-case` with `-core` or `-py` suffix
+**Crate names (Rust):**
+- `classic_{domain}_core` (underscore in crate name, hyphen in directory)
+- Consistent with workspace manifest
 
 ## Where to Add New Code
 
-**New Feature (e.g., "Add FormID validator"):**
-- Primary code: `ClassicLib/scanning/logs/analyzers/` (if related to scanning)
-- Tests: `tests/scanlog/test_formid_validator_unit.py`
-- Rust acceleration: `rust/business-logic/classic-scanlog-core/` + `rust/python-bindings/classic-scanlog-py/`
-- Integration: `ClassicLib/integration/factory/scanlog.py` (add factory method)
-- Config: `ClassicLib/core/constants.py` (if new constants needed)
+**New Rust business logic feature:**
+- Primary code: `ClassicLib-rs/business-logic/classic-{domain}-core/src/`
+- Tests: `ClassicLib-rs/business-logic/classic-{domain}-core/tests/` or inline `#[cfg(test)]`
+- Add to workspace: `ClassicLib-rs/Cargo.toml` members list
+- Document API: `docs/api/classic-{domain}-core.md`
 
-**New Component/Module (e.g., "Game mod dependency analyzer"):**
-- Implementation: `ClassicLib/scanning/game/mod_dependency_analyzer.py` (one file, one class)
-- Tests: `tests/game/test_mod_dependency_analyzer_unit.py`
-- Rust option: Separate `-core` crate if CPU-intensive
-- Entry point: Add to ScanGameFilesOrchestrator or similar
-- Export: Add to relevant `__init__.py` for public API
+**New C++ bridge entry point:**
+- Bridge module: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/{module}.rs`
+- Register in: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs`
+- Add to CMake: `classic-cli/CMakeLists.txt` and `classic-gui/CMakeLists.txt` `corrosion_add_cxxbridge(FILES ...)` list
 
-**Utilities (e.g., "Hash matching function"):**
-- Shared helpers: `ClassicLib/Utils/` (by domain: hash_utils.py, string_utils.py, etc.)
-- Tests: `tests/utils/test_<domain>_utils.py`
-- Pattern: Pure functions, no state, import by domain
+**New Python binding:**
+- Crate: `ClassicLib-rs/python-bindings/classic-{domain}-py/src/lib.rs`
+- Add to workspace: `ClassicLib-rs/Cargo.toml`
+- Rebuild: `./rebuild_rust.ps1 -Target python -Crates classic_{domain}`
 
-**Test Fixtures:**
-- Centralized: `tests/fixtures/` (never in individual test files)
-- Organization: `async_fixtures.py`, `crash_log_fixtures.py`, `mock_fixtures.py`, etc.
-- Pattern: Fixture functions with @pytest.fixture decorator, autouse only in conftest.py
+**New Node binding module:**
+- Module file: `ClassicLib-rs/node-bindings/classic-node/src/{module}.rs`
+- Register in `lib.rs`, update `index.d.ts` TypeScript declarations
+- Rebuild: `./rebuild_node.ps1` or `bun run build` from node-bindings dir
 
-**GUI Component (e.g., "New dialog for advanced settings"):**
-- Dialog class: `ClassicLib/Interface/dialogs/AdvancedSettingsDialog.py`
-- Controller: `ClassicLib/Interface/controllers/settings_controller.py` (if new feature needs coordination)
-- Tests: `tests/gui/test_advanced_settings_dialog.py`
-- Integration: Register in MainWindow or relevant controller
-- Signals: Use SignalHub for cross-feature communication, not direct references
+**New Qt GUI feature:**
+- View/dialog: `classic-gui/src/app/`
+- Controller: `classic-gui/src/controllers/`
+- Background worker: `classic-gui/src/workers/`
+- Custom widget: `classic-gui/src/widgets/`
+
+**New CLI feature:**
+- Source: `classic-cli/src/`
+- Tests: `classic-cli/tests/`
+
+**New TUI tab or widget:**
+- Tab: `ClassicLib-rs/ui-applications/classic-tui/src/tabs/`
+- Widget: `ClassicLib-rs/ui-applications/classic-tui/src/widgets/`
+
+**Utilities (shared Rust helpers):**
+- If usable by all crates: add to `ClassicLib-rs/foundation/classic-shared-core/src/`
+- If domain-specific: add to the relevant `-core` crate
 
 ## Special Directories
 
-**ClassicLib/CLASSIC Backup/:**
-- Purpose: Legacy backup code (not current application code)
-- Generated: No
-- Committed: Yes (for historical reference, can be deleted)
+**`CLASSIC Data/`:**
+- Purpose: Runtime YAML configuration and SQLite FormID databases read at startup
+- Generated: No (maintained; SQLite files are partially generated)
+- Committed: Core YAML files yes; `.db-shm`/`.db-wal` WAL files no
 
-**rust/Crash Logs/:**
-- Purpose: Test/sample crash logs for Rust tests
-- Generated: No (committed with repo)
-- Committed: Yes
-
-**logs/, coverage_html/, htmlcov/:**
-- Purpose: Runtime artifacts (test logs, coverage reports)
-- Generated: Yes (during test runs)
-- Committed: No (in .gitignore)
-
-**build/, dist/, Release/, .venv/:
-- Purpose: Build artifacts, distributions, virtual environments
-- Generated: Yes
-- Committed: No (in .gitignore)
-
-**rust/target/:**
-- Purpose: Rust compilation artifacts
-- Generated: Yes
-- Committed: No (in .gitignore)
-
-**.planning/codebase/:**
-- Purpose: GSD codebase mapping output (ARCHITECTURE.md, STRUCTURE.md, etc.)
-- Generated: By `/gsd:map-codebase` command
-- Committed: Yes (guides future development)
-
-**_internal/:**
-- Purpose: Pre-built Rust extension wheels for standalone distribution
-- Generated: No (packaged separately for release)
+**`CLASSIC Backup/`:**
+- Purpose: Backup copies of game/cleaned files created by the backup feature
+- Generated: Yes (at runtime by BackupManager)
 - Committed: No
 
-## Guidance for Adding New Code
+**`sample_logs/FO4/`:**
+- Purpose: Test fixture crash log files for integration tests
+- Generated: No (git submodule)
+- Committed: Yes (via submodule)
 
-**One Class Per File:** Store each class in its own file to keep modules focused. Exception: Small related helpers can coexist (e.g., exception classes + a single handler).
+**`ClassicLib-rs/target/`:**
+- Purpose: Rust build artifacts
+- Generated: Yes
+- Committed: No
 
-**Module Organization:** Group related classes by domain (all scanning logic in scanning/, all GUI controllers in Interface/controllers/), not by function (don't create a "models/" directory with random classes).
+**`classic-cli/build/`, `classic-gui/build/`:**
+- Purpose: CMake build trees (includes Corrosion-embedded Rust builds and vcpkg)
+- Generated: Yes
+- Committed: No
 
-**Configuration:** Never hardcode paths or settings. Use constants from `ClassicLib/core/constants.py` or load from YAML via `yaml_settings()`.
+**`ClassicLib-rs/python-bindings/.venv/`:**
+- Purpose: Python virtual environment for binding tests
+- Generated: Yes
+- Committed: No
 
-**Async/Await:** CLI/TUI use native async (await, AsyncBridge); GUI workers use `AsyncBridge.run_async()`. CLI entry point is synchronous (parse args, setup) then calls `asyncio.run()` once.
+**`ClassicLib-rs/python-bindings/parity-artifacts/`:**
+- Purpose: Generated parity diff/coverage JSON reports from parity gate tooling
+- Generated: Yes (by `tools/python_api_parity/check_parity_gate.py`)
+- Committed: Yes (baseline snapshots)
 
-**Error Handling:** Use MessageHandler for all output. Log errors at appropriate levels (ERROR for failures, DEBUG for detailed info). Never print() or raise exceptions silently.
+**`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/`:**
+- Purpose: Generated Node/TypeScript parity reports
+- Generated: Yes
+- Committed: Yes (baseline snapshots)
 
-**Testing:** All new code requires tests. Put fixtures in `tests/fixtures/`, tests in appropriate domain directory. Use pytest markers: @pytest.mark.unit, @pytest.mark.integration, @pytest.mark.asyncio, @pytest.mark.slow.
+---
 
-**Documentation:** All public classes and functions need Google-style docstrings (use `/python-docstrings` skill). Module-level docstring at top of every file. Rust: `///` doc comments on all public items.
-
-**Type Hints:** Complete type annotations required (Python 3.12+ syntax). Use TypeVar for generic functions. Path types are always `pathlib.Path`, never `str`.
-
-**Rust Acceleration:** Write in Rust if CPU-intensive (YAML parsing, large data processing). Create separate `-core` and `-py` crates. Provide Python fallback in `ClassicLib/integration/python/`. Add factory method in `ClassicLib/integration/factory/`.
+*Structure analysis: 2026-03-30*

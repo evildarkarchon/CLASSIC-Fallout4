@@ -1,162 +1,147 @@
 # External Integrations
 
-**Analysis Date:** 2026-01-29
+**Analysis Date:** 2026-03-30
 
 ## APIs & External Services
 
-**GitHub API:**
-- Service - Release version checking and updates
-- SDK/Client: aiohttp with GitHub REST API v3
-- Auth: `GITHUB_TOKEN` env var (required for authenticated requests to avoid rate limiting)
-- Endpoints:
-  - `GET https://api.github.com/repos/{owner}/{repo}/releases/latest` - Fetch latest stable release
-  - `GET https://api.github.com/repos/{owner}/{repo}/releases` - List all releases for prerelease detection
-- Scope: `ClassicLib/support/update.py` provides functions:
-  - `get_github_latest_stable_version_from_endpoint()` - Async fetch of latest stable version
-  - `get_github_latest_prerelease_version_from_list()` - Async fetch of latest prerelease
-  - `get_latest_and_top_release_details()` - Comprehensive release details
-- Error Handling: Returns None on 404 or connection errors; logs warnings for non-dict responses
+**GitHub Releases API:**
+- Used for: checking for new CLASSIC releases and downloading update metadata
+- SDK/Client: `reqwest` 0.13.1 (async HTTP)
+- Crate: `ClassicLib-rs/business-logic/classic-update-core/src/github.rs`
+- Auth: `GITHUB_TOKEN` env var (optional); loaded via `dotenvy` from `.env` file
+- Endpoint: `https://api.github.com/repos/evildarkarchon/CLASSIC-Fallout4/releases/latest`
+- Rate limit: 60 req/hr unauthenticated, 5,000 req/hr with token
+- User-agent: `CLASSIC-Update/<version>`
 
-**Pastebin Services (Paste Content Fetching):**
-- Services:
-  - pastebin.com
-  - paste.ee
-  - hastebin.com
-  - haste.zneix.eu
-- Purpose: Download crash logs from user-shared pastebin links
-- Client:
-  - Sync: `requests >= 2.32.3` with 10-second timeout
-  - Async: `aiohttp >= 3.10.10` with ClientTimeout(total=10)
-- Endpoint Format:
-  - pastebin.com → `https://pastebin.com/raw/{paste_id}`
-  - paste.ee → `https://paste.ee/r/{paste_id}`
-  - hastebin → `https://{service}/raw/{paste_id}`
-- Scope: `ClassicLib/Utils/web_utils.py`
-  - `pastebin_fetch(url)` - Sync download (blocks)
-  - `async_pastebin_fetch(url)` - Async download (non-blocking)
-- Output: Saves to `./Crash Logs/Pastebin/crash-{paste_id}.log`
-- Error Handling: Catches `requests.RequestException`, `aiohttp.ClientError`, TimeoutError
+**Mod Site URL Helpers (reference only — no live API calls):**
+- NexusMods (`https://www.nexusmods.com`) — URL validation and domain extraction
+- Bethesda.net (`https://bethesda.net`) — URL validation and domain extraction
+- ModDB (`https://www.moddb.com`) — URL validation and domain extraction
+- Crate: `ClassicLib-rs/business-logic/classic-web-core/src/lib.rs` (`ModSite` enum)
+- These are URL utilities only; no API key or HTTP calls are made to these services
 
 ## Data Storage
 
 **Databases:**
-- SQLite (local file-based)
-  - Implementation: `ClassicLib/io/database/rust_pool.py`
-  - Rust: `classic-database-core` (connection pooling, 25x faster)
-  - Python: `ClassicLib/io/database/async_pool.py` (fallback)
-  - Client: `rusqlite` (sync) + `sqlx` (async Rust) + `aiosqlite` (async Python fallback)
-  - Purpose: Plugin form ID registry, crash analysis cache, configuration
-  - Persistence: Application-scoped databases stored in user data directory
-  - API: `RustAsyncDatabasePool()` class with async `initialize()`, `get_entry()`, `get_entries_batch()`
+- Type: SQLite (local file-based, no server)
+- Client: `sqlx` 0.8 (async, WAL mode) + `rusqlite` 0.38.0 (bundled, sync fallback)
+- Pool crate: `ClassicLib-rs/business-logic/classic-database-core/`
+- Location: `CLASSIC Data/databases/` (shipped with application)
+- Known databases:
+  - `Fallout4 FormIDs Main.db` — base game FormID lookup
+  - `Fallout4 FormIDs Local.db` — local/user FormID database
+  - `aSW FormIDs.db` — additional mod FormID database
+  - `FOLON FormIDs.db` — Fallout London mod FormIDs
+  - `FormIDs.db` — general FormID database
+- User-configured paths: `CLASSIC Settings.yaml` under `CLASSIC_Settings.FormID Databases`
+- Access pattern: async connection pool with TTL-based query caching and WAL concurrency
 
 **File Storage:**
-- Local filesystem only (no cloud integration)
-  - Game installation directories (read-only analysis)
-  - User home directory for configuration (via appdirs)
-  - Application data directory for caches and databases
-  - `./Crash Logs/` directory for analysis results
+- Local filesystem only — no cloud storage integration
+- Game archive reading: Bethesda BA2 archives via `ba2` 3.0.1 crate (read-only)
+- Log collection: crash log files from game documents directory or custom scan path
 
 **Caching:**
-- In-memory (Rust):
-  - `dashmap` - Concurrent hash map for form ID caches
-  - `lru` - LRU cache for frequently accessed data
-  - `quick_cache` - Lock-free concurrent cache for high-contention data
-- In-memory (Python):
-  - `ClassicLib/io/yaml/async_/cache.py` - YAML config caching with lazy loading
-  - Dictionary-based memoization in performance-critical paths
+- In-process only — `quick_cache` 0.6 (lock-free), `lru` 0.16.3
+- YAML file cache keyed by path + mtime (in `classic-yaml-core`)
+- Settings cache with sync/async loaders (in `classic-settings-core`)
+- No external cache service (Redis, Memcached, etc.)
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Custom (GitHub token is optional, not required for core functionality)
-- `GITHUB_TOKEN` env var enables authenticated GitHub API requests
-- No user login system; token-based API authentication only
-- Implementation: `ClassicLib/support/update.py` includes token in request headers if present
+- None — application does not authenticate users
+- `GITHUB_TOKEN` is an optional developer/CI token for raising API rate limits (not user auth)
 
-**Windows Registry Access:**
-- Optional Windows API integration via pywin32 (conditional import)
-- Purpose: Extract game executable version info via Win32 API
-- Functions: `ClassicLib/Utils/version_utils.py`:
-  - `get_version_windows_api(game_exe_path)` - Extract version from .exe metadata
-  - `extract_windows_version_info(win32api_module, exe_path)` - Parse Win32 file version info
-- Fallback: Pure Python version extraction without API if pywin32 unavailable
+## Game Platform Integrations
+
+**Steam (Windows):**
+- Integration: Windows Registry reads (`HKEY_LOCAL_MACHINE`) to locate game installation path
+- Crate: `ClassicLib-rs/business-logic/classic-path-core/src/platform/windows.rs`
+- Dependency: `winreg` 0.52 (Windows target only)
+
+**Steam (Linux/Proton):**
+- Integration: Steam library VDF file parsing (`~/.local/share/Steam/steamapps/libraryfolders.vdf`)
+- Crate: `ClassicLib-rs/business-logic/classic-path-core/src/platform/linux.rs`
+- No external library; custom VDF parser
+
+**GOG:**
+- Integration: Windows Registry reads alongside Steam paths
+- Crate: `ClassicLib-rs/business-logic/classic-path-core/src/game_path.rs`
+
+## File Format Integrations
+
+**Bethesda BA2 Archives:**
+- Format: Fallout 4 BA2 (GNRL general and DX10 texture formats)
+- Library: `ba2` 3.0.1
+- Used by: `ClassicLib-rs/business-logic/classic-scangame-core/src/ba2.rs`
+- Purpose: scanning game archives for file presence and validation
+
+**PE (Windows Portable Executable) Files:**
+- Format: Windows `.exe`/`.dll` version resources (`VS_VERSIONINFO`)
+- Library: `pelite` 0.10
+- Used by: `ClassicLib-rs/business-logic/classic-version-core/src/pe_version.rs`
+- Purpose: extracting game version from `Fallout4.exe` and XSE loader DLLs
+
+**DDS Texture Files:**
+- Library: `ddsfile` 0.5
+- Purpose: texture file validation in loose-file scanning
+
+**INI Files:**
+- Library: `configparser` 3.1
+- Purpose: parsing Fallout 4 `.ini` configuration files (game settings discovery)
+- Used by: `ClassicLib-rs/business-logic/classic-path-core/`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None detected (no Sentry, Rollbar, or similar)
+- None — no external error tracking service (Sentry, Bugsnag, etc.)
 
 **Logs:**
-- Approach: `ClassicLib/core/logger.py` - Centralized Python logging module
-- MessageHandler system for user-facing messages:
-  - `msg_info()` - Information messages
-  - `msg_warning()` - Warnings
-  - `msg_error()` - Errors
-  - `msg_success()` - Success messages
-- Rust logging: `log` crate with optional `env_logger`, `tracing`, `tracing-subscriber`
-- Output: Console (CLI/TUI) or GUI message dialogs (PySide6)
+- Rust: `log` 0.4.29 facade + `env_logger` 0.11` for environment-driven log levels
+- Rust async: `tracing` 0.1.44 + `tracing-subscriber` 0.3.22 + `tracing-appender` 0.2 for structured async-aware logging with file appender support
+- TUI: tracing with file appender (`ClassicLib-rs/ui-applications/classic-tui/`)
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- GitHub repository: https://github.com/evildarkarchon/CLASSIC-Fallout4
-- Distribution: Windows executable via GitHub Releases
+- GitHub: `https://github.com/evildarkarchon/CLASSIC-Fallout4`
+- Releases distributed as standalone Windows ZIP archives via GitHub Releases
 
 **CI Pipeline:**
-- GitHub Actions (not locally configured; inferred from project structure)
-- Build artifact: PyInstaller-bundled Windows .exe in `CLASSIC/` directory
+- GitHub Actions (`.github/workflows/`)
+- `ci-rust.yml` — rustfmt, Clippy, Rust tests (runs on `windows-latest`)
+- `ci-cpp.yml` — C++ CLI and GUI builds + CTest/Catch2/QtTest (runs on `windows-latest`, uses `ilammy/msvc-dev-cmd@v1`)
+- `ci-python-bindings.yml` — Python parity gates, stub validation, pytest (runs on `windows-latest`, uses `astral-sh/setup-uv@v7`)
+- `ci-typescript.yml` — Node parity gates, Bun tests, DTS freshness (runs on `windows-latest`, uses `oven-sh/setup-bun@v2`)
+- `benchmarks.yml` — Criterion benchmarks on PRs to `main` with PR comment reporting
 
-## Environment Configuration
-
-**Required env vars:**
-- `GITHUB_TOKEN` - GitHub API authentication token (optional, limits anonymous requests to 60/hour)
-
-**Optional env vars:**
-- Logging level configuration via standard Python logging env vars (inferred)
-
-**Secrets location:**
-- `.env` file in project root (git-ignored)
-- Contains: `GITHUB_TOKEN=github_pat_*` for GitHub API authentication
+**CI Build Caching:**
+- `actions/cache@v5` for `~/.cargo/registry` and `~/.cargo/git`, keyed by `Cargo.lock` hash
+- Python venv cached by `astral-sh/setup-uv@v7`
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None detected
+- None — the application does not expose any web endpoints
 
 **Outgoing:**
-- GitHub API reads only (no outgoing webhooks or callbacks)
+- GitHub API: outgoing HTTPS GET to `api.github.com` for release checks (user-triggered or automated at startup when `Update Check: true` in settings)
 
-## PyO3 Rust-Python Bridge
+## Environment Configuration
 
-**Module Loading:**
-- Dynamic detection in `ClassicLib/integration/detector.py`
-- Fallback to pure Python implementations if Rust modules unavailable
-- Modules loaded as:
-  - `import classic_yaml` → YAML operations
-  - `import classic_database` → Database pooling
-  - `import classic_scanlog` → Log parsing
-  - `import classic_file_io` → Async file I/O
-  - `import classic_settings` → Configuration
-  - `import classic_registry` → Version registry
+**Required env vars (build/dev):**
+- `VCPKG_ROOT` — path to vcpkg installation (required for C++ builds)
 
-**Exception Types:**
-- `RustDatabaseError` - Database operation failures
-- `RustError` - General Rust errors with context
-- Mapped to Python exception hierarchy in `ClassicLib/integration/exceptions.py`
+**Optional env vars (runtime):**
+- `GITHUB_TOKEN` — GitHub personal access token for higher API rate limit; loaded from `.env` by `dotenvy` in `classic-update-core`
+- `RUST_BACKTRACE` — Rust panic backtraces (set to `1` or `full` in CI)
+- `CARGO_TERM_COLOR` — Cargo output coloring (set to `always` in CI)
 
-## Threading & Async Model
-
-**AsyncBridge:**
-- Location: `ClassicLib/core/async_bridge.py`
-- Purpose: Bridge async Rust code to Qt's event loop
-- Usage: GUI contexts only (PySide6 slots → async function calls)
-- Singleton pattern with thread-safe creation via double-checked locking
-
-**Single Tokio Runtime:**
-- Enforced via `classic-shared::get_runtime()` - all Rust async code uses same global runtime
-- Prevents multiple runtime conflicts
-- Available to Python via `classic-shared-py` Rust bindings
+**Secrets location:**
+- `.env` file at repo root (gitignored) — stores `GITHUB_TOKEN` for local development
+- GitHub Actions secrets — `GITHUB_TOKEN` injected as workflow env for CI
 
 ---
 
-*Integration audit: 2026-01-29*
+*Integration audit: 2026-03-30*

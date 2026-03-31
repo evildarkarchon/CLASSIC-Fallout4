@@ -1,300 +1,288 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-01-29
+**Analysis Date:** 2026-03-30
 
-## Naming Patterns
+## Language-Specific Conventions
 
-**Files:**
-- Snake case for all Python files: `async_bridge.py`, `orchestrator_core.py`
-- One primary class per file (exceptions allowed for small related helpers)
-- Module name reflects primary class/functionality: `async_bridge.py` contains `AsyncBridge` class
-- Fixture files: `*_fixtures.py` in `tests/fixtures/` directory
-- Test files: `test_<component>_<type>.py` (e.g., `test_async_bridge_wrapper_unit.py`)
-
-**Functions and Methods:**
-- Snake case for all functions: `run_async()`, `ensure_loop()`, `gather_with_concurrency()`
-- Private methods prefixed with single underscore: `_run_loop()`, `_cleanup_all()`
-- Async functions may use `async_` prefix or `*_async` suffix: `async_cleanup()`, `read_file_async()`
-- Convenience wrapper functions use `msg_*` pattern for messaging: `msg_info()`, `msg_error()`, `msg_warning()`, `msg_success()`, `msg_debug()`, `msg_critical()`
-- Context managers: `msg_progress_context()` for progress tracking
-
-**Classes:**
-- PascalCase for all classes: `AsyncBridge`, `OrchestratorCore`, `GlobalRegistry`, `AsyncResourceTracker`, `MessageHandler`
-- Exception classes inherit from base exception and use pattern: `RustError`, `RustIOError`, `RustParseError`, `RustConfigError`, `RustDatabaseError`
-- Inner classes within test classes: `TestAsyncBridgeWrapper`, `OuterAsync`, `InnerAsync`
-
-**Variables:**
-- Snake case for all variables: `coro`, `thread_id`, `_shutdown`, `_instances`
-- Module-level constants in ALL_CAPS: `FAST_PATH_OPERATIONS`, `SIZE_DEPENDENT_OPERATIONS`, `AIOFILES_AVAILABLE`
-- Type variables: `T`, `P`, `R` (single letters for generic types)
-- Protected class-level attributes: `_instances`, `_lock`, `_thread_local`, `_metrics_callback`
-
-**Enums and Types:**
-- Enum members in ALL_CAPS: `YAML.Game`, `YAML.Settings`, `MessageType.INFO`, `MessageTarget.CONSOLE`
-- TypedDict names in PascalCase: similar to class names
-- Literal string values lowercase: `"gui_mode"`, `"cli_mode"`
-
-## Code Style
-
-**Formatting:**
-- Tool: Ruff (integrated with pyproject.toml)
-- Line length: 140 characters
-- Indentation: 4 spaces
-- Quote style: Double quotes `""`
-- Trailing commas: Enabled with `skip-magic-trailing-comma = false`
-
-**Linting:**
-- Tool: Ruff with strict configuration
-- Type checking: Pyright in strict mode
-- Error codes enforced:
-  - `ANN` (Type Annotations): Required on all public functions/classes
-  - `PTH` (Pathlib): Prefer `pathlib.Path` over string paths
-  - `ARG` (Unused Arguments): Flag unused parameters
-  - `ASYNC` (Async Suggestions): Enforce async best practices
-  - `SIM` (Simplification): Use simpler patterns
-  - `LOG` (Logging): Use logger module, not print()
-  - `RUF` (Ruff-specific): Various Ruff recommendations
-  - `UP` (pyupgrade): Modern Python syntax
-- Disabled for tests (`tests/**/*.py`): Most style rules relaxed for test clarity
-- Docstring validation: `D` (pydocstyle) rules enforced in production code
-
-**File Organization:**
-- Standard imports first (stdlib)
-- Third-party imports second
-- Relative imports prohibited (`ban-relative-imports = "all"`)
-- Type checking imports isolated: `from typing import TYPE_CHECKING`
-  - Runtime-expensive imports in `if TYPE_CHECKING:` block
-  - Examples: `from packaging.version import Version`, `from ClassicLib.io.database.async_pool import AsyncDatabasePool`
-- `__all__` list in modules exporting public API
-
-## Import Organization
-
-**Order:**
-1. Future annotations: `from __future__ import annotations`
-2. Standard library: `import logging`, `import asyncio`, `from pathlib import Path`
-3. Third-party: `import pytest`, `from pyside6 import ...`
-4. First-party (ClassicLib): `from ClassicLib.core.async_bridge import AsyncBridge`
-5. TYPE_CHECKING block: Expensive imports for type hints only
-6. Module docstring: At top before all imports
-7. Logger setup: `logger = logging.getLogger(__name__)`
-
-**Path Aliases:**
-- No path aliases in use - full absolute imports from project root
-- Example: `from ClassicLib.core.async_bridge import AsyncBridge` (not relative)
-
-**Example Import Block:**
-```python
-"""Module docstring."""
-
-from __future__ import annotations
-
-import asyncio
-import logging
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-import pytest
-
-from ClassicLib.core.constants import YAML
-from ClassicLib.core.registry import GlobalRegistry
-
-if TYPE_CHECKING:
-    from packaging.version import Version
-    from ClassicLib.io.database.async_pool import AsyncDatabasePool
-
-logger = logging.getLogger(__name__)
-```
-
-## Error Handling
-
-**Patterns:**
-- Specific exception types instead of generic `Exception`
-- Exception hierarchy for categorization: `RustError` base class with specific subtypes
-- Examples: `RustIOError` (inherits `IOError`), `RustParseError` (inherits `ValueError`), `RustConfigError` (inherits `ValueError`)
-- Catch specific exceptions before broader ones: `except (OSError, ValueError, UnicodeDecodeError) as e:`
-- Log errors with context: `logger.error(f"Error reading {path}: {e}")`
-- Use `from None` to suppress exception chains when appropriate: `raise RuntimeError(...) from None`
-- Guard clauses with `return` to reduce nesting depth
-- Try-except-else-finally pattern preferred:
-  ```python
-  try:
-      # attempt operation
-  except SpecificError as e:
-      logger.error(f"Failed: {e}")
-      raise
-  else:
-      return result
-  finally:
-      # cleanup
-  ```
-
-## Logging
-
-**Framework:** Python's `logging` module
-
-**Module-level logger:**
-- Every module gets: `logger = logging.getLogger(__name__)`
-- Located after imports, before code
-
-**Log Levels:**
-- `logger.debug()`: Detailed diagnostic info (thread IDs, lifecycle events)
-- `logger.info()`: General informational messages
-- `logger.warning()`: Warning conditions (e.g., "Thread did not stop within timeout")
-- `logger.error()`: Error conditions (failures, exceptions)
-- `logger.critical()`: Critical failures requiring immediate attention
-
-**User-facing messages:** Use MessageHandler functions (not logger):
-- `msg_info()`: Standard information
-- `msg_warning()`: User warnings
-- `msg_error()`: User-facing errors
-- `msg_success()`: Success notifications
-- `msg_debug()`: Debug output
-- `msg_critical()`: Critical notifications
-
-**No print() statements:** All output goes through MessageHandler or logger
-
-## Comments
-
-**When to Comment:**
-- Complex algorithms or non-obvious logic only
-- Explain the WHY, not the WHAT
-- Document threading concerns, concurrency patterns
-- Reference external documentation or issue numbers
-- Examples of GOOD comments:
-  - `# Double-check with lock - handle shutdown instances`
-  - `# Fast path - check thread-local cache (no lock needed)`
-  - `# Signal that we're ready AFTER set_event_loop() but BEFORE run_forever()`
-
-**When NOT to Comment:**
-- Self-documenting code (clear variable names, good structure)
-- Code that replicates what the code literally does
-
-**JSDoc/TSDoc:**
-- Google-style docstrings required for all public functions/classes
-- Use `/python-docstrings` skill for format validation
-- Format:
-  ```python
-  def method(param1: str, param2: int) -> dict[str, Any]:
-      """One-line summary.
-
-      Longer description if needed. Can span multiple lines but stays
-      focused on what the function does.
-
-      Args:
-          param1: Description of first parameter
-          param2: Description of second parameter
-
-      Returns:
-          Description of return value
-
-      Raises:
-          ValueError: When this condition occurs
-          RuntimeError: When that condition occurs
-
-      """
-  ```
-- One-line docstrings acceptable for simple functions
-- Multi-line docstrings start with summary line, blank line, then details
-- Examples in docstrings use `>>>` format
-
-## Function Design
-
-**Size:**
-- Prefer functions < 50 lines
-- Maximum 12 branches per function
-- Use dictionary mapping or match statements to replace long if-elif chains
-- Extract complex logic into separate functions
-
-**Parameters:**
-- Type annotations required on all parameters
-- Use keyword-only arguments (`*,`) for configuration parameters
-- Document all parameters in docstring
-- Avoid `**kwargs` - use explicit named parameters
-- Default values preferred over `None` checks
-
-**Return Values:**
-- Explicit return type annotations required
-- `None` explicit for void functions: `-> None:`
-- Multiple return values as tuple: `-> tuple[str, int]:`
-- Union types for conditional returns: `-> str | None:`
-
-**Async Patterns:**
-- Async functions clearly marked: `async def function_name():`
-- Coroutines called with `await` (never bare coroutine objects)
-- AsyncBridge pattern for sync-to-async bridging in GUI: `bridge.run_async(coro)`
-- Never `asyncio.run()` inside async context (use `await`)
-- Single global runtime via `classic_shared.get_runtime()` for all threads
-
-## Module Design
-
-**Exports:**
-- Public API in `__all__` list at module level
-- Example from `async_bridge.py`:
-  ```python
-  __all__ = [
-      "AsyncBridge",
-      "run_async",
-      "run_async_with_timeout",
-      "context_aware_sync",
-      "smart_await",
-      "create_sync_wrapper",
-  ]
-  ```
-
-**Barrel Files:**
-- Used for re-exporting public APIs
-- Example: `ClassicLib/messaging/__init__.py` re-exports from submodules
-- Pattern: Import internal modules, then `__all__` list, then `from .submodule import`
-- Comment: `# ruff: noqa: TID252 - Relative imports intentional for __init__.py re-exports`
-
-**Module Docstrings:**
-- Required on every module (top of file)
-- Document purpose, main classes/functions, usage examples
-- Example from `async_bridge.py`: Comprehensive module-level docstring with usage patterns, phases, and references
-
-## Concurrency and Threading
-
-**Threading Patterns:**
-- Thread ID acquisition: `threading.get_ident()`
-- Thread-local storage: `threading.local()` for fast instance access
-- Locks: `threading.Lock()` for critical sections
-- Events: `threading.Event()` for synchronization
-- Thread creation: `threading.Thread(target=func, args=(), daemon=True, name=descriptive_name)`
-
-**Async Patterns:**
-- Semaphores for concurrency control: `asyncio.Semaphore(limit)`
-- Task gathering: `asyncio.gather(*tasks)` for concurrent execution
-- Task cancellation: Clean cancellation with timeout in finally blocks
-- Event loop management: Single-threaded event loop per thread (not per function)
-
-**Data Classes:**
-- Frozen/immutable preferred for shared data
-- ClassVar for class-level shared state: `_instances: ClassVar[dict[int, "AsyncBridge"]]`
-- Type annotations on all fields
-
-## Special Patterns
-
-**Singleton Pattern:**
-- Used in `AsyncBridge`, `GlobalRegistry`, `MessageHandler`
-- Thread-local caching with class-level dict backup
-- `get_instance()` class method for thread-safe access
-- Cleanup on program exit via `atexit.register()`
-
-**Factory Pattern:**
-- Located in `ClassicLib/integration/factory/` modules
-- Examples: `get_parser()`, `get_file_io()`, `get_database_pool()`
-- Returns appropriate implementation (Rust or Python fallback) based on availability
-
-**Bridge Pattern:**
-- AsyncBridge connects sync GUI code with async business logic
-- Not used in pure async (CLI/TUI) code
-- Alternative: `@context_aware_sync` decorator for transitional code
-
-**Adapter Pattern:**
-- Fallback implementations for when Rust modules unavailable
-- Example: `get_parser()` returns either Rust or pure Python parser
-- Check availability: `from ClassicLib.integration.status import is_rust_accelerated`
+This codebase is multi-language. Each language has its own conventions.
 
 ---
 
-*Convention analysis: 2026-01-29*
+## Rust Conventions
+
+### Naming Patterns
+
+**Crates:**
+- Kebab-case with a `-core` suffix for pure business logic: `classic-config-core`, `classic-yaml-core`
+- Kebab-case with a `-py` suffix for PyO3 bindings: `classic-config-py`, `classic-yaml-py`
+- Kebab-case with a `-cpp-bridge` or `-node` suffix for C++ / Node bindings
+
+**Files:**
+- snake_case module files: `pool_sqlx.rs`, `game_files.rs`, `log_collection.rs`
+- Integration test files named `integration_tests.rs` under `tests/`
+- Benchmark files under `benches/`
+
+**Functions and Methods:**
+- snake_case for all functions: `load_yaml_file`, `hash_files_parallel`, `create_backup`
+- Async functions use same naming: `read_file`, `write_file`, `load_from_yaml_files`
+- Builder methods use `with_` prefix: `with_title()`, `with_details()`
+
+**Types and Structs:**
+- PascalCase for all types: `FileIOCore`, `YamlDataCore`, `ClassicError`, `BackupManager`
+- Enums use PascalCase: `MessageType`, `MessageTarget`, `BackupType`, `Fallout4Version`
+- Error types end in `Error`: `ClassicError`, `FileIOError`, `DatabaseError`, `ConfigError`
+
+**Constants:**
+- SCREAMING_SNAKE_CASE: `HASH_CHUNK_SIZE`, `DEFAULT_CONFIG_FILENAME`, `SHORT_SCAN_CACHE_CAPACITY`
+- Static globals use `LazyLock` with SCREAMING_SNAKE_CASE: `HASH_CACHE`, `NULL_VERSION`
+
+**Variables:**
+- snake_case: `backup_dir`, `game_root`, `temp_dir`, `yaml_dirs`
+- Abbreviations preserved when conventional: `ec` for `error_code`, `mmap` for memory map
+
+### Code Style
+
+**Formatting:**
+- `cargo fmt` enforced (run as part of pre-commit minimum: `cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml`)
+- Rust edition 2024 (`edition = "2024"`) with `rust-version = "1.85"`
+
+**Linting:**
+- Workspace-level lint config in each crate's `Cargo.toml` under `[lints.rust]`:
+  ```toml
+  [lints.rust]
+  deprecated = "deny"
+  rust_2024_compatibility = "warn"
+  unsafe_code = "deny"
+  missing_docs = "warn"
+  unused = "deny"
+  ```
+- `unsafe_code = "deny"` across all business logic crates; exceptions require `#[allow(unsafe_code)]` with justification
+- Actual unsafe is limited to CXX FFI (`classic-cpp-bridge/src/scanner.rs`) and mmap (`classic-file-io-core/src/core.rs`)
+- Clippy run with `-D warnings` in CI: `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+
+### Attributes
+
+**`#[must_use]`:** Applied to all pure query/accessor methods that return meaningful values. Example from `classic-constants-core/src/lib.rs`:
+```rust
+#[must_use]
+pub const fn is_vr(&self) -> bool { ... }
+
+#[must_use]
+pub const fn exe_name(&self) -> &'static str { ... }
+```
+
+**`#[derive(...)]`:** Use standard derives together:
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+```
+
+### Import Organization
+
+**Order:**
+1. Standard library (`std::`)
+2. External crates (alphabetical within each group)
+3. Internal workspace crates (`classic_*`)
+4. Local module imports (`super::`, `crate::`)
+
+**Namespace aliases:** Use `fs` for `std::fs` or `tokio::fs`, `Arc` from prelude, `ns` prefixes for long module paths:
+```rust
+use tokio::fs;
+use std::path::{Path, PathBuf};
+use classic_yaml_core::YamlOperations;
+```
+
+### Module Documentation
+
+**Crate-level docs:** Every crate has a module-level doc comment (`//!`) in `lib.rs` explaining purpose, architecture notes, and examples:
+```rust
+//! Core file I/O implementation with async support (Pure Rust)
+//!
+//! This module provides high-performance file I/O operations with:
+//! - Async file operations with Tokio
+//! - Memory-mapped file support for large files
+```
+
+**Function-level docs:** Public functions must have doc comments with `# Arguments`, `# Returns`, `# Errors`, and `# Examples` sections. `missing_docs = "warn"` is enforced.
+
+**Inline comments:** `//` comments for implementation logic, especially for optimization notes:
+```rust
+// Optimization 1.3: Use lock-free Cache instead of RwLock<LruCache>
+// Expected impact: 15-25% faster reads, 3-5x better concurrency
+let read_cache = Cache::new(cache_size);
+```
+
+### Error Handling
+
+**Strategy:** `Result<T, E>` propagation with `?`. Never panic in library code.
+
+**Error types:**
+- Business logic crates define their own error enum using `thiserror`: `ClassicError`, `FileIOError`, `DatabaseError`, `ConfigError`, `GamePathError`
+- `anyhow` is used in application-layer and async orchestrators for context chaining: `.context("Failed to read config")?`
+- The `IntoClassicError` trait provides ergonomic conversion: `.into_classic("context message")?`
+- Error variants carry structured context fields, not just strings:
+  ```rust
+  ConfigError::IOError { context, .. }
+  ConfigError::ParseError { context, .. }
+  ConfigError::EmptyDocument(msg)
+  ConfigError::InvalidInput(msg)
+  ```
+
+**Pattern for async errors:**
+```rust
+tokio::fs::read_to_string(path)
+    .await
+    .into_classic(format!("Failed to read config: {}", path.display()))?;
+```
+
+### Async Patterns
+
+**ONE RUNTIME RULE:** All crates use the shared Tokio runtime from `classic_shared_core::get_runtime()`. Never create a new `tokio::runtime::Runtime` in any crate.
+
+**Async functions:** Prefer `async fn` at public API boundaries; use `tokio::spawn` for concurrent tasks, `JoinSet` for collecting multiple results.
+
+**Blocking I/O:** Memory-mapped reads are wrapped with `#[allow(unsafe_code)]` and use `tokio::task::spawn_blocking` or are sequenced outside async contexts.
+
+### Logging
+
+**Mixed approach:** Two logging facades are used across the codebase:
+- `log` crate (`log::info!`, `log::warn!`, `log::error!`, `log::debug!`): used in business logic crates (`classic-config-core`, `classic-database-core`, `classic-scanlog-core`, `classic-message-core`)
+- `tracing` crate (`tracing::warn!`, `tracing::debug!`, `tracing::trace!`): used in `classic-file-io-core`, `classic-settings-core`, `classic-yaml-core`, and TUI application
+
+**Pattern:** Log at `warn` for recoverable issues, `error` for propagated failures, `debug`/`trace` for cache hits and performance notes.
+
+---
+
+## C++ Conventions (classic-cli)
+
+### Naming Patterns
+
+**Files:** snake_case for both headers and implementation: `cli_args.h`, `cli_args.cpp`, `thread_pool.h`
+
+**Types and Structs:** PascalCase: `CliArgs`, `ArgvBuilder`, `DataDirs`
+
+**Functions:** snake_case: `parse_args()`, `auto_concurrency_for_cpu_count()`, `find_data_root()`
+
+**Variables and Parameters:** snake_case: `cpu_count`, `recommended`, `exe_path`
+
+**Private members:** Trailing underscore convention noted in `.clang-format` comment: "trailing underscore for private members"
+
+### Code Style
+
+**Formatting:** clang-format with K&R brace style (Attach), 4-space indent, 120-column limit. Config: `classic-cli/.clang-format`
+
+**Pointer/reference alignment:** Left-aligned: `int* p`, `const std::string& s`
+
+**Short forms:** `AllowShortFunctionsOnASingleLine: Inline` — inline functions in one line, `if` statements always use braces
+
+**Standard:** C++20 (`set(CMAKE_CXX_STANDARD 20)`)
+
+**MSVC flags:** `/utf-8 /W4` applied to all targets
+
+**Header guard:** `#pragma once` in all headers (not include guards)
+
+**Anonymous namespaces:** Used for file-local helpers in `.cpp` files:
+```cpp
+namespace {
+QString format_elapsed_seconds(const QElapsedTimer& timer) { ... }
+}
+```
+
+**Namespace alias:** `namespace fs = std::filesystem;` at top of files using std::filesystem
+
+### Import Organization
+
+**Order:**
+1. Corresponding header (`#include "scanner.h"`)
+2. Platform-specific includes (inside `#ifdef _WIN32`)
+3. CXX bridge headers
+4. Standard library headers (alphabetical)
+5. Third-party headers (fmt, CLI11)
+
+### Comments
+
+**Triple-slash doc comments (`///`):** Used for public types, functions, and structs in headers
+**Section dividers:** `// ── Section Name ────────────` style used in larger files
+
+---
+
+## C++ Conventions (classic-gui)
+
+### Naming Patterns
+
+**Files:** lowercase camelCase filenames: `mainwindow.h`, `scancontroller.cpp`, `signalhub.h`, `reportlistwidget.cpp`
+
+**Classes:** PascalCase Qt-style: `MainWindow`, `ScanController`, `SignalHub`, `BatchProgressModel`
+
+**Member variables:** `m_` prefix for private members (noted in `.clang-format`: "m_ prefix members")
+
+**Methods:** camelCase: `setupUi()`, `connectSignals()`, `loadSettings()`, `setStatusMessage()`
+
+**Qt slots:** camelCase, described in `private slots:` section
+
+### Code Style
+
+**Formatting:** clang-format with custom brace style (next-line for function definitions only), 4-space indent, 120-column limit. Config: `classic-gui/.clang-format`
+
+**Qt macros:** `Q_OBJECT`, `Q_EMIT`, `Q_SIGNAL`, `Q_SLOT` treated as statement-attribute-like macros
+
+**Test framework:** Qt Test (`QTest`) with `QTEST_GUILESS_MAIN` for headless tests, `QCOMPARE`/`QVERIFY`/`QVERIFY2`
+
+---
+
+## TypeScript/Node Conventions (classic-node)
+
+### Naming Patterns
+
+**Test files:** `*.spec.ts` in `__test__/` directory
+
+**Imports:** Named imports from `"../index.js"` (not `.ts`)
+
+**Test fixtures:** SCREAMING_SNAKE_CASE for inline YAML string constants: `MAIN_YAML`, `GAME_YAML`, `IGNORE_YAML`
+
+**Exported functions:** camelCase: `createYamlDataFromContent`, `clearYamlCache`, `setApplicationDir`
+
+**Classes:** PascalCase mirroring Rust: `YamlData`, `ClassicConfigJs`, `JsFileIO`, `JsDatabasePool`
+
+### Code Style
+
+**Runtime:** Bun with TypeScript; compiled via `tsc`
+**Test framework:** `bun:test` — `describe`, `test`, `expect`, `beforeEach`, `afterEach`
+**Fixture management:** `beforeEach` clears caches (`clearYamlCache()`), `afterEach` removes temp directories
+
+---
+
+## Python Conventions (python-bindings)
+
+### Naming Patterns
+
+**Test files:** `test_*.py` in `tests/` directory
+
+**Fixtures:** Separate `fixtures/` subdirectory with `__init__.py`: `ClassicLib-rs/python-bindings/tests/fixtures/`
+
+**Constants:** SCREAMING_SNAKE_CASE for YAML fixture strings: `PARITY_MAIN_YAML`, `PARITY_GAME_YAML`
+
+**Functions:** snake_case: `test_imports_and_versions()`, `_run_config_tier1_smoke()`
+
+### Code Style
+
+**Type annotations:** `from __future__ import annotations` at top of all test files; full typing with `Any`, `cast`, return type annotations
+
+**Formatter:** `uv run ruff format .` (enforced in pre-commit minimum)
+
+**Test framework:** pytest with `pytest.raises` for exception testing, `tmp_path` fixture for temp dirs, `monkeypatch` for environment patching
+
+---
+
+## Cross-Language Architecture Conventions
+
+**Layering rule:** Business logic lives in Rust `-core` crates. Binding layers (Python `-py`, Node `-node`, C++ bridge) are thin wrappers. Logic duplication across binding layers is prohibited.
+
+**Parity enforcement:** Node and Python bindings maintain API parity checked via `tools/node_api_parity/` and `tools/python_api_parity/`. The parity gate runs as part of CI.
+
+**Version:** All crates within the workspace share `version = "9.0.0"`.
+
+**Docs requirement:** Public API changes require updating files under `docs/api/` in the same change (enforced by `AGENTS.md`).
+
+---
+
+*Convention analysis: 2026-03-30*
