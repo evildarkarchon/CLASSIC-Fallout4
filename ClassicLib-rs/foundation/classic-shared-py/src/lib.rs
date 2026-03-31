@@ -21,6 +21,8 @@ use pyo3::exceptions::{
     PyFileNotFoundError, PyIOError, PyPermissionError, PyRuntimeError, PyTimeoutError, PyValueError,
 };
 use pyo3::prelude::*;
+use pyo3::types::PyModule;
+use std::path::{Path, PathBuf};
 
 // Module declarations
 pub mod error_convert;
@@ -200,6 +202,48 @@ where
 {
     // PyO3 0.27: detach() takes a closure
     py.detach(f)
+}
+
+fn parent_dir_from_python_path(candidate: &str) -> Option<PathBuf> {
+    let trimmed = candidate.trim();
+    if trimmed.is_empty() || trimmed == "-c" || trimmed == "-" || trimmed == "<stdin>" {
+        return None;
+    }
+
+    let path = PathBuf::from(trimmed);
+    let resolved = if path.is_absolute() {
+        path
+    } else {
+        std::env::current_dir().ok()?.join(path)
+    };
+
+    resolved.parent().map(Path::to_path_buf)
+}
+
+/// Resolve the application directory from Python execution state.
+///
+/// Prefers the directory of the executed Python file and falls back to the
+/// process working directory when Python is running without a real script file
+/// (for example `python -c` or an interactive shell).
+pub fn resolve_python_entry_dir(py: Python<'_>) -> Option<PathBuf> {
+    if let Ok(main) = PyModule::import(py, "__main__")
+        && let Ok(file) = main.getattr("__file__")
+        && let Ok(path) = file.extract::<String>()
+        && let Some(dir) = parent_dir_from_python_path(&path)
+    {
+        return Some(dir);
+    }
+
+    if let Ok(sys) = PyModule::import(py, "sys")
+        && let Ok(argv) = sys.getattr("argv")
+        && let Ok(argv) = argv.extract::<Vec<String>>()
+        && let Some(first) = argv.first()
+        && let Some(dir) = parent_dir_from_python_path(first)
+    {
+        return Some(dir);
+    }
+
+    std::env::current_dir().ok()
 }
 
 /// Runtime statistics from Tokio

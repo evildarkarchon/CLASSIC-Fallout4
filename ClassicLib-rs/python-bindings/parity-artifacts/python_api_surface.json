@@ -1,17 +1,15 @@
 {
-  "generated_at_utc": "2026-03-06T06:50:13.675468+00:00",
+  "generated_at_utc": "2026-03-30T12:25:29.785974+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
       "classic_config",
-      "classic_version_registry",
-      "classic_pybridge"
+      "classic_version_registry"
     ],
     "source_files": [
       "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
-      "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi"
+      "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi"
     ]
   },
   "exports": [
@@ -318,89 +316,26 @@
       "signature": "def create_yamldata( yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> YamlData:"
     },
     {
-      "module": "classic_pybridge",
-      "export": "BridgeMetrics",
-      "export_path": "BridgeMetrics",
-      "kind": "class",
-      "owner_module": "aux",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "class BridgeMetrics:"
-    },
-    {
-      "module": "classic_pybridge",
-      "export": "BridgeOperationType",
-      "export_path": "BridgeOperationType",
-      "kind": "class",
-      "owner_module": "aux",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "class BridgeOperationType(Enum):"
-    },
-    {
-      "module": "classic_pybridge",
-      "export": "RuntimeInfo",
-      "export_path": "RuntimeInfo",
-      "kind": "class",
-      "owner_module": "aux",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "class RuntimeInfo:"
-    },
-    {
-      "module": "classic_pybridge",
-      "export": "clear_metrics",
-      "export_path": "clear_metrics",
+      "module": "classic_config",
+      "export": "get_application_dir",
+      "export_path": "get_application_dir",
       "kind": "function",
       "arity": 0,
-      "owner_module": "aux",
+      "owner_module": "config",
       "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "def clear_metrics() -> None:"
+      "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def get_application_dir() -> str | None:"
     },
     {
-      "module": "classic_pybridge",
-      "export": "get_metrics",
-      "export_path": "get_metrics",
+      "module": "classic_config",
+      "export": "set_application_dir",
+      "export_path": "set_application_dir",
       "kind": "function",
-      "arity": 0,
-      "owner_module": "aux",
+      "arity": 1,
+      "owner_module": "config",
       "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "def get_metrics() -> BridgeMetrics:"
-    },
-    {
-      "module": "classic_pybridge",
-      "export": "get_runtime_info",
-      "export_path": "get_runtime_info",
-      "kind": "function",
-      "arity": 0,
-      "owner_module": "aux",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "def get_runtime_info() -> RuntimeInfo:"
-    },
-    {
-      "module": "classic_pybridge",
-      "export": "is_runtime_available",
-      "export_path": "is_runtime_available",
-      "kind": "function",
-      "arity": 0,
-      "owner_module": "aux",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "def is_runtime_available() -> bool:"
-    },
-    {
-      "module": "classic_pybridge",
-      "export": "record_operation",
-      "export_path": "record_operation",
-      "kind": "function",
-      "arity": 3,
-      "owner_module": "aux",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
-      "signature": "def record_operation(operation: BridgeOperationType, duration_secs: float, success: bool) -> None:"
+      "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def set_application_dir(path: str | Path) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -898,7 +833,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, show_formid_values: bool, crashgen_name: str, important_mods: dict[str, str], mods_single: dict[str, str], mods_double: dict[str, str], ) -> None:"
+      "signature": "def __init__( self, show_formid_values: bool, crashgen_name: str, important_mods: dict[str, str], mods_single: dict[str, str], mods_double: list[dict[str, str | None]], ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -1318,11 +1253,11 @@
       "export_path": "LogParser.parse_complete",
       "parent_class": "LogParser",
       "kind": "method",
-      "arity": 3,
+      "arity": 1,
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def parse_complete( self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str, ) -> ScanOutput:"
+      "signature": "def parse_complete( self, lines: list[str], ) -> ScanOutput:"
     },
     {
       "module": "classic_scanlog",
@@ -1335,18 +1270,6 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_crash_header(self, lines: list[str]) -> dict[str, str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "parse_segments",
-      "export_path": "LogParser.parse_segments",
-      "parent_class": "LogParser",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def parse_segments(self, lines: list[str]) -> list[list[str]]:"
     },
     {
       "module": "classic_scanlog",
@@ -1405,18 +1328,6 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def check_loadorder_exists(dir_path: str) -> bool:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "detect_folon",
-      "export_path": "Orchestrator.detect_folon",
-      "parent_class": "Orchestrator",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_folon(self, plugins: dict[str, str]) -> bool:"
     },
     {
       "module": "classic_scanlog",
@@ -1699,18 +1610,6 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def combine_fragments(fragments: list[ReportFragment]) -> ReportFragment:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "process_batch",
-      "export_path": "ParallelReportProcessor.process_batch",
-      "parent_class": "ParallelReportProcessor",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier2",
-      "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def process_batch(reports: list[list[str]], processor_fn: Any) -> list[list[str]]:"
     },
     {
       "module": "classic_scanlog",
@@ -2506,7 +2405,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, suspects_error_list: dict[str, str], suspects_stack_list: dict[str, list[str]], ) -> None:"
+      "signature": "def __init__( self, suspect_error_rules: list[dict[str, Any]], suspect_stack_rules: list[dict[str, Any]], ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -2609,7 +2508,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_double( yaml_dict: dict[str, str], crashlog_plugins: dict[str, str] ) -> list[str]:"
+      "signature": "def detect_mods_double( entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str] ) -> list[str]:"
     },
     {
       "module": "classic_scanlog",
@@ -2620,7 +2519,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_important( yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: str | None = None, xse_modules: set[str] = ..., ) -> list[str]:"
+      "signature": "def detect_mods_important( entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str], user_gpu: str | None = None, xse_modules: set[str] = ..., ) -> list[str]:"
     },
     {
       "module": "classic_scanlog",
@@ -3004,7 +2903,7 @@
       "owner_module": "version_registry",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_compatible_crashgens(self, game_version_str: str | None = None) -> list[CrashgenConfig]:"
+      "signature": "def get_compatible_crashgens( self, game_version_str: str | None = None ) -> list[CrashgenConfig]:"
     },
     {
       "module": "classic_version_registry",
@@ -3074,7 +2973,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_address_library_filename(self, version_str: str, is_vr: bool = False) -> str | None:"
+      "signature": "def get_address_library_filename( self, version_str: str, is_vr: bool = False ) -> str | None:"
     },
     {
       "module": "classic_version_registry",
@@ -3098,7 +2997,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_all_exe_hashes(self, game: str = \"Fallout4\", is_vr: bool | None = None) -> set[str]:"
+      "signature": "def get_all_exe_hashes( self, game: str = \"Fallout4\", is_vr: bool | None = None ) -> set[str]:"
     },
     {
       "module": "classic_version_registry",
@@ -3110,7 +3009,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_all_for_game(self, game: str, is_vr: bool | None = None) -> list[VersionInfo]:"
+      "signature": "def get_all_for_game( self, game: str, is_vr: bool | None = None ) -> list[VersionInfo]:"
     },
     {
       "module": "classic_version_registry",
@@ -3122,7 +3021,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_all_script_hashes(self, game: str = \"Fallout4\", is_vr: bool | None = None) -> dict[str, set[str]]:"
+      "signature": "def get_all_script_hashes( self, game: str = \"Fallout4\", is_vr: bool | None = None ) -> dict[str, set[str]]:"
     },
     {
       "module": "classic_version_registry",
@@ -3194,7 +3093,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_crashgen_for_version(self, version_id: str, crashgen_version: str) -> CrashgenConfig | None:"
+      "signature": "def get_crashgen_for_version( self, version_id: str, crashgen_version: str ) -> CrashgenConfig | None:"
     },
     {
       "module": "classic_version_registry",

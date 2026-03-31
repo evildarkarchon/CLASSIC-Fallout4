@@ -51,10 +51,6 @@ impl Keys {
     #[classattr]
     const OPEN_FILE_FUNC: &'static str = classic_registry_core::Keys::OPEN_FILE_FUNC;
 
-    /// VR game variant identifier (DEPRECATED).
-    #[classattr]
-    const VR: &'static str = classic_registry_core::Keys::VR;
-
     #[classattr]
     const GAME: &'static str = classic_registry_core::Keys::GAME;
 
@@ -314,37 +310,6 @@ fn get_game_path_gui(py: Python) -> Option<Py<PyAny>> {
     classic_registry_core::get_game_path_gui::<PyObjectWrapper>().map(|w| w.get(py))
 }
 
-/// Get the VR game variant identifier.
-///
-/// **DEPRECATED**: Use `get_game_version()` instead. VR is now treated as
-/// a version variant of Fallout 4, not a separate mode toggle.
-///
-/// # Returns
-///
-/// The VR variant suffix ("VR" if VR mode, empty string otherwise)
-///
-/// # Python Example
-///
-/// ```python
-/// from classic_core import registry
-///
-/// vr = registry.get_vr()
-/// if vr:
-///     print(f"VR variant: {vr}")
-/// ```
-#[pyfunction]
-fn get_vr(py: Python) -> String {
-    // Try to get as PyObjectWrapper first (for Python string), then fallback to native string
-    if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(Keys::VR) {
-        let obj = wrapper.get(py);
-        if let Ok(value) = obj.extract::<String>(py) {
-            return value;
-        }
-    }
-    // Fallback to native string (for compatibility)
-    classic_registry_core::get_vr()
-}
-
 /// Check if the game version was auto-detected.
 ///
 /// # Returns
@@ -404,32 +369,36 @@ fn get_local_dir(py: Python) -> String {
         .to_string()
 }
 
-/// Get the config key suffix based on game version.
+/// Override the directory used to resolve ``CLASSIC Settings.yaml`` and other
+/// application-local files.  Binding layers auto-register this to
+/// ``os.getcwd()`` at import time; call this only if you need a different
+/// directory.
 ///
-/// Returns "VR" if VR version, empty string otherwise.
+/// # Python Example
+///
+/// ```python
+/// from classic_core import registry
+///
+/// registry.set_application_dir("/my/project")
+/// ```
 #[pyfunction]
-fn get_config_suffix(py: Python) -> String {
-    // Try PyObjectWrapper first for GAME_VERSION
-    if let Some(wrapper) =
-        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME_VERSION)
-    {
-        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
-            if value == "VR" {
-                return "VR".to_string();
-            }
-            if !value.is_empty() {
-                return String::new();
-            }
-        }
-    }
-    // Fall back to native check (also checks legacy VR key)
-    classic_registry_core::get_config_suffix()
+fn set_application_dir(path: String) {
+    classic_registry_core::set_application_dir(std::path::PathBuf::from(path));
 }
 
-/// Check if the current game version is VR.
+/// Return the current application directory override, or ``None`` if not set.
+///
+/// # Python Example
+///
+/// ```python
+/// from classic_core import registry
+///
+/// app_dir = registry.get_application_dir()
+/// print(f"Application directory: {app_dir}")
+/// ```
 #[pyfunction]
-fn is_vr_version(py: Python) -> bool {
-    get_config_suffix(py) == "VR"
+fn get_application_dir() -> Option<String> {
+    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
 }
 
 /// Check if XSE validation passed.
@@ -519,13 +488,12 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(get_manual_docs_gui, m)?)?;
     m.add_function(wrap_pyfunction!(get_game_path_gui, m)?)?;
-    m.add_function(wrap_pyfunction!(get_vr, m)?)?;
     m.add_function(wrap_pyfunction!(get_local_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
 
     // Add new version-aware functions
     m.add_function(wrap_pyfunction!(is_version_auto_detected, m)?)?;
-    m.add_function(wrap_pyfunction!(get_config_suffix, m)?)?;
-    m.add_function(wrap_pyfunction!(is_vr_version, m)?)?;
     m.add_function(wrap_pyfunction!(is_xse_valid, m)?)?;
     m.add_function(wrap_pyfunction!(is_enb_present, m)?)?;
     m.add_function(wrap_pyfunction!(get_game_version_string, m)?)?;

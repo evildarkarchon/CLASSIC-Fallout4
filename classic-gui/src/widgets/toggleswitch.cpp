@@ -6,6 +6,16 @@
 #include <QPalette>
 #include <QRect>
 
+namespace {
+// ToggleSwitch track/thumb colors (dark theme)
+static const QColor kTrackOn(0x2F, 0xAE, 0x2F);        // #2FAE2F green
+static const QColor kTrackOff(0x55, 0x55, 0x55);        // #555555 gray
+static const QColor kTrackDisabled(0x3C, 0x3C, 0x3C);   // #3C3C3C
+static const QColor kThumbEnabled(0xF2, 0xF2, 0xF2);    // #F2F2F2
+static const QColor kThumbDisabled(0x7A, 0x7A, 0x7A);   // #7A7A7A
+static const QColor kFocusRing(0x52, 0xFF, 0x52);        // #52FF52 Pip-Boy green
+} // namespace
+
 ToggleSwitch::ToggleSwitch(const QString& text, QWidget* parent)
     : QCheckBox(text, parent)
 {
@@ -47,9 +57,9 @@ void ToggleSwitch::paintEvent(QPaintEvent* event)
         trackRect.moveLeft(width() - kTrackWidth);
     }
 
-    QColor trackColor = isChecked() ? QColor(0x2F, 0xAE, 0x2F) : QColor(0x55, 0x55, 0x55);
+    QColor trackColor = isChecked() ? kTrackOn : kTrackOff;
     if (!isEnabled()) {
-        trackColor = QColor(0x3C, 0x3C, 0x3C);
+        trackColor = kTrackDisabled;
     } else if (underMouse()) {
         trackColor = trackColor.lighter(110);
     }
@@ -67,12 +77,12 @@ void ToggleSwitch::paintEvent(QPaintEvent* event)
     const int thumbY = trackRect.top() + (kTrackHeight - kThumbDiameter) / 2;
     const QRect thumbRect(thumbX, thumbY, kThumbDiameter, kThumbDiameter);
 
-    const QColor thumbColor = isEnabled() ? QColor(0xF2, 0xF2, 0xF2) : QColor(0x7A, 0x7A, 0x7A);
+    const QColor thumbColor = isEnabled() ? kThumbEnabled : kThumbDisabled;
     painter.setBrush(thumbColor);
     painter.drawEllipse(thumbRect);
 
     if (hasFocus()) {
-        QPen focusPen(QColor(0x52, 0xFF, 0x52));
+        QPen focusPen(kFocusRing);
         focusPen.setWidth(1);
         painter.setPen(focusPen);
         painter.setBrush(Qt::NoBrush);

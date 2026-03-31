@@ -1,13 +1,17 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
-use classic_config_core::{CrashgenEntryRaw, YamlDataCore};
+use classic_config_core::{
+    CoreModEntry, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
+    SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore,
+};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+    resolve_batch_concurrency,
 };
-use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gil};
+use classic_shared::without_gil;
 use classic_shared_core::get_runtime;
-use indexmap::IndexMap;
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 use std::collections::HashMap;
@@ -16,7 +20,20 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
+use crate::core_mod_convert::{exclude_when_from_pydict, exclude_when_to_pydict};
 use crate::crashgen_rules::parse_settings_rules;
+
+macro_rules! required_field {
+    ($dict:expr, $key:literal, $context:expr, $ty:ty) => {{
+        $dict
+            .get_item($key)?
+            .ok_or_else(|| PyValueError::new_err(format!("missing {}.{}", $context, $key)))?
+            .extract::<$ty>()
+            .map_err(|err| {
+                PyTypeError::new_err(format!("invalid {}.{}: {}", $context, $key, err))
+            })?
+    }};
+}
 
 fn parse_crashgen_registry_from_py(
     registry_any: &Bound<'_, PyAny>,
@@ -102,27 +119,268 @@ fn extract_vec_string_attr(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<
         .unwrap_or_default()
 }
 
-fn extract_indexmap_str_attr(
+fn extract_suspect_error_rules(
     yamldata: &Bound<'_, PyAny>,
     attr_name: &str,
-) -> IndexMap<String, String> {
-    yamldata
-        .getattr(attr_name)
-        .map(|attr| pyany_to_indexmap_str(&attr))
-        .unwrap_or_default()
+) -> PyResult<Vec<SuspectErrorRule>> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Ok(Vec::new());
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Ok(Vec::new());
+    };
+
+    parse_suspect_error_rules(&list, attr_name)
 }
 
-fn extract_indexmap_vecstr_attr(
+fn extract_suspect_stack_rules(
     yamldata: &Bound<'_, PyAny>,
     attr_name: &str,
-) -> IndexMap<String, Vec<String>> {
-    yamldata
-        .getattr(attr_name)
-        .map(|attr| pyany_to_indexmap_vecstr(&attr))
-        .unwrap_or_default()
+) -> PyResult<Vec<SuspectStackRule>> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Ok(Vec::new());
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Ok(Vec::new());
+    };
+
+    parse_suspect_stack_rules(&list, attr_name)
 }
 
-fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
+fn parse_suspect_error_rules(
+    list: &[Bound<'_, PyAny>],
+    context_prefix: &str,
+) -> PyResult<Vec<SuspectErrorRule>> {
+    list.iter()
+        .enumerate()
+        .map(|(index, item)| -> PyResult<_> {
+            let context = format!("{context_prefix}[{index}]");
+            let dict = item
+                .cast::<PyDict>()
+                .map_err(|_| PyTypeError::new_err(format!("{context} must be a dict")))?;
+
+            Ok(SuspectErrorRule {
+                id: required_field!(dict, "id", context.as_str(), String),
+                name: required_field!(dict, "name", context.as_str(), String),
+                severity: required_field!(dict, "severity", context.as_str(), i32),
+                main_error_contains_any: required_field!(
+                    dict,
+                    "main_error_contains_any",
+                    context.as_str(),
+                    Vec<String>
+                ),
+            })
+        })
+        .collect()
+}
+
+fn parse_suspect_stack_count_rules(
+    dict: &Bound<'_, PyDict>,
+    context: &str,
+) -> PyResult<Vec<SuspectStackCountRule>> {
+    required_field!(
+        dict,
+        "stack_contains_at_least",
+        context,
+        Vec<Bound<'_, PyAny>>
+    )
+    .iter()
+    .enumerate()
+    .map(|(count_index, count_item)| -> PyResult<_> {
+        let count_context = format!("{context}.stack_contains_at_least[{count_index}]");
+        let count_dict = count_item
+            .cast::<PyDict>()
+            .map_err(|_| PyTypeError::new_err(format!("{count_context} must be a dict")))?;
+
+        Ok(SuspectStackCountRule {
+            substring: required_field!(count_dict, "substring", count_context.as_str(), String),
+            count: required_field!(count_dict, "count", count_context.as_str(), usize),
+        })
+    })
+    .collect()
+}
+
+fn parse_suspect_stack_rules(
+    list: &[Bound<'_, PyAny>],
+    context_prefix: &str,
+) -> PyResult<Vec<SuspectStackRule>> {
+    list.iter()
+        .enumerate()
+        .map(|(index, item)| -> PyResult<_> {
+            let context = format!("{context_prefix}[{index}]");
+            let dict = item
+                .cast::<PyDict>()
+                .map_err(|_| PyTypeError::new_err(format!("{context} must be a dict")))?;
+            let count_rules = parse_suspect_stack_count_rules(dict, context.as_str())?;
+
+            Ok(SuspectStackRule {
+                id: required_field!(dict, "id", context.as_str(), String),
+                name: required_field!(dict, "name", context.as_str(), String),
+                severity: required_field!(dict, "severity", context.as_str(), i32),
+                main_error_required_any: required_field!(
+                    dict,
+                    "main_error_required_any",
+                    context.as_str(),
+                    Vec<String>
+                ),
+                main_error_optional_any: required_field!(
+                    dict,
+                    "main_error_optional_any",
+                    context.as_str(),
+                    Vec<String>
+                ),
+                stack_contains_any: required_field!(
+                    dict,
+                    "stack_contains_any",
+                    context.as_str(),
+                    Vec<String>
+                ),
+                exclude_if_stack_contains_any: required_field!(
+                    dict,
+                    "exclude_if_stack_contains_any",
+                    context.as_str(),
+                    Vec<String>
+                ),
+                stack_contains_at_least: count_rules,
+            })
+        })
+        .collect()
+}
+
+fn pyany_to_suspect_error_rules(value: &Bound<'_, PyAny>) -> PyResult<Vec<SuspectErrorRule>> {
+    let list = value.extract::<Vec<Bound<'_, PyAny>>>()?;
+    parse_suspect_error_rules(&list, "suspect_error_rules")
+}
+
+fn pyany_to_suspect_stack_rules(value: &Bound<'_, PyAny>) -> PyResult<Vec<SuspectStackRule>> {
+    let list = value.extract::<Vec<Bound<'_, PyAny>>>()?;
+    parse_suspect_stack_rules(&list, "suspect_stack_rules")
+}
+
+fn extract_mod_conflict_entries(
+    yamldata: &Bound<'_, PyAny>,
+    attr_name: &str,
+) -> Vec<ModConflictEntry> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Vec::new();
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            Some(ModConflictEntry {
+                mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+                fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                link: dict
+                    .get_item("link")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+            })
+        })
+        .collect()
+}
+
+fn extract_core_mod_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<CoreModEntry> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Vec::new();
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            Some(CoreModEntry {
+                detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+                gpu: dict
+                    .get_item("gpu")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+                gpu_mismatch_warning: dict
+                    .get_item("gpu_mismatch_warning")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+                exclude_when: exclude_when_from_pydict(dict),
+            })
+        })
+        .collect()
+}
+
+fn extract_mod_solution_entries(
+    yamldata: &Bound<'_, PyAny>,
+    attr_name: &str,
+) -> Vec<ModSolutionEntry> {
+    let Ok(attr) = yamldata.getattr(attr_name) else {
+        return Vec::new();
+    };
+    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            let criteria_value = dict.get_item("criteria").ok()??;
+            let criteria_dict = criteria_value.cast::<PyDict>().ok()?;
+            let criteria = if let Some(any_values) = criteria_dict
+                .get_item("any")
+                .ok()
+                .flatten()
+                .and_then(|v| v.extract::<Vec<String>>().ok())
+                .filter(|values| !values.is_empty())
+            {
+                ModSolutionCriteria::Any(any_values)
+            } else if let Some(all_values) = criteria_dict
+                .get_item("all")
+                .ok()
+                .flatten()
+                .and_then(|v| v.extract::<Vec<String>>().ok())
+                .filter(|values| !values.is_empty())
+            {
+                ModSolutionCriteria::All(all_values)
+            } else {
+                return None;
+            };
+
+            Some(ModSolutionEntry {
+                id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                criteria,
+                exceptions: dict
+                    .get_item("exceptions")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<Vec<String>>().ok())
+                    .unwrap_or_default(),
+                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+            })
+        })
+        .collect()
+}
+
+fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> PyResult<YamlDataCore> {
     let crashgen_registry = yamldata
         .getattr("crashgen_registry")
         .ok()
@@ -133,7 +391,7 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
         classic_version = "CLASSIC".to_string();
     }
 
-    YamlDataCore {
+    Ok(YamlDataCore {
         classic_game_hints: extract_vec_string_attr(yamldata, "classic_game_hints"),
         classic_records_list: extract_vec_string_attr(yamldata, "classic_records_list"),
         classic_version,
@@ -147,19 +405,17 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
         game_ignore_plugins: extract_vec_string_attr(yamldata, "game_ignore_plugins"),
         game_ignore_records: extract_vec_string_attr(yamldata, "game_ignore_records"),
         ignore_list: extract_vec_string_attr(yamldata, "ignore_list"),
-        suspects_error_list: extract_indexmap_str_attr(yamldata, "suspects_error_list"),
-        suspects_stack_list: extract_indexmap_vecstr_attr(yamldata, "suspects_stack_list"),
-        game_mods_conf: extract_indexmap_str_attr(yamldata, "game_mods_conf"),
-        game_mods_core: extract_indexmap_str_attr(yamldata, "game_mods_core"),
-        game_mods_core_folon: extract_indexmap_str_attr(yamldata, "game_mods_core_folon"),
-        game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
-        game_mods_opc2: extract_indexmap_str_attr(yamldata, "game_mods_opc2"),
-        game_mods_solu: extract_indexmap_str_attr(yamldata, "game_mods_solu"),
+        suspect_error_rules: extract_suspect_error_rules(yamldata, "suspect_error_rules")?,
+        suspect_stack_rules: extract_suspect_stack_rules(yamldata, "suspect_stack_rules")?,
+        game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
+        game_mods_core: extract_core_mod_entries(yamldata, "game_mods_core"),
+        game_mods_freq: extract_mod_solution_entries(yamldata, "game_mods_freq"),
+        game_mods_solu: extract_mod_solution_entries(yamldata, "game_mods_solu"),
         autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
         game_version: extract_string_attr(yamldata, "game_version"),
         game_root_name: extract_string_attr(yamldata, "game_root_name"),
         crashgen_registry,
-    }
+    })
 }
 
 // =============================================================================
@@ -284,7 +540,7 @@ impl PyAnalysisConfig {
         simplify_logs: bool,
         remove_list: Vec<String>,
     ) -> PyResult<Self> {
-        let yaml_core = adapt_yamldata_to_core(yamldata);
+        let yaml_core = adapt_yamldata_to_core(yamldata)?;
         let config = build_analysis_config_from_yaml(
             &yaml_core,
             &game,
@@ -417,116 +673,316 @@ impl PyAnalysisConfig {
         self.inner.show_formid_values = value;
     }
 
-    /// Get the suspect error patterns dictionary
+    /// Get the structured suspect error rules.
     #[getter]
-    pub fn suspects_error(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.suspects_error {
-            dict.set_item(key, value)?;
+    pub fn suspect_error_rules(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for rule in &self.inner.suspect_error_rules {
+            let dict = pyo3::types::PyDict::new(py);
+            dict.set_item("id", &rule.id)?;
+            dict.set_item("name", &rule.name)?;
+            dict.set_item("severity", rule.severity)?;
+            dict.set_item("main_error_contains_any", &rule.main_error_contains_any)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
-    /// Set the suspect error patterns dictionary (preserves dict order)
+    /// Set the structured suspect error rules.
     #[setter]
-    pub fn set_suspects_error(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.suspects_error = pyany_to_indexmap_str(value);
+    pub fn set_suspect_error_rules(
+        &mut self,
+        value: &Bound<'_, pyo3::types::PyAny>,
+    ) -> PyResult<()> {
+        self.inner.suspect_error_rules = pyany_to_suspect_error_rules(value)?;
+        Ok(())
     }
 
-    /// Get the suspect stack patterns dictionary
+    /// Get the structured suspect stack rules.
     #[getter]
-    pub fn suspects_stack(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.suspects_stack {
-            dict.set_item(key, value)?;
+    pub fn suspect_stack_rules(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for rule in &self.inner.suspect_stack_rules {
+            let dict = pyo3::types::PyDict::new(py);
+            let count_rules = pyo3::types::PyList::empty(py);
+            for count_rule in &rule.stack_contains_at_least {
+                let count_dict = pyo3::types::PyDict::new(py);
+                count_dict.set_item("substring", &count_rule.substring)?;
+                count_dict.set_item("count", count_rule.count)?;
+                count_rules.append(count_dict)?;
+            }
+            dict.set_item("id", &rule.id)?;
+            dict.set_item("name", &rule.name)?;
+            dict.set_item("severity", rule.severity)?;
+            dict.set_item("main_error_required_any", &rule.main_error_required_any)?;
+            dict.set_item("main_error_optional_any", &rule.main_error_optional_any)?;
+            dict.set_item("stack_contains_any", &rule.stack_contains_any)?;
+            dict.set_item(
+                "exclude_if_stack_contains_any",
+                &rule.exclude_if_stack_contains_any,
+            )?;
+            dict.set_item("stack_contains_at_least", count_rules)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
-    /// Set the suspect stack patterns dictionary (preserves dict order)
+    /// Set the structured suspect stack rules.
     #[setter]
-    pub fn set_suspects_stack(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.suspects_stack = pyany_to_indexmap_vecstr(value);
+    pub fn set_suspect_stack_rules(
+        &mut self,
+        value: &Bound<'_, pyo3::types::PyAny>,
+    ) -> PyResult<()> {
+        self.inner.suspect_stack_rules = pyany_to_suspect_stack_rules(value)?;
+        Ok(())
     }
 
-    /// Get the core mods database
+    /// Get the core mods database as a list of dicts
     #[getter]
-    pub fn mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_core {
-            dict.set_item(key, value)?;
+    pub fn mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_core {
+            let dict = pyo3::types::PyDict::new(py);
+            dict.set_item("detect", &entry.detect)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("gpu", &entry.gpu)?;
+            dict.set_item("gpu_mismatch_warning", &entry.gpu_mismatch_warning)?;
+            if let Some(ew_dict) = exclude_when_to_pydict(py, &entry.exclude_when)? {
+                dict.set_item("exclude_when", ew_dict)?;
+            }
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
-    /// Set the core mods database (preserves dict order)
+    /// Set the core mods database from a list of dicts
     #[setter]
     pub fn set_mods_core(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_core = pyany_to_indexmap_str(value);
+        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
+            self.inner.mods_core = list
+                .iter()
+                .filter_map(|item| {
+                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                    Some(CoreModEntry {
+                        detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                        description: dict
+                            .get_item("description")
+                            .ok()??
+                            .extract::<String>()
+                            .ok()?,
+                        gpu: dict
+                            .get_item("gpu")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<String>().ok()),
+                        gpu_mismatch_warning: dict
+                            .get_item("gpu_mismatch_warning")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<String>().ok()),
+                        exclude_when: exclude_when_from_pydict(dict),
+                    })
+                })
+                .collect();
+        }
     }
 
     /// Get the frequently problematic mods database
     #[getter]
-    pub fn mods_freq(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_freq {
-            dict.set_item(key, value)?;
+    pub fn mods_freq(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_freq {
+            let dict = pyo3::types::PyDict::new(py);
+            let criteria = pyo3::types::PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
     /// Set the frequently problematic mods database (preserves insertion order)
     #[setter]
     pub fn set_mods_freq(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_freq = pyany_to_indexmap_str(value);
-    }
+        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
+            self.inner.mods_freq = list
+                .iter()
+                .filter_map(|item| {
+                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria_value = dict.get_item("criteria").ok()??;
+                    let criteria_dict = criteria_value.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria = if let Some(any_values) = criteria_dict
+                        .get_item("any")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::Any(any_values)
+                    } else if let Some(all_values) = criteria_dict
+                        .get_item("all")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::All(all_values)
+                    } else {
+                        return None;
+                    };
 
-    /// Get the mod conflicts database
-    #[getter]
-    pub fn mods_conf(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_conf {
-            dict.set_item(key, value)?;
+                    Some(ModSolutionEntry {
+                        id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                        criteria,
+                        exceptions: dict
+                            .get_item("exceptions")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<Vec<String>>().ok())
+                            .unwrap_or_default(),
+                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                        description: dict
+                            .get_item("description")
+                            .ok()??
+                            .extract::<String>()
+                            .ok()?,
+                    })
+                })
+                .collect();
         }
-        Ok(dict.into())
     }
 
-    /// Set the mod conflicts database (preserves insertion order)
+    /// Get the mod conflicts database as a list of dicts
+    #[getter]
+    pub fn mods_conf(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_conf {
+            let dict = pyo3::types::PyDict::new(py);
+            dict.set_item("mod_a", &entry.mod_a)?;
+            dict.set_item("mod_b", &entry.mod_b)?;
+            dict.set_item("name_a", &entry.name_a)?;
+            dict.set_item("name_b", &entry.name_b)?;
+            dict.set_item("description", &entry.description)?;
+            dict.set_item("fix", &entry.fix)?;
+            dict.set_item("link", &entry.link)?;
+            list.append(dict)?;
+        }
+        Ok(list.into())
+    }
+
+    /// Set the mod conflicts database from a list of dicts
     #[setter]
     pub fn set_mods_conf(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_conf = pyany_to_indexmap_str(value);
+        let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() else {
+            self.inner.mods_conf = Vec::new();
+            return;
+        };
+        self.inner.mods_conf = list
+            .iter()
+            .filter_map(|item| {
+                let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                Some(ModConflictEntry {
+                    mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                    mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                    name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                    name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                    description: dict
+                        .get_item("description")
+                        .ok()??
+                        .extract::<String>()
+                        .ok()?,
+                    fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                    link: dict
+                        .get_item("link")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<String>().ok()),
+                })
+            })
+            .collect();
     }
 
     /// Get the mod solutions database
     #[getter]
-    pub fn mods_solu(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_solu {
-            dict.set_item(key, value)?;
+    pub fn mods_solu(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyList>> {
+        let list = pyo3::types::PyList::empty(py);
+        for entry in &self.inner.mods_solu {
+            let dict = pyo3::types::PyDict::new(py);
+            let criteria = pyo3::types::PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.into())
+        Ok(list.into())
     }
 
     /// Set the mod solutions database (preserves insertion order)
     #[setter]
     pub fn set_mods_solu(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_solu = pyany_to_indexmap_str(value);
-    }
+        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
+            self.inner.mods_solu = list
+                .iter()
+                .filter_map(|item| {
+                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria_value = dict.get_item("criteria").ok()??;
+                    let criteria_dict = criteria_value.cast::<pyo3::types::PyDict>().ok()?;
+                    let criteria = if let Some(any_values) = criteria_dict
+                        .get_item("any")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::Any(any_values)
+                    } else if let Some(all_values) = criteria_dict
+                        .get_item("all")
+                        .ok()
+                        .flatten()
+                        .and_then(|v| v.extract::<Vec<String>>().ok())
+                        .filter(|values| !values.is_empty())
+                    {
+                        ModSolutionCriteria::All(all_values)
+                    } else {
+                        return None;
+                    };
 
-    /// Get the outdated/redundant/community patch mods database
-    #[getter]
-    pub fn mods_opc2(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_opc2 {
-            dict.set_item(key, value)?;
+                    Some(ModSolutionEntry {
+                        id: dict.get_item("id").ok()??.extract::<String>().ok()?,
+                        criteria,
+                        exceptions: dict
+                            .get_item("exceptions")
+                            .ok()
+                            .flatten()
+                            .and_then(|v| v.extract::<Vec<String>>().ok())
+                            .unwrap_or_default(),
+                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                        description: dict
+                            .get_item("description")
+                            .ok()??
+                            .extract::<String>()
+                            .ok()?,
+                    })
+                })
+                .collect();
+        } else {
+            self.inner.mods_solu = Vec::new();
         }
-        Ok(dict.into())
-    }
-
-    /// Set the outdated/redundant/community patch mods database (preserves insertion order)
-    #[setter]
-    pub fn set_mods_opc2(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_opc2 = pyany_to_indexmap_str(value);
     }
 
     // ============================================================================
@@ -605,22 +1061,6 @@ impl PyAnalysisConfig {
         self.inner.remove_list = value;
     }
 
-    /// Get the FOLON-specific mods database
-    #[getter]
-    pub fn mods_core_folon(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
-        let dict = pyo3::types::PyDict::new(py);
-        for (key, value) in &self.inner.mods_core_folon {
-            dict.set_item(key, value)?;
-        }
-        Ok(dict.into())
-    }
-
-    /// Set the FOLON-specific mods database (preserves dict order)
-    #[setter]
-    pub fn set_mods_core_folon(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        self.inner.mods_core_folon = pyany_to_indexmap_str(value);
-    }
-
     /// Get the list of named records to scan for
     #[getter]
     pub fn classic_records_list(&self) -> Vec<String> {
@@ -631,22 +1071,6 @@ impl PyAnalysisConfig {
     #[setter]
     pub fn set_classic_records_list(&mut self, value: Vec<String>) {
         self.inner.classic_records_list = value;
-    }
-
-    /// Get the list of crashgen settings to ignore during validation.
-    ///
-    /// Deprecated: Returns an empty list. Use the Crashgen_Registry in YAML instead.
-    #[getter]
-    pub fn crashgen_ignore(&self) -> Vec<String> {
-        Vec::new() // Superseded by per-crashgen registry entries
-    }
-
-    /// Set the list of crashgen settings to ignore during validation.
-    ///
-    /// Deprecated: No-op. Use the Crashgen_Registry in YAML instead.
-    #[setter]
-    pub fn set_crashgen_ignore(&mut self, _value: Vec<String>) {
-        // No-op: superseded by per-crashgen registry entries
     }
 }
 
@@ -841,18 +1265,7 @@ impl PyRustOrchestrator {
             progress_callback.map(|cb| Arc::new(cb.clone_ref(py)));
 
         // Determine concurrency level
-        let concurrency = match max_concurrent {
-            Some(n) => n.max(1), // User-specified, minimum 1
-            None => {
-                // Adaptive concurrency: start with CPU count, scale based on batch size
-                let num_cpus = num_cpus::get();
-                if total < num_cpus {
-                    total.max(1) // Small batch: process all concurrently, min 1
-                } else {
-                    num_cpus.max(4) // Large batch: use CPU count (min 4 for good throughput)
-                }
-            }
-        };
+        let concurrency = resolve_batch_concurrency(total, max_concurrent);
 
         // Clone log_paths for use inside the closure (needed for placeholder generation)
         let log_paths_clone = log_paths.clone();
@@ -1075,15 +1488,209 @@ impl PyRustOrchestrator {
 
         Ok((result.0, result.1.to_list()))
     }
+}
 
-    /// Detect if FOLON (Fallout: London) is loaded based on plugins.
-    ///
-    /// # Arguments
-    /// * `plugins` - Dictionary of plugin names to data
-    ///
-    /// # Returns
-    /// True if londonworldspace.esm is detected
-    pub fn detect_folon(&self, plugins: std::collections::HashMap<String, String>) -> bool {
-        self.inner.detect_folon(&plugins)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use classic_config_core::CoreModExclude;
+    use pyo3::types::{PyDict, PyList, PyModule};
+
+    #[test]
+    fn from_yamldata_preserves_core_mod_exclusion_metadata() {
+        Python::attach(|py| -> PyResult<()> {
+            let entry = PyDict::new(py);
+            entry.set_item("detect", "prp.esp")?;
+            entry.set_item("name", "PRP")?;
+            entry.set_item("description", "Install PRP when London is not present")?;
+            entry.set_item("gpu_mismatch_warning", "PRP is tuned for NVIDIA users")?;
+
+            let exclude_when = PyDict::new(py);
+            exclude_when.set_item("plugin_any", vec!["LondonWorldspace.esm"])?;
+            entry.set_item("exclude_when", exclude_when)?;
+
+            let game_mods_core = PyList::empty(py);
+            game_mods_core.append(entry)?;
+
+            let kwargs = PyDict::new(py);
+            kwargs.set_item("game_mods_core", game_mods_core)?;
+
+            let types = PyModule::import(py, "types")?;
+            let yamldata = types.getattr("SimpleNamespace")?.call((), Some(&kwargs))?;
+
+            let config = PyAnalysisConfig::from_yamldata(
+                &yamldata,
+                "Fallout4".to_string(),
+                "Original".to_string(),
+                false,
+                false,
+                false,
+                Vec::new(),
+            )?;
+
+            assert_eq!(config.inner.mods_core.len(), 1);
+            let entry = &config.inner.mods_core[0];
+            assert_eq!(
+                entry.gpu_mismatch_warning.as_deref(),
+                Some("PRP is tuned for NVIDIA users")
+            );
+            assert_eq!(
+                entry.exclude_when,
+                Some(CoreModExclude::PluginAny(vec![
+                    "LondonWorldspace.esm".to_string(),
+                ]))
+            );
+
+            Ok(())
+        })
+        .expect("Python core-mod metadata round-trip should succeed");
+    }
+
+    #[test]
+    fn suspect_error_rules_setter_rejects_malformed_rule_payloads() {
+        Python::attach(|py| -> PyResult<()> {
+            let config = Py::new(
+                py,
+                PyAnalysisConfig::new("Fallout4".to_string(), "Original".to_string()),
+            )?;
+
+            let error_rule = PyDict::new(py);
+            error_rule.set_item("id", "rule-id")?;
+            error_rule.set_item("name", "Missing matcher")?;
+            error_rule.set_item("severity", 1)?;
+
+            let error_rules = PyList::empty(py);
+            error_rules.append(&error_rule)?;
+
+            let err = match config.bind(py).setattr("suspect_error_rules", &error_rules) {
+                Ok(()) => panic!("missing main_error_contains_any should fail"),
+                Err(err) => err,
+            };
+
+            assert!(err.to_string().contains("main_error_contains_any"));
+            Ok(())
+        })
+        .expect("malformed error rules should produce a Python error");
+    }
+
+    #[test]
+    fn suspect_stack_rules_setter_rejects_malformed_rule_payloads() {
+        Python::attach(|py| -> PyResult<()> {
+            let config = Py::new(
+                py,
+                PyAnalysisConfig::new("Fallout4".to_string(), "Original".to_string()),
+            )?;
+
+            let count_rule = PyDict::new(py);
+            count_rule.set_item("substring", "foo")?;
+
+            let count_rules = PyList::empty(py);
+            count_rules.append(&count_rule)?;
+
+            let stack_rule = PyDict::new(py);
+            stack_rule.set_item("id", "stack-rule")?;
+            stack_rule.set_item("name", "Missing count")?;
+            stack_rule.set_item("severity", 2)?;
+            stack_rule.set_item("main_error_required_any", vec!["foo"])?;
+            stack_rule.set_item("main_error_optional_any", Vec::<String>::new())?;
+            stack_rule.set_item("stack_contains_any", vec!["foo"])?;
+            stack_rule.set_item("exclude_if_stack_contains_any", Vec::<String>::new())?;
+            stack_rule.set_item("stack_contains_at_least", count_rules)?;
+
+            let stack_rules = PyList::empty(py);
+            stack_rules.append(&stack_rule)?;
+
+            let err = match config.bind(py).setattr("suspect_stack_rules", &stack_rules) {
+                Ok(()) => panic!("missing nested count field should fail"),
+                Err(err) => err,
+            };
+
+            assert!(err.to_string().contains("count"));
+            Ok(())
+        })
+        .expect("malformed stack rules should produce a Python error");
+    }
+
+    #[test]
+    fn from_yamldata_rejects_malformed_error_rule_payloads() {
+        Python::attach(|py| -> PyResult<()> {
+            let error_rule = PyDict::new(py);
+            error_rule.set_item("id", "rule-id")?;
+            error_rule.set_item("name", "Missing matcher")?;
+            error_rule.set_item("severity", 1)?;
+
+            let error_rules = PyList::empty(py);
+            error_rules.append(&error_rule)?;
+
+            let kwargs = PyDict::new(py);
+            kwargs.set_item("suspect_error_rules", error_rules)?;
+
+            let types = PyModule::import(py, "types")?;
+            let yamldata = types.getattr("SimpleNamespace")?.call((), Some(&kwargs))?;
+
+            let err = match PyAnalysisConfig::from_yamldata(
+                &yamldata,
+                "Fallout4".to_string(),
+                "Original".to_string(),
+                false,
+                false,
+                false,
+                Vec::new(),
+            ) {
+                Ok(_) => panic!("missing main_error_contains_any should fail"),
+                Err(err) => err,
+            };
+
+            assert!(err.to_string().contains("main_error_contains_any"));
+            Ok(())
+        })
+        .expect("malformed error rules should produce a Python error");
+    }
+
+    #[test]
+    fn from_yamldata_rejects_malformed_stack_rule_payloads() {
+        Python::attach(|py| -> PyResult<()> {
+            let count_rule = PyDict::new(py);
+            count_rule.set_item("substring", "foo")?;
+
+            let count_rules = PyList::empty(py);
+            count_rules.append(&count_rule)?;
+
+            let stack_rule = PyDict::new(py);
+            stack_rule.set_item("id", "stack-rule")?;
+            stack_rule.set_item("name", "Missing count")?;
+            stack_rule.set_item("severity", 2)?;
+            stack_rule.set_item("main_error_required_any", vec!["foo"])?;
+            stack_rule.set_item("main_error_optional_any", Vec::<String>::new())?;
+            stack_rule.set_item("stack_contains_any", vec!["foo"])?;
+            stack_rule.set_item("exclude_if_stack_contains_any", Vec::<String>::new())?;
+            stack_rule.set_item("stack_contains_at_least", count_rules)?;
+
+            let stack_rules = PyList::empty(py);
+            stack_rules.append(&stack_rule)?;
+
+            let kwargs = PyDict::new(py);
+            kwargs.set_item("suspect_stack_rules", stack_rules)?;
+
+            let types = PyModule::import(py, "types")?;
+            let yamldata = types.getattr("SimpleNamespace")?.call((), Some(&kwargs))?;
+
+            let err = match PyAnalysisConfig::from_yamldata(
+                &yamldata,
+                "Fallout4".to_string(),
+                "Original".to_string(),
+                false,
+                false,
+                false,
+                Vec::new(),
+            ) {
+                Ok(_) => panic!("missing nested count field should fail"),
+                Err(err) => err,
+            };
+
+            assert!(err.to_string().contains("count"));
+            Ok(())
+        })
+        .expect("malformed stack rules should produce a Python error");
     }
 }

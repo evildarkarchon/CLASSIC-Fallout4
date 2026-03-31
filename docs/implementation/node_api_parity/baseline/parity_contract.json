@@ -1014,15 +1014,6 @@
       "nodeArity": 0
     },
     {
-      "id": "version-registry-promote-registry-is-vr-version",
-      "tier": "tier1",
-      "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
-      "nodeExport": "registryIsVrVersion",
-      "nodeKind": "function",
-      "nodeArity": 0
-    },
-    {
       "id": "version-registry-promote-resolve-effective-game-version",
       "tier": "tier1",
       "ownerModule": "version_registry",

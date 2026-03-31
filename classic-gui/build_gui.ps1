@@ -7,14 +7,21 @@
     Corrosion automatically builds the Rust static library (classic-cpp-bridge)
     as part of the CMake build process. Requires VS Dev Shell (auto-detected).
 
-    Qt 6 must be installed and its path configured in CMakePresets.json
-    (default: C:\Qt\6.10.2\msvc2022_64) or via CMAKE_PREFIX_PATH.
+    The default presets expect Qt 6 to come from vcpkg via VCPKG_ROOT.
+    Use the system-fallback presets only when you intentionally want a
+    non-vcpkg Qt install, typically alongside CMAKE_PREFIX_PATH or Qt6_DIR.
 
 .PARAMETER Clean
     Remove build directory before building.
 
 .PARAMETER Test
     Run CTest after building (if tests are available).
+
+.PARAMETER CTestName
+    Run only the specified CTest test name or names. Requires -Test.
+
+.PARAMETER CTestArgs
+    Additional arguments to pass to the CTest run command. Requires -Test.
 
 .PARAMETER Debug
     Build using a debug preset (build-debug directory).
@@ -38,6 +45,11 @@
     .\build_gui.ps1 -Install
     .\build_gui.ps1 -Package
     .\build_gui.ps1 -Clean -Package
+    .\build_gui.ps1 -Preset system-fallback
+    .\build_gui.ps1 -Debug -Preset system-fallback
+    .\build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
+    .\build_gui.ps1 -Test -CTestName classic-gui-test-resultscontroller,classic-gui-test-markdownviewer
+    .\build_gui.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
 #>
 
 param(
@@ -47,13 +59,36 @@ param(
     [switch]$Install,
     [switch]$Package,
     [string]$Preset = "default",
+    [string[]]$CTestName = @(),
+    [string[]]$CTestArgs = @(),
     [int]$TestTimeoutSec = 600
 )
 
 $ErrorActionPreference = "Stop"
 
+function New-ExactTestNameRegex {
+    param([string[]]$TestNames)
+
+    $normalized = @($TestNames | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if ($normalized.Count -eq 0) {
+        return $null
+    }
+
+    $escaped = $normalized | ForEach-Object { [regex]::Escape($_) }
+    return "^($($escaped -join '|'))$"
+}
+
 # -Package implies -Install (windeployqt must populate the install dir first)
 if ($Package) { $Install = $true }
+
+$CTestName = @($CTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0) -and -not $Test) {
+    Write-Error "-CTestName and -CTestArgs require -Test."
+    exit 1
+}
+
+$ctestRegex = New-ExactTestNameRegex -TestNames $CTestName
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $effectivePreset = $Preset
@@ -64,15 +99,23 @@ if ($Debug) {
         "ci" { $effectivePreset = "ci-debug" }
         "debug" { $effectivePreset = "debug" }
         "ci-debug" { $effectivePreset = "ci-debug" }
+        "system-fallback" { $effectivePreset = "system-fallback-debug" }
+        "system-fallback-debug" { $effectivePreset = "system-fallback-debug" }
         default {
-            Write-Error "Debug mode supports -Preset default, ci, debug, or ci-debug. Received: '$Preset'."
+            Write-Error "Debug mode supports -Preset default, ci, debug, ci-debug, system-fallback, or system-fallback-debug. Received: '$Preset'."
             exit 1
         }
     }
 }
 
-$isDebugPreset = $effectivePreset -in @("debug", "ci-debug")
-$buildDirName = if ($isDebugPreset) { "build-debug" } else { "build" }
+$isDebugPreset = $effectivePreset -in @("debug", "ci-debug", "system-fallback-debug")
+$buildDirName = switch ($effectivePreset) {
+    "system-fallback" { "build-system-fallback" }
+    "system-fallback-debug" { "build-system-fallback-debug" }
+    default {
+        if ($isDebugPreset) { "build-debug" } else { "build" }
+    }
+}
 $buildDir = Join-Path $ScriptDir $buildDirName
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
@@ -146,13 +189,30 @@ try {
         }
 
         Write-Host "`n=== Running CTest ===" -ForegroundColor Cyan
-        & ctest --test-dir $buildDirName -N -V --no-tests=error
+        if ($CTestName.Count -gt 0) {
+            Write-Host "Selected CTest names: $($CTestName -join ', ')" -ForegroundColor DarkGray
+        }
+        if ($CTestArgs.Count -gt 0) {
+            Write-Host "Additional CTest args: $($CTestArgs -join ' ')" -ForegroundColor DarkGray
+        }
+
+        $ctestDiscoveryArgs = @("--test-dir", $buildDirName, "-N", "-V", "--no-tests=error")
+        if ($ctestRegex) {
+            $ctestDiscoveryArgs += @("-R", $ctestRegex)
+        }
+        & ctest @ctestDiscoveryArgs
         if ($LASTEXITCODE -ne 0) {
             Write-Error "CTest discovery failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
         }
 
-        & ctest --test-dir $buildDirName --output-on-failure --timeout $TestTimeoutSec --no-tests=error
+        $ctestRunArgs = @("--test-dir", $buildDirName, "--output-on-failure", "--timeout", $TestTimeoutSec,
+            "--no-tests=error")
+        if ($ctestRegex) {
+            $ctestRunArgs += @("-R", $ctestRegex)
+        }
+        $ctestRunArgs += $CTestArgs
+        & ctest @ctestRunArgs
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Tests failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE

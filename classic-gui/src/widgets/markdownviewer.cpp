@@ -4,9 +4,12 @@
 #include <QHBoxLayout>
 #include <QApplication>
 #include <QClipboard>
+#include <QCoreApplication>
+#include <QFile>
 #include <QFont>
 #include <QKeySequence>
 #include <QShortcut>
+#include <QTextStream>
 #include <QTimer>
 
 #include "rust/cxx.h"
@@ -98,20 +101,36 @@ void MarkdownViewer::applyContentStylesheet()
     // CSS for QTextBrowser document matching PRD section 2.8 dark theme.
     // This is applied as the document's default stylesheet, separate from
     // the application-wide QSS theme.
-    static const QString css = QStringLiteral(
-        "body { font-family: 'Segoe UI'; font-size: 13px; color: #e0e0e0; }"
-        "h1 { font-size: 22px; font-weight: bold; color: #e0e0e0; }"
-        "h2 { font-size: 18px; font-weight: bold; color: #e0e0e0; }"
-        "h3 { font-size: 15px; font-weight: bold; color: #e0e0e0; }"
-        "code { font-family: 'Consolas'; font-size: 12px;"
-        "       background-color: #2a2a2e; border-radius: 3px; padding: 2px 4px; }"
-        "pre  { font-family: 'Consolas'; font-size: 12px;"
-        "       background-color: #2a2a2e; border-radius: 4px; padding: 8px; }"
-        "hr   { border: none; border-top: 1px solid #555555; }"
-        "blockquote { border-left: 3px solid #555555; font-style: italic;"
-        "             padding-left: 8px; margin-left: 0; }"
-        "a    { color: #5599dd; }"
-    );
+    // Load from external file; fall back to built-in CSS if not found.
+    QString css;
+    const QString appDir = QCoreApplication::applicationDirPath();
+    for (const auto& candidate : {
+             appDir + QStringLiteral("/styles/markdownviewer_content.css"),
+             appDir + QStringLiteral("/../src/styles/markdownviewer_content.css")}) {
+        QFile file(candidate);
+        if (file.open(QFile::ReadOnly | QFile::Text)) {
+            QTextStream stream(&file);
+            css = stream.readAll();
+            break;
+        }
+    }
+
+    if (css.isEmpty()) {
+        css = QStringLiteral(
+            "body { font-family: 'Segoe UI'; font-size: 13px; color: #e0e0e0; }"
+            "h1 { font-size: 22px; font-weight: bold; color: #e0e0e0; }"
+            "h2 { font-size: 18px; font-weight: bold; color: #e0e0e0; }"
+            "h3 { font-size: 15px; font-weight: bold; color: #e0e0e0; }"
+            "code { font-family: 'Consolas'; font-size: 12px;"
+            "       background-color: #2a2a2e; border-radius: 3px; padding: 2px 4px; }"
+            "pre  { font-family: 'Consolas'; font-size: 12px;"
+            "       background-color: #2a2a2e; border-radius: 4px; padding: 8px; }"
+            "hr   { border: none; border-top: 1px solid #555555; }"
+            "blockquote { border-left: 3px solid #555555; font-style: italic;"
+            "             padding-left: 8px; margin-left: 0; }"
+            "a    { color: #5599dd; }"
+        );
+    }
 
     m_browser->document()->setDefaultStyleSheet(css);
 }

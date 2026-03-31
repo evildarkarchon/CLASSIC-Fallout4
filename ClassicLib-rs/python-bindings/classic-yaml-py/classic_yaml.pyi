@@ -191,7 +191,9 @@ class YamlOperations:
 
         """
 
-    def set_setting(self, data: dict[str, Any], key_path: str, value: Any) -> dict[str, Any]:
+    def set_setting(
+        self, data: dict[str, Any], key_path: str, value: Any
+    ) -> dict[str, Any]:
         """Set a setting value in YAML data using dot notation.
 
         Updates a value in YAML data using a dot-separated key path.
@@ -216,7 +218,9 @@ class YamlOperations:
 
         """
 
-    def get_string_value(self, data: dict[str, Any], key_path: str, default: str) -> str:
+    def get_string_value(
+        self, data: dict[str, Any], key_path: str, default: str
+    ) -> str:
         """Extract a string value from YAML using dot notation.
 
         Convenience method for getting string values from nested YAML structures.

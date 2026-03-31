@@ -1,6 +1,7 @@
 #include "cli_args.h"
 #include <algorithm>
 #include <CLI/CLI.hpp>
+#include <fmt/core.h>
 #include <thread>
 
 
@@ -45,10 +46,19 @@ CliArgs parse_args(int argc, char* argv[]) {
 
     app.add_flag("--version", args.version_flag, "Print version and exit");
 
+    app.add_option("input_paths", args.input_paths,
+                   "Crash log files or directories to scan (targeted mode)");
+
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError& e) {
         std::exit(app.exit(e));
+    }
+
+    if (!args.input_paths.empty() && !args.scan_path.empty()) {
+        fmt::print(stderr, "Error: cannot combine --scan-path with positional input paths.\n"
+                           "Use --scan-path OR positional paths, not both.\n");
+        std::exit(1);
     }
 
     if (args.game_version == "AE") {

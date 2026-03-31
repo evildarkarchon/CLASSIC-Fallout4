@@ -1,10 +1,38 @@
 //! Python bindings for FormIDAnalyzerCore - Thin wrapper over classic-scanlog-core
 
+use crate::core_mod_convert::exclude_when_from_pydict;
+use classic_config_core::{CoreModEntry, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry};
 use classic_scanlog_core::FormIDAnalyzerCore;
 use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyAny, PyDict, PyList};
+
+fn legacy_mod_map_to_entries(
+    mods_single_map: indexmap::IndexMap<String, String>,
+) -> Vec<ModSolutionEntry> {
+    mods_single_map
+        .into_iter()
+        .map(|(key, value)| {
+            let mut lines = value.lines();
+            let name = lines
+                .next()
+                .map(str::trim)
+                .filter(|line| !line.is_empty())
+                .unwrap_or(&key)
+                .to_string();
+            let description = lines.collect::<Vec<_>>().join("\n");
+
+            ModSolutionEntry {
+                id: key.to_lowercase(),
+                criteria: ModSolutionCriteria::Any(vec![key]),
+                exceptions: Vec::new(),
+                name,
+                description,
+            }
+        })
+        .collect()
+}
 
 /// Python wrapper for FormIDAnalyzerCore
 #[pyclass(name = "FormIDAnalyzerCore")]
@@ -22,7 +50,7 @@ impl PyFormIDAnalyzerCore {
     /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout 4")
     /// * `important_mods` - Map of important mod names to their identifiers (order preserved)
     /// * `mods_single` - Map of single-byte mod identifiers
-    /// * `mods_double` - Map of double-byte mod identifiers
+    /// * `mods_double` - List of mod conflict entry dicts
     ///
     /// # Returns
     ///
@@ -36,20 +64,76 @@ impl PyFormIDAnalyzerCore {
     pub fn new(
         show_formid_values: bool,
         crashgen_name: String,
-        important_mods: Option<&Bound<'_, PyDict>>,
+        important_mods: Option<&Bound<'_, PyAny>>,
         mods_single: Option<&Bound<'_, PyDict>>,
-        mods_double: Option<&Bound<'_, PyDict>>,
+        mods_double: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
-        let important_mods_map = pydict_to_indexmap_str_optional(important_mods);
-        let mods_single_map = pydict_to_indexmap_str_optional(mods_single);
-        let mods_double_map = pydict_to_indexmap_str_optional(mods_double);
+        let important_mods_entries: Vec<CoreModEntry> = important_mods
+            .and_then(|v| v.extract::<Vec<Bound<'_, PyAny>>>().ok())
+            .map(|list| {
+                list.iter()
+                    .filter_map(|item| {
+                        let dict = item.cast::<PyDict>().ok()?;
+                        Some(CoreModEntry {
+                            detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                            name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                            description: dict
+                                .get_item("description")
+                                .ok()??
+                                .extract::<String>()
+                                .ok()?,
+                            gpu: dict
+                                .get_item("gpu")
+                                .ok()
+                                .flatten()
+                                .and_then(|v| v.extract::<String>().ok()),
+                            gpu_mismatch_warning: dict
+                                .get_item("gpu_mismatch_warning")
+                                .ok()
+                                .flatten()
+                                .and_then(|v| v.extract::<String>().ok()),
+                            exclude_when: exclude_when_from_pydict(dict),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        let mods_single_entries =
+            legacy_mod_map_to_entries(pydict_to_indexmap_str_optional(mods_single));
+        let mods_double_vec: Vec<ModConflictEntry> = mods_double
+            .and_then(|v| v.cast::<PyList>().ok())
+            .map(|list| {
+                list.iter()
+                    .filter_map(|item| {
+                        let dict = item.cast::<PyDict>().ok()?;
+                        Some(ModConflictEntry {
+                            mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                            mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                            name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                            name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                            description: dict
+                                .get_item("description")
+                                .ok()??
+                                .extract::<String>()
+                                .ok()?,
+                            fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                            link: dict
+                                .get_item("link")
+                                .ok()
+                                .flatten()
+                                .and_then(|v| v.extract::<String>().ok()),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let inner = FormIDAnalyzerCore::new(
-            None, // db_pool not exposed to Python API (would need wrapper)
+            None,
             show_formid_values,
             crashgen_name,
-            important_mods_map,
-            mods_single_map,
-            mods_double_map,
+            important_mods_entries,
+            mods_single_entries,
+            mods_double_vec,
         )
         .map_err(crate::to_pyerr)?;
         Ok(Self { inner })

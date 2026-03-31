@@ -94,21 +94,15 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
-static bool is_vr_game_version(const std::string& game_version) {
-    return game_version == "VR";
-}
-
 static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDirs& dirs) {
     // Mirror Python: read Docs_Folder_XSE from CLASSIC <Game> Local.yaml.
-    // Key path depends on selected game version mode.
     fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
 
     try {
         auto yaml = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*yaml, local_yaml.string());
 
-        std::string key_path =
-            is_vr_game_version(args.game_version) ? "GameVR_Info.Docs_Folder_XSE" : "Game_Info.Docs_Folder_XSE";
+        std::string key_path = "Game_Info.Docs_Folder_XSE";
         auto xse_path = classic::yaml::yaml_ops_get_string(*yaml, key_path, "");
         return std::string(xse_path.data(), xse_path.size());
     } catch (const rust::Error&) {
@@ -129,26 +123,51 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
     // Create orchestrator
     auto orch = classic::scanner::orchestrator_new(*config);
 
-    // Discover crash logs
-    // Mirrors Python's _crashlogs_get_files_rust():
-    //   base_folder  = cwd (where "Crash Logs/" subdirectory is managed)
-    //   custom_folder = --scan-path (searched directly, in addition to Crash Logs)
-    //   xse_folder = Game_Info.Docs_Folder_XSE or GameVR_Info.Docs_Folder_XSE
-    //                based on selected game version mode.
-    std::error_code ec;
-    std::string base_dir = fs::current_path(ec).string();
-    std::string custom_dir = args.scan_path; // empty string = no custom folder
-    std::string xse_dir = resolve_xse_folder_for_scan(args, dirs);
+    // Discover crash logs -- targeted mode or standard discovery
+    rust::Vec<rust::String> log_paths;
 
-    auto collector = classic::files::log_collector_new(base_dir, xse_dir, custom_dir);
-    auto log_paths = classic::files::log_collector_collect_all(*collector);
+    if (!args.input_paths.empty()) {
+        // Targeted mode: resolve explicit user-supplied paths
+        rust::Vec<rust::String> rust_inputs;
+        rust_inputs.reserve(args.input_paths.size());
+        for (const auto& p : args.input_paths) {
+            rust_inputs.push_back(rust::String(p));
+        }
+        auto resolution = classic::files::resolve_targeted_inputs(
+            rust::Slice<const rust::String>(rust_inputs.data(), rust_inputs.size()));
+        log_paths = std::move(resolution.logs);
+
+        if (!resolution.rejected_paths.empty()) {
+            auto n = resolution.rejected_paths.size();
+            fmt::print("Rejected {} input{}:\n", n, n == 1 ? "" : "s");
+            for (size_t i = 0; i < n; ++i) {
+                fmt::print("  {} ({})\n",
+                           std::string(resolution.rejected_paths[i].data(), resolution.rejected_paths[i].size()),
+                           std::string(resolution.rejected_reasons[i].data(), resolution.rejected_reasons[i].size()));
+            }
+            fmt::print("\n");
+        }
+    } else {
+        std::error_code ec;
+        std::string base_dir = fs::current_path(ec).string();
+        std::string custom_dir = args.scan_path;
+        std::string xse_dir = resolve_xse_folder_for_scan(args, dirs);
+
+        auto collector = classic::files::log_collector_new(base_dir, xse_dir, custom_dir);
+        log_paths = classic::files::log_collector_collect_all(*collector);
+
+        if (log_paths.empty()) {
+            if (custom_dir.empty()) {
+                fmt::print("No crash logs found in: {}\n", base_dir);
+            } else {
+                fmt::print("No crash logs found in: {} or {}\n", base_dir, custom_dir);
+            }
+            return 0;
+        }
+    }
 
     if (log_paths.empty()) {
-        if (custom_dir.empty()) {
-            fmt::print("No crash logs found in: {}\n", base_dir);
-        } else {
-            fmt::print("No crash logs found in: {} or {}\n", base_dir, custom_dir);
-        }
+        fmt::print("No crash logs resolved from targeted inputs.\n");
         return 0;
     }
 

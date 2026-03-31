@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-03-06T10:48:39.228573+00:00",
+  "generated_at_utc": "2026-03-30T12:22:20.268784+00:00",
   "summary": {
-    "tier1_contract_total": 262,
-    "tier1_matched": 262,
+    "tier1_contract_total": 261,
+    "tier1_matched": 261,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 102,
+    "total_gaps": 120,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 102
+    "tier2_gap_total": 120
   },
   "contract_results": [
     {
@@ -1500,19 +1500,6 @@
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "VersionRegistry",
       "node_export": "registryGetGameVersion",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 0,
-      "actual_node_arity": 0
-    },
-    {
-      "id": "version-registry-promote-registry-is-vr-version",
-      "tier": "tier1",
-      "owner_module": "version_registry",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "VersionRegistry",
-      "node_export": "registryIsVrVersion",
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",
@@ -3435,7 +3422,95 @@
       "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModEntry",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModExclude",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "CrashgenEntryRaw",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModConflictEntry",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModSolutionCriteria",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModSolutionEntry",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "SuspectErrorRule",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "SuspectStackCountRule",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-config-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "SuspectStackRule",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-config-core",
@@ -3678,6 +3753,17 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "ScanLogError",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-scanlog-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ScanProgressPhase",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scanlog-core",
@@ -4007,6 +4093,17 @@
       "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "resolve_batch_concurrency",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-scanlog-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "scan_records_batch",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -4291,6 +4388,36 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsModConflictEntry",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsModSolutionCriteria",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsModSolutionEntry",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -4345,6 +4472,36 @@
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
       "node_export": "JsRuleTarget",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsSuspectErrorRule",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsSuspectStackCountRule",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "JsSuspectStackRule",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "interface"
     },
@@ -4421,6 +4578,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
+      "node_export": "getApplicationDir",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -4451,10 +4618,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
-      "node_export": "migrateVrSetting",
+      "node_export": "migrateGameVersionSetting",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
     },
@@ -4494,6 +4661,16 @@
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
+      "node_export": "setApplicationDir",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
+      "owner_module": "aux",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": null,
       "node_export": "writeAutoscanReport",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
@@ -4501,16 +4678,16 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 21
+      "tier2": 29
     },
     "scanlog": {
-      "tier2": 70
+      "tier2": 71
     },
     "aux": {
-      "tier2": 7
+      "tier2": 15
     },
     "version_registry": {
-      "tier2": 4
+      "tier2": 5
     }
   }
 }

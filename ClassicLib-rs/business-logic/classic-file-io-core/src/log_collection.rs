@@ -4,6 +4,7 @@
 //! (game documents folder, working directory, custom paths) and organize them into
 //! a central Crash Logs directory for processing.
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tracing::debug;
@@ -411,6 +412,129 @@ impl LogCollector {
     }
 }
 
+/// A user-supplied input path that could not be resolved to a crash log.
+#[derive(Debug, Clone)]
+pub struct RejectedInput {
+    /// The original path the user supplied.
+    pub path: PathBuf,
+    /// Human-readable explanation of why this input was rejected.
+    pub reason: String,
+}
+
+/// The result of resolving explicit user-supplied paths into crash logs.
+#[derive(Debug, Clone)]
+pub struct TargetedResolution {
+    /// Deduplicated crash-log paths in first-seen order.
+    pub logs: Vec<PathBuf>,
+    /// Inputs that did not resolve to any crash logs.
+    pub rejected: Vec<RejectedInput>,
+}
+
+fn matches_crash_log_pattern(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .map(|name| {
+            name.starts_with("crash-") && name.ends_with(".log") && name.len() > "crash-.log".len()
+        })
+        .unwrap_or(false)
+}
+
+/// Resolve explicit user-supplied file and directory paths into a deduplicated
+/// list of crash logs without creating directories or moving files.
+///
+/// For each input:
+/// - If it is a file matching `crash-*.log`, accept it directly.
+/// - If it is a directory, recursively search for `**/crash-*.log`.
+/// - Otherwise record as rejected with a reason.
+///
+/// Paths are canonicalized and deduplicated while preserving first-seen order.
+pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution {
+    let mut logs = Vec::new();
+    let mut rejected = Vec::new();
+    let mut seen: HashSet<PathBuf> = HashSet::new();
+
+    for input in inputs {
+        if !input.exists() {
+            rejected.push(RejectedInput {
+                reason: "path does not exist".to_string(),
+                path: input,
+            });
+            continue;
+        }
+
+        let metadata = match fs::metadata(&input).await {
+            Ok(m) => m,
+            Err(e) => {
+                rejected.push(RejectedInput {
+                    reason: format!("cannot read path: {e}"),
+                    path: input,
+                });
+                continue;
+            }
+        };
+
+        if metadata.is_file() {
+            if matches_crash_log_pattern(&input) {
+                let canonical = input.canonicalize().unwrap_or_else(|_| input.clone());
+                if seen.insert(canonical) {
+                    logs.push(input);
+                }
+            } else {
+                rejected.push(RejectedInput {
+                    reason: "file does not match crash-*.log pattern".to_string(),
+                    path: input,
+                });
+            }
+        } else if metadata.is_dir() {
+            let escaped_input = glob::Pattern::escape(input.to_string_lossy().as_ref());
+            let pattern_str = format!(
+                "{escaped_input}{}**{}{}",
+                std::path::MAIN_SEPARATOR,
+                std::path::MAIN_SEPARATOR,
+                CRASH_LOG_PATTERN
+            );
+
+            let Ok(entries) = glob::glob(&pattern_str) else {
+                rejected.push(RejectedInput {
+                    reason: "failed to build glob pattern for directory".to_string(),
+                    path: input,
+                });
+                continue;
+            };
+
+            let mut found_any = false;
+            for entry in entries {
+                let Ok(path) = entry else { continue };
+                let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+                found_any = true;
+                if seen.insert(canonical) {
+                    logs.push(path);
+                }
+            }
+
+            if !found_any {
+                rejected.push(RejectedInput {
+                    reason: "directory contains no crash-*.log files".to_string(),
+                    path: input,
+                });
+            }
+        } else {
+            rejected.push(RejectedInput {
+                reason: "path is neither a file nor a directory".to_string(),
+                path: input,
+            });
+        }
+    }
+
+    debug!(
+        "Targeted input resolution: {} logs resolved, {} inputs rejected",
+        logs.len(),
+        rejected.len()
+    );
+
+    TargetedResolution { logs, rejected }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -509,5 +633,131 @@ mod tests {
 
         // log3 should remain in custom folder
         assert!(log3.exists());
+    }
+
+    // ── Targeted input resolution tests ─────────────────────────────
+
+    #[tokio::test]
+    async fn test_targeted_explicit_file() {
+        let temp = TempDir::new().unwrap();
+        let log = temp.path().join("crash-2024-01-01-12-00-00.log");
+        tokio::fs::write(&log, b"log data").await.unwrap();
+
+        let res = resolve_targeted_inputs(vec![log.clone()]).await;
+        assert_eq!(res.logs.len(), 1);
+        assert_eq!(res.logs[0], log);
+        assert!(res.rejected.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_targeted_directory_recursive() {
+        let temp = TempDir::new().unwrap();
+        let sub = temp.path().join("a").join("b");
+        tokio::fs::create_dir_all(&sub).await.unwrap();
+        tokio::fs::write(sub.join("crash-2024-01-01-12-00-00.log"), b"log1")
+            .await
+            .unwrap();
+        tokio::fs::write(temp.path().join("crash-2024-01-01-13-00-00.log"), b"log2")
+            .await
+            .unwrap();
+
+        let res = resolve_targeted_inputs(vec![temp.path().to_path_buf()]).await;
+        assert_eq!(res.logs.len(), 2);
+        assert!(res.rejected.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_targeted_directory_with_glob_metacharacters() {
+        let temp = TempDir::new().unwrap();
+        let sub = temp.path().join("mods[1]").join("nested");
+        tokio::fs::create_dir_all(&sub).await.unwrap();
+        let log = sub.join("crash-2024-01-01-12-00-00.log");
+        tokio::fs::write(&log, b"log1").await.unwrap();
+
+        let res = resolve_targeted_inputs(vec![temp.path().join("mods[1]")]).await;
+        assert_eq!(res.logs, vec![log]);
+        assert!(res.rejected.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_targeted_duplicate_file() {
+        let temp = TempDir::new().unwrap();
+        let log = temp.path().join("crash-2024-01-01-12-00-00.log");
+        tokio::fs::write(&log, b"data").await.unwrap();
+
+        let res = resolve_targeted_inputs(vec![log.clone(), log.clone()]).await;
+        assert_eq!(res.logs.len(), 1, "duplicate file should be deduplicated");
+        assert!(res.rejected.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_targeted_file_plus_parent_dir_deduplicates() {
+        let temp = TempDir::new().unwrap();
+        let log = temp.path().join("crash-2024-01-01-12-00-00.log");
+        tokio::fs::write(&log, b"data").await.unwrap();
+
+        let res = resolve_targeted_inputs(vec![log.clone(), temp.path().to_path_buf()]).await;
+        assert_eq!(
+            res.logs.len(),
+            1,
+            "file + parent dir should deduplicate to one entry"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_targeted_non_crash_log_rejected() {
+        let temp = TempDir::new().unwrap();
+        let txt = temp.path().join("notes.txt");
+        tokio::fs::write(&txt, b"not a log").await.unwrap();
+
+        let res = resolve_targeted_inputs(vec![txt.clone()]).await;
+        assert!(res.logs.is_empty());
+        assert_eq!(res.rejected.len(), 1);
+        assert!(res.rejected[0].reason.contains("crash-*.log"));
+    }
+
+    #[tokio::test]
+    async fn test_targeted_missing_path_rejected() {
+        let missing = PathBuf::from("nonexistent_dir_xyz_123/crash-foo.log");
+        let res = resolve_targeted_inputs(vec![missing]).await;
+        assert!(res.logs.is_empty());
+        assert_eq!(res.rejected.len(), 1);
+        assert!(res.rejected[0].reason.contains("does not exist"));
+    }
+
+    #[tokio::test]
+    async fn test_targeted_empty_dir_rejected() {
+        let temp = TempDir::new().unwrap();
+        let res = resolve_targeted_inputs(vec![temp.path().to_path_buf()]).await;
+        assert!(res.logs.is_empty());
+        assert_eq!(res.rejected.len(), 1);
+        assert!(res.rejected[0].reason.contains("no crash-*.log"));
+    }
+
+    #[tokio::test]
+    async fn test_targeted_empty_inputs() {
+        let res = resolve_targeted_inputs(vec![]).await;
+        assert!(res.logs.is_empty());
+        assert!(res.rejected.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_collect_all_unchanged_regression() {
+        let temp = TempDir::new().unwrap();
+        let base = temp.path();
+
+        let log = base.join("crash-2024-06-01-10-00-00.log");
+        tokio::fs::write(&log, b"regression test").await.unwrap();
+
+        let collector = LogCollector::new(base.to_path_buf(), None, None);
+        let logs = collector.collect_all().await.unwrap();
+
+        assert_eq!(logs.len(), 1);
+        assert!(!log.exists(), "log should be moved into Crash Logs");
+        assert!(
+            base.join("Crash Logs")
+                .join("crash-2024-06-01-10-00-00.log")
+                .exists()
+        );
     }
 }

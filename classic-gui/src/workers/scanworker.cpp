@@ -1,5 +1,8 @@
 #include "scanworker.h"
 #include "core/rust_qt_bridge.h"
+#include "scanprogressmodel.h"
+
+#include <QDebug>
 
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/scanner.h"
@@ -85,26 +88,23 @@ void move_unsolved_artifacts(const std::string& log_path, const QString& yaml_ro
 class BatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
 public:
     BatchProgressCallback(ScanWorker& worker, int total_logs)
-        : m_worker(worker), m_total_logs(total_logs) {}
+        : m_worker(worker), m_progressModel(total_logs) {}
 
-    void on_batch_progress(
-        std::uint32_t completed,
-        std::uint32_t total,
-        std::uint32_t /*input_index*/,
-        rust::Str log_path,
-        bool /*success*/
-    ) const override {
-        const int effective_total =
-            (total > 0) ? static_cast<int>(total) : qMax(1, m_total_logs);
-        const float percent =
-            (static_cast<float>(completed) * 100.0f) / static_cast<float>(effective_total);
-        const QString status = QString::fromUtf8(log_path.data(), static_cast<int>(log_path.size()));
+    void on_batch_progress(const classic::scanner::BatchProgressEvent& event) const override {
+        const float percent = m_progressModel.update(event);
+        const QString status = QString::fromUtf8(
+            event.log_path.data(),
+            static_cast<int>(event.log_path.size())
+        );
+        const int completed = static_cast<int>(event.completed);
+        const int total = static_cast<int>(event.total);
         Q_EMIT m_worker.progress(percent, status);
+        Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
     }
 
 private:
     ScanWorker& m_worker;
-    int m_total_logs = 0;
+    mutable BatchProgressModel m_progressModel;
 };
 }
 
@@ -112,7 +112,8 @@ ScanWorker::ScanWorker(QObject* parent)
     : QObject(parent) {}
 
 void ScanWorker::requestCancel() {
-    m_cancelled = true;
+    qDebug() << "ScanWorker: cancellation requested";
+    m_cancelled.store(true);
 }
 
 void ScanWorker::doScan(const QStringList& logPaths,
@@ -124,12 +125,17 @@ void ScanWorker::doScan(const QStringList& logPaths,
                         bool fcxMode,
                         bool simplifyLogs,
                         bool moveUnsolvedLogs,
-                        int maxConcurrentScans) {
-    m_cancelled = false;
+                        int maxConcurrentScans,
+                        bool targetedMode) {
+    m_cancelled.store(false);
 
     int total = logPaths.size();
+    qDebug() << "ScanWorker: starting scan," << total << "logs,"
+             << (targetedMode ? "targeted" : "standard") << "mode";
     int successCount = 0;
     int errorCount = 0;
+    // Targeted scans operate on user-selected source files and should not relocate them.
+    const bool shouldMoveUnsolvedLogs = moveUnsolvedLogs && !targetedMode;
 
     try {
         // rust::Box<T> is non-nullable and non-default-constructible.
@@ -149,12 +155,13 @@ void ScanWorker::doScan(const QStringList& logPaths,
         // Default to batch mode for multi-log scans and stream progress updates
         // from Rust via CXX callback.
         if (total > 1) {
-            if (m_cancelled) {
+            if (m_cancelled.load()) {
                 emit error(QStringLiteral("Scan cancelled by user"));
                 return;
             }
 
             emit progress(0.0f, QStringLiteral("Scanning logs in parallel..."));
+            emit progressDetailed(0.0f, QStringLiteral("Scanning logs in parallel..."), 0, total);
 
             rust::Vec<rust::String> rustPaths;
             for (int i = 0; i < total; ++i) {
@@ -189,7 +196,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     }
                 }
 
-                if (!scanSuccess && moveUnsolvedLogs) {
+                if (!scanSuccess && shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(reportLogPath, yamlRoot);
                 }
 
@@ -202,19 +209,23 @@ void ScanWorker::doScan(const QStringList& logPaths,
                 emit logScanned(index, scanSuccess, resolvedPath);
             }
 
+            qDebug() << "ScanWorker: batch complete -" << successCount
+                     << "success," << errorCount << "errors of" << total;
             emit progress(100.0f, QStringLiteral("Complete"));
+            emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
             emit finished(total, successCount, errorCount);
             return;
         }
 
         for (int i = 0; i < total; ++i) {
-            if (m_cancelled) {
+            if (m_cancelled.load()) {
                 emit error(QStringLiteral("Scan cancelled by user"));
                 return;
             }
 
             float percent = (static_cast<float>(i) * 100.0f) / static_cast<float>(total);
             emit progress(percent, logPaths[i]);
+            emit progressDetailed(percent, logPaths[i], i, total);
 
             try {
                 auto result = classic::scanner::orchestrator_process_log(
@@ -236,7 +247,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     }
                 }
 
-                if (!scan_success && moveUnsolvedLogs) {
+                if (!scan_success && shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(report_log_path, yamlRoot);
                 }
 
@@ -249,14 +260,17 @@ void ScanWorker::doScan(const QStringList& logPaths,
 
             } catch (const rust::Error&) {
                 ++errorCount;
-                if (moveUnsolvedLogs) {
+                if (shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(std::string(logPaths[i].toUtf8().constData()), yamlRoot);
                 }
                 emit logScanned(i, false, logPaths[i]);
             }
         }
 
+        qDebug() << "ScanWorker: scan complete -" << successCount
+                 << "success," << errorCount << "errors of" << total;
         emit progress(100.0f, QStringLiteral("Complete"));
+        emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
         emit finished(total, successCount, errorCount);
 
     } catch (const rust::Error& e) {

@@ -22,14 +22,12 @@ Warnings_CRASHGEN:
   Warn_Outdated: "Outdated"
 Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
-Crashlog_Error_Check: {}
-Crashlog_Stack_Check: {}
-Mods_CONF: {}
-Mods_CORE: {}
-Mods_CORE_FOLON: {}
-Mods_FREQ: {}
-Mods_OPC2: {}
-Mods_SOLU: {}
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_CONF: []
+Mods_CORE: []
+Mods_FREQ: []
+Mods_SOLU: []
 `;
 
 export const CLI_IGNORE_YAML = `
@@ -39,8 +37,6 @@ CLASSIC_Ignore_Fallout4:
 
 export const CLI_LOCAL_YAML = `
 Game_Info:
-  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
-GameVR_Info:
   Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
 `;
 

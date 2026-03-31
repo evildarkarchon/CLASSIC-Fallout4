@@ -130,13 +130,11 @@ function readNestedString(document: YamlDoc | undefined, ...keys: string[]): str
 function resolveXsePath(
   gameYamlPath: string,
   localYamlPath: string,
-  gameVersion: string,
 ): string | undefined {
   const gameDoc = readYamlDocument(gameYamlPath);
   const localDoc = readYamlDocument(localYamlPath);
-  const localKey = gameVersion === "VR" ? "GameVR_Info" : "Game_Info";
 
-  const localXsePath = readNestedString(localDoc, localKey, "Docs_Folder_XSE");
+  const localXsePath = readNestedString(localDoc, "Game_Info", "Docs_Folder_XSE");
   if (localXsePath) {
     return localXsePath;
   }
@@ -211,13 +209,11 @@ function loadScanInputs(paths: CliPaths, options: CliOptions): ScanInputs {
   const ignoreYamlPath = join(paths.root, "CLASSIC Ignore.yaml");
   const localYamlPath = join(paths.data, `CLASSIC ${options.game} Local.yaml`);
 
-  const normalizedVersion = normalizeGameVersion(options.gameVersion);
-
   return {
     mainYaml: readRequiredFile(mainYamlPath, "CLASSIC Main.yaml"),
     gameYaml: readRequiredFile(gameYamlPath, `CLASSIC ${options.game}.yaml`),
     ignoreYaml: readOptionalFile(ignoreYamlPath, `CLASSIC_Ignore_${options.game}: []\n`),
-    xsePath: resolveXsePath(gameYamlPath, localYamlPath, normalizedVersion),
+    xsePath: resolveXsePath(gameYamlPath, localYamlPath),
   };
 }
 

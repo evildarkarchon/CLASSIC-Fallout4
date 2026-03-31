@@ -2,6 +2,8 @@
 
 This guide covers async patterns and best practices for CLASSIC's Python and Rust codebases.
 
+Note: the Python application-layer examples in this document refer to the legacy Python runtime/orchestration model. The active product path now centers on Rust core crates in `ClassicLib-rs/` plus the maintained C++ frontends and binding layers. Use this guide as historical reference for legacy Python runtime patterns, not as the default workflow for new product work.
+
 ## Python Async Patterns
 
 ### AsyncBridge Usage - When and Where

@@ -4,12 +4,17 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDir>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QMimeData>
+#include <QSaveFile>
+#include <QSet>
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QTextStream>
@@ -70,8 +75,17 @@ QString ignoreFilePath(const QString& dataRoot)
     return dataRoot + QStringLiteral("/CLASSIC Ignore.yaml");
 }
 
-bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut)
+QString localYamlFilePath(const QString& dataDir, const QString& game)
 {
+    return dataDir + QStringLiteral("/CLASSIC %1 Local.yaml").arg(game);
+}
+
+bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut,
+                              bool* migrationFailed = nullptr)
+{
+    if (migrationFailed) {
+        *migrationFailed = false;
+    }
     if (dataRoot.isEmpty()) {
         if (errorOut) {
             *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
@@ -90,18 +104,39 @@ bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, Q
         return true;
     }
 
-    // Migration path: if an older build wrote settings under CLASSIC Data,
-    // copy that file back to the canonical root location.
+    // Attempt to migrate settings from legacy location (CLASSIC Data/CLASSIC Settings.yaml).
+    // Older builds wrote the settings file under CLASSIC Data/; try to move it to the
+    // current root-level location before falling back to default generation.
     const QString legacySettingsPath = dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     if (QFile::exists(legacySettingsPath)) {
-        if (QFile::copy(legacySettingsPath, settingsPath)) {
+        bool moved = QFile::rename(legacySettingsPath, settingsPath);
+        if (!moved) {
+            // Preserve the legacy file unless the destination can be published atomically.
+            QFile legacySettingsFile(legacySettingsPath);
+            if (legacySettingsFile.open(QIODevice::ReadOnly)) {
+                QSaveFile migratedSettingsFile(settingsPath);
+                migratedSettingsFile.setDirectWriteFallback(false);
+                if (migratedSettingsFile.open(QIODevice::WriteOnly)) {
+                    const QByteArray legacyContents = legacySettingsFile.readAll();
+                    if (legacySettingsFile.error() == QFileDevice::NoError &&
+                        migratedSettingsFile.write(legacyContents) == legacyContents.size() &&
+                        migratedSettingsFile.commit()) {
+                        moved = true;
+                    } else {
+                        migratedSettingsFile.cancelWriting();
+                    }
+                }
+            }
+        }
+
+        if (moved && QFile::exists(settingsPath)) {
+            QFile::remove(legacySettingsPath);
             return true;
         }
-        if (errorOut) {
-            *errorOut = QStringLiteral("Failed to migrate settings from ") + legacySettingsPath +
-                        QStringLiteral(" to ") + settingsPath;
+        // Migration failed — fall through to generate defaults, but flag the caller.
+        if (migrationFailed) {
+            *migrationFailed = true;
         }
-        return false;
     }
 
     const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
@@ -228,6 +263,35 @@ bool ensureIgnoreFileExists(const QString& dataRoot, const QString& dataDir, QSt
         return false;
     }
 }
+
+bool saveLocalYamlPaths(const QString& dataDir, const QString& game, const QString& gamePath, const QString& docsPath,
+                        QString* errorOut)
+{
+    if (dataDir.isEmpty()) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("CLASSIC Data directory path is empty.");
+        }
+        return false;
+    }
+
+    if (gamePath.isEmpty() && docsPath.isEmpty()) {
+        return true;
+    }
+
+    const QString localYamlPath = localYamlFilePath(dataDir, game);
+
+    try {
+        classic::config::save_local_yaml_paths(std::string(localYamlPath.toUtf8().constData()),
+                                               std::string(gamePath.toUtf8().constData()),
+                                               std::string(docsPath.toUtf8().constData()));
+        return true;
+    } catch (const rust::Error& e) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("Failed to update local YAML: ") + QString::fromUtf8(e.what());
+        }
+        return false;
+    }
+}
 } // namespace
 
 // ── Construction / Destruction ─────────────────────────────────────
@@ -235,6 +299,7 @@ bool ensureIgnoreFileExists(const QString& dataRoot, const QString& dataDir, QSt
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+    setAcceptDrops(true);
     setupUi();
     loadStylesheet();
     loadSettings();
@@ -362,6 +427,36 @@ void MainWindow::setupMainOptionsTab()
         connect(btnBrowse, &QPushButton::clicked, this, &MainWindow::onBrowseCustom);
     }
 
+    // ── Targeted scan drop zone ───────────────────────────────────
+    {
+        m_targetedInputContainer = new QWidget();
+        auto* containerLayout = new QVBoxLayout(m_targetedInputContainer);
+        containerLayout->setContentsMargins(0, 4, 0, 0);
+        containerLayout->setSpacing(4);
+
+        auto* headerRow = new QHBoxLayout();
+        m_targetedInputLabel = new QLabel(QStringLiteral("Targeted Scan: drop files or folders here"));
+        m_targetedInputLabel->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
+        headerRow->addWidget(m_targetedInputLabel);
+        headerRow->addStretch();
+
+        m_btnClearTargeted = new QPushButton(QStringLiteral("Clear"));
+        m_btnClearTargeted->setObjectName(QStringLiteral("btnClearTargeted"));
+        m_btnClearTargeted->setFixedWidth(60);
+        m_btnClearTargeted->setVisible(false);
+        headerRow->addWidget(m_btnClearTargeted);
+        containerLayout->addLayout(headerRow);
+
+        m_targetedInputList = new QListWidget();
+        m_targetedInputList->setMaximumHeight(90);
+        m_targetedInputList->setVisible(false);
+        containerLayout->addWidget(m_targetedInputList);
+
+        mainLayout->addWidget(m_targetedInputContainer);
+
+        connect(m_btnClearTargeted, &QPushButton::clicked, this, &MainWindow::onClearTargetedInputs);
+    }
+
     // Spacer before primary buttons
     mainLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
@@ -437,8 +532,8 @@ void MainWindow::setupFileBackupTab()
     // ── Header instruction labels ─────────────────────────────────
     {
         auto* headerLabel = new QLabel(QStringLiteral("BACKUP / RESTORE / REMOVE"));
+        headerLabel->setProperty("class", QStringLiteral("sectionHeader"));
         headerLabel->setAlignment(Qt::AlignCenter);
-        headerLabel->setStyleSheet(QStringLiteral("font-size: 14px; font-weight: bold;"));
         mainLayout->addWidget(headerLabel);
 
         auto* instructionLabel =
@@ -510,8 +605,8 @@ void MainWindow::setupArticlesTab()
 
     // Header
     auto* headerLabel = new QLabel(QStringLiteral("USEFUL RESOURCES & LINKS"));
+    headerLabel->setProperty("class", QStringLiteral("sectionHeader"));
     headerLabel->setAlignment(Qt::AlignCenter);
-    headerLabel->setStyleSheet(QStringLiteral("font-size: 14px; font-weight: bold;"));
     mainLayout->addWidget(headerLabel);
 
     // 3x3 grid of URL buttons
@@ -631,11 +726,14 @@ void MainWindow::connectSignals()
     connect(m_editCustomFolder, &QLineEdit::editingFinished, this, &MainWindow::onCustomFolderEdited);
 
     // ScanController → MainWindow
-    connect(m_scanController, &ScanController::scanProgress, this, &MainWindow::onScanProgress);
+    connect(m_scanController, &ScanController::scanProgress, this, &MainWindow::onCrashScanProgress);
     connect(m_scanController, &ScanController::scanDiscovered, this, &MainWindow::onCrashScanDiscovered);
     connect(m_scanController, &ScanController::scanLogScanned, this, &MainWindow::onCrashLogScanned);
     connect(m_scanController, &ScanController::scanFinished, this, &MainWindow::onScanCompleted);
     connect(m_scanController, &ScanController::scanError, this, &MainWindow::onScanError);
+    connect(m_scanController, &ScanController::scanWarning, this, &MainWindow::onScanWarning);
+    connect(m_scanController, &ScanController::scanReportDirectoriesResolved,
+            this, &MainWindow::onScanReportDirectoriesResolved);
 
     // Settings button
     connect(m_btnSettings, &QPushButton::clicked, this, &MainWindow::onShowSettings);
@@ -721,8 +819,17 @@ void MainWindow::loadSettings()
     m_dataDir = m_dataRoot + QStringLiteral("/CLASSIC Data");
 
     QString bootstrapError;
-    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+    bool settingsMigrationFailed = false;
+    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError, &settingsMigrationFailed)) {
         setStatusMessage(QStringLiteral("Settings bootstrap failed: ") + bootstrapError);
+    }
+    if (settingsMigrationFailed) {
+        QMessageBox::warning(this, QStringLiteral("Settings Migration"),
+                             QStringLiteral("A settings file was found at the previous location "
+                                            "(CLASSIC Data/CLASSIC Settings.yaml), but migration to the "
+                                            "new location failed.\n\n"
+                                            "Your settings have been reverted to defaults. "
+                                            "Please reconfigure your paths and options in Settings."));
     }
     if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
         setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
@@ -866,13 +973,34 @@ void MainWindow::initResultsReportDir()
     QDir().mkpath(crashDir);
 
     QStringList reportDirs;
-    reportDirs.append(crashDir);
+    QSet<QString> seenReportDirs;
+
+    const auto appendUniqueReportDir = [&reportDirs, &seenReportDirs](const QString& rawDir) {
+        const QString cleanedDir = QDir::cleanPath(rawDir.trimmed());
+        if (cleanedDir.isEmpty()) {
+            return;
+        }
+
+        const QString key = cleanedDir.toLower();
+        if (seenReportDirs.contains(key)) {
+            return;
+        }
+
+        seenReportDirs.insert(key);
+        reportDirs.append(cleanedDir);
+    };
+
+    appendUniqueReportDir(crashDir);
 
     if (m_editCustomFolder) {
         const QString customDir = QDir::cleanPath(m_editCustomFolder->text().trimmed());
         if (!customDir.isEmpty() && QDir(customDir).exists() && customDir.compare(crashDir, Qt::CaseInsensitive) != 0) {
-            reportDirs.append(customDir);
+            appendUniqueReportDir(customDir);
         }
+    }
+
+    for (const auto& reportDir : m_lastScanReportDirs) {
+        appendUniqueReportDir(reportDir);
     }
 
     m_resultsController->setReportDirectories(reportDirs, crashDir);
@@ -887,7 +1015,7 @@ void MainWindow::checkFirstRunPaths()
     // Read current game and docs paths from YAML settings
     QString gamePath;
     QString docsPath;
-    bool isVrMode = false;
+    QString gameVersion = QStringLiteral("auto");
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
@@ -903,10 +1031,8 @@ void MainWindow::checkFirstRunPaths()
             docsPath = classic::toQString(dp);
         }
 
-        auto gameVersion = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
-        if (gameVersion == "VR") {
-            isVrMode = true;
-        }
+        gameVersion = classic::toQString(
+            classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
 
     } catch (...) {
         // If settings can't be read, fall through to path detection
@@ -922,7 +1048,7 @@ void MainWindow::checkFirstRunPaths()
 
     // Fallback: import detected paths from CLASSIC Fallout4 Local.yaml if
     // settings file does not contain them yet.
-    bool importedFromLocal = false;
+    bool resolvedFromFallbacks = false;
     if (gamePath.isEmpty() || docsPath.isEmpty()) {
         const QString localYamlPath = m_dataDir + QStringLiteral("/CLASSIC Fallout4 Local.yaml");
         try {
@@ -933,7 +1059,7 @@ void MainWindow::checkFirstRunPaths()
                 auto gp = classic::yaml::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Game", "");
                 if (!gp.empty()) {
                     gamePath = classic::toQString(gp);
-                    importedFromLocal = true;
+                    resolvedFromFallbacks = true;
                 }
             }
 
@@ -941,7 +1067,7 @@ void MainWindow::checkFirstRunPaths()
                 auto dp = classic::yaml::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Docs", "");
                 if (!dp.empty()) {
                     docsPath = classic::toQString(dp);
-                    importedFromLocal = true;
+                    resolvedFromFallbacks = true;
                 }
             }
         } catch (...) {
@@ -951,21 +1077,25 @@ void MainWindow::checkFirstRunPaths()
 
     // Fallback: use Rust auto-detection (registry / docs discovery).
     if (gamePath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_game_path(std::string(gamePath.toUtf8().constData()), isVrMode);
+        auto detected = classic::path::detect_fallout4_game_path(
+            std::string(gamePath.toUtf8().constData()),
+            std::string(gameVersion.toUtf8().constData()));
         if (!detected.empty()) {
             gamePath = classic::toQString(detected);
-            importedFromLocal = true;
+            resolvedFromFallbacks = true;
         }
     }
     if (docsPath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_docs_path(std::string(docsPath.toUtf8().constData()), isVrMode);
+        auto detected = classic::path::detect_fallout4_docs_path(
+            std::string(docsPath.toUtf8().constData()),
+            std::string(gameVersion.toUtf8().constData()));
         if (!detected.empty()) {
             docsPath = classic::toQString(detected);
-            importedFromLocal = true;
+            resolvedFromFallbacks = true;
         }
     }
 
-    if (importedFromLocal) {
+    if (resolvedFromFallbacks) {
         try {
             auto ops = classic::yaml::yaml_ops_new();
             classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -976,7 +1106,9 @@ void MainWindow::checkFirstRunPaths()
 
                 auto exePath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
                 if (exePath.empty()) {
-                    auto defaultExe = gamePath + QStringLiteral("/Fallout4.exe");
+                    auto exeName = classic::path::resolve_fallout4_exe_name(
+                        std::string(gameVersion.toUtf8().constData()));
+                    auto defaultExe = gamePath + QStringLiteral("/") + classic::toQString(exeName);
                     classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
                                                                std::string(defaultExe.toUtf8().constData()));
                 }
@@ -1011,30 +1143,51 @@ void MainWindow::checkFirstRunPaths()
             classic::scangame::needs_path_detection(classic::toRustString(gamePath), classic::toRustString(docsPath));
 
         if (!needs.needs_game_path && !needs.needs_docs_path) {
+            if (resolvedFromFallbacks) {
+                QString localYamlError;
+                if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), gamePath, docsPath, &localYamlError)) {
+                    setStatusMessage(QStringLiteral("Local YAML sync failed: ") + localYamlError);
+                }
+            }
             return; // All paths are detected -- nothing to do
         }
 
         // Show the manual path dialog
         ManualPathDialog dlg(needs.needs_game_path, needs.needs_docs_path, this);
         if (dlg.exec() != QDialog::Accepted) {
+            if (resolvedFromFallbacks) {
+                QString localYamlError;
+                if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), gamePath, docsPath, &localYamlError)) {
+                    setStatusMessage(QStringLiteral("Local YAML sync failed: ") + localYamlError);
+                }
+            }
             return; // User cancelled -- they can set paths later via Settings
         }
+
+        const QString finalGamePath = needs.needs_game_path ? dlg.gamePath() : gamePath;
+        const QString finalDocsPath = needs.needs_docs_path ? dlg.docsPath() : docsPath;
 
         // Save the user-provided paths to YAML settings
         try {
             auto ops = classic::yaml::yaml_ops_new();
             classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
-            if (needs.needs_game_path && !dlg.gamePath().isEmpty()) {
+            if (needs.needs_game_path && !finalGamePath.isEmpty()) {
                 classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
-                                                           std::string(dlg.gamePath().toUtf8().constData()));
+                                                           std::string(finalGamePath.toUtf8().constData()));
             }
-            if (needs.needs_docs_path && !dlg.docsPath().isEmpty()) {
+            if (needs.needs_docs_path && !finalDocsPath.isEmpty()) {
                 classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
-                                                           std::string(dlg.docsPath().toUtf8().constData()));
+                                                           std::string(finalDocsPath.toUtf8().constData()));
             }
 
             classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+
+            QString manualLocalYamlError;
+            if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), finalGamePath, finalDocsPath,
+                                    &manualLocalYamlError)) {
+                setStatusMessage(QStringLiteral("Local YAML sync failed: ") + manualLocalYamlError);
+            }
 
             // Reload settings so the rest of the app sees the new paths
             loadSettings();
@@ -1193,22 +1346,7 @@ void MainWindow::onTabChanged(int index)
 
 QString MainWindow::readCrashLogsDir() const
 {
-    if (!m_dataDir.isEmpty()) {
-        QString settingsPath = settingsFilePath(m_dataRoot);
-        try {
-            auto ops = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-            auto dir = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Crash Logs Folder", "");
-            if (!dir.empty()) {
-                return QDir::cleanPath(classic::toQString(dir));
-            }
-        } catch (...) {
-            // Fall through to default path below.
-        }
-    }
-
-    // Default to a local "Crash Logs" folder when settings are missing.
-    return QDir::cleanPath(QDir::current().filePath(QStringLiteral("Crash Logs")));
+    return QDir::cleanPath(QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("Crash Logs")));
 }
 
 bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const
@@ -1420,13 +1558,14 @@ void MainWindow::onScanCrashLogs()
     m_crashScanTotalLogs = 0;
     m_crashScanLogsCompleted = 0;
     m_crashScanInProgress = true;
+    m_lastScanReportDirs.clear();
     m_crashScanTimer.start();
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
     m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
                                 m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_maxConcurrentScans,
-                                m_editCustomFolder->text());
+                                m_editCustomFolder->text(), m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1498,15 +1637,23 @@ void MainWindow::onExit()
     QApplication::quit();
 }
 
+void MainWindow::onCrashScanProgress(float percent, const QString& status, int completed, int total)
+{
+    if (m_crashScanInProgress) {
+        if (total > 0) {
+            m_crashScanTotalLogs = total;
+            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, qMin(completed, total));
+        } else {
+            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, completed);
+        }
+    }
+
+    onScanProgress(percent, status);
+}
+
 void MainWindow::onScanProgress(float percent, const QString& status)
 {
     if (m_crashScanInProgress) {
-        if (percent >= 0.0f && m_crashScanTotalLogs > 0) {
-            const int progressCompletedEstimate =
-                qBound(0, qRound((percent * static_cast<float>(m_crashScanTotalLogs)) / 100.0f), m_crashScanTotalLogs);
-            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, progressCompletedEstimate);
-        }
-
         const int completedLogs = (m_crashScanTotalLogs > 0) ? qMin(m_crashScanLogsCompleted, m_crashScanTotalLogs)
                                                              : m_crashScanLogsCompleted;
         const QString scanStats =
@@ -1569,6 +1716,7 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
     m_crashScanInProgress = false;
     m_crashScanTotalLogs = total;
     m_crashScanLogsCompleted = total;
+    initResultsReportDir();
     setStatusMessage(QStringLiteral("Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)")
                          .arg(total)
                          .arg(format_elapsed_seconds(m_crashScanTimer))
@@ -1585,10 +1733,21 @@ void MainWindow::onScanError(const QString& message)
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
+    initResultsReportDir();
     setStatusMessage(
         QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message));
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
+}
+
+void MainWindow::onScanWarning(const QString& message)
+{
+    QMessageBox::warning(this, QStringLiteral("Scan Warning"), message);
+}
+
+void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
+{
+    m_lastScanReportDirs = reportDirs;
 }
 
 void MainWindow::onShowSettings()
@@ -1809,7 +1968,6 @@ void MainWindow::onTogglePapyrusMonitor()
 
         // Update button appearance
         m_btnPapyrusMonitor->setText(QStringLiteral("STOP PAPYRUS MONITORING"));
-        m_btnPapyrusMonitor->setStyleSheet(QStringLiteral("background-color: #2E7D32;")); // green
         setStatusMessage(QStringLiteral("Papyrus monitoring active"));
 
         // Create worker + thread
@@ -1849,7 +2007,6 @@ void MainWindow::onTogglePapyrusMonitor()
         m_threadManager->stopWorker(QStringLiteral("papyrus"));
 
         m_btnPapyrusMonitor->setText(QStringLiteral("START PAPYRUS MONITORING"));
-        m_btnPapyrusMonitor->setStyleSheet(QString()); // reset to default
         setStatusMessage(QStringLiteral("Papyrus monitoring stopped"));
 
         if (m_papyrusDialog) {
@@ -1857,5 +2014,61 @@ void MainWindow::onTogglePapyrusMonitor()
             m_papyrusDialog->deleteLater();
             m_papyrusDialog = nullptr;
         }
+    }
+}
+
+// ── Drag-and-drop for targeted scan inputs ─────────────────────────
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (m_tabWidget && m_tabWidget->currentIndex() == 0 && event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent* event)
+{
+    if (!m_tabWidget || m_tabWidget->currentIndex() != 0) {
+        return;
+    }
+
+    const auto urls = event->mimeData()->urls();
+    for (const auto& url : urls) {
+        if (url.isLocalFile()) {
+            const QString path = QDir::toNativeSeparators(url.toLocalFile());
+            if (!m_targetedInputPaths.contains(path)) {
+                m_targetedInputPaths.append(path);
+            }
+        }
+    }
+    updateTargetedInputUi();
+    event->acceptProposedAction();
+}
+
+void MainWindow::onClearTargetedInputs()
+{
+    m_targetedInputPaths.clear();
+    updateTargetedInputUi();
+}
+
+void MainWindow::updateTargetedInputUi()
+{
+    const bool hasInputs = !m_targetedInputPaths.isEmpty();
+    m_targetedInputList->setVisible(hasInputs);
+    m_btnClearTargeted->setVisible(hasInputs);
+
+    if (hasInputs) {
+        m_targetedInputLabel->setText(QStringLiteral("Targeted Scan: %1 path%2 selected")
+                                          .arg(m_targetedInputPaths.size())
+                                          .arg(m_targetedInputPaths.size() == 1 ? "" : "s"));
+        m_targetedInputLabel->setStyleSheet(QStringLiteral("font-weight: bold;"));
+
+        m_targetedInputList->clear();
+        for (const auto& p : m_targetedInputPaths) {
+            m_targetedInputList->addItem(p);
+        }
+    } else {
+        m_targetedInputLabel->setText(QStringLiteral("Targeted Scan: drop files or folders here"));
+        m_targetedInputLabel->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
     }
 }

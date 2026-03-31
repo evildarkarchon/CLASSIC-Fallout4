@@ -1,5 +1,7 @@
 # FCX Mode Read-Only Conversion Plan
 
+Note: this is a historical implementation/design document. Some examples reference older `classic_core` or legacy Python runtime structures and should not be treated as current binding guidance.
+
 **Status**: In Progress (Phases 1-4 Complete, Documentation Updated)
 **Created**: 2025-10-29
 **Last Updated**: 2025-10-29

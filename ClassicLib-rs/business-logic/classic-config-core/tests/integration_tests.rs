@@ -51,22 +51,57 @@ Crashlog_Plugins_Exclude:
 Crashlog_Records_Exclude:
   - "RecordType1"
 Crashlog_Error_Check:
-  ErrorPattern1: "Error description 1"
-  ErrorPattern2: "Error description 2"
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: "Stack description 1"
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
 Mods_CONF:
-  ModA: "Config for ModA"
+  - mod_a: modA
+    mod_b: modB
+    name_a: Mod A
+    name_b: Mod B
+    description: "Config for ModA"
+    fix: "Remove one."
 Mods_CORE:
-  ModB: "Core mod B"
-Mods_CORE_FOLON:
-  FolonMod: "Folon specific mod"
+  - detect: ModB
+    name: Core Mod B
+    description: "Core mod B"
 Mods_FREQ:
-  FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
 Mods_SOLU:
-  SoluMod: "Solution mod"
+  - id: solu-mod
+    criteria:
+      any:
+        - SoluMod
+    name: Solution Mod
+    description: "Solution mod"
 "#
 }
 
@@ -320,6 +355,46 @@ mod from_content_workflows {
         assert!(!config.ignore_list.is_empty());
     }
 
+    #[test]
+    fn test_from_yaml_content_merges_multiple_documents_per_input() {
+        let main = concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"7.31.0\"\n",
+            "---\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Merged Autoscan\"\n",
+        );
+        let game = concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "---\n",
+            "Warnings_CRASHGEN:\n",
+            "  Warn_NOPlugins: \"Merged warning\"\n",
+        );
+        let ignore = concat!(
+            "CLASSIC_Ignore_Fallout4:\n",
+            "  - \"IgnoreA\"\n",
+            "---\n",
+            "CLASSIC_Ignore_Skyrim:\n",
+            "  - \"IgnoreB\"\n",
+        );
+
+        let config = YamlDataCore::from_yaml_content(
+            main,
+            game,
+            ignore,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("from_yaml_content should merge multiple documents per input");
+
+        assert_eq!(config.classic_version, "7.31.0");
+        assert_eq!(config.autoscan_text, "Merged Autoscan");
+        assert_eq!(config.xse_acronym, "F4SE");
+        assert_eq!(config.warn_noplugins, "Merged warning");
+        assert_eq!(config.ignore_list, vec!["IgnoreA"]);
+    }
+
     /// Test from_content produces identical results across selected game modes
     #[test]
     fn test_from_content_selected_game_version_ignored_for_explicit_game_info() {
@@ -363,30 +438,21 @@ mod from_content_workflows {
         .expect("from_yaml_content should succeed");
 
         // All mod databases should be populated
-        assert_eq!(
-            config.game_mods_conf.get("ModA"),
-            Some(&"Config for ModA".to_string())
-        );
-        assert_eq!(
-            config.game_mods_core.get("ModB"),
-            Some(&"Core mod B".to_string())
-        );
-        assert_eq!(
-            config.game_mods_core_folon.get("FolonMod"),
-            Some(&"Folon specific mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_freq.get("FreqMod"),
-            Some(&"Frequently used mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_opc2.get("OpcMod"),
-            Some(&"OPC2 mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_solu.get("SoluMod"),
-            Some(&"Solution mod".to_string())
-        );
+        assert_eq!(config.game_mods_conf.len(), 1);
+        assert_eq!(config.game_mods_conf[0].mod_a, "modA");
+        assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
+        assert_eq!(config.game_mods_core.len(), 1);
+        assert_eq!(config.game_mods_core[0].detect, "ModB");
+        assert_eq!(config.game_mods_core[0].name, "Core Mod B");
+        assert_eq!(config.game_mods_core[0].description, "Core mod B");
+        assert_eq!(config.game_mods_freq.len(), 1);
+        assert_eq!(config.game_mods_freq[0].id, "freq-mod");
+        assert_eq!(config.game_mods_freq[0].name, "Frequent Mod");
+        assert_eq!(config.game_mods_freq[0].description, "Frequently used mod");
+        assert_eq!(config.game_mods_solu.len(), 1);
+        assert_eq!(config.game_mods_solu[0].id, "solu-mod");
+        assert_eq!(config.game_mods_solu[0].name, "Solution Mod");
+        assert_eq!(config.game_mods_solu[0].description, "Solution mod");
     }
 }
 
@@ -450,6 +516,33 @@ mod error_handling_workflows {
             }
             Err(e) => panic!("Expected ParseError, got {:?}", e),
             Ok(_) => panic!("Should fail with invalid YAML"),
+        }
+    }
+
+    #[test]
+    fn test_from_yaml_content_non_mapping_later_document_returns_parse_like_error() {
+        let invalid_game_yaml = concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "---\n",
+            "- invalid\n",
+        );
+
+        let result = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            invalid_game_yaml,
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        );
+
+        assert!(result.is_err());
+        match result {
+            Err(ConfigError::ParseError { context, .. }) => {
+                assert!(context.contains("game") || context.contains("Game"));
+            }
+            Err(e) => panic!("Expected ParseError, got {:?}", e),
+            Ok(_) => panic!("Should fail when a later YAML document is not a mapping"),
         }
     }
 
@@ -525,6 +618,63 @@ mod error_handling_workflows {
 
 mod parallel_loading {
     use super::*;
+
+    #[tokio::test]
+    async fn test_load_from_yaml_files_merges_multiple_documents() {
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let databases_dir = temp_dir.path().join("databases");
+        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
+
+        fs::write(
+            databases_dir.join("CLASSIC Main.yaml"),
+            concat!(
+                "CLASSIC_Info:\n",
+                "  version: \"7.31.0\"\n",
+                "---\n",
+                "CLASSIC_Interface:\n",
+                "  autoscan_text_Fallout4: \"Merged Autoscan\"\n",
+            ),
+        )
+        .expect("Failed to write main YAML");
+        fs::write(
+            databases_dir.join("CLASSIC Fallout4.yaml"),
+            concat!(
+                "Game_Info:\n",
+                "  XSE_Acronym: \"F4SE\"\n",
+                "---\n",
+                "Warnings_CRASHGEN:\n",
+                "  Warn_NOPlugins: \"Merged warning\"\n",
+            ),
+        )
+        .expect("Failed to write game YAML");
+        fs::write(
+            temp_dir.path().join("CLASSIC Ignore.yaml"),
+            concat!(
+                "CLASSIC_Ignore_Fallout4:\n",
+                "  - \"IgnoreA\"\n",
+                "---\n",
+                "CLASSIC_Ignore_Skyrim:\n",
+                "  - \"IgnoreB\"\n",
+            ),
+        )
+        .expect("Failed to write ignore YAML");
+
+        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
+
+        let config = YamlDataCore::load_from_yaml_files(
+            yaml_dirs,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .await
+        .expect("load_from_yaml_files should merge multiple documents");
+
+        assert_eq!(config.classic_version, "7.31.0");
+        assert_eq!(config.autoscan_text, "Merged Autoscan");
+        assert_eq!(config.xse_acronym, "F4SE");
+        assert_eq!(config.warn_noplugins, "Merged warning");
+        assert_eq!(config.ignore_list, vec!["IgnoreA"]);
+    }
 
     /// Test that parallel loading preserves file order
     #[tokio::test]
@@ -647,7 +797,7 @@ mod clone_debug {
         assert_eq!(cloned.xse_acronym, config.xse_acronym);
         assert_eq!(cloned.ignore_list, config.ignore_list);
         assert_eq!(cloned.game_mods_conf, config.game_mods_conf);
-        assert_eq!(cloned.suspects_error_list, config.suspects_error_list);
+        assert_eq!(cloned.suspect_error_rules, config.suspect_error_rules);
     }
 
     /// Test debug format

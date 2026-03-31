@@ -51,10 +51,10 @@ pub use logs::{LogError, LogErrorEntry, LogProcessor};
 pub use mod_ini::{DuplicateEntry, ModIniScanResult, ModIniScanner, VsyncEntry};
 pub use orchestrator::{
     CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult,
-    OrchestratorError,
+    OrchestratorError, detect_config_issues,
 };
 pub use setup::{
-    SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_vr_setting,
+    SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting,
     needs_path_detection, resolve_effective_game_version, run_combined_checks,
 };
 pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};

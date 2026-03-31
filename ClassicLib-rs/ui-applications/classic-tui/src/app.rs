@@ -3,7 +3,7 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use classic_config_core::{ClassicConfig, YamlSource};
+use classic_config_core::{ClassicConfig, YamlSource, resolve_registry_version_info};
 use classic_file_io_core::BackupManager;
 use classic_file_io_core::BackupType;
 use classic_file_io_core::LogCollector;
@@ -549,11 +549,7 @@ impl App {
         let tx = self.async_tx.clone();
         let custom_folder = self.config.paths.scan_custom.clone();
         let xse_folder = resolve_xse_folder_for_scan(&self.config);
-        let selected_game_version = if config_uses_vr_mode(&self.config) {
-            "VR".to_string()
-        } else {
-            "auto".to_string()
-        };
+        let selected_game_version = self.config.game_version.clone();
         let base_folder = std::env::current_dir().unwrap_or_default();
 
         get_runtime().spawn(async move {
@@ -1453,7 +1449,7 @@ enum BackupOperation {
 }
 
 fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
-    if let Some(xse_from_local) = xse_folder_from_local_yaml(config_uses_vr_mode(config)) {
+    if let Some(xse_from_local) = xse_folder_from_local_yaml() {
         return Some(xse_from_local);
     }
 
@@ -1463,33 +1459,29 @@ fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
         return Some(docs_root.join("F4SE"));
     }
 
-    let relative_docs = if config_uses_vr_mode(config) {
-        r"My Games\Fallout4VR"
-    } else {
-        r"My Games\Fallout4"
-    };
-    let finder = DocsPathFinder::new(relative_docs);
+    let relative_docs = resolve_selected_docs_relative_path(config);
+    let finder = DocsPathFinder::new(&relative_docs);
     finder
         .find_docs_path(None)
         .ok()
         .map(|path| path.join("F4SE"))
 }
 
-fn xse_folder_from_local_yaml(vr_mode: bool) -> Option<PathBuf> {
+fn resolve_selected_docs_relative_path(config: &ClassicConfig) -> String {
+    resolve_registry_version_info("Fallout4", &config.game_version)
+        .map(|info| format!(r"My Games\{}", info.docs_name))
+        .unwrap_or_else(|| r"My Games\Fallout4".to_string())
+}
+
+fn xse_folder_from_local_yaml() -> Option<PathBuf> {
     let local_yaml_path = YamlSource::GameLocal.path("Fallout4");
     let content = std::fs::read_to_string(local_yaml_path).ok()?;
-    parse_xse_folder_from_local_yaml(&content, vr_mode)
+    parse_xse_folder_from_local_yaml(&content)
 }
 
-fn config_uses_vr_mode(config: &ClassicConfig) -> bool {
-    config.game_version.eq_ignore_ascii_case("VR")
-}
-
-fn parse_xse_folder_from_local_yaml(content: &str, _vr_mode: bool) -> Option<PathBuf> {
+fn parse_xse_folder_from_local_yaml(content: &str) -> Option<PathBuf> {
     let docs = YamlLoader::load_from_str(content).ok()?;
     let doc = docs.first()?;
-    // GameVR_Info has been deprecated; all config now uses Game_Info.
-    // VR-specific metadata is provided by the Version Registry.
     let xse = doc["Game_Info"]["Docs_Folder_XSE"].as_str()?;
     if xse.trim().is_empty() {
         None
@@ -1850,7 +1842,7 @@ mod tests {
 Game_Info:
   Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4\F4SE
 "#;
-        let parsed = super::parse_xse_folder_from_local_yaml(yaml, false);
+        let parsed = super::parse_xse_folder_from_local_yaml(yaml);
         assert_eq!(
             parsed,
             Some(PathBuf::from(
@@ -1860,13 +1852,12 @@ Game_Info:
     }
 
     #[test]
-    fn parse_xse_folder_from_local_yaml_vr_mode_uses_game_info() {
-        // Even in VR mode, we now read from Game_Info (GameVR_Info is deprecated)
+    fn parse_xse_folder_from_local_yaml_reads_registry_backed_vr_path() {
         let yaml = r#"
 Game_Info:
   Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4VR\F4SE
 "#;
-        let parsed = super::parse_xse_folder_from_local_yaml(yaml, true);
+        let parsed = super::parse_xse_folder_from_local_yaml(yaml);
         assert_eq!(
             parsed,
             Some(PathBuf::from(

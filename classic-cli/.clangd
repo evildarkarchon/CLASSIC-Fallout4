@@ -1,0 +1,14 @@
+CompileFlags:
+  CompilationDatabase: build/
+  Remove:
+    - /Ob*
+    - /Fd*
+    - /Fo*
+    - /Fp*
+    - /FS
+    - /MP
+    - /nologo
+    - /GL
+    - /Gy
+    - /guard:*
+    - /FC

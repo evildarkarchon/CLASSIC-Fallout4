@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-03-06T06:47:30.497538+00:00`
-- Tier-1 contract rows: **60**
-- Tier-1 matched: **60**
+- Generated: `2026-03-30T12:22:08.744654+00:00`
+- Tier-1 contract rows: **59**
+- Tier-1 matched: **59**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **292**
+- Total gaps (Tier-1 + Tier-2): **294**
 
 ## Tier-1 Contract Evaluation
 
@@ -28,7 +28,6 @@
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `classic_config.YamlSource.display_name` | `matched` |
 | `config-yaml-source-display-name-with-game` | `config` | `YamlSource` | `classic_config.YamlSource.display_name_with_game` | `matched` |
 | `scanlog-logparser-class` | `scanlog` | `LogParser` | `classic_scanlog.LogParser` | `matched` |
-| `scanlog-logparser-parse-segments` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.parse_segments` | `matched` |
 | `scanlog-logparser-extract-formids` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.extract_formids` | `matched` |
 | `scanlog-logparser-extract-plugins` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.extract_plugins` | `matched` |
 | `scanlog-logparser-detect-vr` | `scanlog` | `detect_vr_log` | `classic_scanlog.LogParser.detect_vr_log` | `matched` |
@@ -78,8 +77,8 @@
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
 | `scanlog` | 0 | 231 |
-| `config` | 0 | 18 |
+| `config` | 0 | 28 |
 | `version_registry` | 0 | 35 |
-| `aux` | 0 | 8 |
+| `aux` | 0 | 0 |
 
 Detailed per-gap diagnostics are in `parity_diff_report.json`.

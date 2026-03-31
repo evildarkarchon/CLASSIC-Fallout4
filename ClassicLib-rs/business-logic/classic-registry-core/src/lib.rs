@@ -45,17 +45,18 @@ pub use registry::{clear_all, get, is_registered, register, unregister};
 
 // Convenience functions matching Python API
 pub use registry::{
-    get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_vr, get_yaml_cache,
-    is_gui_mode, set_game,
+    get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode,
+    set_game,
 };
+
+// Application directory override for binding scenarios
+pub use registry::{get_application_dir, set_application_dir};
 
 // New version-aware convenience functions
 pub use registry::{get_game_version, is_version_auto_detected};
 
 // Additional convenience functions
-pub use registry::{
-    get_config_suffix, get_game_version_string, is_enb_present, is_vr_version, is_xse_valid,
-};
+pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};
 
 #[cfg(test)]
 mod tests {
@@ -116,6 +117,13 @@ mod tests {
         let test_path = PathBuf::from("/test/path");
         register(Keys::LOCAL_DIR, test_path.clone());
         assert_eq!(get_local_dir(), test_path);
+
+        // Test application_dir override
+        clear_all();
+        assert_eq!(get_application_dir(), None);
+        let app_path = PathBuf::from("/my/app");
+        set_application_dir(app_path.clone());
+        assert_eq!(get_application_dir(), Some(app_path));
     }
 
     #[test]

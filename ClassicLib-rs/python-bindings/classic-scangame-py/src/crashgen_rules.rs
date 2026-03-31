@@ -1,6 +1,7 @@
 use classic_crashgen_settings_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
+    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
+    TargetValueType,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
@@ -126,6 +127,9 @@ pub fn parse_settings_rules(value: &Bound<'_, PyAny>) -> Option<CrashgenSettings
             let kind = get_opt_str(&action_map, "kind")
                 .and_then(|v| PreflightActionKind::parse(&v))
                 .unwrap_or(PreflightActionKind::Notice);
+            let bucket = get_opt_str(&action_map, "bucket")
+                .and_then(|v| RuleReportBucket::parse(&v))
+                .unwrap_or_default();
             let severity = get_opt_str(&action_map, "severity")
                 .and_then(|v| RuleSeverity::parse(&v))
                 .unwrap_or(RuleSeverity::Info);
@@ -137,6 +141,7 @@ pub fn parse_settings_rules(value: &Bound<'_, PyAny>) -> Option<CrashgenSettings
                 when,
                 action: PreflightAction {
                     kind,
+                    bucket,
                     severity,
                     message,
                     fix,

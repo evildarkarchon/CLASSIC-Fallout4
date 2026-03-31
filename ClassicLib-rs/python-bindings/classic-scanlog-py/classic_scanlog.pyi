@@ -174,7 +174,7 @@ class FormIDAnalyzerCore:
         crashgen_name: str,
         important_mods: dict[str, str],
         mods_single: dict[str, str],
-        mods_double: dict[str, str],
+        mods_double: list[dict[str, str | None]],
     ) -> None:
         """Create FormID analyzer core.
 
@@ -183,7 +183,8 @@ class FormIDAnalyzerCore:
             crashgen_name: Name of the crash generator (e.g., "Buffout 4")
             important_mods: Dictionary of important/problematic plugins
             mods_single: Single-pass mod detection database
-            mods_double: Double-pass mod detection database
+            mods_double: List of mod conflict entry dicts with keys:
+                mod_a, mod_b, name_a, name_b, description, fix, link (optional)
 
         """
 
@@ -317,9 +318,6 @@ class LogParser:
     def clear_caches(self) -> None:
         """Clear all caches to free memory."""
 
-    def parse_segments(self, lines: list[str]) -> list[list[str]]:
-        """Parse log into segments using SIMD-optimized boundary detection."""
-
     def parse_segments_parallel(
         self, lines: list[str], chunk_size: int | None = None
     ) -> list[list[str]]:
@@ -355,8 +353,6 @@ class LogParser:
     def parse_complete(
         self,
         lines: list[str],
-        segment_boundaries: list[tuple[str, str]],
-        xse_acronym: str,
     ) -> ScanOutput:
         """Optimized batch operation: complete log analysis in single FFI call.
 
@@ -848,17 +844,6 @@ class Orchestrator:
 
         """
 
-    def detect_folon(self, plugins: dict[str, str]) -> bool:
-        """Detect if FOLON (Fallout: London) is loaded based on plugins.
-
-        Args:
-            plugins: Dictionary of plugin names to data
-
-        Returns:
-            True if londonworldspace.esm is detected
-
-        """
-
 class AnalysisConfig:
     """Analysis configuration.
 
@@ -882,17 +867,13 @@ class AnalysisConfig:
     fcx_mode: bool  # FCX mode enabled
     simplify_logs: bool  # Whether to simplify logs
     remove_list: list[str]  # Strings to remove when simplifying
-    suspects_error: dict[str, str]
-    suspects_stack: dict[str, list[str]]
-    mods_core: dict[str, str]
-    mods_freq: dict[str, str]
-    mods_conf: dict[str, str]
-    mods_solu: dict[str, str]
-    mods_opc2: dict[str, str]
-    mods_core_folon: dict[str, str]  # FOLON-specific mods
+    suspect_error_rules: list[dict[str, Any]]
+    suspect_stack_rules: list[dict[str, Any]]
+    mods_core: list[dict[str, str | None]]
+    mods_freq: list[dict[str, Any]]
+    mods_conf: list[dict[str, str | None]]
+    mods_solu: list[dict[str, Any]]
     classic_records_list: list[str]  # Named records to scan
-    crashgen_ignore: list[str]  # Settings to ignore during validation
-
     def __init__(self, game: str, game_version: str = "auto") -> None:
         """Create analysis config.
 
@@ -1331,19 +1312,6 @@ class ParallelReportProcessor:
         """Create parallel processor."""
 
     @staticmethod
-    def process_batch(reports: list[list[str]], processor_fn: Any) -> list[list[str]]:
-        """Process multiple reports in parallel.
-
-        Args:
-            reports: List of report fragments (each is a list of strings)
-            processor_fn: Processing function to apply
-
-        Returns:
-            List of processed report fragments
-
-        """
-
-    @staticmethod
     def combine_fragments(fragments: list[ReportFragment]) -> ReportFragment:
         """Combine multiple report fragments in parallel.
 
@@ -1465,14 +1433,15 @@ def detect_mods_single(
     """
 
 def detect_mods_double(
-    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]
+    entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str]
 ) -> list[str]:
-    """Detect mods using double-pass algorithm.
+    """Detect conflicting mod pairs from structured conflict entries.
 
-    More accurate detection using two-stage matching for conflict detection.
+    Checks if both mods from any conflict entry are present in the plugin list.
 
     Args:
-        yaml_dict: Mod conflict database dictionary {mod1+mod2: warning_message}
+        entries: List of mod conflict entry dicts with keys:
+            mod_a, mod_b, name_a, name_b, description, fix, link (optional)
         crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
 
     Returns:
@@ -1481,9 +1450,9 @@ def detect_mods_double(
     """
 
 def detect_mods_important(
-    yaml_dict: dict[str, str],
+    entries: list[dict[str, str | None]],
     crashlog_plugins: dict[str, str],
-    gpu_rival: str | None = None,
+    user_gpu: str | None = None,
     xse_modules: set[str] = ...,
 ) -> list[str]:
     """Detect important mods (core mods, framework mods).
@@ -1491,9 +1460,9 @@ def detect_mods_important(
     Prioritizes detection of essential mods that affect stability.
 
     Args:
-        yaml_dict: Important mods database dictionary {mod_signature: warning_message}
+        entries: List of core mod entry dicts with keys: detect, name, description, gpu (optional)
         crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
-        gpu_rival: Optional GPU vendor filter ("nvidia" or "amd")
+        user_gpu: Optional GPU vendor the user has ("nvidia", "amd", "intel")
         xse_modules: Set of XSE module names for additional checking
 
     Returns:
@@ -1522,24 +1491,18 @@ def detect_mods_batch(
 # =============================================================================
 
 class SuspectScanner:
-    """Suspect pattern matching with signal modifiers (40x speedup).
-
-    Supports three pattern modifier types:
-    - ME-REQ: Main error required (must match in main error)
-    - ME-OPT: Main error optional (bonus if in main error)
-    - NOT: Negative pattern (excludes if matched)
-    """
+    """Suspect pattern matching using structured crash suspect rules."""
 
     def __init__(
         self,
-        suspects_error_list: dict[str, str],
-        suspects_stack_list: dict[str, list[str]],
+        suspect_error_rules: list[dict[str, Any]],
+        suspect_stack_rules: list[dict[str, Any]],
     ) -> None:
         """Create suspect scanner.
 
         Args:
-            suspects_error_list: Dictionary mapping error patterns to descriptions
-            suspects_stack_list: Dictionary mapping stack patterns to descriptions
+            suspect_error_rules: Structured main-error suspect rules
+            suspect_stack_rules: Structured stack suspect rules
 
         """
 
@@ -1881,10 +1844,11 @@ class FcxModeHandler:
         """
 
     def check_fcx_mode(self) -> None:
-        """Check and update FCX mode state by calling Python code.
+        """Check and update FCX mode state with Rust core checks.
 
-        This method imports Python modules and runs file checks,
-        then stores the results in the handler.
+        This method loads the current CLASSIC configuration, runs the
+        corresponding Rust setup/config checks, and stores the results
+        in the handler.
 
         IMPORTANT: This method assumes game paths have already been generated
         via game_generate_paths() before being called.

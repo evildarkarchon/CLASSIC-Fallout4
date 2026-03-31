@@ -4,10 +4,13 @@
 //! while leveraging Rust's performance optimizations.
 
 use crate::error::{Result, ScanLogError};
+use classic_config_core::{
+    CoreModEntry, CoreModExclude, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
+};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 /// Convert IndexMap keys to lowercase, preserving insertion order
 fn convert_indexmap_to_lowercase(data: &IndexMap<String, String>) -> IndexMap<String, String> {
@@ -48,6 +51,28 @@ fn validate_warning(mod_name: &str, warning: &str) -> Result<()> {
         )));
     }
     Ok(())
+}
+
+fn append_found_entry(lines: &mut Vec<String>, plugin_ids: &[String], title: &str, body: &str) {
+    let plugin_list = plugin_ids
+        .iter()
+        .map(|plugin_id| format!("[{plugin_id}]"))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    lines.push(format!(
+        "**[!] FOUND : {} {}**\n\n",
+        plugin_list,
+        title.trim()
+    ));
+
+    for line in body.lines() {
+        if !line.trim().is_empty() {
+            lines.push(format!("{}  \n", line));
+        } else {
+            lines.push("  \n".to_string());
+        }
+    }
 }
 
 /// Detects known problematic or noteworthy single mods in the crash log plugin list.
@@ -170,42 +195,156 @@ pub fn detect_mods_single(
 
     // Build output lines in plugin ID sorted order
     for (plugin_id, _mod_name, mod_warning) in detected_mods {
-        let plugin_list = format!("[{}]", plugin_id);
-
-        // Build the complete entry using hybrid approach with Qt-compatible newlines
         let warning_lines: Vec<&str> = mod_warning.lines().collect();
-        if !warning_lines.is_empty() {
-            // First line (mod name) goes on the same line as FOUND header
-            let mod_name_display = warning_lines[0].trim();
-            lines.push(format!(
-                "**[!] FOUND : {} {}**\n\n",
-                plugin_list, mod_name_display
-            ));
-
-            // Remaining lines are joined with hard line breaks for single paragraph rendering
-            for line in &warning_lines[1..] {
-                if !line.trim().is_empty() {
-                    lines.push(format!("{}  \n", line));
-                } else {
-                    lines.push("  \n".to_string());
-                }
-            }
-        } else {
-            lines.push(format!("**[!] FOUND : {}**\n\n", plugin_list));
+        if warning_lines.is_empty() {
+            continue;
         }
+
+        let plugin_ids = vec![plugin_id];
+        append_found_entry(
+            &mut lines,
+            &plugin_ids,
+            warning_lines[0],
+            &warning_lines[1..].join("\n"),
+        );
     }
 
     Ok(lines)
 }
 
+fn detect_structured_mod_entries(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    let mut lines = Vec::new();
+
+    if entries.is_empty() {
+        return Ok(lines);
+    }
+
+    let crashlog_plugins_lower: Vec<(String, String)> = crashlog_plugins
+        .iter()
+        .map(|(plugin_name, plugin_id)| (plugin_name.to_lowercase(), plugin_id.clone()))
+        .collect();
+
+    let mut detected_entries: Vec<(String, usize, Vec<String>, &ModSolutionEntry)> = Vec::new();
+
+    for (yaml_index, entry) in entries.iter().enumerate() {
+        validate_warning(&entry.id, &entry.description)?;
+
+        let criterion_tokens: HashSet<String> = entry
+            .criteria
+            .values()
+            .iter()
+            .map(|value| value.to_lowercase())
+            .collect();
+
+        let matched_plugin_ids = match &entry.criteria {
+            ModSolutionCriteria::Any(criteria) => {
+                let mut matched = Vec::new();
+                for criterion in criteria {
+                    let criterion_lower = criterion.to_lowercase();
+                    if let Some((_, plugin_id)) = crashlog_plugins_lower
+                        .iter()
+                        .find(|(plugin_name, _)| plugin_name.contains(&criterion_lower))
+                        && !matched.contains(plugin_id)
+                    {
+                        matched.push(plugin_id.clone());
+                    }
+                }
+                matched
+            }
+            ModSolutionCriteria::All(criteria) => {
+                let mut matched = Vec::new();
+                let mut all_matched = true;
+                for criterion in criteria {
+                    let criterion_lower = criterion.to_lowercase();
+                    match crashlog_plugins_lower
+                        .iter()
+                        .find(|(plugin_name, _)| plugin_name.contains(&criterion_lower))
+                    {
+                        Some((_, plugin_id)) => {
+                            if !matched.contains(plugin_id) {
+                                matched.push(plugin_id.clone());
+                            }
+                        }
+                        None => {
+                            all_matched = false;
+                            break;
+                        }
+                    }
+                }
+
+                if all_matched { matched } else { Vec::new() }
+            }
+        };
+
+        if matched_plugin_ids.is_empty() {
+            continue;
+        }
+
+        let suppressed = entry.exceptions.iter().any(|exception| {
+            let exception_lower = exception.to_lowercase();
+            if criterion_tokens.contains(&exception_lower) {
+                return false;
+            }
+            crashlog_plugins_lower
+                .iter()
+                .any(|(plugin_name, _)| plugin_name.contains(&exception_lower))
+        });
+        if suppressed {
+            continue;
+        }
+
+        let mut matched_plugin_ids = matched_plugin_ids;
+        matched_plugin_ids.sort_by_key(|plugin_id| parse_plugin_id_for_sort(plugin_id));
+        let first_plugin_id = matched_plugin_ids[0].clone();
+        detected_entries.push((first_plugin_id, yaml_index, matched_plugin_ids, entry));
+    }
+
+    detected_entries.sort_by(|a, b| {
+        let sort_key_a = parse_plugin_id_for_sort(&a.0);
+        let sort_key_b = parse_plugin_id_for_sort(&b.0);
+        sort_key_a.cmp(&sort_key_b).then(a.1.cmp(&b.1))
+    });
+
+    for (_first_plugin_id, _yaml_index, matched_plugin_ids, entry) in detected_entries {
+        append_found_entry(
+            &mut lines,
+            &matched_plugin_ids,
+            &entry.name,
+            &entry.description,
+        );
+    }
+
+    Ok(lines)
+}
+
+/// Detect structured `Mods_FREQ` entries against the installed plugin list.
+pub(crate) fn detect_mods_freq(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    detect_structured_mod_entries(entries, crashlog_plugins)
+}
+
+/// Detect structured `Mods_SOLU` entries against the installed plugin list.
+pub(crate) fn detect_mods_solutions(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    detect_structured_mod_entries(entries, crashlog_plugins)
+}
+
 /// Detects conflicting mod combinations where two specific mods cause problems together.
 ///
 /// This function identifies known problematic mod pairs by checking if both mods from a
-/// conflict definition are present in the crash log plugins. Conflict pairs are defined
-/// in the YAML database using the format "ModA | ModB" as the key.
+/// conflict definition are present in the crash log plugins. Each conflict entry carries
+/// structured fields (identifiers, display names, description, fix, optional link) so the
+/// output is formatted consistently by code rather than stored as freeform text.
 ///
 /// The detection process:
-/// 1. Parses mod pair definitions from the YAML dictionary
+/// 1. Collects all unique mod identifiers from the conflict entries
 /// 2. Builds a single regex pattern for all unique mod names
 /// 3. Scans plugins to find which mods are present
 /// 4. Checks if both mods from any conflict pair are installed
@@ -213,7 +352,7 @@ pub fn detect_mods_single(
 ///
 /// # Arguments
 ///
-/// * `yaml_dict` - HashMap of mod pair patterns ("ModA | ModB") to warning text
+/// * `entries` - Slice of `ModConflictEntry` conflict pair definitions
 /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from crash log
 ///   (preserves load order for deterministic matching)
 ///
@@ -222,14 +361,14 @@ pub fn detect_mods_single(
 /// Returns `Ok(Vec<String>)` containing formatted caution messages for each detected conflict.
 /// Each conflict report includes:
 /// - "[!] CAUTION : Conflicting mods detected" header
-/// - Detailed warning text explaining the conflict
+/// - Display names of the conflicting mods
+/// - Description and fix text
+/// - Optional link
 /// - Empty vector if no conflicts detected
 ///
 /// # Errors
 ///
-/// Returns `Err(ScanLogError)` if:
-/// - A conflict pair has empty warning text (database configuration error)
-/// - Regex compilation fails for pattern matching
+/// Returns `Err(ScanLogError)` if regex compilation fails for pattern matching.
 ///
 /// # Performance
 ///
@@ -241,56 +380,48 @@ pub fn detect_mods_single(
 ///
 /// ```rust
 /// use classic_scanlog_core::mod_detector::detect_mods_double;
+/// use classic_config_core::ModConflictEntry;
 /// use indexmap::IndexMap;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let mut yaml_dict = IndexMap::new();
-/// yaml_dict.insert(
-///     "modA | modB".to_string(),
-///     "These two mods conflict and will cause crashes!".to_string()
-/// );
+/// let entries = vec![ModConflictEntry {
+///     mod_a: "modA".to_string(),
+///     mod_b: "modB".to_string(),
+///     name_a: "Mod A".to_string(),
+///     name_b: "Mod B".to_string(),
+///     description: "These two mods conflict!".to_string(),
+///     fix: "Remove one of them.".to_string(),
+///     link: None,
+/// }];
 ///
 /// let mut plugins = IndexMap::new();
 /// plugins.insert("ModA.esp".to_string(), "12".to_string());
 /// plugins.insert("ModB.esp".to_string(), "13".to_string());
 ///
-/// let report = detect_mods_double(yaml_dict, plugins)?;
+/// let report = detect_mods_double(&entries, plugins)?;
 ///
 /// assert!(!report.is_empty()); // Conflict should be detected
 /// # Ok(())
 /// # }
 /// ```
 pub fn detect_mods_double(
-    yaml_dict: IndexMap<String, String>,
+    entries: &[ModConflictEntry],
     crashlog_plugins: IndexMap<String, String>,
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
-    // IndexMap preserves YAML key order for Python parity
-    let yaml_dict_lower = convert_indexmap_to_lowercase(&yaml_dict);
-    // IndexMap preserves load order for deterministic matching
+
+    if entries.is_empty() {
+        return Ok(lines);
+    }
+
     let crashlog_plugins_lower = convert_indexmap_to_lowercase(&crashlog_plugins);
 
-    // Build a set of all unique mod names from the pairs, preserving YAML order for conflict checking
     let mut all_mod_names: HashSet<String> = HashSet::new();
-    // IndexMap preserves YAML order for conflict reporting
-    let mut mod_pairs_map: IndexMap<(String, String), String> = IndexMap::new();
-
-    for (mod_pair, mod_warning) in yaml_dict_lower.iter() {
-        let parts: Vec<&str> = mod_pair.split(" | ").collect();
-        if parts.len() == 2 {
-            let mod1 = parts[0].to_string();
-            let mod2 = parts[1].to_string();
-            all_mod_names.insert(mod1.clone());
-            all_mod_names.insert(mod2.clone());
-            mod_pairs_map.insert((mod1, mod2), mod_warning.clone());
-        }
+    for entry in entries {
+        all_mod_names.insert(entry.mod_a.to_lowercase());
+        all_mod_names.insert(entry.mod_b.to_lowercase());
     }
 
-    if all_mod_names.is_empty() {
-        return Ok(vec![]);
-    }
-
-    // Create a single regex pattern to find all mods in one pass
     let mod_patterns: Vec<String> = all_mod_names
         .iter()
         .map(|mod_name| regex::escape(mod_name))
@@ -298,7 +429,6 @@ pub fn detect_mods_double(
     let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
         .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
-    // Find which mods are present in the plugins
     let mut mods_present: HashSet<String> = HashSet::new();
     for plugin_name in crashlog_plugins_lower.keys() {
         for mat in combined_pattern.find_iter(plugin_name) {
@@ -306,16 +436,22 @@ pub fn detect_mods_double(
         }
     }
 
-    // Check for conflicting pairs in YAML order for Python parity
-    for ((mod1, mod2), mod_warning) in &mod_pairs_map {
-        if mods_present.contains(mod1) && mods_present.contains(mod2) {
-            validate_warning(&format!("{} | {}", mod1, mod2), mod_warning)?;
+    for entry in entries {
+        let a_lower = entry.mod_a.to_lowercase();
+        let b_lower = entry.mod_b.to_lowercase();
+
+        if mods_present.contains(&a_lower) && mods_present.contains(&b_lower) {
             lines.push("[!] CAUTION : Conflicting mods detected\n".to_string());
-            lines.push(mod_warning.clone());
-            if !mod_warning.ends_with('\n') {
-                lines.push("\n".to_string());
+            lines.push(format!(
+                "{} ❌ CONFLICTS WITH : {}\n",
+                entry.name_a, entry.name_b
+            ));
+            lines.push(format!("    {}\n", entry.description));
+            lines.push(format!("    {}\n", entry.fix));
+            if let Some(link) = &entry.link {
+                lines.push(format!("    Link: {}\n", link));
             }
-            lines.push("\n".to_string());
+            lines.push("    -----\n\n".to_string());
         }
     }
 
@@ -333,6 +469,10 @@ pub fn detect_mods_double(
 /// may not have traditional plugin files but still provide functionality through script
 /// extender plugins.
 ///
+/// Entries with `exclude_when` conditions are evaluated against the plugin list and skipped
+/// when the condition is met (e.g., FOLON plugins present). Entries with a `gpu` field are
+/// compared against `user_gpu` for GPU-specific behavior.
+///
 /// The report includes:
 /// - ✔️ Installed recommended mods (green checkmarks)
 /// - ❌ Missing recommended mods with installation instructions (red X marks)
@@ -340,128 +480,112 @@ pub fn detect_mods_double(
 ///
 /// # Arguments
 ///
-/// * `yaml_dict` - HashMap of important mod patterns ("mod_id | Mod Name") to recommendation text
-/// * `crashlog_plugins` - HashMap of plugin names to load order IDs from crash log
-/// * `gpu_rival` - Optional GPU vendor name for compatibility checking (e.g., "nvidia", "amd")
+/// * `entries` - Structured core mod entries from `Mods_CORE` YAML section
+/// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from crash log
+/// * `user_gpu` - Optional GPU vendor the user has (e.g., "nvidia", "amd")
 /// * `xse_modules` - Set of XSE module/DLL names from the script extender
 ///
 /// # Returns
 ///
-/// Returns `Ok(Vec<String>)` containing a formatted report with:
-/// - "### Checking for Important Mods" header
-/// - Status indicators for each important mod (✔️/❌/❓)
-/// - Installation instructions for missing mods
-/// - GPU compatibility warnings where applicable
+/// Returns `Ok(Vec<String>)` containing a formatted report with status indicators for
+/// each important mod (✔️/❌/❓), installation instructions for missing mods, and GPU
+/// compatibility warnings where applicable.
 ///
 /// # Errors
 ///
 /// Returns `Err(ScanLogError)` if regex pattern compilation fails.
-///
-/// # Performance
-///
-/// - Pre-compiled patterns for efficient matching
-/// - Single pass through plugins and modules
-/// - Typical processing: 5-10ms for 50 important mods
-///
-/// # Example
-///
-/// ```rust
-/// use classic_scanlog_core::mod_detector::detect_mods_important;
-/// use std::collections::HashSet;
-/// use indexmap::IndexMap;
-///
-/// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let mut yaml_dict = IndexMap::new();
-/// yaml_dict.insert(
-///     "enginefixes | Engine Fixes".to_string(),
-///     "Highly recommended for stability!".to_string()
-/// );
-///
-/// let mut plugins = IndexMap::new();
-/// plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-///
-/// let xse_modules = HashSet::new();
-///
-/// let report = detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules)?;
-/// # Ok(())
-/// # }
-/// ```
 pub fn detect_mods_important(
-    yaml_dict: IndexMap<String, String>,
-    crashlog_plugins: IndexMap<String, String>,
-    gpu_rival: Option<&str>,
-    xse_modules: HashSet<String>,
+    entries: &[CoreModEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+    user_gpu: Option<&str>,
+    xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    // Don't add header here - let the orchestrator add it if there's content
     let mut lines = Vec::new();
 
-    // Convert plugin names to lowercase once
     let plugin_names_lower: Vec<String> =
         crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
+    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
     let plugins_text = plugin_names_lower.join(" ");
 
-    // Convert XSE module names to lowercase
     let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
     let modules_text = module_names_lower.join(" ");
 
-    // Combined text for matching against both plugins and XSE modules
     let all_text = format!("{} {}", plugins_text, modules_text);
 
-    // Build patterns for all mod IDs
-    let mut mod_patterns: HashMap<String, Regex> = HashMap::new();
-    for mod_entry in yaml_dict.keys() {
-        let parts: Vec<&str> = mod_entry.split(" | ").collect();
-        if parts.len() == 2 {
-            let mod_id = parts[0];
-            let pattern = Regex::new(&format!("(?i){}", regex::escape(&mod_id.to_lowercase())))
-                .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
-            mod_patterns.insert(mod_entry.clone(), pattern);
-        }
-    }
-
-    // Iterate in YAML key order (IndexMap preserves insertion order for Python parity)
-    for (mod_entry, mod_warning) in yaml_dict.iter() {
-        let parts: Vec<&str> = mod_entry.split(" | ").collect();
-        if parts.len() != 2 {
+    for entry in entries {
+        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
             continue;
         }
 
-        let mod_display_name = parts[1];
+        let pattern = Regex::new(&format!(
+            "(?i){}",
+            regex::escape(&entry.detect.to_lowercase())
+        ))
+        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
-        let mod_found = mod_patterns
-            .get(mod_entry)
-            .map(|pattern| pattern.is_match(&all_text))
-            .unwrap_or(false);
+        let mod_found = pattern.is_match(&all_text);
+
+        // gpu_mismatch: entry is for a specific GPU that the user does NOT have
+        let gpu_mismatch = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug)));
+
+        // gpu_matches_user: entry is for a specific GPU that the user DOES have
+        let gpu_matches_user = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug)));
 
         if mod_found {
-            // Mod is installed
-            if let Some(gpu) = gpu_rival {
-                if mod_warning.to_lowercase().contains(gpu) {
-                    // GPU mismatch warning (e.g., NVIDIA mod installed but user has AMD)
-                    lines.push(format!(
-                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n",
-                        mod_display_name,
-                        gpu.to_uppercase()
-                    ));
-                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n".to_string());
+            if gpu_mismatch {
+                if let Some(ref warning) = entry.gpu_mismatch_warning {
+                    let warning_md = warning.trim_end().replace('\n', "\n\n");
+                    lines.push(format!("❓ {}\n\n", warning_md));
                 } else {
-                    lines.push(format!("✔️ {} is installed!\n\n", mod_display_name));
+                    let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
+                    lines.push(format!(
+                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
+                        entry.name, gpu_label
+                    ));
+                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
                 }
             } else {
-                lines.push(format!("✔️ {} is installed!\n\n", mod_display_name));
+                lines.push(format!("✔️ {} is installed!\n\n", entry.name));
             }
-        } else if let Some(gpu) = gpu_rival {
-            // Mod not installed - show warning if gpu_rival is set and mod is NOT for the rival GPU
-            // (i.e., show "not installed" for non-GPU mods and for mods matching user's GPU)
-            if !mod_warning.is_empty() && !mod_warning.to_lowercase().contains(gpu) {
-                lines.push(format!("❌ {} is not installed!\n", mod_display_name));
-                lines.push(mod_warning.to_string());
-                lines.push("\n\n".to_string());
+        } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
+            // Show "not installed" for universal mods and mods matching the user's GPU
+            if !entry.description.is_empty() {
+                let desc_lines: Vec<&str> = entry.description.trim_end().lines().collect();
+                let first_line = desc_lines.first().map(|s| s.trim()).unwrap_or("");
+
+                lines.push(format!(
+                    "❌ {} is not installed! {}  \n",
+                    entry.name, first_line
+                ));
+
+                for line in desc_lines.iter().skip(1) {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() {
+                        lines.push(format!("{}  \n", trimmed));
+                    }
+                }
+                lines.push("\n".to_string());
             }
         }
     }
 
     Ok(lines)
+}
+
+/// Checks whether a `CoreModExclude` condition is met by the current plugin list.
+fn is_excluded(exclude: &Option<CoreModExclude>, plugin_names_lower: &HashSet<String>) -> bool {
+    match exclude {
+        Some(CoreModExclude::PluginAny(required_plugins)) => required_plugins
+            .iter()
+            .any(|p| plugin_names_lower.contains(&p.to_lowercase())),
+        None => false,
+    }
 }
 
 /// Detects single mods across multiple crash logs in parallel using Rayon.
@@ -628,6 +752,7 @@ pub fn detect_mods_batch(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
 
     // ============================================
     // Helper function tests
@@ -770,110 +895,275 @@ mod tests {
         assert!(output.contains("Mod Extended") || output.contains("modextended"));
     }
 
+    #[test]
+    fn test_detect_mods_freq_any_match() {
+        let entries = vec![make_solution_entry(
+            "freq-test",
+            ModSolutionCriteria::Any(vec!["FreqMod".to_string(), "FallbackToken".to_string()]),
+            vec![],
+            "Frequent Mod",
+            "This mod can frequently crash the game.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("FreqMod.esp".to_string(), "06".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [06] Frequent Mod"));
+        assert!(output.contains("frequently crash the game"));
+    }
+
+    #[test]
+    fn test_detect_mods_freq_all_requires_every_criterion() {
+        let entries = vec![make_solution_entry(
+            "freq-all",
+            ModSolutionCriteria::All(vec!["LooksMenu".to_string(), "CBBE".to_string()]),
+            vec![],
+            "Combined Setup",
+            "Only report when both mods are installed.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("LooksMenu.esp".to_string(), "07".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_freq_exception_suppresses_match() {
+        let entries = vec![make_solution_entry(
+            "freq-exception",
+            ModSolutionCriteria::Any(vec!["ProblematicMod".to_string()]),
+            vec!["PatchForProblematicMod"],
+            "Problematic Mod",
+            "Skip this warning when the patch is installed.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("ProblematicMod.esp".to_string(), "08".to_string());
+        plugins.insert("PatchForProblematicMod.esp".to_string(), "09".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    // ============================================
+    // detect_mods_solutions tests
+    // ============================================
+
+    fn make_solution_entry(
+        id: &str,
+        criteria: ModSolutionCriteria,
+        exceptions: Vec<&str>,
+        name: &str,
+        description: &str,
+    ) -> ModSolutionEntry {
+        ModSolutionEntry {
+            id: id.to_string(),
+            criteria,
+            exceptions: exceptions.into_iter().map(str::to_string).collect(),
+            name: name.to_string(),
+            description: description.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_any_match() {
+        let entries = vec![make_solution_entry(
+            "high-resolution-dlc",
+            ModSolutionCriteria::Any(vec![
+                "DLCUltraHighResolution".to_string(),
+                "HighResPack".to_string(),
+            ]),
+            vec![],
+            "High Resolution DLC",
+            "Disable the official texture pack.\nIt causes crashes and stutter.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("DLCUltraHighResolution.esp".to_string(), "01".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [01] High Resolution DLC"));
+        assert!(output.contains("Disable the official texture pack."));
+        assert!(output.contains("It causes crashes and stutter."));
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_all_requires_every_criterion() {
+        let entries = vec![make_solution_entry(
+            "bodyslide-patch",
+            ModSolutionCriteria::All(vec!["LooksMenu".to_string(), "CBBE".to_string()]),
+            vec![],
+            "BodySlide Patch",
+            "Install the compatibility patch.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("LooksMenu.esp".to_string(), "02".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_exception_suppresses_match() {
+        let entries = vec![make_solution_entry(
+            "ebf-redux",
+            ModSolutionCriteria::Any(vec!["EveryonesBestFriend".to_string()]),
+            vec!["UFO4P"],
+            "Everyone's Best Friend",
+            "Install the compatibility patch.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("EveryonesBestFriend.esp".to_string(), "03".to_string());
+        plugins.insert("UFO4P.esp".to_string(), "04".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_ignores_exception_identical_to_criterion() {
+        let entries = vec![make_solution_entry(
+            "overlap-safe",
+            ModSolutionCriteria::Any(vec!["OverlapMod".to_string()]),
+            vec!["OverlapMod"],
+            "Overlap Mod",
+            "Still report the mod when exception equals the criterion.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("OverlapMod.esp".to_string(), "05".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [05] Overlap Mod"));
+        assert!(output.contains("Still report the mod"));
+    }
+
     // ============================================
     // detect_mods_double tests
     // ============================================
 
+    fn make_conflict(mod_a: &str, mod_b: &str) -> ModConflictEntry {
+        ModConflictEntry {
+            mod_a: mod_a.to_string(),
+            mod_b: mod_b.to_string(),
+            name_a: format!("Mod {}", mod_a),
+            name_b: format!("Mod {}", mod_b),
+            description: "These mods conflict!".to_string(),
+            fix: "Remove one of them.".to_string(),
+            link: None,
+        }
+    }
+
     #[test]
     fn test_detect_mods_double_empty() {
-        let yaml_dict: IndexMap<String, String> = IndexMap::new();
+        let entries: Vec<ModConflictEntry> = Vec::new();
         let plugins: IndexMap<String, String> = IndexMap::new();
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_detect_mods_double_no_conflict() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "moda | modb".to_string(),
-            "These mods conflict!".to_string(),
-        );
+        let entries = vec![make_conflict("moda", "modb")];
 
         let mut plugins = IndexMap::new();
         plugins.insert("ModA.esp".to_string(), "10".to_string());
-        // ModB is NOT present
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_detect_mods_double_conflict_detected() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "moda | modb".to_string(),
-            "These mods conflict and cause crashes!".to_string(),
-        );
+        let entries = vec![make_conflict("moda", "modb")];
 
         let mut plugins = IndexMap::new();
         plugins.insert("ModA.esp".to_string(), "10".to_string());
         plugins.insert("ModB.esp".to_string(), "11".to_string());
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(!result.is_empty());
         let output = result.join("");
         assert!(output.contains("CAUTION"));
-        assert!(output.contains("conflict"));
+        assert!(output.contains("CONFLICTS WITH"));
     }
 
     #[test]
     fn test_detect_mods_double_case_insensitive() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert("moda | modb".to_string(), "Conflict warning.".to_string());
+        let entries = vec![make_conflict("moda", "modb")];
 
         let mut plugins = IndexMap::new();
         plugins.insert("MODA.esp".to_string(), "10".to_string());
         plugins.insert("MODB.esp".to_string(), "11".to_string());
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        let result = detect_mods_double(&entries, plugins).unwrap();
         assert!(!result.is_empty());
     }
 
     #[test]
-    fn test_detect_mods_double_invalid_format() {
-        let mut yaml_dict = IndexMap::new();
-        // Invalid format (no " | " separator)
-        yaml_dict.insert("modamodB".to_string(), "Invalid format.".to_string());
+    fn test_detect_mods_double_with_link() {
+        let entries = vec![ModConflictEntry {
+            mod_a: "modx".to_string(),
+            mod_b: "mody".to_string(),
+            name_a: "Mod X".to_string(),
+            name_b: "Mod Y".to_string(),
+            description: "They clash.".to_string(),
+            fix: "Get a patch.".to_string(),
+            link: Some("https://example.com/patch".to_string()),
+        }];
 
         let mut plugins = IndexMap::new();
-        plugins.insert("ModA.esp".to_string(), "10".to_string());
+        plugins.insert("ModX.esp".to_string(), "10".to_string());
+        plugins.insert("ModY.esp".to_string(), "11".to_string());
 
-        let result = detect_mods_double(yaml_dict, plugins).unwrap();
-        // Should not detect anything with invalid format
-        assert!(result.is_empty());
+        let result = detect_mods_double(&entries, plugins).unwrap();
+        let output = result.join("");
+        assert!(output.contains("https://example.com/patch"));
     }
 
     // ============================================
     // detect_mods_important tests
     // ============================================
 
+    fn make_core_entry(detect: &str, name: &str, desc: &str) -> CoreModEntry {
+        CoreModEntry {
+            detect: detect.to_string(),
+            name: name.to_string(),
+            description: desc.to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        }
+    }
+
     #[test]
     fn test_detect_mods_important_empty() {
-        let yaml_dict: IndexMap<String, String> = IndexMap::new();
+        let entries: Vec<CoreModEntry> = vec![];
         let plugins: IndexMap<String, String> = IndexMap::new();
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
-        // With empty inputs and no plugin-based mods installed, section is empty
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_detect_mods_important_installed() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "enginefixes.esp | Engine Fixes".to_string(),
-            "Highly recommended for stability.".to_string(),
-        );
+        let entries = vec![make_core_entry(
+            "enginefixes.esp",
+            "Engine Fixes",
+            "Highly recommended for stability.",
+        )];
 
         let mut plugins = IndexMap::new();
         plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("✔️"));
         assert!(output.contains("Engine Fixes"));
@@ -882,50 +1172,56 @@ mod tests {
 
     #[test]
     fn test_detect_mods_important_not_installed() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "enginefixes.esp | Engine Fixes".to_string(),
-            "Highly recommended for stability.".to_string(),
-        );
+        let entries = vec![make_core_entry(
+            "enginefixes.esp",
+            "Engine Fixes",
+            "Highly recommended for stability.\nLink: https://example.com/mod",
+        )];
 
         let plugins: IndexMap<String, String> = IndexMap::new();
         let xse_modules: HashSet<String> = HashSet::new();
 
-        // When gpu_rival is set and mod warning doesn't contain the GPU type,
-        // the function shows "not installed" warnings for recommended mods
-        let result = detect_mods_important(
-            yaml_dict.clone(),
-            plugins.clone(),
-            Some("nvidia"),
-            xse_modules.clone(),
-        )
-        .unwrap();
+        // user_gpu is known → "not installed" warnings are shown for universal mods
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❌"));
         assert!(output.contains("Engine Fixes"));
         assert!(output.contains("not installed"));
 
-        // When gpu_rival is None, no "not installed" warnings are shown for missing mods
-        let result_no_gpu = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        // Description text should be on the same line as the "not installed" message
+        assert!(
+            output.contains("not installed! Highly recommended"),
+            "Description should follow the not-installed message on the same line"
+        );
+
+        // Link must appear on its own line (after a hard line break)
+        assert!(
+            output.contains("  \nLink: https://example.com/mod"),
+            "Link should be on a new line via hard line break, got: {:?}",
+            output
+        );
+
+        let result_no_gpu = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         assert!(result_no_gpu.is_empty());
     }
 
     #[test]
     fn test_detect_mods_important_gpu_mismatch() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "nvidiapatch.esp | NVIDIA Patch".to_string(),
-            "For NVIDIA GPUs only!".to_string(),
-        );
+        let entries = vec![CoreModEntry {
+            detect: "nvidiapatch.esp".to_string(),
+            name: "NVIDIA Patch".to_string(),
+            description: "For NVIDIA GPUs only!".to_string(),
+            gpu: Some("nvidia".to_string()),
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        }];
 
         let mut plugins = IndexMap::new();
         plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
-
         let xse_modules: HashSet<String> = HashSet::new();
 
-        // User has AMD but NVIDIA mod is installed
-        let result =
-            detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules).unwrap();
+        // User has AMD, nvidia mod is installed → mismatch warning
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("❓"));
         assert!(output.contains("UNINSTALL"));
@@ -933,16 +1229,14 @@ mod tests {
 
     #[test]
     fn test_detect_mods_important_xse_module() {
-        let mut yaml_dict = IndexMap::new();
-        // Need at least one plugin-based mod installed for section to show
-        yaml_dict.insert(
-            "someplugin.esp | Some Plugin".to_string(),
-            "A plugin.".to_string(),
-        );
-        yaml_dict.insert(
-            "addresslib.dll | Address Library".to_string(),
-            "Required for many F4SE plugins.".to_string(),
-        );
+        let entries = vec![
+            make_core_entry("someplugin.esp", "Some Plugin", "A plugin."),
+            make_core_entry(
+                "addresslib.dll",
+                "Address Library",
+                "Required for many F4SE plugins.",
+            ),
+        ];
 
         let mut plugins = IndexMap::new();
         plugins.insert("SomePlugin.esp".to_string(), "05".to_string());
@@ -950,30 +1244,137 @@ mod tests {
         let mut xse_modules = HashSet::new();
         xse_modules.insert("AddressLibrary.dll".to_string());
 
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
         let output = result.join("");
         assert!(output.contains("✔️"));
-        // Should have at least one installed mod shown
         assert!(output.contains("installed"));
     }
 
     #[test]
     fn test_detect_mods_important_no_leading_newline_before_first_entry() {
-        let mut yaml_dict = IndexMap::new();
-        yaml_dict.insert(
-            "enginefixes.esp | Engine Fixes".to_string(),
-            "Highly recommended for stability.".to_string(),
-        );
+        let entries = vec![make_core_entry(
+            "enginefixes.esp",
+            "Engine Fixes",
+            "Highly recommended for stability.",
+        )];
 
         let mut plugins = IndexMap::new();
         plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
-
         let xse_modules: HashSet<String> = HashSet::new();
-        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
-        let output = result.join("");
 
+        let result = detect_mods_important(&entries, &plugins, None, &xse_modules).unwrap();
+        let output = result.join("");
         assert!(!output.starts_with('\n'));
         assert!(output.starts_with("✔️ "));
+    }
+
+    #[test]
+    fn test_detect_mods_important_exclude_when_plugin_any() {
+        let entries = vec![CoreModEntry {
+            detect: "UFO4P.esp".to_string(),
+            name: "Unofficial Patch".to_string(),
+            description: "Install this patch.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: Some(CoreModExclude::PluginAny(vec![
+                "LondonWorldspace.esm".to_string(),
+            ])),
+        }];
+
+        let mut plugins_without_folon = IndexMap::new();
+        plugins_without_folon.insert("SomeMod.esp".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result =
+            detect_mods_important(&entries, &plugins_without_folon, Some("amd"), &xse_modules)
+                .unwrap();
+        assert!(
+            !result.is_empty(),
+            "Entry should be shown when exclusion plugin is absent"
+        );
+
+        let mut plugins_with_folon = IndexMap::new();
+        plugins_with_folon.insert("LondonWorldspace.esm".to_string(), "01".to_string());
+
+        let result =
+            detect_mods_important(&entries, &plugins_with_folon, Some("amd"), &xse_modules)
+                .unwrap();
+        assert!(
+            result.is_empty(),
+            "Entry should be skipped when exclusion plugin is present"
+        );
+    }
+
+    #[test]
+    fn test_detect_mods_important_exclude_when_plugin_any_is_case_insensitive() {
+        let entries = vec![CoreModEntry {
+            detect: "UFO4P.esp".to_string(),
+            name: "Unofficial Patch".to_string(),
+            description: "Install this patch.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: Some(CoreModExclude::PluginAny(vec![
+                "londonworldspace.esm".to_string(),
+            ])),
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("LondonWorldspace.esm".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        assert!(
+            result.is_empty(),
+            "Entry should be skipped even when exclusion plugin casing differs"
+        );
+    }
+
+    #[test]
+    fn test_detect_mods_important_gpu_not_rival_shows_installed() {
+        let entries = vec![CoreModEntry {
+            detect: "nvidiapatch.esp".to_string(),
+            name: "NVIDIA Patch".to_string(),
+            description: "For NVIDIA GPUs only!".to_string(),
+            gpu: Some("nvidia".to_string()),
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        // User has NVIDIA, mod is for nvidia -> shows installed
+        let result =
+            detect_mods_important(&entries, &plugins, Some("nvidia"), &xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("✔️"));
+        assert!(output.contains("installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_custom_gpu_mismatch_warning() {
+        let entries = vec![CoreModEntry {
+            detect: "nvidiapatch.esp".to_string(),
+            name: "NVIDIA Patch".to_string(),
+            description: "For NVIDIA GPUs only!".to_string(),
+            gpu: Some("nvidia".to_string()),
+            gpu_mismatch_warning: Some(
+                "Custom warning: you don't have NVIDIA, remove this mod!".to_string(),
+            ),
+            exclude_when: None,
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        // User has AMD, nvidia mod is installed → custom mismatch warning
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("❓"));
+        assert!(output.contains("Custom warning: you don't have NVIDIA"));
+        assert!(!output.contains("BUT IT SEEMS"));
     }
 
     // ============================================

@@ -1,20 +1,23 @@
 # Phase 1 Engineering Handoff Map
 
-- Generated: `2026-03-06T06:47:30.499054+00:00`
-- Total gaps handed off: **101**
+- Generated: `2026-03-16T08:27:40.381169+00:00`
+- Total gaps handed off: **107**
 
 ## Squad A (scanlog/config)
 
 ### `config`
 
-- Total gaps: **21**
+- Total gaps: **24**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **21**
+- Tier 2 gaps: **24**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `ConfigError` | `-` |
+| `rust_unmapped` | `tier2` | `CoreModEntry` | `-` |
+| `rust_unmapped` | `tier2` | `CoreModExclude` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenEntryRaw` | `-` |
+| `rust_unmapped` | `tier2` | `ModConflictEntry` | `-` |
 | `rust_unmapped` | `tier2` | `format_registry_game_version` | `-` |
 | `rust_unmapped` | `tier2` | `resolve_registry_version_info` | `-` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_INTERVAL` |
@@ -37,9 +40,9 @@
 
 ### `scanlog`
 
-- Total gaps: **70**
+- Total gaps: **71**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **70**
+- Tier 2 gaps: **71**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -63,6 +66,7 @@
 | `rust_unmapped` | `tier2` | `ReportGenerator` | `-` |
 | `rust_unmapped` | `tier2` | `RustFormIDAnalyzer` | `-` |
 | `rust_unmapped` | `tier2` | `ScanLogError` | `-` |
+| `rust_unmapped` | `tier2` | `ScanProgressPhase` | `-` |
 | `rust_unmapped` | `tier2` | `SettingsValidator` | `-` |
 | `rust_unmapped` | `tier2` | `StreamingIteratorParser` | `-` |
 | `rust_unmapped` | `tier2` | `StreamingLogParser` | `-` |
@@ -118,18 +122,20 @@
 
 ### `aux`
 
-- Total gaps: **6**
+- Total gaps: **8**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **6**
+- Tier 2 gaps: **8**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `node_unmapped` | `tier2` | `-` | `JsCheckRule` |
 | `node_unmapped` | `tier2` | `-` | `JsExpectedValue` |
+| `node_unmapped` | `tier2` | `-` | `JsModConflictEntry` |
 | `node_unmapped` | `tier2` | `-` | `JsPreflightAction` |
 | `node_unmapped` | `tier2` | `-` | `JsPreflightRule` |
 | `node_unmapped` | `tier2` | `-` | `JsRuleMessages` |
 | `node_unmapped` | `tier2` | `-` | `JsRuleTarget` |
+| `node_unmapped` | `tier2` | `-` | `writeAutoscanReport` |
 
 ### `version_registry`
 

@@ -46,7 +46,6 @@ members = [
     # Phase 1 - Core Infrastructure (Python Bindings)
     "python-bindings/classic-registry-py",
     "python-bindings/classic-perf-py",
-    "python-bindings/classic-pybridge-py",
     "python-bindings/classic-settings-py",
     "python-bindings/classic-message-py",
 

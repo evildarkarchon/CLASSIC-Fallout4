@@ -1,8 +1,83 @@
 //! Python bindings for FcxModeHandler - Thin wrapper over classic-scanlog-core
 
+use classic_config_core::ClassicConfig;
+use classic_constants_core::GameId;
+use classic_scangame_core::integrity::IntegrityConfig;
+use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler};
+use classic_shared_core::get_runtime;
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
-use pyo3::types::{PyModule, PyType};
+use pyo3::types::PyType;
+
+fn load_classic_config() -> PyResult<ClassicConfig> {
+    get_runtime()
+        .block_on(ClassicConfig::load_or_default())
+        .map_err(|error| PyRuntimeError::new_err(format!("failed to load CLASSIC config: {error}")))
+}
+
+fn infer_game_id(config: &ClassicConfig) -> Option<GameId> {
+    let game_root = &config.paths.game_root;
+    if !game_root.as_os_str().is_empty() {
+        if let Some(game_id) = GameId::all()
+            .into_iter()
+            .find(|game_id| game_root.join(game_id.exe_name()).exists())
+        {
+            return Some(game_id);
+        }
+
+        if let Some(name) = game_root.file_name().and_then(|name| name.to_str())
+            && let Ok(game_id) = name.parse::<GameId>()
+        {
+            return Some(game_id);
+        }
+    }
+
+    None
+}
+
+fn build_setup_check_config(config: &ClassicConfig, game_id: GameId) -> Option<SetupCheckConfig> {
+    if config.paths.game_root.as_os_str().is_empty() {
+        return None;
+    }
+
+    Some(SetupCheckConfig {
+        integrity: IntegrityConfig::new(
+            config.paths.game_root.join(game_id.exe_name()),
+            Vec::new(),
+            game_id.as_str().to_string(),
+        ),
+        game_name: game_id.as_str().to_string(),
+        docs_path: config
+            .paths
+            .docs_root
+            .as_ref()
+            .or(config.paths.ini_folder.as_ref())
+            .map(|path| path.to_string_lossy().into_owned()),
+        xse_hashes: Vec::new(),
+    })
+}
+
+fn to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {
+    ConfigIssue::new(
+        issue.file_path.display().to_string(),
+        Some(issue.section),
+        issue.setting,
+        issue.current_value,
+        issue.recommended_value,
+        issue.description,
+        match issue.severity {
+            classic_scangame_core::IssueSeverity::Error => "error",
+            classic_scangame_core::IssueSeverity::Warning => "warning",
+            classic_scangame_core::IssueSeverity::Info => "info",
+        }
+        .to_string(),
+    )
+}
+
+fn format_detected_issues(issues: &[ConfigIssue]) -> String {
+    issues.iter().map(ConfigIssue::format_report).collect()
+}
 
 /// Python wrapper for ConfigIssue
 #[pyclass(name = "ConfigIssue")]
@@ -121,10 +196,7 @@ impl PyFcxModeHandler {
         }
     }
 
-    /// Check and update FCX mode state by calling Python code
-    ///
-    /// This method imports Python modules and runs file checks,
-    /// then stores the results in the handler.
+    /// Check and update FCX mode state using Rust core checks.
     ///
     /// Uses run-once caching via global singleton for batch scanning performance.
     /// When checks have already been run in this session, cached results are reused
@@ -133,7 +205,7 @@ impl PyFcxModeHandler {
     /// IMPORTANT: This method assumes game paths have already been generated
     /// via game_generate_paths() before being called. This should be done
     /// in the scan executor or orchestrator initialization.
-    pub fn check_fcx_mode(&mut self, py: Python<'_>) -> PyResult<()> {
+    pub fn check_fcx_mode(&mut self, _py: Python<'_>) -> PyResult<()> {
         // Use global handler for session-wide caching
         use classic_scanlog_core::GLOBAL_FCX_HANDLER;
         let mut global_handler = GLOBAL_FCX_HANDLER.lock();
@@ -163,58 +235,29 @@ impl PyFcxModeHandler {
             return Ok(());
         }
 
-        // Import and call Python code to perform the checks
-        // This is necessary because the checks require complex Python module imports
-        let setup_module = PyModule::import(py, "ClassicLib.SetupCoordinator")?;
-        let setup_coordinator_class = setup_module.getattr("SetupCoordinator")?;
-        let coordinator = setup_coordinator_class.call0()?;
+        let config = load_classic_config()?;
+        let game_id = infer_game_id(&config).ok_or_else(|| {
+            PyRuntimeError::new_err(
+                "failed to infer game id from configured game root; run path detection first",
+            )
+        })?;
 
-        // Get main files result
-        let main_result: String = coordinator
-            .call_method0("generate_combined_results")?
-            .extract()?;
+        let main_result = build_setup_check_config(&config, game_id)
+            .map(|setup_config| run_combined_checks(&setup_config).combined())
+            .unwrap_or_default();
         self.inner.set_main_files_result(main_result);
 
-        // Try to get game files result and detected issues (fallback if not available)
-        // generate_game_combined_result now returns tuple[str, list[ConfigIssue]]
-        let (game_result, detected_issues) = match PyModule::import(py, "ClassicLib.ScanGame") {
-            Ok(scan_game_module) => {
-                match scan_game_module.getattr("generate_game_combined_result") {
-                    Ok(scan_game_fn) => {
-                        // Call Python function and extract tuple
-                        match scan_game_fn.call0() {
-                            Ok(result_tuple) => {
-                                // Extract the two elements from the tuple
-                                let game_text = result_tuple
-                                    .get_item(0)
-                                    .and_then(|item| item.extract::<String>())
-                                    .unwrap_or_else(|_| {
-                                        "Game files check not available\n".to_string()
-                                    });
-
-                                let issues = result_tuple
-                                    .get_item(1)
-                                    .and_then(|item| item.extract::<Vec<PyConfigIssue>>())
-                                    .unwrap_or_else(|_| Vec::new());
-
-                                (game_text, issues)
-                            }
-                            Err(_) => ("Game files check not available\n".to_string(), Vec::new()),
-                        }
-                    }
-                    Err(_) => ("Game files check not available\n".to_string(), Vec::new()),
-                }
-            }
-            Err(_) => ("Game files check not available\n".to_string(), Vec::new()),
+        let rust_issues: Vec<ConfigIssue> = if config.paths.game_root.as_os_str().is_empty() {
+            Vec::new()
+        } else {
+            detect_config_issues(&config.paths.game_root, game_id.as_str())
+                .into_iter()
+                .map(to_scanlog_issue)
+                .collect()
         };
+        let game_result = format_detected_issues(&rust_issues);
 
         self.inner.set_game_files_result(game_result);
-
-        // Convert PyConfigIssue to ConfigIssue and set
-        let rust_issues: Vec<ConfigIssue> = detected_issues
-            .into_iter()
-            .map(|py_issue| py_issue.inner)
-            .collect();
         self.inner.set_detected_issues(rust_issues.clone());
 
         // Cache results in global handler for subsequent calls

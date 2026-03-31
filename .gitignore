@@ -325,4 +325,11 @@ qt.conf
 *.pyinstaller
 .coverage.*
 build-debug/
-.opencode/
+.opencode/*
+!.opencode/skills/
+!.opencode/skills/**
+build-*/
+# CocoIndex Code (ccc)
+/.cocoindex_code/
+!.agents/skills/
+opencode.json

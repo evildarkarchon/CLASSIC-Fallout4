@@ -58,14 +58,6 @@ impl Keys {
     /// encoding handling.
     pub const OPEN_FILE_FUNC: &'static str = "open_file_with_encoding";
 
-    /// VR game variant identifier.
-    ///
-    /// Stores the VR variant of the game (e.g., "SkyrimVR", "Fallout4VR").
-    ///
-    /// Used by `get_vr()` to check legacy VR mode. Callers that need to
-    /// distinguish game versions should prefer [`Keys::GAME_VERSION`].
-    pub const VR: &'static str = "gamevars_vr";
-
     /// Current game identifier.
     ///
     /// Stores the current game name (e.g., "Fallout4", "Skyrim").
@@ -111,6 +103,16 @@ impl Keys {
     /// current working directory or installation location.
     pub const LOCAL_DIR: &'static str = "local_dir";
 
+    /// Application directory override for settings resolution.
+    ///
+    /// When set, `classic-config-core` uses this directory instead of
+    /// `current_exe().parent()` to anchor settings and data files.
+    ///
+    /// Binding layers (Python, Node) auto-register this to `current_dir()`
+    /// at module init so settings resolve relative to the working directory
+    /// rather than the interpreter's install directory.
+    pub const APP_DIR: &'static str = "app_dir";
+
     /// Prerelease flag.
     ///
     /// Boolean flag indicating whether this is a prerelease version.
@@ -151,11 +153,11 @@ mod tests {
             Keys::DOCS_PATH,
             Keys::IS_GUI_MODE,
             Keys::OPEN_FILE_FUNC,
-            Keys::VR,
             Keys::GAME,
             Keys::GAME_VERSION,
             Keys::VERSION_AUTO_DETECTED,
             Keys::LOCAL_DIR,
+            Keys::APP_DIR,
             Keys::IS_PRERELEASE,
             Keys::XSE_VALID,
             Keys::XSE_VERSION,
@@ -178,10 +180,5 @@ mod tests {
         assert_eq!(Keys::LOCAL_DIR, "local_dir");
         assert_eq!(Keys::GAME_VERSION, "gamevars_version");
         assert_eq!(Keys::VERSION_AUTO_DETECTED, "gamevars_version_auto");
-    }
-
-    #[test]
-    fn test_vr_key_accessible() {
-        assert_eq!(Keys::VR, "gamevars_vr");
     }
 }

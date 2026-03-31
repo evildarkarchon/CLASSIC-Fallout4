@@ -176,7 +176,7 @@ impl CrashgenVersion {
     ///
     /// * `latest` - The latest non-VR version
     /// * `latest_vr` - The latest VR version
-    /// * `is_vr_mode` - Whether the game is in VR mode
+    /// * `selected_version_is_vr` - Whether the selected version is VR
     ///
     /// # Returns
     ///
@@ -205,14 +205,14 @@ impl CrashgenVersion {
         &self,
         latest: &CrashgenVersion,
         latest_vr: &CrashgenVersion,
-        is_vr_mode: bool,
+        selected_version_is_vr: bool,
     ) -> bool {
         // Port of Python logic:
         // if (version_current < version_latest_vr and version_current != version_latest) or
         //    (not game_is_vr and version_current < version_latest):
         //     # outdated
 
-        if is_vr_mode {
+        if selected_version_is_vr {
             // VR mode: Check against VR version, but allow if matches non-VR latest
             self < latest_vr && self != latest
         } else {
@@ -385,6 +385,23 @@ pub fn check_crashgen_version_status(
         .collect();
 
     detected.check_version_status(&valid)
+}
+
+/// Returns whether a crash log is using a fake Buffout 4 version for bot compatibility.
+///
+/// Addictol's bot-compatible mode can present itself as `Buffout 4` with a low semantic
+/// version so legacy report bots continue parsing the log. Real Buffout 4 versions used by
+/// CLASSIC start well above this threshold, so versions below `1.20.0` are treated as fake
+/// and skip normal Buffout version/settings validation.
+pub(crate) fn is_fake_bot_compatible_buffout_version(crashgen_version_str: &str) -> bool {
+    let normalized = crashgen_version_str.to_ascii_lowercase();
+    if !normalized.contains("buffout") {
+        return false;
+    }
+
+    CrashgenVersion::parse(crashgen_version_str)
+        .map(|version| version < CrashgenVersion::new(1, 20, 0))
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -613,5 +630,15 @@ mod tests {
 
         let status = check_crashgen_version_status("Buffout 4 v1.26.0", &["1.28.6", "1.37.0"]);
         assert_eq!(status, CrashgenVersionStatus::Outdated);
+    }
+
+    #[test]
+    fn test_is_fake_bot_compatible_buffout_version_detects_low_fake_version() {
+        assert!(is_fake_bot_compatible_buffout_version("Buffout 4 v1.1.0"));
+        assert!(is_fake_bot_compatible_buffout_version("Buffout 4 v1.19.9"));
+        assert!(!is_fake_bot_compatible_buffout_version("Buffout 4 v1.28.6"));
+        assert!(!is_fake_bot_compatible_buffout_version(
+            "Addictol v1.1.0 Feb 16 2026 08:02:06"
+        ));
     }
 }

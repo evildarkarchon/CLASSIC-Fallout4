@@ -14,8 +14,12 @@ crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
 # CLASSIC shared utilities (provides runtime)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
+# Registry (provides APP_DIR override for binding scenarios)
+classic-registry-core = { path = "../classic-registry-core" }
+
 # YAML operations (provides YamlOperations with helpers)
 classic-yaml-core = { path = "../classic-yaml-core" }
+classic-settings-core = { path = "../classic-settings-core" }
 classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
@@ -32,6 +36,7 @@ indexmap = { workspace = true }
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
+dirs = { workspace = true }
 
 # Error handling
 thiserror = { workspace = true }

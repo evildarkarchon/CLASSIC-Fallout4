@@ -39,13 +39,14 @@ An API can be promoted when all are true:
 ## Required local checks
 
 ```powershell
-uv venv
-uv pip install maturin pytest
+uv venv ClassicLib-rs/python-bindings/.venv
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
 python tools/python_api_parity/generate_baseline.py --repo-root .
 python tools/python_api_parity/generate_wave_manifest.py --repo-root .
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --fail-on-warnings
-uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
+uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
 
 ## Trigger points
@@ -57,6 +58,8 @@ Run parity maintenance when any of these change:
 - `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
 - `ClassicLib-rs/python-bindings/*-py/src/`
 - `ClassicLib-rs/python-bindings/*-py/*.pyi`
+
+For companion guidance on when Python stub refreshes align with Node declaration refreshes, see [`docs/api/binding-contract-refresh-note.md`](../../../api/binding-contract-refresh-note.md). That note supports this workflow and does not replace the Python parity gates on this page.
 
 ## Contract rules
 

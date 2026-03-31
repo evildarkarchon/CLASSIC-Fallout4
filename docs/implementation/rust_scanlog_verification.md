@@ -1,5 +1,7 @@
 # Rust Scanlog Implementation Verification
 
+Note: this is a historical verification record from the scanlog migration phases. It is useful as implementation history but not as the primary guide for the current workspace and binding workflow.
+
 **Date**: 2025-10-08
 **Phase**: Phase 4 Complete - Full Business Logic Separation
 

@@ -4,6 +4,7 @@
 
 use crate::error::Result;
 use crate::version::crashgen_version_gen;
+use aho_corasick::AhoCorasickBuilder;
 use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
 use dashmap::DashMap;
 use indexmap::IndexMap;
@@ -25,6 +26,36 @@ const PLUGIN_ORIGIN_LOADORDER: &str = "LO";
 const PLUGIN_STATUS_DLL: &str = "DLL";
 const PLUGIN_STATUS_UNKNOWN: &str = "???";
 const PLUGIN_LIMIT_MARKER: &str = "[FF]";
+
+fn normalize_plugin_name(plugin_name: &str) -> String {
+    plugin_name.to_lowercase()
+}
+
+fn classify_plugin_status(plugin_id: Option<&str>, plugin_name: &str) -> String {
+    if let Some(id) = plugin_id {
+        id.replace(':', "").to_uppercase()
+    } else if normalize_plugin_name(plugin_name).contains("dll") {
+        PLUGIN_STATUS_DLL.to_string()
+    } else {
+        PLUGIN_STATUS_UNKNOWN.to_string()
+    }
+}
+
+fn insert_plugin_if_new(
+    plugin_map: &mut IndexMap<String, String>,
+    seen_plugins: &mut HashSet<String>,
+    plugin_name: String,
+    plugin_status: String,
+) {
+    if plugin_name.is_empty() {
+        return;
+    }
+
+    let normalized_name = normalize_plugin_name(&plugin_name);
+    if seen_plugins.insert(normalized_name) {
+        plugin_map.insert(plugin_name, plugin_status);
+    }
+}
 
 /// Core plugin analyzer - pure Rust implementation (NO PyO3)
 pub struct PluginAnalyzer {
@@ -150,6 +181,7 @@ impl PluginAnalyzer {
 
         // IndexMap preserves insertion order for Python parity
         let mut loadorder_plugins = IndexMap::new();
+        let mut seen_plugins = HashSet::new();
         let loadorder_path = Path::new("loadorder.txt");
 
         if loadorder_path.exists() {
@@ -161,14 +193,12 @@ impl PluginAnalyzer {
                     if loadorder_data.len() > 1 {
                         for plugin_entry in loadorder_data.iter().skip(1) {
                             let plugin_entry = plugin_entry.trim();
-                            if !plugin_entry.is_empty()
-                                && !loadorder_plugins.contains_key(plugin_entry)
-                            {
-                                loadorder_plugins.insert(
-                                    plugin_entry.to_string(),
-                                    PLUGIN_ORIGIN_LOADORDER.to_string(),
-                                );
-                            }
+                            insert_plugin_if_new(
+                                &mut loadorder_plugins,
+                                &mut seen_plugins,
+                                plugin_entry.to_string(),
+                                PLUGIN_ORIGIN_LOADORDER.to_string(),
+                            );
                         }
                     }
                 }
@@ -224,7 +254,7 @@ impl PluginAnalyzer {
     /// ];
     ///
     /// let (plugins, limit_triggered, limit_disabled) = analyzer.loadorder_scan_log(
-    ///     segment,
+    ///     &segment,
     ///     Some("1.10.163"),
     ///     Some("1.36.0")
     /// )?;
@@ -235,7 +265,7 @@ impl PluginAnalyzer {
     /// ```
     pub fn loadorder_scan_log(
         &self,
-        segment_plugins: Vec<String>,
+        segment_plugins: &[String],
         game_version: Option<&str>,
         version_current: Option<&str>,
     ) -> Result<(IndexMap<String, String>, bool, bool)> {
@@ -246,43 +276,35 @@ impl PluginAnalyzer {
 
         // Initialize plugin map - IndexMap preserves insertion order for Python parity
         let mut plugin_map = IndexMap::new();
+        let mut seen_plugins = HashSet::new();
 
         // Check plugin limits separately if version info provided
         let mut plugin_limit_triggered = false;
         let mut limit_check_disabled = false;
         if let (Some(game_ver), Some(version_cur)) = (game_version, version_current) {
             let (triggered, disabled) =
-                self.check_plugin_limit(segment_plugins.clone(), game_ver, version_cur)?;
+                self.check_plugin_limit(segment_plugins, game_ver, version_cur)?;
             plugin_limit_triggered = triggered;
             limit_check_disabled = disabled;
         }
 
         // Process each plugin entry (universal parsing logic)
         // Plugins are added in the order they appear in the crash log (load order)
-        for entry in &segment_plugins {
+        for entry in segment_plugins {
             // Extract plugin information using regex
             if let Some(caps) = PLUGIN_PATTERN.captures(entry) {
-                let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
+                let plugin_id = caps.get(1).map(|m| m.as_str());
                 let plugin_name = caps
                     .get(3)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_default();
 
-                // Skip if plugin name is empty or already processed
-                if plugin_name.is_empty() || plugin_map.contains_key(&plugin_name) {
-                    continue;
-                }
-
-                // Classify the plugin
-                let status = if let Some(id) = plugin_id {
-                    id.replace(":", "").to_uppercase()
-                } else if plugin_name.to_lowercase().contains("dll") {
-                    PLUGIN_STATUS_DLL.to_string()
-                } else {
-                    PLUGIN_STATUS_UNKNOWN.to_string()
-                };
-
-                plugin_map.insert(plugin_name, status);
+                insert_plugin_if_new(
+                    &mut plugin_map,
+                    &mut seen_plugins,
+                    plugin_name.clone(),
+                    classify_plugin_status(plugin_id, &plugin_name),
+                );
             }
         }
 
@@ -320,13 +342,13 @@ impl PluginAnalyzer {
     /// )?;
     ///
     /// let segment = vec!["[FF] PluginLimit.esp".to_string()];
-    /// let (triggered, disabled) = analyzer.check_plugin_limit(segment, "1.10.163", "1.36.0")?;
+    /// let (triggered, disabled) = analyzer.check_plugin_limit(&segment, "1.10.163", "1.36.0")?;
     /// # Ok(())
     /// # }
     /// ```
     pub fn check_plugin_limit(
         &self,
-        segment_plugins: Vec<String>,
+        segment_plugins: &[String],
         game_version: &str,
         version_current: &str,
     ) -> Result<(bool, bool)> {
@@ -346,7 +368,7 @@ impl PluginAnalyzer {
         let mut limit_check_disabled = false;
 
         // Check for plugin limit markers
-        for entry in &segment_plugins {
+        for entry in segment_plugins {
             if entry.contains(PLUGIN_LIMIT_MARKER) {
                 match detected_short_name.as_deref() {
                     Some("NG") if is_crashgen_pre_137 => {
@@ -443,27 +465,53 @@ impl PluginAnalyzer {
         crashlog_plugins_lower: HashSet<String>,
         crashgen_name: &str,
     ) -> Result<Vec<String>> {
+        self.plugin_match_with_crashgen_name_from_lowered(
+            &segment_callstack_lower,
+            &crashlog_plugins_lower,
+            crashgen_name,
+        )
+    }
+
+    /// Like [`Self::plugin_match_with_crashgen_name`] but borrows already-lowercased data.
+    pub fn plugin_match_with_crashgen_name_from_lowered(
+        &self,
+        segment_callstack_lower: &[String],
+        crashlog_plugins_lower: &HashSet<String>,
+        crashgen_name: &str,
+    ) -> Result<Vec<String>> {
         let mut lines = Vec::new();
 
-        // Pre-filter call stack lines
-        let relevant_lines: Vec<_> = segment_callstack_lower
+        let relevant_lines: Vec<&str> = segment_callstack_lower
             .iter()
+            .map(String::as_str)
             .filter(|line| !line.contains("modified by:"))
             .collect();
 
-        // Use Counter equivalent
+        let plugin_patterns: Vec<&String> = crashlog_plugins_lower
+            .iter()
+            .filter(|plugin| !self.lower_plugins_ignore.contains(*plugin))
+            .collect();
+
         let mut plugins_matches: HashMap<String, usize> = HashMap::new();
 
-        // Optimize the matching algorithm
-        for line in &relevant_lines {
-            for plugin in &crashlog_plugins_lower {
-                // Skip plugins that are in the ignore list
-                if self.lower_plugins_ignore.contains(plugin) {
-                    continue;
-                }
+        if !plugin_patterns.is_empty() && !relevant_lines.is_empty() {
+            let matcher = AhoCorasickBuilder::new()
+                .ascii_case_insensitive(false)
+                .build(
+                    plugin_patterns
+                        .iter()
+                        .map(|plugin| plugin.as_str())
+                        .collect::<Vec<_>>(),
+                )?;
 
-                if line.contains(plugin) {
-                    *plugins_matches.entry(plugin.clone()).or_insert(0) += 1;
+            for line in relevant_lines {
+                let mut matched_pattern_indexes = HashSet::new();
+                for matched in matcher.find_iter(line) {
+                    if matched_pattern_indexes.insert(matched.pattern().as_usize())
+                        && let Some(plugin) = plugin_patterns.get(matched.pattern().as_usize())
+                    {
+                        *plugins_matches.entry((**plugin).clone()).or_insert(0) += 1;
+                    }
                 }
             }
         }
@@ -597,26 +645,22 @@ pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<IndexMap<String, String>> 
         .map(|log| {
             // IndexMap preserves insertion order for Python parity
             let mut plugins = IndexMap::new();
+            let mut seen_plugins = HashSet::new();
 
             for line in log.lines() {
                 if let Some(caps) = PLUGIN_PATTERN.captures(line) {
-                    let plugin_id = caps.get(1).map(|m| m.as_str().to_string());
+                    let plugin_id = caps.get(1).map(|m| m.as_str());
                     let plugin_name = caps
                         .get(3)
                         .map(|m| m.as_str().to_string())
                         .unwrap_or_default();
 
-                    if !plugin_name.is_empty() && !plugins.contains_key(&plugin_name) {
-                        let status = if let Some(id) = plugin_id {
-                            id.replace(":", "").to_uppercase()
-                        } else if plugin_name.to_lowercase().contains("dll") {
-                            PLUGIN_STATUS_DLL.to_string()
-                        } else {
-                            PLUGIN_STATUS_UNKNOWN.to_string()
-                        };
-
-                        plugins.insert(plugin_name, status);
-                    }
+                    insert_plugin_if_new(
+                        &mut plugins,
+                        &mut seen_plugins,
+                        plugin_name.clone(),
+                        classify_plugin_status(plugin_id, &plugin_name),
+                    );
                 }
             }
 
@@ -743,7 +787,8 @@ mod tests {
         )
         .unwrap();
 
-        let (plugins, limit, disabled) = analyzer.loadorder_scan_log(vec![], None, None).unwrap();
+        let empty: Vec<String> = vec![];
+        let (plugins, limit, disabled) = analyzer.loadorder_scan_log(&empty, None, None).unwrap();
 
         assert!(plugins.is_empty());
         assert!(!limit);
@@ -767,7 +812,7 @@ mod tests {
             "[02] MyMod.esp".to_string(),
         ];
 
-        let (plugins, _, _) = analyzer.loadorder_scan_log(segment, None, None).unwrap();
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 3);
         assert_eq!(plugins.get("Fallout4.esm"), Some(&"00".to_string()));
@@ -791,7 +836,7 @@ mod tests {
             "[FE:002] LightMod2.esl".to_string(),
         ];
 
-        let (plugins, _, _) = analyzer.loadorder_scan_log(segment, None, None).unwrap();
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 2);
         assert_eq!(plugins.get("LightMod1.esl"), Some(&"FE001".to_string()));
@@ -814,9 +859,29 @@ mod tests {
             "[00] Fallout4.esm".to_string(), // Duplicate
         ];
 
-        let (plugins, _, _) = analyzer.loadorder_scan_log(segment, None, None).unwrap();
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
 
         assert_eq!(plugins.len(), 1);
+    }
+
+    #[test]
+    fn test_loadorder_scan_log_skips_mixed_case_duplicates() {
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.10.163vr".to_string(),
+        )
+        .unwrap();
+
+        let segment = vec!["[01] MyMod.esp".to_string(), "[02] mymod.esp".to_string()];
+
+        let (plugins, _, _) = analyzer.loadorder_scan_log(&segment, None, None).unwrap();
+
+        assert_eq!(plugins.len(), 1);
+        assert_eq!(plugins.get("MyMod.esp"), Some(&"01".to_string()));
+        assert!(!plugins.contains_key("mymod.esp"));
     }
 
     // ============================================
@@ -836,7 +901,7 @@ mod tests {
 
         let segment = vec!["[00] Fallout4.esm".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.10.163", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.163", "1.36.0")
             .unwrap();
 
         assert!(!triggered);
@@ -856,7 +921,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.10.163", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.163", "1.36.0")
             .unwrap();
 
         assert!(triggered);
@@ -876,7 +941,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, _) = analyzer
-            .check_plugin_limit(segment, "1.10.163vr", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.163vr", "1.36.0")
             .unwrap();
 
         assert!(triggered);
@@ -895,7 +960,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.10.984", "1.36.0")
+            .check_plugin_limit(&segment, "1.10.984", "1.36.0")
             .unwrap();
 
         assert!(!triggered);
@@ -915,7 +980,7 @@ mod tests {
 
         let segment = vec!["[FF] PluginLimit.esp".to_string()];
         let (triggered, disabled) = analyzer
-            .check_plugin_limit(segment, "1.11.191", "1.36.0")
+            .check_plugin_limit(&segment, "1.11.191", "1.36.0")
             .unwrap();
 
         assert!(triggered);
@@ -1190,5 +1255,16 @@ mod tests {
 
         assert_eq!(result.len(), 1);
         assert!(result[0].is_empty());
+    }
+
+    #[test]
+    fn test_detect_plugins_batch_skips_mixed_case_duplicates() {
+        let logs = vec!["[01] MyMod.esp\n[02] mymod.esp".to_string()];
+        let result = detect_plugins_batch(logs);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].len(), 1);
+        assert_eq!(result[0].get("MyMod.esp"), Some(&"01".to_string()));
+        assert!(!result[0].contains_key("mymod.esp"));
     }
 }

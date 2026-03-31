@@ -38,7 +38,7 @@ pub enum JsYamlFile {
     GameLocal,
     /// tests/test_settings.yaml (for testing only)
     Test,
-    /// User config dir/CLASSIC-Fallout4/cache.yaml
+    /// User config dir/CLASSIC/cache.yaml
     Cache,
 }
 

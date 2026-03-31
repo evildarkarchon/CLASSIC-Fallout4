@@ -444,7 +444,9 @@ class VersionInfo:
 
         """
 
-    def get_compatible_crashgens(self, game_version_str: str | None = None) -> list[CrashgenConfig]:
+    def get_compatible_crashgens(
+        self, game_version_str: str | None = None
+    ) -> list[CrashgenConfig]:
         """Get crash generators compatible with a specific game version.
 
         Args:
@@ -546,7 +548,9 @@ class VersionRegistry:
 
         """
 
-    def get_all_for_game(self, game: str, is_vr: bool | None = None) -> list[VersionInfo]:
+    def get_all_for_game(
+        self, game: str, is_vr: bool | None = None
+    ) -> list[VersionInfo]:
         """Get all versions for a specific game.
 
         Args:
@@ -609,7 +613,9 @@ class VersionRegistry:
 
         """
 
-    def get_address_library_filename(self, version_str: str, is_vr: bool = False) -> str | None:
+    def get_address_library_filename(
+        self, version_str: str, is_vr: bool = False
+    ) -> str | None:
         """Get Address Library filename for a version.
 
         Args:
@@ -648,7 +654,9 @@ class VersionRegistry:
 
         """
 
-    def get_crashgen_for_version(self, version_id: str, crashgen_version: str) -> CrashgenConfig | None:
+    def get_crashgen_for_version(
+        self, version_id: str, crashgen_version: str
+    ) -> CrashgenConfig | None:
         """Get a specific crash generator by version ID and crashgen version.
 
         Args:
@@ -662,7 +670,9 @@ class VersionRegistry:
 
     # === Hash API ===
 
-    def get_all_exe_hashes(self, game: str = "Fallout4", is_vr: bool | None = None) -> set[str]:
+    def get_all_exe_hashes(
+        self, game: str = "Fallout4", is_vr: bool | None = None
+    ) -> set[str]:
         """Get all known exe hashes for a game.
 
         Args:
@@ -674,7 +684,9 @@ class VersionRegistry:
 
         """
 
-    def get_all_script_hashes(self, game: str = "Fallout4", is_vr: bool | None = None) -> dict[str, set[str]]:
+    def get_all_script_hashes(
+        self, game: str = "Fallout4", is_vr: bool | None = None
+    ) -> dict[str, set[str]]:
         """Get all valid script hashes for all versions of a game.
 
         Args:

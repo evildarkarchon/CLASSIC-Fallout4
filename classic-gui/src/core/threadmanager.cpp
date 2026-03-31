@@ -1,5 +1,6 @@
 #include "threadmanager.h"
 
+#include <QDebug>
 #include <QThread>
 
 ThreadManager::ThreadManager(QObject* parent)
@@ -16,6 +17,7 @@ void ThreadManager::startWorker(const QString& name, QThread* thread, QObject* w
     worker->moveToThread(thread);
     m_workers.insert(name, {thread, worker});
     thread->start();
+    qDebug() << "ThreadManager: started worker" << name;
 }
 
 void ThreadManager::stopWorker(const QString& name) {
@@ -23,19 +25,25 @@ void ThreadManager::stopWorker(const QString& name) {
     if (it == m_workers.end()) {
         return;
     }
+    qDebug() << "ThreadManager: stopping worker" << name;
     if (it->thread && it->thread->isRunning()) {
         it->thread->quit();
         if (!it->thread->wait(5000)) {
+            qWarning() << "ThreadManager: worker" << name
+                       << "did not stop within 5s, terminated";
             it->thread->terminate();
             it->thread->wait();
         }
     }
     delete it->worker;
-    delete it->thread;
+    if (it->thread) {
+        it->thread->deleteLater();
+    }
     m_workers.erase(it);
 }
 
 void ThreadManager::stopAll() {
+    qDebug() << "ThreadManager: stopping all workers (" << m_workers.size() << "registered)";
     const auto names = m_workers.keys();
     for (const auto& name : names) {
         stopWorker(name);

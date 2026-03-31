@@ -285,34 +285,6 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
     get(Keys::GAME_PATH_GUI)
 }
 
-/// Get the VR game variant identifier.
-///
-/// # Deprecation Notice
-///
-/// This function is deprecated. Use [`get_game_version()`] instead, which returns
-/// a `Fallout4Version` enum that includes VR as a version variant.
-///
-/// During the transition period, this function will:
-/// 1. First check the legacy VR key
-/// 2. If not found, try to derive from GAME_VERSION if it's set to Vr
-///
-/// # Returns
-///
-/// Returns the VR variant suffix if VR mode is active ("VR"), empty string otherwise.
-///
-/// # Examples
-///
-/// ```rust
-/// use classic_registry_core::{register, get_vr, Keys, clear_all};
-///
-/// clear_all();
-/// assert_eq!(get_vr(), "");
-/// ```
-pub fn get_vr() -> String {
-    // First check legacy VR key for backward compatibility
-    get::<_, String>(Keys::VR).unwrap_or_else(String::new)
-}
-
 /// Get the current Fallout 4 version.
 ///
 /// This is the recommended way to check which version of Fallout 4 is being used,
@@ -385,62 +357,46 @@ pub fn get_local_dir() -> PathBuf {
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
 }
 
-/// Get the config key suffix based on game version.
+/// Set the application directory override for settings resolution.
 ///
-/// Returns "VR" if the game version is VR (either via `GAME_VERSION` or the
-/// legacy `VR` key), otherwise returns an empty string. Used for building
-/// YAML config keys like `"Game_Info"` vs `"GameVR_Info"`.
-///
-/// # Returns
-///
-/// `"VR"` if the current version is VR, `""` otherwise.
+/// When set, `classic-config-core` uses this directory instead of
+/// `current_exe().parent()` to anchor settings and data file lookups.
 ///
 /// # Examples
 ///
 /// ```rust
-/// use classic_registry_core::{register, get_config_suffix, Keys, clear_all};
+/// use classic_registry_core::{set_application_dir, get_application_dir, clear_all};
+/// use std::path::PathBuf;
 ///
 /// clear_all();
-/// assert_eq!(get_config_suffix(), "");
+/// assert_eq!(get_application_dir(), None);
 ///
-/// register(Keys::GAME_VERSION, "VR".to_string());
-/// assert_eq!(get_config_suffix(), "VR");
+/// set_application_dir(PathBuf::from("/my/app"));
+/// assert_eq!(get_application_dir(), Some(PathBuf::from("/my/app")));
 /// ```
-pub fn get_config_suffix() -> String {
-    // Check GAME_VERSION first
-    if let Some(version) = get::<_, String>(Keys::GAME_VERSION) {
-        if version == "VR" {
-            return "VR".to_string();
-        }
-    }
-    // Fall back to legacy VR key
-    if let Some(vr) = get::<_, String>(Keys::VR) {
-        if vr == "VR" {
-            return "VR".to_string();
-        }
-    }
-    String::new()
+pub fn set_application_dir(dir: PathBuf) {
+    register(Keys::APP_DIR, dir);
 }
 
-/// Check if the current game version is a VR version.
+/// Get the application directory override, if set.
 ///
-/// # Returns
-///
-/// `true` if the current version is VR, `false` otherwise.
+/// Returns `None` when no override has been registered, signalling callers
+/// to fall back to their own default (e.g., `current_exe().parent()`).
 ///
 /// # Examples
 ///
 /// ```rust
-/// use classic_registry_core::{register, is_vr_version, Keys, clear_all};
+/// use classic_registry_core::{set_application_dir, get_application_dir, clear_all};
+/// use std::path::PathBuf;
 ///
 /// clear_all();
-/// assert!(!is_vr_version());
+/// assert_eq!(get_application_dir(), None);
 ///
-/// register(Keys::GAME_VERSION, "VR".to_string());
-/// assert!(is_vr_version());
+/// set_application_dir(PathBuf::from("/my/app"));
+/// assert_eq!(get_application_dir(), Some(PathBuf::from("/my/app")));
 /// ```
-pub fn is_vr_version() -> bool {
-    get_config_suffix() == "VR"
+pub fn get_application_dir() -> Option<PathBuf> {
+    get::<_, PathBuf>(Keys::APP_DIR)
 }
 
 /// Check if XSE validation passed.
@@ -624,52 +580,6 @@ mod tests {
 
         let removed = unregister("nonexistent");
         assert!(!removed);
-    }
-
-    #[test]
-    #[serial]
-    fn test_get_config_suffix_default() {
-        clear_all();
-        assert_eq!(get_config_suffix(), "");
-    }
-
-    #[test]
-    #[serial]
-    fn test_get_config_suffix_vr_via_game_version() {
-        clear_all();
-        register(Keys::GAME_VERSION, "VR".to_string());
-        assert_eq!(get_config_suffix(), "VR");
-    }
-
-    #[test]
-    #[serial]
-    fn test_get_config_suffix_vr_via_legacy_key() {
-        clear_all();
-        register(Keys::VR, "VR".to_string());
-        assert_eq!(get_config_suffix(), "VR");
-    }
-
-    #[test]
-    #[serial]
-    fn test_get_config_suffix_non_vr() {
-        clear_all();
-        register(Keys::GAME_VERSION, "NextGen".to_string());
-        assert_eq!(get_config_suffix(), "");
-    }
-
-    #[test]
-    #[serial]
-    fn test_is_vr_version_default() {
-        clear_all();
-        assert!(!is_vr_version());
-    }
-
-    #[test]
-    #[serial]
-    fn test_is_vr_version_true() {
-        clear_all();
-        register(Keys::GAME_VERSION, "VR".to_string());
-        assert!(is_vr_version());
     }
 
     #[test]

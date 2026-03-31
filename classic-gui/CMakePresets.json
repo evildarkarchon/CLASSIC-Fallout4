@@ -24,6 +24,24 @@
             }
         },
         {
+            "name": "system-fallback",
+            "displayName": "System Qt fallback (vcpkg-first + Ninja)",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-system-fallback",
+            "cacheVariables": {
+                "CLASSIC_GUI_ALLOW_SYSTEM_QT_FALLBACK": "ON"
+            }
+        },
+        {
+            "name": "system-fallback-debug",
+            "displayName": "System Qt fallback Debug (vcpkg-first + Ninja)",
+            "inherits": "debug",
+            "binaryDir": "${sourceDir}/build-system-fallback-debug",
+            "cacheVariables": {
+                "CLASSIC_GUI_ALLOW_SYSTEM_QT_FALLBACK": "ON"
+            }
+        },
+        {
             "name": "ci",
             "displayName": "CI (vcpkg Qt6 + Ninja)",
             "inherits": "default",
@@ -50,6 +68,14 @@
         {
             "name": "debug",
             "configurePreset": "debug"
+        },
+        {
+            "name": "system-fallback",
+            "configurePreset": "system-fallback"
+        },
+        {
+            "name": "system-fallback-debug",
+            "configurePreset": "system-fallback-debug"
         },
         {
             "name": "ci",

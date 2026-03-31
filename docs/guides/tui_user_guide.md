@@ -298,7 +298,7 @@ Top suspects:
 - Simplify Logs
 - Update Check
 
-**Persistence:** Settings are saved to `CLASSIC Settings.yaml`
+**Persistence:** Settings are saved next to the executable as `CLASSIC Settings.yaml`. If the application directory cannot be resolved, CLASSIC falls back to the plain relative filename `CLASSIC Settings.yaml`.
 
 ---
 
@@ -599,8 +599,9 @@ ClassicLib-rs/ui-applications/classic-tui  # Works great!
 CLASSIC TUI is interactive, but you can script initial setup:
 
 ```bash
-# Configure via YAML before launching TUI
-cat > "CLASSIC Settings.yaml" <<EOF
+# Configure via YAML before launching TUI.
+# Put the file next to the TUI binary.
+cat > "<tui dir>/CLASSIC Settings.yaml" <<EOF
 fcx_mode: true
 stat_logging: true
 paths:

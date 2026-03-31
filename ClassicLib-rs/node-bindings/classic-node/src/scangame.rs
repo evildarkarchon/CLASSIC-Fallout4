@@ -992,10 +992,9 @@ impl JsXseChecker {
     #[napi(constructor)]
     pub fn new(plugins_path: String, game_version: Option<String>) -> Result<Self> {
         let version = parse_game_version(game_version.as_deref().unwrap_or("Original"));
-        let use_vr = is_vr_version(version);
 
         // Validate that the path exists
-        let _ = CoreXseChecker::new(&plugins_path, use_vr, version).map_err(to_napi_err)?;
+        let _ = CoreXseChecker::new(&plugins_path, version).map_err(to_napi_err)?;
 
         Ok(Self {
             plugins_path,
@@ -1009,12 +1008,8 @@ impl JsXseChecker {
     ///          "VersionNotDetected", "PluginsPathNotFound").
     #[napi]
     pub fn check(&self) -> Result<String> {
-        let checker = CoreXseChecker::new(
-            &self.plugins_path,
-            is_vr_version(self.game_version),
-            self.game_version,
-        )
-        .map_err(to_napi_err)?;
+        let checker =
+            CoreXseChecker::new(&self.plugins_path, self.game_version).map_err(to_napi_err)?;
 
         Ok(match checker.check() {
             ValidationResult::CorrectVersion => "CorrectVersion".to_string(),
@@ -1030,12 +1025,8 @@ impl JsXseChecker {
     /// @returns Formatted message string with validation result.
     #[napi]
     pub fn validate(&self) -> Result<String> {
-        let checker = CoreXseChecker::new(
-            &self.plugins_path,
-            is_vr_version(self.game_version),
-            self.game_version,
-        )
-        .map_err(to_napi_err)?;
+        let checker =
+            CoreXseChecker::new(&self.plugins_path, self.game_version).map_err(to_napi_err)?;
 
         Ok(checker.validate())
     }
@@ -1051,10 +1042,6 @@ fn parse_game_version(s: &str) -> GameVersion {
         "Vr" | "VR" => GameVersion::Vr,
         _ => GameVersion::Original,
     }
-}
-
-fn is_vr_version(version: GameVersion) -> bool {
-    matches!(version, GameVersion::Vr)
 }
 
 /// Get Address Library info for a specific game version.
@@ -1087,8 +1074,7 @@ pub fn get_address_lib_info(version: String) -> JsAddressLibInfo {
 #[napi]
 pub fn check_xse_plugins(plugins_path: String, game_version: String) -> Result<String> {
     let version = parse_game_version(&game_version);
-    let checker =
-        CoreXseChecker::new(&plugins_path, is_vr_version(version), version).map_err(to_napi_err)?;
+    let checker = CoreXseChecker::new(&plugins_path, version).map_err(to_napi_err)?;
     Ok(checker.validate())
 }
 
@@ -1555,7 +1541,7 @@ pub fn scan_mod_inis(game_root: String, game_name: String) -> napi::Result<JsMod
 // 14. Setup Checking
 // ============================================================================
 
-/// Migrate legacy VR Mode setting to Game Version format.
+/// Migrate legacy game-version settings to the canonical Game Version format.
 ///
 /// In CLASSIC v8.0+, the "VR Mode" boolean was replaced with a
 /// "Game Version" string
@@ -1564,7 +1550,7 @@ pub fn scan_mod_inis(game_root: String, game_name: String) -> napi::Result<JsMod
 /// @param gameVersion - The new Game Version setting value.
 /// @returns The resolved game version string, or null if neither setting is configured.
 #[napi]
-pub fn migrate_vr_setting(game_version: Option<String>) -> Option<String> {
+pub fn migrate_game_version_setting(game_version: Option<String>) -> Option<String> {
     game_version.map(|version| {
         classic_scangame_core::setup::resolve_effective_game_version(Some(&version)).to_string()
     })

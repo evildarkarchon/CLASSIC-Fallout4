@@ -1,9 +1,11 @@
 //! Python bindings for mod detection functions - Thin wrapper over classic-scanlog-core
 
+use crate::core_mod_convert::exclude_when_from_pydict;
+use classic_config_core::{CoreModEntry, ModConflictEntry};
 use classic_shared::{pydict_to_indexmap_str, without_gil};
 use indexmap::IndexMap;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList};
 use std::collections::HashSet;
 
 /// Detect single-type mods (standalone function)
@@ -27,51 +29,94 @@ pub fn detect_mods_single(
     .map_err(crate::to_pyerr)
 }
 
-/// Detect double-type mods (standalone function)
+/// Detect mod conflicts from structured conflict entries.
 ///
-/// Takes a YAML dict of mod conflict patterns and a dict of crash log plugins.
-/// Both dicts preserve insertion order using IndexMap internally for Python parity.
+/// Takes a list of conflict entry dicts and a dict of crash log plugins.
 /// Releases GIL during pattern matching to allow concurrent Python threads.
 #[pyfunction]
 pub fn detect_mods_double(
     py: Python<'_>,
-    yaml_dict: &Bound<'_, PyDict>,
+    entries: &Bound<'_, PyList>,
     crashlog_plugins: &Bound<'_, PyDict>,
 ) -> PyResult<Vec<String>> {
-    // Extract all Python data before releasing GIL
-    let yaml_map = pydict_to_indexmap_str(yaml_dict)?;
+    let conflict_entries: Vec<ModConflictEntry> = entries
+        .iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            Some(ModConflictEntry {
+                mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
+                mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
+                name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
+                name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+                fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
+                link: dict
+                    .get_item("link")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+            })
+        })
+        .collect();
     let plugins_map = pydict_to_indexmap_str(crashlog_plugins)?;
-    // Release GIL during pattern matching
     without_gil(py, || {
-        classic_scanlog_core::detect_mods_double(yaml_map, plugins_map)
+        classic_scanlog_core::detect_mods_double(&conflict_entries, plugins_map)
     })
     .map_err(crate::to_pyerr)
 }
 
 /// Detect important mods (standalone function)
 ///
-/// Uses IndexMap to preserve Python dict iteration order for parity.
-/// Both yaml_dict and crashlog_plugins preserve insertion order.
+/// Accepts a list of core mod entry dicts (each with detect, name, description,
+/// optional gpu), a dict of crash log plugins, optional user GPU vendor string,
+/// and a set of XSE module names.
 /// Releases GIL during pattern matching to allow concurrent Python threads.
 #[pyfunction]
-#[pyo3(signature = (yaml_dict, crashlog_plugins, gpu_rival=None, xse_modules=HashSet::new()))]
+#[pyo3(signature = (entries, crashlog_plugins, user_gpu=None, xse_modules=HashSet::new()))]
 pub fn detect_mods_important(
     py: Python<'_>,
-    yaml_dict: &Bound<'_, PyDict>,
+    entries: &Bound<'_, PyList>,
     crashlog_plugins: &Bound<'_, PyDict>,
-    gpu_rival: Option<String>,
+    user_gpu: Option<String>,
     xse_modules: HashSet<String>,
 ) -> PyResult<Vec<String>> {
-    // Extract all Python data before releasing GIL
-    let yaml_map = pydict_to_indexmap_str(yaml_dict)?;
+    let core_entries: Vec<CoreModEntry> = entries
+        .iter()
+        .filter_map(|item| {
+            let dict = item.cast::<PyDict>().ok()?;
+            Some(CoreModEntry {
+                detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
+                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
+                description: dict
+                    .get_item("description")
+                    .ok()??
+                    .extract::<String>()
+                    .ok()?,
+                gpu: dict
+                    .get_item("gpu")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+                gpu_mismatch_warning: dict
+                    .get_item("gpu_mismatch_warning")
+                    .ok()
+                    .flatten()
+                    .and_then(|v| v.extract::<String>().ok()),
+                exclude_when: exclude_when_from_pydict(dict),
+            })
+        })
+        .collect();
     let plugins_map = pydict_to_indexmap_str(crashlog_plugins)?;
-    // Release GIL during pattern matching
     without_gil(py, || {
         classic_scanlog_core::detect_mods_important(
-            yaml_map,
-            plugins_map,
-            gpu_rival.as_deref(),
-            xse_modules,
+            &core_entries,
+            &plugins_map,
+            user_gpu.as_deref(),
+            &xse_modules,
         )
     })
     .map_err(crate::to_pyerr)

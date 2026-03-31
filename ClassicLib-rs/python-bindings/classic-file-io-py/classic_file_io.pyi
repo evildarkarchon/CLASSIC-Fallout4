@@ -91,7 +91,13 @@ class FileIOCore:
 
     """
 
-    def __init__(self, encoding: str = "utf-8", errors: str = "ignore", cache_size: int = 100, max_concurrent_io: int = 50) -> None:
+    def __init__(
+        self,
+        encoding: str = "utf-8",
+        errors: str = "ignore",
+        cache_size: int = 100,
+        max_concurrent_io: int = 50,
+    ) -> None:
         """Create a new file I/O core with specified configuration.
 
         Initializes internal caching structures and async runtime for improved
@@ -384,7 +390,9 @@ class FileIOCore:
 
         """
 
-    def read_file_with_encoding(self, path: str, encoding: str) -> Coroutine[Any, Any, str]:
+    def read_file_with_encoding(
+        self, path: str, encoding: str
+    ) -> Coroutine[Any, Any, str]:
         """Read a file with a specific encoding.
 
         This method is asynchronous and must be awaited.
@@ -419,7 +427,9 @@ class FileIOCore:
 
         """
 
-    def read_dds_headers_batch(self, paths: list[str]) -> dict[str, tuple[int, int] | None]:
+    def read_dds_headers_batch(
+        self, paths: list[str]
+    ) -> dict[str, tuple[int, int] | None]:
         """Parse multiple DDS headers in parallel (synchronous).
 
         Parses multiple DDS texture file headers in parallel for improved
@@ -457,7 +467,9 @@ class FileIOCore:
 
         """
 
-    def py_walk_directory(self, path: str, pattern: str | None = None, max_depth: int | None = None) -> list[str]:
+    def py_walk_directory(
+        self, path: str, pattern: str | None = None, max_depth: int | None = None
+    ) -> list[str]:
         r"""Walk directory tree and collect file paths (synchronous).
 
         Traverses a directory tree and collects file paths matching an
@@ -483,7 +495,9 @@ class FileIOCore:
 
         """
 
-    def py_read_multiple_files(self, paths: list[str]) -> Coroutine[Any, Any, dict[str, str]]:
+    def py_read_multiple_files(
+        self, paths: list[str]
+    ) -> Coroutine[Any, Any, dict[str, str]]:
         """Read multiple files in parallel (asynchronous).
 
         Reads multiple text files in parallel for improved performance.
@@ -507,7 +521,9 @@ class FileIOCore:
 
         """
 
-    def py_write_multiple_files(self, files: dict[str, str]) -> Coroutine[Any, Any, None]:
+    def py_write_multiple_files(
+        self, files: dict[str, str]
+    ) -> Coroutine[Any, Any, None]:
         """Write multiple files in parallel (asynchronous).
 
         Writes multiple files in parallel for improved performance.
@@ -842,7 +858,12 @@ class PyLogCollector:
 
     """
 
-    def __init__(self, base_folder: str, xse_folder: str | None = None, custom_folder: str | None = None) -> None:
+    def __init__(
+        self,
+        base_folder: str,
+        xse_folder: str | None = None,
+        custom_folder: str | None = None,
+    ) -> None:
         """Create a new LogCollector.
 
         Args:
@@ -962,7 +983,9 @@ class FileGeneratorConfig:
     game_name: str
     """Game name for local YAML path (e.g., 'Fallout4', 'Skyrim')."""
 
-    def __init__(self, ignore_file_content: str, local_yaml_content: str, game_name: str) -> None:
+    def __init__(
+        self, ignore_file_content: str, local_yaml_content: str, game_name: str
+    ) -> None:
         """Create a new file generator configuration.
 
         Args:

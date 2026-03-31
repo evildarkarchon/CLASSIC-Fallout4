@@ -37,21 +37,18 @@ PYTHON_TARGET_MODULES: dict[str, str] = {
     "classic_scanlog": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
     "classic_config": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
     "classic_version_registry": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-    "classic_pybridge": "ClassicLib-rs/python-bindings/classic-pybridge-py/classic_pybridge.pyi",
 }
 
 PYTHON_OWNER_BY_MODULE: dict[str, str] = {
     "classic_scanlog": "scanlog",
     "classic_config": "config",
     "classic_version_registry": "version_registry",
-    "classic_pybridge": "aux",
 }
 
 SQUAD_BY_OWNER: dict[str, str] = {
     "scanlog": "Squad A (scanlog/config)",
     "config": "Squad A (scanlog/config)",
-    "version_registry": "Squad B (version-registry/aux)",
-    "aux": "Squad B (version-registry/aux)",
+    "version_registry": "Squad B (version-registry)",
 }
 
 

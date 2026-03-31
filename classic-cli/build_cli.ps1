@@ -13,6 +13,15 @@
 .PARAMETER Test
     Run CTest (Catch2 unit tests) and integration tests after building.
 
+.PARAMETER CTestName
+    Run only the specified CTest unit test name or names. Requires -Test.
+
+.PARAMETER CTestArgs
+    Additional arguments to pass to the CTest unit test run command. Requires -Test.
+
+.PARAMETER IntegrationTestName
+    Run only the specified classic-cli integration scenario name or names. Requires -Test.
+
 .PARAMETER Debug
     Build using the CMake debug preset (build-debug directory).
 
@@ -31,6 +40,9 @@
     .\build_cli.ps1 -Debug -Install
     .\build_cli.ps1 -Clean -Test -Install
     .\build_cli.ps1 -Package
+    .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+    .\build_cli.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
+    .\build_cli.ps1 -Test -IntegrationTestName help,version
 #>
 
 param(
@@ -38,13 +50,45 @@ param(
     [switch]$Test,
     [switch]$Debug,
     [switch]$Install,
-    [switch]$Package
+    [switch]$Package,
+    [string[]]$CTestName = @(),
+    [string[]]$CTestArgs = @(),
+    [string[]]$IntegrationTestName = @()
 )
 
 $ErrorActionPreference = "Stop"
 
+function New-ExactTestNameRegex {
+    param([string[]]$TestNames)
+
+    $normalized = @($TestNames | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if ($normalized.Count -eq 0) {
+        return $null
+    }
+
+    $escaped = $normalized | ForEach-Object { [regex]::Escape($_) }
+    return "^($($escaped -join '|'))$"
+}
+
 # -Package implies -Install
 if ($Package) { $Install = $true }
+
+$CTestName = @($CTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$IntegrationTestName = @($IntegrationTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
+if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0 -or $IntegrationTestName.Count -gt 0) -and -not $Test) {
+    Write-Error "-CTestName, -CTestArgs, and -IntegrationTestName require -Test."
+    exit 1
+}
+
+if ($CTestArgs.Count -gt 0 -and $IntegrationTestName.Count -gt 0 -and $CTestName.Count -eq 0) {
+    Write-Error "-CTestArgs apply only to CTest unit tests and cannot be used when only integration scenarios are selected."
+    exit 1
+}
+
+$ctestRegex = New-ExactTestNameRegex -TestNames $CTestName
+$selectiveTestMode = $CTestName.Count -gt 0 -or $IntegrationTestName.Count -gt 0
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -140,24 +184,63 @@ try {
 
     # ── Step 4: Tests (optional) ─────────────────────────────────
     if ($Test) {
-        # Catch2 unit tests via CTest
-        Write-Host "`n=== Running Catch2 unit tests (CTest) ===" -ForegroundColor Cyan
-        & ctest --test-dir $buildDirName --output-on-failure
-        if ($LASTEXITCODE -ne 0) {
-            Write-Error "Unit tests failed with exit code $LASTEXITCODE"
-            exit $LASTEXITCODE
+        $runCtest = ($CTestName.Count -gt 0) -or (-not $selectiveTestMode)
+        $runIntegrationTests = ($IntegrationTestName.Count -gt 0) -or (-not $selectiveTestMode)
+
+        if ($runCtest) {
+            # Catch2 unit tests via CTest
+            Write-Host "`n=== Running Catch2 unit tests (CTest) ===" -ForegroundColor Cyan
+            if ($CTestName.Count -gt 0) {
+                Write-Host "Selected CTest names: $($CTestName -join ', ')" -ForegroundColor DarkGray
+            }
+            if ($CTestArgs.Count -gt 0) {
+                Write-Host "Additional CTest args: $($CTestArgs -join ' ')" -ForegroundColor DarkGray
+            }
+
+            $ctestDiscoveryArgs = @("--test-dir", $buildDirName, "-N", "-V", "--no-tests=error")
+            if ($ctestRegex) {
+                $ctestDiscoveryArgs += @("-R", $ctestRegex)
+            }
+            & ctest @ctestDiscoveryArgs
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "CTest discovery failed with exit code $LASTEXITCODE"
+                exit $LASTEXITCODE
+            }
+
+            $ctestRunArgs = @("--test-dir", $buildDirName, "--output-on-failure", "--no-tests=error")
+            if ($ctestRegex) {
+                $ctestRunArgs += @("-R", $ctestRegex)
+            }
+            $ctestRunArgs += $CTestArgs
+            & ctest @ctestRunArgs
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Unit tests failed with exit code $LASTEXITCODE"
+                exit $LASTEXITCODE
+            }
+            Write-Host "Unit tests passed." -ForegroundColor Green
         }
-        Write-Host "Unit tests passed." -ForegroundColor Green
+        else {
+            Write-Host "Skipping Catch2 unit tests because only integration scenarios were selected." -ForegroundColor DarkGray
+        }
 
         # Integration tests
         $integrationScript = Join-Path $ScriptDir "test_cli.ps1"
-        if (Test-Path $integrationScript) {
+        if ($runIntegrationTests -and (Test-Path $integrationScript)) {
             Write-Host "`n=== Running integration tests ===" -ForegroundColor Cyan
-            & $integrationScript -BuildDir $buildDirName
+            if ($IntegrationTestName.Count -gt 0) {
+                Write-Host "Selected integration scenarios: $($IntegrationTestName -join ', ')" -ForegroundColor DarkGray
+                & $integrationScript -BuildDir $buildDirName -TestName $IntegrationTestName
+            }
+            else {
+                & $integrationScript -BuildDir $buildDirName
+            }
             if ($LASTEXITCODE -ne 0) {
                 Write-Error "Integration tests failed with exit code $LASTEXITCODE"
                 exit $LASTEXITCODE
             }
+        }
+        elseif (-not $runIntegrationTests) {
+            Write-Host "Skipping integration tests because only CTest names were selected." -ForegroundColor DarkGray
         }
     }
 

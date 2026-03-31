@@ -244,7 +244,6 @@ cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml \
   --exclude classic-scangame-py \
   --exclude classic-registry-py \
   --exclude classic-perf-py \
-  --exclude classic-pybridge-py \
   --exclude classic-settings-py \
   --exclude classic-message-py \
   --exclude classic-path-py \

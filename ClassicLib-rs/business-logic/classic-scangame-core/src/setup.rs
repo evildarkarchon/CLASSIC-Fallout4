@@ -22,12 +22,12 @@
 //! use classic_scangame_core::setup::{
 //!     SetupCheckConfig,
 //!     run_combined_checks,
-//!     migrate_vr_setting,
+//!     migrate_game_version_setting,
 //!     resolve_effective_game_version,
 //! };
 //!
 //! // Migrate legacy VR Mode setting
-//! let version = migrate_vr_setting(None, Some(true));
+//! let version = migrate_game_version_setting(None, Some(true));
 //! assert_eq!(version, Some("VR".to_string()));
 //!
 //! // Resolve effective game version
@@ -217,12 +217,12 @@ fn canonical_game_version(value: &str) -> Option<&'static str> {
     }
 }
 
-/// Migrate legacy VR mode settings into canonical game version mode values.
+/// Migrate legacy game-version settings into canonical game version mode values.
 ///
 /// Supports "Original", "NextGen", "AnniversaryEdition"/"AE", "VR", and "auto".
 /// Explicit non-"auto" game version values take precedence over legacy VR mode.
 #[must_use]
-pub fn migrate_vr_setting(
+pub fn migrate_game_version_setting(
     game_version: Option<&str>,
     legacy_vr_mode: Option<bool>,
 ) -> Option<String> {
@@ -330,51 +330,57 @@ mod tests {
     // ========================================================================
 
     #[test]
-    fn test_migrate_vr_setting_new_takes_precedence() {
+    fn test_migrate_game_version_setting_new_takes_precedence() {
         assert_eq!(
-            migrate_vr_setting(Some("Original"), Some(true)),
+            migrate_game_version_setting(Some("Original"), Some(true)),
             Some("Original".to_string())
         );
         assert_eq!(
-            migrate_vr_setting(Some("NextGen"), Some(false)),
+            migrate_game_version_setting(Some("NextGen"), Some(false)),
             Some("NextGen".to_string())
         );
         assert_eq!(
-            migrate_vr_setting(Some("AnniversaryEdition"), Some(false)),
+            migrate_game_version_setting(Some("AnniversaryEdition"), Some(false)),
             Some("AnniversaryEdition".to_string())
         );
         assert_eq!(
-            migrate_vr_setting(Some("AE"), Some(false)),
+            migrate_game_version_setting(Some("AE"), Some(false)),
             Some("AnniversaryEdition".to_string())
         );
-        assert_eq!(migrate_vr_setting(Some("VR"), None), Some("VR".to_string()));
-    }
-
-    #[test]
-    fn test_migrate_vr_setting_legacy_migration() {
-        assert_eq!(migrate_vr_setting(None, Some(true)), Some("VR".to_string()));
         assert_eq!(
-            migrate_vr_setting(Some("auto"), Some(true)),
+            migrate_game_version_setting(Some("VR"), None),
             Some("VR".to_string())
         );
     }
 
     #[test]
-    fn test_migrate_vr_setting_no_migration_needed() {
+    fn test_migrate_game_version_setting_legacy_migration() {
         assert_eq!(
-            migrate_vr_setting(Some("auto"), Some(false)),
+            migrate_game_version_setting(None, Some(true)),
+            Some("VR".to_string())
+        );
+        assert_eq!(
+            migrate_game_version_setting(Some("auto"), Some(true)),
+            Some("VR".to_string())
+        );
+    }
+
+    #[test]
+    fn test_migrate_game_version_setting_no_migration_needed() {
+        assert_eq!(
+            migrate_game_version_setting(Some("auto"), Some(false)),
             Some("auto".to_string())
         );
         assert_eq!(
-            migrate_vr_setting(Some("auto"), None),
+            migrate_game_version_setting(Some("auto"), None),
             Some("auto".to_string())
         );
     }
 
     #[test]
-    fn test_migrate_vr_setting_nothing_set() {
-        assert_eq!(migrate_vr_setting(None, None), None);
-        assert_eq!(migrate_vr_setting(None, Some(false)), None);
+    fn test_migrate_game_version_setting_nothing_set() {
+        assert_eq!(migrate_game_version_setting(None, None), None);
+        assert_eq!(migrate_game_version_setting(None, Some(false)), None);
     }
 
     // ========================================================================

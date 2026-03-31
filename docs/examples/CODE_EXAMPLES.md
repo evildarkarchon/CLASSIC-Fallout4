@@ -2,6 +2,8 @@
 
 > Practical examples for common development patterns
 
+Note: many examples in this file target the legacy Python runtime/orchestration layer under `deprecated/` and older migration helpers. They are not the default path for current product work, which centers on `ClassicLib-rs/`, the maintained bindings, and the C++ frontends.
+
 This document provides ready-to-use code examples for common tasks in CLASSIC development.
 
 ---
@@ -791,7 +793,7 @@ result = await fetch_all_data()
 
 ## See Also
 
-- [API Reference](API_REFERENCE.md)
+- [API Docs Index](../api/README.md)
 - [Architecture Overview](../architecture/ARCHITECTURE_OVERVIEW.md)
 - [Quick Start Guide](QUICK_START.md)
 - [Testing Guide](../testing/TESTING_GUIDE_INDEX.md)

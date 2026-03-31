@@ -123,11 +123,37 @@ impl RecordScanner {
         segment_callstack: &[String],
         crashgen_name: &str,
     ) -> (Vec<String>, Vec<String>) {
+        let segment_callstack_lower: Vec<String> = segment_callstack
+            .iter()
+            .map(|line| line.to_lowercase())
+            .collect();
+        self.scan_named_records_with_crashgen_name_and_lowercase(
+            segment_callstack,
+            &segment_callstack_lower,
+            crashgen_name,
+        )
+    }
+
+    /// Like [`Self::scan_named_records_with_crashgen_name`] but reuses pre-lowercased input.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `segment_callstack_lower` is not kept index-aligned with `segment_callstack`.
+    pub fn scan_named_records_with_crashgen_name_and_lowercase(
+        &self,
+        segment_callstack: &[String],
+        segment_callstack_lower: &[String],
+        crashgen_name: &str,
+    ) -> (Vec<String>, Vec<String>) {
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
 
-        let records_matches =
-            self.find_matching_records_internal(segment_callstack, RSP_MARKER, RSP_OFFSET);
+        let records_matches = self.find_matching_records_internal(
+            segment_callstack,
+            segment_callstack_lower,
+            RSP_MARKER,
+            RSP_OFFSET,
+        );
 
         let report_lines = if !records_matches.is_empty() {
             self.generate_found_records_lines(&records_matches, crashgen_name)
@@ -169,8 +195,17 @@ impl RecordScanner {
     pub fn extract_records(&self, segment_callstack: &[String]) -> Vec<String> {
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
+        let segment_callstack_lower: Vec<String> = segment_callstack
+            .iter()
+            .map(|line| line.to_lowercase())
+            .collect();
 
-        self.find_matching_records_internal(segment_callstack, RSP_MARKER, RSP_OFFSET)
+        self.find_matching_records_internal(
+            segment_callstack,
+            &segment_callstack_lower,
+            RSP_MARKER,
+            RSP_OFFSET,
+        )
     }
 
     /// Clears internal caches (currently a no-op for API compatibility).
@@ -196,9 +231,16 @@ impl RecordScanner {
     fn find_matching_records_internal(
         &self,
         segment_callstack: &[String],
+        segment_callstack_lower: &[String],
         rsp_marker: &str,
         rsp_offset: usize,
     ) -> Vec<String> {
+        assert_eq!(
+            segment_callstack.len(),
+            segment_callstack_lower.len(),
+            "lowercased callstack slice should stay aligned with the original callstack",
+        );
+
         let mut records_matches = Vec::new();
 
         // Build Aho-Corasick automaton for efficient multi-pattern matching if not already built
@@ -218,14 +260,14 @@ impl RecordScanner {
                 .unwrap()
         });
 
-        for line in segment_callstack {
-            let lower_line = line.to_lowercase();
+        for (index, line) in segment_callstack.iter().enumerate() {
+            let lower_line = segment_callstack_lower[index].as_str();
 
             // Check if line contains any target record
-            let has_target = record_matcher.is_match(&lower_line);
+            let has_target = record_matcher.is_match(lower_line);
 
             // Check if line contains any ignored terms
-            let has_ignored = ignore_matcher.is_match(&lower_line);
+            let has_ignored = ignore_matcher.is_match(lower_line);
 
             if has_target && !has_ignored {
                 // Extract the relevant part of the line based on format
@@ -687,6 +729,53 @@ mod tests {
         let records = scanner.extract_records(&callstack);
         // Should extract content after offset 30
         assert!(!records.is_empty());
+    }
+
+    #[test]
+    fn test_scan_named_records_with_misaligned_lowercase_input_panics() {
+        let scanner = RecordScanner::new(
+            vec!["ActorBase".to_string(), "Weapon".to_string()],
+            vec![],
+            "Buffout 4".to_string(),
+        );
+
+        let callstack = vec!["ActorBase_Player".to_string(), "Weapon_Pistol".to_string()];
+        let lowered = vec!["actorbase_player".to_string()];
+
+        let result = std::panic::catch_unwind(|| {
+            scanner.scan_named_records_with_crashgen_name_and_lowercase(
+                &callstack,
+                &lowered,
+                "Buffout 4",
+            )
+        });
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_scan_named_records_with_aligned_lowercase_input_matches_original_callstack() {
+        let scanner = RecordScanner::new(
+            vec!["ActorBase".to_string(), "Weapon".to_string()],
+            vec![],
+            "Buffout 4".to_string(),
+        );
+
+        let callstack = vec!["ActorBase_Player".to_string(), "Weapon_Pistol".to_string()];
+        let lowered = callstack
+            .iter()
+            .map(|line| line.to_lowercase())
+            .collect::<Vec<_>>();
+
+        let (_report, matches) = scanner.scan_named_records_with_crashgen_name_and_lowercase(
+            &callstack,
+            &lowered,
+            "Buffout 4",
+        );
+
+        assert_eq!(matches.len(), 2);
+        assert!(matches.iter().any(|line| line.contains("ActorBase_Player")));
+        assert!(matches.iter().any(|line| line.contains("Weapon_Pistol")));
     }
 
     // ============================================

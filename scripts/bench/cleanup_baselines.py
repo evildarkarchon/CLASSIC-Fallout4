@@ -32,7 +32,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 # Pattern to match baseline directories: baseline-YYYY-MM-DD-HHMMSS
-BASELINE_PATTERN = re.compile(r"^baseline-(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})(\d{2})$")
+BASELINE_PATTERN = re.compile(
+    r"^baseline-(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})(\d{2})$"
+)
 
 
 def parse_baseline_timestamp(name: str) -> datetime | None:
@@ -259,7 +261,9 @@ Examples:
         if args.execute:
             print(f"Deleted {len(deleted_paths)} baseline(s)")
         else:
-            print(f"Would delete {len(deleted_paths)} baseline(s) ({format_size(total_size)} total)")
+            print(
+                f"Would delete {len(deleted_paths)} baseline(s) ({format_size(total_size)} total)"
+            )
             print("\nRun with --execute to actually delete these baselines.")
     else:
         print("No baselines need to be deleted.")

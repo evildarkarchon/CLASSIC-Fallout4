@@ -1197,6 +1197,118 @@
         "parseXseLog"
       ],
       "rustSymbols": []
+    },
+    {
+      "coverageId": "node-deferred-scanlog-101",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "ScanProgressPhase"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-config-102",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "CoreModEntry"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-config-103",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "CoreModExclude"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-config-104",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "ModConflictEntry"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-config-105",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [
+        "JsModConflictEntry"
+      ],
+      "rustSymbols": []
+    },
+    {
+      "coverageId": "node-deferred-scanlog-106",
+      "classification": "deferred",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "resolve_batch_concurrency"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-config-107",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "ModSolutionCriteria",
+        "ModSolutionEntry",
+        "SuspectErrorRule",
+        "SuspectStackCountRule",
+        "SuspectStackRule"
+      ]
+    },
+    {
+      "coverageId": "node-deferred-aux-108",
+      "classification": "deferred",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "wave": null,
+      "owner": "Squad B",
+      "deferReason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [
+        "JsModSolutionCriteria",
+        "JsModSolutionEntry",
+        "JsSuspectErrorRule",
+        "JsSuspectStackCountRule",
+        "JsSuspectStackRule"
+      ],
+      "rustSymbols": []
     }
   ]
 }

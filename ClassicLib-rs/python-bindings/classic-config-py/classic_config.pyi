@@ -202,56 +202,41 @@ class YamlData:
 
     # Mod detection lists
     @property
-    def game_mods_core(self) -> dict[str, Any]:
+    def game_mods_core(self) -> list[dict[str, str | None]]:
         """Core/essential mods configuration.
 
         Returns:
-            Dictionary mapping mod names to detection patterns
+            List of dicts with keys: detect, name, description, gpu (optional)
 
         """
 
     @property
-    def game_mods_core_folon(self) -> dict[str, Any]:
-        """Fallout London (FOLON) specific mods configuration.
-
-        Returns:
-            Dictionary mapping FOLON mod names to detection patterns
-
-        """
-
-    @property
-    def game_mods_freq(self) -> dict[str, Any]:
+    def game_mods_freq(self) -> list[dict[str, Any]]:
         """Frequently problematic mods configuration.
 
         Returns:
-            Dictionary mapping mod names to detection patterns
+            List of structured mod entries with `id`, `criteria`, `exceptions`, `name`,
+            and `description`
 
         """
 
     @property
-    def game_mods_solu(self) -> dict[str, Any]:
+    def game_mods_solu(self) -> list[dict[str, Any]]:
         """Solution/fix mods configuration.
 
         Returns:
-            Dictionary mapping solution mod names to detection patterns
+            Ordered list of dicts with keys:
+                id, criteria, exceptions, name, description
 
         """
 
     @property
-    def game_mods_opc2(self) -> dict[str, Any]:
-        """Optimization/performance mods configuration (OPC2).
+    def game_mods_conf(self) -> list[dict[str, str | None]]:
+        """Mod conflict entries.
 
         Returns:
-            Dictionary mapping optimization mod names to detection patterns
-
-        """
-
-    @property
-    def game_mods_conf(self) -> dict[str, Any]:
-        """Configuration mods.
-
-        Returns:
-            Dictionary mapping config mod names to detection patterns
+            List of mod conflict entry dicts with keys:
+                mod_a, mod_b, name_a, name_b, description, fix, link (optional)
 
         """
 
@@ -265,22 +250,24 @@ class YamlData:
 
         """
 
-    # Suspect detection lists
+    # Suspect detection rules
     @property
-    def suspects_error_list(self) -> dict[str, Any]:
-        """Suspect patterns for error detection.
+    def suspect_error_rules(self) -> list[dict[str, Any]]:
+        """Structured suspect rules for main-error detection.
 
         Returns:
-            Dictionary mapping error categories to detection patterns
+            List of dicts with keys: id, name, severity, main_error_contains_any
 
         """
 
     @property
-    def suspects_stack_list(self) -> dict[str, list[str]]:
-        """Suspect patterns for callstack analysis.
+    def suspect_stack_rules(self) -> list[dict[str, Any]]:
+        """Structured suspect rules for callstack analysis.
 
         Returns:
-            Dictionary mapping callstack categories to pattern lists
+            List of dicts with keys: id, name, severity, main_error_required_any,
+            main_error_optional_any, stack_contains_any,
+            exclude_if_stack_contains_any, stack_contains_at_least
 
         """
 
@@ -341,35 +328,30 @@ class PathConfig:
 
     @ini_folder.setter
     def ini_folder(self, value: str | None) -> None: ...
-
     @property
     def scan_custom(self) -> str | None:
         """Path to a custom scan folder, if configured."""
 
     @scan_custom.setter
     def scan_custom(self, value: str | None) -> None: ...
-
     @property
     def mods_folder(self) -> str | None:
         """Path to the mods folder, if configured."""
 
     @mods_folder.setter
     def mods_folder(self, value: str | None) -> None: ...
-
     @property
     def game_root(self) -> str:
         """Path to the game root directory."""
 
     @game_root.setter
     def game_root(self, value: str) -> None: ...
-
     @property
     def docs_root(self) -> str | None:
         """Path to the documents root directory, if configured."""
 
     @docs_root.setter
     def docs_root(self, value: str | None) -> None: ...
-
     def __repr__(self) -> str: ...
 
 class YamlSource:
@@ -429,84 +411,72 @@ class ClassicConfig:
 
     @fcx_mode.setter
     def fcx_mode(self, value: bool) -> None: ...
-
     @property
     def show_formid_values(self) -> bool:
         """Whether FormID values are shown."""
 
     @show_formid_values.setter
     def show_formid_values(self, value: bool) -> None: ...
-
     @property
     def stat_logging(self) -> bool:
         """Whether statistical logging is enabled."""
 
     @stat_logging.setter
     def stat_logging(self, value: bool) -> None: ...
-
     @property
     def move_unsolved_logs(self) -> bool:
         """Whether unsolved logs are moved after scanning."""
 
     @move_unsolved_logs.setter
     def move_unsolved_logs(self, value: bool) -> None: ...
-
     @property
     def simplify_logs(self) -> bool:
         """Whether logs are simplified."""
 
     @simplify_logs.setter
     def simplify_logs(self, value: bool) -> None: ...
-
     @property
     def update_check(self) -> bool:
         """Whether startup update checks are enabled."""
 
     @update_check.setter
     def update_check(self, value: bool) -> None: ...
-
     @property
     def game_version(self) -> str:
         """Selected game version mode."""
 
     @game_version.setter
     def game_version(self, value: str) -> None: ...
-
     @property
     def update_source(self) -> str:
         """Configured update source."""
 
     @update_source.setter
     def update_source(self, value: str) -> None: ...
-
     @property
     def auto_switch_to_results(self) -> bool:
         """Whether UI should switch to results automatically."""
 
     @auto_switch_to_results.setter
     def auto_switch_to_results(self, value: bool) -> None: ...
-
     @property
     def auto_refresh_interval_ms(self) -> int:
         """Auto-refresh interval in milliseconds."""
 
     @auto_refresh_interval_ms.setter
     def auto_refresh_interval_ms(self, value: int) -> None: ...
-
     @property
     def paths(self) -> PathConfig:
         """Path configuration."""
 
     @paths.setter
     def paths(self, value: PathConfig) -> None: ...
-
     @property
     def formid_databases(self) -> dict[str, list[str]]:
         """Configured FormID database paths by game."""
 
     @formid_databases.setter
     def formid_databases(self, value: dict[str, list[str]]) -> None: ...
-
     def __repr__(self) -> str: ...
 
 def clear_yaml_cache() -> None:
@@ -545,3 +515,18 @@ def create_yamldata(
         '8.0.0'
 
     """
+
+def set_application_dir(path: str | Path) -> None:
+    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+
+    By default this is set to the executed Python file's directory at import
+    time, falling back to ``os.getcwd()`` when no script file is available.
+    Call this before ``ClassicConfig.load_or_default()`` if you need a
+    different root.
+
+    Args:
+        path: Absolute path to the desired application directory.
+    """
+
+def get_application_dir() -> str | None:
+    """Return the current application directory override, or ``None``."""

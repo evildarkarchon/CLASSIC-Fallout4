@@ -102,14 +102,12 @@ Warnings_CRASHGEN:
   Warn_Outdated: "Outdated"
 Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
-Crashlog_Error_Check: {}
-Crashlog_Stack_Check: {}
-Mods_CONF: {}
-Mods_CORE: {}
-Mods_CORE_FOLON: {}
-Mods_FREQ: {}
-Mods_OPC2: {}
-Mods_SOLU: {}
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_CONF: []
+Mods_CORE: []
+Mods_FREQ: []
+Mods_SOLU: []
 `;
 
 const IGNORE_YAML = `

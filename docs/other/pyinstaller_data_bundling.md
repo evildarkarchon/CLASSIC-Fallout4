@@ -70,9 +70,9 @@ The ResourceLoader uses a hierarchical strategy to find data files:
 
 1. Install PyInstaller:
    ```bash
-   uv sync --all-extras  # Includes pyinstaller in dev dependencies
+   uv tool install pyinstaller
    # or
-   pip install pyinstaller
+   uv pip install pyinstaller
    ```
 
 2. Ensure UPX is available (optional, for compression):

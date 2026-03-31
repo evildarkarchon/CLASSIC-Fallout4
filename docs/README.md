@@ -17,6 +17,7 @@ For policy-level guidance, see [`AGENTS.md`](../AGENTS.md).
 
 ## Quick Navigation
 
+- [`api/README.md`](api/README.md) - contributor-facing Rust API docs index
 - [`api/QUICK_START.md`](api/QUICK_START.md) — contributor quick start for current C++ + Rust workflows
 - [`architecture/ARCHITECTURE_OVERVIEW.md`](architecture/ARCHITECTURE_OVERVIEW.md) — architecture map and runtime boundaries
 - [`development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — Rust integration surfaces (C++, Node, Python bindings)
@@ -37,7 +38,13 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 ```
+
+Use the PowerShell wrappers for all C++ testing. Do not invoke raw `ctest` or C++ test executables directly.
 
 ### Rust
 
@@ -63,12 +70,12 @@ bun run test:node
 ### Python bindings (when touching PyO3 surface)
 
 ```powershell
-uv venv
-uv pip install maturin pytest
+uv venv ClassicLib-rs/python-bindings/.venv
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry classic_pybridge
-uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
+uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
 
 ---

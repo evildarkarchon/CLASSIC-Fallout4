@@ -3,11 +3,20 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 TOOL_PATH = REPO_ROOT / "tools" / "binding_parity_runtime_coverage.py"
+PYTHON_RUNTIME_REGISTRY = (
+    REPO_ROOT
+    / "ClassicLib-rs"
+    / "python-bindings"
+    / "tests"
+    / "fixtures"
+    / "runtime_coverage_registry.json"
+)
 
 
 def load_tool_module():
@@ -202,3 +211,15 @@ def test_build_coverage_summary_reports_selector_snapshot_mismatch() -> None:
 
     assert summary["summary"]["registry_mismatch_total"] == 1
     assert summary["summary"]["tier1_missing_runtime_total"] == 1
+
+
+def test_python_runtime_registry_tracks_application_dir_surfaces() -> None:
+    registry = json.loads(PYTHON_RUNTIME_REGISTRY.read_text(encoding="utf-8"))
+    binding_identifiers = {
+        binding_identifier
+        for entry in registry["entries"]
+        for binding_identifier in entry.get("bindingIdentifiers", [])
+    }
+
+    assert "classic_config.get_application_dir" in binding_identifiers
+    assert "classic_config.set_application_dir" in binding_identifiers

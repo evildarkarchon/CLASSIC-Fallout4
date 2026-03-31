@@ -14,13 +14,16 @@ crate-type = ["cdylib", "rlib"]  # Both for Python and Rust usage
 [dependencies]
 # Business logic (pure Rust)
 classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-registry-core = { path = "../../business-logic/classic-registry-core" }
 classic-crashgen-settings-core = { path = "../../business-logic/classic-crashgen-settings-core" }
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 
 # Foundation
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 
 # Python bindings
+anyhow = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }
 
 [dev-dependencies]

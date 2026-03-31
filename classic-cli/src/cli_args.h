@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 /// Parsed CLI arguments, mirroring Python's CLASSIC_ScanLogs.py argparse.
 struct CliArgs {
@@ -13,6 +14,7 @@ struct CliArgs {
     std::string scan_path;       // Empty = auto-detect
     uint32_t max_concurrent = 0; // 0 = auto (cpu_count - 2, min 2, max 32)
     bool version_flag = false;
+    std::vector<std::string> input_paths; // Explicit crash-log files or directories
 };
 
 uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count);

@@ -92,39 +92,6 @@ impl PyLogParser {
         self.inner.clear_caches();
     }
 
-    /// Parse log into segments (deprecated positional Vec interface).
-    ///
-    /// Returns a `list[list[str]]` for backward compatibility.
-    /// For new code, use `parse_all_sections()` which returns a `dict[str, list[str]]`.
-    ///
-    /// For large logs (>1000 lines), this releases the GIL.
-    #[allow(deprecated)]
-    pub fn parse_segments<'py>(
-        &self,
-        py: Python<'py>,
-        lines: Vec<String>,
-    ) -> PyResult<Bound<'py, PyList>> {
-        let arc_lines = to_arc_str_vec(&lines);
-
-        // Release GIL for large parsing operations
-        let result = if lines.len() > 1000 {
-            without_gil(py, || self.inner.parse_segments(&arc_lines))
-        } else {
-            // Keep GIL for small operations (overhead not worth it)
-            self.inner.parse_segments(&arc_lines)
-        };
-
-        // Convert result back to list[list[str]] without intermediate String allocation
-        let mut outer_items = Vec::with_capacity(result.len());
-        for segment in result {
-            // Create PyString directly from Arc<str> reference (no String allocation)
-            let inner_items = segment.iter().map(|line| PyString::new(py, line));
-            let inner_list = PyList::new(py, inner_items)?;
-            outer_items.push(inner_list);
-        }
-        PyList::new(py, outer_items)
-    }
-
     /// Parse segments in parallel for large logs
     ///
     /// This operation always releases the GIL to allow other Python threads to run concurrently.
@@ -231,16 +198,9 @@ impl PyLogParser {
     /// The returned `ScanOutput.segments` is now a `dict[str, list[str]]` with
     /// all 8 named keys always present (see `segment_key` constants).
     ///
-    /// The `segment_boundaries` parameter is accepted for API compatibility but
-    /// is ignored — anchor-first segmentation is always used.
+    /// Anchor-first segmentation is always used.
     #[pyo3(name = "parse_complete")]
-    pub fn parse_complete<'py>(
-        &self,
-        py: Python<'py>,
-        lines: Vec<String>,
-        _segment_boundaries: Vec<(String, String)>,
-        _xse_acronym: String,
-    ) -> PyResult<ScanOutput> {
+    pub fn parse_complete<'py>(&self, py: Python<'py>, lines: Vec<String>) -> PyResult<ScanOutput> {
         // Parse header metadata
         let (game_ver, crashgen_ver, main_err) = {
             let header = self

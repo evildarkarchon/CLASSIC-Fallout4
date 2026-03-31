@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 
 class SignalHub;
 class ThreadManager;
@@ -24,7 +25,8 @@ public:
                    bool simplifyLogs,
                    bool moveUnsolvedLogs,
                    int maxConcurrentScans,
-                   const QString& customFolder);
+                   const QString& customFolder,
+                   const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 
@@ -34,7 +36,9 @@ signals:
     void scanLogScanned(int index, bool success, const QString& logPath);
     void scanFinished(int total, int success, int errors);
     void scanError(const QString& message);
-    void scanProgress(float percent, const QString& status);
+    void scanWarning(const QString& message);
+    void scanProgress(float percent, const QString& status, int completed, int total);
+    void scanReportDirectoriesResolved(const QStringList& reportDirs);
 
 private slots:
     void onWorkerFinished(int total, int success, int errors);
