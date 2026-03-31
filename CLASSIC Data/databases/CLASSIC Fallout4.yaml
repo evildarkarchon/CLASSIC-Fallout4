@@ -76,6 +76,7 @@ Crashgen_Registry:
                     ]
           action:
             kind: issue
+            bucket: error_information
             severity: error
             message: "Baka ScrapHeap is redundant with {crashgen_name}"
             fix: "Uninstall Baka ScrapHeap to prevent conflicts with {crashgen_name}."
@@ -224,6 +225,7 @@ Crashgen_Registry:
             plugin_any: [bakascrapheap.dll]
           action:
             kind: notice
+            bucket: error_information
             severity: error
             message: "Baka ScrapHeap is redundant with Addictol"
             fix: "Uninstall Baka ScrapHeap to prevent conflicts with Addictol."
@@ -459,231 +461,498 @@ Crashlog_Plugins_Exclude: # EXCLUDE *these* plugins from Crash Logs when perform
   - DLCworkshop03.esm
   - Unofficial Fallout 4 Patch.esp
 
-# CRASH SUSPECTS WITH ITEMS IN MAIN ERROR ONLY
-# If even ONE Stack Condition is found, move to dict directly below.
-# INT in every main key is required and used for 'Severity' value assignment.
-# Reminder: Items starting with 0x must be quoted so they aren't converted to HexInt.
+# CRASH SUSPECTS WITH ITEMS IN MAIN ERROR ONLY.
+# Reminder: Hex values or digit-leading values should be quoted so they return as strings.
 Crashlog_Error_Check:
-  5 | Stack Overflow Crash: EXCEPTION_STACK_OVERFLOW
+  - id: stack_overflow_crash
+    name: Stack Overflow Crash
+    severity: 5
+    main_error_contains_any: [EXCEPTION_STACK_OVERFLOW]
 
-  5 | Active Effects Crash: "0x000100000000"
+  - id: active_effects_crash
+    name: Active Effects Crash
+    severity: 5
+    main_error_contains_any: ["0x000100000000"]
 
-  3 | C++ Redist Crash: MSVC
+  - id: cpp_redist_crash
+    name: C++ Redist Crash
+    severity: 3
+    main_error_contains_any: [MSVC]
 
-  4 | Rendering Crash: d3d11
+  - id: rendering_crash
+    name: Rendering Crash
+    severity: 4
+    main_error_contains_any: [d3d11]
 
-  5 | Bad Math Crash: EXCEPTION_INT_DIVIDE_BY_ZERO
+  - id: bad_math_crash
+    name: Bad Math Crash
+    severity: 5
+    main_error_contains_any: [EXCEPTION_INT_DIVIDE_BY_ZERO]
 
-  2 | Generic Crash: tbbmalloc
+  - id: generic_crash
+    name: Generic Crash
+    severity: 2
+    main_error_contains_any: [tbbmalloc]
 
-  5 | Null Crash: "0x000000000000"
+  - id: null_crash
+    name: Null Crash
+    severity: 5
+    main_error_contains_any: ["0x000000000000"]
 
-  1 | *[Localized Mod Crash]: 01B59A4
+  - id: localized_mod_crash
+    name: "*[Localized Mod Crash]"
+    severity: 1
+    main_error_contains_any: ["01B59A4"]
 
-# CRASH SUSPECTS WITH ITEMS IN CALL STACK AND / OR MAIN ERROR | SPECIAL ITEM CONDITIONS:
-# Add ME-REQ if item is required to show up in Main Error, otherwise add ME-OPT if optional.
-# Add INT to set least number of times the item has to repeat in the Call Stack. Ex: [3|UIMessage]
-# Add NOT to ignore crash suspect warning completely if the Call Stack also contains this item.
-# If no condition is specified, it checks if the item appears at least once in the Call Stack.
+# CRASH SUSPECTS WITH ITEMS IN CALL STACK AND / OR MAIN ERROR.
+# `main_error_required_any` preserves the old ME-REQ behavior: any listed item can satisfy the requirement.
+# Reminder: Hex values or digit-leading values should be quoted so they return as strings.
 Crashlog_Stack_Check:
-  5 | Scaleform Gfx Crash:
-    [
-      ME-OPT|Scaleform::Gfx::Value::ObjectInterface,
-      InstalledContentPanelBackground_mc,
-      BackgroundAndBracketsInstalledContentTopic_mc,
-    ]
+  - id: scaleform_gfx_crash
+    name: Scaleform Gfx Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: [Scaleform::Gfx::Value::ObjectInterface]
+    stack_contains_any:
+      [InstalledContentPanelBackground_mc, BackgroundAndBracketsInstalledContentTopic_mc]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | DLL Crash: [DLCBannerDLC01.dds]
+  - id: dll_crash
+    name: DLL Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [DLCBannerDLC01.dds]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Downgrade Crash: [LoadScreenTranslucent.nif]
+  - id: downgrade_crash
+    name: Downgrade Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [LoadScreenTranslucent.nif]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | LOD Crash: [BGSLocation, BGSQueuedTerrainInitialLoad]
+  - id: lod_crash
+    name: LOD Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BGSLocation, BGSQueuedTerrainInitialLoad]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | MCM Crash: [FaderData, FaderMenu, UIMessage]
+  - id: mcm_crash
+    name: MCM Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [FaderData, FaderMenu, UIMessage]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Decal Crash: [BGSDecalManager, BSTempEffectGeometryDecal]
+  - id: decal_crash
+    name: Decal Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BGSDecalManager, BSTempEffectGeometryDecal]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | Equip Crash: [PipboyMapData]
+  - id: equip_crash
+    name: Equip Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [PipboyMapData]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | Script Crash: [Papyrus, VirtualMachine, Assertion failed]
+  - id: script_crash
+    name: Script Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [Papyrus, VirtualMachine, Assertion failed]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Antivirus Crash:
-    [
-      ME-OPT|24A48D48,
-      ME-OPT|bdhkm64.dll,
-      usvfs::hook_DeleteFileW,
-      ::Manager,
-      ::zlibStreamDetail,
-    ]
+  - id: antivirus_crash
+    name: Antivirus Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: ["24A48D48", bdhkm64.dll]
+    stack_contains_any: [usvfs::hook_DeleteFileW, ::Manager, ::zlibStreamDetail]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  6 | BA2 Limit Crash: [LooseFileAsyncStream]
+  - id: ba2_limit_crash
+    name: BA2 Limit Crash
+    severity: 6
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [LooseFileAsyncStream]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Grid Scrap Crash: [GridAdjacencyMapNode, PowerUtils]
+  - id: grid_scrap_crash
+    name: Grid Scrap Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [GridAdjacencyMapNode, PowerUtils]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Map Marker Crash: [HUDCompass, HUDCompassMarker, attachMovie()]
+  - id: map_marker_crash
+    name: Map Marker Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [HUDCompass, HUDCompassMarker, attachMovie()]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  4 | Mesh (NIF) Crash:
-    [NOT|LooseFileAsyncStream, LooseFileStream, BSFadeNode, BSMultiBoundNode]
+  - id: mesh_nif_crash
+    name: Mesh (NIF) Crash
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [LooseFileStream, BSFadeNode, BSMultiBoundNode]
+    exclude_if_stack_contains_any: [LooseFileAsyncStream]
+    stack_contains_at_least: []
 
-  4 | Texture (DDS) Crash: [Create2DTexture, DefaultTexture]
+  - id: texture_dds_crash
+    name: Texture (DDS) Crash
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [Create2DTexture, DefaultTexture]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | Material (BGSM) Crash: [DefaultTexture_Black, NiAlphaProperty]
+  - id: material_bgsm_crash
+    name: Material (BGSM) Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [DefaultTexture_Black, NiAlphaProperty]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | NPC Pathing Crash (S):
-    [NavMesh, PathingCell, BSPathBuilder, PathManagerServer]
+  - id: npc_pathing_crash_s
+    name: NPC Pathing Crash (S)
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [NavMesh, PathingCell, BSPathBuilder, PathManagerServer]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | NPC Pathing Crash (D):
-    [BSNavmeshObstacleData, DynamicNavmesh, PathingRequest]
+  - id: npc_pathing_crash_d
+    name: NPC Pathing Crash (D)
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BSNavmeshObstacleData, DynamicNavmesh, PathingRequest]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | NPC Pathing Crash (F):
-    [
-      ME-OPT|248B26A,
-      MovementAgentPathFollowerVirtual,
-      PathingStreamSaveGame,
-      BGSProcedurePatrolExecState,
-      CustomActorPackageData,
-    ]
+  - id: npc_pathing_crash_f
+    name: NPC Pathing Crash (F)
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: ["248B26A"]
+    stack_contains_any:
+      [MovementAgentPathFollowerVirtual, PathingStreamSaveGame, BGSProcedurePatrolExecState, CustomActorPackageData]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Audio Driver Crash:
-    [ME-OPT|X3DAudio1_7, ME-OPT|XAudio2_7, X3DAudio1_7.dll, XAudio2_7.dll]
+  - id: audio_driver_crash
+    name: Audio Driver Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: [X3DAudio1_7, XAudio2_7]
+    stack_contains_any: [X3DAudio1_7.dll, XAudio2_7.dll]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  4 | Body Physics Crash: [ME-OPT|cbp.dll, skeleton.nif, cbp.dll]
+  - id: body_physics_crash
+    name: Body Physics Crash
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: [cbp.dll]
+    stack_contains_any: [skeleton.nif, cbp.dll]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | Leveled List Crash: [ME-OPT|0D09AB7, TESLevItem]
+  - id: leveled_list_crash
+    name: Leveled List Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: ["0D09AB7"]
+    stack_contains_any: [TESLevItem]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Plugin Limit Crash: ["[FF]", BSMemStorage, DataFileHandleReaderWriter]
+  - id: plugin_limit_crash
+    name: Plugin Limit Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: ["[FF]", BSMemStorage, DataFileHandleReaderWriter]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Load Order Crash: [ME-OPT|0DB9300, GamebryoSequenceGenerator]
+  - id: load_order_crash
+    name: Load Order Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: ["0DB9300"]
+    stack_contains_any: [GamebryoSequenceGenerator]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | MO2 Extractor Crash: [BSD3DResourceCreator]
+  - id: mo2_extractor_crash
+    name: MO2 Extractor Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BSD3DResourceCreator]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Nvidia Debris Crash:
-    [
-      ME-OPT|03EE452,
-      ME-OPT|flexRelease_x64,
-      flexRelease_x64.dll,
-      CheckRefAgainstConditionsFunc,
-    ]
+  - id: nvidia_debris_crash
+    name: Nvidia Debris Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: ["03EE452", flexRelease_x64]
+    stack_contains_any: [flexRelease_x64.dll, CheckRefAgainstConditionsFunc]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Nvidia Driver Crash:
-    [ME-OPT|nvwgf2umx, ME-OPT|USER32, 3|nvwgf2umx.dll, 3|USER32.dll]
+  - id: nvidia_driver_crash
+    name: Nvidia Driver Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: [nvwgf2umx, USER32]
+    stack_contains_any: []
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least:
+      - substring: nvwgf2umx.dll
+        count: 3
+      - substring: USER32.dll
+        count: 3
 
-  4 | Nvidia Reflex Crash:
-    [
-      ME-OPT|3A0000,
-      ME-OPT|AD0000,
-      ME-OPT|8E0000,
-      ME-OPT|NVIDIA_Reflex,
-      ME-OPT|Buffout4,
-      NVIDIA_Reflex.dll,
-    ]
+  - id: nvidia_reflex_crash
+    name: Nvidia Reflex Crash
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: ["3A0000", "AD0000", "8E0000", NVIDIA_Reflex, Buffout4]
+    stack_contains_any: [NVIDIA_Reflex.dll]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  4 | Vulkan Memory Crash:
-    [
-      ME-REQ|KERNELBASE,
-      ME-OPT|MSVCP140,
-      KERNELBASE.dll,
-      MSVCP140.dll,
-      DxvkSubmissionQueue,
-    ]
+  - id: vulkan_memory_crash
+    name: Vulkan Memory Crash
+    severity: 4
+    main_error_required_any: [KERNELBASE]
+    main_error_optional_any: [MSVCP140]
+    stack_contains_any: [KERNELBASE.dll, MSVCP140.dll, DxvkSubmissionQueue]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Vulkan Settings Crash:
-    [
-      ME-OPT|00CD99B,
-      ME-OPT|amdvlk64,
-      amdvlk64.dll,
-      dxvk::DXGIAdapter,
-      dxvk::DXGIFactory,
-      VirtualLinearAllocatorWithNode,
-    ]
+  - id: vulkan_settings_crash
+    name: Vulkan Settings Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: ["00CD99B", amdvlk64]
+    stack_contains_any: [amdvlk64.dll, dxvk::DXGIAdapter, dxvk::DXGIFactory, VirtualLinearAllocatorWithNode]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  4 | Corrupted Audio Crash: [BSXAudio2DataSrc, BSXAudio2GameSound]
+  - id: corrupted_audio_crash
+    name: Corrupted Audio Crash
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BSXAudio2DataSrc, BSXAudio2GameSound]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | Console Command Crash: [SysWindowCompileAndRun, ConsoleLogPrinter]
+  - id: console_command_crash
+    name: Console Command Crash
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [SysWindowCompileAndRun, ConsoleLogPrinter]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  6 | Water Collision Crash: [BGSWaterCollisionManager]
+  - id: water_collision_crash
+    name: Water Collision Crash
+    severity: 6
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BGSWaterCollisionManager]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  4 | Particle Effects Crash: [ParticleSystem]
+  - id: particle_effects_crash
+    name: Particle Effects Crash
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [ParticleSystem]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  3 | Player Character Crash:
-    [PlayerCharacter, 3|0x00000007, 3|0x00000008, 3|0x00000014]
+  - id: player_character_crash
+    name: Player Character Crash
+    severity: 3
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [PlayerCharacter]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least:
+      - substring: "0x00000007"
+        count: 3
+      - substring: "0x00000008"
+        count: 3
+      - substring: "0x00000014"
+        count: 3
 
-  5 | Animation / Physics Crash:
-    [
-      ME-OPT|1FCC07E,
-      BSAnimationGraphManager,
-      hkbVariableBindingSet,
-      hkbHandIkControlsModifier,
-      hkbBehaviorGraph,
-      hkbModifierList,
-    ]
+  - id: animation_physics_crash
+    name: Animation / Physics Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: ["1FCC07E"]
+    stack_contains_any:
+      [BSAnimationGraphManager, hkbVariableBindingSet, hkbHandIkControlsModifier, hkbBehaviorGraph, hkbModifierList]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Animation Corruption Crash:
-    [
-      ME-OPT|1B938F0,
-      AnimTextData\\AnimationFileData,
-      AnimationFileLookupSingletonHelper,
-    ]
+  - id: animation_corruption_crash
+    name: Animation Corruption Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: ["1B938F0"]
+    stack_contains_any: [AnimTextData\\AnimationFileData, AnimationFileLookupSingletonHelper]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  5 | Archive Invalidation Crash: [DLCBanner05.dds]
+  - id: archive_invalidation_crash
+    name: Archive Invalidation Crash
+    severity: 5
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [DLCBanner05.dds]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[Item Crash]:
-    [
-      ME-OPT|0B2C44B,
-      TESObjectARMO,
-      TESObjectWEAP,
-      BGSMod::Attachment,
-      BGSMod::Template,
-      BGSMod::Template::Item,
-    ]
+  - id: item_crash
+    name: "*[Item Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: ["0B2C44B"]
+    stack_contains_any:
+      [TESObjectARMO, TESObjectWEAP, BGSMod::Attachment, BGSMod::Template, BGSMod::Template::Item]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[Save Crash]:
-    [ME-OPT|0CDAD30, BGSSaveLoadManager, BGSSaveLoadThread, BGSSaveFormBuffer]
+  - id: save_crash
+    name: "*[Save Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: ["0CDAD30"]
+    stack_contains_any: [BGSSaveLoadManager, BGSSaveLoadThread, BGSSaveFormBuffer]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[Input Crash]:
-    [
-      ButtonEvent,
-      MenuControls,
-      MenuOpenCloseHandler,
-      PlayerControls,
-      DXGISwapChain,
-    ]
+  - id: input_crash
+    name: "*[Input Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [ButtonEvent, MenuControls, MenuOpenCloseHandler, PlayerControls, DXGISwapChain]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[SS2 / WF Crash]:
-    [
-      ME-OPT|01F498D,
-      ME-OPT|03F89A3,
-      StartWorkshop,
-      IsWithinBuildableArea,
-      PlayerControls,
-      DXGISwapChain,
-    ]
+  - id: ss2_wf_crash
+    name: "*[SS2 / WF Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: ["01F498D", "03F89A3"]
+    stack_contains_any: [StartWorkshop, IsWithinBuildableArea, PlayerControls, DXGISwapChain]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[Looks Menu Crash]:
-    [ME-OPT|1D13DA7, ME-OPT|F4EE, BSShader, BSBatchRenderer, ShadowSceneNode]
+  - id: looks_menu_crash
+    name: "*[Looks Menu Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: ["1D13DA7", "F4EE"]
+    stack_contains_any: [BSShader, BSBatchRenderer, ShadowSceneNode]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[NPC Patrol Crash]:
-    [BGSProcedurePatrol, BGSProcedurePatrolExecState, PatrolActorPackageData]
+  - id: npc_patrol_crash
+    name: "*[NPC Patrol Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BGSProcedurePatrol, BGSProcedurePatrolExecState, PatrolActorPackageData]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[Precombines Crash]:
-    [
-      BSPackedCombined,
-      BGSCombinedCellGeometryDB,
-      BGSStaticCollection,
-      TESObjectCELL,
-    ]
+  - id: precombines_crash
+    name: "*[Precombines Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [BSPackedCombined, BGSCombinedCellGeometryDB, BGSStaticCollection, TESObjectCELL]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[GPU Overclock Crash]:
-    [myID3D11DeviceContext, BSDeferredDecal, BSDFDecal]
+  - id: gpu_overclock_crash
+    name: "*[GPU Overclock Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [myID3D11DeviceContext, BSDeferredDecal, BSDFDecal]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[NPC Projectile Crash]: [CombatProjectileAimController, BGSProjectile]
+  - id: npc_projectile_crash
+    name: "*[NPC Projectile Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [CombatProjectileAimController, BGSProjectile]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[Camera Position Crash]:
-    [ME-OPT|NvCamera64, NvCamera64.dll, NiCamera, WorldRoot Camera]
+  - id: camera_position_crash
+    name: "*[Camera Position Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: [NvCamera64]
+    stack_contains_any: [NvCamera64.dll, NiCamera, WorldRoot Camera]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
-  1 | *[HUD / Interface Crash]: [HUDAmmoCounter]
-
-# IMPORTANT: AVOID KEY NESTING BY JUST SPLITTING THE KEY WITH A SPECIFIC CHAR
+  - id: hud_interface_crash
+    name: "*[HUD / Interface Crash]"
+    severity: 1
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [HUDAmmoCounter]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
 
 Mods_CORE: # 0) MODS THAT EVERY PLAYER SHOULD HAVE INSTALLED
   - detect: CanarySaveFileMonitor
@@ -725,87 +994,151 @@ Mods_CORE: # 0) MODS THAT EVERY PLAYER SHOULD HAVE INSTALLED
       If this is correct, completely uninstall this mod to avoid any problems!
 
 Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
-  DamageThresholdFramework: |
-    Damage Threshold Framework
-        - Can cause crashes in combat on some occasions due to how damage calculations are done.
-        -----
+  - id: damage-threshold-framework
+    criteria:
+      any:
+        - DamageThresholdFramework
+    name: Damage Threshold Framework
+    description: |
+          - Can cause crashes in combat on some occasions due to how damage calculations are done.
+          -----
 
-  Endless Warfare: |
-    Endless Warfare
-        - Some enemy spawn points could be bugged or crash the game due to scripts or pathfinding.
-        -----
+  - id: endless-warfare
+    criteria:
+      any:
+        - Endless Warfare
+    name: Endless Warfare
+    description: |
+          - Some enemy spawn points could be bugged or crash the game due to scripts or pathfinding.
+          -----
 
-  EPO.esp: |
-    Extreme Particles Overhaul
-        - Can cause particle effects related crashes, consider switching to Burst Impact Blast FX.
-          Burst Impact Blast FX: https://www.nexusmods.com/fallout4/mods/57789?tab=files
-        -----
+  - id: extreme-particles-overhaul
+    criteria:
+      any:
+        - EPO.esp
+    name: Extreme Particles Overhaul
+    description: |
+          - Can cause particle effects related crashes, consider switching to Burst Impact Blast FX.
+            Burst Impact Blast FX: https://www.nexusmods.com/fallout4/mods/57789?tab=files
+          -----
 
-  SakhalinWasteland: |
-    Fallout Sakhalin
-        - Breaks the precombine system all across Far Harbor which will randomly crash your game.
-        -----
+  - id: fallout-sakhalin
+    criteria:
+      any:
+        - SakhalinWasteland
+    name: Fallout Sakhalin
+    description: |
+          - Breaks the precombine system all across Far Harbor which will randomly crash your game.
+          -----
 
-  76HUD: |
-    HUD76 Hud Replacer
-        - Can sometimes cause interface and pip-boy related bugs, glitches and crashes.
-        -----
+  - id: hud76-hud-replacer
+    criteria:
+      any:
+        - 76HUD
+    name: HUD76 Hud Replacer
+    description: |
+          - Can sometimes cause interface and pip-boy related bugs, glitches and crashes.
+          -----
 
-  NCRenegade: |
-    NCR Renegade Armor
-        - Broken outfit mesh that crashes the game in 3rd person or when NPCs wearing it are hit.
-        -----
+  - id: ncr-renegade-armor
+    criteria:
+      any:
+        - NCRenegade
+    name: NCR Renegade Armor
+    description: |
+          - Broken outfit mesh that crashes the game in 3rd person or when NPCs wearing it are hit.
+          -----
 
-  Respawnable Legendary Bosses: |
-    Respawnable Legendary Bosses
-        - Can sometimes cause Deathclaw / Behemoth boulder projectile crashes for unknown reasons.
-        -----
+  - id: respawnable-legendary-bosses
+    criteria:
+      any:
+        - Respawnable Legendary Bosses
+    name: Respawnable Legendary Bosses
+    description: |
+          - Can sometimes cause Deathclaw / Behemoth boulder projectile crashes for unknown reasons.
+          -----
 
-  Scrap Everything: |
-    Scrap Everything (Core Or Ultimate)
-        - Weird crashes and issues due to multiple unknown problems. This mod must be always last in your load order.
-        -----
+  - id: scrap-everything
+    criteria:
+      any:
+        - Scrap Everything
+    name: Scrap Everything (Core Or Ultimate)
+    description: |
+          - Weird crashes and issues due to multiple unknown problems. This mod must be always last in your load order.
+          -----
 
-  Shade Girl Leather Outfits: |
-    Shade Girl Leather Outfits
-        - Outfits can crash the game while browsing the armor workbench or upon starting a new game due to bad meshes.
-        -----
+  - id: shade-girl-leather-outfits
+    criteria:
+      any:
+        - Shade Girl Leather Outfits
+    name: Shade Girl Leather Outfits
+    description: |
+          - Outfits can crash the game while browsing the armor workbench or upon starting a new game due to bad meshes.
+          -----
 
-  SpringCleaning: |
-    Spring Cleaning
-        - Abandoned and severely outdated mod that breaks precombines and could potentially even break your save file.
-        -----
+  - id: spring-cleaning
+    criteria:
+      any:
+        - SpringCleaning
+    name: Spring Cleaning
+    description: |
+          - Abandoned and severely outdated mod that breaks precombines and could potentially even break your save file.
+          -----
 
-  (STO) NO: |
-    Stalker Texture Overhaul
-        - Doesn't work due to incorrect folder structure and has a corrupted dds file that causes Create2DTexture crashes.
-        -----
+  - id: stalker-texture-overhaul
+    criteria:
+      any:
+        - (STO) NO
+    name: Stalker Texture Overhaul
+    description: |
+          - Doesn't work due to incorrect folder structure and has a corrupted dds file that causes Create2DTexture crashes.
+          -----
 
-  TacticalTablet: |
-    Tactical Tablet
-        - Can cause flickering with certain scopes or crashes while browsing workbenches, most commonly with ECO.
-        -----
+  - id: tactical-tablet
+    criteria:
+      any:
+        - TacticalTablet
+    name: Tactical Tablet
+    description: |
+          - Can cause flickering with certain scopes or crashes while browsing workbenches, most commonly with ECO.
+          -----
 
-  True Nights v03: |
-    True Nights
-        - Has an invalid Image Space Adapter (IMAD) Record that will corrupt your save memory and has to be manually fixed.
-        -----
+  - id: true-nights
+    criteria:
+      any:
+        - True Nights v03
+    name: True Nights
+    description: |
+          - Has an invalid Image Space Adapter (IMAD) Record that will corrupt your save memory and has to be manually fixed.
+          -----
 
-  WeaponsFramework: |
-    Weapons Framework Beta
-        - Will randomly cause crashes when used with Tactical Reload and possibly other weapon or combat related mods.
-          Visit Important Patches List article for possible solutions: https://www.nexusmods.com/fallout4/articles/3769
-        -----
+  - id: weapons-framework-beta
+    criteria:
+      any:
+        - WeaponsFramework
+    name: Weapons Framework Beta
+    description: |
+          - Will randomly cause crashes when used with Tactical Reload and possibly other weapon or combat related mods.
+            Visit Important Patches List article for possible solutions: https://www.nexusmods.com/fallout4/articles/3769
+          -----
 
-  WOTC: |
-    War Of The Commonwealth
-        - Seems responsible for consistent crashes with specific spawn points or random ones during settlement attacks.
-        -----
+  - id: war-of-the-commonwealth
+    criteria:
+      any:
+        - WOTC
+    name: War Of The Commonwealth
+    description: |
+          - Seems responsible for consistent crashes with specific spawn points or random ones during settlement attacks.
+          -----
 
-  NewCalibers_Modern: |
-    Modern Firearms - New Calibers Patch
-        - New Calibers Patch for this mod is outdated and can frequently crash the game. Check if there is a newer patch.
-        -----
+  - id: modern-firearms-new-calibers-patch
+    criteria:
+      any:
+        - NewCalibers_Modern
+    name: Modern Firearms - New Calibers Patch
+    description: |
+          - New Calibers Patch for this mod is outdated and can frequently crash the game. Check if there is a newer patch.
+          -----
 
 Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
   - mod_a: betterpowerarmor
@@ -982,288 +1315,349 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     link: https://www.nexusmods.com/fallout4/mods/84930
 
 Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
-  DLCUltraHighResolution: |
-    High Resolution DLC. I STRONGLY ADVISE AGAINST USING IT, ESPECIALLY ON LOW-END GPUs!
-        - This DLC is overly large, does not provide any meaningful visual improvements, and has various issues of its own.
-          Right click on Fallout 4 in your Steam Library folder, then select Properties
-          Switch to the DLC tab and uncheck / disable the High Resolution Texture Pack.
-        -----
+  - id: dlc-ultra-high-resolution
+    criteria:
+      any:
+        - DLCUltraHighResolution
+    name: High Resolution DLC
+    description: |
+      I STRONGLY ADVISE AGAINST USING IT, ESPECIALLY ON LOW-END GPUs!
+          - This DLC is overly large, does not provide any meaningful visual improvements, and has various issues of its own.
+            Right click on Fallout 4 in your Steam Library folder, then select Properties
+            Switch to the DLC tab and uncheck / disable the High Resolution Texture Pack.
+          -----
 
-  AAF.esm: |
-    Advanced Animation Framework
-        - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
-          Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2
-        -----
-        - Looks Menu versions 1.6.20 & 1.6.19 can frequently break adult mod related (erection) morphs.
-          If you notice AAF related problems, remove latest version of Looks Menu and switch to 1.6.18.
-        -----
+  - id: aaf-esm
+    criteria:
+      any:
+        - AAF.esm
+    name: Advanced Animation Framework
+    description: |
+          - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
+            Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2
+          -----
+          - Looks Menu versions 1.6.20 & 1.6.19 can frequently break adult mod related (erection) morphs.
+            If you notice AAF related problems, remove latest version of Looks Menu and switch to 1.6.18.
+          -----
 
-  AnimeRace_Nanako: |
-    Anime Race Nanako Chan
-        - Make sure you have the Skeleton Fixes installed for this mod.
-          Read the fixes description carefully for installation info.
-          Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
-        -----
+  - id: anime-race-nanako
+    criteria:
+      any:
+        - AnimeRace_Nanako
+    name: Anime Race Nanako Chan
+    description: |
+          - Make sure you have the Skeleton Fixes installed for this mod.
+            Read the fixes description carefully for installation info.
+            Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
+          -----
 
-  ArmorKeywords: |
-    Armor And Weapons Keywords
-        - If you don't rely on AWKCR, consider switching to Equipment and Crafting Overhaul
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
-          Patches to remove AWKCR: https://www.nexusmods.com/fallout4/mods/40752?tab=files
-        -----
+  - id: armor-keywords
+    criteria:
+      any:
+        - ArmorKeywords
+    name: Armor And Weapons Keywords
+    description: |
+          - If you don't rely on AWKCR, consider switching to Equipment and Crafting Overhaul
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
+            Patches to remove AWKCR: https://www.nexusmods.com/fallout4/mods/40752?tab=files
+          -----
 
-  BTInteriors_Project: |
-    Beantown Interiors
-        - Usually causes fps drops, stuttering, crashing and culling issues in multiple locations.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/53894?tab=files
-        -----
+  - id: bt-interiors-project
+    criteria:
+      any:
+        - BTInteriors_Project
+    name: Beantown Interiors
+    description: |
+          - Usually causes fps drops, stuttering, crashing and culling issues in multiple locations.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/53894?tab=files
+          -----
 
-  CombatZoneRestored: |
-    Combat Zone Restored
-        - Contains few small issues and NPCs usually have trouble navigating the interior space.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/59329?tab=files
-        -----
+  - id: combat-zone-restored
+    criteria:
+      any:
+        - CombatZoneRestored
+    name: Combat Zone Restored
+    description: |
+          - Contains few small issues and NPCs usually have trouble navigating the interior space.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/59329?tab=files
+          -----
 
-  CaN.esm: |
-    Crimes Against Nature
-        - Make sure you have the Skeleton Fixes installed for this mod.
-          Read the fixes description carefully for installation info.
-          Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
-        -----
+  - id: ca-n-esm
+    criteria:
+      any:
+        - CaN.esm
+    name: Crimes Against Nature
+    description: |
+          - Make sure you have the Skeleton Fixes installed for this mod.
+            Read the fixes description carefully for installation info.
+            Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
+          -----
 
-  D.E.C.A.Y: |
-    Decay Better Ghouls
-        - You have to install DECAY Redux patch to prevent its audio files from crashing the game.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/59025?tab=files
-        -----
+  - id: d-e-c-a-y
+    criteria:
+      any:
+        - D.E.C.A.Y
+    name: Decay Better Ghouls
+    description: |
+          - You have to install DECAY Redux patch to prevent its audio files from crashing the game.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/59025?tab=files
+          -----
 
-  EveryonesBestFriend: |
-    Everyone's Best Friend
-        - An improved alternative with better compatibility is available:
-          Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
-          If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
-          Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
-          If you have Horizon installed or don't use UFO4P, this patch is not needed.
-        -----
+  - id: everyones-best-friend
+    criteria:
+      any:
+        - EveryonesBestFriend
+    name: Everyone's Best Friend
+    description: |
+          - An improved alternative with better compatibility is available:
+            Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
+            If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
+            Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
+            If you have Horizon installed or don't use UFO4P, this patch is not needed.
+          -----
 
-  FallSouls: |
-    Fallsouls Unpaused Game Menus
-        - Occasionally breaks the Quests menu, can cause crashes while changing MCM settings.
-          Advised Fix: Toggle PipboyMenu in FallSouls MCM settings or completely reinstall the mod.
-        -----
+  - id: fall-souls
+    criteria:
+      any:
+        - FallSouls
+    name: Fallsouls Unpaused Game Menus
+    description: |
+          - Occasionally breaks the Quests menu, can cause crashes while changing MCM settings.
+            Advised Fix: Toggle PipboyMenu in FallSouls MCM settings or completely reinstall the mod.
+          -----
 
-  M8r_Item_Tags: |
-    Fallui Item Sorter (OLD)
-        - This is an outdated item tagging / sorting patch that can cause crashes or conflicts in all kinds of situations.
-          I strongly recommend to instead generate your own sorting patch and place it last in your load order.
-          That way, you won't experience any conflicts / crashes and even modded items will be sorted.
-          Generate Sorting Patch With This: https://www.nexusmods.com/fallout4/mods/48826?tab=files
-        -----
+  - id: m8r-item-tags
+    criteria:
+      any:
+        - M8r_Item_Tags
+    name: Fallui Item Sorter (OLD)
+    description: |
+          - This is an outdated item tagging / sorting patch that can cause crashes or conflicts in all kinds of situations.
+            I strongly recommend to instead generate your own sorting patch and place it last in your load order.
+            That way, you won't experience any conflicts / crashes and even modded items will be sorted.
+            Generate Sorting Patch With This: https://www.nexusmods.com/fallout4/mods/48826?tab=files
+          -----
 
-  Fo4FI_FPS_fix: |
-    FO4FI FPS Fix
-        - This mod is severely outdated and will cause crashes even with compatibility patches.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
-        -----
+  - id: fo4-fi-fps-fix
+    criteria:
+      any:
+        - Fo4FI_FPS_fix
+    name: FO4FI FPS Fix
+    description: |
+          - This mod is severely outdated and will cause crashes even with compatibility patches.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+          -----
 
-  bostonfpsfix: |
-    Boston FPS Fix
-        - This mod is severely outdated. Either install the PRP patch or switch to PRP entirely.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/59021?tab=files
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
-        -----
+  - id: bostonfpsfix
+    criteria:
+      any:
+        - bostonfpsfix
+    name: Boston FPS Fix
+    description: |
+          - This mod is severely outdated. Either install the PRP patch or switch to PRP entirely.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/59021?tab=files
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+          -----
 
-  FunctionalDisplays: |
-    Functional Displays
-        - Frequently causes object model (nif) related crashes and this needs to be manually corrected.
-          Advised Fix: Open its Meshes folder and delete everything inside EXCEPT for the Functional Displays folder.
-        -----
+  - id: functional-displays
+    criteria:
+      any:
+        - FunctionalDisplays
+    name: Functional Displays
+    description: |
+          - Frequently causes object model (nif) related crashes and this needs to be manually corrected.
+            Advised Fix: Open its Meshes folder and delete everything inside EXCEPT for the Functional Displays folder.
+          -----
 
-  skeleton*player: |
-    Gender Specific Skeletons (Male/Female)
-        - High chance to cause a crash when starting a new game. Switch to Discrete Female Skeleton instead.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/56115?tab=files
-        -----
+  - id: skeleton-player
+    criteria:
+      any:
+        - skeleton*player
+    name: Gender Specific Skeletons (Male/Female)
+    description: |
+          - High chance to cause a crash when starting a new game. Switch to Discrete Female Skeleton instead.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/56115?tab=files
+          -----
 
-  Give Me That Bottle: |
-    Give Me That Bottle
-        - Can rarely cause crashes in the Pip-Boy inventory menu. Switch to Fill'em Up Again instead.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/12674?tab=files
-        -----
+  - id: give-me-that-bottle
+    criteria:
+      any:
+        - Give Me That Bottle
+    name: Give Me That Bottle
+    description: |
+          - Can rarely cause crashes in the Pip-Boy inventory menu. Switch to Fill'em Up Again instead.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/12674?tab=files
+          -----
 
-  CapsWidget: |
-    HUD Caps
-        - Often breaks the Save / Quicksave function due to poor script implementation.
-          Advised Fix: Download fixed pex file and place it into HUDCaps/Scripts folder.
-          Fix Link: https://drive.google.com/file/d/1egmtKVR7mSbjRgo106UbXv_ySKBg5az2
-        -----
+  - id: caps-widget
+    criteria:
+      any:
+        - CapsWidget
+    name: HUD Caps
+    description: |
+          - Often breaks the Save / Quicksave function due to poor script implementation.
+            Advised Fix: Download fixed pex file and place it into HUDCaps/Scripts folder.
+            Fix Link: https://drive.google.com/file/d/1egmtKVR7mSbjRgo106UbXv_ySKBg5az2
+          -----
 
-  Homemaker: |
-    Homemaker
-        - Causes a crash while scrolling over Military / BoS fences in the Settlement Menu.
-          Advised Fix: Make sure you are using at least version 1.73 of this mod.
-          Alternate Fix: https://www.nexusmods.com/fallout4/mods/41434?tab=files
-        -----
+  - id: homemaker
+    criteria:
+      any:
+        - Homemaker
+    name: Homemaker
+    description: |
+          - Causes a crash while scrolling over Military / BoS fences in the Settlement Menu.
+            Advised Fix: Make sure you are using at least version 1.73 of this mod.
+            Alternate Fix: https://www.nexusmods.com/fallout4/mods/41434?tab=files
+          -----
 
-  LegendaryModification: |
-    Legendary Modification
-        - Old mod plagued with all kinds of bugs and crashes, can conflict with some modded weapons.
-          Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
-        -----
+  - id: legendary-modification
+    criteria:
+      any:
+        - LegendaryModification
+    name: Legendary Modification
+    description: |
+          - Old mod plagued with all kinds of bugs and crashes, can conflict with some modded weapons.
+            Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
+          -----
 
-  LooksMenu Customization Compendium: |
-    Looks Menu Customization Compendium
-        - If you are getting broken hair colors, install this mod and make sure it loads after LMCC.
-          Mod Link: https://www.nexusmods.com/fallout4/mods/18287?tab=files
-        -----
+  - id: looks-menu-customization-compendium
+    criteria:
+      any:
+        - LooksMenu Customization Compendium
+    name: Looks Menu Customization Compendium
+    description: |
+          - If you are getting broken hair colors, install this mod and make sure it loads after LMCC.
+            Mod Link: https://www.nexusmods.com/fallout4/mods/18287?tab=files
+          -----
 
-  MilitarizedMinutemen: |
-    Militarized Minutemen
-        - Can occasionally crash the game due to a broken mesh on some minutemen outfits.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/32369?tab=files
-        -----
+  - id: militarized-minutemen
+    criteria:
+      any:
+        - MilitarizedMinutemen
+    name: Militarized Minutemen
+    description: |
+          - Can occasionally crash the game due to a broken mesh on some minutemen outfits.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/32369?tab=files
+          -----
 
-  MoreUniques: |
-    More Unique Weapons Expansion
-        - Causes crashes due to broken precombines and compatibility issues with other weapon mods.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/54848?tab=files
-        -----
+  - id: more-uniques
+    criteria:
+      any:
+        - MoreUniques
+    name: More Unique Weapons Expansion
+    description: |
+          - Causes crashes due to broken precombines and compatibility issues with other weapon mods.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/54848?tab=files
+          -----
 
-  NAC: |
-    Natural And Atmospheric Commonwealth
-        - If you notice weird looking skin tones with either NAC or NACX, install this patch.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/57052?tab=files
-        -----
+  - id: nac
+    criteria:
+      any:
+        - NAC
+    name: Natural And Atmospheric Commonwealth
+    description: |
+          - If you notice weird looking skin tones with either NAC or NACX, install this patch.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/57052?tab=files
+          -----
 
-  Northland Diggers New: |
-    Northland Diggers Resources
-        - Contains various bugs and issues that can cause crashes or negatively affect other mods.
-          Fix Link: https://www.nexusmods.com/fallout4/mods/53395?tab=files
-        -----
+  - id: northland-diggers-new
+    criteria:
+      any:
+        - Northland Diggers New
+    name: Northland Diggers Resources
+    description: |
+          - Contains various bugs and issues that can cause crashes or negatively affect other mods.
+            Fix Link: https://www.nexusmods.com/fallout4/mods/53395?tab=files
+          -----
 
-  Project Zeta: |
-    Project Zeta
-        - Invasion quests seem overly buggy or trigger too frequently, minor sound issues.
-          Fix Link: https://www.nexusmods.com/fallout4/mods/65166?tab=files
-        -----
+  - id: project-zeta
+    criteria:
+      any:
+        - Project Zeta
+    name: Project Zeta
+    description: |
+          - Invasion quests seem overly buggy or trigger too frequently, minor sound issues.
+            Fix Link: https://www.nexusmods.com/fallout4/mods/65166?tab=files
+          -----
 
-  RaiderOverhaul: |
-    Raider Overhaul
-        - Old mod that requires several patches to function as intended. Use ONE Version instead.
-          Updated ONE Version: https://www.nexusmods.com/fallout4/mods/51658?tab=files
-        -----
+  - id: raider-overhaul
+    criteria:
+      any:
+        - RaiderOverhaul
+    name: Raider Overhaul
+    description: |
+          - Old mod that requires several patches to function as intended. Use ONE Version instead.
+            Updated ONE Version: https://www.nexusmods.com/fallout4/mods/51658?tab=files
+          -----
 
-  Rusty Face Fix: |
-    Rusty Face Fix
-        - Make sure you have the latest 2.0 version installed or try the REDUX Version instead.
-          Original Rusty Face Fix: https://www.nexusmods.com/fallout4/mods/31028?tab=files
-          Alternative REDUX Version: https://www.nexusmods.com/fallout4/mods/64270?tab=files
-        -----
+  - id: rusty-face-fix
+    criteria:
+      any:
+        - Rusty Face Fix
+    name: Rusty Face Fix
+    description: |
+          - Make sure you have the latest 2.0 version installed or try the REDUX Version instead.
+            Original Rusty Face Fix: https://www.nexusmods.com/fallout4/mods/31028?tab=files
+            Alternative REDUX Version: https://www.nexusmods.com/fallout4/mods/64270?tab=files
+          -----
 
-  SOTS: |
-    South Of The Sea
-        - Very unstable mod that consistently and frequently causes strange problems and crashes.
-          Updated Version: https://www.nexusmods.com/fallout4/mods/63152?tab=files
-        -----
+  - id: sots
+    criteria:
+      any:
+        - SOTS
+    name: South Of The Sea
+    description: |
+          - Very unstable mod that consistently and frequently causes strange problems and crashes.
+            Updated Version: https://www.nexusmods.com/fallout4/mods/63152?tab=files
+          -----
 
-  StartMeUp: |
-    Start Me Up
-        - Abandoned mod that can cause infinite loading and other problems. Switch to REDUX Version instead.
-          Updated REDUX Version: https://www.nexusmods.com/fallout4/mods/56984?tab=files
-        -----
+  - id: start-me-up
+    criteria:
+      any:
+        - StartMeUp
+    name: Start Me Up
+    description: |
+          - Abandoned mod that can cause infinite loading and other problems. Switch to REDUX Version instead.
+            Updated REDUX Version: https://www.nexusmods.com/fallout4/mods/56984?tab=files
+          -----
 
-  SuperMutantRedux: |
-    Super Mutant Redux
-        - Causes crashes at specific locations or with certain Super Mutant enemies and items.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/51353?tab=files
-        -----
+  - id: super-mutant-redux
+    criteria:
+      any:
+        - SuperMutantRedux
+    name: Super Mutant Redux
+    description: |
+          - Causes crashes at specific locations or with certain Super Mutant enemies and items.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/51353?tab=files
+          -----
 
-  tacticalreload: |
-    Tactical Reload
-        - Can cause weapon and combat related crashes. TR Expansion For ECO is highly recommended.
-          TR Expansion For ECO Link: https://www.nexusmods.com/fallout4/mods/67716?tab=files
-        -----
+  - id: tacticalreload
+    criteria:
+      any:
+        - tacticalreload
+    name: Tactical Reload
+    description: |
+          - Can cause weapon and combat related crashes. TR Expansion For ECO is highly recommended.
+            TR Expansion For ECO Link: https://www.nexusmods.com/fallout4/mods/67716?tab=files
+          -----
 
-  Creatures and Monsters: |
-    Unique NPCs Creatures And Monsters
-        - Causes crashes and breaks precombines at specific locations, some creature spawns are too frequent.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/48637?tab=files
-        -----
+  - id: creatures-and-monsters
+    criteria:
+      any:
+        - Creatures and Monsters
+    name: Unique NPCs Creatures And Monsters
+    description: |
+          - Causes crashes and breaks precombines at specific locations, some creature spawns are too frequent.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/48637?tab=files
+          -----
 
-  Vault4: |
-    Fourville (Vault 4)
-        - Has various visual issues and quest glitches.
-          Patch Link: https://www.nexusmods.com/fallout4/mods/61080?tab=files
-        -----
-
-Mods_OPC2: # 4) MODS PATCHED THROUGH OPC INSTALLER
-  3DNPC_FO4: |
-    Tales from the Commonwealth
-  3DNPC_FO4Settler: |
-    Settlers Of The Commonwealth
-  Beyond the Borders: |
-    Beyond The Borders
-  ConcordEXPANDED: |
-    Concord EXPANDED
-  CovenantComplex: |
-    Covenant Complex
-  Deadly Commonwealth Expansion: |
-    Deadly Commonwealth Expansion
-  DoYourDamnJobCodsworth: |
-    Do Your Damn Job Codsworth
-  Dogmeat and Strong Armor: |
-    Dogmeat And Strong Armor
-  Firelance: |
-    Xander's Aid
-  GlowingSeaEXPANDED: |
-    Glowing Sea EXPANDED
-  GunnersPlazaInterior: |
-    Gunners Plaza Interior
-  HagenEXPANDED: |
-    Hagen EXPANDED
-  Immersive Nahant: |
-    Immersive & Extended Nahant
-  Immersive S Boston: |
-    Immersive Military Checkpoint
-  ImmersiveBeantown: |
-    Immersive Beantown
-  ImmersiveHubCity: |
-    Immersive Hub City
-  Immersive_Lexington: |
-    Immersive & Extended Lexington
-  Minutemen Supply Caches: |
-    Minutemen Supply Caches
-  MojaveImports: |
-    Wasteland Imports (Mojave Imports)
-  MutilatedDeadBodies: |
-    Mutilated Dead Bodies
-  NEST_BUNKER_PROJECT: |
-    NEST Bunker Project
-  Raider Children: |
-    Raider Children
-  SalemEXPANDED: |
-    Salem EXPANDED
-  SettlementShelters: |
-    Settlement Shelters
-  SwampsEXPANDED: |
-    Swamps EXPANDED
-  The Hollow: |
-    The Hollow
-  Vault4: |
-    Fourville (Vault 4)
-  Vertibird Faction Paint Schemes: |
-    Vertibird Faction Paint Schemes
-  _hod: |
-    Halls of the Dead
-  atlanticofficesf23: |
-    Lost Building of Atlantic
-  moreXplore: |
-    More Xplore
-  nvvault1080: |
-    Vault 1080 (Vault 80)
-  sectorv: |
-    Sector V
-  subwayrunnerdynamiclighting: |
-    Subway Runner (Dynamic Lights)
-  zxcMicroAdditions: |-
-    ZXC Micro Additions
+  - id: vault4
+    criteria:
+      any:
+        - Vault4
+    name: Fourville (Vault 4)
+    description: |
+          - Has various visual issues and quest glitches.
+            Patch Link: https://www.nexusmods.com/fallout4/mods/61080?tab=files
+          -----

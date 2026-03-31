@@ -34,8 +34,8 @@
 	"python.REPL.enableREPLSmartSend": false,
 	"python-envs.pythonProjects": [
 		{
-			"path": "",
-			"envManager": "ms-python.python:venv",
+			"path": ".",
+			"envManager": "ms-python.python:system",
 			"packageManager": "ms-python.python:pip"
 		}
 	],

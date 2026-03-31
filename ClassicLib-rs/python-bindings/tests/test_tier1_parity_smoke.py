@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
+import subprocess
+import sys
+import textwrap
+from typing import Any, cast
 
 import pytest
 
@@ -44,6 +48,32 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert data.classic_version == "9.0.0"
     assert data.xse_acronym == "F4SE"
     assert data.crashgen_name == "Buffout 4"
+
+    structured_game_yaml = PARITY_GAME_YAML.replace(
+        "Mods_SOLU: []",
+        "\n".join(
+            (
+                "Mods_SOLU:",
+                "  - id: solu-mod",
+                "    criteria:",
+                "      any:",
+                '        - "SoluMod"',
+                '    name: "Solution Mod"',
+                '    description: "Solution mod"',
+            )
+        ),
+    )
+    structured_data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        structured_game_yaml,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    solu_entries = cast(list[dict[str, Any]], structured_data.game_mods_solu)
+    assert solu_entries[0]["id"] == "solu-mod"
+    assert cast(dict[str, Any], solu_entries[0]["criteria"])["any"] == ["SoluMod"]
+    assert solu_entries[0]["name"] == "Solution Mod"
     classic_config.clear_yaml_cache()
 
     with pytest.raises(classic_config.RustConfigParseError) as exc_info:
@@ -68,7 +98,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     config = classic_config.ClassicConfig()
     assert config.game_version == "auto"
     assert config.get_config_path().endswith("CLASSIC Settings.yaml")
-    assert "CLASSIC-Fallout4" not in config.get_config_path()
 
     config.paths = classic_config.PathConfig(game_root=str(tmp_path))
     config.validate_paths()
@@ -103,7 +132,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     auto_loaded = classic_config.ClassicConfig.load_or_default()
     assert auto_loaded.fcx_mode is True
     assert auto_loaded.get_config_path() == str(resolved_default_settings)
-    assert "CLASSIC-Fallout4" not in auto_loaded.get_config_path()
 
     resolved_default_settings.write_text(
         "{ invalid: yaml: content: }}}", encoding="utf-8"
@@ -146,7 +174,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     cache_path = classic_config.YamlSource.CACHE.path("")
     assert cache_path.endswith("cache.yaml")
     assert "CLASSIC" in cache_path
-    assert "CLASSIC-Fallout4" not in cache_path
 
 
 def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -198,6 +225,36 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
         remove_list=["skip-me"],
     )
     assert config.remove_list == ["skip-me"]
+
+    structured_game_yaml = PARITY_GAME_YAML.replace(
+        "Mods_SOLU: []",
+        "\n".join(
+            (
+                "Mods_SOLU:",
+                "  - id: solu-mod",
+                "    criteria:",
+                "      any:",
+                '        - "SoluMod"',
+                '    name: "Solution Mod"',
+                '    description: "Solution mod"',
+            )
+        ),
+    )
+    structured_yamldata = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        structured_game_yaml,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+    structured_config = classic_scanlog.AnalysisConfig.from_yamldata(
+        structured_yamldata,
+        "Fallout4",
+        "auto",
+    )
+    solu_entries = cast(list[dict[str, Any]], structured_config.mods_solu)
+    assert solu_entries[0]["id"] == "solu-mod"
+    assert cast(dict[str, Any], solu_entries[0]["criteria"])["any"] == ["SoluMod"]
 
     assert hasattr(parser, "parse_segments") is False
     assert hasattr(classic_scanlog.ParallelReportProcessor, "process_batch") is False
@@ -368,6 +425,73 @@ CASE_RUNNERS = {
     "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
     "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
 }
+
+
+def test_application_dir_override(tmp_path: Path) -> None:
+    """Settings resolution should honour the APP_DIR registry override."""
+    import classic_config
+
+    # Module auto-init should have set APP_DIR to cwd
+    app_dir = classic_config.get_application_dir()
+    assert app_dir is not None, "APP_DIR should be auto-set on import"
+
+    # Override to a custom directory and verify get_config_path reflects it
+    classic_config.set_application_dir(str(tmp_path))
+    assert classic_config.get_application_dir() == str(tmp_path)
+
+    config = classic_config.ClassicConfig()
+    config_path = Path(config.get_config_path())
+    assert config_path.parent == tmp_path
+
+    # Write a settings file there and verify load_or_default finds it
+    config_path.write_text("fcx_mode: true\n", encoding="utf-8")
+    loaded = classic_config.ClassicConfig.load_or_default()
+    assert loaded.fcx_mode is True
+
+    # Restore the original override so other tests are unaffected
+    if app_dir is not None:
+        classic_config.set_application_dir(app_dir)
+
+
+def _run_application_dir_override(
+    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    test_application_dir_override(tmp_path)
+
+
+CASE_RUNNERS["application-dir-override"] = _run_application_dir_override
+
+
+def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> None:
+    """classic_config should anchor settings lookup to the executed script directory."""
+
+    script_dir = tmp_path / "script-dir"
+    run_dir = tmp_path / "run-dir"
+    script_dir.mkdir()
+    run_dir.mkdir()
+
+    script_path = script_dir / "show_config_path.py"
+    script_path.write_text(
+        textwrap.dedent(
+            """\
+            import classic_config
+
+            print(classic_config.ClassicConfig().get_config_path())
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=run_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(script_dir / "CLASSIC Settings.yaml")
 
 
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))

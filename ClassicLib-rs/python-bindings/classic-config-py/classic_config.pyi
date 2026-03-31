@@ -211,29 +211,22 @@ class YamlData:
         """
 
     @property
-    def game_mods_freq(self) -> dict[str, Any]:
+    def game_mods_freq(self) -> list[dict[str, Any]]:
         """Frequently problematic mods configuration.
 
         Returns:
-            Dictionary mapping mod names to detection patterns
+            List of structured mod entries with `id`, `criteria`, `exceptions`, `name`,
+            and `description`
 
         """
 
     @property
-    def game_mods_solu(self) -> dict[str, Any]:
+    def game_mods_solu(self) -> list[dict[str, Any]]:
         """Solution/fix mods configuration.
 
         Returns:
-            Dictionary mapping solution mod names to detection patterns
-
-        """
-
-    @property
-    def game_mods_opc2(self) -> dict[str, Any]:
-        """Optimization/performance mods configuration (OPC2).
-
-        Returns:
-            Dictionary mapping optimization mod names to detection patterns
+            Ordered list of dicts with keys:
+                id, criteria, exceptions, name, description
 
         """
 
@@ -257,22 +250,24 @@ class YamlData:
 
         """
 
-    # Suspect detection lists
+    # Suspect detection rules
     @property
-    def suspects_error_list(self) -> dict[str, Any]:
-        """Suspect patterns for error detection.
+    def suspect_error_rules(self) -> list[dict[str, Any]]:
+        """Structured suspect rules for main-error detection.
 
         Returns:
-            Dictionary mapping error categories to detection patterns
+            List of dicts with keys: id, name, severity, main_error_contains_any
 
         """
 
     @property
-    def suspects_stack_list(self) -> dict[str, list[str]]:
-        """Suspect patterns for callstack analysis.
+    def suspect_stack_rules(self) -> list[dict[str, Any]]:
+        """Structured suspect rules for callstack analysis.
 
         Returns:
-            Dictionary mapping callstack categories to pattern lists
+            List of dicts with keys: id, name, severity, main_error_required_any,
+            main_error_optional_any, stack_contains_any,
+            exclude_if_stack_contains_any, stack_contains_at_least
 
         """
 
@@ -520,3 +515,18 @@ def create_yamldata(
         '8.0.0'
 
     """
+
+def set_application_dir(path: str | Path) -> None:
+    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+
+    By default this is set to the executed Python file's directory at import
+    time, falling back to ``os.getcwd()`` when no script file is available.
+    Call this before ``ClassicConfig.load_or_default()`` if you need a
+    different root.
+
+    Args:
+        path: Absolute path to the desired application directory.
+    """
+
+def get_application_dir() -> str | None:
+    """Return the current application directory override, or ``None``."""

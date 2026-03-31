@@ -31,13 +31,13 @@
 //!
 //! # Access mod detection databases
 //! core_mods = yamldata.game_mods_core  # Essential mods
-//! freq_mods = yamldata.game_mods_freq  # Frequently problematic mods
+//! freq_mods = yamldata.game_mods_freq  # Frequently problematic structured mod entries
 //! conf_mods = yamldata.game_mods_conf  # Conflicting mod pairs
 //! solu_mods = yamldata.game_mods_solu  # Solution mods
 //!
-//! # Access suspect pattern dictionaries
-//! error_patterns = yamldata.suspects_error_list  # Error message patterns
-//! stack_patterns = yamldata.suspects_stack_list  # Stack trace patterns
+//! # Access suspect rules
+//! error_rules = yamldata.suspect_error_rules  # Main error suspect rules
+//! stack_rules = yamldata.suspect_stack_rules  # Stack suspect rules
 //!
 //! # Access CLASSIC metadata
 //! print(f"CLASSIC Version: {yamldata.classic_version}")
@@ -80,8 +80,8 @@
 //! ```
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, PathConfig as CorePathConfig,
-    YamlDataCore, YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, ModSolutionCriteria,
+    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_crashgen_settings_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
@@ -887,25 +887,49 @@ impl PyYamlData {
     }
 
     // ========================================================================
-    // Suspect Pattern Dictionaries
+    // Suspect Rules
     // ========================================================================
 
     #[getter]
-    fn suspects_error_list(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.suspects_error_list {
-            dict.set_item(k, v)?;
+    fn suspect_error_rules(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for rule in &self.inner.suspect_error_rules {
+            let dict = PyDict::new(py);
+            dict.set_item("id", &rule.id)?;
+            dict.set_item("name", &rule.name)?;
+            dict.set_item("severity", rule.severity)?;
+            dict.set_item("main_error_contains_any", &rule.main_error_contains_any)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]
-    fn suspects_stack_list(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.suspects_stack_list {
-            dict.set_item(k, v)?;
+    fn suspect_stack_rules(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for rule in &self.inner.suspect_stack_rules {
+            let dict = PyDict::new(py);
+            let count_rules = PyList::empty(py);
+            for count_rule in &rule.stack_contains_at_least {
+                let count_dict = PyDict::new(py);
+                count_dict.set_item("substring", &count_rule.substring)?;
+                count_dict.set_item("count", count_rule.count)?;
+                count_rules.append(count_dict)?;
+            }
+            dict.set_item("id", &rule.id)?;
+            dict.set_item("name", &rule.name)?;
+            dict.set_item("severity", rule.severity)?;
+            dict.set_item("main_error_required_any", &rule.main_error_required_any)?;
+            dict.set_item("main_error_optional_any", &rule.main_error_optional_any)?;
+            dict.set_item("stack_contains_any", &rule.stack_contains_any)?;
+            dict.set_item(
+                "exclude_if_stack_contains_any",
+                &rule.exclude_if_stack_contains_any,
+            )?;
+            dict.set_item("stack_contains_at_least", count_rules)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     // ========================================================================
@@ -950,30 +974,43 @@ impl PyYamlData {
     }
 
     #[getter]
-    fn game_mods_freq(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_freq {
-            dict.set_item(k, v)?;
+    fn game_mods_freq(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for entry in &self.inner.game_mods_freq {
+            let dict = PyDict::new(py);
+            let criteria = PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     #[getter]
-    fn game_mods_opc2(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_opc2 {
-            dict.set_item(k, v)?;
+    fn game_mods_solu(&self, py: Python<'_>) -> PyResult<Py<PyList>> {
+        let list = PyList::empty(py);
+        for entry in &self.inner.game_mods_solu {
+            let dict = PyDict::new(py);
+            let criteria = PyDict::new(py);
+            match &entry.criteria {
+                ModSolutionCriteria::Any(values) => criteria.set_item("any", values)?,
+                ModSolutionCriteria::All(values) => criteria.set_item("all", values)?,
+            }
+            dict.set_item("id", &entry.id)?;
+            dict.set_item("criteria", criteria)?;
+            dict.set_item("exceptions", &entry.exceptions)?;
+            dict.set_item("name", &entry.name)?;
+            dict.set_item("description", &entry.description)?;
+            list.append(dict)?;
         }
-        Ok(dict.unbind())
-    }
-
-    #[getter]
-    fn game_mods_solu(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
-        let dict = PyDict::new(py);
-        for (k, v) in &self.inner.game_mods_solu {
-            dict.set_item(k, v)?;
-        }
-        Ok(dict.unbind())
+        Ok(list.unbind())
     }
 
     // ========================================================================
@@ -1044,15 +1081,47 @@ pub fn clear_yaml_cache() {
     classic_config_core::clear_global_yaml_cache();
 }
 
+/// Auto-register the application directory so settings resolve relative to the
+/// executed Python file rather than the interpreter's install path.
+fn auto_init_application_dir(py: Python<'_>) {
+    if classic_registry_core::get_application_dir().is_none() {
+        if let Some(app_dir) = classic_shared::resolve_python_entry_dir(py) {
+            classic_registry_core::set_application_dir(app_dir);
+        }
+    }
+}
+
+/// Override the directory used to resolve ``CLASSIC Settings.yaml`` and other
+/// application-local files.  Call before ``load_or_default()`` or
+/// ``get_config_path()`` if you need a directory other than the executed
+/// Python file's directory.
+#[pyfunction]
+fn set_application_dir(path: String) {
+    classic_registry_core::set_application_dir(PathBuf::from(path));
+}
+
+/// Return the current application directory override, or ``None`` if no
+/// override has been registered (which should not happen after import,
+/// since the module auto-registers the executed script directory when one is
+/// available).
+#[pyfunction]
+fn get_application_dir() -> Option<String> {
+    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
+}
+
 /// Initialize the classic_config Python module
 #[pymodule]
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    auto_init_application_dir(m.py());
+
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyPathConfig>()?;
     m.add_class::<PyYamlSource>()?;
     m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
+    m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     // Register custom exception types using the shared macro
@@ -1064,12 +1133,16 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 /// Public registration function for use by facade modules
 /// This allows classic-core to include config components in its submodule
 pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    auto_init_application_dir(m.py());
+
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyPathConfig>()?;
     m.add_class::<PyYamlSource>()?;
     m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
+    m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
+    m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
 
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);

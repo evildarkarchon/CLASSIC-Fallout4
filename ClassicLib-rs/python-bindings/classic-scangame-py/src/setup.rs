@@ -173,14 +173,14 @@ fn run_setup_checks(py: Python<'_>, config: &PySetupCheckConfig) -> PySetupCheck
 ///     Resolved game version string, or None if no game version is provided
 ///
 /// Example:
-///     >>> migrate_vr_setting_py("VR")
+///     >>> migrate_game_version_setting_py("VR")
 ///     'VR'
-///     >>> migrate_vr_setting_py("Original")
+///     >>> migrate_game_version_setting_py("Original")
 ///     'Original'
 #[pyfunction]
-#[pyo3(name = "migrate_vr_setting")]
+#[pyo3(name = "migrate_game_version_setting")]
 #[pyo3(signature = (game_version=None))]
-fn migrate_vr_setting_py(game_version: Option<&str>) -> Option<String> {
+fn migrate_game_version_setting_py(game_version: Option<&str>) -> Option<String> {
     game_version.map(|version| resolve_effective_game_version(Some(version)).to_string())
 }
 
@@ -233,7 +233,7 @@ pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySetupCheckConfig>()?;
     m.add_class::<PySetupCheckResults>()?;
     m.add_function(wrap_pyfunction!(run_setup_checks, m)?)?;
-    m.add_function(wrap_pyfunction!(migrate_vr_setting_py, m)?)?;
+    m.add_function(wrap_pyfunction!(migrate_game_version_setting_py, m)?)?;
     m.add_function(wrap_pyfunction!(resolve_effective_game_version_py, m)?)?;
     m.add_function(wrap_pyfunction!(needs_path_detection_py, m)?)?;
     Ok(())

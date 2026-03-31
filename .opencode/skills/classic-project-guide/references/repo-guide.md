@@ -37,9 +37,8 @@ Rust workspace layout:
 
 Placement guidance:
 
-- Keep all business logic in Rust core. Shared behavior, state transitions, data mutation, persistence rules, and validation belong in Rust unless the task is explicitly interface-only.
+- Put new product behavior in Rust core when it should be shared across frontends or bindings.
 - Keep `classic-cli/` and `classic-gui/` focused on frontend and integration concerns.
-- Keep C++, Python, Node, and other UI or binding layers thin wrappers over Rust APIs rather than reimplementing logic, unless the performance cost of FFI bridging is demonstrated to be too high for that specific path.
 - Treat Python bindings as compatibility work, not the default place for new features.
 
 ## Build, Test, and Validation Commands
@@ -58,6 +57,11 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 # Build plus tests
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+
+# Build plus selected tests
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 
 # Clean rebuild
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
@@ -79,12 +83,14 @@ Prerequisites:
 
 ### C++ tests
 
-Policy: run C++ tests through CTest or the script wrappers, not by invoking test binaries directly.
+Policy: NEVER run C++ tests by invoking test binaries or raw `ctest` directly. Always run C++ tests through the PowerShell build wrappers.
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
-pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 ```
 
 ### Rust workspace
@@ -117,17 +123,18 @@ bun run test:node
 ### Python bindings
 
 ```powershell
-uv venv
-uv pip install maturin pytest
+uv venv ClassicLib-rs/python-bindings/.venv
+uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
 ```
+
+Use a bindings-local virtual environment at `ClassicLib-rs/python-bindings/.venv`; do not rely on a repo-root `.venv` for Python binding smoke tests.
 
 ## Repo Conventions and Constraints
 
-- Keep business logic in Rust and treat non-interface layers as thin wrappers unless measured FFI overhead justifies local implementation.
 - Maintain one shared Tokio runtime from the Rust core runtime facilities.
 - Rust edition is 2024.
 - Rust workspace policy denies `unsafe_code`.
@@ -191,9 +198,12 @@ Required follow-up in the same change:
    - `docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json`
    - `docs/implementation/python_api_parity/governance/tier2_wave_manifest.json`
 5. Run:
+   - `uv venv ClassicLib-rs/python-bindings/.venv`
+   - `uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt`
    - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
    - `python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
-   - `uv run python -m pytest ClassicLib-rs/python-bindings/tests -q`
+   - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry`
+   - `uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q`
 6. Make sure `ci-python-bindings.yml` jobs pass before merge.
 
 ## CI and Platform Notes

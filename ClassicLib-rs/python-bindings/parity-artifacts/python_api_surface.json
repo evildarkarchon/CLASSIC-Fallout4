@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-16T11:52:01.996442+00:00",
+  "generated_at_utc": "2026-03-30T12:25:29.785974+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -314,6 +314,28 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def create_yamldata( yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> YamlData:"
+    },
+    {
+      "module": "classic_config",
+      "export": "get_application_dir",
+      "export_path": "get_application_dir",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def get_application_dir() -> str | None:"
+    },
+    {
+      "module": "classic_config",
+      "export": "set_application_dir",
+      "export_path": "set_application_dir",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def set_application_dir(path: str | Path) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -2383,7 +2405,7 @@
       "owner_module": "scanlog",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, suspects_error_list: dict[str, str], suspects_stack_list: dict[str, list[str]], ) -> None:"
+      "signature": "def __init__( self, suspect_error_rules: list[dict[str, Any]], suspect_stack_rules: list[dict[str, Any]], ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -2881,7 +2903,7 @@
       "owner_module": "version_registry",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_compatible_crashgens(self, game_version_str: str | None = None) -> list[CrashgenConfig]:"
+      "signature": "def get_compatible_crashgens( self, game_version_str: str | None = None ) -> list[CrashgenConfig]:"
     },
     {
       "module": "classic_version_registry",
@@ -2951,7 +2973,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_address_library_filename(self, version_str: str, is_vr: bool = False) -> str | None:"
+      "signature": "def get_address_library_filename( self, version_str: str, is_vr: bool = False ) -> str | None:"
     },
     {
       "module": "classic_version_registry",
@@ -2975,7 +2997,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_all_exe_hashes(self, game: str = \"Fallout4\", is_vr: bool | None = None) -> set[str]:"
+      "signature": "def get_all_exe_hashes( self, game: str = \"Fallout4\", is_vr: bool | None = None ) -> set[str]:"
     },
     {
       "module": "classic_version_registry",
@@ -2987,7 +3009,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_all_for_game(self, game: str, is_vr: bool | None = None) -> list[VersionInfo]:"
+      "signature": "def get_all_for_game( self, game: str, is_vr: bool | None = None ) -> list[VersionInfo]:"
     },
     {
       "module": "classic_version_registry",
@@ -2999,7 +3021,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_all_script_hashes(self, game: str = \"Fallout4\", is_vr: bool | None = None) -> dict[str, set[str]]:"
+      "signature": "def get_all_script_hashes( self, game: str = \"Fallout4\", is_vr: bool | None = None ) -> dict[str, set[str]]:"
     },
     {
       "module": "classic_version_registry",
@@ -3071,7 +3093,7 @@
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "signature": "def get_crashgen_for_version(self, version_id: str, crashgen_version: str) -> CrashgenConfig | None:"
+      "signature": "def get_crashgen_for_version( self, version_id: str, crashgen_version: str ) -> CrashgenConfig | None:"
     },
     {
       "module": "classic_version_registry",

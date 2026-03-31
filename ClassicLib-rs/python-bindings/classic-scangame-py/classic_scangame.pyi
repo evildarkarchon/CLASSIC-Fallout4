@@ -1196,7 +1196,7 @@ class SetupCheckResults:
 def run_setup_checks(config: SetupCheckConfig) -> SetupCheckResults:
     """Run combined setup checks."""
 
-def migrate_vr_setting(game_version: str | None = ...) -> str | None:
+def migrate_game_version_setting(game_version: str | None = ...) -> str | None:
     """Normalize Game Version to a canonical mode value."""
 
 def resolve_effective_game_version(game_version: str | None = ...) -> str:

@@ -29,7 +29,9 @@ def run_build(package_dir: Path) -> None:
     if result.returncode != 0:
         print(result.stdout, end="")
         print(result.stderr, end="")
-        raise RuntimeError("Failed to run `bun run build:debug` for d.ts freshness check.")
+        raise RuntimeError(
+            "Failed to run `bun run build:debug` for d.ts freshness check."
+        )
 
 
 def collect_git_diff(package_dir: Path) -> str:
@@ -45,12 +47,16 @@ def collect_git_diff(package_dir: Path) -> str:
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     """Write JSON output with stable formatting."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> int:
     """CLI entrypoint."""
-    parser = argparse.ArgumentParser(description="Check freshness of classic-node index.d.ts.")
+    parser = argparse.ArgumentParser(
+        description="Check freshness of classic-node index.d.ts."
+    )
     parser.add_argument(
         "--repo-root",
         default=str(Path(__file__).resolve().parents[2]),
@@ -101,7 +107,9 @@ def main() -> int:
     print(f"- {diff_path}")
 
     if not is_fresh:
-        print("index.d.ts is stale. Regenerate bindings and commit updated declarations.")
+        print(
+            "index.d.ts is stale. Regenerate bindings and commit updated declarations."
+        )
         return 1
 
     print("index.d.ts freshness check passed.")

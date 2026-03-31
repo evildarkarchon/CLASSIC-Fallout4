@@ -51,10 +51,32 @@ Crashlog_Plugins_Exclude:
 Crashlog_Records_Exclude:
   - "RecordType1"
 Crashlog_Error_Check:
-  ErrorPattern1: "Error description 1"
-  ErrorPattern2: "Error description 2"
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: "Stack description 1"
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
 Mods_CONF:
   - mod_a: modA
     mod_b: modB
@@ -67,11 +89,19 @@ Mods_CORE:
     name: Core Mod B
     description: "Core mod B"
 Mods_FREQ:
-  FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
 Mods_SOLU:
-  SoluMod: "Solution mod"
+  - id: solu-mod
+    criteria:
+      any:
+        - SoluMod
+    name: Solution Mod
+    description: "Solution mod"
 "#
 }
 
@@ -415,18 +445,14 @@ mod from_content_workflows {
         assert_eq!(config.game_mods_core[0].detect, "ModB");
         assert_eq!(config.game_mods_core[0].name, "Core Mod B");
         assert_eq!(config.game_mods_core[0].description, "Core mod B");
-        assert_eq!(
-            config.game_mods_freq.get("FreqMod"),
-            Some(&"Frequently used mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_opc2.get("OpcMod"),
-            Some(&"OPC2 mod".to_string())
-        );
-        assert_eq!(
-            config.game_mods_solu.get("SoluMod"),
-            Some(&"Solution mod".to_string())
-        );
+        assert_eq!(config.game_mods_freq.len(), 1);
+        assert_eq!(config.game_mods_freq[0].id, "freq-mod");
+        assert_eq!(config.game_mods_freq[0].name, "Frequent Mod");
+        assert_eq!(config.game_mods_freq[0].description, "Frequently used mod");
+        assert_eq!(config.game_mods_solu.len(), 1);
+        assert_eq!(config.game_mods_solu[0].id, "solu-mod");
+        assert_eq!(config.game_mods_solu[0].name, "Solution Mod");
+        assert_eq!(config.game_mods_solu[0].description, "Solution mod");
     }
 }
 
@@ -771,7 +797,7 @@ mod clone_debug {
         assert_eq!(cloned.xse_acronym, config.xse_acronym);
         assert_eq!(cloned.ignore_list, config.ignore_list);
         assert_eq!(cloned.game_mods_conf, config.game_mods_conf);
-        assert_eq!(cloned.suspects_error_list, config.suspects_error_list);
+        assert_eq!(cloned.suspect_error_rules, config.suspect_error_rules);
     }
 
     /// Test debug format

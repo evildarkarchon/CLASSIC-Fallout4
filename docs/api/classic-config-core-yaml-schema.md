@@ -10,15 +10,12 @@ Reference: [`classic-config-core.md`](classic-config-core.md).
 
 - `ClassicConfig::load_or_default()` reads settings in this order:
   1. application directory: `CLASSIC Settings.yaml`
-  2. application directory: `CLASSIC_Settings.yaml`
-  3. user config directory: `dirs::config_dir()/CLASSIC/CLASSIC Settings.yaml`
-  4. user config directory: `dirs::config_dir()/CLASSIC/CLASSIC_Settings.yaml`
 - If none of those files exist, the crate returns `ClassicConfig::default()`.
 - `ClassicConfig::get_config_path()` is best-effort and non-fallible:
-  - it first tries to update the first existing writable settings file in the normal search order, including an existing writable legacy `CLASSIC_Settings.yaml`
-  - if no existing candidate is writable, it tries to create `CLASSIC Settings.yaml` in the application directory, then in `dirs::config_dir()/CLASSIC/`
-  - if those writability checks fail but at least one directory can still be resolved, it returns the preferred `CLASSIC Settings.yaml` target for that resolved directory anyway
-  - it falls back to the plain relative filename `CLASSIC Settings.yaml` only when neither the application directory nor the user config directory can be resolved
+  - it first tries to update an existing writable `CLASSIC Settings.yaml` in the application directory
+  - if that file does not exist, it tries to create `CLASSIC Settings.yaml` in the application directory
+  - if those writability checks fail but the application directory can still be resolved, it returns that preferred `CLASSIC Settings.yaml` target anyway
+  - it falls back to the plain relative filename `CLASSIC Settings.yaml` only when the application directory cannot be resolved
 - `YamlSource::Cache` and cache helpers use the `CLASSIC` base directory, not `CLASSIC-Fallout4`:
   - preferred: `dirs::config_dir()/CLASSIC/cache.yaml`
   - compatibility fallback when no user config dir is available: `<application-dir>/CLASSIC/cache.yaml`
@@ -138,13 +135,41 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `Warnings_CRASHGEN.Warn_Outdated` | string | populates `warn_outdated` |
 | `Crashlog_Plugins_Exclude` | sequence of strings | populates `game_ignore_plugins` |
 | `Crashlog_Records_Exclude` | sequence of strings | populates `game_ignore_records` |
-| `Crashlog_Error_Check` | mapping of string -> string | populates `suspects_error_list`; key order is preserved |
-| `Crashlog_Stack_Check` | mapping of string -> sequence of strings | populates `suspects_stack_list`; key order is preserved |
+| `Crashlog_Error_Check` | sequence of `SuspectErrorRule` mappings | populates `suspect_error_rules`; source order is preserved |
+| `Crashlog_Stack_Check` | sequence of `SuspectStackRule` mappings | populates `suspect_stack_rules`; source order is preserved |
+
+`SuspectErrorRule` entry shape:
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier |
+| `name` | string | yes | report display name |
+| `severity` | integer or numeric string | yes | severity used for sorting and display |
+| `main_error_contains_any` | sequence of strings | yes | rule matches when any listed main-error substring is present |
+
+`SuspectStackRule` entry shape:
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier |
+| `name` | string | yes | report display name |
+| `severity` | integer or numeric string | yes | severity used for sorting and display |
+| `main_error_required_any` | sequence of strings | no | if non-empty, any listed main-error substring must be present before the rule can match |
+| `main_error_optional_any` | sequence of strings | no | optional main-error hints that can trigger the rule when no required list is present |
+| `stack_contains_any` | sequence of strings | no | stack substrings where any match can trigger the rule |
+| `exclude_if_stack_contains_any` | sequence of strings | no | suppresses the rule when any listed stack substring is present |
+| `stack_contains_at_least` | sequence of `SuspectStackCountRule` mappings | no | minimum occurrence stack checks |
+
+`SuspectStackCountRule` entry shape:
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `substring` | string | yes | substring counted inside the stack dump |
+| `count` | positive integer or numeric string | yes | minimum number of occurrences required |
 | `Mods_CONF` | sequence of `ModConflictEntry` mappings | populates `game_mods_conf` (`Vec<ModConflictEntry>`); deduplicated at parse time by canonical pair order |
 | `Mods_CORE` | sequence of `CoreModEntry` mappings | populates `game_mods_core` (`Vec<CoreModEntry>`); entries with missing required fields are skipped |
-| `Mods_FREQ` | mapping of string -> string | populates `game_mods_freq`; key order is preserved |
-| `Mods_OPC2` | mapping of string -> string | populates `game_mods_opc2`; key order is preserved |
-| `Mods_SOLU` | mapping of string -> string | populates `game_mods_solu`; key order is preserved |
+| `Mods_FREQ` | sequence of `ModSolutionEntry` mappings | populates `game_mods_freq` (`Vec<ModSolutionEntry>`); YAML order is preserved |
+| `Mods_SOLU` | sequence of `ModSolutionEntry` mappings | populates `game_mods_solu` (`Vec<ModSolutionEntry>`); YAML order is preserved |
 | `Crashgen_Registry` | mapping of crashgen name -> mapping | parsed into `HashMap<String, CrashgenEntryRaw>`; malformed entries are skipped rather than failing the whole file |
 
 `Crashgen_Registry.<name>` entry shape:
@@ -194,6 +219,40 @@ Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), 
 | `gpu` | string | no | GPU vendor this mod is for (`"nvidia"` or `"amd"`); used for GPU-specific install/uninstall logic |
 | `gpu_mismatch_warning` | string | no | custom warning text shown when the mod is installed but the user does NOT have the GPU specified by `gpu`; falls back to a generic message when absent |
 | `exclude_when` | mapping | no | condition under which this entry is skipped entirely |
+
+`Mods_FREQ[]` entry shape (`ModSolutionEntry`):
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier for the frequent-crash entry |
+| `criteria` | mapping with exactly one of `any` or `all` | yes | grouped plugin-substring matcher used for detection |
+| `exceptions` | sequence of strings | no | suppresses the entry when any listed substring matches an installed plugin filename |
+| `name` | string | yes | human-readable title rendered directly in reports |
+| `description` | string | yes | report body rendered directly without first-line splitting |
+
+`Mods_FREQ[].criteria` currently supports:
+
+| Key | Type / shape | Behavior |
+|---|---|---|
+| `any` | sequence of strings | reports the entry when at least one listed substring matches an installed plugin filename |
+| `all` | sequence of strings | reports the entry only when every listed substring matches an installed plugin filename |
+
+`Mods_SOLU[]` entry shape (`ModSolutionEntry`):
+
+| Key | Type / shape | Required | Behavior |
+|---|---|---|---|
+| `id` | string | yes | stable machine-readable identifier for the solution entry |
+| `criteria` | mapping with exactly one of `any` or `all` | yes | grouped plugin-substring matcher used for detection |
+| `exceptions` | sequence of strings | no | suppresses the entry when any listed substring matches an installed plugin filename |
+| `name` | string | yes | human-readable title rendered directly in reports |
+| `description` | string | yes | report body rendered directly without first-line splitting |
+
+`Mods_SOLU[].criteria` currently supports:
+
+| Key | Type / shape | Behavior |
+|---|---|---|
+| `any` | sequence of strings | reports the entry when at least one listed substring matches an installed plugin filename |
+| `all` | sequence of strings | reports the entry only when every listed substring matches an installed plugin filename |
 
 `exclude_when` currently supports one predicate:
 

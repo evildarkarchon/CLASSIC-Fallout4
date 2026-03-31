@@ -157,8 +157,12 @@ void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
              "Crash scan status should update scanned-log stats during live progress events");
     QVERIFY2(sourceText.contains(QStringLiteral("completed, int total")),
              "Crash scan progress updates should carry structured completed and total counts");
-    QVERIFY2(crashScanProgressBody.contains(QStringLiteral("m_crashScanLogsCompleted = qMin(completed, total);")),
-             "Crash scan progress updates should store completed-log counts from structured progress arguments");
+    QVERIFY2(crashScanProgressBody.contains(
+                 QStringLiteral("m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, qMin(completed, total));")),
+             "Crash scan progress updates should keep completed-log counts monotonic when total is known");
+    QVERIFY2(crashScanProgressBody.contains(
+                 QStringLiteral("m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, completed);")),
+             "Crash scan progress updates should keep completed-log counts monotonic when total is unknown");
     QVERIFY2(scanProgressBody.contains(QStringLiteral("m_crashScanLogsCompleted")),
              "Crash scan status formatting should read tracked completed-log counts");
     QVERIFY2(!crashScanProgressBody.contains(QStringLiteral("progressCompletedEstimate")),

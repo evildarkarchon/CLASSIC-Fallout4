@@ -39,13 +39,12 @@ Warnings_CRASHGEN:
   Warn_Outdated: "Outdated"
 Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
-Crashlog_Error_Check: {}
-Crashlog_Stack_Check: {}
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
 Mods_CONF: []
 Mods_CORE: []
-Mods_FREQ: {}
-Mods_OPC2: {}
-Mods_SOLU: {}
+Mods_FREQ: []
+Mods_SOLU: []
 `;
 
 const IGNORE_YAML = `
@@ -93,8 +92,6 @@ function createCliWorkspace() {
   const localYaml = `
 Game_Info:
   Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
-GameVR_Info:
-  Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
 `;
   const gameYaml = `
 Game_Info:
@@ -110,13 +107,12 @@ Warnings_CRASHGEN:
   Warn_Outdated: "Outdated"
 Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
-Crashlog_Error_Check: {}
-Crashlog_Stack_Check: {}
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
 Mods_CONF: []
 Mods_CORE: []
-Mods_FREQ: {}
-Mods_OPC2: {}
-Mods_SOLU: {}
+Mods_FREQ: []
+Mods_SOLU: []
 `;
 
   mkdirSync(databaseDir, { recursive: true });

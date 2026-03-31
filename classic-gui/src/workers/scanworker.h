@@ -4,6 +4,8 @@
 #include <QString>
 #include <QStringList>
 
+#include <atomic>
+
 class ScanWorker : public QObject {
     Q_OBJECT
 
@@ -20,7 +22,8 @@ public slots:
                 bool fcxMode,
                 bool simplifyLogs,
                 bool moveUnsolvedLogs,
-                int maxConcurrentScans);
+                int maxConcurrentScans,
+                bool targetedMode);
     void requestCancel();
 
 signals:
@@ -31,5 +34,5 @@ signals:
     void error(const QString& message);
 
 private:
-    bool m_cancelled = false;
+    std::atomic<bool> m_cancelled{false};
 };

@@ -73,8 +73,10 @@ private slots:
     void onScanProgress(float percent, const QString& status);
     void onScanCompleted(int total, int success, int errors);
     void onScanError(const QString& message);
+    void onScanWarning(const QString& message);
     void onCrashScanDiscovered(int totalLogs);
     void onCrashLogScanned(int index, bool success, const QString& logPath);
+    void onScanReportDirectoriesResolved(const QStringList& reportDirs);
     void onShowSettings();
     void onGameFilesScanFinished(const QString& output, bool hasErrors, uint32_t totalChecks);
     void onGameFilesScanError(const QString& message);
@@ -118,6 +120,7 @@ private:
 
     // Targeted scan input state (ephemeral, not persisted)
     QStringList m_targetedInputPaths;
+    QStringList m_lastScanReportDirs;
     QWidget* m_targetedInputContainer = nullptr;
     QListWidget* m_targetedInputList = nullptr;
     QLabel* m_targetedInputLabel = nullptr;

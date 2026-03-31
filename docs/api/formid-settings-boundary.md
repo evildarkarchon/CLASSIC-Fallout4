@@ -38,7 +38,7 @@ There are two different active representations for per-game FormID database path
 [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs) reads:
 
 - YAML key path: `CLASSIC_Settings.FormID Databases.{game}`
-- source file search order: `CLASSIC Settings.yaml`, then `CLASSIC_Settings.yaml`
+- source file path: `CLASSIC Settings.yaml` next to the executable / root install directory
 - shape: legacy nested settings tree read through `YamlOperations`
 
 Important contributor takeaway:
@@ -104,7 +104,7 @@ Current hardcoded extras:
 
 Current settings-read details:
 
-- the bridge checks `CLASSIC Settings.yaml` first, then `CLASSIC_Settings.yaml`
+- the bridge reads only `CLASSIC Settings.yaml`
 - it loads the file with `YamlOperations`, not `ClassicConfig`
 - relative user paths are resolved against `yaml_dir_data` (`CLASSIC Data`)
 - absolute user paths are used as-is after normalization

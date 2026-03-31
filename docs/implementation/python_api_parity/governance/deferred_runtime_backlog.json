@@ -3667,6 +3667,23 @@
         "classic_version_registry.XseConfig"
       ],
       "rustSymbols": []
+    },
+    {
+      "coverageId": "python-deferred-config-296",
+      "classification": "deferred",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "wave": "wave2",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "bindingIdentifiers": [],
+      "rustSymbols": [
+        "ModSolutionCriteria",
+        "ModSolutionEntry",
+        "SuspectErrorRule",
+        "SuspectStackCountRule",
+        "SuspectStackRule"
+      ]
     }
   ]
 }

@@ -86,6 +86,9 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = $PSScriptRoot
 $WorkspaceManifest = Join-Path $ProjectRoot "ClassicLib-rs/Cargo.toml"
 $UseUv = [bool](Get-Command uv -ErrorAction SilentlyContinue)
+$PythonBindingsRoot = Join-Path $ProjectRoot "ClassicLib-rs/python-bindings"
+$PythonBindingsVenv = Join-Path $PythonBindingsRoot ".venv"
+$PythonBindingsPython = Join-Path $PythonBindingsVenv "Scripts/python.exe"
 
 function Assert-LastExitCode {
     param (
@@ -170,7 +173,7 @@ function Invoke-MaturinBuildWithRetry {
                 # Stream output directly so Ctrl+C is handled like a normal foreground command.
                 $PSNativeCommandUseErrorActionPreference = $false
                 if ($UseUv) {
-                    & uv run maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+                    & uv run --python $PythonBindingsPython maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
                 }
                 else {
                     & maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
@@ -273,13 +276,13 @@ function Remove-PythonInstalledArtifacts {
         [array]$RustModules
     )
 
-    $sitePackages = Join-Path $ProjectRoot ".venv/Lib/site-packages"
+    $sitePackages = Join-Path $PythonBindingsVenv "Lib/site-packages"
     if (-not (Test-Path $sitePackages)) {
-        Write-Host "ℹ️  No local .venv site-packages found; skipping installed artifact cleanup." -ForegroundColor Gray
+        Write-Host "ℹ️  No Python bindings .venv site-packages found; skipping installed artifact cleanup." -ForegroundColor Gray
         return
     }
 
-    Write-Host "🗑️  Removing old Python binding artifacts from .venv..." -ForegroundColor Cyan
+    Write-Host "🗑️  Removing old Python binding artifacts from ClassicLib-rs/python-bindings/.venv..." -ForegroundColor Cyan
     foreach ($module in $RustModules) {
         Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.pyd") -ErrorAction SilentlyContinue
         Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.dll") -ErrorAction SilentlyContinue
@@ -296,6 +299,12 @@ function Invoke-PythonBindingsRebuild {
 
     Write-Host "Rust bindings are mandatory prerequisites for CLASSIC Python entrypoints." -ForegroundColor Cyan
     Write-Host "This run rebuilds/installs required Python bindings used by startup-all validation." -ForegroundColor Cyan
+    Write-Host "Using Python bindings virtual environment at $PythonBindingsVenv" -ForegroundColor Cyan
+
+    if (-not (Test-Path $PythonBindingsPython)) {
+        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv venv ClassicLib-rs/python-bindings/.venv' and install dependencies into that interpreter."
+        exit 1
+    }
 
     $rustModules = Get-PythonRustModules -CrateFilters $CrateFilters
     if ($rustModules.Count -eq 0) {
@@ -360,12 +369,12 @@ function Invoke-PythonBindingsRebuild {
             if (-not $BuildOnlyMode) {
                 Write-Host "📦 Installing $($module.WheelName)..." -ForegroundColor Green
                 if ($UseUv) {
-                    & uv pip install $wheel.FullName --force-reinstall
-                    Assert-LastExitCode -CommandLabel "uv pip install $($wheel.FullName)"
+                    & uv pip install --python $PythonBindingsPython $wheel.FullName --reinstall
+                    Assert-LastExitCode -CommandLabel "uv pip install --python $PythonBindingsPython $($wheel.FullName)"
                 }
                 else {
-                    & pip install $wheel.FullName --force-reinstall
-                    Assert-LastExitCode -CommandLabel "pip install $($wheel.FullName)"
+                    & $PythonBindingsPython -m pip install $wheel.FullName --force-reinstall
+                    Assert-LastExitCode -CommandLabel "$PythonBindingsPython -m pip install $($wheel.FullName)"
                 }
             }
         }
@@ -388,18 +397,7 @@ function Invoke-PythonBindingsRebuild {
     foreach ($module in $rustModules) {
         try {
             $importName = $module.ImportName
-            if ($UseUv) {
-                $version = & uv run python -c "import $importName; print($importName.__version__)" 2>&1
-            }
-            else {
-                $venvPython = Join-Path $ProjectRoot ".venv/Scripts/python.exe"
-                if (Test-Path $venvPython) {
-                    $version = & $venvPython -c "import $importName; print($importName.__version__)" 2>&1
-                }
-                else {
-                    $version = & python -c "import $importName; print($importName.__version__)" 2>&1
-                }
-            }
+            $version = & $PythonBindingsPython -c "import $importName; print($importName.__version__)" 2>&1
 
             if ($LASTEXITCODE -eq 0) {
                 $verificationResults += @{ Module = $module.WheelName; Status = "✓"; Version = $version }

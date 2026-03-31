@@ -2,6 +2,8 @@
 #include "core/rust_qt_bridge.h"
 #include "scanprogressmodel.h"
 
+#include <QDebug>
+
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/config.h"
@@ -110,7 +112,8 @@ ScanWorker::ScanWorker(QObject* parent)
     : QObject(parent) {}
 
 void ScanWorker::requestCancel() {
-    m_cancelled = true;
+    qDebug() << "ScanWorker: cancellation requested";
+    m_cancelled.store(true);
 }
 
 void ScanWorker::doScan(const QStringList& logPaths,
@@ -122,12 +125,17 @@ void ScanWorker::doScan(const QStringList& logPaths,
                         bool fcxMode,
                         bool simplifyLogs,
                         bool moveUnsolvedLogs,
-                        int maxConcurrentScans) {
-    m_cancelled = false;
+                        int maxConcurrentScans,
+                        bool targetedMode) {
+    m_cancelled.store(false);
 
     int total = logPaths.size();
+    qDebug() << "ScanWorker: starting scan," << total << "logs,"
+             << (targetedMode ? "targeted" : "standard") << "mode";
     int successCount = 0;
     int errorCount = 0;
+    // Targeted scans operate on user-selected source files and should not relocate them.
+    const bool shouldMoveUnsolvedLogs = moveUnsolvedLogs && !targetedMode;
 
     try {
         // rust::Box<T> is non-nullable and non-default-constructible.
@@ -147,7 +155,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
         // Default to batch mode for multi-log scans and stream progress updates
         // from Rust via CXX callback.
         if (total > 1) {
-            if (m_cancelled) {
+            if (m_cancelled.load()) {
                 emit error(QStringLiteral("Scan cancelled by user"));
                 return;
             }
@@ -188,7 +196,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     }
                 }
 
-                if (!scanSuccess && moveUnsolvedLogs) {
+                if (!scanSuccess && shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(reportLogPath, yamlRoot);
                 }
 
@@ -201,6 +209,8 @@ void ScanWorker::doScan(const QStringList& logPaths,
                 emit logScanned(index, scanSuccess, resolvedPath);
             }
 
+            qDebug() << "ScanWorker: batch complete -" << successCount
+                     << "success," << errorCount << "errors of" << total;
             emit progress(100.0f, QStringLiteral("Complete"));
             emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
             emit finished(total, successCount, errorCount);
@@ -208,7 +218,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
         }
 
         for (int i = 0; i < total; ++i) {
-            if (m_cancelled) {
+            if (m_cancelled.load()) {
                 emit error(QStringLiteral("Scan cancelled by user"));
                 return;
             }
@@ -237,7 +247,7 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     }
                 }
 
-                if (!scan_success && moveUnsolvedLogs) {
+                if (!scan_success && shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(report_log_path, yamlRoot);
                 }
 
@@ -250,13 +260,15 @@ void ScanWorker::doScan(const QStringList& logPaths,
 
             } catch (const rust::Error&) {
                 ++errorCount;
-                if (moveUnsolvedLogs) {
+                if (shouldMoveUnsolvedLogs) {
                     move_unsolved_artifacts(std::string(logPaths[i].toUtf8().constData()), yamlRoot);
                 }
                 emit logScanned(i, false, logPaths[i]);
             }
         }
 
+        qDebug() << "ScanWorker: scan complete -" << successCount
+                 << "success," << errorCount << "errors of" << total;
         emit progress(100.0f, QStringLiteral("Complete"));
         emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
         emit finished(total, successCount, errorCount);

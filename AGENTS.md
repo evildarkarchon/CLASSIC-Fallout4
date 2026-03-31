@@ -29,6 +29,7 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a C++ plus Rust ap
 5. Keep docs synchronized with architecture or workflow changes, especially `README.md` and this file.
 6. Never write to `NUL` or `nul` as if it were a file path on Windows.
 7. Consult `docs/api/README.md` before changing public Rust, bridge, GUI-consumer, or binding-facing APIs; if an API-breaking or contract-shaping change occurs, update the affected pages under `docs/api/` in the same change.
+8. Never run C++ tests by invoking test binaries or raw `ctest` directly; use `classic-cli/build_cli.ps1 -Test` or `classic-gui/build_gui.ps1 -Test`, with `-CTestName` or `-IntegrationTestName` when you need a subset.
 
 ## Quick Notes
 

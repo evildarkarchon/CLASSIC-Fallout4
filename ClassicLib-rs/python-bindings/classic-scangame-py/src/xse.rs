@@ -139,20 +139,13 @@ fn to_core_game_version(game_version: PyGameVersion) -> GameVersion {
     }
 }
 
-fn is_vr_game_version(version: GameVersion) -> bool {
-    matches!(version, GameVersion::Vr)
-}
-
 #[pymethods]
 impl PyXseChecker {
     #[new]
     #[pyo3(signature = (plugins_path, game_version=PyGameVersion::Original))]
     fn new(plugins_path: PathBuf, game_version: PyGameVersion) -> PyResult<Self> {
         let version = to_core_game_version(game_version);
-        let use_vr_mode = is_vr_game_version(version);
-
-        let checker =
-            XseChecker::new(plugins_path, use_vr_mode, version).map_err(crate::to_pyerr)?;
+        let checker = XseChecker::new(plugins_path, version).map_err(crate::to_pyerr)?;
 
         Ok(Self { inner: checker })
     }

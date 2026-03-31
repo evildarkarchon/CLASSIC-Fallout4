@@ -200,7 +200,9 @@ class Message:
         """
 
     @staticmethod
-    def with_target(content: str, msg_type: MessageType, target: MessageTarget) -> Message:
+    def with_target(
+        content: str, msg_type: MessageType, target: MessageTarget
+    ) -> Message:
         """Create a new message with the specified content, type, and target.
 
         Args:

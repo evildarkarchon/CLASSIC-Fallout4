@@ -40,18 +40,18 @@ jobs:
     if: github.event_name == 'push' || !github.event.pull_request.draft
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -59,7 +59,7 @@ jobs:
             ${{ runner.os }}-cargo-registry-
 
       - name: Cache cargo index
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
@@ -67,7 +67,7 @@ jobs:
             ${{ runner.os }}-cargo-index-
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ClassicLib-rs/target
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Restore baseline cache
         id: baseline-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ClassicLib-rs/target/criterion/baseline
           key: criterion-baseline-${{ runner.os }}-dummy
@@ -115,7 +115,7 @@ jobs:
 
       - name: Save baseline cache (main only)
         if: github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ClassicLib-rs/target/criterion/baseline
           key: criterion-baseline-${{ runner.os }}-${{ github.sha }}

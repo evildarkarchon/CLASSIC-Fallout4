@@ -15,7 +15,9 @@ use crate::error::Result;
 use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
 use crate::gpu_detector::GpuDetector;
-use crate::mod_detector::{detect_mods_double, detect_mods_important, detect_mods_single};
+use crate::mod_detector::{
+    detect_mods_double, detect_mods_freq, detect_mods_important, detect_mods_solutions,
+};
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
@@ -25,11 +27,16 @@ use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
+    is_fake_bot_compatible_buffout_version,
 };
-use classic_config_core::{CoreModEntry, ModConflictEntry};
+use classic_config_core::{
+    CoreModEntry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule, SuspectStackRule,
+};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
-use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
+use classic_version_registry_core::{
+    GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
+};
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -177,11 +184,8 @@ pub struct AnalysisConfig {
     /// Game name (e.g., "Fallout4")
     pub game: String,
 
-    /// Selected game-version mode state (derived from caller input).
-    ///
-    /// This is intentionally not exposed publicly; public callers configure
-    /// mode via `game_version` selection APIs.
-    is_vr_mode: bool,
+    /// Registry-backed selected version metadata, if available.
+    selected_version: Option<VersionInfo>,
 
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
@@ -226,22 +230,19 @@ pub struct AnalysisConfig {
     /// List of strings to remove from crash logs when simplify_logs is enabled
     pub remove_list: Vec<String>,
 
-    /// Pattern dictionaries for suspect detection (IndexMap preserves YAML key order for Python parity)
-    pub suspects_error: IndexMap<String, String>,
-    /// Stack-based suspect patterns for crash analysis (IndexMap preserves YAML key order for Python parity)
-    pub suspects_stack: IndexMap<String, Vec<String>>,
+    /// Structured main-error suspect rules.
+    pub suspect_error_rules: Vec<SuspectErrorRule>,
+    /// Structured stack suspect rules.
+    pub suspect_stack_rules: Vec<SuspectStackRule>,
 
     /// Structured core / important mod entries for recommended-mod checks
     pub mods_core: Vec<CoreModEntry>,
-    /// Frequently problematic mods database for crash analysis (IndexMap preserves YAML key order)
-    pub mods_freq: IndexMap<String, String>,
+    /// Structured frequently problematic mods database for crash analysis.
+    pub mods_freq: Vec<ModSolutionEntry>,
     /// Mod conflict entries for compatibility analysis
     pub mods_conf: Vec<ModConflictEntry>,
-    /// Mod solutions database for providing fixes and workarounds (IndexMap preserves YAML key order)
-    pub mods_solu: IndexMap<String, String>,
-    /// Outdated, redundant, or community patch mods database (IndexMap preserves YAML key order)
-    pub mods_opc2: IndexMap<String, String>,
-
+    /// Structured mod solution entries for fixes and workarounds.
+    pub mods_solu: Vec<ModSolutionEntry>,
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
 
@@ -286,9 +287,12 @@ impl AnalysisConfig {
     /// config.ignore_plugins = vec!["Fallout4.esm".to_string()];
     /// ```
     pub fn new(game: String, selected_game_version: String) -> Self {
+        let selected_version =
+            classic_config_core::resolve_registry_version_info(&game, &selected_game_version);
+
         Self {
             game,
-            is_vr_mode: selected_game_version.eq_ignore_ascii_case("VR"),
+            selected_version,
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
             crashgen_latest_vr: String::new(),
@@ -304,31 +308,16 @@ impl AnalysisConfig {
             fcx_mode: false,
             simplify_logs: false,
             remove_list: Vec::new(),
-            suspects_error: IndexMap::new(),
-            suspects_stack: IndexMap::new(),
+            suspect_error_rules: Vec::new(),
+            suspect_stack_rules: Vec::new(),
             mods_core: Vec::new(),
-            mods_freq: IndexMap::new(),
+            mods_freq: Vec::new(),
             mods_conf: Vec::new(),
-            mods_solu: IndexMap::new(),
-            mods_opc2: IndexMap::new(),
+            mods_solu: Vec::new(),
             classic_records_list: Vec::new(),
             crashgen_registry: CrashgenRegistry::default(),
         }
     }
-
-    #[must_use]
-    fn is_vr_mode(&self) -> bool {
-        self.is_vr_mode
-    }
-}
-
-/// Resolve VR game version string for a game from Version Registry.
-///
-/// This is used to preserve plugin-limit matching behavior where callers may
-/// provide a VR game version string directly (e.g., "1.2.72" for Fallout 4 VR).
-fn resolve_registry_game_version_vr(registry_game_id: &str) -> Option<String> {
-    classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
-        .map(|info| classic_config_core::format_registry_game_version(&info.version))
 }
 
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
@@ -356,15 +345,17 @@ pub fn build_analysis_config_from_yaml(
     simplify_logs: bool,
     remove_list: Vec<String>,
 ) -> AnalysisConfig {
-    let is_vr_mode = selected_game_version.eq_ignore_ascii_case("VR");
     let registry_game_id = match yaml.get_game_root_name().trim() {
         "" => game,
         root_name => root_name,
     };
-    let registry_info =
+    let selected_version =
         classic_config_core::resolve_registry_version_info(registry_game_id, selected_game_version);
-    let game_version_vr = resolve_registry_game_version_vr(registry_game_id).unwrap_or_default();
-    let registry_crashgen = registry_info
+    let game_version_vr =
+        classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
+            .map(|info| classic_config_core::format_registry_game_version(&info.version))
+            .unwrap_or_default();
+    let registry_crashgen = selected_version
         .as_ref()
         .and_then(|info| info.crashgen_versions.first());
 
@@ -378,21 +369,21 @@ pub fn build_analysis_config_from_yaml(
         .filter(|version| !version.is_empty())
         .unwrap_or(yaml.crashgen_latest_og.as_str())
         .to_string();
-    let xse_acronym = registry_info
+    let xse_acronym = selected_version
         .as_ref()
         .and_then(|info| info.xse.as_ref())
         .map(|xse| xse.acronym.as_str())
         .filter(|acronym| !acronym.is_empty())
         .unwrap_or(yaml.xse_acronym.as_str())
         .to_string();
-    let game_version = registry_info
+    let game_version = selected_version
         .as_ref()
         .map(|info| classic_config_core::format_registry_game_version(&info.version))
         .unwrap_or_else(|| yaml.game_version.clone());
 
     AnalysisConfig {
         game: game.to_string(),
-        is_vr_mode,
+        selected_version,
         crashgen_name,
         crashgen_latest,
         crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
@@ -408,13 +399,12 @@ pub fn build_analysis_config_from_yaml(
         fcx_mode,
         simplify_logs,
         remove_list,
-        suspects_error: yaml.suspects_error_list.clone(),
-        suspects_stack: yaml.suspects_stack_list.clone(),
+        suspect_error_rules: yaml.suspect_error_rules.clone(),
+        suspect_stack_rules: yaml.suspect_stack_rules.clone(),
         mods_core: yaml.game_mods_core.clone(),
         mods_freq: yaml.game_mods_freq.clone(),
         mods_conf: yaml.game_mods_conf.clone(),
         mods_solu: yaml.game_mods_solu.clone(),
-        mods_opc2: yaml.game_mods_opc2.clone(),
         classic_records_list: yaml.classic_records_list.clone(),
         crashgen_registry: build_crashgen_registry(&yaml.crashgen_registry),
     }
@@ -700,6 +690,21 @@ pub struct OrchestratorCore {
 }
 
 impl OrchestratorCore {
+    fn has_real_buffout_module(xse_modules: &HashSet<String>) -> bool {
+        xse_modules.contains("buffout4.dll") || xse_modules.contains("buffout4ae.dll")
+    }
+
+    fn is_fake_bot_compatible_mode(
+        crashgen_version_str: &str,
+        xse_modules: &HashSet<String>,
+    ) -> bool {
+        is_fake_bot_compatible_buffout_version(crashgen_version_str)
+            || (crashgen_version_str
+                .to_ascii_lowercase()
+                .contains("buffout")
+                && !Self::has_real_buffout_module(xse_modules))
+    }
+
     /// Build a settings validator from `AnalysisConfig`.
     fn settings_validator_from_config(config: &AnalysisConfig) -> SettingsValidator {
         Self::settings_validator_for_crashgen(config, &config.crashgen_name)
@@ -728,7 +733,7 @@ impl OrchestratorCore {
         }
 
         let has_addictol = xse_modules.contains("addictol.dll");
-        let has_buffout = xse_modules.contains("buffout4.dll");
+        let has_buffout = Self::has_real_buffout_module(xse_modules);
         if has_addictol && !has_buffout {
             return "Addictol".to_string();
         }
@@ -778,26 +783,22 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub fn new(config: AnalysisConfig) -> Result<Self> {
-        // Initialize plugin analyzer if ignore lists are available
-        let plugin_analyzer = if !config.ignore_plugins.is_empty() || !config.ignore_list.is_empty()
-        {
-            Some(PluginAnalyzer::new(
-                config.ignore_plugins.clone(),
-                config.ignore_list.clone(),
-                config.crashgen_name.clone(),
-                config.game_version.clone(),
-                config.game_version_vr.clone(),
-            )?)
-        } else {
-            None
-        };
+        // Plugin parsing is needed for all mod-detection paths, even when the
+        // ignore lists are empty.
+        let plugin_analyzer = Some(PluginAnalyzer::new(
+            config.ignore_plugins.clone(),
+            config.ignore_list.clone(),
+            config.crashgen_name.clone(),
+            config.game_version.clone(),
+            config.game_version_vr.clone(),
+        )?);
 
         // Initialize suspect scanner if suspect patterns are available
         let suspect_scanner =
-            if !config.suspects_error.is_empty() || !config.suspects_stack.is_empty() {
+            if !config.suspect_error_rules.is_empty() || !config.suspect_stack_rules.is_empty() {
                 Some(SuspectScanner::new(
-                    config.suspects_error.clone(),
-                    config.suspects_stack.clone(),
+                    config.suspect_error_rules.clone(),
+                    config.suspect_stack_rules.clone(),
                 ))
             } else {
                 None
@@ -1109,10 +1110,19 @@ impl OrchestratorCore {
             .cloned()
             .unwrap_or_default();
 
-        let effective_crashgen_name = self.resolve_effective_crashgen_name(
+        let fake_bot_compatible_mode = Self::is_fake_bot_compatible_mode(
             &crashgen_version_str,
             &context.xse_modules_for_settings,
         );
+
+        let effective_crashgen_name = if fake_bot_compatible_mode {
+            self.config.crashgen_name.clone()
+        } else {
+            self.resolve_effective_crashgen_name(
+                &crashgen_version_str,
+                &context.xse_modules_for_settings,
+            )
+        };
 
         // Create ReportGenerator for this log using effective crashgen name.
         let report_gen = self.create_report_generator_with_crashgen_name(&effective_crashgen_name);
@@ -1136,7 +1146,8 @@ impl OrchestratorCore {
         });
 
         // Check crashgen version status using list-based validation for the detected game version
-        let crashgen_status = if crashgen_version_str.trim().is_empty() {
+        let crashgen_status = if crashgen_version_str.trim().is_empty() || fake_bot_compatible_mode
+        {
             None
         } else {
             let (_parsed, status) = self.check_crashgen_version_for_detected_game(
@@ -1171,7 +1182,8 @@ impl OrchestratorCore {
 
         let mut error_information_fragments: Vec<ReportFragment> = Vec::new();
         let mut settings_fragments: Vec<ReportFragment> = Vec::new();
-        if !context.crashgen_settings.is_empty()
+        if !fake_bot_compatible_mode
+            && !context.crashgen_settings.is_empty()
             && let Ok(bucketed_settings_fragments) = settings_validator.scan_all_settings_bucketed(
                 &context.crashgen_settings,
                 &context.xse_modules_for_settings,
@@ -1192,10 +1204,11 @@ impl OrchestratorCore {
         }
 
         // Generate error section
-        let error_section = report_gen.generate_error_section_with_status(
+        let error_section = report_gen.generate_error_section_with_status_and_fake_mode(
             &main_error,
             &crashgen_version_str,
             crashgen_status,
+            fake_bot_compatible_mode,
         );
         composer.add(Self::append_error_information_fragments(
             error_section,
@@ -1321,9 +1334,7 @@ impl OrchestratorCore {
 
             // Check for frequently problematic mods
             if !self.config.mods_freq.is_empty() {
-                if let Ok(freq_lines) =
-                    detect_mods_single(self.config.mods_freq.clone(), plugins.clone())
-                {
+                if let Ok(freq_lines) = detect_mods_freq(&self.config.mods_freq, plugins) {
                     if !freq_lines.is_empty() {
                         composer.add(
                             report_gen.generate_mod_check_header("Can Cause Frequent Crashes"),
@@ -1335,9 +1346,7 @@ impl OrchestratorCore {
 
             // Check for mods with known solutions
             if !self.config.mods_solu.is_empty() {
-                if let Ok(solu_lines) =
-                    detect_mods_single(self.config.mods_solu.clone(), plugins.clone())
-                {
+                if let Ok(solu_lines) = detect_mods_solutions(&self.config.mods_solu, plugins) {
                     if !solu_lines.is_empty() {
                         composer.add(report_gen.generate_mod_check_header("HAVE SOLUTIONS"));
                         composer.add(ReportFragment::from_lines(solu_lines));
@@ -1359,20 +1368,6 @@ impl OrchestratorCore {
                             "### Checking for Important Mods\n\n".to_string(),
                         ]));
                         composer.add(ReportFragment::from_lines(important_lines));
-                    }
-                }
-            }
-
-            // Check for OPC2 mods (outdated, redundant, or have community patches)
-            if !self.config.mods_opc2.is_empty() {
-                if let Ok(opc2_lines) =
-                    detect_mods_single(self.config.mods_opc2.clone(), plugins.clone())
-                {
-                    if !opc2_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header(
-                            "Are Outdated, Redundant, or Have Community Patches",
-                        ));
-                        composer.add(ReportFragment::from_lines(opc2_lines));
                     }
                 }
             }
@@ -1852,7 +1847,10 @@ impl OrchestratorCore {
         let match_result = registry.match_version(
             &detected_game_version,
             &self.config.game,
-            self.config.is_vr_mode(),
+            self.config
+                .selected_version
+                .as_ref()
+                .is_some_and(|info| info.is_vr),
         );
 
         let valid_versions: Vec<&str> = match match_result.version_info {
@@ -2136,18 +2134,91 @@ mod tests {
             game_ignore_plugins: Vec::new(),
             game_ignore_records: Vec::new(),
             ignore_list: Vec::new(),
-            suspects_error_list: IndexMap::new(),
-            suspects_stack_list: IndexMap::new(),
+            suspect_error_rules: Vec::new(),
+            suspect_stack_rules: Vec::new(),
             game_mods_conf: Vec::new(),
             game_mods_core: Vec::new(),
-            game_mods_freq: IndexMap::new(),
-            game_mods_opc2: IndexMap::new(),
-            game_mods_solu: IndexMap::new(),
+            game_mods_freq: Vec::new(),
+            game_mods_solu: Vec::new(),
             autoscan_text: String::new(),
             game_version: String::new(),
             game_root_name: "Fallout4".to_string(),
             crashgen_registry: std::collections::HashMap::new(),
         }
+    }
+
+    fn build_orchestrator_with_structured_mods_solu(mods_solu_yaml: &str) -> OrchestratorCore {
+        let main_yaml = concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"7.31.0\"\n",
+            "  version_date: \"2024-01-15\"\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+        );
+        let game_yaml = format!(
+            concat!(
+                "Game_Info:\n",
+                "  XSE_Acronym: \"F4SE\"\n",
+                "  GameVersion: \"1.10.163\"\n",
+                "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+                "  CRASHGEN_LogName: \"Buffout 4\"\n",
+                "  Main_Root_Name: \"Fallout4\"\n",
+                "{}"
+            ),
+            mods_solu_yaml
+        );
+        let ignore_yaml = "CLASSIC_Ignore_Fallout4: []\n";
+        let yaml = classic_config_core::YamlDataCore::from_yaml_content(
+            main_yaml,
+            &game_yaml,
+            ignore_yaml,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("structured Mods_SOLU yaml should load");
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        OrchestratorCore::new(config).expect("orchestrator should build")
+    }
+
+    fn structured_mods_solu_log(plugins: &[(&str, &str)]) -> String {
+        let mut lines = vec![
+            "Fallout 4 v1.11.191".to_string(),
+            "Buffout 4 v1.28.6".to_string(),
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000"
+                .to_string(),
+            String::new(),
+            "PROBABLE CALL STACK:".to_string(),
+            "stack frame".to_string(),
+            "MODULES:".to_string(),
+            "kernel32.dll v10.0.0".to_string(),
+            "F4SE PLUGINS:".to_string(),
+            "buffout4.dll v1.28.6".to_string(),
+            "PLUGINS:".to_string(),
+        ];
+
+        lines.extend(
+            plugins
+                .iter()
+                .map(|(plugin_id, plugin_name)| format!("[{plugin_id}] {plugin_name}")),
+        );
+
+        lines.extend([
+            "REGISTERS:".to_string(),
+            "RAX 0x0".to_string(),
+            "STACK:".to_string(),
+            "stack dump line".to_string(),
+        ]);
+
+        lines.join("\n")
     }
 
     #[test]
@@ -2431,6 +2502,17 @@ mod tests {
     }
 
     #[test]
+    fn fake_bot_mode_treats_buffout4ae_dll_as_real_buffout() {
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("buffout4ae.dll".to_string());
+
+        assert!(
+            !OrchestratorCore::is_fake_bot_compatible_mode("Buffout 4 v1.28.6", &xse_modules),
+            "buffout4ae.dll should count as a real Buffout module"
+        );
+    }
+
+    #[test]
     fn create_report_generator_with_crashgen_name_updates_error_section_label() {
         let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
         let orchestrator = OrchestratorCore::new(config).unwrap();
@@ -2653,6 +2735,111 @@ mod tests {
     }
 
     #[test]
+    fn process_log_skips_fake_bot_compatible_buffout_version_and_settings_checks() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Buffout 4 v1.1.0",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Compatibility]",
+            "Achievements: true",
+            "MemoryManager: true",
+            "ArchiveLimit: false",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "fake-buffout.dll v1.0.0",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log("fake-bot-compatible.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fake bot-compatible fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(report_text.contains("Bot Compatible Mode"));
+        assert!(
+            report_text.contains("Version and Settings checks are disabled"),
+            "report should explain why checks were skipped"
+        );
+        assert!(
+            !report_text.contains("OUTDATED"),
+            "fake bot-compatible logs should not emit outdated-version warnings"
+        );
+        assert!(
+            !report_text.contains("### Checking for Settings-related Issues"),
+            "fake bot-compatible logs should skip settings validation"
+        );
+    }
+
+    #[test]
+    fn process_log_skips_checks_when_buffout_header_lacks_buffout_module() {
+        let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+        config.crashgen_name = "Buffout 4".to_string();
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Buffout 4 v1.28.6",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Compatibility]",
+            "Achievements: true",
+            "MemoryManager: true",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "addictol.dll v1.1.0",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log(
+            "fake-bot-compatible-missing-buffout-module.log",
+            &log_contents,
+        );
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("missing buffout module fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(
+            report_text.contains("Bot Compatible Mode"),
+            "logs claiming Buffout 4 without buffout4.dll should be treated as bot-compatible"
+        );
+        assert!(
+            !report_text.contains("### Checking for Settings-related Issues"),
+            "missing buffout4.dll should suppress settings validation for fake Buffout logs"
+        );
+    }
+
+    #[test]
     fn derive_config_layout_returns_og_for_valid_non_vr_version() {
         let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
         let orchestrator = OrchestratorCore::new(config).unwrap();
@@ -2747,6 +2934,196 @@ mod tests {
         assert!(report_text.contains("Generated by CLASSIC"));
         assert!(report_text.contains("Checking for Known Crash Messages, Errors and Suspects"));
         assert!(report_text.contains("### End of Report"));
+    }
+
+    #[test]
+    fn process_log_ignores_legacy_mods_opc2_yaml_entries() {
+        let main_yaml = concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"7.31.0\"\n",
+            "  version_date: \"2024-01-15\"\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+        );
+        let game_yaml = concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "  GameVersion: \"1.10.163\"\n",
+            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+            "  CRASHGEN_LogName: \"Buffout 4\"\n",
+            "  Main_Root_Name: \"Fallout4\"\n",
+            "Mods_OPC2:\n",
+            "  OpcMod: \"OPC2 mod\"\n",
+        );
+        let ignore_yaml = "CLASSIC_Ignore_Fallout4: []\n";
+        let yaml = classic_config_core::YamlDataCore::from_yaml_content(
+            main_yaml,
+            game_yaml,
+            ignore_yaml,
+            "Fallout4".to_string(),
+            "auto".to_string(),
+        )
+        .expect("yaml fixture should load");
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            "auto",
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+        let orchestrator = OrchestratorCore::new(config).expect("orchestrator should build");
+
+        let log_contents = [
+            "Fallout 4 v1.11.191",
+            "Buffout 4 v1.28.6",
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            "buffout4.dll v1.28.6",
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "[01] OpcMod.esp",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture = write_fixture_log("legacy-opc2.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(!report_text.contains(
+            "### Checking For Mods That Are Outdated, Redundant, or Have Community Patches"
+        ));
+    }
+
+    #[test]
+    fn process_log_renders_structured_mods_solu_any_matches() {
+        let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(
+            "Mods_SOLU:\n",
+            "  - id: high-resolution-dlc\n",
+            "    criteria:\n",
+            "      any:\n",
+            "        - DLCUltraHighResolution\n",
+            "        - HighResPack\n",
+            "    name: High Resolution DLC\n",
+            "    description: |\n",
+            "      Disable the official texture pack.\n",
+            "      It causes crashes and stutter.\n"
+        ));
+        let log_contents = structured_mods_solu_log(&[("01", "DLCUltraHighResolution.esp")]);
+        let processed_lines = orchestrator.reformat_crash_data_inline(
+            &log_contents.lines().map(str::to_string).collect::<Vec<_>>(),
+        );
+        let context =
+            ScanAnalysisContext::from_processed_lines(&orchestrator.parser, processed_lines);
+        assert!(
+            !context.plugin_lines.is_empty(),
+            "plugin segment should not be empty"
+        );
+
+        let analyzer = orchestrator
+            .plugin_analyzer
+            .as_ref()
+            .expect("orchestrator should have a plugin analyzer");
+        let (plugins, _limit_triggered, _limit_disabled) = analyzer
+            .loadorder_scan_log(
+                &context.plugin_lines,
+                Some(orchestrator.config.game_version.as_str()),
+                Some(orchestrator.config.crashgen_latest.as_str()),
+            )
+            .expect("plugin analyzer should parse the fixture plugins");
+        assert_eq!(
+            plugins.get("DLCUltraHighResolution.esp"),
+            Some(&"01".to_string())
+        );
+        assert!(
+            !detect_mods_solutions(&orchestrator.config.mods_solu, &plugins)
+                .expect("structured matcher should succeed")
+                .is_empty(),
+            "structured matcher should detect the configured entry"
+        );
+
+        let fixture = write_fixture_log("mods-solu-any.log", &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
+        assert!(report_text.contains("FOUND : [01] High Resolution DLC"));
+        assert!(report_text.contains("Disable the official texture pack."));
+        assert!(report_text.contains("It causes crashes and stutter."));
+    }
+
+    #[test]
+    fn process_log_requires_all_structured_mods_solu_criteria() {
+        let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(
+            "Mods_SOLU:\n",
+            "  - id: bodyslide-patch\n",
+            "    criteria:\n",
+            "      all:\n",
+            "        - LooksMenu\n",
+            "        - CBBE\n",
+            "    name: BodySlide Patch\n",
+            "    description: |\n",
+            "      Install the compatibility patch.\n"
+        ));
+        let fixture = write_fixture_log(
+            "mods-solu-all.log",
+            &structured_mods_solu_log(&[("02", "LooksMenu.esp")]),
+        );
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(!report_text.contains("BodySlide Patch"));
+        assert!(!report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
+    }
+
+    #[test]
+    fn process_log_suppresses_structured_mods_solu_exceptions() {
+        let orchestrator = build_orchestrator_with_structured_mods_solu(concat!(
+            "Mods_SOLU:\n",
+            "  - id: ebf-redux\n",
+            "    criteria:\n",
+            "      any:\n",
+            "        - EveryonesBestFriend\n",
+            "    exceptions:\n",
+            "      - UFO4P\n",
+            "    name: Everyone's Best Friend\n",
+            "    description: |\n",
+            "      Install the compatibility patch.\n"
+        ));
+        let fixture = write_fixture_log(
+            "mods-solu-exception.log",
+            &structured_mods_solu_log(&[("03", "EveryonesBestFriend.esp"), ("04", "UFO4P.esp")]),
+        );
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success);
+        assert!(!report_text.contains("Everyone's Best Friend"));
+        assert!(!report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
     }
 
     #[test]

@@ -4,7 +4,9 @@
 //! while leveraging Rust's performance optimizations.
 
 use crate::error::{Result, ScanLogError};
-use classic_config_core::{CoreModEntry, CoreModExclude, ModConflictEntry};
+use classic_config_core::{
+    CoreModEntry, CoreModExclude, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
+};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
@@ -49,6 +51,28 @@ fn validate_warning(mod_name: &str, warning: &str) -> Result<()> {
         )));
     }
     Ok(())
+}
+
+fn append_found_entry(lines: &mut Vec<String>, plugin_ids: &[String], title: &str, body: &str) {
+    let plugin_list = plugin_ids
+        .iter()
+        .map(|plugin_id| format!("[{plugin_id}]"))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    lines.push(format!(
+        "**[!] FOUND : {} {}**\n\n",
+        plugin_list,
+        title.trim()
+    ));
+
+    for line in body.lines() {
+        if !line.trim().is_empty() {
+            lines.push(format!("{}  \n", line));
+        } else {
+            lines.push("  \n".to_string());
+        }
+    }
 }
 
 /// Detects known problematic or noteworthy single mods in the crash log plugin list.
@@ -171,32 +195,145 @@ pub fn detect_mods_single(
 
     // Build output lines in plugin ID sorted order
     for (plugin_id, _mod_name, mod_warning) in detected_mods {
-        let plugin_list = format!("[{}]", plugin_id);
-
-        // Build the complete entry using hybrid approach with Qt-compatible newlines
         let warning_lines: Vec<&str> = mod_warning.lines().collect();
-        if !warning_lines.is_empty() {
-            // First line (mod name) goes on the same line as FOUND header
-            let mod_name_display = warning_lines[0].trim();
-            lines.push(format!(
-                "**[!] FOUND : {} {}**\n\n",
-                plugin_list, mod_name_display
-            ));
-
-            // Remaining lines are joined with hard line breaks for single paragraph rendering
-            for line in &warning_lines[1..] {
-                if !line.trim().is_empty() {
-                    lines.push(format!("{}  \n", line));
-                } else {
-                    lines.push("  \n".to_string());
-                }
-            }
-        } else {
-            lines.push(format!("**[!] FOUND : {}**\n\n", plugin_list));
+        if warning_lines.is_empty() {
+            continue;
         }
+
+        let plugin_ids = vec![plugin_id];
+        append_found_entry(
+            &mut lines,
+            &plugin_ids,
+            warning_lines[0],
+            &warning_lines[1..].join("\n"),
+        );
     }
 
     Ok(lines)
+}
+
+fn detect_structured_mod_entries(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    let mut lines = Vec::new();
+
+    if entries.is_empty() {
+        return Ok(lines);
+    }
+
+    let crashlog_plugins_lower: Vec<(String, String)> = crashlog_plugins
+        .iter()
+        .map(|(plugin_name, plugin_id)| (plugin_name.to_lowercase(), plugin_id.clone()))
+        .collect();
+
+    let mut detected_entries: Vec<(String, usize, Vec<String>, &ModSolutionEntry)> = Vec::new();
+
+    for (yaml_index, entry) in entries.iter().enumerate() {
+        validate_warning(&entry.id, &entry.description)?;
+
+        let criterion_tokens: HashSet<String> = entry
+            .criteria
+            .values()
+            .iter()
+            .map(|value| value.to_lowercase())
+            .collect();
+
+        let matched_plugin_ids = match &entry.criteria {
+            ModSolutionCriteria::Any(criteria) => {
+                let mut matched = Vec::new();
+                for criterion in criteria {
+                    let criterion_lower = criterion.to_lowercase();
+                    if let Some((_, plugin_id)) = crashlog_plugins_lower
+                        .iter()
+                        .find(|(plugin_name, _)| plugin_name.contains(&criterion_lower))
+                        && !matched.contains(plugin_id)
+                    {
+                        matched.push(plugin_id.clone());
+                    }
+                }
+                matched
+            }
+            ModSolutionCriteria::All(criteria) => {
+                let mut matched = Vec::new();
+                let mut all_matched = true;
+                for criterion in criteria {
+                    let criterion_lower = criterion.to_lowercase();
+                    match crashlog_plugins_lower
+                        .iter()
+                        .find(|(plugin_name, _)| plugin_name.contains(&criterion_lower))
+                    {
+                        Some((_, plugin_id)) => {
+                            if !matched.contains(plugin_id) {
+                                matched.push(plugin_id.clone());
+                            }
+                        }
+                        None => {
+                            all_matched = false;
+                            break;
+                        }
+                    }
+                }
+
+                if all_matched { matched } else { Vec::new() }
+            }
+        };
+
+        if matched_plugin_ids.is_empty() {
+            continue;
+        }
+
+        let suppressed = entry.exceptions.iter().any(|exception| {
+            let exception_lower = exception.to_lowercase();
+            if criterion_tokens.contains(&exception_lower) {
+                return false;
+            }
+            crashlog_plugins_lower
+                .iter()
+                .any(|(plugin_name, _)| plugin_name.contains(&exception_lower))
+        });
+        if suppressed {
+            continue;
+        }
+
+        let mut matched_plugin_ids = matched_plugin_ids;
+        matched_plugin_ids.sort_by_key(|plugin_id| parse_plugin_id_for_sort(plugin_id));
+        let first_plugin_id = matched_plugin_ids[0].clone();
+        detected_entries.push((first_plugin_id, yaml_index, matched_plugin_ids, entry));
+    }
+
+    detected_entries.sort_by(|a, b| {
+        let sort_key_a = parse_plugin_id_for_sort(&a.0);
+        let sort_key_b = parse_plugin_id_for_sort(&b.0);
+        sort_key_a.cmp(&sort_key_b).then(a.1.cmp(&b.1))
+    });
+
+    for (_first_plugin_id, _yaml_index, matched_plugin_ids, entry) in detected_entries {
+        append_found_entry(
+            &mut lines,
+            &matched_plugin_ids,
+            &entry.name,
+            &entry.description,
+        );
+    }
+
+    Ok(lines)
+}
+
+/// Detect structured `Mods_FREQ` entries against the installed plugin list.
+pub(crate) fn detect_mods_freq(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    detect_structured_mod_entries(entries, crashlog_plugins)
+}
+
+/// Detect structured `Mods_SOLU` entries against the installed plugin list.
+pub(crate) fn detect_mods_solutions(
+    entries: &[ModSolutionEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+) -> Result<Vec<String>> {
+    detect_structured_mod_entries(entries, crashlog_plugins)
 }
 
 /// Detects conflicting mod combinations where two specific mods cause problems together.
@@ -367,6 +504,7 @@ pub fn detect_mods_important(
 
     let plugin_names_lower: Vec<String> =
         crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
+    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
     let plugins_text = plugin_names_lower.join(" ");
 
     let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
@@ -375,7 +513,7 @@ pub fn detect_mods_important(
     let all_text = format!("{} {}", plugins_text, modules_text);
 
     for entry in entries {
-        if is_excluded(&entry.exclude_when, crashlog_plugins) {
+        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
             continue;
         }
 
@@ -441,15 +579,11 @@ pub fn detect_mods_important(
 }
 
 /// Checks whether a `CoreModExclude` condition is met by the current plugin list.
-fn is_excluded(exclude: &Option<CoreModExclude>, plugins: &IndexMap<String, String>) -> bool {
+fn is_excluded(exclude: &Option<CoreModExclude>, plugin_names_lower: &HashSet<String>) -> bool {
     match exclude {
-        Some(CoreModExclude::PluginAny(required_plugins)) => {
-            let plugin_names_lower: HashSet<String> =
-                plugins.keys().map(|k| k.to_lowercase()).collect();
-            required_plugins
-                .iter()
-                .any(|p| plugin_names_lower.contains(&p.to_lowercase()))
-        }
+        Some(CoreModExclude::PluginAny(required_plugins)) => required_plugins
+            .iter()
+            .any(|p| plugin_names_lower.contains(&p.to_lowercase())),
         None => false,
     }
 }
@@ -618,6 +752,7 @@ pub fn detect_mods_batch(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
 
     // ============================================
     // Helper function tests
@@ -758,6 +893,153 @@ mod tests {
         let output = result.join("");
         // The longer pattern should match
         assert!(output.contains("Mod Extended") || output.contains("modextended"));
+    }
+
+    #[test]
+    fn test_detect_mods_freq_any_match() {
+        let entries = vec![make_solution_entry(
+            "freq-test",
+            ModSolutionCriteria::Any(vec!["FreqMod".to_string(), "FallbackToken".to_string()]),
+            vec![],
+            "Frequent Mod",
+            "This mod can frequently crash the game.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("FreqMod.esp".to_string(), "06".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [06] Frequent Mod"));
+        assert!(output.contains("frequently crash the game"));
+    }
+
+    #[test]
+    fn test_detect_mods_freq_all_requires_every_criterion() {
+        let entries = vec![make_solution_entry(
+            "freq-all",
+            ModSolutionCriteria::All(vec!["LooksMenu".to_string(), "CBBE".to_string()]),
+            vec![],
+            "Combined Setup",
+            "Only report when both mods are installed.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("LooksMenu.esp".to_string(), "07".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_freq_exception_suppresses_match() {
+        let entries = vec![make_solution_entry(
+            "freq-exception",
+            ModSolutionCriteria::Any(vec!["ProblematicMod".to_string()]),
+            vec!["PatchForProblematicMod"],
+            "Problematic Mod",
+            "Skip this warning when the patch is installed.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("ProblematicMod.esp".to_string(), "08".to_string());
+        plugins.insert("PatchForProblematicMod.esp".to_string(), "09".to_string());
+
+        let result = detect_mods_freq(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    // ============================================
+    // detect_mods_solutions tests
+    // ============================================
+
+    fn make_solution_entry(
+        id: &str,
+        criteria: ModSolutionCriteria,
+        exceptions: Vec<&str>,
+        name: &str,
+        description: &str,
+    ) -> ModSolutionEntry {
+        ModSolutionEntry {
+            id: id.to_string(),
+            criteria,
+            exceptions: exceptions.into_iter().map(str::to_string).collect(),
+            name: name.to_string(),
+            description: description.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_any_match() {
+        let entries = vec![make_solution_entry(
+            "high-resolution-dlc",
+            ModSolutionCriteria::Any(vec![
+                "DLCUltraHighResolution".to_string(),
+                "HighResPack".to_string(),
+            ]),
+            vec![],
+            "High Resolution DLC",
+            "Disable the official texture pack.\nIt causes crashes and stutter.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("DLCUltraHighResolution.esp".to_string(), "01".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [01] High Resolution DLC"));
+        assert!(output.contains("Disable the official texture pack."));
+        assert!(output.contains("It causes crashes and stutter."));
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_all_requires_every_criterion() {
+        let entries = vec![make_solution_entry(
+            "bodyslide-patch",
+            ModSolutionCriteria::All(vec!["LooksMenu".to_string(), "CBBE".to_string()]),
+            vec![],
+            "BodySlide Patch",
+            "Install the compatibility patch.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("LooksMenu.esp".to_string(), "02".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_exception_suppresses_match() {
+        let entries = vec![make_solution_entry(
+            "ebf-redux",
+            ModSolutionCriteria::Any(vec!["EveryonesBestFriend".to_string()]),
+            vec!["UFO4P"],
+            "Everyone's Best Friend",
+            "Install the compatibility patch.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("EveryonesBestFriend.esp".to_string(), "03".to_string());
+        plugins.insert("UFO4P.esp".to_string(), "04".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_solutions_ignores_exception_identical_to_criterion() {
+        let entries = vec![make_solution_entry(
+            "overlap-safe",
+            ModSolutionCriteria::Any(vec!["OverlapMod".to_string()]),
+            vec!["OverlapMod"],
+            "Overlap Mod",
+            "Still report the mod when exception equals the criterion.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("OverlapMod.esp".to_string(), "05".to_string());
+
+        let result = detect_mods_solutions(&entries, &plugins).unwrap();
+        let output = result.join("");
+
+        assert!(output.contains("FOUND : [05] Overlap Mod"));
+        assert!(output.contains("Still report the mod"));
     }
 
     // ============================================
@@ -1020,6 +1302,30 @@ mod tests {
         assert!(
             result.is_empty(),
             "Entry should be skipped when exclusion plugin is present"
+        );
+    }
+
+    #[test]
+    fn test_detect_mods_important_exclude_when_plugin_any_is_case_insensitive() {
+        let entries = vec![CoreModEntry {
+            detect: "UFO4P.esp".to_string(),
+            name: "Unofficial Patch".to_string(),
+            description: "Install this patch.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: Some(CoreModExclude::PluginAny(vec![
+                "londonworldspace.esm".to_string(),
+            ])),
+        }];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("LondonWorldspace.esm".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result = detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        assert!(
+            result.is_empty(),
+            "Entry should be skipped even when exclusion plugin casing differs"
         );
     }
 

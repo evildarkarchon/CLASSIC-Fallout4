@@ -122,6 +122,36 @@ EOF
   printf 'Loaded MSVC environment for Git Bash (%s).\n' "$arch" >&2
   printf 'Cargo linker: %s\n' "${CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER:-unset}" >&2
 
+  # Resolve the correct Python for PyO3 builds.
+  # The IDE sometimes sets VIRTUAL_ENV to a path that doesn't exist (e.g., a
+  # repo-root .venv).  When that happens, search below the project root for the
+  # first valid .venv that contains a Python interpreter, skipping heavy dirs.
+  if [[ -n "$VIRTUAL_ENV" ]] && [[ ! -x "$VIRTUAL_ENV/Scripts/python.exe" ]] && [[ ! -x "$VIRTUAL_ENV/bin/python" ]]; then
+    local repo_root=""
+    repo_root="$(cd -- "$script_dir/.." && pwd -P)" || true
+    local found_venv=""
+    while IFS= read -r -d '' candidate; do
+      if [[ -x "$candidate/Scripts/python.exe" ]] || [[ -x "$candidate/bin/python" ]]; then
+        found_venv="$candidate"
+        break
+      fi
+    done < <(find "$repo_root" -maxdepth 4 -name ".venv" -type d \
+        -not -path "*/target/*" \
+        -not -path "*/node_modules/*" \
+        -not -path "*/.git/*" \
+        -print0 2>/dev/null)
+
+    if [[ -n "$found_venv" ]]; then
+      if [[ -x "$found_venv/Scripts/python.exe" ]]; then
+        export PYO3_PYTHON
+        PYO3_PYTHON="$(cygpath -w "$found_venv/Scripts/python.exe")"
+      else
+        export PYO3_PYTHON="$found_venv/bin/python"
+      fi
+      printf 'PYO3_PYTHON: %s (VIRTUAL_ENV was stale)\n' "$PYO3_PYTHON" >&2
+    fi
+  fi
+
   if [[ $# -gt 0 ]]; then
     "$@"
   fi

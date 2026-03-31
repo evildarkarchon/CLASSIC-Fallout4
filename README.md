@@ -11,9 +11,7 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 - **Business logic:** `ClassicLib-rs/` (Rust workspace)
 - **C++ ↔ Rust bridge:** `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
 
-The previous Python runtime entrypoints/orchestration have been moved to **`deprecated/`** and are no longer the primary runtime path.
-
-Maintained Python integration bindings remain under **`ClassicLib-rs/python-bindings/`** for supported integration scenarios.
+Maintained Python integration bindings exist under **`ClassicLib-rs/python-bindings/`** for integration scenarios.
 
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
@@ -29,7 +27,7 @@ Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>
 
 - [Fallout 4 Script Extender](https://www.nexusmods.com/fallout4/mods/42147?tab=files)
 - [Address Library for F4SE Plugins](https://www.nexusmods.com/fallout4/mods/47327?tab=files)
-- [Buffout 4 NG](https://www.nexusmods.com/fallout4/mods/64880?tab=files) (OG/NG/VR) or [Buffout 4](https://www.nexusmods.com/fallout4/mods/47359) (OG)
+- [Buffout 4 NG](https://www.nexusmods.com/fallout4/mods/64880?tab=files) (OG/NG/VR), [Buffout 4](https://www.nexusmods.com/fallout4/mods/47359) (OG), or [Addictol](https://www.nexusmods.com/fallout4/mods/84214) (OG/NG/AE)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files) (required for some file scan workflows)
 
 ### Skyrim (work in progress)
@@ -38,11 +36,6 @@ Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files)
 - [Crash Logger AE for VR](https://www.nexusmods.com/skyrimspecialedition/mods/59818?tab=files)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files)
-
-For both games, install:
-
-- [Microsoft Visual C++ Redistributable All-In-One](https://github.com/abbodi1406/vcredist)
-- [DirectX Redist (June 2010)](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
 
 ---
 
@@ -64,6 +57,7 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 #### Prerequisites
 
 - Visual Studio with C++ Desktop workload (MSVC toolchain)
+- [vcpkg](https://vcpkg.io/)
 - `VCPKG_ROOT` environment variable configured (example: `C:\vcpkg`)
 - Rust toolchain (`cargo`)
 - CMake 3.25+
@@ -87,6 +81,11 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+
+# Selected C++ tests through the wrappers
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 ```
 
 CLI integration tests use crash-log fixtures from `sample_logs/FO4` (git submodule). Initialize submodules before running tests:
@@ -94,8 +93,6 @@ CLI integration tests use crash-log fixtures from `sample_logs/FO4` (git submodu
 ```powershell
 git submodule update --init --recursive
 ```
-
-Alternatively, run integration tests with an explicit fixture path via `classic-cli/test_cli.ps1 -TestDataDir <path>`.
 
 ---
 
@@ -120,7 +117,7 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 ```
 
-Use the build scripts instead of raw CMake commands so VS Dev Shell is initialized correctly.
+Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test executable launches so VS Dev Shell and C++ test environment setup stay correct.
 
 ---
 
@@ -142,7 +139,6 @@ GitHub Actions workflows:
 - `classic-gui/` — C++ Qt 6 desktop GUI
 - `ClassicLib-rs/` — Rust business logic + bindings
 - `CLASSIC Data/` — runtime data, databases, help, graphics
-- `deprecated/` — legacy Python codebase (deprecated)
 
 ---
 

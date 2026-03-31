@@ -28,8 +28,8 @@ AboutDialog::AboutDialog(QWidget* parent)
 
     // Title
     auto* titleLabel = new QLabel(QStringLiteral("CLASSIC"));
+    titleLabel->setObjectName(QStringLiteral("aboutTitle"));
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet(QStringLiteral("font-size: 18px; font-weight: bold;"));
     layout->addWidget(titleLabel);
 
     // Description and version

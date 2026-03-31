@@ -18,7 +18,7 @@ jobs:
     env:
       RUST_BACKTRACE: full
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -31,7 +31,7 @@ jobs:
           arch: x64
 
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -39,7 +39,7 @@ jobs:
             ${{ runner.os }}-cargo-registry-
 
       - name: Cache cargo index
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
@@ -47,7 +47,7 @@ jobs:
             ${{ runner.os }}-cargo-index-
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ClassicLib-rs/target
           key: ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
@@ -56,7 +56,7 @@ jobs:
             ${{ runner.os }}-cargo-cpp-cli-
 
       - name: Cache vcpkg root
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~\vcpkg
           key: ${{ runner.os }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
@@ -72,7 +72,7 @@ jobs:
 
       - name: Upload CLI diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cli-test-diagnostics
           path: |
@@ -91,7 +91,7 @@ jobs:
       RUST_BACKTRACE: full
       QT_QPA_PLATFORM: offscreen
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -102,7 +102,7 @@ jobs:
           arch: x64
 
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -110,7 +110,7 @@ jobs:
             ${{ runner.os }}-cargo-registry-
 
       - name: Cache cargo index
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
@@ -118,7 +118,7 @@ jobs:
             ${{ runner.os }}-cargo-index-
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ClassicLib-rs/target
           key: ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
@@ -127,7 +127,7 @@ jobs:
             ${{ runner.os }}-cargo-cpp-gui-
 
       - name: Cache vcpkg root
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~\vcpkg
           key: ${{ runner.os }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
@@ -139,7 +139,7 @@ jobs:
         run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
 
       - name: Cache GUI vcpkg installed
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: classic-gui/vcpkg_installed
           key: ${{ runner.os }}-vcpkg-installed-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
@@ -147,7 +147,7 @@ jobs:
             ${{ runner.os }}-vcpkg-installed-gui-
 
       - name: Cache GUI vcpkg archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~\AppData\Local\vcpkg\archives
           key: ${{ runner.os }}-vcpkg-archives-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
@@ -170,7 +170,7 @@ jobs:
 
       - name: Upload GUI diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: gui-test-diagnostics
           path: |

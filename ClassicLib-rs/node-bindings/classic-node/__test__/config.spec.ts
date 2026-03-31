@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -11,10 +11,17 @@ import {
   createYamlDataFromContent,
   createDefaultConfig,
   clearYamlCache,
+  registryClear,
+  getApplicationDir,
+  setApplicationDir,
   getYamlSourcePath,
   getYamlSourceDisplayName,
   getYamlSourceDisplayNameWithGame,
 } from "../index.js";
+import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
+
+const THIS_SUITE =
+  "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts";
 
 // ============================================================================
 // Test Fixtures
@@ -40,12 +47,6 @@ Game_Info:
   GameVersionNEW: "1.10.984"
   CRASHGEN_LatestVer: "4.0.0"
   CRASHGEN_LogName: "crash-og"
-GameVR_Info:
-  GameVersion: "1.2.72"
-  CRASHGEN_LatestVer: "3.0.0"
-  CRASHGEN_LogName: "crash-vr"
-  CRASHGEN_Ignore:
-    - "VRIgnoreItem1"
 Game_Hints:
   - "Hint 1"
   - "Hint 2"
@@ -57,10 +58,32 @@ Crashlog_Plugins_Exclude:
 Crashlog_Records_Exclude:
   - "RecordType1"
 Crashlog_Error_Check:
-  ErrorPattern1: "Error description 1"
-  ErrorPattern2: "Error description 2"
+  - id: error_pattern_1
+    name: Error Pattern 1
+    severity: 4
+    main_error_contains_any:
+      - "Error description 1"
+  - id: error_pattern_2
+    name: Error Pattern 2
+    severity: 2
+    main_error_contains_any:
+      - "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
+  - id: stack_pattern_1
+    name: Stack Pattern 1
+    severity: 3
+    main_error_required_any:
+      - "Main error required"
+    main_error_optional_any:
+      - "Main error optional"
+    stack_contains_any:
+      - "Stack pattern 1"
+      - "Stack pattern 2"
+    exclude_if_stack_contains_any:
+      - "Excluded pattern"
+    stack_contains_at_least:
+      - substring: "Repeated pattern"
+        count: 2
 Mods_CONF:
   - mod_a: modA
     mod_b: modB
@@ -73,11 +96,19 @@ Mods_CORE:
     name: Core Mod B
     description: "Core mod B"
 Mods_FREQ:
-  FreqMod: "Frequently used mod"
-Mods_OPC2:
-  OpcMod: "OPC2 mod"
+  - id: freq-mod
+    criteria:
+      any:
+        - FreqMod
+    name: Frequent Mod
+    description: "Frequently used mod"
 Mods_SOLU:
-  SoluMod: "Solution mod"
+  - id: solu-mod
+    criteria:
+      any:
+        - SoluMod
+    name: Solution Mod
+    description: "Solution mod"
 `;
 
 const IGNORE_YAML = `
@@ -182,6 +213,38 @@ describe("YamlData construction", () => {
     expect(data.crashgenName.length).toBeGreaterThan(0);
     expect(data.xseAcronym.length).toBeGreaterThan(0);
     expect(data.gameVersion.length).toBeGreaterThan(0);
+  });
+});
+
+describe("runtime coverage metadata", () => {
+  test("tracks application directory overrides", () => {
+    const bindingIdentifiers = new Set(
+      getRuntimeCoverageEntries(THIS_SUITE).flatMap(
+        (entry) => entry.bindingIdentifiers ?? [],
+      ),
+    );
+
+    expect(bindingIdentifiers.has("getApplicationDir")).toBe(true);
+    expect(bindingIdentifiers.has("setApplicationDir")).toBe(true);
+  });
+});
+
+describe("application directory overrides", () => {
+  beforeEach(() => {
+    registryClear();
+  });
+
+  afterEach(() => {
+    registryClear();
+  });
+
+  test("setApplicationDir and getApplicationDir round-trip", () => {
+    expect(getApplicationDir()).toBeNull();
+
+    const appDir = mkdtempSync(join(tmpdir(), "classic-node-appdir-"));
+    setApplicationDir(appDir);
+
+    expect(getApplicationDir()).toBe(appDir);
   });
 });
 
@@ -341,20 +404,32 @@ describe("YamlData suspect patterns", () => {
     );
   });
 
-  test("suspectsErrorList returns correct map", () => {
-    const errors = data.suspectsErrorList;
-    expect(errors["ErrorPattern1"]).toBe("Error description 1");
-    expect(errors["ErrorPattern2"]).toBe("Error description 2");
-    expect(Object.keys(errors).length).toBe(2);
+  test("suspectErrorRules returns structured rules", () => {
+    const rules = data.suspectErrorRules;
+    expect(rules).toHaveLength(2);
+    expect(rules[0]).toMatchObject({
+      id: "error_pattern_1",
+      name: "Error Pattern 1",
+      severity: 4,
+      mainErrorContainsAny: ["Error description 1"],
+    });
   });
 
-  test("suspectsStackList returns correct map with arrays", () => {
-    const stacks = data.suspectsStackList;
-    expect(stacks["StackPattern1"]).toEqual([
-      "Stack pattern 1",
-      "Stack pattern 2",
+  test("suspectStackRules returns structured rules", () => {
+    const rules = data.suspectStackRules;
+    expect(rules).toHaveLength(1);
+    expect(rules[0]).toMatchObject({
+      id: "stack_pattern_1",
+      name: "Stack Pattern 1",
+      severity: 3,
+      mainErrorRequiredAny: ["Main error required"],
+      mainErrorOptionalAny: ["Main error optional"],
+      stackContainsAny: ["Stack pattern 1", "Stack pattern 2"],
+      excludeIfStackContainsAny: ["Excluded pattern"],
+    });
+    expect(rules[0].stackContainsAtLeast).toEqual([
+      { substring: "Repeated pattern", count: 2 },
     ]);
-    expect(Object.keys(stacks).length).toBe(1);
   });
 });
 
@@ -398,16 +473,26 @@ describe("YamlData mod databases", () => {
     expect(data.gameModsCoreDescriptions).toEqual(["Core mod B"]);
   });
 
-  test("gameModsFreq returns correct map", () => {
-    expect(data.gameModsFreq["FreqMod"]).toBe("Frequently used mod");
+  test("gameModsFreq returns structured entries", () => {
+    expect(data.gameModsFreq).toHaveLength(1);
+    expect(data.gameModsFreq[0].id).toBe("freq-mod");
+    expect(data.gameModsFreq[0].criteria.any).toEqual(["FreqMod"]);
+    expect(data.gameModsFreq[0].name).toBe("Frequent Mod");
+    expect(data.gameModsFreq[0].description).toBe("Frequently used mod");
   });
 
-  test("gameModsOpc2 returns correct map", () => {
-    expect(data.gameModsOpc2["OpcMod"]).toBe("OPC2 mod");
+  test("legacy OPC2 YAML is not exposed through YamlData", () => {
+    expect("gameModsOpc2" in data).toBe(false);
   });
 
-  test("gameModsSolu returns correct map", () => {
-    expect(data.gameModsSolu["SoluMod"]).toBe("Solution mod");
+  test("gameModsSolu returns structured entries", () => {
+    expect(data.gameModsSolu).toHaveLength(1);
+    expect(data.gameModsSolu[0].id).toBe("solu-mod");
+    expect(data.gameModsSolu[0].criteria.any).toEqual(["SoluMod"]);
+    expect(data.gameModsSolu[0].criteria.all).toBeUndefined();
+    expect(data.gameModsSolu[0].exceptions).toEqual([]);
+    expect(data.gameModsSolu[0].name).toBe("Solution Mod");
+    expect(data.gameModsSolu[0].description).toBe("Solution mod");
   });
 });
 
@@ -491,7 +576,7 @@ describe("YamlData missing keys", () => {
     expect(data.classicRecordsList).toEqual([]);
     expect(data.ignoreList).toEqual([]);
     expect(data.xseAcronym).toBe("");
-    expect(Object.keys(data.suspectsErrorList).length).toBe(0);
+    expect(data.suspectErrorRules).toEqual([]);
     expect(data.gameModsCoreCount).toBe(0);
   });
 });
@@ -656,12 +741,11 @@ describe("ClassicConfigJs FormID databases", () => {
 // ============================================================================
 
 describe("ClassicConfigJs config path", () => {
-  test("getConfigPath returns a CLASSIC-based default path", () => {
+  test("getConfigPath defaults to the process working directory", () => {
     const config = new ClassicConfigJs();
     const path = config.getConfigPath();
     expect(typeof path).toBe("string");
-    expect(path).toContain("CLASSIC Settings.yaml");
-    expect(path).not.toContain("CLASSIC-Fallout4");
+    expect(path).toBe(join(process.cwd(), "CLASSIC Settings.yaml"));
   });
 
   test("loadOrDefault reads from the resolved default settings path", () => {
@@ -682,7 +766,6 @@ describe("ClassicConfigJs config path", () => {
       const config = ClassicConfigJs.loadOrDefault();
       expect(config.fcxMode).toBe(true);
       expect(config.getConfigPath()).toBe(settingsPath);
-      expect(config.getConfigPath()).not.toContain("CLASSIC-Fallout4");
     } finally {
       if (originalAppData === undefined) {
         delete process.env.APPDATA;

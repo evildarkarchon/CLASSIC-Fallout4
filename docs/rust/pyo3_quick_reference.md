@@ -278,14 +278,14 @@ export RUST_BACKTRACE=1
 
 ### Check if Rust is loaded
 ```python
-import classic_core
-print(f"Version: {classic_core.__version__}")
+import classic_scanlog
+print(f"Version: {classic_scanlog.__version__}")
 ```
 
 ### Profile Rust code
 ```bash
-cargo build --release
-perf record target/release/classic_core
+cargo build --release --manifest-path ClassicLib-rs/Cargo.toml
+perf record target/release/deps/<crate-or-binary>
 perf report
 ```
 

@@ -12,8 +12,9 @@
 //!    `clearYamlCache()`, convenience accessors.
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry,
-    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry, ModSolutionCriteria,
+    ModSolutionEntry, PathConfig as CorePathConfig, SuspectErrorRule, SuspectStackRule,
+    YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
@@ -21,6 +22,21 @@ use napi::Status;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Once;
+
+static INIT_APP_DIR: Once = Once::new();
+
+/// Ensure APP_DIR is registered so settings resolve relative to the process
+/// working directory rather than the interpreter install path (node/bun).
+fn ensure_app_dir_initialized() {
+    INIT_APP_DIR.call_once(|| {
+        if classic_registry_core::get_application_dir().is_none() {
+            if let Ok(cwd) = std::env::current_dir() {
+                classic_registry_core::set_application_dir(cwd);
+            }
+        }
+    });
+}
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js};
 
@@ -35,6 +51,80 @@ pub struct JsModConflictEntry {
     pub link: Option<String>,
 }
 
+#[napi(object)]
+pub struct JsModSolutionCriteria {
+    pub any: Option<Vec<String>>,
+    pub all: Option<Vec<String>>,
+}
+
+#[napi(object)]
+pub struct JsModSolutionEntry {
+    pub id: String,
+    pub criteria: JsModSolutionCriteria,
+    pub exceptions: Vec<String>,
+    pub name: String,
+    pub description: String,
+}
+
+#[napi(object)]
+pub struct JsSuspectErrorRule {
+    pub id: String,
+    pub name: String,
+    pub severity: i32,
+    pub main_error_contains_any: Vec<String>,
+}
+
+impl From<&SuspectErrorRule> for JsSuspectErrorRule {
+    fn from(rule: &SuspectErrorRule) -> Self {
+        Self {
+            id: rule.id.clone(),
+            name: rule.name.clone(),
+            severity: rule.severity,
+            main_error_contains_any: rule.main_error_contains_any.clone(),
+        }
+    }
+}
+
+#[napi(object)]
+pub struct JsSuspectStackCountRule {
+    pub substring: String,
+    pub count: u32,
+}
+
+#[napi(object)]
+pub struct JsSuspectStackRule {
+    pub id: String,
+    pub name: String,
+    pub severity: i32,
+    pub main_error_required_any: Vec<String>,
+    pub main_error_optional_any: Vec<String>,
+    pub stack_contains_any: Vec<String>,
+    pub exclude_if_stack_contains_any: Vec<String>,
+    pub stack_contains_at_least: Vec<JsSuspectStackCountRule>,
+}
+
+impl From<&SuspectStackRule> for JsSuspectStackRule {
+    fn from(rule: &SuspectStackRule) -> Self {
+        Self {
+            id: rule.id.clone(),
+            name: rule.name.clone(),
+            severity: rule.severity,
+            main_error_required_any: rule.main_error_required_any.clone(),
+            main_error_optional_any: rule.main_error_optional_any.clone(),
+            stack_contains_any: rule.stack_contains_any.clone(),
+            exclude_if_stack_contains_any: rule.exclude_if_stack_contains_any.clone(),
+            stack_contains_at_least: rule
+                .stack_contains_at_least
+                .iter()
+                .map(|count_rule| JsSuspectStackCountRule {
+                    substring: count_rule.substring.clone(),
+                    count: count_rule.count as u32,
+                })
+                .collect(),
+        }
+    }
+}
+
 impl From<&ModConflictEntry> for JsModConflictEntry {
     fn from(e: &ModConflictEntry) -> Self {
         Self {
@@ -45,6 +135,29 @@ impl From<&ModConflictEntry> for JsModConflictEntry {
             description: e.description.clone(),
             fix: e.fix.clone(),
             link: e.link.clone(),
+        }
+    }
+}
+
+impl From<&ModSolutionEntry> for JsModSolutionEntry {
+    fn from(entry: &ModSolutionEntry) -> Self {
+        let criteria = match &entry.criteria {
+            ModSolutionCriteria::Any(values) => JsModSolutionCriteria {
+                any: Some(values.clone()),
+                all: None,
+            },
+            ModSolutionCriteria::All(values) => JsModSolutionCriteria {
+                any: None,
+                all: Some(values.clone()),
+            },
+        };
+
+        Self {
+            id: entry.id.clone(),
+            criteria,
+            exceptions: entry.exceptions.clone(),
+            name: entry.name.clone(),
+            description: entry.description.clone(),
         }
     }
 }
@@ -279,30 +392,26 @@ impl YamlData {
     }
 
     // ========================================================================
-    // Suspect Pattern Dictionaries
+    // Suspect Rules
     // ========================================================================
 
-    /// Suspect error patterns mapped to descriptive explanations.
-    ///
-    /// Returns a `Record<string, string>` preserving YAML source order.
+    /// Structured main-error suspect rules.
     #[napi(getter)]
-    pub fn suspects_error_list(&self) -> HashMap<String, String> {
+    pub fn suspect_error_rules(&self) -> Vec<JsSuspectErrorRule> {
         self.inner
-            .suspects_error_list
+            .suspect_error_rules
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsSuspectErrorRule::from)
             .collect()
     }
 
-    /// Suspect stack trace patterns mapped to pattern lists.
-    ///
-    /// Returns a `Record<string, string[]>` preserving YAML source order.
+    /// Structured stack suspect rules.
     #[napi(getter)]
-    pub fn suspects_stack_list(&self) -> HashMap<String, Vec<String>> {
+    pub fn suspect_stack_rules(&self) -> Vec<JsSuspectStackRule> {
         self.inner
-            .suspects_stack_list
+            .suspect_stack_rules
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsSuspectStackRule::from)
             .collect()
     }
 
@@ -368,31 +477,21 @@ impl YamlData {
 
     /// Frequently problematic mods database.
     #[napi(getter)]
-    pub fn game_mods_freq(&self) -> HashMap<String, String> {
+    pub fn game_mods_freq(&self) -> Vec<JsModSolutionEntry> {
         self.inner
             .game_mods_freq
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect()
-    }
-
-    /// OPC2 mods database.
-    #[napi(getter)]
-    pub fn game_mods_opc2(&self) -> HashMap<String, String> {
-        self.inner
-            .game_mods_opc2
-            .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsModSolutionEntry::from)
             .collect()
     }
 
     /// Solution mods database.
     #[napi(getter)]
-    pub fn game_mods_solu(&self) -> HashMap<String, String> {
+    pub fn game_mods_solu(&self) -> Vec<JsModSolutionEntry> {
         self.inner
             .game_mods_solu
             .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(JsModSolutionEntry::from)
             .collect()
     }
 
@@ -567,6 +666,7 @@ impl ClassicConfigJs {
     /// Load configuration from default location, or return defaults if no file exists.
     #[napi(factory)]
     pub fn load_or_default() -> Result<Self> {
+        ensure_app_dir_initialized();
         let inner = get_runtime()
             .block_on(async { CoreClassicConfig::load_or_default().await })
             .map_err(runtime_to_napi_err)?;
@@ -590,6 +690,7 @@ impl ClassicConfigJs {
     /// Get the default config file path.
     #[napi]
     pub fn get_config_path(&self) -> String {
+        ensure_app_dir_initialized();
         self.inner.get_config_path().to_string_lossy().to_string()
     }
 
@@ -855,6 +956,7 @@ pub fn create_yaml_data_from_content(
 /// Equivalent to `new ClassicConfig()`.
 #[napi]
 pub fn create_default_config() -> ClassicConfigJs {
+    ensure_app_dir_initialized();
     ClassicConfigJs::new()
 }
 
@@ -873,6 +975,7 @@ pub fn clear_yaml_cache() {
 /// @returns The file path as a string.
 #[napi]
 pub fn get_yaml_source_path(source: JsYamlSource, game: String) -> String {
+    ensure_app_dir_initialized();
     let core_source: CoreYamlSource = source.into();
     core_source.path(&game).to_string_lossy().to_string()
 }
@@ -896,4 +999,22 @@ pub fn get_yaml_source_display_name(source: JsYamlSource) -> String {
 pub fn get_yaml_source_display_name_with_game(source: JsYamlSource, game: String) -> String {
     let core_source: CoreYamlSource = source.into();
     core_source.display_name_with_game(&game)
+}
+
+/// Override the directory used to resolve `CLASSIC Settings.yaml` and other
+/// application-local files.  Call before `ClassicConfig.loadOrDefault()` or
+/// `getConfigPath()` if you need a directory other than `process.cwd()`
+/// captured at first use.
+///
+/// @param path - Absolute path to the desired application directory.
+#[napi]
+pub fn set_application_dir(path: String) {
+    classic_registry_core::set_application_dir(PathBuf::from(path));
+}
+
+/// Return the current application directory override, or `undefined` if no
+/// override has been registered yet.
+#[napi]
+pub fn get_application_dir() -> Option<String> {
+    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
 }

@@ -55,8 +55,6 @@ class Keys:
         DOCS_PATH: Key for documents folder path.
         IS_GUI_MODE: Key for GUI mode flag.
         OPEN_FILE_FUNC: Key for file opening function callback.
-        VR: **DEPRECATED** - Key for VR game variant identifier.
-            Use GAME_VERSION instead. Will be removed in v9.0.
         GAME: Key for current game name.
         LOCAL_DIR: Key for local application directory.
         IS_PRERELEASE: Key for prerelease version flag.
@@ -82,7 +80,6 @@ class Keys:
     DOCS_PATH: str
     IS_GUI_MODE: str
     OPEN_FILE_FUNC: str
-    VR: str  # Deprecated - use GAME_VERSION
     GAME: str
     LOCAL_DIR: str
     IS_PRERELEASE: str
@@ -259,27 +256,6 @@ def get_game_path_gui() -> Any | None:
 
     """
 
-def get_vr() -> str:
-    """Get the VR game variant identifier.
-
-    **DEPRECATED**: Use `is_version_auto_detected()` and check GAME_VERSION
-    instead. VR is now treated as a version variant of Fallout 4, not a
-    separate mode toggle. This function will be removed in v9.0.
-
-    Returns:
-        The VR variant suffix ("VR" if VR mode, empty string otherwise).
-
-    Example:
-        >>> from classic_registry import get_vr
-        >>> vr = get_vr()
-        >>> if vr:
-        ...     print(f"VR variant: {vr}")
-
-    .. deprecated:: 8.0.0
-        Use `get(Keys.GAME_VERSION)` and `is_version_auto_detected()` instead.
-
-    """
-
 def get_local_dir() -> str:
     """Get the local application directory.
 
@@ -290,6 +266,30 @@ def get_local_dir() -> str:
         >>> from classic_registry import get_local_dir
         >>> local_dir = get_local_dir()
         >>> print(f"Local directory: {local_dir}")
+
+    """
+
+def set_application_dir(path: str) -> None:
+    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+
+    Binding layers auto-register ``os.getcwd()`` at import time.
+    Call this only if you need a different directory.
+
+    Args:
+        path: Absolute path to the desired application directory.
+
+    Example:
+        >>> from classic_registry import set_application_dir
+        >>> set_application_dir("/my/project")
+
+    """
+
+def get_application_dir() -> str | None:
+    """Return the current application directory override, or ``None``.
+
+    Example:
+        >>> from classic_registry import get_application_dir
+        >>> app_dir = get_application_dir()
 
     """
 
@@ -315,25 +315,6 @@ def is_version_auto_detected() -> bool:
         >>> print(f"Game version: {version}")
 
     .. versionadded:: 8.0.0
-
-    """
-
-def get_config_suffix() -> str:
-    """Get the config key suffix based on game version.
-
-    Returns "VR" if VR version, empty string otherwise. Used for building
-    YAML config keys like "Game_Info" vs "GameVR_Info".
-
-    Returns:
-        "VR" if VR version, "" otherwise.
-
-    """
-
-def is_vr_version() -> bool:
-    """Check if the current game version is VR.
-
-    Returns:
-        True if VR version, False otherwise.
 
     """
 

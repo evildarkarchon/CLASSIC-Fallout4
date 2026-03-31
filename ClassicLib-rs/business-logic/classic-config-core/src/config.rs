@@ -16,16 +16,19 @@ use yaml_rust2::{Yaml, YamlEmitter};
 type LinkedHashMap<K, V> = hashlink::LinkedHashMap<K, V>;
 
 const DEFAULT_CONFIG_FILENAME: &str = "CLASSIC Settings.yaml";
-const LEGACY_CONFIG_FILENAME: &str = "CLASSIC_Settings.yaml";
-
 fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
     current_exe.and_then(|path| path.parent().map(Path::to_path_buf))
 }
 
 fn application_dir() -> Option<PathBuf> {
-    std::env::current_exe()
-        .ok()
-        .and_then(|path| resolve_application_dir(Some(path.as_path())))
+    // Binding layers (Python, Node) auto-register APP_DIR at module init
+    // so settings resolve relative to the working directory rather than
+    // the interpreter's install directory (python.exe, node.exe, etc.).
+    classic_registry_core::get_application_dir().or_else(|| {
+        std::env::current_exe()
+            .ok()
+            .and_then(|path| resolve_application_dir(Some(path.as_path())))
+    })
 }
 
 fn resolve_user_config_dir(config_dir: Option<&Path>) -> Option<PathBuf> {
@@ -37,17 +40,11 @@ fn user_config_dir() -> Option<PathBuf> {
     resolve_user_config_dir(config_dir.as_deref())
 }
 
-fn resolve_settings_search_paths(app_dir: Option<&Path>, user_dir: Option<&Path>) -> Vec<PathBuf> {
+fn resolve_settings_search_paths(app_dir: Option<&Path>, _user_dir: Option<&Path>) -> Vec<PathBuf> {
     let mut paths = Vec::new();
 
     if let Some(app_dir) = app_dir {
         paths.push(app_dir.join(DEFAULT_CONFIG_FILENAME));
-        paths.push(app_dir.join(LEGACY_CONFIG_FILENAME));
-    }
-
-    if let Some(user_dir) = user_dir {
-        paths.push(user_dir.join(DEFAULT_CONFIG_FILENAME));
-        paths.push(user_dir.join(LEGACY_CONFIG_FILENAME));
     }
 
     paths
@@ -67,14 +64,9 @@ fn resolve_preferred_settings_path(app_dir: Option<&Path>, user_dir: Option<&Pat
         return app_target;
     }
 
-    if let Some(user_target) = user_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
-        return user_target;
-    }
+    let _ = user_dir;
 
-    resolve_settings_search_paths(app_dir, user_dir)
-        .into_iter()
-        .next()
-        .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG_FILENAME))
+    PathBuf::from(DEFAULT_CONFIG_FILENAME)
 }
 
 fn choose_settings_write_path(
@@ -94,11 +86,11 @@ fn choose_settings_write_path(
 fn choose_settings_write_path_with_access(
     existing_paths: &[PathBuf],
     app_dir: Option<&Path>,
-    user_dir: Option<&Path>,
+    _user_dir: Option<&Path>,
     can_update_existing: impl Fn(&Path) -> bool,
     can_create_new: impl Fn(&Path) -> bool,
 ) -> Result<Option<PathBuf>> {
-    for candidate in resolve_settings_search_paths(app_dir, user_dir) {
+    for candidate in resolve_settings_search_paths(app_dir, None) {
         if existing_paths.iter().any(|path| path == &candidate) && can_update_existing(&candidate) {
             return Ok(Some(candidate));
         }
@@ -107,12 +99,6 @@ fn choose_settings_write_path_with_access(
     if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
         if can_create_new(&app_target) {
             return Ok(Some(app_target));
-        }
-    }
-
-    if let Some(user_target) = user_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
-        if can_create_new(&user_target) {
-            return Ok(Some(user_target));
         }
     }
 
@@ -161,11 +147,11 @@ fn can_create_new_settings_file(path: &Path) -> bool {
 }
 
 fn resolve_settings_write_path(app_dir: Option<&Path>, user_dir: Option<&Path>) -> PathBuf {
-    if app_dir.is_none() && user_dir.is_none() {
+    if app_dir.is_none() {
         return PathBuf::from(DEFAULT_CONFIG_FILENAME);
     }
 
-    let existing_paths: Vec<_> = resolve_settings_search_paths(app_dir, user_dir)
+    let existing_paths: Vec<_> = resolve_settings_search_paths(app_dir, None)
         .into_iter()
         .filter(|path| path.exists())
         .collect();
@@ -192,11 +178,13 @@ async fn load_or_default_from_dirs(
     app_dir: Option<&Path>,
     user_dir: Option<&Path>,
 ) -> Result<ClassicConfig> {
-    for path in resolve_settings_search_paths(app_dir, user_dir) {
+    for path in resolve_settings_search_paths(app_dir, None) {
         if path.exists() {
             return ClassicConfig::load_from_yaml(&path).await;
         }
     }
+
+    let _ = user_dir;
 
     Ok(ClassicConfig::default())
 }
@@ -256,8 +244,7 @@ impl YamlSource {
             Self::Main => PathBuf::from("CLASSIC Data/databases/CLASSIC Main.yaml"),
             Self::Settings => {
                 let app_dir = application_dir();
-                let user_dir = user_config_dir();
-                resolve_settings_read_path(app_dir.as_deref(), user_dir.as_deref())
+                resolve_settings_read_path(app_dir.as_deref(), None)
             }
             Self::Ignore => PathBuf::from("CLASSIC Ignore.yaml"),
             Self::Game => {
@@ -708,24 +695,19 @@ impl ClassicConfig {
     ///
     /// Searches for configuration in standard locations:
     /// 1. Application directory: CLASSIC Settings.yaml
-    /// 2. Application directory: CLASSIC_Settings.yaml (legacy fallback)
-    /// 3. User config directory: CLASSIC Settings.yaml
-    /// 4. User config directory: CLASSIC_Settings.yaml (legacy fallback)
     ///
     /// # Returns
     /// * Configuration loaded from file (if exists)
     /// * Default configuration (if no file found)
     pub async fn load_or_default() -> Result<Self> {
         let app_dir = application_dir();
-        let user_dir = user_config_dir();
-        load_or_default_from_dirs(app_dir.as_deref(), user_dir.as_deref()).await
+        load_or_default_from_dirs(app_dir.as_deref(), None).await
     }
 
     /// Get the default config path
     pub fn get_config_path(&self) -> PathBuf {
         let app_dir = application_dir();
-        let user_dir = user_config_dir();
-        resolve_settings_write_path(app_dir.as_deref(), user_dir.as_deref())
+        resolve_settings_write_path(app_dir.as_deref(), None)
     }
 
     /// Validate configuration paths
@@ -1234,6 +1216,24 @@ mod tests {
     }
 
     #[test]
+    fn test_application_dir_uses_registry_override_when_set() {
+        let override_dir = PathBuf::from("C:/my/project");
+        classic_registry_core::set_application_dir(override_dir.clone());
+        assert_eq!(application_dir(), Some(override_dir));
+        // Clean up so other tests are not affected
+        classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
+    }
+
+    #[test]
+    fn test_application_dir_falls_back_to_current_exe_without_override() {
+        classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
+        // With no registry entry, should fall back to current_exe().parent()
+        let result = application_dir();
+        // We can't predict the exact path but it should be Some (tests run from a real exe)
+        assert!(result.is_some());
+    }
+
+    #[test]
     fn test_resolve_user_config_dir_returns_none_without_base_dir() {
         assert_eq!(resolve_user_config_dir(None), None);
     }
@@ -1249,16 +1249,13 @@ mod tests {
     }
 
     #[test]
-    fn test_resolve_settings_search_paths_prefers_app_dir_then_user_dir_and_legacy_names() {
+    fn test_resolve_settings_search_paths_uses_only_app_dir_modern_filename() {
         let app_dir = PathBuf::from("C:/ClassicApp");
         let user_dir = PathBuf::from("C:/Users/Test/AppData/Roaming/CLASSIC");
 
         let paths = resolve_settings_search_paths(Some(&app_dir), Some(&user_dir));
 
-        assert_eq!(paths[0], app_dir.join("CLASSIC Settings.yaml"));
-        assert_eq!(paths[1], app_dir.join("CLASSIC_Settings.yaml"));
-        assert_eq!(paths[2], user_dir.join("CLASSIC Settings.yaml"));
-        assert_eq!(paths[3], user_dir.join("CLASSIC_Settings.yaml"));
+        assert_eq!(paths, vec![app_dir.join(DEFAULT_CONFIG_FILENAME)]);
     }
 
     #[test]
@@ -1267,20 +1264,16 @@ mod tests {
 
         let paths = resolve_settings_search_paths(Some(&app_dir), None);
 
-        assert_eq!(paths.len(), 2);
-        assert_eq!(paths[0], app_dir.join("CLASSIC Settings.yaml"));
-        assert_eq!(paths[1], app_dir.join("CLASSIC_Settings.yaml"));
+        assert_eq!(paths, vec![app_dir.join(DEFAULT_CONFIG_FILENAME)]);
     }
 
     #[test]
-    fn test_resolve_settings_search_paths_uses_user_dir_only_when_app_dir_missing() {
+    fn test_resolve_settings_search_paths_ignores_user_dir_when_app_dir_missing() {
         let user_dir = PathBuf::from("C:/Users/Test/AppData/Roaming/CLASSIC");
 
         let paths = resolve_settings_search_paths(None, Some(&user_dir));
 
-        assert_eq!(paths.len(), 2);
-        assert_eq!(paths[0], user_dir.join("CLASSIC Settings.yaml"));
-        assert_eq!(paths[1], user_dir.join("CLASSIC_Settings.yaml"));
+        assert!(paths.is_empty());
     }
 
     #[test]
@@ -1298,7 +1291,7 @@ mod tests {
         std::fs::create_dir_all(&app_dir).unwrap();
         std::fs::create_dir_all(&user_dir).unwrap();
 
-        let existing_path = app_dir.join("CLASSIC_Settings.yaml");
+        let existing_path = app_dir.join(DEFAULT_CONFIG_FILENAME);
         std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
         let existing = vec![existing_path.clone()];
         let chosen =
@@ -1308,7 +1301,7 @@ mod tests {
     }
 
     #[test]
-    fn test_choose_settings_write_path_prefers_existing_user_dir_file_when_app_has_none() {
+    fn test_choose_settings_write_path_ignores_existing_user_dir_file_when_app_has_none() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
@@ -1321,11 +1314,11 @@ mod tests {
         let chosen =
             choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
 
-        assert_eq!(chosen, Some(existing_path));
+        assert_eq!(chosen, Some(app_dir.join(DEFAULT_CONFIG_FILENAME)));
     }
 
     #[test]
-    fn test_choose_settings_write_path_skips_existing_app_file_when_exact_file_is_not_writable() {
+    fn test_choose_settings_write_path_returns_none_when_app_dir_target_is_not_writable() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
@@ -1341,16 +1334,15 @@ mod tests {
             Some(&app_dir),
             Some(&user_dir),
             |path| path != app_file.as_path(),
-            |_| true,
+            |_| false,
         )
         .unwrap();
 
-        assert_eq!(chosen, Some(user_file));
+        assert_eq!(chosen, None);
     }
 
     #[test]
-    fn test_choose_settings_write_path_falls_back_to_user_dir_when_app_dir_target_is_not_writable()
-    {
+    fn test_choose_settings_write_path_ignores_user_dir_when_app_dir_target_is_not_writable() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
@@ -1366,7 +1358,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(chosen, Some(user_dir.join("CLASSIC Settings.yaml")));
+        assert_eq!(chosen, None);
     }
 
     #[test]
@@ -1383,14 +1375,14 @@ mod tests {
     }
 
     #[test]
-    fn test_choose_settings_write_path_prefers_new_modern_file_in_user_dir_when_app_missing() {
+    fn test_choose_settings_write_path_returns_none_when_only_user_dir_is_available() {
         let temp_dir = tempdir().unwrap();
         let user_dir = temp_dir.path().join("user");
         std::fs::create_dir_all(&user_dir).unwrap();
 
         let chosen = choose_settings_write_path(&[], None, Some(&user_dir)).unwrap();
 
-        assert_eq!(chosen, Some(user_dir.join("CLASSIC Settings.yaml")));
+        assert_eq!(chosen, None);
     }
 
     #[test]
@@ -1416,38 +1408,39 @@ mod tests {
         let path = resolve_settings_write_path(Some(&app_dir), None);
 
         assert_ne!(path, PathBuf::from(DEFAULT_CONFIG_FILENAME));
+        assert_eq!(path, app_dir.join(DEFAULT_CONFIG_FILENAME));
     }
 
     #[test]
-    fn test_resolve_existing_settings_path_prefers_actual_existing_file_in_search_order() {
+    fn test_resolve_existing_settings_path_ignores_user_dir_file() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
         std::fs::create_dir_all(&app_dir).unwrap();
         std::fs::create_dir_all(&user_dir).unwrap();
 
-        let existing_path = user_dir.join(LEGACY_CONFIG_FILENAME);
+        let existing_path = user_dir.join(DEFAULT_CONFIG_FILENAME);
         std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
 
         let resolved = resolve_existing_settings_path(Some(&app_dir), Some(&user_dir));
 
-        assert_eq!(resolved, Some(existing_path));
+        assert_eq!(resolved, None);
     }
 
     #[test]
-    fn test_resolve_settings_read_path_prefers_existing_file_over_write_target() {
+    fn test_resolve_settings_read_path_ignores_existing_user_dir_file() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
         std::fs::create_dir_all(&app_dir).unwrap();
         std::fs::create_dir_all(&user_dir).unwrap();
 
-        let existing_path = user_dir.join(LEGACY_CONFIG_FILENAME);
+        let existing_path = user_dir.join(DEFAULT_CONFIG_FILENAME);
         std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
 
         let resolved = resolve_settings_read_path(Some(&app_dir), Some(&user_dir));
 
-        assert_eq!(resolved, existing_path);
+        assert_eq!(resolved, app_dir.join(DEFAULT_CONFIG_FILENAME));
     }
 
     #[test]
@@ -1527,7 +1520,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_load_or_default_falls_back_to_user_dir_when_app_has_no_settings_file() {
+    async fn test_load_or_default_ignores_user_dir_when_app_has_no_settings_file() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
@@ -1540,11 +1533,11 @@ mod tests {
         let config = load_or_default_from_dirs(Some(&app_dir), Some(&user_dir))
             .await
             .unwrap();
-        assert!(config.fcx_mode);
+        assert!(!config.fcx_mode);
     }
 
     #[tokio::test]
-    async fn test_load_or_default_reads_legacy_underscore_filename_from_app_dir() {
+    async fn test_load_or_default_ignores_legacy_underscore_filename_from_app_dir() {
         let temp_dir = tempdir().unwrap();
         let app_dir = temp_dir.path().join("app");
         let user_dir = temp_dir.path().join("user");
@@ -1557,7 +1550,7 @@ mod tests {
         let config = load_or_default_from_dirs(Some(&app_dir), Some(&user_dir))
             .await
             .unwrap();
-        assert!(config.fcx_mode);
+        assert!(!config.fcx_mode);
     }
 
     #[test]

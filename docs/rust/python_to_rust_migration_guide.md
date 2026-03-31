@@ -1,5 +1,7 @@
 # Python to Rust Migration Guide
 
+Note: this migration guide is historical context for the older Python-to-Rust transition period. Use it as background, not as the primary source of current build, test, or binding workflow commands.
+
 **Version:** 8.0.0
 **Last Updated:** 2025-10-10
 **Target Audience:** Users upgrading from Python CLASSIC to Rust CLASSIC

@@ -73,7 +73,9 @@ def calculate_percentiles(values: list[float]) -> dict[str, float]:
         lower_idx = int(rank)
         upper_idx = min(lower_idx + 1, n - 1)
         weight = rank - lower_idx
-        return sorted_values[lower_idx] * (1 - weight) + sorted_values[upper_idx] * weight
+        return (
+            sorted_values[lower_idx] * (1 - weight) + sorted_values[upper_idx] * weight
+        )
 
     result = {
         "min": sorted_values[0],

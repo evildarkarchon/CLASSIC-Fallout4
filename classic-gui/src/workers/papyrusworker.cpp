@@ -1,6 +1,7 @@
 #include "papyrusworker.h"
 #include "core/rust_qt_bridge.h"
 
+#include <QDebug>
 #include <QTimer>
 
 #include "rust/cxx.h"
@@ -33,6 +34,8 @@ void PapyrusWorker::start(const QString& logPath)
         // Initialize monitoring (positions cursor at end of file)
         classic::scanner::papyrus_start_monitoring(*rawAnalyzer);
 
+        qDebug() << "PapyrusWorker: monitoring started for" << logPath;
+
         // Start 1-second polling timer
         m_timer = new QTimer(this);
         m_timer->setInterval(1000);
@@ -48,6 +51,7 @@ void PapyrusWorker::start(const QString& logPath)
 
 void PapyrusWorker::stop()
 {
+    qDebug() << "PapyrusWorker: monitoring stopped";
     if (m_timer) {
         m_timer->stop();
     }

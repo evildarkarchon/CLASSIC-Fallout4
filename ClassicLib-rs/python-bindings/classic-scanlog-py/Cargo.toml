@@ -14,6 +14,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
+classic-registry-core = { path = "../../business-logic/classic-registry-core" }
 
 # Core business logic (pure Rust - no PyO3)
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
@@ -45,6 +46,7 @@ futures = { workspace = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
+serial_test = "3.2"
 criterion = "0.5"
 
 [[bench]]

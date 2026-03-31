@@ -139,18 +139,19 @@ Forwarding notes:
 - `yaml_data_get_crashgen_name()` and `yaml_data_get_game_root_name()` forward through `YamlDataCore` helper methods
 - `yaml_data_get_crashgen_ignore()` forwards through `YamlDataCore::get_crashgen_ignore()`
 
-### Flattened map getters
+### Flattened and structured getters
 
-These functions flatten `IndexMap` fields into paired vectors because the bridge does not share map wrapper types across modules:
+These functions flatten selected YAML-backed fields into vectors where needed, while `Mods_FREQ` and `Mods_SOLU` now cross the bridge as explicit shared struct sequences:
 
-- suspects error map: `yaml_data_suspects_error_keys()` and `yaml_data_suspects_error_values()`
-- mods maps: `yaml_data_mods_core_*` (structured), `yaml_data_mods_freq_*`, `yaml_data_mods_solu_*`, `yaml_data_mods_opc2_*`
+- suspect rule ids and names: `yaml_data_suspects_error_keys()` and `yaml_data_suspects_error_values()`
+- mods entries: `yaml_data_mods_core_*` (structured keys/names/gpus), `yaml_data_mods_freq_entries()` (structured sequence)
+- structured mod-check entries: `yaml_data_mods_freq_entries()` and `yaml_data_mods_solu_entries()` return ordered `YamlDataModSolutionEntry` values with `id`, grouped `criteria`, `exceptions`, `name`, and `description`
 - mod conflict entries (structured): `yaml_data_mods_conf_mod_a()`, `yaml_data_mods_conf_mod_b()`, `yaml_data_mods_conf_name_a()`, `yaml_data_mods_conf_name_b()`, `yaml_data_mods_conf_descriptions()`, `yaml_data_mods_conf_fixes()`, `yaml_data_mods_conf_links()`, `yaml_data_mods_conf_count()`
 
 Important current boundary:
 
-- `yaml_data_suspects_stack_keys()` exposes only keys from `YamlDataCore.suspects_stack_list`
-- the bridge does **not** expose the corresponding `Vec<String>` values even though the Rust field is `IndexMap<String, Vec<String>>`
+- `yaml_data_suspects_stack_keys()` exposes only `YamlDataCore.suspect_stack_rules[].id`
+- the bridge does **not** expose the rest of each structured stack rule yet
 - the bridge exposes no raw `CrashgenEntryRaw` or `crashgen_registry` data at all
 
 ---
@@ -527,7 +528,7 @@ Several entry points erase typed errors and return defaults instead:
 
 - exposes only selected `YamlDataCore` fields and helper methods
 - does not expose `ClassicConfig` at all
-- drops `suspects_stack_list` values
+- drops most structured stack-rule fields, exposing only ids today
 - drops `crashgen_registry` and other richer YAML-derived structures
 
 ## `src/files.rs`
@@ -563,7 +564,7 @@ When C++ YAML-backed scan behavior looks wrong, check these in order:
 1. confirm whether the frontend used `classic::config::yaml_data_load()` or the fuller `classic::scanner::build_full_scan_config()` path
 2. verify the bridge got the 2-directory layout the Rust loader expects
 3. remember that `yaml_data_load()` loads bulk scan YAML only and does not read `CLASSIC Settings.yaml`
-4. if stack-suspect output is incomplete, remember the bridge exports only stack keys, not stack value lists
+4. if stack-suspect output is incomplete, remember the bridge exports only stack rule ids, not full structured rule content
 
 ## File flow
 
@@ -609,7 +610,7 @@ When Papyrus monitoring looks stale:
 ## Source-Backed Limits And Caveats
 
 - `src/config.rs` is a narrow read bridge over `YamlDataCore`, not a general config bridge
-- `src/config.rs` does not expose `YamlDataCore.suspects_stack_list` values, only keys
+- `src/config.rs` does not expose full `YamlDataCore.suspect_stack_rules` entries yet, only ids
 - `src/files.rs::write_file_string()` does not create parent directories because it uses `FileIOCore::write_file()`
 - `src/files.rs::resolve_targeted_inputs()` flattens `RejectedInput` structs into parallel vectors; callers must zip `rejected_paths` and `rejected_reasons` to reconstruct per-input context
 - `src/files.rs::discover_report_files()` is bridge-local, non-recursive, and fail-soft on unreadable directories

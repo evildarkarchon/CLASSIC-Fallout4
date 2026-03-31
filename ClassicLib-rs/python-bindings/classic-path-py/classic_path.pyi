@@ -13,7 +13,9 @@ class GamePathFinder:
     XSE log parsing, and cached paths.
     """
 
-    def __init__(self, game_exe: str, xse_loader: str | None, game_name: str, is_vr: bool) -> None:
+    def __init__(
+        self, game_exe: str, xse_loader: str | None, game_name: str, is_vr: bool
+    ) -> None:
         """Create a new GamePathFinder.
 
         Args:
@@ -135,7 +137,9 @@ class PathValidator:
         """
 
     @staticmethod
-    def validate_settings_path(path: str, setting_name: str, required_files: list[str] | None) -> None:
+    def validate_settings_path(
+        path: str, setting_name: str, required_files: list[str] | None
+    ) -> None:
         """Validate a settings path with optional required files.
 
         Args:
@@ -149,7 +153,9 @@ class PathValidator:
         """
 
     @staticmethod
-    def validate_settings_paths(game_path: str, docs_path: str, custom_scan_path: str | None, game_exe: str) -> None:
+    def validate_settings_paths(
+        game_path: str, docs_path: str, custom_scan_path: str | None, game_exe: str
+    ) -> None:
         """Validate all common settings paths.
 
         Args:
@@ -214,7 +220,9 @@ class PathValidator:
         """
 
     @staticmethod
-    def validate_path_with_permissions(path: str, check_read: bool = True, check_write: bool = False) -> None:
+    def validate_path_with_permissions(
+        path: str, check_read: bool = True, check_write: bool = False
+    ) -> None:
         """Validate a path with comprehensive permission checks.
 
         Args:

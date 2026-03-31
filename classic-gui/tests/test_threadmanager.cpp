@@ -1,4 +1,5 @@
 #include <QThread>
+#include <QPointer>
 #include <QtTest/QtTest>
 
 #include "core/threadmanager.h"
@@ -8,6 +9,7 @@ class ThreadManagerTests : public QObject {
 
 private slots:
     void start_and_stop_worker_updates_running_state();
+    void stopWorker_deletes_worker_after_thread_shutdown();
     void stopAll_stops_all_registered_workers();
     void stopWorker_on_missing_name_is_noop();
 };
@@ -21,6 +23,21 @@ void ThreadManagerTests::start_and_stop_worker_updates_running_state()
 
     manager.stopWorker(QStringLiteral("scan"));
     QVERIFY(!manager.isRunning(QStringLiteral("scan")));
+}
+
+void ThreadManagerTests::stopWorker_deletes_worker_after_thread_shutdown()
+{
+    ThreadManager manager;
+    auto* worker = new QObject();
+    QPointer<QObject> workerGuard(worker);
+
+    manager.startWorker(QStringLiteral("scan"), new QThread(), worker);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.isRunning(QStringLiteral("scan")), 2000);
+
+    manager.stopWorker(QStringLiteral("scan"));
+
+    QVERIFY(!manager.isRunning(QStringLiteral("scan")));
+    QTRY_VERIFY_WITH_TIMEOUT(workerGuard.isNull(), 2000);
 }
 
 void ThreadManagerTests::stopAll_stops_all_registered_workers()

@@ -21,7 +21,6 @@ import {
   registrySetGame,
   registryGetGame,
   registryGetGameVersion,
-  registryIsVrVersion,
   // Diagnostics
   isRuntimeAvailable,
   getRuntimeInfo,
@@ -268,22 +267,4 @@ describe("Registry convenience functions", () => {
     expect(version).toBe("Original");
   });
 
-  test("registryIsVrVersion returns false when not set", () => {
-    expect(registryIsVrVersion()).toBe(false);
-  });
-
-  test("registryIsVrVersion returns true for VR version", () => {
-    registrySet("gamevars_version", "Vr");
-    expect(registryIsVrVersion()).toBe(true);
-  });
-
-  test("registryIsVrVersion returns false for non-VR version", () => {
-    registrySet("gamevars_version", "Original");
-    expect(registryIsVrVersion()).toBe(false);
-  });
-
-  test("registryIsVrVersion is case-insensitive", () => {
-    registrySet("gamevars_version", "VR");
-    expect(registryIsVrVersion()).toBe(true);
-  });
 });

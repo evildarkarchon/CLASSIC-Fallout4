@@ -1,10 +1,10 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-03-16T11:19:26.107479+00:00`
-- Tracked surfaces: **346**
-- Runtime verified: **64**
+- Generated: `2026-03-30T12:22:08.746980+00:00`
+- Tracked surfaces: **353**
+- Runtime verified: **66**
 - Contract mapped only: **0**
-- Deferred: **282**
+- Deferred: **287**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -12,7 +12,7 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|
-| `config` | 15 | 0 | 21 | 0 | 36 |
+| `config` | 17 | 0 | 26 | 0 | 43 |
 | `scanlog` | 24 | 0 | 227 | 0 | 251 |
 | `version_registry` | 25 | 0 | 34 | 0 | 59 |
 
