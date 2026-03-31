@@ -14,6 +14,41 @@
     -ErrorAction SilentlyContinue instead.
 #>
 
+function Import-DotEnv {
+    <#
+    .SYNOPSIS
+        Loads variables from a .env file into the environment.
+    .DESCRIPTION
+        Reads KEY=VALUE lines from the specified file and sets them as
+        environment variables. Existing env vars are NOT overwritten,
+        so explicit env vars always take precedence.
+    .PARAMETER Path
+        Full path to the .env file.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path $Path)) { return }
+
+    foreach ($line in Get-Content -Path $Path -Encoding UTF8) {
+        $trimmed = $line.Trim()
+        if ($trimmed -eq '' -or $trimmed.StartsWith('#')) { continue }
+
+        $eqIdx = $trimmed.IndexOf('=')
+        if ($eqIdx -le 0) { continue }
+
+        $key = $trimmed.Substring(0, $eqIdx).Trim()
+        $val = $trimmed.Substring($eqIdx + 1).Trim()
+
+        # Only set if the env var is not already defined
+        if (-not [System.Environment]::GetEnvironmentVariable($key)) {
+            [System.Environment]::SetEnvironmentVariable($key, $val)
+        }
+    }
+}
+
 function Find-SignTool {
     <#
     .SYNOPSIS
@@ -65,6 +100,8 @@ function Ensure-SigningCert {
         Full path to the PFX file.
     .PARAMETER Password
         Password for the PFX file.
+    .PARAMETER Subject
+        X.500 distinguished name for the certificate (e.g., "CN=Name, E=email, O=Org").
     .PARAMETER RenewalWindowDays
         Number of days before expiration to trigger auto-renewal.
     .PARAMETER ValidityYears
@@ -73,6 +110,8 @@ function Ensure-SigningCert {
     param(
         [Parameter(Mandatory)]
         [string]$PfxPath,
+        [Parameter(Mandatory)]
+        [string]$Subject,
         [string]$Password = "classic-dev-signing",
         [int]$RenewalWindowDays = 30,
         [int]$ValidityYears = 1
@@ -109,7 +148,7 @@ function Ensure-SigningCert {
         # Create cert in user cert store (required by New-SelfSignedCertificate)
         $cert = New-SelfSignedCertificate `
             -Type CodeSigningCert `
-            -Subject "CN=Andrew Nelson, E=evildarkarchon@gmail.com, O=CLASSIC Project" `
+            -Subject $Subject `
             -FriendlyName "CLASSIC Code Signing" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -NotAfter (Get-Date).AddYears($ValidityYears) `
@@ -200,6 +239,10 @@ function Invoke-CodeSigning {
     )
 
     try {
+        # Load .env from repo root (existing env vars take precedence)
+        $repoRoot = Split-Path $PSScriptRoot -Parent
+        Import-DotEnv -Path (Join-Path $repoRoot ".env")
+
         # Locate signtool.exe
         $signtool = Find-SignTool
         if (-not $signtool) {
@@ -208,10 +251,17 @@ function Invoke-CodeSigning {
         }
         Write-Host "Using signtool: $signtool" -ForegroundColor DarkGray
 
+        # Resolve certificate subject from env
+        $subject = $env:CLASSIC_SIGNING_SUBJECT
+        if (-not $subject) {
+            Write-Host "CLASSIC_SIGNING_SUBJECT not set. Skipping certificate generation and code signing." -ForegroundColor DarkGray
+            Write-Host "Set it in .env or as an environment variable (see .env.example)." -ForegroundColor DarkGray
+            return
+        }
+
         # Resolve PFX path: env var override or default location
         $pfxPath = $env:CLASSIC_SIGNING_PFX
         if (-not $pfxPath) {
-            $repoRoot = Split-Path $PSScriptRoot -Parent
             $pfxPath = Join-Path $repoRoot "tools" "certs" "classic-signing.pfx"
         }
 
@@ -222,7 +272,7 @@ function Invoke-CodeSigning {
         }
 
         # Ensure certificate exists and is valid
-        Ensure-SigningCert -PfxPath $pfxPath -Password $pfxPassword
+        Ensure-SigningCert -PfxPath $pfxPath -Subject $subject -Password $pfxPassword
 
         # Sign each binary
         foreach ($binary in $Binaries) {
