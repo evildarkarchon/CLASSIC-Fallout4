@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 Phase: 27 of 27 (Test Coverage Evaluation and Improvement)
 Plan: 9 of 9 in current phase
 Status: COMPLETE -- All phases finished
-Last activity: 2026-02-06 -- Completed 27-09-PLAN.md (Final Coverage Verification)
+Last activity: 2026-03-31 - Completed quick task 260331-4d1: Set up self-signing of compiled code in build scripts
 
 Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 9/9]
 [############################################################] 100% (68/68 plans)
@@ -156,10 +156,10 @@ None.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 001 | fix missing documentation warnings | 2026-02-05 | 70d4553a | [001-fix-missing-documentation-warnings](./quick/001-fix-missing-documentation-warnings/) |
-| 260331-4d1 | set up self-signing of compiled code in build scripts | 2026-03-31 | 811fea95, 72b0e81f | [260331-4d1-set-up-self-signing-of-compiled-code-in-](./quick/260331-4d1-set-up-self-signing-of-compiled-code-in-/) |
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 001 | fix missing documentation warnings | 2026-02-05 | 70d4553a | | [001-fix-missing-documentation-warnings](./quick/001-fix-missing-documentation-warnings/) |
+| 260331-4d1 | set up self-signing of compiled code in build scripts | 2026-03-31 | 811fea95, 72b0e81f | Verified | [260331-4d1-set-up-self-signing-of-compiled-code-in-](./quick/260331-4d1-set-up-self-signing-of-compiled-code-in-/) |
 
 ### Roadmap Evolution
 
