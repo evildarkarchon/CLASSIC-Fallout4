@@ -105,6 +105,9 @@ coverage.json
 too-many-branches.txt
 test-results.txt
 
+# Code signing certificates (auto-generated, contains private key)
+tools/certs/
+
 # Rust
 target/
 Cargo.lock
