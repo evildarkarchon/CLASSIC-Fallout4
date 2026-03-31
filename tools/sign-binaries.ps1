@@ -109,7 +109,7 @@ function Ensure-SigningCert {
         # Create cert in user cert store (required by New-SelfSignedCertificate)
         $cert = New-SelfSignedCertificate `
             -Type CodeSigningCert `
-            -Subject "CN=CLASSIC Dev Signing, O=CLASSIC Project" `
+            -Subject "CN=Andrew Nelson, E=evildarkarchon@gmail.com, O=CLASSIC Project" `
             -FriendlyName "CLASSIC Code Signing" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -NotAfter (Get-Date).AddYears($ValidityYears) `
@@ -169,7 +169,7 @@ function Sign-Binary {
         return $false
     }
 
-    & $SignToolPath sign /f $PfxPath /p $Password /fd SHA256 /d "CLASSIC" $BinaryPath
+    & $SignToolPath sign /f $PfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /d "CLASSIC" $BinaryPath
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "Failed to sign: $BinaryPath"
         return $false
