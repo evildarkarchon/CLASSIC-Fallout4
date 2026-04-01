@@ -360,7 +360,7 @@ pub(crate) fn detect_mods_solutions(
 ///
 /// Returns `Ok(Vec<String>)` containing formatted caution messages for each detected conflict.
 /// Each conflict report includes:
-/// - "[!] CAUTION : Conflicting mods detected" header
+/// - "[!] CAUTION : Conflicting mods detected" header (once, before all conflict details)
 /// - Display names of the conflicting mods
 /// - Description and fix text
 /// - Optional link
@@ -436,12 +436,16 @@ pub fn detect_mods_double(
         }
     }
 
+    let mut header_emitted = false;
     for entry in entries {
         let a_lower = entry.mod_a.to_lowercase();
         let b_lower = entry.mod_b.to_lowercase();
 
         if mods_present.contains(&a_lower) && mods_present.contains(&b_lower) {
-            lines.push("[!] CAUTION : Conflicting mods detected\n".to_string());
+            if !header_emitted {
+                lines.push("[!] CAUTION : Conflicting mods detected\n".to_string());
+                header_emitted = true;
+            }
             lines.push(format!(
                 "{} ❌ CONFLICTS WITH : {}\n",
                 entry.name_a, entry.name_b
@@ -1124,6 +1128,40 @@ mod tests {
         let result = detect_mods_double(&entries, plugins).unwrap();
         let output = result.join("");
         assert!(output.contains("https://example.com/patch"));
+    }
+
+    #[test]
+    fn test_detect_mods_double_multiple_conflicts_single_header() {
+        let entries = vec![make_conflict("moda", "modb"), make_conflict("modc", "modd")];
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("ModA.esp".to_string(), "10".to_string());
+        plugins.insert("ModB.esp".to_string(), "11".to_string());
+        plugins.insert("ModC.esp".to_string(), "12".to_string());
+        plugins.insert("ModD.esp".to_string(), "13".to_string());
+
+        let result = detect_mods_double(&entries, plugins).unwrap();
+        let output = result.join("");
+
+        // Header must appear exactly once, not per-conflict
+        assert_eq!(
+            output
+                .matches("[!] CAUTION : Conflicting mods detected")
+                .count(),
+            1,
+            "CAUTION header should appear exactly once, not per conflict"
+        );
+
+        // Both conflict pairs must still be reported
+        assert!(output.contains("Mod moda"));
+        assert!(output.contains("Mod modb"));
+        assert!(output.contains("Mod modc"));
+        assert!(output.contains("Mod modd"));
+        assert_eq!(
+            output.matches("CONFLICTS WITH").count(),
+            2,
+            "Both conflict pairs should be reported"
+        );
     }
 
     // ============================================
