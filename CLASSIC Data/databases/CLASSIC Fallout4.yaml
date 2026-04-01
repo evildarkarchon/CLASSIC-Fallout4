@@ -1160,7 +1160,7 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     name_a: Boston Fps Fix
     name_b: Previs Repair Pack
     description: "Using both mods can break precombines."
-    fix: "CLASSIC suggests using Previs Repair Pack only."
+    fix: "Remove Boston FPS Fix and use Previs Repair Pack as it is more comprehensive"
 
   - mod_a: ExtendedWeaponSystem
     mod_b: tacticalreload
@@ -1174,7 +1174,7 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     name_a: Frost Survival Simulator
     name_b: Previs Repair Pack
     description: "Using both mods can break precombines."
-    fix: "For precombine fixes, remove PRP and switch to FROST Cell Fixes (FCF)."
+    fix: "Remove PRP and switch to FROST Cell Fixes (FCF)."
     link: https://www.nexusmods.com/fallout4/mods/59652?tab=files
 
   - mod_a: DCGuard_Overhaul
@@ -1196,14 +1196,14 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     name_a: Vulkan Renderer
     name_b: Nvidia Reflex Support
     description: "Vulkan Renderer can break GPU recognition from NV Reflex Support. This can crash the game or cause weird mod behavior."
-    fix: "If you encounter Nvidia Driver crashes, CLASSIC suggests using Vulkan Render only. Otherwise, use Nvidia Reflex Support."
+    fix: "If you encounter Nvidia Driver crashes, use Vulkan Render only. Otherwise, use Nvidia Reflex Support."
 
   - mod_a: CustomCamera
     mod_b: CameraTweaks
     name_a: Custom Camera
     name_b: Camera Tweaks
     description: "Both mods make changes to the in-game camera."
-    fix: "CLASSIC suggests using Camera Tweaks only, since it's an updated alternative."
+    fix: "Use Camera Tweaks only, since it's an updated alternative."
 
   - mod_a: UniquePlayer
     mod_b: ClassicHolsteredWeapons
