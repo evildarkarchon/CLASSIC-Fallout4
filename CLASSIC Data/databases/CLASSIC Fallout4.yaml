@@ -1160,7 +1160,7 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     name_a: Boston Fps Fix
     name_b: Previs Repair Pack
     description: "Using both mods can break precombines."
-    fix: "Remove Boston FPS Fix and use Previs Repair Pack as it is more comprehensive"
+    fix: "Remove Boston FPS Fix and use Previs Repair Pack as it is more comprehensive."
 
   - mod_a: ExtendedWeaponSystem
     mod_b: tacticalreload
