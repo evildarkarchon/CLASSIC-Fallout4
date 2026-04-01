@@ -871,6 +871,7 @@ mod tests {
     use super::*;
     use classic_settings_core::{merge_yaml_documents, parse_yaml_content};
     use std::sync::{Mutex, OnceLock};
+    use serial_test::serial;
     use tempfile::tempdir;
 
     fn current_dir_lock() -> &'static Mutex<()> {
@@ -1216,6 +1217,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_application_dir_uses_registry_override_when_set() {
         let override_dir = PathBuf::from("C:/my/project");
         classic_registry_core::set_application_dir(override_dir.clone());
@@ -1225,6 +1227,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_application_dir_falls_back_to_current_exe_without_override() {
         classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
         // With no registry entry, should fall back to current_exe().parent()
