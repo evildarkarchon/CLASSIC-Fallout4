@@ -336,3 +336,4 @@ build-*/
 /.cocoindex_code/
 !.agents/skills/
 opencode.json
+.claude/worktrees
