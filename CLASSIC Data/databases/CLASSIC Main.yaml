@@ -419,7 +419,7 @@ Version_Registry:
           name: "Buffout 4"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
-        - version: "1.0.0"
+        - version: "1.2.0"
           name: "Addictol"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
@@ -486,7 +486,7 @@ Version_Registry:
           compatible_range:
             min: "1.10.984.0"
             max: "1.10.999.999"
-        - version: "1.0.0"
+        - version: "1.2.0"
           name: "Addictol"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
@@ -553,7 +553,7 @@ Version_Registry:
           compatible_range:
             min: "1.11.137.0"
             max: "1.11.999.999"
-        - version: "1.0.0"
+        - version: "1.2.0"
           name: "Addictol"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
