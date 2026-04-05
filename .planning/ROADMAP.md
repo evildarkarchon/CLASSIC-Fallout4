@@ -50,7 +50,7 @@ Plans:
   5. `cargo build --workspace` and all parity gates pass cleanly
 **Plans:** 3 plans
 Plans:
-- [ ] 02-01-PLAN.md -- Migrate deprecated shim tests and delete deprecated methods/dead code from parser.rs and version.rs (DEBT-01, DEBT-08)
+- [x] 02-01-PLAN.md -- Migrate deprecated shim tests and delete deprecated methods/dead code from parser.rs and version.rs (DEBT-01, DEBT-08)
 - [x] 02-02-PLAN.md -- Delete YamlFormatConfig, remove PluginAnalyzer.case_cache, convert PyGpuDetector to stateless (DEBT-02, DEBT-03, DEBT-04)
 - [ ] 02-03-PLAN.md -- Add legacy fallback assertion test, then remove scan_all_settings_legacy_bucketed (DEBT-09, TEST-02)
 
