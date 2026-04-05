@@ -13,22 +13,12 @@
 //! # Complete Usage Example
 //!
 //! ```rust,no_run
-//! use classic_yaml_core::{YamlOperations, YamlFormatConfig, YamlError};
+//! use classic_yaml_core::{YamlOperations, YamlError};
 //! use std::path::Path;
 //!
 //! fn main() -> Result<(), YamlError> {
-//!     // Create YAML operations handler with default settings
+//!     // Create YAML operations handler
 //!     let yaml_ops = YamlOperations::new();
-//!
-//!     // Or with custom formatting
-//!     let custom_config = YamlFormatConfig {
-//!         preserve_quotes: true,
-//!         width: 100,
-//!         indent_mapping: 2,
-//!         indent_sequence: 2,
-//!         indent_offset: 0,
-//!     };
-//!     let yaml_ops_custom = YamlOperations::with_config(custom_config);
 //!
 //!     // Parse YAML from string
 //!     let yaml_string = r#"
@@ -335,96 +325,6 @@ pub enum YamlError {
     TypeConversionError(String),
 }
 
-/// `YamlFormatConfig` is a configuration structure that defines formatting preferences
-/// for YAML serialization and deserialization. This structure allows customization of
-/// YAML output by adjusting indentation, width, and optional preservation of quotes
-/// for better control over the generated YAML structure.
-/// # Fields
-///
-/// * `preserve_quotes` (bool):  
-///   - Determines whether to preserve quotes around scalar values, ensuring that values
-///     remain quoted in the output regardless of YAML formatting rules.
-///   - If `true`, quotes are retained.  
-///   - If `false`, quotes may be removed for plain scalar styles.
-///
-/// * `width` (usize):  
-///   - Specifies the maximum line width for wrapped text.   
-///   - Lines exceeding this width will be automatically wrapped for better readability.
-///
-/// * `indent_mapping` (usize):  
-///   - Defines the number of spaces used for indenting YAML mappings (key-value pairs).  
-///   - Higher values increase indentation for nested mappings.
-///
-/// * `indent_sequence` (usize):  
-///   - Specifies the number of spaces used for indenting YAML sequences (lists).  
-///   - Useful for controlling the visual alignment of sequence elements.
-///
-/// * `indent_offset` (usize):  
-///   - Determines the additional offset applied to nested structures beyond the
-///     `indent_mapping` or `indent_sequence` values.
-///   - Can be used to fine-tune the overall indentation appearance.
-///
-/// # Usage
-///
-/// To create a custom YAML format configuration:
-/// ```rust
-/// use classic_yaml_core::YamlFormatConfig;
-///
-/// let config = YamlFormatConfig {
-///     preserve_quotes: true,
-///     width: 80,
-///     indent_mapping: 2,
-///     indent_sequence: 2,
-///     indent_offset: 0,
-/// };
-/// println!("{:?}", config);
-/// ```
-#[derive(Debug, Clone)]
-pub struct YamlFormatConfig {
-    /// Preserve quotes around scalar values
-    pub preserve_quotes: bool,
-    /// Maximum line width for wrapped text
-    pub width: usize,
-    /// Number of spaces for indenting mappings (key-value pairs)
-    pub indent_mapping: usize,
-    /// Number of spaces for indenting sequences (lists)
-    pub indent_sequence: usize,
-    /// Additional offset for nested structures
-    pub indent_offset: usize,
-}
-
-impl Default for YamlFormatConfig {
-    /// Provides the default implementation for a configuration struct.
-    /// # Returns
-    /// A new instance of the struct with the following default values:
-    /// - `preserve_quotes`: `true` - Indicates whether or not quotes should be preserved.
-    /// - `width`: `120` - Sets the default width, likely representing maximum line width.
-    /// - `indent_mapping`: `2` - Specifies the indentation level for mappings, such as key-value pairs.
-    /// - `indent_sequence`: `4` - Specifies the indentation spaces for sequences or lists.
-    /// - `indent_offset`: `2` - Defines additional offset indentation for certain scenarios.
-    ///
-    /// # Example
-    /// ```rust
-    /// use classic_yaml_core::YamlFormatConfig;
-    ///
-    /// let config = YamlFormatConfig::default();
-    /// assert_eq!(config.preserve_quotes, true);
-    /// assert_eq!(config.width, 120);
-    /// assert_eq!(config.indent_mapping, 2);
-    /// assert_eq!(config.indent_sequence, 4);
-    /// assert_eq!(config.indent_offset, 2);
-    /// ```
-    fn default() -> Self {
-        Self {
-            preserve_quotes: true,
-            width: 120,
-            indent_mapping: 2,
-            indent_sequence: 4,
-            indent_offset: 2,
-        }
-    }
-}
-
 /// A structure representing a cached YAML configuration or data.
 ///
 /// The `CachedYaml` struct is designed to encapsulate YAML data along with metadata
@@ -482,19 +382,11 @@ struct CachedYaml {
 /// and optional caching to optimize performance in repeated operations.
 /// # Fields
 ///
-/// * `format_config` - (Reserved for future use) This field will be utilized in
-///   future versions to store YAML format preservation configurations, allowing
-///   fine-grained control over YAML serialization and deserialization.
-///   For now, this field is unused and deliberately marked with `#[allow(dead_code)]`.
-///
 /// * `cache_enabled` - A boolean field that enables or disables caching functionality.
 ///   When set to `true`, caching can be used to avoid redundant processing, improving
 ///   performance in scenarios involving multiple reads or writes.
 ///
 /// # Usage
-///
-/// While the `format_config` field is currently not in use, the `cache_enabled`
-/// field can be utilized to configure whether caching is enabled for YAML operations.
 ///
 /// Example:
 /// ```rust
@@ -504,8 +396,6 @@ struct CachedYaml {
 /// assert!(yaml_ops.is_cache_enabled());
 /// ```
 pub struct YamlOperations {
-    #[allow(dead_code)] // Reserved for future format preservation features
-    format_config: YamlFormatConfig,
     cache_enabled: bool,
 }
 
@@ -513,7 +403,6 @@ impl YamlOperations {
     /// Creates a new instance of the struct with default configuration.
     /// # Returns
     /// A new instance where:
-    /// - `format_config` is initialized with the default settings provided by `YamlFormatConfig::default()`.
     /// - `cache_enabled` is set to `true`.
     ///
     /// # Example
@@ -524,33 +413,7 @@ impl YamlOperations {
     /// assert!(instance.is_cache_enabled());
     /// ```
     pub fn new() -> Self {
-        Self {
-            format_config: YamlFormatConfig::default(),
-            cache_enabled: true,
-        }
-    }
-
-    /// Creates a new instance of the struct with the specified YAML format configuration.
-    /// # Parameters
-    /// - `format_config`: A `YamlFormatConfig` instance that specifies the configuration
-    ///   settings to be used for YAML formatting.
-    ///
-    /// # Returns
-    /// - Returns a new instance of the struct with the given configuration and
-    ///   `cache_enabled` set to `true` by default.
-    ///
-    /// # Example
-    /// ```rust
-    /// use classic_yaml_core::{YamlOperations, YamlFormatConfig};
-    ///
-    /// let config = YamlFormatConfig::default();
-    /// let instance = YamlOperations::with_config(config);
-    /// ```
-    pub fn with_config(format_config: YamlFormatConfig) -> Self {
-        Self {
-            format_config,
-            cache_enabled: true,
-        }
+        Self { cache_enabled: true }
     }
 
     /// Parses a YAML string and returns the first YAML document found.
@@ -2392,36 +2255,11 @@ outer:
     // ============================================================================
 
     #[test]
-    fn test_yaml_format_config_default() {
-        let config = YamlFormatConfig::default();
-
-        assert!(config.preserve_quotes);
-        assert_eq!(config.width, 120);
-        assert_eq!(config.indent_mapping, 2);
-        assert_eq!(config.indent_sequence, 4);
-        assert_eq!(config.indent_offset, 2);
-    }
-
-    #[test]
     fn test_yaml_operations_default_trait() {
         let ops1 = YamlOperations::new();
         let ops2 = YamlOperations::default();
 
         assert_eq!(ops1.is_cache_enabled(), ops2.is_cache_enabled());
-    }
-
-    #[test]
-    fn test_yaml_operations_with_custom_config() {
-        let custom_config = YamlFormatConfig {
-            preserve_quotes: false,
-            width: 80,
-            indent_mapping: 4,
-            indent_sequence: 4,
-            indent_offset: 0,
-        };
-
-        let ops = YamlOperations::with_config(custom_config);
-        assert!(ops.is_cache_enabled()); // Cache should still be enabled by default
     }
 
     #[test]

@@ -3,7 +3,7 @@
 //! These tests verify cross-component workflows and file I/O operations
 //! that involve multiple YAML operations working together.
 
-use classic_yaml_core::{YamlError, YamlFormatConfig, YamlOperations, clear_global_yaml_cache};
+use classic_yaml_core::{YamlError, YamlOperations, clear_global_yaml_cache};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -474,33 +474,6 @@ mod error_recovery {
             results.contains_key(&valid_path.to_string_lossy().to_string()),
             "Should contain valid file"
         );
-    }
-}
-
-// ============================================================================
-// Format Configuration Tests
-// ============================================================================
-
-mod format_config {
-    use super::*;
-
-    /// Test custom format configuration
-    #[test]
-    fn test_custom_format_config() {
-        let custom_config = YamlFormatConfig {
-            preserve_quotes: false,
-            width: 80,
-            indent_mapping: 4,
-            indent_sequence: 4,
-            indent_offset: 0,
-        };
-
-        let ops = YamlOperations::with_config(custom_config);
-        assert!(ops.is_cache_enabled(), "Cache should be enabled by default");
-
-        // Basic operations should still work
-        let yaml = ops.parse_yaml("key: value").expect("Parse should succeed");
-        assert!(ops.get_setting(&yaml, "key").is_some());
     }
 }
 
