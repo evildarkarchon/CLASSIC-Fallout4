@@ -1,227 +1,129 @@
-# Roadmap: CLASSIC
+# Roadmap: CLASSIC Codebase Health Milestone
 
-## Milestones
+## Overview
 
-- **v1.0 Codebase Cleanup** -- Phases 1-5 (shipped 2026-02-02)
-- **v8.2.0-part2 Rust Migration** -- Phases 6-11 (shipped 2026-02-04)
-- **v8.3.0 Performance & Polish** -- Phases 12-18 (shipped 2026-02-05)
-- **v9.0.0 Slint GUI** -- Phases 19-27, 25 plans (shipped 2026-02-06)
+This milestone resolves every concern from the codebase audit: deprecated APIs, dead code, global state bugs, unbounded caches, hot-path allocations, TOCTOU unsafe mmap, and workspace housekeeping. The work proceeds in dependency order -- deprecated API callers migrate first (unblocking dead code removal), then three independent workstreams (FCX state, bounded caches, pattern caching) execute in parallel, followed by isolated safety and housekeeping work. Every change is internal; no user-facing APIs change shape.
 
 ## Phases
 
-<details>
-<summary>v1.0 Codebase Cleanup (Phases 1-5) -- SHIPPED 2026-02-02</summary>
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-See `.planning/milestones/v1.0-ROADMAP.md` for full details.
+Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] Phase 1: Foundation Cleanup (4/4 plans)
-- [x] Phase 2: Integration Layer Simplification (2/2 plans)
-- [x] Phase 3: Wrapper Thinning (2/2 plans)
-- [x] Phase 4: Interface Consolidation (3/3 plans)
-- [x] Phase 5: Fallback Pruning (3/3 plans)
+- [ ] **Phase 1: Deprecated API Migration** - Migrate all callers off deprecated methods and add binding-surface deprecation warnings
+- [ ] **Phase 2: Dead Code Removal** - Delete dead code items, remove deprecated methods, eliminate legacy fallback path
+- [ ] **Phase 3: FCX State Hardening** - Fix silent reset bug, expose FCX reset/issues in all binding surfaces, add contention tests
+- [ ] **Phase 4: Bounded Cache Replacement** - Replace three unbounded DashMap caches with quick_cache LRU, expose CacheStats
+- [ ] **Phase 5: Pattern Caching and Performance** - Cache compiled regex/AhoCorasick in mod detector hot paths, cache LogParser in bridge, add benchmarks
+- [ ] **Phase 6: mmap TOCTOU Safety** - Switch mmap to map_copy_read_only with Windows benchmark validation
+- [ ] **Phase 7: Consistency Sweep** - Replace once_cell::sync::Lazy with std::sync::LazyLock across all crates
+- [ ] **Phase 8: Workspace and Infrastructure** - Promote workspace deps, wire Proton path, resolve zerovec, commit Node types
 
-**Accomplishments:** Removed 11,993 net lines, 8 Python fallbacks eliminated, factory.py consolidated with 13 Protocol types.
+## Phase Details
 
-</details>
-
-<details>
-<summary>v8.2.0-part2 Rust Migration (Phases 6-11) -- SHIPPED 2026-02-04</summary>
-
-See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
-
-- [x] Phase 6: Foundation & Settings (2/2 plans)
-- [x] Phase 7: Game Detection (2/2 plans)
-- [x] Phase 8: Report Generation (2/2 plans)
-- [x] Phase 9: Orchestration Migration (4/4 plans)
-- [x] Phase 10: Parity Validation (2/2 plans)
-- [x] Phase 11: Integration & Cleanup (2/2 plans)
-
-**Accomplishments:** Python is now UI-only shell. All business logic in Rust. 7 Python analyzers deleted, 19 Rust modules bundled.
-
-</details>
-
-<details>
-<summary>v8.3.0 Performance & Polish (Phases 12-18) -- SHIPPED 2026-02-05</summary>
-
-See `.planning/milestones/v8.3.0-ROADMAP.md` for full details.
-
-- [x] Phase 12: GIL Release Audit (1/1 plan)
-- [x] Phase 13: Benchmark Infrastructure (3/3 plans)
-- [x] Phase 14: Hot Path Profiling (3/3 plans)
-- [x] Phase 15: Bug Fixes (2/2 plans)
-- [x] Phase 16: Hot Path Optimization (2/2 plans)
-- [x] Phase 17: CI Regression Detection (3/3 plans)
-- [x] Phase 18: Tech Debt Cleanup (1/1 plan)
-
-**Accomplishments:** 77+ Criterion benchmarks established, CI regression detection (10% threshold), GIL release audit (65 without_gil), profiling tooling (flamegraph/py-spy/dhat), O(1) membership optimization, both pre-existing bugs fixed.
-
-</details>
-
-### v9.0.0 Slint GUI -- SHIPPED 2026-02-06
-
-**Milestone Goal:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-
-#### Phase 19: Foundation and Async Bridge
-**Goal**: Slint application builds, launches, and integrates with existing Tokio runtime
-**Depends on**: Phase 18 (v8.3.0 complete)
-**Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05
+### Phase 1: Deprecated API Migration
+**Goal**: All binding surfaces use current APIs with deprecation warnings emitted for end-users still calling legacy Python methods
+**Depends on**: Nothing (first phase)
+**Requirements**: DEBT-05, DEBT-06, DEBT-07, DEBT-10
 **Success Criteria** (what must be TRUE):
-  1. Running `cargo build -p classic-gui` produces a Windows executable
-  2. Launching the executable displays a window (any content)
-  3. Worker thread can spawn async tasks on Tokio runtime without blocking UI
-  4. Long-running operation demonstrates progress callback to UI thread
-**Plans:** 2 plans
+  1. Python `parse_segments_parallel` wrapper internally delegates to `parse_all_sections_arc` and the `.pyi` contract is updated
+  2. Python `generate_suspect_section` legacy method internally calls the two-method replacement (`generate_suspect_section_header` + `generate_suspect_found_footer`)
+  3. All tests formerly using `#[allow(deprecated)]` on `is_outdated` now exercise `check_version_status()` instead
+  4. `PyFormIDAnalyzerCore::new` emits a `DeprecationWarning` when receiving legacy `PyDict` format for `mods_single`
+  5. Python and Node parity gates pass after all migrations
+**Plans**: TBD
 
-Plans:
-- [x] 19-01-PLAN.md — Create classic-gui Slint crate with build system and scaffold UI
-- [x] 19-02-PLAN.md — Wire AsyncBridge for worker thread pattern with progress callbacks
-
-#### Phase 20: Core UI Layout
-**Goal**: Main window with proper layout, theming, and tabbed interface
-**Depends on**: Phase 19
-**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05
+### Phase 2: Dead Code Removal
+**Goal**: No dead code remains in the workspace and no legacy fallback paths exist in production code
+**Depends on**: Phase 1
+**Requirements**: DEBT-01, DEBT-02, DEBT-03, DEBT-04, DEBT-08, DEBT-09, TEST-02
 **Success Criteria** (what must be TRUE):
-  1. Window shows "CLASSIC" title and icon in title bar
-  2. Dark theme renders (fluent-dark style)
-  3. User can switch between Main Options, Results, and Settings tabs
-  4. Buttons, inputs, and checkboxes render and respond to clicks
-  5. Window resizes without layout breaking
-**Plans:** 2 plans
+  1. `SEGMENT_BOUNDARIES`, `YamlFormatConfig`, `PluginAnalyzer.case_cache`, and `PyGpuDetector.inner` are deleted from source with no `#[allow(dead_code)]` annotations remaining
+  2. `parse_segments`, `parse_segments_parallel`, and `is_outdated` methods are deleted from core crates with no `#[allow(deprecated)]` guards remaining in the workspace
+  3. `scan_all_settings_legacy_bucketed` fallback path is removed and an assertion test confirms production configs never hit it
+  4. `PyGpuDetector` is converted to a stateless Python class
+  5. `cargo build --workspace` and all parity gates pass cleanly
+**Plans**: TBD
 
-Plans:
-- [x] 20-01-PLAN.md — Main window layout with fluent-dark theme and 3-tab structure
-- [x] 20-02-PLAN.md — State persistence and native file dialogs
-
-#### Phase 21: Scan Operations
-**Goal**: User can trigger, monitor, and cancel crash log scans
-**Depends on**: Phase 20
-**Requirements**: SCAN-01, SCAN-02, SCAN-03, SCAN-04, SCAN-05
+### Phase 3: FCX State Hardening
+**Goal**: FCX global state resets reliably under contention and all binding surfaces can reset state and inspect issues between scan sessions
+**Depends on**: Nothing (independent workstream, but benefits from Phase 1/2 reducing noise)
+**Requirements**: SAFE-01, SAFE-02, SAFE-03, SAFE-04, CONS-02, TEST-01, TEST-04
 **Success Criteria** (what must be TRUE):
-  1. User can click "Scan" button and see scanning begin
-  2. Progress bar updates with percentage during scan
-  3. User can click "Cancel" to stop a running scan
-  4. Scan completion shows summary (X logs scanned, Y issues found)
-  5. OrchestratorCore executes actual scan logic (not mocked)
-**Plans:** 2 plans
+  1. `reset_global_state()` uses blocking `lock()` instead of `try_lock()` and returns `Result<(), FcxResetError>` distinguishing success, unnecessary, and failure
+  2. C++ bridge exposes `fcx_reset_global_state()` in the CXX extern block and it is callable before each scan session
+  3. Node bindings expose `resetFcxGlobalState()` and `getFcxConfigIssues()` NAPI functions
+  4. A test demonstrates FCX reset succeeds even when another thread holds the mutex (contention scenario)
+  5. A test demonstrates Node binding FCX state does not carry over between sequential scan calls in a single process
+**Plans**: TBD
 
-Plans:
-- [x] 21-01-PLAN.md — Wire OrchestratorCore to GUI with morphing Scan/Cancel button
-- [x] 21-02-PLAN.md — Add indeterminate progress, cancellation with partial results, and auto-tab-switch
-
-#### Phase 22: Results Viewer
-**Goal**: User can browse and view scan reports
-**Depends on**: Phase 21
-**Requirements**: RSLT-01, RSLT-02, RSLT-03, RSLT-04, RSLT-06, RSLT-07
+### Phase 4: Bounded Cache Replacement
+**Goal**: All global caches have bounded memory with LRU eviction and expose consistent observability through CacheStats
+**Depends on**: Nothing (independent workstream)
+**Requirements**: CACHE-01, CACHE-02, CACHE-03, CONS-03
 **Success Criteria** (what must be TRUE):
-  1. Results tab shows list of available reports with timestamps
-  2. User can type in search box to filter report list
-  3. Clicking a report displays its content in viewer panel
-  4. Long reports scroll properly
-  5. User can select and copy text from the viewer
-**Plans:** 1 plan
+  1. `YAML_CACHE` uses `quick_cache::sync::Cache` with capacity 128 instead of unbounded `DashMap`
+  2. `SETTINGS_CACHE` uses `quick_cache::sync::Cache` with capacity 64 instead of unbounded `DashMap`
+  3. `HASH_CACHE` uses `quick_cache::sync::Cache` with capacity 1024 instead of unbounded `DashMap`
+  4. All three caches expose a consistent `CacheStats` struct with hits, misses, hit_rate, size, and capacity fields
+  5. Existing tests pass with bounded caches (clear/reset APIs preserved for test isolation)
+**Plans**: TBD
 
-Plans:
-- [x] 22-01-PLAN.md — Master-detail results viewer with report list, search/filter/sort, viewer panel, and clipboard copy
-
-#### Phase 23: Markdown Renderer
-**Goal**: Report content renders with proper markdown formatting
-**Depends on**: Phase 22
-**Requirements**: RSLT-05
+### Phase 5: Pattern Caching and Performance
+**Goal**: Hot-path regex compilation and LogParser allocation happen once, not per-call, with criterion benchmarks proving the improvement
+**Depends on**: Nothing (independent workstream)
+**Requirements**: PERF-01, PERF-02, PERF-03, PERF-04, CONS-04
 **Success Criteria** (what must be TRUE):
-  1. Headers (H1-H3) render with distinct sizes
-  2. Bullet lists render with proper indentation
-  3. Code blocks render with monospace font and background
-  4. Inline formatting (bold, italic, code) renders correctly
-**Plans:** 1 plan
+  1. `detect_mods_single`, `detect_mods_double`, and `detect_mods_batch` cache compiled regex patterns keyed by mod list content hash
+  2. `detect_mods_important` uses `str::contains` or AhoCorasick with `LeftmostLongest` instead of per-entry `Regex::new`, producing identical detection results to the prior implementation
+  3. C++ bridge `detect_crash_pattern` uses a module-level `LazyLock<LogParser>` instead of per-call `LogParser::new(None)`
+  4. Static regex patterns in `mod_detector` use `LazyLock` with `Regex::new().unwrap()` to move compilation failure to startup
+  5. Criterion benchmarks exist for `detect_mods_important`, `detect_mods_single`/`batch`, `detect_crash_pattern`, and show measurable improvement over baseline
+**Plans**: TBD
 
-Plans:
-- [x] 23-01-PLAN.md — Markdown parsing with pulldown-cmark and block-based Slint rendering
-
-#### Phase 24: Settings Dialog
-**Goal**: User can configure application settings within the existing Settings tab with live save-on-change
-**Depends on**: Phase 20
-**Requirements**: SETT-01, SETT-02, SETT-03, SETT-04, SETT-05, SETT-06, SETT-07
+### Phase 6: mmap TOCTOU Safety
+**Goal**: Memory-mapped file reads are safe against time-of-check-to-time-of-use races on Windows
+**Depends on**: Nothing (independent)
+**Requirements**: SAFE-05
 **Success Criteria** (what must be TRUE):
-  1. Settings tab shows sub-tabs (General, Scanning, Paths)
-  2. User can select game version from dropdown and change persists
-  3. User can toggle scan options and changes persist immediately
-  4. User can browse for folder paths (native file dialog opens)
-  5. Invalid paths are rejected with error messages
-  6. Reset to Defaults resets all settings with confirmation
-**Plans:** 2 plans
+  1. `read_file_mmap` uses `MmapOptions::map_copy_read_only()` instead of `Mmap::map()`
+  2. A criterion benchmark compares throughput of `map()`, `map_copy()`, and `map_copy_read_only()` on representative file sizes to confirm acceptable performance
+**Plans**: TBD
 
-Plans:
-- [x] 24-01-PLAN.md — Settings UI layout with sub-tabs and ClassicConfig extension
-- [x] 24-02-PLAN.md — Wire settings callbacks with live save persistence and validation
-
-#### Phase 25: Platform Polish
-**Goal**: Application is ready for Windows distribution
-**Depends on**: Phase 21, Phase 22, Phase 23, Phase 24
-**Requirements**: PLAT-01, PLAT-02, PLAT-03
+### Phase 7: Consistency Sweep
+**Goal**: The codebase uses only `std::sync::LazyLock` for lazy statics, eliminating the `once_cell` dependency where it is no longer needed
+**Depends on**: Phase 4, Phase 5 (both introduce new LazyLock usage; sweep after to catch all remaining sites)
+**Requirements**: CONS-01
 **Success Criteria** (what must be TRUE):
-  1. Application runs on Windows 10 and Windows 11
-  2. UI is legible and properly scaled on 4K display (200% scaling)
-  3. Application launches without GPU (software renderer fallback works)
-**Plans:** 2 plans
+  1. No crate in the workspace imports `once_cell::sync::Lazy` -- all replaced with `std::sync::LazyLock`
+  2. `once_cell` is removed from `[workspace.dependencies]` if no other `once_cell` APIs (e.g., `OnceCell`) are still in use
+**Plans**: TBD
 
-Plans:
-- [x] 25-01-PLAN.md — Logging infrastructure, eprintln! replacement, renderer-software feature
-- [x] 25-02-PLAN.md — Build system (manifest, icon, static CRT), startup overhaul (self-healing, console suppression, default geometry)
-
-#### Phase 26: Async Bridge Audit
-**Goal**: Remove dead code, add resilience features (timeout, cancellation), extract EventLoopDispatcher trait for testability, and update all GUI call sites
-**Depends on**: Phase 25
-**Requirements**: TBD
+### Phase 8: Workspace and Infrastructure
+**Goal**: Workspace dependency management is clean, Linux Proton path discovery works end-to-end, and Node type definitions are committed with CI freshness checks
+**Depends on**: Nothing (independent housekeeping, but logically last)
+**Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05, TEST-03
 **Success Criteria** (what must be TRUE):
-  1. Dead code removed (BRIDGE_POOL, run_with_ui_update_blocking, Bridge alias, run_with_loading)
-  2. once_cell migrated to std::sync::LazyLock, num_cpus removed
-  3. BridgeError, run_with_timeout, run_cancellable APIs added
-  4. EventLoopDispatcher trait enables testing without Slint event loop
-  5. Scan call site uses run_cancellable, all call sites compile
-**Plans:** 3 plans
-
-Plans:
-- [x] 26-01-PLAN.md — Dead code removal and dependency cleanup (once_cell to LazyLock, remove num_cpus)
-- [x] 26-02-PLAN.md — Add BridgeError, EventLoopDispatcher trait, run_with_timeout, run_cancellable
-- [x] 26-03-PLAN.md — Migrate GUI call sites and write bridge unit tests
-
-#### Phase 27: Test Coverage Evaluation and Improvement
-**Goal**: Establish 60% minimum line coverage across all Rust crates using cargo-llvm-cov, with per-crate measurement and systematic gap-filling
-**Depends on**: Phase 26
-**Requirements**: TBD
-**Success Criteria** (what must be TRUE):
-  1. Test coverage baseline established across all Rust crates
-  2. Critical gaps identified and prioritized
-  3. New tests written for under-covered areas
-  4. All non-PyO3 Rust crates meet 60% line coverage minimum
-**Plans:** 9 plans
-
-Plans:
-- [x] 27-01-PLAN.md — Coverage tooling setup, baseline measurement, and gap analysis
-- [x] 27-02-PLAN.md — Gap-fill classic-scanlog-core (largest crate, 11K lines)
-- [x] 27-03-PLAN.md — Gap-fill classic-file-io-core and classic-path-core
-- [x] 27-04-PLAN.md — Gap-fill classic-scangame-core and classic-version-registry-core
-- [x] 27-05-PLAN.md — Gap-fill classic-yaml-core, classic-config-core, classic-settings-core
-- [x] 27-06-PLAN.md — Gap-fill classic-database-core, classic-message-core, classic-constants-core
-- [x] 27-07-PLAN.md — Gap-fill 8 small business-logic crates
-- [x] 27-08-PLAN.md — Gap-fill classic-gui, classic-shared-core, classic-shared-py
-- [x] 27-09-PLAN.md — Final workspace-wide verification and coverage report
+  1. `winreg` and `phf` are declared in `[workspace.dependencies]` with crate-level `workspace = true` references and `winreg` gated on `cfg(windows)`
+  2. `construct_proton_docs_path` is wired into the Linux docs-path discovery workflow and an integration test using a mock Proton prefix structure passes
+  3. The `zerovec` workaround in `classic-shared-core` is either removed (if Slint 1.15+ resolved it) or documented with a tracking comment
+  4. Node `index.d.ts` is committed as a snapshot with a CI freshness check that fails if the generated output differs from the committed version
+**Plans**: TBD
 
 ## Progress
 
-| Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|----------------|--------|-----------|
-| 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
-| 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
-| 12-18 | v8.3.0 | 15/15 | Complete | 2026-02-05 |
-| 19. Foundation | v9.0.0 | 2/2 | Complete | 2026-02-05 |
-| 20. Core UI | v9.0.0 | 2/2 | Complete | 2026-02-05 |
-| 21. Scan Ops | v9.0.0 | 2/2 | Complete | 2026-02-06 |
-| 22. Results | v9.0.0 | 1/1 | Complete | 2026-02-06 |
-| 23. Markdown | v9.0.0 | 1/1 | Complete | 2026-02-05 |
-| 24. Settings | v9.0.0 | 2/2 | Complete | 2026-02-05 |
-| 25. Platform | v9.0.0 | 2/2 | Complete | 2026-02-06 |
-| 26. Async Bridge Audit | v9.0.0 | 3/3 | Complete | 2026-02-06 |
-| 27. Test Coverage | v9.0.0 | 9/9 | Complete | 2026-02-06 |
+**Execution Order:**
+Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 2. Phase 7 follows Phases 4 and 5.
 
-**Overall:** 5 milestones shipped, 68 plans completed
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Deprecated API Migration | 0/TBD | Not started | - |
+| 2. Dead Code Removal | 0/TBD | Not started | - |
+| 3. FCX State Hardening | 0/TBD | Not started | - |
+| 4. Bounded Cache Replacement | 0/TBD | Not started | - |
+| 5. Pattern Caching and Performance | 0/TBD | Not started | - |
+| 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
+| 7. Consistency Sweep | 0/TBD | Not started | - |
+| 8. Workspace and Infrastructure | 0/TBD | Not started | - |
