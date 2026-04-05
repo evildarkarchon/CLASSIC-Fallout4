@@ -19,13 +19,13 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ 19 business-logic `-core` crates with no PyO3 dependencies — existing
 - ✓ Parity tooling for Node and Python bindings — existing
 - ✓ All deprecated API callers migrated with deprecation warnings — Validated in Phase 1: Deprecated API Migration
+- ✓ All deprecated APIs removed (parse_segments, parse_segments_parallel, is_outdated) — Validated in Phase 2: Dead Code Removal
+- ✓ Dead code removed (SEGMENT_BOUNDARIES, YamlFormatConfig, PluginAnalyzer.case_cache, PyGpuDetector.inner) — Validated in Phase 2: Dead Code Removal
+- ✓ Legacy `scan_all_settings_legacy_bucketed` fallback path eliminated with assertion test — Validated in Phase 2: Dead Code Removal
 
 ### Active
 
-- [ ] Remove all deprecated APIs (parse_segments, parse_segments_parallel, is_outdated) after callers migrated (Phase 2)
-- [ ] Remove dead code (SEGMENT_BOUNDARIES, YamlFormatConfig, PluginAnalyzer.case_cache, PyGpuDetector.inner)
 - [ ] Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete)
-- [ ] Eliminate `scan_all_settings_legacy_bucketed` fallback path
 - [x] Migrate Python FormID analyzer away from legacy map format with deprecation warnings — Validated in Phase 1
 - [ ] Cache compiled regex patterns in mod detector hot paths (detect_mods_single/double/batch/important)
 - [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
@@ -39,7 +39,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - [ ] Promote `winreg` and `phf` to workspace dependencies
 - [ ] Document or remove `zerovec` workaround dependency
 - [ ] Commit or document Node `index.d.ts` build-first requirement
-- [ ] Add test coverage: FCX contention reset, legacy settings path assertion, Linux Proton path, Node FCX state carryover
+- [ ] Add test coverage: FCX contention reset, Linux Proton path, Node FCX state carryover
 
 ### Out of Scope
 
@@ -96,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after Phase 1 completion*
+*Last updated: 2026-04-05 after Phase 2 completion*
