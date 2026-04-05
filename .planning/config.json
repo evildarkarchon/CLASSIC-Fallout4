@@ -13,7 +13,8 @@
     "ui_phase": true,
     "ui_safety_gate": true,
     "research_before_questions": true,
-    "skip_discuss": false
+    "skip_discuss": false,
+    "_auto_chain_active": false
   },
   "git": {
     "branching_strategy": "milestone",

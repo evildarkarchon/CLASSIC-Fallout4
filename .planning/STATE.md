@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Phase 1: Deprecated API Migration
+**Current focus:** Phase 02 — dead-code-removal
 
 ## Current Position
 
-Phase: 02 of 8 (integration layer simplification)
-Plan: 02 of 3
-Status: Executing
+Phase: 02 (dead-code-removal) — EXECUTING
+Plan: 2 of 3
+Status: Executing Phase 02
 Last activity: 2026-04-05
 
 Progress: [█░░░░░░░░░] 6%
