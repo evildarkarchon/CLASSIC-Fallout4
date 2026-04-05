@@ -1,140 +1,130 @@
-# Requirements: CLASSIC v9.0.0 Slint GUI
+# Requirements: CLASSIC Codebase Health Milestone
 
-**Defined:** 2026-02-05
-**Core Value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency
+**Defined:** 2026-04-04
+**Core Value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
 
-## v9.0.0 Requirements
+## v1 Requirements
 
-Requirements for Slint GUI core workflow. Each maps to roadmap phases.
+Requirements for this milestone. Each maps to roadmap phases.
 
-### Infrastructure
+### Tech Debt Cleanup
 
-- [x] **INFRA-01**: Slint 1.15.0 crate created in rust/ui-applications/classic-gui/
-- [x] **INFRA-02**: Build system configured with slint-build and Skia renderer
-- [x] **INFRA-03**: Async bridge connects Slint UI to existing Tokio runtime
-- [x] **INFRA-04**: Worker thread pattern established for long-running operations
-- [x] **INFRA-05**: Application launches and displays main window
+- [ ] **DEBT-01**: Remove `SEGMENT_BOUNDARIES` static from `classic-scanlog-core/src/parser.rs` (dead code, `#[allow(dead_code)]`)
+- [ ] **DEBT-02**: Remove `YamlFormatConfig` struct and `format_config` field from `YamlOperations` in `classic-yaml-core/src/lib.rs` (dead code, never shipped)
+- [ ] **DEBT-03**: Remove `PluginAnalyzer.case_cache` field from `classic-scanlog-core/src/plugin_analyzer.rs` (allocated per orchestrator but never written or read)
+- [ ] **DEBT-04**: Remove `PyGpuDetector.inner` field from `classic-scanlog-py/src/gpu_detector.rs` and convert to stateless Python class
+- [ ] **DEBT-05**: Migrate Python binding `parse_segments_parallel` caller to wrapper over `parse_all_sections_arc`, update `.pyi` contract
+- [ ] **DEBT-06**: Migrate Python `generate_suspect_section` legacy method to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately
+- [ ] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
+- [ ] **DEBT-08**: Delete deprecated `parse_segments`, `parse_segments_parallel`, and `is_outdated` methods after all callers migrated
+- [ ] **DEBT-09**: Eliminate `scan_all_settings_legacy_bucketed` fallback path with tracing warning, assertion test, and removal
+- [ ] **DEBT-10**: Add deprecation warning via `PyErr::warn` when `PyFormIDAnalyzerCore::new` receives legacy `PyDict` format for `mods_single`
 
-### Core UI
+### Correctness and Safety
 
-- [x] **UI-01**: Main window with application title and icon
-- [x] **UI-02**: Dark theme applied (fluent-dark style)
-- [x] **UI-03**: Tabbed interface with Main Options and Results tabs
-- [x] **UI-04**: Standard controls render correctly (buttons, inputs, checkboxes)
-- [x] **UI-05**: Window resizing works with proper layout
+- [ ] **SAFE-01**: Fix `GLOBAL_FCX_HANDLER.reset_global_state()` silent drop -- replace `try_lock()` with `lock()` (parking_lot non-poisoning)
+- [ ] **SAFE-02**: Expose `reset_fcx_global_state()` in C++ bridge CXX extern block, called before each scan session
+- [ ] **SAFE-03**: Expose `resetFcxState()` NAPI function in Node bindings, called before each scan session
+- [ ] **SAFE-04**: Expose `ConfigIssue` list in Node bindings via `JsConfigIssue` NAPI struct and `getFcxIssues()` function
+- [ ] **SAFE-05**: Switch `read_file_mmap` from `Mmap::map()` to `MmapOptions::map_copy()` for TOCTOU safety on Windows
 
-### Scanning
+### Performance
 
-- [x] **SCAN-01**: User can trigger crash log scan from main tab
-- [x] **SCAN-02**: Progress indicator shows scan progress with percentage
-- [x] **SCAN-03**: User can cancel running scan
-- [x] **SCAN-04**: Scan completion displays summary (logs scanned, issues found)
-- [x] **SCAN-05**: Scan integrates with existing OrchestratorCore via async bridge
+- [ ] **PERF-01**: Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch` keyed by hash of mod list contents
+- [ ] **PERF-02**: Replace per-entry `Regex::new` in `detect_mods_important` with `str::contains` (patterns are escaped literals) or AhoCorasick for large lists
+- [ ] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
+- [ ] **PERF-04**: Add criterion benchmarks for `detect_mods_important`, `detect_mods_single`/`batch`, `detect_crash_pattern`, and mmap read throughput with before/after measurements
 
-### Results Viewer
+### Cache Eviction
 
-- [x] **RSLT-01**: Report list displays available scan reports
-- [x] **RSLT-02**: Report list shows timestamp, status, and file size
-- [x] **RSLT-03**: User can search/filter report list
-- [x] **RSLT-04**: Selecting report displays content in viewer panel
-- [x] **RSLT-05**: Markdown content renders with proper formatting (headers, lists, code blocks)
-- [x] **RSLT-06**: Report viewer supports scrolling for long reports
-- [x] **RSLT-07**: User can copy text from report viewer
+- [ ] **CACHE-01**: Replace unbounded `DashMap` in `YAML_CACHE` with `quick_cache::sync::Cache` (capacity 128)
+- [ ] **CACHE-02**: Replace unbounded `DashMap` in `SETTINGS_CACHE` with `quick_cache::sync::Cache` (capacity 64)
+- [ ] **CACHE-03**: Replace unbounded `DashMap` in `HASH_CACHE` with `quick_cache::sync::Cache` (capacity 1024)
 
-### Settings
+### Workspace and Infrastructure
 
-- [x] **SETT-01**: Settings tab accessible from main tab widget
-- [x] **SETT-02**: Settings tab has sub-tabbed layout (General, Scanning, Paths)
-- [x] **SETT-03**: User can select game version from dropdown
-- [x] **SETT-04**: User can configure scan options (switches)
-- [x] **SETT-05**: User can browse and set folder paths (using rfd file dialogs)
-- [x] **SETT-06**: Settings persist via ClassicConfig YAML save-on-change
-- [x] **SETT-07**: Live save-on-change with Reset to Defaults (replaces OK/Cancel per design decision)
+- [ ] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
+- [ ] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
+- [ ] **INFRA-03**: Wire `construct_proton_docs_path` into Linux docs-path discovery workflow with unit tests using mock Proton prefix
+- [ ] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
+- [ ] **INFRA-05**: Commit generated `index.d.ts` snapshot for Node bindings with CI freshness check
 
-### Platform
+### Test Coverage
 
-- [x] **PLAT-01**: Application runs on Windows 10/11
-- [x] **PLAT-02**: Application handles high-DPI displays correctly
-- [x] **PLAT-03**: GPU renderer fallback to software if needed
+- [ ] **TEST-01**: Add test for FCX contention reset (concurrent scan scenario where mutex is held during reset)
+- [ ] **TEST-02**: Add assertion test that standard production crashgen configs do NOT hit `scan_all_settings_legacy_bucketed`
+- [ ] **TEST-03**: Add integration test for Linux Proton docs-path discovery with mock Proton prefix structure
+- [ ] **TEST-04**: Add test for Node binding FCX state carryover between scan calls in a single process
 
-## Future Requirements (v9.1.0+)
+### Codebase Consistency (Differentiators)
 
-Deferred to subsequent milestones. Not in current roadmap.
-
-### File Backup Tab
-- **BKUP-01**: User can backup XSE/ENB/ReShade files
-- **BKUP-02**: User can restore backed up files
-- **BKUP-03**: User can remove mod framework files
-
-### Articles Tab
-- **ARTC-01**: Grid of resource links
-- **ARTC-02**: Links open in default browser
-
-### Game File Scanning
-- **GAME-01**: User can trigger game file scan
-- **GAME-02**: Game file scan results displayed
-
-### Papyrus Monitoring
-- **PAPY-01**: User can start/stop Papyrus monitoring
-- **PAPY-02**: Monitoring dialog shows live statistics
-
-### Additional Features
-- **MISC-01**: About dialog
-- **MISC-02**: Update checking
-- **MISC-03**: Pastebin log fetch
+- [ ] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
+- [ ] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
+- [ ] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
+- [ ] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
 
 ## Out of Scope
 
+Explicitly excluded. Documented to prevent scope creep.
+
 | Feature | Reason |
 |---------|--------|
-| PySide6/Qt replacement in v9.0.0 | Slint GUI runs alongside Qt initially; deprecation in v9.1.0+ |
-| egui/iced frameworks | Slint chosen for declarative syntax |
-| Runtime theme switching | Slint limitation -- style is compile-time |
-| Native markdown in Slint | Experimental feature; using pulldown-cmark instead |
-| Linux/macOS support | Windows-first; cross-platform in future |
+| TUI dependency workspace promotion (ratatui, arboard, crossterm, open) | Local to classic-tui, not shared -- management overhead for no benefit |
+| VersionRegistry singleton reload | OnceLock design is intentional; process-restart isolation is acceptable |
+| CXX bridge `unsafe extern "C++"` restructuring | CXX framework manages safety boundary; no action beyond version upgrades |
+| Major binding API redesigns | Fixes parity gaps and deprecations only, not wholesale API changes |
+| New user-facing features | Purely a health/hardening milestone |
+| Python FormID legacy map removal | Deprecation warning first (this milestone); removal in a future milestone |
+| Bulk error handling refactoring | Error handling works; no audit-driven justification for migration |
+| Singleton architecture redesign | Fixes specific bugs (silent reset, unbounded growth) not structural rewrites |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 19 | Complete |
-| INFRA-02 | Phase 19 | Complete |
-| INFRA-03 | Phase 19 | Complete |
-| INFRA-04 | Phase 19 | Complete |
-| INFRA-05 | Phase 19 | Complete |
-| UI-01 | Phase 20 | Complete |
-| UI-02 | Phase 20 | Complete |
-| UI-03 | Phase 20 | Complete |
-| UI-04 | Phase 20 | Complete |
-| UI-05 | Phase 20 | Complete |
-| SCAN-01 | Phase 21 | Complete |
-| SCAN-02 | Phase 21 | Complete |
-| SCAN-03 | Phase 21 | Complete |
-| SCAN-04 | Phase 21 | Complete |
-| SCAN-05 | Phase 21 | Complete |
-| RSLT-01 | Phase 22 | Complete |
-| RSLT-02 | Phase 22 | Complete |
-| RSLT-03 | Phase 22 | Complete |
-| RSLT-04 | Phase 22 | Complete |
-| RSLT-05 | Phase 23 | Complete |
-| RSLT-06 | Phase 22 | Complete |
-| RSLT-07 | Phase 22 | Complete |
-| SETT-01 | Phase 24 | Complete |
-| SETT-02 | Phase 24 | Complete |
-| SETT-03 | Phase 24 | Complete |
-| SETT-04 | Phase 24 | Complete |
-| SETT-05 | Phase 24 | Complete |
-| SETT-06 | Phase 24 | Complete |
-| SETT-07 | Phase 24 | Complete |
-| PLAT-01 | Phase 25 | Complete |
-| PLAT-02 | Phase 25 | Complete |
-| PLAT-03 | Phase 25 | Complete |
+| DEBT-01 | TBD | Pending |
+| DEBT-02 | TBD | Pending |
+| DEBT-03 | TBD | Pending |
+| DEBT-04 | TBD | Pending |
+| DEBT-05 | TBD | Pending |
+| DEBT-06 | TBD | Pending |
+| DEBT-07 | TBD | Pending |
+| DEBT-08 | TBD | Pending |
+| DEBT-09 | TBD | Pending |
+| DEBT-10 | TBD | Pending |
+| SAFE-01 | TBD | Pending |
+| SAFE-02 | TBD | Pending |
+| SAFE-03 | TBD | Pending |
+| SAFE-04 | TBD | Pending |
+| SAFE-05 | TBD | Pending |
+| PERF-01 | TBD | Pending |
+| PERF-02 | TBD | Pending |
+| PERF-03 | TBD | Pending |
+| PERF-04 | TBD | Pending |
+| CACHE-01 | TBD | Pending |
+| CACHE-02 | TBD | Pending |
+| CACHE-03 | TBD | Pending |
+| INFRA-01 | TBD | Pending |
+| INFRA-02 | TBD | Pending |
+| INFRA-03 | TBD | Pending |
+| INFRA-04 | TBD | Pending |
+| INFRA-05 | TBD | Pending |
+| TEST-01 | TBD | Pending |
+| TEST-02 | TBD | Pending |
+| TEST-03 | TBD | Pending |
+| TEST-04 | TBD | Pending |
+| CONS-01 | TBD | Pending |
+| CONS-02 | TBD | Pending |
+| CONS-03 | TBD | Pending |
+| CONS-04 | TBD | Pending |
 
 **Coverage:**
-- v9.0.0 requirements: 30 total
-- Mapped to phases: 30
-- Unmapped: 0
+- v1 requirements: 35 total
+- Mapped to phases: 0
+- Unmapped: 35
 
 ---
-*Requirements defined: 2026-02-05*
-*Last updated: 2026-02-06 -- Phase 25 complete*
+*Requirements defined: 2026-04-04*
+*Last updated: 2026-04-04 after initial definition*
