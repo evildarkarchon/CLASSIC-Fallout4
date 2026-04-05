@@ -48,7 +48,11 @@ Plans:
   3. `scan_all_settings_legacy_bucketed` fallback path is removed and an assertion test confirms production configs never hit it
   4. `PyGpuDetector` is converted to a stateless Python class
   5. `cargo build --workspace` and all parity gates pass cleanly
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 02-01-PLAN.md -- Migrate deprecated shim tests and delete deprecated methods/dead code from parser.rs and version.rs (DEBT-01, DEBT-08)
+- [ ] 02-02-PLAN.md -- Delete YamlFormatConfig, remove PluginAnalyzer.case_cache, convert PyGpuDetector to stateless (DEBT-02, DEBT-03, DEBT-04)
+- [ ] 02-03-PLAN.md -- Add legacy fallback assertion test, then remove scan_all_settings_legacy_bucketed (DEBT-09, TEST-02)
 
 ### Phase 3: FCX State Hardening
 **Goal**: FCX global state resets reliably under contention and all binding surfaces can reset state and inspect issues between scan sessions
@@ -123,7 +127,7 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Deprecated API Migration | 1/2 | In Progress | - |
-| 2. Dead Code Removal | 0/TBD | Not started | - |
+| 2. Dead Code Removal | 0/3 | Not started | - |
 | 3. FCX State Hardening | 0/TBD | Not started | - |
 | 4. Bounded Cache Replacement | 0/TBD | Not started | - |
 | 5. Pattern Caching and Performance | 0/TBD | Not started | - |
