@@ -182,7 +182,8 @@ class FormIDAnalyzerCore:
             show_formid_values: Whether to show FormID values in output
             crashgen_name: Name of the crash generator (e.g., "Buffout 4")
             important_mods: Dictionary of important/problematic plugins
-            mods_single: Single-pass mod detection database
+            mods_single: Single-pass mod detection database.
+                .. deprecated:: Pass structured ``ModSolutionEntry`` format instead.
             mods_double: List of mod conflict entry dicts with keys:
                 mod_a, mod_b, name_a, name_b, description, fix, link (optional)
 
@@ -320,8 +321,13 @@ class LogParser:
 
     def parse_segments_parallel(
         self, lines: list[str], chunk_size: int | None = None
-    ) -> list[list[str]]:
-        """Parse segments in parallel for large logs."""
+    ) -> dict[str, list[str]]:
+        """Parse segments in parallel for large logs.
+
+        .. deprecated::
+            Use :meth:`parse_all_sections` instead, which returns ``dict[str, list[str]]``.
+
+        """
 
     def find_patterns(self, lines: list[str]) -> list[tuple[int, str, str]]:
         """Find all pattern matches in parallel with caching."""
@@ -1292,6 +1298,10 @@ class ReportGenerator:
 
     def generate_suspect_section(self, found_suspects: list[str]) -> ReportFragment:
         """Generate suspect section (legacy method for backward compatibility).
+
+        .. deprecated::
+            Use :meth:`generate_suspect_section_header` and
+            :meth:`generate_suspect_found_footer` instead.
 
         Args:
             found_suspects: List of suspect lines to include

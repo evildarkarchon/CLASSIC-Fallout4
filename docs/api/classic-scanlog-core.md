@@ -208,9 +208,9 @@ Named section guarantees from `parse_all_sections_arc()` and `parse_all_sections
 Deprecated parser APIs still present:
 
 - `parse_segments()`
-- `parse_segments_parallel()`
+- `parse_segments_parallel()` -- Python binding now returns `dict[str, list[str]]` (was `list[list[str]]`) and emits `DeprecationWarning`
 
-These are compatibility shims over `parse_all_sections_arc()` and are marked deprecated in source.
+These are compatibility shims over `parse_all_sections_arc()` and are marked deprecated in source. The Python binding's `parse_segments_parallel` was migrated to delegate to `parse_all_sections_arc` with a dict return type matching `parse_all_sections`.
 
 ## `CrashgenRegistry`, `CrashgenEntry`, and `CheckId`
 
@@ -470,7 +470,7 @@ If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool`
 ## Contributor Notes And Known Limits
 
 - `classic-scanlog-core` is downstream of [`classic-config-core`](../../docs/api/classic-config-core.md); update both docs if the YAML-to-analysis contract changes.
-- `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated.
+- `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated. The Python binding `parse_segments_parallel` now returns `dict[str, list[str]]` instead of `list[list[str]]`.
 - The source contains performance claims in comments and docs, but this page does not treat them as compatibility guarantees.
 - `process_logs_batch()` does not preserve input ordering.
 - `SettingsValidator::scan_addictol_settings_scaffold()` is intentionally a scaffold, not a complete Addictol rules implementation.
