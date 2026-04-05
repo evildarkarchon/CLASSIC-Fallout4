@@ -52,10 +52,6 @@ pub struct SettingsValidator {
 }
 
 impl SettingsValidator {
-    fn has_real_buffout_module(xse_modules: &HashSet<String>) -> bool {
-        xse_modules.contains("buffout4.dll") || xse_modules.contains("buffout4ae.dll")
-    }
-
     /// Creates a new settings validator from a pre-resolved crashgen name and entry.
     ///
     /// # Arguments
@@ -189,78 +185,8 @@ impl SettingsValidator {
             return Ok(fragments);
         }
 
-        self.scan_all_settings_legacy_bucketed(crashgen, xse_modules, crashgen_version)
-    }
-
-    fn scan_all_settings_legacy_bucketed(
-        &self,
-        crashgen: &HashMap<String, String>,
-        xse_modules: &HashSet<String>,
-        crashgen_version: Option<(u32, u32, u32)>,
-    ) -> Result<Vec<BucketedSettingsFragment>> {
-        let has_addictol = xse_modules.contains("addictol.dll");
-        let has_buffout = Self::has_real_buffout_module(xse_modules);
-        let mut settings_fragments = Vec::new();
-
-        if has_addictol {
-            if has_buffout {
-                settings_fragments.push(BucketedSettingsFragment::settings(
-                    ReportFragment::from_lines(vec![
-                        format!(
-                            "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
-                            self.crashgen_name
-                        ),
-                        "  Running Addictol TOML checks scaffold instead of default crashgen checks.\n\n-----\n"
-                            .to_string(),
-                    ]),
-                ));
-            }
-
-            let addictol_fragment = self.scan_addictol_settings_scaffold(crashgen)?;
-            if !addictol_fragment.is_empty() {
-                settings_fragments.push(BucketedSettingsFragment::settings(addictol_fragment));
-            }
-            return Ok(settings_fragments);
-        }
-
-        let achievements_fragment =
-            self.scan_buffout_achievements_setting(xse_modules.clone(), crashgen)?;
-        if !achievements_fragment.is_empty() {
-            settings_fragments.push(BucketedSettingsFragment::settings(achievements_fragment));
-        }
-
-        let has_xcell = [
-            "x-cell-fo4.dll",
-            "x-cell-og.dll",
-            "x-cell-ng2.dll",
-            "x-cell-ae.dll",
-        ]
-        .iter()
-        .any(|dll| xse_modules.contains(*dll));
-        let has_old_xcell = false;
-        let has_baka_scrapheap = xse_modules.contains("bakascrapheap.dll");
-        let memory_fragment = self.scan_buffout_memorymanagement_settings(
-            crashgen,
-            has_xcell,
-            has_old_xcell,
-            has_baka_scrapheap,
-        )?;
-        if !memory_fragment.is_empty() {
-            settings_fragments.push(BucketedSettingsFragment::settings(memory_fragment));
-        }
-
-        let archive_fragment = self.scan_archivelimit_setting(crashgen, crashgen_version)?;
-        if !archive_fragment.is_empty() {
-            settings_fragments.push(BucketedSettingsFragment::settings(archive_fragment));
-        }
-
-        let looksmenu_fragment =
-            self.scan_buffout_looksmenu_setting(crashgen, xse_modules.clone())?;
-        if !looksmenu_fragment.is_empty() {
-            settings_fragments.push(BucketedSettingsFragment::settings(looksmenu_fragment));
-        }
-
-        Ok(settings_fragments)
+        // No settings_rules defined -- return empty (no legacy fallback)
+        Ok(Vec::new())
     }
 
     fn render_settings_bucket_lines(&self, outcome: &EvaluationOutcome) -> Vec<String> {
@@ -1428,8 +1354,7 @@ mod tests {
             .unwrap();
         let all_lines: Vec<String> = fragments
             .iter()
-            .map(|f| f.fragment.to_list())
-            .flatten()
+            .flat_map(|f| f.fragment.to_list())
             .collect();
         assert!(
             all_lines
