@@ -36,7 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2 plans
 Plans:
 - [x] 01-01-PLAN.md -- Replace is_outdated tests with expanded check_version_status coverage (DEBT-07)
-- [ ] 01-02-PLAN.md -- Migrate Python binding deprecated API callers and add deprecation warnings (DEBT-05, DEBT-06, DEBT-10)
+- [x] 01-02-PLAN.md -- Migrate Python binding deprecated API callers and add deprecation warnings (DEBT-05, DEBT-06, DEBT-10)
 
 ### Phase 2: Dead Code Removal
 **Goal**: No dead code remains in the workspace and no legacy fallback paths exist in production code
