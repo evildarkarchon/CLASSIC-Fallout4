@@ -17,7 +17,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **DEBT-06**: Migrate Python `generate_suspect_section` legacy method to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately
 - [x] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
 - [x] **DEBT-08**: Delete deprecated `parse_segments`, `parse_segments_parallel`, and `is_outdated` methods after all callers migrated
-- [ ] **DEBT-09**: Eliminate `scan_all_settings_legacy_bucketed` fallback path with tracing warning, assertion test, and removal
+- [x] **DEBT-09**: Eliminate `scan_all_settings_legacy_bucketed` fallback path with tracing warning, assertion test, and removal
 - [x] **DEBT-10**: Add deprecation warning via `PyErr::warn` when `PyFormIDAnalyzerCore::new` receives legacy `PyDict` format for `mods_single`
 
 ### Correctness and Safety
@@ -52,7 +52,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Test Coverage
 
 - [ ] **TEST-01**: Add test for FCX contention reset (concurrent scan scenario where mutex is held during reset)
-- [ ] **TEST-02**: Add assertion test that standard production crashgen configs do NOT hit `scan_all_settings_legacy_bucketed`
+- [x] **TEST-02**: Add assertion test that standard production crashgen configs do NOT hit `scan_all_settings_legacy_bucketed`
 - [ ] **TEST-03**: Add integration test for Linux Proton docs-path discovery with mock Proton prefix structure
 - [ ] **TEST-04**: Add test for Node binding FCX state carryover between scan calls in a single process
 
@@ -92,7 +92,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-06 | Phase 1 | Complete |
 | DEBT-07 | Phase 1 | Complete |
 | DEBT-08 | Phase 2 | Complete |
-| DEBT-09 | Phase 2 | Pending |
+| DEBT-09 | Phase 2 | Complete |
 | DEBT-10 | Phase 1 | Complete |
 | SAFE-01 | Phase 3 | Pending |
 | SAFE-02 | Phase 3 | Pending |
@@ -112,7 +112,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-04 | Phase 8 | Pending |
 | INFRA-05 | Phase 8 | Pending |
 | TEST-01 | Phase 3 | Pending |
-| TEST-02 | Phase 2 | Pending |
+| TEST-02 | Phase 2 | Complete |
 | TEST-03 | Phase 8 | Pending |
 | TEST-04 | Phase 3 | Pending |
 | CONS-01 | Phase 7 | Pending |

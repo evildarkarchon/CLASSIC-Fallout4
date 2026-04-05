@@ -52,7 +52,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md -- Migrate deprecated shim tests and delete deprecated methods/dead code from parser.rs and version.rs (DEBT-01, DEBT-08)
 - [x] 02-02-PLAN.md -- Delete YamlFormatConfig, remove PluginAnalyzer.case_cache, convert PyGpuDetector to stateless (DEBT-02, DEBT-03, DEBT-04)
-- [ ] 02-03-PLAN.md -- Add legacy fallback assertion test, then remove scan_all_settings_legacy_bucketed (DEBT-09, TEST-02)
+- [x] 02-03-PLAN.md -- Add legacy fallback assertion test, then remove scan_all_settings_legacy_bucketed (DEBT-09, TEST-02)
 
 ### Phase 3: FCX State Hardening
 **Goal**: FCX global state resets reliably under contention and all binding surfaces can reset state and inspect issues between scan sessions
