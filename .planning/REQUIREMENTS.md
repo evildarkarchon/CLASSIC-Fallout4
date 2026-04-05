@@ -10,9 +10,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Tech Debt Cleanup
 
 - [ ] **DEBT-01**: Remove `SEGMENT_BOUNDARIES` static from `classic-scanlog-core/src/parser.rs` (dead code, `#[allow(dead_code)]`)
-- [ ] **DEBT-02**: Remove `YamlFormatConfig` struct and `format_config` field from `YamlOperations` in `classic-yaml-core/src/lib.rs` (dead code, never shipped)
-- [ ] **DEBT-03**: Remove `PluginAnalyzer.case_cache` field from `classic-scanlog-core/src/plugin_analyzer.rs` (allocated per orchestrator but never written or read)
-- [ ] **DEBT-04**: Remove `PyGpuDetector.inner` field from `classic-scanlog-py/src/gpu_detector.rs` and convert to stateless Python class
+- [x] **DEBT-02**: Remove `YamlFormatConfig` struct and `format_config` field from `YamlOperations` in `classic-yaml-core/src/lib.rs` (dead code, never shipped)
+- [x] **DEBT-03**: Remove `PluginAnalyzer.case_cache` field from `classic-scanlog-core/src/plugin_analyzer.rs` (allocated per orchestrator but never written or read)
+- [x] **DEBT-04**: Remove `PyGpuDetector.inner` field from `classic-scanlog-py/src/gpu_detector.rs` and convert to stateless Python class
 - [x] **DEBT-05**: Migrate Python binding `parse_segments_parallel` caller to wrapper over `parse_all_sections_arc`, update `.pyi` contract
 - [x] **DEBT-06**: Migrate Python `generate_suspect_section` legacy method to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately
 - [x] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
@@ -85,9 +85,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DEBT-01 | Phase 2 | Pending |
-| DEBT-02 | Phase 2 | Pending |
-| DEBT-03 | Phase 2 | Pending |
-| DEBT-04 | Phase 2 | Pending |
+| DEBT-02 | Phase 2 | Complete |
+| DEBT-03 | Phase 2 | Complete |
+| DEBT-04 | Phase 2 | Complete |
 | DEBT-05 | Phase 1 | Complete |
 | DEBT-06 | Phase 1 | Complete |
 | DEBT-07 | Phase 1 | Complete |
