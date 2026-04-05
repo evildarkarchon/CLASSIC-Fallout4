@@ -451,36 +451,78 @@ mod tests {
         assert!(v1 < v3);
     }
 
-    // Legacy tests for deprecated is_outdated method
-    #[test]
-    #[allow(deprecated)]
-    fn test_is_outdated_non_vr() {
-        let current = CrashgenVersion::new(1, 26, 0);
-        let latest = CrashgenVersion::new(1, 28, 0);
-        let latest_vr = CrashgenVersion::new(1, 27, 0);
+    // Replacement tests for deprecated is_outdated method -- now exercise check_version_status directly
 
-        assert!(current.is_outdated(&latest, &latest_vr, false));
+    #[test]
+    fn test_check_version_status_non_vr_outdated_scenario() {
+        // Replaces test_is_outdated_non_vr: version 1.26.0 is outdated against valid [1.28.0]
+        let current = CrashgenVersion::new(1, 26, 0);
+        let valid = vec![CrashgenVersion::new(1, 28, 0)];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Outdated);
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_is_outdated_vr() {
+    fn test_check_version_status_vr_outdated_scenario() {
+        // Replaces test_is_outdated_vr: version 1.26.0 is outdated against VR valid [1.27.0]
         let current = CrashgenVersion::new(1, 26, 0);
-        let latest = CrashgenVersion::new(1, 28, 0);
-        let latest_vr = CrashgenVersion::new(1, 27, 0);
-
-        assert!(current.is_outdated(&latest, &latest_vr, true));
+        let valid = vec![CrashgenVersion::new(1, 27, 0)];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Outdated);
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_not_outdated_when_matches_latest() {
+    fn test_check_version_status_vr_matches_valid() {
+        // Replaces test_not_outdated_when_matches_latest: version 1.28.0 matches a VR valid entry
         let current = CrashgenVersion::new(1, 28, 0);
-        let latest = CrashgenVersion::new(1, 28, 0);
-        let latest_vr = CrashgenVersion::new(1, 27, 0);
+        let valid = vec![
+            CrashgenVersion::new(1, 27, 0),
+            CrashgenVersion::new(1, 28, 0),
+        ];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Valid);
+    }
 
-        // VR mode: not outdated if matches non-VR latest
-        assert!(!current.is_outdated(&latest, &latest_vr, true));
+    #[test]
+    fn test_check_version_status_vr_newer_than_known() {
+        // VR version 1.30.0 is newer than all known VR valid versions [1.27.0, 1.28.0]
+        let current = CrashgenVersion::new(1, 30, 0);
+        let valid = vec![
+            CrashgenVersion::new(1, 27, 0),
+            CrashgenVersion::new(1, 28, 0),
+        ];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::NewerThanKnown);
+    }
+
+    #[test]
+    fn test_check_version_status_vr_empty_valid_list() {
+        // Any version checked against empty VR valid list returns NoSupportedVersion
+        let current = CrashgenVersion::new(1, 27, 0);
+        let valid: Vec<CrashgenVersion> = vec![];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::NoSupportedVersion);
+    }
+
+    #[test]
+    fn test_check_version_status_vr_single_valid() {
+        // VR version exactly matching the single valid entry returns Valid
+        let current = CrashgenVersion::new(1, 27, 0);
+        let valid = vec![CrashgenVersion::new(1, 27, 0)];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Valid);
+    }
+
+    #[test]
+    fn test_check_version_status_vr_between_entries() {
+        // VR version 1.27.5 between valid entries [1.27.0, 1.28.0] is not in list, below max
+        let current = CrashgenVersion::new(1, 27, 5);
+        let valid = vec![
+            CrashgenVersion::new(1, 27, 0),
+            CrashgenVersion::new(1, 28, 0),
+        ];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Outdated);
     }
 
     #[test]
