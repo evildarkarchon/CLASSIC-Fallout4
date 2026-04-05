@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Python and Node parity gates pass after all migrations
 **Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md -- Replace is_outdated tests with expanded check_version_status coverage (DEBT-07)
+- [x] 01-01-PLAN.md -- Replace is_outdated tests with expanded check_version_status coverage (DEBT-07)
 - [ ] 01-02-PLAN.md -- Migrate Python binding deprecated API callers and add deprecation warnings (DEBT-05, DEBT-06, DEBT-10)
 
 ### Phase 2: Dead Code Removal
@@ -122,7 +122,7 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Deprecated API Migration | 0/2 | Planned | - |
+| 1. Deprecated API Migration | 1/2 | In Progress | - |
 | 2. Dead Code Removal | 0/TBD | Not started | - |
 | 3. FCX State Hardening | 0/TBD | Not started | - |
 | 4. Bounded Cache Replacement | 0/TBD | Not started | - |

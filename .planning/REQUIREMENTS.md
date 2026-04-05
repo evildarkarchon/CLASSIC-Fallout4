@@ -15,7 +15,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **DEBT-04**: Remove `PyGpuDetector.inner` field from `classic-scanlog-py/src/gpu_detector.rs` and convert to stateless Python class
 - [ ] **DEBT-05**: Migrate Python binding `parse_segments_parallel` caller to wrapper over `parse_all_sections_arc`, update `.pyi` contract
 - [ ] **DEBT-06**: Migrate Python `generate_suspect_section` legacy method to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately
-- [ ] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
+- [x] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
 - [ ] **DEBT-08**: Delete deprecated `parse_segments`, `parse_segments_parallel`, and `is_outdated` methods after all callers migrated
 - [ ] **DEBT-09**: Eliminate `scan_all_settings_legacy_bucketed` fallback path with tracing warning, assertion test, and removal
 - [ ] **DEBT-10**: Add deprecation warning via `PyErr::warn` when `PyFormIDAnalyzerCore::new` receives legacy `PyDict` format for `mods_single`
@@ -90,7 +90,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-04 | Phase 2 | Pending |
 | DEBT-05 | Phase 1 | Pending |
 | DEBT-06 | Phase 1 | Pending |
-| DEBT-07 | Phase 1 | Pending |
+| DEBT-07 | Phase 1 | Complete |
 | DEBT-08 | Phase 2 | Pending |
 | DEBT-09 | Phase 2 | Pending |
 | DEBT-10 | Phase 1 | Pending |
