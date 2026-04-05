@@ -494,6 +494,47 @@ def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> N
     assert result.stdout.strip() == str(script_dir / "CLASSIC Settings.yaml")
 
 
+def test_parse_segments_parallel_deprecation_warning() -> None:
+    """parse_segments_parallel emits DeprecationWarning and returns dict."""
+    import classic_scanlog
+
+    parser = classic_scanlog.LogParser()
+    sample_lines = ["[Compatibility]", "Buffout4.dll"]
+
+    with pytest.warns(DeprecationWarning, match="parse_segments_parallel is deprecated"):
+        result = parser.parse_segments_parallel(sample_lines)
+
+    assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
+
+
+def test_generate_suspect_section_deprecation_warning() -> None:
+    """generate_suspect_section emits DeprecationWarning and returns ReportFragment."""
+    import classic_scanlog
+
+    report_gen = classic_scanlog.ReportGenerator()
+
+    with pytest.warns(DeprecationWarning, match="generate_suspect_section is deprecated"):
+        fragment = report_gen.generate_suspect_section(["SomeSuspect"])
+
+    assert fragment is not None
+
+
+def test_formid_analyzer_legacy_dict_deprecation_warning() -> None:
+    """PyFormIDAnalyzerCore.__init__ emits DeprecationWarning when mods_single is a dict."""
+    import classic_scanlog
+
+    legacy_mods_single = {"TestMod": "Install TestMod fix"}
+
+    with pytest.warns(DeprecationWarning, match="mods_single as dict.*is deprecated"):
+        analyzer = classic_scanlog.FormIDAnalyzerCore(
+            show_formid_values=False,
+            crashgen_name="Buffout 4",
+            mods_single=legacy_mods_single,
+        )
+
+    assert analyzer is not None
+
+
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
 def test_runtime_coverage_registry_cases(
     case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
