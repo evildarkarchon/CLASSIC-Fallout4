@@ -163,64 +163,6 @@ impl CrashgenVersion {
         (self.major as u32, self.minor as u32, self.patch as u32)
     }
 
-    /// Checks if this version is outdated compared to the latest versions.
-    ///
-    /// **Deprecated**: Use `check_version_status()` with a list of valid versions instead.
-    /// This legacy method only supports single-version comparison.
-    ///
-    /// This matches Python's version comparison logic:
-    /// - If VR mode: Check against both version_latest_vr AND version_latest
-    /// - If non-VR: Check only against version_latest
-    ///
-    /// # Arguments
-    ///
-    /// * `latest` - The latest non-VR version
-    /// * `latest_vr` - The latest VR version
-    /// * `selected_version_is_vr` - Whether the selected version is VR
-    ///
-    /// # Returns
-    ///
-    /// `true` if the current version is outdated, `false` otherwise.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::version::CrashgenVersion;
-    ///
-    /// let current = CrashgenVersion::new(1, 26, 0);
-    /// let latest = CrashgenVersion::new(1, 28, 0);
-    /// let latest_vr = CrashgenVersion::new(1, 27, 0);
-    ///
-    /// // Non-VR: only compare against latest
-    /// assert!(current.is_outdated(&latest, &latest_vr, false));
-    ///
-    /// // VR: compare against both
-    /// assert!(current.is_outdated(&latest, &latest_vr, true));
-    /// ```
-    #[deprecated(
-        since = "0.2.0",
-        note = "Use check_version_status() with a list of valid versions instead"
-    )]
-    pub fn is_outdated(
-        &self,
-        latest: &CrashgenVersion,
-        latest_vr: &CrashgenVersion,
-        selected_version_is_vr: bool,
-    ) -> bool {
-        // Port of Python logic:
-        // if (version_current < version_latest_vr and version_current != version_latest) or
-        //    (not game_is_vr and version_current < version_latest):
-        //     # outdated
-
-        if selected_version_is_vr {
-            // VR mode: Check against VR version, but allow if matches non-VR latest
-            self < latest_vr && self != latest
-        } else {
-            // Non-VR mode: Check against non-VR latest
-            self < latest
-        }
-    }
-
     /// Checks this version against a list of valid versions.
     ///
     /// This is the new list-based version validation that supports multiple valid

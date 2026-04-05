@@ -10,7 +10,6 @@
 use crate::error::Result;
 use dashmap::DashMap;
 use lru::LruCache;
-use memchr::{memchr, memmem};
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rayon::prelude::*;
@@ -64,19 +63,6 @@ static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
 static CRASHGEN_HEADER_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^[A-Za-z][A-Za-z0-9 _.\-]{1,80}\s+v\d+\.\d+(?:\.\d+){0,2}\b")
         .expect("Invalid crashgen header regex")
-});
-
-/// Legacy segment boundary definitions (kept for `parse_complete` backward compat only).
-#[allow(dead_code)]
-static SEGMENT_BOUNDARIES: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|| {
-    vec![
-        ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
-        ("PROBABLE CALL STACK:", "MODULES:"),
-        ("MODULES:", "PLUGINS:"),
-        ("PLUGINS:", "REGISTERS:"),
-        ("REGISTERS:", "STACK:"),
-        ("STACK:", "EOF"),
-    ]
 });
 
 /// High-performance log parser with parallel processing and SIMD optimizations
@@ -406,83 +392,6 @@ impl LogParser {
             || trimmed.starts_with("PLUGINS:")
             || trimmed.starts_with("REGISTERS:")
             || trimmed.starts_with("STACK:")
-    }
-
-    /// Convert named section map to deprecated positional segment vector.
-    fn named_sections_to_positional(
-        sections: &HashMap<String, Vec<Arc<str>>>,
-    ) -> Vec<Vec<Arc<str>>> {
-        use crate::segment_key;
-        vec![
-            sections
-                .get(segment_key::SETTINGS)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::SYSTEM)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::CALLSTACK)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::MODULES)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::XSE_MODULES)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::PLUGINS)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::REGISTERS)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::STACK_DUMP)
-                .cloned()
-                .unwrap_or_default(),
-        ]
-    }
-
-    /// Deprecated: parses log lines into a positional segment vector.
-    ///
-    /// This method is a backward-compatibility shim over `parse_all_sections_arc`.
-    /// It reconstructs the old positional `Vec<Vec<Arc<str>>>` from the named map.
-    /// Use `parse_all_sections_arc` for all new code.
-    ///
-    /// # TODO: Remove once all callers have migrated to `parse_all_sections_arc`.
-    #[deprecated(
-        since = "9.0.0",
-        note = "Use parse_all_sections_arc instead. This shim will be removed."
-    )]
-    pub fn parse_segments(&self, lines: &[Arc<str>]) -> Vec<Vec<Arc<str>>> {
-        let sections = self.parse_all_sections_arc(lines);
-        Self::named_sections_to_positional(&sections)
-    }
-
-    /// Deprecated: parse segments in parallel (delegates to `parse_all_sections_arc`).
-    ///
-    /// Segment parsing requires maintaining state across the entire log and cannot
-    /// be meaningfully parallelised at the line level. This method is kept for API
-    /// compatibility and simply delegates to `parse_all_sections_arc`.
-    ///
-    /// # TODO: Remove once all callers have migrated to `parse_all_sections_arc`.
-    #[deprecated(
-        since = "9.0.0",
-        note = "Use parse_all_sections_arc instead. Parallelism at the segment level is not meaningful."
-    )]
-    pub fn parse_segments_parallel(
-        &self,
-        lines: &[Arc<str>],
-        _chunk_size: Option<usize>,
-    ) -> Vec<Vec<Arc<str>>> {
-        let sections = self.parse_all_sections_arc(lines);
-        Self::named_sections_to_positional(&sections)
     }
 
     /// Finds all pattern matches in the log lines with parallel processing and caching.
@@ -1200,28 +1109,6 @@ impl LogParser {
             || line.contains("Trainwreck")
             || line.contains("Addictol")
             || CRASHGEN_HEADER_PATTERN.is_match(line)
-    }
-
-    /// SIMD-optimized string contains check.
-    ///
-    /// Kept for potential use by `parse_complete` and other methods.
-    #[allow(dead_code)]
-    fn fast_contains(&self, haystack: &str, needle: &str) -> bool {
-        // Use memchr for single-byte patterns
-        if needle.len() == 1 {
-            if let Some(byte) = needle.bytes().next() {
-                return memchr(byte, haystack.as_bytes()).is_some();
-            }
-        }
-
-        // Use memmem for multi-byte patterns
-        if needle.len() < 32 {
-            let finder = memmem::Finder::new(needle);
-            return finder.find(haystack.as_bytes()).is_some();
-        }
-
-        // Fall back to standard contains for larger patterns
-        haystack.contains(needle)
     }
 
     /// Optimized prefix matching for segment boundary detection.
