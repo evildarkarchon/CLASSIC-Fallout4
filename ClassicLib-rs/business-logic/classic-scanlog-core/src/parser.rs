@@ -1557,6 +1557,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::segment_key;
 
     fn create_sample_log() -> Vec<Arc<str>> {
         vec![
@@ -1612,48 +1613,57 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_segment_parsing_deprecated_shim() {
+    fn test_parse_all_sections_arc_basic_segmentation() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = create_sample_log();
-        let segments = parser.parse_segments(&log_lines);
-        // Shim returns positional Vec; settings (segment 0) should have content
-        assert!(!segments.is_empty());
+        let sections = parser.parse_all_sections_arc(&log_lines);
+        // Named sections map should be non-empty and settings should have content
+        assert!(!sections.is_empty());
+        assert!(
+            !sections[segment_key::SETTINGS].is_empty(),
+            "settings section should contain log header lines"
+        );
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_segment_parsing_with_patches_first_boundary() {
+    fn test_parse_all_sections_arc_patches_in_settings() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = create_sample_log_patches_only();
-        // Anchor-first: [Patches] is just content in the settings segment
-        let segments = parser.parse_segments(&log_lines);
-        assert!(!segments.is_empty());
-        // settings segment (index 0) should contain the [Patches] line
+        let sections = parser.parse_all_sections_arc(&log_lines);
+        // Anchor-first: [Patches] content lives in the settings section
         assert!(
-            segments[0]
+            sections[segment_key::SETTINGS]
                 .iter()
-                .any(|line| line.contains("[Patches]") || line.contains("bThreads"))
+                .any(|line| line.contains("[Patches]") || line.contains("bThreads")),
+            "settings section should contain [Patches] or bThreads line"
         );
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_deprecated_parse_segments_preserves_xse_modules_slot() {
+    fn test_parse_all_sections_arc_preserves_xse_modules() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = make_log_with_known_header();
-        let segments = parser.parse_segments(&log_lines);
+        let sections = parser.parse_all_sections_arc(&log_lines);
 
-        // Deprecated positional layout should preserve a dedicated xse_modules slot
-        // between modules and plugins.
-        assert!(segments.len() >= 6);
-        assert!(segments[3].iter().any(|line| line.contains("module.dll")));
+        // Named sections should correctly separate modules, xse_modules, and plugins
         assert!(
-            segments[4]
+            sections[segment_key::MODULES]
                 .iter()
-                .any(|line| line.contains("f4se_plugin.dll"))
+                .any(|line| line.contains("module.dll")),
+            "modules section should contain module.dll"
         );
-        assert!(segments[5].iter().any(|line| line.contains("Fallout4.esm")));
+        assert!(
+            sections[segment_key::XSE_MODULES]
+                .iter()
+                .any(|line| line.contains("f4se_plugin.dll")),
+            "xse_modules section should contain f4se_plugin.dll"
+        );
+        assert!(
+            sections[segment_key::PLUGINS]
+                .iter()
+                .any(|line| line.contains("Fallout4.esm")),
+            "plugins section should contain Fallout4.esm"
+        );
     }
 
     // ===== Tests for parse_all_sections_arc (anchor-first segmentation) =====
