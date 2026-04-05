@@ -2,8 +2,9 @@
 
 use classic_scanlog_core::LogParser;
 use classic_shared::without_gil;
+use pyo3::exceptions::PyDeprecationWarning;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyString};
+use pyo3::types::{PyDict, PyList};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -94,31 +95,34 @@ impl PyLogParser {
 
     /// Parse segments in parallel for large logs
     ///
+    /// .. deprecated::
+    ///     Use :meth:`parse_all_sections` instead, which returns ``dict[str, list[str]]``.
+    ///
     /// This operation always releases the GIL to allow other Python threads to run concurrently.
-    #[allow(deprecated)]
     #[pyo3(name = "parse_segments_parallel", signature = (lines, chunk_size=None))]
     pub fn parse_segments_parallel<'py>(
         &self,
         py: Python<'py>,
         lines: Vec<String>,
-        chunk_size: Option<usize>,
-    ) -> PyResult<Bound<'py, PyList>> {
+        #[allow(unused_variables)] chunk_size: Option<usize>,
+    ) -> PyResult<Bound<'py, PyDict>> {
+        PyErr::warn(
+            py,
+            &py.get_type::<PyDeprecationWarning>(),
+            c"parse_segments_parallel is deprecated. Use parse_all_sections instead, which returns dict[str, list[str]].",
+            1,
+        )?;
         let arc_lines = to_arc_str_vec(&lines);
-
-        // Always release GIL for parallel operations
-        let result = without_gil(py, || {
-            self.inner.parse_segments_parallel(&arc_lines, chunk_size)
+        let named_sections = without_gil(py, || {
+            self.inner.parse_all_sections_arc(&arc_lines)
         });
-
-        // Convert result back to list[list[str]] without intermediate String allocation
-        let mut outer_items = Vec::with_capacity(result.len());
-        for segment in result {
-            // Create PyString directly from Arc<str> reference (no String allocation)
-            let inner_items = segment.iter().map(|line| PyString::new(py, line));
-            let inner_list = PyList::new(py, inner_items)?;
-            outer_items.push(inner_list);
+        let dict = PyDict::new(py);
+        for (key, section_lines) in &named_sections {
+            let py_lines: Vec<&str> = section_lines.iter().map(|s| s.as_ref()).collect();
+            let inner_list = PyList::new(py, py_lines)?;
+            dict.set_item(key.as_str(), inner_list)?;
         }
-        PyList::new(py, outer_items)
+        Ok(dict)
     }
 
     /// Find all pattern matches in parallel with caching
