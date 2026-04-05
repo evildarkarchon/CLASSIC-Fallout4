@@ -18,14 +18,15 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ Windows-native C++ frontends (CLI + Qt GUI) via CXX bridge — existing
 - ✓ 19 business-logic `-core` crates with no PyO3 dependencies — existing
 - ✓ Parity tooling for Node and Python bindings — existing
+- ✓ All deprecated API callers migrated with deprecation warnings — Validated in Phase 1: Deprecated API Migration
 
 ### Active
 
-- [ ] Remove all deprecated APIs (parse_segments, parse_segments_parallel, is_outdated) and migrate callers
+- [ ] Remove all deprecated APIs (parse_segments, parse_segments_parallel, is_outdated) after callers migrated (Phase 2)
 - [ ] Remove dead code (SEGMENT_BOUNDARIES, YamlFormatConfig, PluginAnalyzer.case_cache, PyGpuDetector.inner)
 - [ ] Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete)
 - [ ] Eliminate `scan_all_settings_legacy_bucketed` fallback path
-- [ ] Migrate Python FormID analyzer away from legacy map format with deprecation warnings
+- [x] Migrate Python FormID analyzer away from legacy map format with deprecation warnings — Validated in Phase 1
 - [ ] Cache compiled regex patterns in mod detector hot paths (detect_mods_single/double/batch/important)
 - [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
 - [ ] Replace per-entry regex in `detect_mods_important` with AhoCorasick or combined pattern
@@ -95,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-04 after initialization*
+*Last updated: 2026-04-05 after Phase 1 completion*
