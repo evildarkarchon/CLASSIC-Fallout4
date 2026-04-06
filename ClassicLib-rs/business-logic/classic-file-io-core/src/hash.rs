@@ -33,13 +33,14 @@
 //! ```
 
 use crate::error::FileIOError;
-use dashmap::DashMap;
+use quick_cache::sync::Cache;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, LazyLock};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::LazyLock;
 use tracing::{debug, warn};
 
 /// Optimal chunk size for reading files during hashing (64KB).
@@ -47,9 +48,29 @@ use tracing::{debug, warn};
 const HASH_CHUNK_SIZE: usize = 64 * 1024;
 
 /// Global hash cache for repeated hash calculations.
-/// Uses LRU eviction to prevent unbounded growth.
-static HASH_CACHE: LazyLock<Arc<DashMap<PathBuf, String>>> =
-    LazyLock::new(|| Arc::new(DashMap::with_capacity(256)));
+/// Uses bounded `quick_cache` eviction to prevent unbounded growth.
+static HASH_CACHE: LazyLock<Cache<PathBuf, String>> = LazyLock::new(|| Cache::new(1024));
+
+/// Global counter for hash cache hits.
+static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
+
+/// Global counter for hash cache misses.
+static CACHE_MISSES: AtomicU64 = AtomicU64::new(0);
+
+/// Hash cache performance statistics.
+#[derive(Debug, Clone)]
+pub struct CacheStats {
+    /// Number of cache hits since the last reset.
+    pub hits: u64,
+    /// Number of cache misses since the last reset.
+    pub misses: u64,
+    /// Hit rate as a fraction from 0.0 to 1.0.
+    pub hit_rate: f64,
+    /// Current number of cached entries.
+    pub size: usize,
+    /// Maximum configured cache capacity.
+    pub capacity: usize,
+}
 
 /// File hashing utility for integrity verification.
 ///
@@ -85,9 +106,12 @@ impl FileHasher {
     pub fn hash_file(path: &Path) -> Result<String, FileIOError> {
         // Check cache first
         if let Some(cached_hash) = HASH_CACHE.get(path) {
+            CACHE_HITS.fetch_add(1, Ordering::Relaxed);
             debug!("Cache hit for hash: {}", path.display());
-            return Ok(cached_hash.clone());
+            return Ok(cached_hash);
         }
+
+        CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
 
         // Validate file exists
         if !path.exists() {
@@ -240,6 +264,31 @@ impl FileHasher {
         debug!("Hash cache cleared");
     }
 
+    /// Return canonical cache performance statistics.
+    pub fn cache_stats() -> CacheStats {
+        let hits = CACHE_HITS.load(Ordering::Relaxed);
+        let misses = CACHE_MISSES.load(Ordering::Relaxed);
+        let total = hits + misses;
+
+        CacheStats {
+            hits,
+            misses,
+            hit_rate: if total > 0 {
+                hits as f64 / total as f64
+            } else {
+                0.0
+            },
+            size: HASH_CACHE.len(),
+            capacity: HASH_CACHE.capacity() as usize,
+        }
+    }
+
+    /// Reset only cache performance counters.
+    pub fn reset_cache_stats() {
+        CACHE_HITS.store(0, Ordering::Relaxed);
+        CACHE_MISSES.store(0, Ordering::Relaxed);
+    }
+
     /// Get the number of cached hashes.
     ///
     /// # Returns
@@ -252,7 +301,7 @@ impl FileHasher {
     /// println!("Cached hashes: {}", count);
     /// ```
     pub fn cache_size() -> usize {
-        HASH_CACHE.len()
+        Self::cache_stats().size
     }
 }
 
@@ -440,7 +489,8 @@ mod tests {
 
         let stats = FileHasher::cache_stats();
         assert_eq!(stats.capacity, 1024);
-        assert_eq!(stats.size, 1024);
+        assert!(stats.size <= stats.capacity);
+        assert!(stats.size < 1025);
         assert_eq!(stats.misses, 1025);
         assert_eq!(stats.hits, 0);
 
@@ -449,7 +499,7 @@ mod tests {
         assert_eq!(rehashed, original_hash);
 
         let after_rehash = FileHasher::cache_stats();
-        assert_eq!(after_rehash.size, 1024);
+        assert!(after_rehash.size <= after_rehash.capacity);
         assert_eq!(after_rehash.capacity, 1024);
         assert!(after_rehash.hits + after_rehash.misses >= 1026);
         assert!(after_rehash.misses >= 1025);
