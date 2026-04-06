@@ -25,10 +25,13 @@ use xxhash_rust::xxh3::xxh3_64;
 static SINGLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
 static DOUBLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
 static BATCH_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
+static IMPORTANT_MATCHER_CACHE: LazyLock<Cache<u64, Arc<AhoCorasick>>> =
+    LazyLock::new(|| Cache::new(64));
 
 static SINGLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
 static DOUBLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
 static BATCH_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
+static IMPORTANT_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
 
 /// Convert IndexMap keys to lowercase, preserving insertion order
 fn convert_indexmap_to_lowercase(data: &IndexMap<String, String>) -> IndexMap<String, String> {
@@ -518,6 +521,67 @@ fn build_important_mod_haystack(
     )
 }
 
+fn important_matcher_tokens(entries: &[CoreModEntry]) -> Vec<String> {
+    entries
+        .iter()
+        .map(|entry| entry.detect.to_lowercase())
+        .collect()
+}
+
+fn compile_cached_important_matcher(matcher_tokens: &[String]) -> Result<Arc<AhoCorasick>> {
+    let cache_key = hash_normalized_matcher_tokens(matcher_tokens);
+    if let Some(cached) = IMPORTANT_MATCHER_CACHE.get(&cache_key) {
+        return Ok(cached);
+    }
+
+    let compiled = Arc::new(
+        AhoCorasick::builder()
+            .match_kind(MatchKind::LeftmostLongest)
+            .build(matcher_tokens)
+            .map_err(|e| ScanLogError::InvalidInput(format!("Aho-Corasick error: {}", e)))?,
+    );
+
+    IMPORTANT_MATCHER_COMPILES.fetch_add(1, Ordering::Relaxed);
+    IMPORTANT_MATCHER_CACHE.insert(cache_key, compiled.clone());
+    Ok(compiled)
+}
+
+fn get_important_matcher(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+    let matcher_tokens = important_matcher_tokens(entries);
+    compile_cached_important_matcher(&matcher_tokens)
+}
+
+fn important_match_ids(matcher: &AhoCorasick, haystack: &str) -> HashSet<usize> {
+    matcher
+        .find_iter(haystack)
+        .map(|mat| mat.pattern().as_usize())
+        .collect()
+}
+
+#[doc(hidden)]
+pub fn build_important_mod_haystack_for_bench(
+    crashlog_plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> String {
+    build_important_mod_haystack(crashlog_plugins, xse_modules).1
+}
+
+#[doc(hidden)]
+pub fn build_important_matcher_for_bench(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+    get_important_matcher(entries)
+}
+
+#[doc(hidden)]
+pub fn reset_important_matcher_cache_for_bench() {
+    IMPORTANT_MATCHER_CACHE.clear();
+    IMPORTANT_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+}
+
+#[doc(hidden)]
+pub fn important_matcher_compile_count_for_bench() -> u64 {
+    IMPORTANT_MATCHER_COMPILES.load(Ordering::Relaxed)
+}
+
 #[cfg(test)]
 fn detect_mods_important_legacy(
     entries: &[CoreModEntry],
@@ -610,18 +674,8 @@ fn detect_mods_important_aho(
 
     let (plugin_names_lower_set, all_text) =
         build_important_mod_haystack(crashlog_plugins, xse_modules);
-    let detect_literals: Vec<String> = entries
-        .iter()
-        .map(|entry| entry.detect.to_lowercase())
-        .collect();
-    let matcher = AhoCorasick::builder()
-        .match_kind(MatchKind::LeftmostLongest)
-        .build(&detect_literals)
-        .map_err(|e| ScanLogError::InvalidInput(format!("Aho-Corasick error: {}", e)))?;
-    let matched_pattern_ids: HashSet<usize> = matcher
-        .find_iter(&all_text)
-        .map(|mat| mat.pattern().as_usize())
-        .collect();
+    let matcher = get_important_matcher(entries)?;
+    let matched_pattern_ids = important_match_ids(matcher.as_ref(), &all_text);
 
     for (pattern_index, entry) in entries.iter().enumerate() {
         if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
@@ -958,9 +1012,11 @@ mod tests {
         SINGLE_MATCHER_CACHE.clear();
         DOUBLE_MATCHER_CACHE.clear();
         BATCH_MATCHER_CACHE.clear();
+        IMPORTANT_MATCHER_CACHE.clear();
         SINGLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
         DOUBLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
         BATCH_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+        IMPORTANT_MATCHER_COMPILES.store(0, Ordering::Relaxed);
     }
 
     fn single_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
@@ -995,6 +1051,14 @@ mod tests {
 
     fn double_compile_snapshot_for_tests() -> u64 {
         double_compile_count_for_tests()
+    }
+
+    fn important_matcher_for_tests(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+        get_important_matcher(entries)
+    }
+
+    fn important_compile_count_for_tests() -> u64 {
+        IMPORTANT_MATCHER_COMPILES.load(Ordering::Relaxed)
     }
 
     // ============================================
@@ -1573,6 +1637,31 @@ mod tests {
 
         assert!(output.contains("Long Match is installed"));
         assert!(!output.contains("Short Match is installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_reuses_cached_matcher_for_same_detect_literals() {
+        let entries = vec![
+            make_core_entry(
+                "bakascrapheap",
+                "Baka ScrapHeap",
+                "Synthetic important-mod literal benchmark token.",
+            ),
+            make_core_entry(
+                "x-cell-fo4.dll",
+                "X-Cell",
+                "Synthetic XSE-module benchmark token.",
+            ),
+        ];
+
+        reset_matcher_caches_for_tests();
+        let starting_compiles = important_compile_count_for_tests();
+
+        let first = important_matcher_for_tests(&entries).unwrap();
+        let second = important_matcher_for_tests(&entries).unwrap();
+
+        assert!(Arc::ptr_eq(&first, &second));
+        assert_eq!(important_compile_count_for_tests() - starting_compiles, 1);
     }
 
     #[test]

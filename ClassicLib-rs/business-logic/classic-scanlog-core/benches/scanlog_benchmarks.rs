@@ -18,7 +18,6 @@
 //! ```
 
 use criterion::{BatchSize, BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use aho_corasick::{AhoCorasick, MatchKind};
 use std::collections::HashSet;
 use std::hint::black_box;
 use std::sync::Arc;
@@ -33,9 +32,13 @@ mod db_fixtures;
 use classic_config_core::CoreModEntry;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner,
-    contains_plugin, contains_record, detect_mods_batch, detect_mods_single,
-    detect_plugins_batch, scan_records_batch,
+    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin,
+    contains_record, detect_mods_batch, detect_mods_single, detect_plugins_batch,
+    mod_detector::{
+        build_important_matcher_for_bench, build_important_mod_haystack_for_bench,
+        important_matcher_compile_count_for_bench, reset_important_matcher_cache_for_bench,
+    },
+    scan_records_batch,
 };
 use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
@@ -324,14 +327,37 @@ fn detect_mods_important_aho_count(
     plugins: &IndexMap<String, String>,
     xse_modules: &HashSet<String>,
 ) -> usize {
-    let combined_text = phase5_important_combined_text(plugins, xse_modules);
-    let patterns: Vec<String> = entries.iter().map(|entry| entry.detect.to_lowercase()).collect();
-    let matcher = AhoCorasick::builder()
-        .match_kind(MatchKind::LeftmostLongest)
-        .build(patterns)
+    let combined_text = build_important_mod_haystack_for_bench(plugins, xse_modules);
+    let matcher = build_important_matcher_for_bench(entries)
         .expect("important-mod aho benchmark matcher should build");
 
     matcher.find_iter(&combined_text).count()
+}
+
+fn detect_mods_important_aho_uncached_count(
+    entries: &[CoreModEntry],
+    plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> usize {
+    reset_important_matcher_cache_for_bench();
+    detect_mods_important_aho_count(entries, plugins, xse_modules)
+}
+
+fn detect_mods_important_aho_cached_haystack_count(
+    entries: &[CoreModEntry],
+    combined_text: &str,
+) -> usize {
+    let matcher = build_important_matcher_for_bench(entries)
+        .expect("important-mod aho benchmark matcher should build");
+    matcher.find_iter(combined_text).count()
+}
+
+fn detect_mods_important_aho_compile_only(entries: &[CoreModEntry]) -> usize {
+    reset_important_matcher_cache_for_bench();
+    let _before = important_matcher_compile_count_for_bench();
+    let _matcher = build_important_matcher_for_bench(entries)
+        .expect("important-mod aho benchmark matcher should build");
+    important_matcher_compile_count_for_bench() as usize
 }
 
 fn extract_fixture_plugins(content: &str) -> IndexMap<String, String> {
@@ -910,6 +936,15 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
     });
     cached_regex_group.finish();
 
+    let synthetic_important_haystack =
+        build_important_mod_haystack_for_bench(&synthetic_plugins, &synthetic_xse_modules);
+    let fixture_important_haystack =
+        build_important_mod_haystack_for_bench(&fixture_plugins, &fixture_xse_modules);
+
+    reset_important_matcher_cache_for_bench();
+    let _ = build_important_matcher_for_bench(&important_entries)
+        .expect("important-mod cached matcher should build");
+
     let mut important_group = c.benchmark_group("phase5_detect_mods_important");
     important_group.bench_function("legacy_regex_plugin_and_xse_surface", |b| {
         b.iter_batched(
@@ -930,6 +965,44 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
             BatchSize::SmallInput,
         );
     });
+    important_group.bench_function("aho_compile_only_synthetic_literals", |b| {
+        b.iter_batched(
+            || important_entries.clone(),
+            |entries| black_box(detect_mods_important_aho_compile_only(&entries)),
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.bench_function("aho_build_haystack_only_plugin_and_xse_surface", |b| {
+        b.iter_batched(
+            || (synthetic_plugins.clone(), synthetic_xse_modules.clone()),
+            |(plugins, xse_modules)| {
+                black_box(build_important_mod_haystack_for_bench(
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.bench_function("aho_uncached_plugin_and_xse_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    synthetic_plugins.clone(),
+                    synthetic_xse_modules.clone(),
+                )
+            },
+            |(entries, plugins, xse_modules)| {
+                black_box(detect_mods_important_aho_uncached_count(
+                    &entries,
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
     important_group.bench_function("synthetic_plugin_and_xse_surface", |b| {
         b.iter_batched(
             || {
@@ -940,7 +1013,28 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
                 )
             },
             |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_aho_count(&entries, &plugins, &xse_modules))
+                black_box(detect_mods_important_aho_count(
+                    &entries,
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.bench_function("aho_cached_match_only_plugin_and_xse_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    synthetic_important_haystack.clone(),
+                )
+            },
+            |(entries, combined_text)| {
+                black_box(detect_mods_important_aho_cached_haystack_count(
+                    &entries,
+                    &combined_text,
+                ))
             },
             BatchSize::SmallInput,
         );
@@ -964,6 +1058,25 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
             BatchSize::SmallInput,
         );
     });
+    important_group.bench_function("aho_uncached_real_fixture_plugin_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    fixture_plugins.clone(),
+                    fixture_xse_modules.clone(),
+                )
+            },
+            |(entries, plugins, xse_modules)| {
+                black_box(detect_mods_important_aho_uncached_count(
+                    &entries,
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
     important_group.bench_function("real_fixture_plugin_surface", |b| {
         b.iter_batched(
             || {
@@ -974,7 +1087,28 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
                 )
             },
             |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_aho_count(&entries, &plugins, &xse_modules))
+                black_box(detect_mods_important_aho_count(
+                    &entries,
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.bench_function("aho_cached_match_only_real_fixture_plugin_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    fixture_important_haystack.clone(),
+                )
+            },
+            |(entries, combined_text)| {
+                black_box(detect_mods_important_aho_cached_haystack_count(
+                    &entries,
+                    &combined_text,
+                ))
             },
             BatchSize::SmallInput,
         );
