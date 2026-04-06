@@ -89,6 +89,7 @@ use classic_shared::{define_exceptions, register_exceptions, without_gil, PathLi
 use classic_yaml_core::{self as core, YamlError, YamlOperations};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use yaml_rust2::Yaml;
 
