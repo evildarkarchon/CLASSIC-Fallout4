@@ -132,8 +132,8 @@ use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::SystemTime;
 use thiserror::Error;
 use tracing::trace;
@@ -413,7 +413,9 @@ impl YamlOperations {
     /// assert!(instance.is_cache_enabled());
     /// ```
     pub fn new() -> Self {
-        Self { cache_enabled: true }
+        Self {
+            cache_enabled: true,
+        }
     }
 
     /// Parses a YAML string and returns the first YAML document found.
@@ -1366,7 +1368,7 @@ mod tests {
     use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
-    use tempfile::NamedTempFile;
+    use tempfile::{tempdir, NamedTempFile};
 
     // ============================================================================
     // Basic Parse/Dump Tests (existing)
@@ -1665,24 +1667,26 @@ nested:
 
     #[test]
     fn test_cache_hit_on_second_load() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "cached: true").expect("Write failed");
         let file_path = temp_file.path().to_path_buf();
 
         let ops = YamlOperations::new();
 
-        // First load - should populate cache
-        let _ = ops.load_yaml_file(&file_path).expect("Load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("First load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("Second load should succeed");
 
-        // Verify this specific file IS in the cache
-        assert!(
-            YAML_CACHE.contains_key(&file_path),
-            "File should be in cache after first load"
-        );
-
-        // Second load should use cache (file unchanged)
-        let result = ops.load_yaml_file(&file_path);
-        assert!(result.is_ok());
+        let stats = cache_stats();
+        assert_eq!(stats.misses, 1, "First unchanged load should miss once");
+        assert_eq!(stats.hits, 1, "Second unchanged load should hit once");
+        assert_eq!(stats.size, 1, "Exactly one file should be cached");
     }
 
     #[test]
@@ -1724,6 +1728,9 @@ nested:
 
     #[test]
     fn test_cache_disabled_always_reads() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "cached: false").expect("Write failed");
         let file_path = temp_file.path().to_path_buf();
@@ -1731,16 +1738,20 @@ nested:
         let mut ops = YamlOperations::new();
         ops.set_cache_enabled(false);
 
-        // Load file with caching disabled
-        let _ = ops.load_yaml_file(&file_path).expect("Load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("First load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("Second load should succeed");
 
-        // Verify this specific file is NOT in the cache
-        // (We can't check total count due to parallel tests)
-        let is_cached = YAML_CACHE.contains_key(&file_path);
-        assert!(
-            !is_cached,
-            "File should not be cached when caching is disabled"
+        let stats = cache_stats();
+        assert_eq!(stats.hits, 0, "Disabled caching should not record hits");
+        assert_eq!(
+            stats.misses, 2,
+            "Disabled caching should re-read on every load"
         );
+        assert_eq!(stats.size, 0, "Disabled caching should not retain entries");
     }
 
     #[test]
@@ -2717,7 +2728,19 @@ list:
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
         assert_eq!(stats.size, 0);
-        assert_eq!(stats.total_bytes, 0);
+
+        let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
+        let object = serialized
+            .as_object()
+            .expect("Serialized cache stats should be an object");
+
+        assert_eq!(object.len(), 5, "Cache stats should expose five fields");
+        assert!(object.contains_key("hits"));
+        assert!(object.contains_key("misses"));
+        assert!(object.contains_key("hit_rate"));
+        assert!(object.contains_key("size"));
+        assert!(object.contains_key("capacity"));
+        assert!(!object.contains_key("total_bytes"));
     }
 
     #[test]
@@ -2730,25 +2753,24 @@ list:
 
         let ops = YamlOperations::new();
 
-        // Load file to ensure at least one cache entry exists
         let _ = ops
             .load_yaml_file(temp_file.path())
-            .expect("Load should succeed");
+            .expect("First load should succeed");
+        let _ = ops
+            .load_yaml_file(temp_file.path())
+            .expect("Second load should succeed");
 
         let stats = cache_stats();
-        // Cache should have at least one entry (our file)
-        assert!(stats.size >= 1, "Cache should have at least one entry");
-        assert!(stats.total_bytes > 0, "Cache should have content bytes");
-        // Total requests should be non-zero
-        assert!(
-            stats.hits + stats.misses > 0,
-            "Should have at least one hit or miss"
+        assert_eq!(stats.misses, 1, "Initial read should miss once");
+        assert_eq!(stats.hits, 1, "Second unchanged read should hit once");
+        assert_eq!(stats.size, 1, "One file should remain cached");
+        assert_eq!(
+            stats.hit_rate, 0.5,
+            "Hit rate should reflect one hit in two reads"
         );
-        // Hit rate should be a valid fraction
-        assert!(
-            stats.hit_rate >= 0.0 && stats.hit_rate <= 1.0,
-            "Hit rate should be between 0.0 and 1.0"
-        );
+
+        let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
+        assert_eq!(serialized["capacity"].as_u64(), Some(128));
     }
 
     #[test]
@@ -2774,7 +2796,34 @@ list:
         assert_eq!(stats.hits, 0);
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
-        // size and total_bytes depend on cache content, not stats counters
+        assert_eq!(
+            stats.size, 1,
+            "Resetting counters should not clear cache entries"
+        );
+    }
+
+    #[test]
+    fn test_cache_size_is_bounded_without_assuming_evicted_key() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let ops = YamlOperations::new();
+
+        for index in 0..129 {
+            let path = temp_dir.path().join(format!("cache-{index}.yaml"));
+            fs::write(&path, format!("index: {index}\n")).expect("Failed to write test YAML");
+            let _ = ops.load_yaml_file(&path).expect("Load should succeed");
+        }
+
+        let stats = cache_stats();
+        let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
+
+        assert_eq!(serialized["capacity"].as_u64(), Some(128));
+        assert!(
+            stats.size <= 128,
+            "Bounded cache should never report more entries than capacity"
+        );
     }
 
     // ============================================================================
@@ -2913,6 +2962,7 @@ root:
     #[test]
     fn test_load_yaml_file_with_cache_disabled_no_cache_entry() {
         clear_global_yaml_cache();
+        reset_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "no_cache: true").expect("Write failed");
@@ -2927,7 +2977,12 @@ root:
             Some(Yaml::Boolean(true))
         );
 
-        // Should NOT be in cache
-        assert!(!YAML_CACHE.contains_key(&file_path));
+        let stats = cache_stats();
+        assert_eq!(
+            stats.size, 0,
+            "Disabled cache reads should not retain entries"
+        );
+        assert_eq!(stats.hits, 0, "Disabled cache reads should not count hits");
+        assert_eq!(stats.misses, 1, "Disabled cache reads should count a miss");
     }
 }
