@@ -30,7 +30,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Performance
 
-- [ ] **PERF-01**: Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch` keyed by hash of mod list contents
+- [x] **PERF-01**: Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch` keyed by hash of mod list contents
 - [ ] **PERF-02**: Replace per-entry `Regex::new` in `detect_mods_important` with `str::contains` (patterns are escaped literals) or AhoCorasick for large lists
 - [x] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
 - [ ] **PERF-04**: Add criterion benchmarks for `detect_mods_important`, `detect_mods_single`/`batch`, `detect_crash_pattern`, and mmap read throughput with before/after measurements
@@ -61,7 +61,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
 - [x] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
 - [x] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
-- [ ] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
+- [x] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
 
 ## Out of Scope
 
@@ -99,7 +99,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAFE-03 | Phase 3 | Complete |
 | SAFE-04 | Phase 3 | Complete |
 | SAFE-05 | Phase 6 | Pending |
-| PERF-01 | Phase 5 | Pending |
+| PERF-01 | Phase 5 | Complete |
 | PERF-02 | Phase 5 | Pending |
 | PERF-03 | Phase 5 | Complete |
 | PERF-04 | Phase 5 | Pending |
@@ -118,7 +118,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONS-01 | Phase 7 | Pending |
 | CONS-02 | Phase 3 | Complete |
 | CONS-03 | Phase 4 | Complete |
-| CONS-04 | Phase 5 | Pending |
+| CONS-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 35 total

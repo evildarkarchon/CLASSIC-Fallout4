@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-pattern-caching-and-performance-03-PLAN.md
-last_updated: "2026-04-06T07:23:16.556Z"
+stopped_at: Completed 05-pattern-caching-and-performance-01-PLAN.md
+last_updated: "2026-04-06T07:30:02.746Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
   percent: 6
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 Phase: 05 (pattern-caching-and-performance) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -65,6 +65,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 04-bounded-cache-replacement P04 | 8 min | 2 tasks | 12 files |
 | Phase 04-bounded-cache-replacement P05 | 15min | 2 tasks | 13 files |
 | Phase 05-pattern-caching-and-performance P03 | 4min | 2 tasks | 2 files |
+| Phase 05-pattern-caching-and-performance P01 | 8min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 04-bounded-cache-replacement]: Keep FileHasher.cache_size() as a deferred compatibility adapter while cache_stats/reset_cache_stats own the Phase 4 runtime smoke contract.
 - [Phase 05-pattern-caching-and-performance]: Kept bridge regression coverage focused on observable main_error output instead of parser internals.
 - [Phase 05-pattern-caching-and-performance]: Reused one module-level default LogParser with LazyLock while preserving empty-string fail-soft behavior for parse failures.
+- [Phase 05-pattern-caching-and-performance]: Keep single, double, and batch matcher caches separate while sharing normalization and compile helpers.
+- [Phase 05-pattern-caching-and-performance]: Validate bounded matcher caches by reuse and capacity behavior instead of eviction-victim order.
 
 ### Pending Todos
 
@@ -121,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T07:23:16.553Z
-Stopped at: Completed 05-pattern-caching-and-performance-03-PLAN.md
+Last session: 2026-04-06T07:30:02.741Z
+Stopped at: Completed 05-pattern-caching-and-performance-01-PLAN.md
 Resume file: None
