@@ -12,6 +12,7 @@
 use crate::report::ReportFragment;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
+use thiserror::Error;
 
 /// Global FCX mode handler for shared state across scan sessions
 ///
@@ -22,6 +23,18 @@ use parking_lot::Mutex;
 /// to clear cached results.
 pub static GLOBAL_FCX_HANDLER: Lazy<Mutex<FcxModeHandler>> =
     Lazy::new(|| Mutex::new(FcxModeHandler::new(false)));
+
+/// Typed outcome for resetting the global FCX handler state.
+#[derive(Clone, Debug, Error, Eq, PartialEq)]
+pub enum FcxResetError {
+    /// The global handler was already clean, so no reset work was needed.
+    #[error("FCX global state reset was unnecessary")]
+    Unnecessary,
+
+    /// Reserved binding-visible failure path for future reset precondition errors.
+    #[error("FCX global state reset failed: {0}")]
+    Failed(&'static str),
+}
 
 /// Configuration issue detected by FCX mode
 #[derive(Clone, Debug)]
@@ -265,6 +278,13 @@ impl FcxModeHandler {
                 .is_some_and(|s| !s.is_empty())
     }
 
+    fn needs_reset(&self) -> bool {
+        self.main_files_check.is_some()
+            || self.game_files_check.is_some()
+            || !self.detected_issues.is_empty()
+            || self.checks_run
+    }
+
     /// Reset all FCX check results (for new scan session)
     pub fn reset(&mut self) {
         self.main_files_check = None;
@@ -285,17 +305,22 @@ impl FcxModeHandler {
     /// use classic_scanlog_core::FcxModeHandler;
     ///
     /// // Reset global state before starting a new scan
-    /// FcxModeHandler::reset_global_state();
+    /// let _ = FcxModeHandler::reset_global_state();
     /// ```
     ///
     /// # Thread Safety
     ///
     /// This method is thread-safe and can be called from multiple threads
     /// without risk of data races. It uses a mutex-protected global state.
-    pub fn reset_global_state() {
-        if let Some(mut handler) = GLOBAL_FCX_HANDLER.try_lock() {
-            handler.reset();
+    pub fn reset_global_state() -> Result<(), FcxResetError> {
+        let mut handler = GLOBAL_FCX_HANDLER.lock();
+
+        if !handler.needs_reset() {
+            return Err(FcxResetError::Unnecessary);
         }
+
+        handler.reset();
+        Ok(())
     }
 
     /// Create a disabled FCX handler (convenience constructor)
@@ -325,6 +350,7 @@ impl FcxModeHandler {
 mod tests {
     use super::*;
     use std::{
+        sync::Arc,
         sync::{
             atomic::{AtomicBool, Ordering},
             mpsc, LazyLock, Mutex as StdMutex,
@@ -458,8 +484,8 @@ mod tests {
 
         let (lock_ready_tx, lock_ready_rx) = mpsc::channel();
         let (release_tx, release_rx) = mpsc::channel();
-        let reset_finished = AtomicBool::new(false);
-        let reset_finished_ref = &reset_finished;
+        let reset_finished = Arc::new(AtomicBool::new(false));
+        let reset_finished_ref = Arc::clone(&reset_finished);
 
         let lock_holder = thread::spawn(move || {
             let _handler = GLOBAL_FCX_HANDLER.lock();
