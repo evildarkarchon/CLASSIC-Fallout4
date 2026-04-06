@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-pattern-caching-and-performance-04-PLAN.md
-last_updated: "2026-04-06T07:51:45.246Z"
+stopped_at: Completed 05-pattern-caching-and-performance-05-PLAN.md
+last_updated: "2026-04-06T08:15:20.601Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
+  completed_phases: 4
+  total_plans: 20
+  completed_plans: 19
   percent: 6
 ---
 
@@ -68,6 +68,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 05-pattern-caching-and-performance P01 | 8min | 2 tasks | 3 files |
 | Phase 05-pattern-caching-and-performance P02 | 9min | 2 tasks | 1 files |
 | Phase 05-pattern-caching-and-performance P04 | 12min | 2 tasks | 3 files |
+| Phase 05-pattern-caching-and-performance P05 | 18min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,8 @@ Recent decisions affecting current work:
 - [Phase 05-pattern-caching-and-performance]: Kept Phase 5 performance proof in the existing scanlog Criterion harness and mirrored bridge crash-pattern behavior with a Rust helper instead of an FFI benchmark.
 - [Phase 05-pattern-caching-and-performance]: Primed cached single and batch matchers before timed loops and used Criterion iter_batched to avoid timing benchmark input setup.
 - [Phase 05-pattern-caching-and-performance]: Scoped the legacy important-mod regex helper to tests after bench verification exposed a dead-code lint failure in non-test builds.
+- [Phase 05-pattern-caching-and-performance]: Measured the double-matcher reuse proof with a scoped compile-count snapshot instead of an absolute global counter.
+- [Phase 05-pattern-caching-and-performance]: Serialized detect_mods_double regression tests so grouped runs cannot pollute the shared double-matcher compile counter.
 
 ### Pending Todos
 
@@ -132,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T07:51:45.241Z
-Stopped at: Completed 05-pattern-caching-and-performance-04-PLAN.md
+Last session: 2026-04-06T08:15:20.596Z
+Stopped at: Completed 05-pattern-caching-and-performance-05-PLAN.md
 Resume file: None
