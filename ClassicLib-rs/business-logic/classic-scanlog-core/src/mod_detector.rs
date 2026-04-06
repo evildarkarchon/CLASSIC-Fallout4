@@ -3,8 +3,8 @@
 //! This module provides exact behavioral parity with Python's DetectMods
 //! while leveraging Rust's performance optimizations.
 
-use aho_corasick::{AhoCorasick, MatchKind};
 use crate::error::{Result, ScanLogError};
+use aho_corasick::{AhoCorasick, MatchKind};
 use classic_config_core::{
     CoreModEntry, CoreModExclude, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
 };
@@ -22,12 +22,9 @@ use xxhash_rust::xxh3::xxh3_64;
 // YAML/config content. Truly constant regexes should compile through their own LazyLock
 // statics, but the single/double/batch hot paths intentionally stay on bounded hash-keyed
 // matcher caches because their alternation bodies vary with mod-list inputs.
-static SINGLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
-    LazyLock::new(|| Cache::new(64));
-static DOUBLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
-    LazyLock::new(|| Cache::new(64));
-static BATCH_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
-    LazyLock::new(|| Cache::new(64));
+static SINGLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
+static DOUBLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
+static BATCH_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
 
 static SINGLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
 static DOUBLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
@@ -507,16 +504,21 @@ fn build_important_mod_haystack(
     crashlog_plugins: &IndexMap<String, String>,
     xse_modules: &HashSet<String>,
 ) -> (HashSet<String>, String) {
-    let plugin_names_lower: Vec<String> = crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
+    let plugin_names_lower: Vec<String> =
+        crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
     let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
     let plugins_text = plugin_names_lower.join(" ");
 
     let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
     let modules_text = module_names_lower.join(" ");
 
-    (plugin_names_lower_set, format!("{} {}", plugins_text, modules_text))
+    (
+        plugin_names_lower_set,
+        format!("{} {}", plugins_text, modules_text),
+    )
 }
 
+#[cfg(test)]
 fn detect_mods_important_legacy(
     entries: &[CoreModEntry],
     crashlog_plugins: &IndexMap<String, String>,
@@ -525,7 +527,8 @@ fn detect_mods_important_legacy(
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
 
-    let (plugin_names_lower_set, all_text) = build_important_mod_haystack(crashlog_plugins, xse_modules);
+    let (plugin_names_lower_set, all_text) =
+        build_important_mod_haystack(crashlog_plugins, xse_modules);
 
     for entry in entries {
         if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
@@ -605,8 +608,12 @@ fn detect_mods_important_aho(
         return Ok(lines);
     }
 
-    let (plugin_names_lower_set, all_text) = build_important_mod_haystack(crashlog_plugins, xse_modules);
-    let detect_literals: Vec<String> = entries.iter().map(|entry| entry.detect.to_lowercase()).collect();
+    let (plugin_names_lower_set, all_text) =
+        build_important_mod_haystack(crashlog_plugins, xse_modules);
+    let detect_literals: Vec<String> = entries
+        .iter()
+        .map(|entry| entry.detect.to_lowercase())
+        .collect();
     let matcher = AhoCorasick::builder()
         .match_kind(MatchKind::LeftmostLongest)
         .build(&detect_literals)
@@ -885,7 +892,8 @@ fn compile_cached_matcher(
             .join("|")
     );
     let compiled = Arc::new(
-        Regex::new(&pattern).map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
+        Regex::new(&pattern)
+            .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
     );
 
     compile_counter.fetch_add(1, Ordering::Relaxed);
@@ -937,8 +945,8 @@ fn get_batch_matcher(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{LogParser, plugin_analyzer::PluginAnalyzer, segment_key};
     use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
-    use crate::{plugin_analyzer::PluginAnalyzer, segment_key, LogParser};
     use serial_test::serial;
     use std::sync::Arc as StdArc;
     use std::sync::Arc;
@@ -1526,8 +1534,8 @@ mod tests {
         let plugins = important_fixture_plugins();
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let legacy = detect_mods_important_legacy(&entries, &plugins, Some("amd"), &xse_modules)
-            .unwrap();
+        let legacy =
+            detect_mods_important_legacy(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
         let aho = detect_mods_important_aho(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
 
         assert_eq!(aho, legacy);
@@ -1590,7 +1598,9 @@ mod tests {
 
         assert!(output.contains("❓ NVIDIA High Resolution DLC is installed"));
         assert!(!output.contains("Skipped Entry"));
-        assert!(output.contains("❌ Engine Fixes is not installed! Highly recommended for stability."));
+        assert!(
+            output.contains("❌ Engine Fixes is not installed! Highly recommended for stability.")
+        );
         assert!(output.contains("Link: https://example.com/mod"));
     }
 
@@ -1605,8 +1615,7 @@ mod tests {
         plugins.insert("DLCUltraHighResolutionXesm".to_string(), "01".to_string());
         let xse_modules: HashSet<String> = HashSet::new();
 
-        let legacy = detect_mods_important_legacy(&entries, &plugins, None, &xse_modules)
-            .unwrap();
+        let legacy = detect_mods_important_legacy(&entries, &plugins, None, &xse_modules).unwrap();
         let aho = detect_mods_important_aho(&entries, &plugins, None, &xse_modules).unwrap();
 
         assert!(legacy.is_empty());

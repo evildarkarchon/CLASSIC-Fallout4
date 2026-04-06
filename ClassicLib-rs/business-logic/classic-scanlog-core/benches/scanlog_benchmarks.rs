@@ -17,7 +17,8 @@
 //! cargo bench --bench scanlog_benchmarks -- --test
 //! ```
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{BatchSize, BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use std::collections::HashSet;
 use std::hint::black_box;
 use std::sync::Arc;
 use std::time::Duration;
@@ -28,9 +29,11 @@ mod common;
 #[path = "../../../benches/common/db_fixtures.rs"]
 mod db_fixtures;
 
+use classic_config_core::CoreModEntry;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    FormIDAnalyzerCore, LogParser, PatternMatcher, RecordScanner, contains_plugin, contains_record,
+    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin,
+    contains_record, detect_mods_batch, detect_mods_important, detect_mods_single,
     detect_plugins_batch, scan_records_batch,
 };
 use classic_shared_core::get_runtime;
@@ -103,6 +106,157 @@ fn create_record_types() -> Vec<String> {
         "DOOR".to_string(),
         "MISC".to_string(),
     ]
+}
+
+fn create_phase5_cached_regex_yaml() -> IndexMap<String, String> {
+    IndexMap::from([
+        (
+            "unofficial fallout 4 patch".to_string(),
+            "Unofficial Fallout 4 Patch\nBaseline hotspot token.".to_string(),
+        ),
+        (
+            "workshop framework".to_string(),
+            "Workshop Framework\nSynthetic cached-regex benchmark token.".to_string(),
+        ),
+        (
+            "sim settlements 2".to_string(),
+            "Sim Settlements 2\nSynthetic cached-regex benchmark token.".to_string(),
+        ),
+        (
+            "hudframework".to_string(),
+            "HUDFramework\nSynthetic cached-regex benchmark token.".to_string(),
+        ),
+        (
+            "looksmenu".to_string(),
+            "LooksMenu\nSynthetic cached-regex benchmark token.".to_string(),
+        ),
+        (
+            "fallui".to_string(),
+            "FallUI\nSynthetic cached-regex benchmark token.".to_string(),
+        ),
+    ])
+}
+
+fn create_phase5_synthetic_plugins(count: usize) -> IndexMap<String, String> {
+    let seed_plugins = [
+        "Unofficial Fallout 4 Patch.esp",
+        "Workshop Framework.esm",
+        "Sim Settlements 2.esm",
+        "HUDFramework.esm",
+        "LooksMenu.esp",
+        "FallUI.esp",
+    ];
+
+    let mut plugins = IndexMap::new();
+    for index in 0..count {
+        let id = format!("{:02X}", index % 0xFD);
+        let plugin_name = if index < seed_plugins.len() {
+            seed_plugins[index].to_string()
+        } else {
+            format!("SyntheticBenchmarkMod{:03}.esp", index)
+        };
+        plugins.insert(plugin_name, id);
+    }
+    plugins
+}
+
+fn create_phase5_batch_plugins(
+    batch_size: usize,
+    plugins_per_log: usize,
+) -> Vec<IndexMap<String, String>> {
+    (0..batch_size)
+        .map(|batch_index| {
+            let mut plugins = create_phase5_synthetic_plugins(plugins_per_log);
+            plugins.insert(
+                format!("BatchUnique{:02}.esp", batch_index),
+                format!("{:02X}", (batch_index + plugins_per_log) % 0xFD),
+            );
+            plugins
+        })
+        .collect()
+}
+
+fn create_phase5_important_entries() -> Vec<CoreModEntry> {
+    vec![
+        CoreModEntry {
+            detect: "Unofficial Fallout 4 Patch.esp".to_string(),
+            name: "Unofficial Fallout 4 Patch".to_string(),
+            description: "Install the unofficial patch for baseline stability coverage."
+                .to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        },
+        CoreModEntry {
+            detect: "f4se_plugin_preloader".to_string(),
+            name: "F4SE Plugin Preloader".to_string(),
+            description: "Important XSE module path for hotspot matching.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        },
+        CoreModEntry {
+            detect: "bakascrapheap".to_string(),
+            name: "Baka ScrapHeap".to_string(),
+            description: "Synthetic important-mod literal benchmark token.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        },
+        CoreModEntry {
+            detect: "x-cell-fo4.dll".to_string(),
+            name: "X-Cell".to_string(),
+            description: "Synthetic XSE-module benchmark token.".to_string(),
+            gpu: None,
+            gpu_mismatch_warning: None,
+            exclude_when: None,
+        },
+    ]
+}
+
+fn create_phase5_important_xse_modules() -> HashSet<String> {
+    HashSet::from([
+        "f4se_plugin_preloader.dll".to_string(),
+        "x-cell-fo4.dll".to_string(),
+    ])
+}
+
+fn extract_fixture_plugins(content: &str) -> IndexMap<String, String> {
+    let parser = LogParser::new(None).expect("fixture parser should build");
+    let fixture_lines: Vec<Arc<str>> = content.lines().map(Arc::<str>::from).collect();
+    let sections = parser.parse_all_sections_arc(&fixture_lines);
+    let plugin_lines: Vec<String> = sections
+        .get(classic_scanlog_core::segment_key::PLUGINS)
+        .expect("fixture should contain a plugins section")
+        .iter()
+        .map(|line| line.to_string())
+        .collect();
+    let analyzer = PluginAnalyzer::new(
+        vec![],
+        vec![],
+        "Buffout 4".to_string(),
+        "1.10.163".to_string(),
+        "1.2.72".to_string(),
+    )
+    .expect("fixture plugin analyzer should build");
+    let (plugins, _limit_triggered, _limit_disabled) = analyzer
+        .loadorder_scan_log(&plugin_lines, None, None)
+        .expect("fixture plugins should parse");
+    plugins
+}
+
+/// Rust-side replica of the C++ bridge `detect_crash_pattern` helper.
+/// This benchmark remains in the core Criterion harness and intentionally is not an FFI benchmark.
+fn bridge_style_detect_crash_pattern_with_parser(parser: &LogParser, lines: &[String]) -> String {
+    match parser.parse_crash_header(lines) {
+        Ok(header) => header.get("main_error").cloned().unwrap_or_default(),
+        Err(_) => String::new(),
+    }
+}
+
+fn bridge_style_detect_crash_pattern_uncached(lines: &[String]) -> String {
+    let parser = LogParser::new(None).expect("default crash-pattern parser should build");
+    bridge_style_detect_crash_pattern_with_parser(&parser, lines)
 }
 
 // =============================================================================
@@ -569,6 +723,114 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
     group.finish();
 }
 
+fn phase5_hotspot_benchmarks(c: &mut Criterion) {
+    let yaml_dict = create_phase5_cached_regex_yaml();
+    let synthetic_plugins = create_phase5_synthetic_plugins(48);
+    let batch_plugins = create_phase5_batch_plugins(16, 40);
+    let important_entries = create_phase5_important_entries();
+    let synthetic_xse_modules = create_phase5_important_xse_modules();
+    let fixture_plugins = extract_fixture_plugins(SAMPLE_LOG_LARGE);
+    let fixture_xse_modules: HashSet<String> = HashSet::new();
+
+    let _ = detect_mods_single(yaml_dict.clone(), synthetic_plugins.clone())
+        .expect("single matcher cache priming should succeed");
+    let _ = detect_mods_batch(yaml_dict.clone(), batch_plugins.clone())
+        .expect("batch matcher cache priming should succeed");
+
+    let mut cached_regex_group = c.benchmark_group("phase5_cached_regex_paths");
+    cached_regex_group.throughput(Throughput::Elements(synthetic_plugins.len() as u64));
+    cached_regex_group.bench_function("detect_mods_single_synthetic_cached", |b| {
+        b.iter_batched(
+            || (yaml_dict.clone(), synthetic_plugins.clone()),
+            |(yaml_dict, plugins)| {
+                detect_mods_single(yaml_dict, plugins)
+                    .expect("single cached benchmark should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    cached_regex_group.bench_function("detect_mods_batch_synthetic_cached", |b| {
+        b.iter_batched(
+            || (yaml_dict.clone(), batch_plugins.clone()),
+            |(yaml_dict, plugins)| {
+                detect_mods_batch(yaml_dict, plugins)
+                    .expect("batch cached benchmark should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    cached_regex_group.finish();
+
+    let mut important_group = c.benchmark_group("phase5_detect_mods_important");
+    important_group.bench_function("synthetic_plugin_and_xse_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    synthetic_plugins.clone(),
+                    synthetic_xse_modules.clone(),
+                )
+            },
+            |(entries, plugins, xse_modules)| {
+                detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules)
+                    .expect("important synthetic benchmark should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.bench_function("real_fixture_plugin_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    fixture_plugins.clone(),
+                    fixture_xse_modules.clone(),
+                )
+            },
+            |(entries, plugins, xse_modules)| {
+                detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules)
+                    .expect("important fixture benchmark should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.finish();
+
+    let bridge_fixture_lines: Vec<String> = SAMPLE_LOG_LARGE.lines().map(str::to_string).collect();
+    let bridge_header_excerpt: Vec<String> = SAMPLE_LOG_LARGE
+        .lines()
+        .take(24)
+        .map(str::to_string)
+        .collect();
+    let cached_bridge_parser =
+        LogParser::new(None).expect("cached crash-pattern parser should build");
+
+    let mut bridge_group = c.benchmark_group("phase5_bridge_crash_pattern_replica");
+    bridge_group.bench_function("parser_per_call_real_fixture", |b| {
+        b.iter(|| bridge_style_detect_crash_pattern_uncached(black_box(&bridge_fixture_lines)));
+    });
+    bridge_group.bench_function("cached_parser_real_fixture", |b| {
+        b.iter(|| {
+            bridge_style_detect_crash_pattern_with_parser(
+                black_box(&cached_bridge_parser),
+                black_box(&bridge_fixture_lines),
+            )
+        });
+    });
+    bridge_group.bench_function("parser_per_call_header_excerpt", |b| {
+        b.iter(|| bridge_style_detect_crash_pattern_uncached(black_box(&bridge_header_excerpt)));
+    });
+    bridge_group.bench_function("cached_parser_header_excerpt", |b| {
+        b.iter(|| {
+            bridge_style_detect_crash_pattern_with_parser(
+                black_box(&cached_bridge_parser),
+                black_box(&bridge_header_excerpt),
+            )
+        });
+    });
+    bridge_group.finish();
+}
+
 // =============================================================================
 // Criterion Group Configuration
 // =============================================================================
@@ -584,7 +846,8 @@ criterion_group! {
         plugin_detection_benchmarks,
         record_scanning_benchmarks,
         full_pipeline_benchmarks,
-        parser_creation_benchmarks
+        parser_creation_benchmarks,
+        phase5_hotspot_benchmarks
 }
 
 criterion_main!(benches);
