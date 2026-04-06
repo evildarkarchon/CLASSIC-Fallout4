@@ -250,14 +250,27 @@ Contributor notes:
 - `hash_file(path) -> Result<String, FileIOError>`
 - `hash_files_parallel(paths) -> Result<Vec<(PathBuf, Option<String>)>, FileIOError>`
 - `hash_files_to_map(paths) -> Result<HashMap<PathBuf, String>, FileIOError>`
+- `cache_stats() -> CacheStats`
+- `reset_cache_stats()`
 - `clear_cache()`
 - `cache_size() -> usize`
+
+`CacheStats` exposes the canonical Phase 4 cache contract:
+
+- `hits: u64`
+- `misses: u64`
+- `hit_rate: f64`
+- `size: usize`
+- `capacity: usize`
 
 Contributor notes:
 
 - the hash cache is global and keyed only by `PathBuf`
+- the hash cache is bounded to 1024 entries through `quick_cache::sync::Cache`
 - the implementation does not compare mtimes or file size before returning a cached hash
 - callers that hash mutable files should clear the cache explicitly when freshness matters
+- `clear_cache()` empties cached entries only; `reset_cache_stats()` clears hit/miss counters without dropping entries
+- Phase 4 validates bounded `quick_cache` eviction semantics rather than strict LRU victim order, because the locked cache implementation is `quick_cache`
 - batch hashing is fail-soft per file: the overall call succeeds and failed files get `None`
 
 ## `LogCollector`

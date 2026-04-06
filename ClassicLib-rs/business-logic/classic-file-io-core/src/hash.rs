@@ -39,8 +39,8 @@ use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::LazyLock;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::{debug, warn};
 
 /// Optimal chunk size for reading files during hashing (64KB).
@@ -253,6 +253,8 @@ impl FileHasher {
     /// Clear the hash cache.
     ///
     /// Useful for testing or when files are known to have changed.
+    /// This clears cached hashes only; hit/miss counters remain available until
+    /// `reset_cache_stats()` is called.
     ///
     /// # Example
     /// ```rust
@@ -284,6 +286,9 @@ impl FileHasher {
     }
 
     /// Reset only cache performance counters.
+    ///
+    /// This preserves cached hash entries so callers can clear observability
+    /// independently from cache contents during tests and benchmarks.
     pub fn reset_cache_stats() {
         CACHE_HITS.store(0, Ordering::Relaxed);
         CACHE_MISSES.store(0, Ordering::Relaxed);
@@ -444,8 +449,8 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_hash_cache_stats_reset_preserves_cache_entries(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn test_hash_cache_stats_reset_preserves_cache_entries()
+    -> Result<(), Box<dyn std::error::Error>> {
         FileHasher::clear_cache();
         FileHasher::reset_cache_stats();
 
@@ -462,6 +467,32 @@ mod tests {
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.size, 1);
         assert_eq!(stats.capacity, 1024);
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn test_hash_clear_cache_empties_entries_without_resetting_stats()
+    -> Result<(), Box<dyn std::error::Error>> {
+        FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
+
+        let mut temp_file = NamedTempFile::new()?;
+        temp_file.write_all(b"clear cache")?;
+        temp_file.flush()?;
+
+        FileHasher::hash_file(temp_file.path())?;
+        let before_clear = FileHasher::cache_stats();
+        assert_eq!(before_clear.size, 1);
+        assert_eq!(before_clear.misses, 1);
+
+        FileHasher::clear_cache();
+        let after_clear = FileHasher::cache_stats();
+        assert_eq!(after_clear.size, 0);
+        assert_eq!(after_clear.capacity, 1024);
+        assert_eq!(after_clear.misses, 1);
+        assert_eq!(after_clear.hits, 0);
 
         Ok(())
     }
