@@ -47,8 +47,8 @@ This crate exposes its public API from the crate root in `src/lib.rs`.
 
 ## Cache and cache-control API
 
-- `CacheStats` - typed cache hit/miss snapshot
-- `cache_stats()` - returns global cache counters and size information
+- `CacheStats` - typed cache hit/miss snapshot with fixed-capacity observability
+- `cache_stats()` - returns global cache counters plus current size/capacity information
 - `reset_cache_stats()` - resets global hit/miss counters
 - `clear_global_yaml_cache()` - clears the global file cache
 
@@ -148,14 +148,16 @@ Fields:
 - `misses`
 - `hit_rate`
 - `size`
-- `total_bytes`
+- `capacity`
 
 Contributor notes:
 
 - The counters are global, not per-`YamlOperations` instance.
-- `size` and `total_bytes` are derived from the shared `DashMap` cache.
+- `size` reports the current number of cached YAML files.
+- `capacity` is fixed at `128` entries for the process-global YAML cache.
 - `reset_cache_stats()` resets only hit/miss counters; it does not clear cached entries.
-- `YamlOperations::get_cache_stats()` is a separate legacy-style helper that returns only `cached_files` and `total_bytes` in an untyped `HashMap`.
+- `YamlOperations::get_cache_stats()` remains a legacy-style helper; it now adapts the canonical stats contract and supplements it with YAML-specific `total_bytes` for callers that still need that detail.
+- Phase 4 uses `quick_cache` as the locked bounded-cache implementation. Acceptance targets bounded eviction plus observable stats, not proof of strict LRU victim order.
 
 ## `YamlError`
 
@@ -205,11 +207,12 @@ The source-visible file-loading flow is:
 
 1. Construct or reuse a `YamlOperations` value.
 2. Call `load_yaml_file(path)`.
-3. If per-instance caching is enabled, the crate checks the global `YAML_CACHE` by the exact `PathBuf` key.
+3. If per-instance caching is enabled, the crate checks the global bounded `YAML_CACHE` by the exact `PathBuf` key.
 4. If a cached entry exists and the file's current modification time is not newer than the cached timestamp, the crate:
    - increments the global hit counter
    - returns a clone of the cached parsed `Yaml`
 5. Otherwise the crate:
+   - removes any stale cached entry for that exact path before reloading
    - increments the global miss counter
    - reads the file synchronously with `std::fs::read_to_string`
    - parses YAML with `YamlLoader`
@@ -227,6 +230,7 @@ Write flow for `save_yaml_file(path, yaml)`:
 Important cache notes:
 
 - The cache is process-global, shared by all `YamlOperations` instances.
+- The backing store is `quick_cache::sync::Cache<PathBuf, CachedYaml>` with a fixed capacity of `128` entries.
 - `set_cache_enabled(false)` disables cache reads and writes only for that instance; it does not disable the global cache for other instances.
 - Cache invalidation is mtime-based. The source does not canonicalize paths before caching, so different path spellings to the same file may produce distinct cache entries.
 
@@ -270,7 +274,7 @@ This crate is synchronous.
 
 Concurrency notes from the implementation:
 
-- The global cache is backed by `DashMap<PathBuf, CachedYaml>`.
+- The global cache is backed by `quick_cache::sync::Cache<PathBuf, CachedYaml>`.
 - Cache hit/miss counters use `AtomicU64`.
 - Cached parsed YAML values are stored in `Arc<Yaml>` and cloned back out per read.
 - The crate's own tests exercise concurrent parsing and concurrent cached file loads across threads.
@@ -297,7 +301,7 @@ Source-observed note:
 Important direct dependencies:
 
 - `yaml-rust2` - parsed YAML AST and emitter used throughout the crate
-- `dashmap` and `once_cell` - global lazy cache implementation
+- `quick_cache` - bounded global YAML cache implementation
 - `indexmap` - ordered map extraction helpers for YAML-order-sensitive consumers
 - `thiserror` - `YamlError`
 - `serde` - `CacheStats` serialization support

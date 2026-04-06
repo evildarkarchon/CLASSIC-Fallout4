@@ -1368,7 +1368,7 @@ mod tests {
     use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
-    use tempfile::{NamedTempFile, tempdir};
+    use tempfile::{tempdir, NamedTempFile};
 
     // ============================================================================
     // Basic Parse/Dump Tests (existing)
@@ -1767,10 +1767,10 @@ nested:
 
     #[test]
     fn test_cache_stats_after_load() {
-        // Get baseline cache stats (may have entries from parallel tests)
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let ops = YamlOperations::new();
-        let baseline_files = *ops.get_cache_stats().get("cached_files").unwrap();
-        let baseline_bytes = *ops.get_cache_stats().get("total_bytes").unwrap();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         let content = "stats_test: true\nvalue: 123";
@@ -1781,17 +1781,10 @@ nested:
             .expect("Load should succeed");
 
         let stats = ops.get_cache_stats();
-        let current_files = *stats.get("cached_files").unwrap();
-        let current_bytes = *stats.get("total_bytes").unwrap();
-
-        // Cache should have increased by at least one file
+        assert_eq!(stats.get("cached_files"), Some(&1));
+        assert_eq!(stats.get("capacity"), Some(&128));
         assert!(
-            current_files > baseline_files,
-            "Cache file count should increase after load"
-        );
-        // Cache bytes should have increased
-        assert!(
-            current_bytes > baseline_bytes,
+            stats.get("total_bytes").copied().unwrap_or_default() > 0,
             "Cache byte count should increase after load"
         );
     }
