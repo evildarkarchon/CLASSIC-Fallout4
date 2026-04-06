@@ -68,7 +68,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md -- Harden the core FCX reset contract and add contention coverage (SAFE-01, CONS-02, TEST-01)
 - [x] 03-02-PLAN.md -- Expose C++ FCX reset and auto-reset every C++ scan session (SAFE-02)
-- [ ] 03-03-PLAN.md -- Add Node FCX reset/issues APIs, auto-reset wiring, and carryover coverage (SAFE-03, SAFE-04, TEST-04)
+- [x] 03-03-PLAN.md -- Add Node FCX reset/issues APIs, auto-reset wiring, and carryover coverage (SAFE-03, SAFE-04, TEST-04)
 
 ### Phase 4: Bounded Cache Replacement
 **Goal**: All global caches have bounded memory with LRU eviction and expose consistent observability through CacheStats

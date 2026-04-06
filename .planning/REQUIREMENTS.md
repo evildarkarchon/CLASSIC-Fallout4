@@ -24,8 +24,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **SAFE-01**: Fix `GLOBAL_FCX_HANDLER.reset_global_state()` silent drop -- replace `try_lock()` with `lock()` (parking_lot non-poisoning)
 - [x] **SAFE-02**: Expose `reset_fcx_global_state()` in C++ bridge CXX extern block, called before each scan session
-- [ ] **SAFE-03**: Expose `resetFcxState()` NAPI function in Node bindings, called before each scan session
-- [ ] **SAFE-04**: Expose `ConfigIssue` list in Node bindings via `JsConfigIssue` NAPI struct and `getFcxIssues()` function
+- [x] **SAFE-03**: Expose `resetFcxState()` NAPI function in Node bindings, called before each scan session
+- [x] **SAFE-04**: Expose `ConfigIssue` list in Node bindings via `JsConfigIssue` NAPI struct and `getFcxIssues()` function
 - [ ] **SAFE-05**: Switch `read_file_mmap` from `Mmap::map()` to `MmapOptions::map_copy()` for TOCTOU safety on Windows
 
 ### Performance
@@ -54,7 +54,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **TEST-01**: Add test for FCX contention reset (concurrent scan scenario where mutex is held during reset)
 - [x] **TEST-02**: Add assertion test that standard production crashgen configs do NOT hit `scan_all_settings_legacy_bucketed`
 - [ ] **TEST-03**: Add integration test for Linux Proton docs-path discovery with mock Proton prefix structure
-- [ ] **TEST-04**: Add test for Node binding FCX state carryover between scan calls in a single process
+- [x] **TEST-04**: Add test for Node binding FCX state carryover between scan calls in a single process
 
 ### Codebase Consistency (Differentiators)
 
@@ -96,8 +96,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-10 | Phase 1 | Complete |
 | SAFE-01 | Phase 3 | Complete |
 | SAFE-02 | Phase 3 | Complete |
-| SAFE-03 | Phase 3 | Pending |
-| SAFE-04 | Phase 3 | Pending |
+| SAFE-03 | Phase 3 | Complete |
+| SAFE-04 | Phase 3 | Complete |
 | SAFE-05 | Phase 6 | Pending |
 | PERF-01 | Phase 5 | Pending |
 | PERF-02 | Phase 5 | Pending |
@@ -114,7 +114,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 2 | Complete |
 | TEST-03 | Phase 8 | Pending |
-| TEST-04 | Phase 3 | Pending |
+| TEST-04 | Phase 3 | Complete |
 | CONS-01 | Phase 7 | Pending |
 | CONS-02 | Phase 3 | Complete |
 | CONS-03 | Phase 4 | Pending |
