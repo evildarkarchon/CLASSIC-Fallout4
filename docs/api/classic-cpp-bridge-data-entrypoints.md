@@ -2,12 +2,13 @@
 
 Contributor-facing documentation for the active C++ bridge entry points in:
 
+- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs)
 
-This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
+This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for YAML operations, config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
 
 It is intentionally about the bridge surface that exists in source today. It does **not** describe a future unified bridge and it does **not** imply that the bridge exposes every capability of the underlying Rust crates.
 
@@ -39,9 +40,25 @@ For crate-level behavior, see:
 
 ## Current Bridge Ownership
 
+## `src/yaml.rs` -> `classic::yaml`
+
+This file exposes a stateful `YamlOps` wrapper over `classic_yaml_core::YamlOperations` plus bridge-local `YamlValue` and `CacheStats` DTOs that CXX can move by value.
+
+It owns:
+
+- YAML parse/load/save helpers through `yaml_ops_*`
+- typed setting inspection and mutation helpers through `YamlValue`
+- YAML cache helpers `yaml_ops_clear_cache()`, `yaml_ops_cache_stats()`, and the narrowed `yaml_ops_cache_size()` adapter
+
+Current cache-observability behavior:
+
+- `yaml_ops_cache_stats()` forwards to the canonical `classic_yaml_core::cache_stats()` contract with `hits`, `misses`, `hit_rate`, `size`, and `capacity`
+- `yaml_ops_cache_size()` intentionally stays as `yaml_ops_cache_stats().size` for older C++ callers that only need a count
+- YAML-specific legacy byte totals remain on the Rust side through `YamlOperations::get_cache_stats()` and are not widened into the C++ `CacheStats` DTO
+
 ## `src/config.rs` -> `classic::config`
 
-This file exposes a mostly read-oriented bridge around `classic_config_core::YamlDataCore` plus a small Local-YAML path persistence helper.
+This file exposes a mostly read-oriented bridge around `classic_config_core::YamlDataCore`, a small Local-YAML path persistence helper, and settings-cache observability helpers that forward into `classic_settings_core`.
 
 It owns:
 
@@ -49,6 +66,7 @@ It owns:
 - Local-YAML path persistence through `save_local_yaml_paths(...)`
 - field getters for selected scalar and `Vec<String>` values
 - flattened `IndexMap` access for suspect and mod dictionaries
+- settings cache helpers `settings_cache_clear()`, `settings_cache_stats()`, `settings_cache_size()`, and `reset_settings_cache_stats()`
 
 It does not expose the full `YamlDataCore` model, general `ClassicConfig` save APIs, or raw crashgen registry data.
 
@@ -61,6 +79,7 @@ It owns:
 - typed backup workflows through `classic_file_io_core::backup::BackupManager`
 - generic file-group backup, restore, and remove through `classic_file_io_core::game_files::GameFilesManager`
 - crash-log collection through `classic_file_io_core::log_collection::LogCollector`
+- hash cache helpers `hash_cache_clear()`, `hash_cache_stats()`, `hash_cache_size()`, and `reset_hash_cache_stats()` through `classic_file_io_core::hash::FileHasher`
 - small standalone helpers for file similarity, encoding-aware reads and writes, and AUTOSCAN report files
 
 Some report-file helpers are bridge-local convenience code, not direct crate re-exports.
@@ -97,7 +116,36 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 ## FFI Surface By File
 
+## `classic::yaml` entry points
+
+### Cache stats helpers
+
+These helpers keep the C++ YAML surface aligned with the canonical Phase 4 cache stats contract:
+
+- `yaml_ops_clear_cache(ops)` forwards to `YamlOperations::clear_cache()`
+- `yaml_ops_cache_stats(ops) -> CacheStats` forwards to `classic_yaml_core::cache_stats()`
+- `yaml_ops_cache_size(ops) -> usize` is a narrowed adapter over `yaml_ops_cache_stats(ops).size`
+
+Current bridge behavior:
+
+- the returned `CacheStats` DTO uses the exact shared five-field cache stats contract
+- C++ does not receive YAML-specific `total_bytes`; that legacy detail remains Rust-only
+
 ## `classic::config` entry points
+
+### Settings cache helpers
+
+These helpers give C++ the same bounded-cache observability surface that Node and Python expose for `classic_settings_core`:
+
+- `settings_cache_clear()` forwards to `classic_settings_core::clear_cache()`
+- `settings_cache_stats() -> CacheStats` forwards to `classic_settings_core::cache_stats()`
+- `settings_cache_size() -> usize` is a narrowed adapter over `settings_cache_stats().size`
+- `reset_settings_cache_stats()` forwards to `classic_settings_core::reset_cache_stats()`
+
+Current bridge behavior:
+
+- the C++ `CacheStats` DTO matches the canonical Phase 4 contract exactly: `hits`, `misses`, `hit_rate`, `size`, `capacity`
+- cache ownership and invalidation semantics stay in Rust core; the bridge only reshapes the DTO for CXX
 
 ### `yaml_data_load(yaml_dir_root, yaml_dir_data, game, game_version) -> Result<Box<YamlData>>`
 
@@ -158,6 +206,20 @@ Important current boundary:
 ---
 
 ## `classic::files` entry points
+
+## Hash cache helpers
+
+These helpers expose the `classic_file_io_core::hash::FileHasher` cache directly to C++ callers:
+
+- `hash_cache_clear()` forwards to `FileHasher::clear_cache()`
+- `hash_cache_stats() -> CacheStats` forwards to `FileHasher::cache_stats()`
+- `hash_cache_size() -> usize` is a narrowed adapter over `hash_cache_stats().size`
+- `reset_hash_cache_stats()` forwards to `FileHasher::reset_cache_stats()`
+
+Current bridge behavior:
+
+- the returned `CacheStats` DTO uses the same five-field cache stats contract as `classic::yaml` and `classic::config`
+- hash calculation and cache semantics remain owned by `classic-file-io-core`; the bridge just forwards the data
 
 ## Backup helpers
 
