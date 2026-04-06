@@ -103,7 +103,7 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md -- Add bounded matcher caches for `detect_mods_single`/`double`/`batch` and move touched static regexes to `LazyLock` (PERF-01, CONS-04)
-- [ ] 05-02-PLAN.md -- Replace `detect_mods_important` regex-per-entry matching with `Aho-Corasick` guarded by fixture-backed parity coverage (PERF-02)
+- [x] 05-02-PLAN.md -- Replace `detect_mods_important` regex-per-entry matching with `Aho-Corasick` guarded by fixture-backed parity coverage (PERF-02)
 - [x] 05-03-PLAN.md -- Cache the C++ bridge `detect_crash_pattern` parser with a module-level `LazyLock<LogParser>` and add positive bridge coverage (PERF-03)
 - [ ] 05-04-PLAN.md -- Extend `scanlog_benchmarks.rs` with Phase 5 hotspot proof and document the local Criterion baseline workflow (PERF-04)
 

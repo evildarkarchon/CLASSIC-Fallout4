@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-pattern-caching-and-performance-01-PLAN.md
-last_updated: "2026-04-06T07:30:02.746Z"
+stopped_at: Completed 05-pattern-caching-and-performance-02-PLAN.md
+last_updated: "2026-04-06T07:41:58.201Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
   percent: 6
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 Phase: 05 (pattern-caching-and-performance) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -66,6 +66,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 04-bounded-cache-replacement P05 | 15min | 2 tasks | 13 files |
 | Phase 05-pattern-caching-and-performance P03 | 4min | 2 tasks | 2 files |
 | Phase 05-pattern-caching-and-performance P01 | 8min | 2 tasks | 3 files |
+| Phase 05-pattern-caching-and-performance P02 | 9min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - [Phase 05-pattern-caching-and-performance]: Reused one module-level default LogParser with LazyLock while preserving empty-string fail-soft behavior for parse failures.
 - [Phase 05-pattern-caching-and-performance]: Keep single, double, and batch matcher caches separate while sharing normalization and compile helpers.
 - [Phase 05-pattern-caching-and-performance]: Validate bounded matcher caches by reuse and capacity behavior instead of eviction-victim order.
+- [Phase 05-pattern-caching-and-performance]: Kept the legacy regex path as a private helper so fixture-backed parity stays executable while detect_mods_important uses Aho-Corasick.
+- [Phase 05-pattern-caching-and-performance]: Used the large crash-log fixture for important-mod parity because the smaller fixture lacks a plugin section.
+- [Phase 05-pattern-caching-and-performance]: Kept the Aho-Corasick automaton one-per-call in PERF-02 and deferred cache reuse to later performance proof work.
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T07:30:02.741Z
-Stopped at: Completed 05-pattern-caching-and-performance-01-PLAN.md
+Last session: 2026-04-06T07:41:58.197Z
+Stopped at: Completed 05-pattern-caching-and-performance-02-PLAN.md
 Resume file: None
