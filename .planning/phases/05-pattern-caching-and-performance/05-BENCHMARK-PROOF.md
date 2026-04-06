@@ -61,3 +61,4 @@ The save/compare workflow above was run to keep the proof reproducible and focus
 
 - `PERF-04` in Phase 5 now covers the hotspot groups actually implemented in `scanlog_benchmarks`.
 - mmap throughput benchmarking is **not** part of this file or harness; that work belongs to **SAFE-05 / Phase 6**.
+- `.planning/REQUIREMENTS.md` was updated in the same change so milestone traceability matches the benchmark artifact instead of implying missing mmap evidence in Phase 5.

@@ -33,7 +33,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **PERF-01**: Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch` keyed by hash of mod list contents
 - [x] **PERF-02**: Replace per-entry `Regex::new` in `detect_mods_important` with `str::contains` (patterns are escaped literals) or AhoCorasick for large lists
 - [x] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
-- [x] **PERF-04**: Add criterion benchmarks for `detect_mods_important`, `detect_mods_single`/`batch`, `detect_crash_pattern`, and mmap read throughput with before/after measurements
+- [x] **PERF-04**: Add criterion benchmarks and committed proof for `detect_mods_important`, `detect_mods_single`/`batch`, and `detect_crash_pattern` hotspot measurements; mmap throughput benchmarking is owned by **SAFE-05** / Phase 6
 
 ### Cache Eviction
 
@@ -127,4 +127,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-04*
-*Last updated: 2026-04-04 after roadmap creation*
+*Last updated: 2026-04-06 after Phase 5 benchmark-proof alignment*
