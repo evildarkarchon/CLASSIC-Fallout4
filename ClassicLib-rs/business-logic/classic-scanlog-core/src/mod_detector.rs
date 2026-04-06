@@ -1343,6 +1343,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_empty() {
         let entries: Vec<ModConflictEntry> = Vec::new();
         let plugins: IndexMap<String, String> = IndexMap::new();
@@ -1352,6 +1353,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_no_conflict() {
         let entries = vec![make_conflict("moda", "modb")];
 
@@ -1363,6 +1365,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_conflict_detected() {
         let entries = vec![make_conflict("moda", "modb")];
 
@@ -1378,6 +1381,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_case_insensitive() {
         let entries = vec![make_conflict("moda", "modb")];
 
@@ -1390,6 +1394,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_with_link() {
         let entries = vec![ModConflictEntry {
             mod_a: "modx".to_string(),
@@ -1411,6 +1416,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_multiple_conflicts_single_header() {
         let entries = vec![make_conflict("moda", "modb"), make_conflict("modc", "modd")];
 
