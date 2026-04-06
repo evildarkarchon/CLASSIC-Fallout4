@@ -7,7 +7,7 @@
 //! ## Architecture
 //! - Pure Rust - no PyO3, usable by CLI/TUI directly
 //! - Based on yaml-rust2 (YAML 1.2 compliant)
-//! - Thread-safe caching with DashMap
+//! - Thread-safe bounded caching with quick_cache
 //! - Atomic file writes for safety
 //!
 //! # Complete Usage Example
@@ -92,7 +92,7 @@
 //!
 //! # Thread Safety
 //!
-//! All operations are thread-safe. The cache uses `DashMap` for concurrent access:
+//! All operations are thread-safe. The cache uses `quick_cache` for concurrent access:
 //!
 //! ```rust,no_run
 //! use classic_yaml_core::YamlOperations;
@@ -124,16 +124,15 @@
 //!
 //! - **Caching**: 15-30x faster than repeated file reads
 //! - **Atomic Writes**: Uses temp file + rename for crash safety
-//! - **Parallel Access**: Lock-free concurrent reads with DashMap
+//! - **Parallel Access**: Lock-free concurrent reads with quick_cache
 
-use dashmap::DashMap;
 use indexmap::IndexMap;
-use once_cell::sync::Lazy;
+use quick_cache::sync::Cache;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::time::SystemTime;
 use thiserror::Error;
 use tracing::trace;
@@ -142,8 +141,8 @@ use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 /// Global YAML cache for frequently accessed files
 ///
 /// NOTE: This is lazily initialized on first use to avoid deadlocks during module import.
-/// The cache is thread-safe and uses DashMap for concurrent access.
-static YAML_CACHE: Lazy<DashMap<PathBuf, CachedYaml>> = Lazy::new(DashMap::new);
+/// The cache is thread-safe and uses `quick_cache` with a fixed 128-entry capacity.
+static YAML_CACHE: LazyLock<Cache<PathBuf, CachedYaml>> = LazyLock::new(|| Cache::new(128));
 
 /// Global counter for cache hits.
 static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
@@ -174,8 +173,15 @@ pub struct CacheStats {
     pub hit_rate: f64,
     /// Current number of entries in the cache.
     pub size: usize,
-    /// Total bytes of cached raw content.
-    pub total_bytes: usize,
+    /// Maximum number of entries the cache retains before evicting.
+    pub capacity: usize,
+}
+
+fn total_cached_bytes() -> usize {
+    YAML_CACHE
+        .iter()
+        .map(|(_, cached)| cached.raw_content.as_ref().map_or(0, String::len))
+        .sum()
 }
 
 /// Get current cache statistics.
@@ -196,11 +202,6 @@ pub fn cache_stats() -> CacheStats {
     let misses = CACHE_MISSES.load(Ordering::Relaxed);
     let total = hits + misses;
 
-    let total_bytes: usize = YAML_CACHE
-        .iter()
-        .filter_map(|entry| entry.raw_content.as_ref().map(|s| s.len()))
-        .sum();
-
     CacheStats {
         hits,
         misses,
@@ -210,7 +211,8 @@ pub fn cache_stats() -> CacheStats {
             0.0
         },
         size: YAML_CACHE.len(),
-        total_bytes,
+        capacity: usize::try_from(YAML_CACHE.capacity())
+            .expect("quick_cache capacity should fit in usize"),
     }
 }
 
@@ -552,6 +554,8 @@ impl YamlOperations {
                             trace!(cache = "yaml", path = %file_path.display(), "cache hit");
                             return Ok((*cached.data).clone());
                         }
+
+                        let _ = YAML_CACHE.remove(&file_path);
                     }
                 }
             }
@@ -783,8 +787,8 @@ impl YamlOperations {
     /// - `"cached_files"`: The number of entries currently stored in the YAML cache.
     /// - `"total_bytes"`: The total size in bytes of the raw content of all cached entries.
     ///
-    /// The function iterates over the `YAML_CACHE`, counting the number of entries
-    /// and calculating the total size of all entries' raw content if available.
+    /// The helper adapts the canonical cache stats contract and supplements it with
+    /// YAML-specific raw byte totals for legacy callers.
     /// # Returns
     /// A `HashMap<String, usize>` containing the cache statistics.
     ///
@@ -802,15 +806,11 @@ impl YamlOperations {
     /// This function assumes that `YAML_CACHE` is a globally accessible data structure
     /// that holds cached entries, where each entry may contain an optional `raw_content`.
     pub fn get_cache_stats(&self) -> HashMap<String, usize> {
+        let canonical = cache_stats();
         let mut stats = HashMap::new();
-        stats.insert("cached_files".to_string(), YAML_CACHE.len());
-
-        let total_size: usize = YAML_CACHE
-            .iter()
-            .filter_map(|entry| entry.raw_content.as_ref().map(|s| s.len()))
-            .sum();
-
-        stats.insert("total_bytes".to_string(), total_size);
+        stats.insert("cached_files".to_string(), canonical.size);
+        stats.insert("capacity".to_string(), canonical.capacity);
+        stats.insert("total_bytes".to_string(), total_cached_bytes());
         stats
     }
 
@@ -1368,7 +1368,7 @@ mod tests {
     use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
-    use tempfile::{tempdir, NamedTempFile};
+    use tempfile::{NamedTempFile, tempdir};
 
     // ============================================================================
     // Basic Parse/Dump Tests (existing)
