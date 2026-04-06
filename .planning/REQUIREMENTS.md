@@ -22,7 +22,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Correctness and Safety
 
-- [ ] **SAFE-01**: Fix `GLOBAL_FCX_HANDLER.reset_global_state()` silent drop -- replace `try_lock()` with `lock()` (parking_lot non-poisoning)
+- [x] **SAFE-01**: Fix `GLOBAL_FCX_HANDLER.reset_global_state()` silent drop -- replace `try_lock()` with `lock()` (parking_lot non-poisoning)
 - [ ] **SAFE-02**: Expose `reset_fcx_global_state()` in C++ bridge CXX extern block, called before each scan session
 - [ ] **SAFE-03**: Expose `resetFcxState()` NAPI function in Node bindings, called before each scan session
 - [ ] **SAFE-04**: Expose `ConfigIssue` list in Node bindings via `JsConfigIssue` NAPI struct and `getFcxIssues()` function
@@ -51,7 +51,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Test Coverage
 
-- [ ] **TEST-01**: Add test for FCX contention reset (concurrent scan scenario where mutex is held during reset)
+- [x] **TEST-01**: Add test for FCX contention reset (concurrent scan scenario where mutex is held during reset)
 - [x] **TEST-02**: Add assertion test that standard production crashgen configs do NOT hit `scan_all_settings_legacy_bucketed`
 - [ ] **TEST-03**: Add integration test for Linux Proton docs-path discovery with mock Proton prefix structure
 - [ ] **TEST-04**: Add test for Node binding FCX state carryover between scan calls in a single process
@@ -59,7 +59,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Codebase Consistency (Differentiators)
 
 - [ ] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
-- [ ] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
+- [x] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
 - [ ] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
 - [ ] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
 
@@ -94,7 +94,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-08 | Phase 2 | Complete |
 | DEBT-09 | Phase 2 | Complete |
 | DEBT-10 | Phase 1 | Complete |
-| SAFE-01 | Phase 3 | Pending |
+| SAFE-01 | Phase 3 | Complete |
 | SAFE-02 | Phase 3 | Pending |
 | SAFE-03 | Phase 3 | Pending |
 | SAFE-04 | Phase 3 | Pending |
@@ -111,12 +111,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-03 | Phase 8 | Pending |
 | INFRA-04 | Phase 8 | Pending |
 | INFRA-05 | Phase 8 | Pending |
-| TEST-01 | Phase 3 | Pending |
+| TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 2 | Complete |
 | TEST-03 | Phase 8 | Pending |
 | TEST-04 | Phase 3 | Pending |
 | CONS-01 | Phase 7 | Pending |
-| CONS-02 | Phase 3 | Pending |
+| CONS-02 | Phase 3 | Complete |
 | CONS-03 | Phase 4 | Pending |
 | CONS-04 | Phase 5 | Pending |
 
