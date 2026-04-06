@@ -177,12 +177,19 @@ Source-observed note:
 
 ## Cache API
 
-The cache stores parsed YAML documents in a global concurrent map:
+The cache stores parsed YAML documents in a global bounded concurrent cache:
 
 - key type: `String`
 - value type: `Arc<Vec<Yaml>>`
+- backing store: `std::sync::LazyLock<quick_cache::sync::Cache<String, Arc<Vec<Yaml>>>>`
+- configured capacity: `64`
 
 That means callers can cheaply clone cached values and compare `Arc` identity across reads.
+
+Phase 4 note:
+
+- the roadmap's older "LRU" shorthand is implemented here through the repo-standard `quick_cache` crate
+- `quick_cache` uses bounded eviction semantics, so contributors should test that the cache stays within capacity rather than asserting an exact victim order
 
 ## `load_settings_sync(key, path)` and `load_settings_async(key, path)`
 
@@ -193,6 +200,7 @@ These are the main cache-populating entry points.
 - they insert the value into the global cache under `key.to_string()`
 - inserting with an existing key replaces the previous cached value
 - they return the same `Arc<Vec<Yaml>>` that was inserted
+- they do not consult file mtimes or other freshness signals; callers still control reload timing explicitly
 
 ## `load_batch_sync(paths)` and `load_batch_async(paths)`
 
@@ -211,7 +219,7 @@ Contributor note:
 - `invalidate(key) -> bool` removes one entry and reports whether it existed
 - `clear_cache()` removes all entries
 - `cache_size() -> usize` returns entry count
-- `cache_keys() -> Vec<String>` returns all keys; ordering is not stable because storage uses `DashMap`
+- `cache_keys() -> Vec<String>` returns all keys; ordering is not stable and this helper is now the only public API that exposes key listings
 
 ## `CacheStats`, `cache_stats()`, and `reset_cache_stats()`
 
@@ -221,13 +229,15 @@ Contributor note:
 - `misses`
 - `hit_rate`
 - `size`
-- `keys`
+- `capacity`
 
 Behavior worth knowing:
 
 - hit/miss counters are process-global `AtomicU64` values
 - only `get_cached()` updates those counters
 - loading functions do not count as cache hits or misses
+- `cache_stats()` reports the canonical five-field Phase 4 contract only; key listings stay on `cache_keys()`
+- `capacity` is the configured bounded cache size and currently reports `64`
 - `reset_cache_stats()` resets counters only; it does not clear cached entries
 
 ---
@@ -248,7 +258,7 @@ The source-visible flow is split into two layers.
 1. A caller chooses `load_settings_sync(key, path)` or `load_settings_async(key, path)`.
 2. The crate performs the same disk read + parse flow as the raw loader.
 3. The parsed `Vec<Yaml>` is wrapped in `Arc`.
-4. The crate inserts that `Arc<Vec<Yaml>>` into the global `DashMap<String, ...>`.
+4. The crate inserts that `Arc<Vec<Yaml>>` into the global bounded `quick_cache::sync::Cache<String, ...>`.
 5. Later callers retrieve it with `get_cached(key)`.
 
 ## Batch flow

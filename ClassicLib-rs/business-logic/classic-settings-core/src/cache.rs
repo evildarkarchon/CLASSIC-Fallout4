@@ -492,6 +492,10 @@ mod tests {
         assert_eq!(keys.len(), 1);
         assert!(keys.contains(&"test_key".to_string()));
 
+        let stats = cache_stats();
+        assert_eq!(stats.size, 1);
+        assert_eq!(stats.capacity, 64);
+
         // Invalidate
         let removed = invalidate("test_key");
         assert!(removed);
