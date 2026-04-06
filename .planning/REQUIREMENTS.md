@@ -39,7 +39,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **CACHE-01**: Replace unbounded `DashMap` in `YAML_CACHE` with `quick_cache::sync::Cache` (capacity 128)
 - [x] **CACHE-02**: Replace unbounded `DashMap` in `SETTINGS_CACHE` with `quick_cache::sync::Cache` (capacity 64)
-- [ ] **CACHE-03**: Replace unbounded `DashMap` in `HASH_CACHE` with `quick_cache::sync::Cache` (capacity 1024)
+- [x] **CACHE-03**: Replace unbounded `DashMap` in `HASH_CACHE` with `quick_cache::sync::Cache` (capacity 1024)
 
 ### Workspace and Infrastructure
 
@@ -105,7 +105,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-04 | Phase 5 | Pending |
 | CACHE-01 | Phase 4 | Pending |
 | CACHE-02 | Phase 4 | Complete |
-| CACHE-03 | Phase 4 | Pending |
+| CACHE-03 | Phase 4 | Complete |
 | INFRA-01 | Phase 8 | Pending |
 | INFRA-02 | Phase 8 | Pending |
 | INFRA-03 | Phase 8 | Pending |
