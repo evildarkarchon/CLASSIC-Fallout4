@@ -22,6 +22,9 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ All deprecated APIs removed (parse_segments, parse_segments_parallel, is_outdated) — Validated in Phase 2: Dead Code Removal
 - ✓ Dead code removed (SEGMENT_BOUNDARIES, YamlFormatConfig, PluginAnalyzer.case_cache, PyGpuDetector.inner) — Validated in Phase 2: Dead Code Removal
 - ✓ Legacy `scan_all_settings_legacy_bucketed` fallback path eliminated with assertion test — Validated in Phase 2: Dead Code Removal
+- ✓ FCX global state reset is blocking, typed, and contention-tested — Validated in Phase 3: FCX State Hardening
+- ✓ C++ bridge exposes explicit FCX reset and auto-resets before scan sessions — Validated in Phase 3: FCX State Hardening
+- ✓ Node bindings expose FCX reset plus structured issue inspection without same-process carryover — Validated in Phase 3: FCX State Hardening
 
 ### Active
 
@@ -31,15 +34,12 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
 - [ ] Replace per-entry regex in `detect_mods_important` with AhoCorasick or combined pattern
 - [ ] Add before/after criterion benchmarks for performance improvements
-- [ ] Harden FCX global state: fix silent drop on contention, add reset calls in C++/Node bindings
-- [ ] Expose FCX handler reset and ConfigIssue list in Node bindings
-- [ ] Expose FCX state reset in C++ bridge
 - [ ] Switch mmap from `Mmap::map()` to `MmapOptions::map_copy()` for TOCTOU safety
 - [ ] Add LRU capacity eviction to YAML_CACHE, SETTINGS_CACHE, and HASH_CACHE
 - [ ] Promote `winreg` and `phf` to workspace dependencies
 - [ ] Document or remove `zerovec` workaround dependency
 - [ ] Commit or document Node `index.d.ts` build-first requirement
-- [ ] Add test coverage: FCX contention reset, Linux Proton path, Node FCX state carryover
+- [ ] Add test coverage: Linux Proton path
 
 ### Out of Scope
 
@@ -96,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after Phase 2 completion*
+*Last updated: 2026-04-06 after Phase 3 completion*
