@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-06T02:43:59.634771+00:00",
+  "generated_at_utc": "2026-04-06T04:55:43.818731+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,8 +8,8 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 385,
-    "runtime_verified_total": 276,
+    "tracked_surface_total": 389,
+    "runtime_verified_total": 280,
     "contract_mapped_total": 0,
     "deferred_total": 109,
     "newly_uncovered_total": 0,
@@ -25,8 +25,8 @@
       "deferred": 12
     },
     "config": {
-      "runtime_verified": 55,
-      "total": 81,
+      "runtime_verified": 59,
+      "total": 85,
       "deferred": 26
     },
     "scanlog": {
@@ -6159,6 +6159,25 @@
       "notes": null
     },
     {
+      "trackedId": "binding:HashCacheStats",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "HashCacheStats",
+      "coverageId": "node-tier2-aux-cache-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
+    },
+    {
       "trackedId": "binding:JsAnalysisBuildOptions",
       "trackedType": "gap",
       "ownerModule": "scanlog",
@@ -6848,6 +6867,25 @@
       "notes": null
     },
     {
+      "trackedId": "binding:clearHashCache",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "clearHashCache",
+      "coverageId": "node-tier2-aux-cache-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
+    },
+    {
       "trackedId": "binding:createLogger",
       "trackedType": "gap",
       "ownerModule": "scanlog",
@@ -6981,6 +7019,25 @@
       "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     },
     {
+      "trackedId": "binding:getHashCacheStats",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "getHashCacheStats",
+      "coverageId": "node-tier2-aux-cache-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
+    },
+    {
       "trackedId": "binding:migrateGameVersionSetting",
       "trackedType": "gap",
       "ownerModule": "version_registry",
@@ -7074,6 +7131,25 @@
       "owner": null,
       "deferReason": null,
       "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
+    },
+    {
+      "trackedId": "binding:resetHashCacheStats",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "resetHashCacheStats",
+      "coverageId": "node-tier2-aux-cache-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
     },
     {
       "trackedId": "binding:setApplicationDir",

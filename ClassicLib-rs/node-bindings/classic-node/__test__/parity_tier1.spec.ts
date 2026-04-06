@@ -28,6 +28,7 @@ import {
   settingsCacheKeys,
   settingsCacheSize,
   clearSettingsCache,
+  clearHashCache,
   validateSettingsPath,
   validateSettingsPaths,
   normalizePath,
@@ -45,6 +46,8 @@ import {
   JsMessageTarget,
   JsFileIO,
   detectEncoding,
+  getHashCacheStats,
+  hashFile,
   JsDatabasePool,
   detectResourceType,
   parseResourceType,
@@ -80,6 +83,7 @@ import {
   yamlClearCache,
   yamlGetCacheStats,
   yamlParse,
+  resetHashCacheStats,
   yamlStringify,
 } from "../index.js";
 import {
@@ -244,8 +248,14 @@ describe("Tier-1 parity fixture suites", () => {
     test("YAML cache APIs expose stable stats shape", () => {
       yamlClearCache();
       const stats = yamlGetCacheStats();
-      expect(typeof stats.cachedFiles).toBe("number");
-      expect(typeof stats.totalBytes).toBe("number");
+      expect(Object.keys(stats).sort()).toEqual([
+        "capacity",
+        "hit_rate",
+        "hits",
+        "misses",
+        "size",
+      ]);
+      expect(typeof stats.hit_rate).toBe("number");
     });
 
     test("settings cache lifecycle remains stable", () => {
@@ -270,7 +280,9 @@ describe("Tier-1 parity fixture suites", () => {
 
         const stats = getSettingsCacheStats();
         expect(stats.hits).toBeGreaterThanOrEqual(1);
+        expect(typeof stats.hit_rate).toBe("number");
         expect(stats.size).toBe(1);
+        expect(stats.capacity).toBeGreaterThan(0);
 
         expect(invalidateSettings(cacheKey)).toBe(true);
         expect(isCached(cacheKey)).toBe(false);
@@ -369,6 +381,47 @@ describe("Tier-1 parity fixture suites", () => {
         expect(await io.readFile(filePath)).toBe("hello world");
         expect(detectEncoding(filePath)).toBe("UTF-8");
       } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    test("hash cache helpers keep canonical stats and bounded semantics", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-tier1-hash-cache-"));
+      const filePath = join(dir, "hash.txt");
+      try {
+        writeFileSync(filePath, "tier1 hash cache", "utf-8");
+        clearHashCache();
+        resetHashCacheStats();
+
+        const initial = getHashCacheStats();
+        expect(Object.keys(initial).sort()).toEqual([
+          "capacity",
+          "hit_rate",
+          "hits",
+          "misses",
+          "size",
+        ]);
+
+        expect(hashFile(filePath).length).toBe(64);
+        expect(hashFile(filePath).length).toBe(64);
+
+        const warmed = getHashCacheStats();
+        expect(warmed.misses).toBe(1);
+        expect(warmed.hits).toBe(1);
+        expect(warmed.hit_rate).toBeCloseTo(0.5, 5);
+        expect(warmed.size).toBeLessThanOrEqual(warmed.capacity);
+
+        resetHashCacheStats();
+        const reset = getHashCacheStats();
+        expect(reset.hits).toBe(0);
+        expect(reset.misses).toBe(0);
+        expect(reset.size).toBe(1);
+
+        clearHashCache();
+        expect(getHashCacheStats().size).toBe(0);
+      } finally {
+        clearHashCache();
+        resetHashCacheStats();
         rmSync(dir, { recursive: true, force: true });
       }
     });

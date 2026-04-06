@@ -4,8 +4,10 @@ import { join } from "path";
 import { tmpdir } from "os";
 import {
   JsFileIO,
+  clearHashCache,
   hashFile,
   hashFilesParallel,
+  getHashCacheStats,
   detectEncoding,
   JsBackupManager,
   JsDdsAnalyzer,
@@ -16,6 +18,7 @@ import {
   JsGameFilesManager,
   CRASH_LOG_PATTERN,
   CRASH_AUTOSCAN_PATTERN,
+  resetHashCacheStats,
   writeAutoscanReport,
 } from "../index.js";
 
@@ -27,9 +30,13 @@ let tempDir: string;
 
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), "classic-fileio-test-"));
+  clearHashCache();
+  resetHashCacheStats();
 });
 
 afterEach(() => {
+  clearHashCache();
+  resetHashCacheStats();
   rmSync(tempDir, { recursive: true, force: true });
 });
 
@@ -416,6 +423,86 @@ describe("hashFilesParallel", () => {
     const failedKey = Object.keys(results).find((k) => k !== goodPath);
     expect(failedKey).toBeDefined();
     expect(results[failedKey!]).toBe("");
+  });
+});
+
+// ============================================================================
+// Hash cache helpers
+// ============================================================================
+
+describe("hash cache helpers", () => {
+  test("report canonical stats for first miss then repeated hit", () => {
+    const filePath = join(tempDir, "hash-cache.txt");
+    writeFileSync(filePath, "cache me");
+
+    const before = getHashCacheStats();
+    expect(Object.keys(before).sort()).toEqual([
+      "capacity",
+      "hit_rate",
+      "hits",
+      "misses",
+      "size",
+    ]);
+    expect(before.hits).toBe(0);
+    expect(before.misses).toBe(0);
+
+    hashFile(filePath);
+    const afterMiss = getHashCacheStats();
+    expect(afterMiss.hits).toBe(0);
+    expect(afterMiss.misses).toBe(1);
+    expect(afterMiss.hit_rate).toBe(0);
+    expect(afterMiss.size).toBe(1);
+    expect(afterMiss.capacity).toBeGreaterThan(0);
+
+    hashFile(filePath);
+    const afterHit = getHashCacheStats();
+    expect(afterHit.hits).toBe(1);
+    expect(afterHit.misses).toBe(1);
+    expect(afterHit.hit_rate).toBeCloseTo(0.5, 5);
+    expect(afterHit.size).toBe(1);
+    expect(afterHit.capacity).toBe(afterMiss.capacity);
+  });
+
+  test("resetHashCacheStats clears counters without dropping cached entries", () => {
+    const filePath = join(tempDir, "hash-reset.txt");
+    writeFileSync(filePath, "reset me");
+
+    hashFile(filePath);
+    hashFile(filePath);
+
+    resetHashCacheStats();
+
+    const stats = getHashCacheStats();
+    expect(stats.hits).toBe(0);
+    expect(stats.misses).toBe(0);
+    expect(stats.hit_rate).toBe(0);
+    expect(stats.size).toBe(1);
+    expect(stats.capacity).toBeGreaterThan(0);
+  });
+
+  test("clearHashCache empties entries while keeping bounded capacity", () => {
+    const before = getHashCacheStats();
+    const capacity = before.capacity;
+
+    for (let index = 0; index < capacity + 1; index += 1) {
+      const filePath = join(tempDir, `hash-capacity-${index}.txt`);
+      writeFileSync(filePath, `content-${index}`);
+      hashFile(filePath);
+    }
+
+    const filled = getHashCacheStats();
+    expect(filled.capacity).toBe(capacity);
+    expect(filled.size).toBeLessThanOrEqual(capacity);
+    expect(filled.misses).toBe(capacity + 1);
+
+    clearHashCache();
+
+    const cleared = getHashCacheStats();
+    expect(cleared.size).toBe(0);
+    expect(cleared.capacity).toBe(capacity);
+    expect(cleared.misses).toBe(capacity + 1);
+    expect(cleared.hits).toBe(0);
+    expect(cleared.hit_rate).toBe(0);
   });
 });
 

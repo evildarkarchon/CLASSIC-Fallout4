@@ -302,6 +302,22 @@ impl JsFileIO {
 // 2. Free functions — hashing, encoding detection
 // ============================================================================
 
+/// Canonical hash cache performance statistics.
+#[napi(object)]
+pub struct HashCacheStats {
+    /// Number of cache hits since last reset.
+    pub hits: i64,
+    /// Number of cache misses since last reset.
+    pub misses: i64,
+    /// Hit rate as a fraction (0.0 to 1.0).
+    #[napi(js_name = "hit_rate")]
+    pub hit_rate: f64,
+    /// Current number of cached entries.
+    pub size: u32,
+    /// Maximum bounded cache capacity.
+    pub capacity: u32,
+}
+
 /// Calculate the SHA256 hash of a file.
 ///
 /// Returns a lowercase hex string (64 characters). Results are cached.
@@ -327,6 +343,31 @@ pub fn hash_files_parallel(paths: Vec<String>) -> Result<HashMap<String, String>
         map.insert(key, hash_opt.unwrap_or_default());
     }
     Ok(map)
+}
+
+/// Return canonical hash cache statistics.
+#[napi]
+pub fn get_hash_cache_stats() -> HashCacheStats {
+    let stats = FileHasher::cache_stats();
+    HashCacheStats {
+        hits: stats.hits as i64,
+        misses: stats.misses as i64,
+        hit_rate: stats.hit_rate,
+        size: stats.size as u32,
+        capacity: stats.capacity as u32,
+    }
+}
+
+/// Reset hash cache hit/miss counters without clearing cached entries.
+#[napi]
+pub fn reset_hash_cache_stats() {
+    FileHasher::reset_cache_stats();
+}
+
+/// Clear all cached file hashes without resetting hit/miss counters.
+#[napi]
+pub fn clear_hash_cache() {
+    FileHasher::clear_cache();
 }
 
 /// Detect the encoding of a file by reading its content.

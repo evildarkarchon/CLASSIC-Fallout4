@@ -1420,6 +1420,9 @@ export declare function checkXsePlugins(pluginsPath: string, gameVersion: string
 /** Clear all recorded performance metrics. */
 export declare function clearAllMetrics(): void
 
+/** Clear all cached file hashes without resetting hit/miss counters. */
+export declare function clearHashCache(): void
+
 /** Clear all entries from the settings cache. */
 export declare function clearSettingsCache(): void
 
@@ -1872,6 +1875,9 @@ export declare function getFcxConfigIssues(): Array<JsFcxConfigIssue>
  */
 export declare function getGameName(id: JsGameId): string
 
+/** Return canonical hash cache statistics. */
+export declare function getHashCacheStats(): HashCacheStats
+
 /**
  * Fetch the latest release for a repository in a single call.
  *
@@ -1943,7 +1949,7 @@ export declare function getRuntimeInfo(): RuntimeInfo
  */
 export declare function getScriptHashesForVersion(id: string): Record<string, string>
 
-/** Get cache performance statistics (hits, misses, hit rate, size, keys). */
+/** Get cache performance statistics (hits, misses, hit rate, size, capacity). */
 export declare function getSettingsCacheStats(): SettingsCacheStats
 
 /**
@@ -2070,6 +2076,20 @@ export declare function getYamlSourceDisplayNameWithGame(source: JsYamlSource, g
  * @returns The file path as a string.
  */
 export declare function getYamlSourcePath(source: JsYamlSource, game: string): string
+
+/** Canonical hash cache performance statistics. */
+export interface HashCacheStats {
+  /** Number of cache hits since last reset. */
+  hits: number
+  /** Number of cache misses since last reset. */
+  misses: number
+  /** Hit rate as a fraction (0.0 to 1.0). */
+  hit_rate: number
+  /** Current number of cached entries. */
+  size: number
+  /** Maximum bounded cache capacity. */
+  capacity: number
+}
 
 /**
  * Calculate the SHA256 hash of a file.
@@ -3580,6 +3600,9 @@ export declare function removeReadonly(filePath: string): void
 
 export declare function resetFcxGlobalState(): void
 
+/** Reset hash cache hit/miss counters without clearing cached entries. */
+export declare function resetHashCacheStats(): void
+
 /** Reset the cache hit/miss counters to zero. */
 export declare function resetSettingsCacheStats(): void
 
@@ -3687,11 +3710,11 @@ export interface SettingsCacheStats {
   /** Number of cache misses since last reset. */
   misses: number
   /** Hit rate as a fraction (0.0 to 1.0). */
-  hitRate: number
+  hit_rate: number
   /** Current number of entries in the cache. */
   size: number
-  /** List of cache keys. */
-  keys: Array<string>
+  /** Maximum bounded cache capacity. */
+  capacity: number
 }
 
 /**
@@ -3845,9 +3868,9 @@ export declare function yamlClearCache(): void
 /**
  * Get statistics about the global YAML file cache.
  *
- * @returns An object with `cachedFiles` (number) and `totalBytes` (number).
+ * @returns An object with canonical cache stats fields.
  */
-export declare function yamlGetCacheStats(): any
+export declare function yamlGetCacheStats(): { hits: number; misses: number; hit_rate: number; size: number; capacity: number }
 
 /** Extract a string-to-string map from YAML using dot-notation key path. */
 export declare function yamlGetHashmapValue(content: string, keyPath: string): Record<string, string>
