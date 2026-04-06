@@ -411,10 +411,15 @@ mod tests {
         file
     }
 
+    fn reset_cache_state() {
+        clear_cache();
+        reset_cache_stats();
+    }
+
     #[test]
     #[serial]
     fn test_load_settings_sync() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "key: value\nnumber: 42\n";
         let file = create_test_yaml(yaml_content);
@@ -429,7 +434,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_load_settings_async() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "key: value\nnumber: 42\n";
         let file = create_test_yaml(yaml_content);
@@ -444,7 +449,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_load_batch_sync() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("key1: value1\n");
         let yaml2 = create_test_yaml("key2: value2\n");
@@ -460,7 +465,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_load_batch_async() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("key1: value1\n");
         let yaml2 = create_test_yaml("key2: value2\n");
@@ -476,7 +481,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_cache_operations() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "key: value\n";
         let file = create_test_yaml(yaml_content);
@@ -501,7 +506,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_clear_cache() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("key1: value1\n");
         let yaml2 = create_test_yaml("key2: value2\n");
@@ -522,7 +527,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_concurrent_read_access() {
-        clear_cache();
+        reset_cache_state();
 
         // Pre-populate cache
         let yaml_content = "concurrent: test\n";
@@ -552,7 +557,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_concurrent_write_access() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "write: test\n";
         let file = create_test_yaml(yaml_content);
@@ -576,7 +581,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_concurrent_read_write() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "mixed: access\n";
         let file = create_test_yaml(yaml_content);
@@ -616,7 +621,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_is_cached_on_empty_cache() {
-        clear_cache();
+        reset_cache_state();
 
         assert!(!is_cached("nonexistent"));
         assert!(!is_cached(""));
@@ -626,7 +631,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_get_cached_on_empty_cache() {
-        clear_cache();
+        reset_cache_state();
 
         assert!(get_cached("nonexistent").is_none());
         assert!(get_cached("").is_none());
@@ -635,7 +640,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_invalidate_nonexistent_key() {
-        clear_cache();
+        reset_cache_state();
 
         assert!(!invalidate("never_added"));
         assert!(!invalidate(""));
@@ -644,7 +649,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_cache_keys_empty() {
-        clear_cache();
+        reset_cache_state();
 
         let keys = cache_keys();
         assert!(keys.is_empty());
@@ -653,7 +658,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_cache_size_empty() {
-        clear_cache();
+        reset_cache_state();
 
         assert_eq!(cache_size(), 0);
     }
@@ -661,7 +666,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_clear_empty_cache() {
-        clear_cache();
+        reset_cache_state();
 
         // Should not panic on empty cache
         clear_cache();
@@ -671,7 +676,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_reload_same_key_updates_value() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("version: 1\n");
         let yaml2 = create_test_yaml("version: 2\n");
@@ -691,7 +696,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_async_reload_same_key_updates_value() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("async_version: 1\n");
         let yaml2 = create_test_yaml("async_version: 2\n");
@@ -712,7 +717,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_arc_cloning_preserves_reference() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "arc: test\n";
         let file = create_test_yaml(yaml_content);
@@ -729,7 +734,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_load_batch_sync_empty_paths() {
-        clear_cache();
+        reset_cache_state();
 
         let paths: Vec<&Path> = vec![];
         let result = load_batch_sync(&paths);
@@ -742,7 +747,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_load_batch_async_empty_paths() {
-        clear_cache();
+        reset_cache_state();
 
         let paths: Vec<&Path> = vec![];
         let result = load_batch_async(&paths).await;
@@ -755,7 +760,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_special_key_characters() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "key: value\n";
         let file = create_test_yaml(yaml_content);
@@ -785,7 +790,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_batch_uses_path_as_key() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("batch: one\n");
         let yaml2 = create_test_yaml("batch: two\n");
@@ -805,7 +810,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_async_batch_uses_path_as_key() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml1 = create_test_yaml("async_batch: one\n");
         let yaml2 = create_test_yaml("async_batch: two\n");
@@ -824,7 +829,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_invalidate_during_reads() {
-        clear_cache();
+        reset_cache_state();
 
         let yaml_content = "invalidate: test\n";
         let file = create_test_yaml(yaml_content);
@@ -855,28 +860,62 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_many_entries() {
-        clear_cache();
+    fn test_cache_hit_and_miss_stats_follow_get_cached_behavior() {
+        reset_cache_state();
 
         let yaml_content = "many: entries\n";
         let file = create_test_yaml(yaml_content);
 
-        // Add many entries
-        for i in 0..100 {
+        load_settings_sync("tracked_key", file.path()).unwrap();
+
+        assert!(get_cached("tracked_key").is_some());
+        assert!(get_cached("missing_key").is_none());
+
+        let stats = cache_stats();
+        assert_eq!(stats.hits, 1);
+        assert_eq!(stats.misses, 1);
+        assert_eq!(stats.hit_rate, 0.5);
+    }
+
+    #[test]
+    #[serial]
+    fn test_cache_stats_reports_canonical_capacity_fields() {
+        reset_cache_state();
+
+        let CacheStats {
+            hits,
+            misses,
+            hit_rate,
+            size,
+            capacity,
+        } = cache_stats();
+
+        assert_eq!(hits, 0);
+        assert_eq!(misses, 0);
+        assert_eq!(hit_rate, 0.0);
+        assert_eq!(size, 0);
+        assert_eq!(capacity, 64);
+    }
+
+    #[test]
+    #[serial]
+    fn test_bounded_cache_never_exceeds_capacity_without_asserting_victim_order() {
+        reset_cache_state();
+
+        let yaml_content = "many: entries\n";
+        let file = create_test_yaml(yaml_content);
+
+        for i in 0..128 {
             let key = format!("entry_{}", i);
             load_settings_sync(&key, file.path()).unwrap();
         }
 
-        assert_eq!(cache_size(), 100);
+        assert!(cache_size() <= 64);
 
-        // Verify all are accessible
-        for i in 0..100 {
-            let key = format!("entry_{}", i);
-            assert!(is_cached(&key));
-            assert!(get_cached(&key).is_some());
-        }
+        let stats = cache_stats();
+        assert!(stats.size <= 64);
+        assert_eq!(stats.capacity, 64);
 
-        // Clear all
         clear_cache();
         assert_eq!(cache_size(), 0);
     }
