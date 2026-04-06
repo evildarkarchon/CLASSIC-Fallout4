@@ -757,6 +757,8 @@ pub fn detect_mods_batch(
 mod tests {
     use super::*;
     use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
+    use serial_test::serial;
+    use std::sync::Arc;
 
     // ============================================
     // Helper function tests
@@ -897,6 +899,47 @@ mod tests {
         let output = result.join("");
         // The longer pattern should match
         assert!(output.contains("Mod Extended") || output.contains("modextended"));
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_single_reuses_cached_matcher_for_same_normalized_input() {
+        let mut yaml_dict = IndexMap::new();
+        yaml_dict.insert(
+            "RepeatableMod".to_string(),
+            "Repeatable Mod\nCache me once.".to_string(),
+        );
+        yaml_dict.insert(
+            "RepeatableModExtended".to_string(),
+            "Repeatable Mod Extended\nStill cache me once.".to_string(),
+        );
+
+        reset_matcher_caches_for_tests();
+
+        let first = single_matcher_for_tests(&yaml_dict).unwrap();
+        let second = single_matcher_for_tests(&yaml_dict).unwrap();
+
+        assert!(Arc::ptr_eq(&first, &second));
+        assert_eq!(single_compile_count_for_tests(), 1);
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_single_cache_stays_bounded_without_victim_assertions() {
+        reset_matcher_caches_for_tests();
+
+        for index in 0..70 {
+            let mut yaml_dict = IndexMap::new();
+            yaml_dict.insert(
+                format!("bounded-single-{index}"),
+                format!("Bounded Single {index}\nKeep cache bounded."),
+            );
+            let _ = single_matcher_for_tests(&yaml_dict).unwrap();
+        }
+
+        assert_eq!(single_cache_capacity_for_tests(), 64);
+        assert!(single_cache_size_for_tests() <= single_cache_capacity_for_tests());
+        assert!(single_compile_count_for_tests() >= 64);
     }
 
     #[test]
@@ -1162,6 +1205,23 @@ mod tests {
             2,
             "Both conflict pairs should be reported"
         );
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_double_reuses_cached_matcher_for_same_conflict_set() {
+        let entries = vec![
+            make_conflict("repeat-double-a", "repeat-double-b"),
+            make_conflict("repeat-double-c", "repeat-double-d"),
+        ];
+
+        reset_matcher_caches_for_tests();
+
+        let first = double_matcher_for_tests(&entries).unwrap();
+        let second = double_matcher_for_tests(&entries).unwrap();
+
+        assert!(Arc::ptr_eq(&first, &second));
+        assert_eq!(double_compile_count_for_tests(), 1);
     }
 
     // ============================================
@@ -1501,5 +1561,41 @@ mod tests {
         // Second result should be about Mod2
         let output2 = result[1].join("");
         assert!(output2.contains("[02]") || output2.contains("Mod 2"));
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_batch_reuses_cached_matcher_across_repeated_invocations() {
+        let mut yaml_dict = IndexMap::new();
+        yaml_dict.insert(
+            "repeatable-batch".to_string(),
+            "Repeatable Batch\nFirst warning.".to_string(),
+        );
+        yaml_dict.insert(
+            "repeatable-batch-extended".to_string(),
+            "Repeatable Batch Extended\nSecond warning.".to_string(),
+        );
+
+        let mut log1 = IndexMap::new();
+        log1.insert("Repeatable-Batch.esp".to_string(), "0A".to_string());
+
+        let mut log2 = IndexMap::new();
+        log2.insert(
+            "Repeatable-Batch-Extended.esp".to_string(),
+            "0B".to_string(),
+        );
+
+        let logs = vec![log1, log2];
+
+        reset_matcher_caches_for_tests();
+
+        let first = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
+        let second = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
+        let cached_first = batch_matcher_for_tests(&yaml_dict).unwrap();
+        let cached_second = batch_matcher_for_tests(&yaml_dict).unwrap();
+
+        assert_eq!(first, second);
+        assert!(Arc::ptr_eq(&cached_first, &cached_second));
+        assert_eq!(batch_compile_count_for_tests(), 1);
     }
 }

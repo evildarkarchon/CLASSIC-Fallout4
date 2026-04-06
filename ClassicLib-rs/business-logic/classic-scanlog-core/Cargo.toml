@@ -43,6 +43,7 @@ tokio = { workspace = true, features = ["full"] }
 futures = { workspace = true }
 
 # Caching and concurrency
+quick_cache = { workspace = true }
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
 once_cell = { workspace = true }
@@ -76,6 +77,7 @@ serde_json = { workspace = true }
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
 sqlx = { workspace = true }
+serial_test = "3.2"
 
 [[bench]]
 name = "scanlog_benchmarks"
