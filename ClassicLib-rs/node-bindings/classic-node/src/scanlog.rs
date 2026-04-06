@@ -14,6 +14,7 @@
 use classic_config_core::YamlDataCore;
 use classic_scanlog_core::OrchestratorCore;
 use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
+use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
@@ -70,6 +71,7 @@ pub struct JsAnalysisConfig {
 
 /// Optional settings used when building analysis config from YAML content.
 #[napi(object)]
+#[derive(Clone)]
 pub struct JsAnalysisBuildOptions {
     /// Whether to include FormID value lookups in reports.
     pub show_formid_values: Option<bool>,
@@ -102,6 +104,31 @@ pub struct JsAnalysisResult {
     pub plugin_count: u32,
     /// Number of suspect patterns matched
     pub suspect_count: u32,
+}
+
+#[napi(object)]
+pub struct JsFcxConfigIssue {
+    pub file_path: String,
+    pub section: Option<String>,
+    pub setting: String,
+    pub current_value: String,
+    pub recommended_value: String,
+    pub description: String,
+    pub severity: String,
+}
+
+impl From<&ConfigIssue> for JsFcxConfigIssue {
+    fn from(issue: &ConfigIssue) -> Self {
+        Self {
+            file_path: issue.file_path.clone(),
+            section: issue.section.clone(),
+            setting: issue.setting.clone(),
+            current_value: issue.current_value.clone(),
+            recommended_value: issue.recommended_value.clone(),
+            description: issue.description.clone(),
+            severity: issue.severity.clone(),
+        }
+    }
 }
 
 /// JavaScript-compatible parsed log segments.
@@ -139,6 +166,24 @@ pub fn create_analysis_config(game: String, game_version: String) -> JsAnalysisC
         simplify_logs: false,
         crashgen_registry: Some(HashMap::new()),
     }
+}
+
+#[napi]
+pub fn reset_fcx_global_state() -> napi::Result<()> {
+    match FcxModeHandler::reset_global_state() {
+        Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
+        Err(error) => Err(to_napi_err(format!("failed to reset FCX global state: {error}"))),
+    }
+}
+
+#[napi]
+pub fn get_fcx_config_issues() -> Vec<JsFcxConfigIssue> {
+    let handler = GLOBAL_FCX_HANDLER.lock();
+    handler
+        .get_detected_issues()
+        .iter()
+        .map(JsFcxConfigIssue::from)
+        .collect()
 }
 
 fn resolve_build_options(
