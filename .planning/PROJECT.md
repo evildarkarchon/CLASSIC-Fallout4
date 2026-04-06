@@ -27,6 +27,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ Node bindings expose FCX reset plus structured issue inspection without same-process carryover — Validated in Phase 3: FCX State Hardening
 - ✓ YAML, settings, and hash caches now use bounded `quick_cache` eviction with capacities 128/64/1024 — Validated in Phase 4: Bounded Cache Replacement
 - ✓ YAML, settings, and hash cache stats now expose one canonical five-field contract across Rust, Node, Python, and C++ — Validated in Phase 4: Bounded Cache Replacement
+- ✓ Large-file mmap reads use `MmapOptions::map_copy_read_only()` with validated Windows benchmark proof — Validated in Phase 6: mmap TOCTOU Safety
 
 ### Active
 
@@ -36,7 +37,6 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
 - [ ] Replace per-entry regex in `detect_mods_important` with AhoCorasick or combined pattern
 - [ ] Add before/after criterion benchmarks for performance improvements
-- [ ] Switch mmap from `Mmap::map()` to `MmapOptions::map_copy_read_only()` for TOCTOU safety
 - [ ] Promote `winreg` and `phf` to workspace dependencies
 - [ ] Document or remove `zerovec` workaround dependency
 - [ ] Commit or document Node `index.d.ts` build-first requirement
@@ -72,7 +72,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | -- Pending |
+| Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | Validated in Phase 6 |
 | Keep Proton path code, wire it up | Linux support is planned; don't delete partial work | -- Pending |
 | Bounded `quick_cache` eviction for caches | Bounded memory is more important than unlimited cache hits for long-running processes, and Phase 4 standardizes on the repo's existing `quick_cache` implementation | Validated in Phase 4 |
 | Promote only shared deps to workspace | TUI deps are local to one crate; workspace promotion adds management overhead for no benefit | -- Pending |
@@ -97,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after Phase 4 completion*
+*Last updated: 2026-04-06 after Phase 6 completion*
