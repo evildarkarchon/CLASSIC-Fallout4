@@ -417,11 +417,41 @@ def _run_version_registry_tier2_smoke(
     assert base.semantic_distance(newer) > 0
 
 
+def _run_cache_helpers_tier2_smoke(
+    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import classic_file_io
+
+    hashed_file = tmp_path / "hash-cache.txt"
+    hashed_file.write_text("hash-cache", encoding="utf-8")
+
+    classic_file_io.FileHasher.clear_cache()
+    classic_file_io.FileHasher.reset_cache_stats()
+    first_hash = classic_file_io.FileHasher.hash_file(str(hashed_file))
+    second_hash = classic_file_io.FileHasher.hash_file(str(hashed_file))
+    assert first_hash == second_hash
+
+    hash_stats = classic_file_io.FileHasher.cache_stats()
+    assert hash_stats["misses"] == 1
+    assert hash_stats["hits"] == 1
+    assert hash_stats["capacity"] >= hash_stats["size"]
+
+    classic_file_io.FileHasher.reset_cache_stats()
+    reset_stats = classic_file_io.FileHasher.cache_stats()
+    assert reset_stats["hits"] == 0
+    assert reset_stats["misses"] == 0
+
+    classic_file_io.FileHasher.clear_cache()
+    cleared_stats = classic_file_io.FileHasher.cache_stats()
+    assert cleared_stats["size"] == 0
+
+
 CASE_RUNNERS = {
     "config-tier1-smoke": _run_config_tier1_smoke,
     "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
     "version-registry-tier1-smoke": _run_version_registry_tier1_smoke,
     "config-tier2-smoke": _run_config_tier2_smoke,
+    "cache-helpers-tier2-smoke": _run_cache_helpers_tier2_smoke,
     "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
     "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
 }
@@ -501,7 +531,9 @@ def test_parse_segments_parallel_deprecation_warning() -> None:
     parser = classic_scanlog.LogParser()
     sample_lines = ["[Compatibility]", "Buffout4.dll"]
 
-    with pytest.warns(DeprecationWarning, match="parse_segments_parallel is deprecated"):
+    with pytest.warns(
+        DeprecationWarning, match="parse_segments_parallel is deprecated"
+    ):
         result = parser.parse_segments_parallel(sample_lines)
 
     assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
@@ -513,7 +545,9 @@ def test_generate_suspect_section_deprecation_warning() -> None:
 
     report_gen = classic_scanlog.ReportGenerator()
 
-    with pytest.warns(DeprecationWarning, match="generate_suspect_section is deprecated"):
+    with pytest.warns(
+        DeprecationWarning, match="generate_suspect_section is deprecated"
+    ):
         fragment = report_gen.generate_suspect_section(["SomeSuspect"])
 
     assert fragment is not None

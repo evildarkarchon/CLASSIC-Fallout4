@@ -37,9 +37,18 @@ Usage:
 """
 
 from collections.abc import Coroutine
-from typing import Any
+from typing import Any, TypedDict
 
 __version__: str
+
+class FileHasherCacheStats(TypedDict):
+    """Canonical hash cache statistics contract."""
+
+    hits: int
+    misses: int
+    hit_rate: float
+    size: int
+    capacity: int
 
 class RustFileIOError(Exception):
     """Base for File I/O Rust errors."""
@@ -828,6 +837,36 @@ class FileHasher:
         Example:
             >>> count = FileHasher.cache_size()
             >>> print(f"Cached hashes: {count}")
+
+        """
+
+    @staticmethod
+    def cache_stats() -> FileHasherCacheStats:
+        """Get canonical hash cache statistics.
+
+        Returns:
+            Dictionary with cache statistics:
+                - 'hits': Number of cache hits
+                - 'misses': Number of cache misses
+                - 'hit_rate': Hit ratio as a float from 0.0 to 1.0
+                - 'size': Current number of cached entries
+                - 'capacity': Maximum retained cache entries
+
+        Example:
+            >>> stats = FileHasher.cache_stats()
+            >>> print(stats["capacity"])
+            1024
+
+        """
+
+    @staticmethod
+    def reset_cache_stats() -> None:
+        """Reset hash cache hit and miss counters.
+
+        Example:
+            >>> FileHasher.reset_cache_stats()
+            >>> FileHasher.cache_stats()["hits"]
+            0
 
         """
 

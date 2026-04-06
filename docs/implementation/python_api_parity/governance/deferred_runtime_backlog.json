@@ -3684,6 +3684,19 @@
         "SuspectStackCountRule",
         "SuspectStackRule"
       ]
+    },
+    {
+      "coverageId": "python-deferred-aux-297",
+      "classification": "deferred",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "wave": "wave4",
+      "owner": "Squad B",
+      "deferReason": "Compatibility cache-size adapter remains outside direct smoke coverage while canonical cache stats own Phase 4 runtime verification.",
+      "bindingIdentifiers": [
+        "classic_file_io.FileHasher.cache_size"
+      ],
+      "rustSymbols": []
     }
   ]
 }

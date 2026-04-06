@@ -3112,6 +3112,17 @@
       "python_module": "classic_version_registry",
       "python_export_path": "XseConfig",
       "wave": "wave3"
+    },
+    {
+      "gap_id": "aux-001",
+      "owner_module": "aux",
+      "ordinal_in_module": 1,
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "rust_symbol": null,
+      "python_module": "classic_file_io",
+      "python_export_path": "FileHasher.cache_size",
+      "wave": "wave4"
     }
   ]
 }
