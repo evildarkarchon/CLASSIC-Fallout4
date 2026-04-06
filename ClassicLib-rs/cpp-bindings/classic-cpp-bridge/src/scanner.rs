@@ -8,7 +8,7 @@ use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, FcxModeHandler, FcxResetError, OrchestratorCore,
+    AnalysisConfig, AnalysisResult, FcxModeHandler, FcxResetError, LogParser, OrchestratorCore,
     ScanProgressPhase, build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;
@@ -17,7 +17,7 @@ use log::info;
 use std::collections::{HashSet, VecDeque};
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use std::time::Duration;
 
@@ -39,6 +39,9 @@ const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
 const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
 const SHORT_SCAN_CACHE_TTL_SECS: u64 = BATCH_CACHE_TTL_SECS;
 const DB_COUNTER_LOG_INTERVAL_DEFAULT: u64 = 25;
+
+static CRASH_PATTERN_PARSER: LazyLock<classic_scanlog_core::LogParser> =
+    LazyLock::new(|| LogParser::new(None).expect("default crash-pattern parser should initialize"));
 
 fn diagnostics_enabled() -> bool {
     std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some()
@@ -726,9 +729,8 @@ fn detect_vr_log(content: &str) -> bool {
 
 fn detect_crash_pattern(content: &str) -> String {
     // Parse the crash header to extract the main error/crash module
-    let parser = classic_scanlog_core::LogParser::new(None).unwrap();
     let lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
-    match parser.parse_crash_header(&lines) {
+    match CRASH_PATTERN_PARSER.parse_crash_header(&lines) {
         Ok(header) => header.get("main_error").cloned().unwrap_or_default(),
         Err(_) => String::new(),
     }

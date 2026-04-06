@@ -540,11 +540,19 @@ This is bridge-local logic. It checks only for the substrings `Fallout4VR.esm` o
 
 ### `detect_crash_pattern(content) -> String`
 
-Creates `classic_scanlog_core::LogParser::new(None)` and forwards to `LogParser::parse_crash_header(...)`, returning only the parsed `main_error` text.
+Reuses one module-level default `LogParser` and forwards to `LogParser::parse_crash_header(...)`, returning only the parsed `main_error` text.
+
+Contributor note:
+
+- `detect_crash_pattern` keeps the same fail-soft `""` behavior, but it now reuses a cached default parser internally instead of constructing `LogParser::new(None)` on every call
 
 Fail-soft behavior:
 
-- parser construction failure or header parse failure becomes `""`
+- header parse failure becomes `""`
+
+Initialization note:
+
+- default parser construction is now a one-time module initialization step rather than per-call bridge work
 
 ## Papyrus monitoring
 
