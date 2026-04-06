@@ -82,7 +82,7 @@ Plans:
   5. Existing tests pass with bounded caches (clear/reset APIs preserved for test isolation)
 **Plans**: 6 plans
 Plans:
-- [ ] 04-01-PLAN.md -- Replace YAML_CACHE with a 128-entry bounded quick_cache and canonical CacheStats
+- [x] 04-01-PLAN.md -- Replace YAML_CACHE with a 128-entry bounded quick_cache and canonical CacheStats
 - [x] 04-02-PLAN.md -- Replace SETTINGS_CACHE with a 64-entry bounded quick_cache and canonical CacheStats
 - [x] 04-03-PLAN.md -- Replace HASH_CACHE with a 1024-entry bounded quick_cache and add public hash cache stats
 - [ ] 04-04-PLAN.md -- Align Node YAML/settings/hash cache stats, tests, committed TypeScript contract, and Node parity artifacts to the canonical contract
