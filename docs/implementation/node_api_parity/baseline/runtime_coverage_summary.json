@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-30T12:22:20.270588+00:00",
+  "generated_at_utc": "2026-04-06T02:43:59.634771+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,10 +8,10 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 381,
-    "runtime_verified_total": 273,
+    "tracked_surface_total": 385,
+    "runtime_verified_total": 276,
     "contract_mapped_total": 0,
-    "deferred_total": 108,
+    "deferred_total": 109,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 261,
     "tier1_missing_runtime_total": 0,
@@ -20,19 +20,19 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 143,
-      "total": 155,
+      "runtime_verified": 144,
+      "total": 156,
       "deferred": 12
     },
     "config": {
-      "runtime_verified": 53,
-      "total": 79,
+      "runtime_verified": 55,
+      "total": 81,
       "deferred": 26
     },
     "scanlog": {
       "runtime_verified": 21,
-      "total": 87,
-      "deferred": 66
+      "total": 88,
+      "deferred": 67
     },
     "version_registry": {
       "runtime_verified": 56,
@@ -5095,6 +5095,25 @@
       "notes": null
     },
     {
+      "trackedId": "binding:rust:FcxResetError",
+      "trackedType": "gap",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "FcxResetError",
+      "bindingIdentifier": null,
+      "coverageId": "node-deferred-scanlog-fcx-reset-error",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
       "trackedId": "binding:rust:FormIDAnalyzer",
       "trackedType": "gap",
       "ownerModule": "scanlog",
@@ -6330,6 +6349,25 @@
       "notes": null
     },
     {
+      "trackedId": "binding:JsFcxConfigIssue",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFcxConfigIssue",
+      "coverageId": "node-tier2-scanlog-fcx-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "scanlog-fcx-state-isolation",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
+    },
+    {
       "trackedId": "binding:JsGameScanConfig",
       "trackedType": "gap",
       "ownerModule": "config",
@@ -6924,6 +6962,25 @@
       "notes": null
     },
     {
+      "trackedId": "binding:getFcxConfigIssues",
+      "trackedType": "gap",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "getFcxConfigIssues",
+      "coverageId": "node-tier2-scanlog-fcx-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "scanlog-fcx-state-isolation",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
+    },
+    {
       "trackedId": "binding:migrateGameVersionSetting",
       "trackedType": "gap",
       "ownerModule": "version_registry",
@@ -6998,6 +7055,25 @@
       "owner": null,
       "deferReason": null,
       "notes": null
+    },
+    {
+      "trackedId": "binding:resetFcxGlobalState",
+      "trackedType": "gap",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "gapType": "node_unmapped",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "resetFcxGlobalState",
+      "coverageId": "node-tier2-scanlog-fcx-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "scanlog-fcx-state-isolation",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     },
     {
       "trackedId": "binding:setApplicationDir",

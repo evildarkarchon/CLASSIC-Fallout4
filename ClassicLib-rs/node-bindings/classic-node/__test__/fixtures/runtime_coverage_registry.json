@@ -156,6 +156,21 @@
         "IGNORE_YAML"
       ],
       "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+    },
+    {
+      "coverageId": "node-tier2-scanlog-fcx-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsFcxConfigIssue",
+        "getFcxConfigIssues",
+        "resetFcxGlobalState"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "scanlog-fcx-state-isolation",
+      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     }
   ]
 }
