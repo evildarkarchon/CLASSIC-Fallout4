@@ -28,6 +28,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ YAML, settings, and hash caches now use bounded `quick_cache` eviction with capacities 128/64/1024 — Validated in Phase 4: Bounded Cache Replacement
 - ✓ YAML, settings, and hash cache stats now expose one canonical five-field contract across Rust, Node, Python, and C++ — Validated in Phase 4: Bounded Cache Replacement
 - ✓ Large-file mmap reads use `MmapOptions::map_copy_read_only()` with validated Windows benchmark proof — Validated in Phase 6: mmap TOCTOU Safety
+- ✓ Owned workspace lazy statics now use `std::sync::LazyLock`, and the remaining scanlog `OnceCell` cache uses `std::sync::OnceLock` with direct `once_cell` manifests removed — Validated in Phase 7: Consistency Sweep
 
 ### Active
 
@@ -75,6 +76,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 | Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | Validated in Phase 6 |
 | Keep Proton path code, wire it up | Linux support is planned; don't delete partial work | -- Pending |
 | Bounded `quick_cache` eviction for caches | Bounded memory is more important than unlimited cache hits for long-running processes, and Phase 4 standardizes on the repo's existing `quick_cache` implementation | Validated in Phase 4 |
+| Standardize owned lazy initialization on std primitives | `LazyLock`/`OnceLock` are stable in the repo MSRV and remove the need for direct `once_cell` ownership in workspace code | Validated in Phase 7 |
 | Promote only shared deps to workspace | TUI deps are local to one crate; workspace promotion adds management overhead for no benefit | -- Pending |
 | Before/after benchmarks for perf work | Prove improvements with data; criterion benchmarks become regression guards | -- Pending |
 | Binding parity in-scope | FCX and deprecated API issues span core + bindings; splitting would leave incomplete fixes | -- Pending |
@@ -97,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after Phase 6 completion*
+*Last updated: 2026-04-06 after Phase 7 completion*
