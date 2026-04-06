@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-04-06T02:59:45.095Z"
+status: executing
+stopped_at: Completed 04-bounded-cache-replacement-02-PLAN.md
+last_updated: "2026-04-06T04:35:54.916Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 14
+  completed_plans: 9
   percent: 6
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Phase 03 — fcx-state-hardening
+**Current focus:** Phase 04 — bounded-cache-replacement
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 04 (bounded-cache-replacement) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
 Last activity: 2026-04-06
 
 Progress: [█░░░░░░░░░] 6%
@@ -58,6 +58,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 03 P01 | 0 min | 2 tasks | 3 files |
 | Phase 03 P02 | 6 min | 2 tasks | 2 files |
 | Phase 03 P03 | 8 min | 3 tasks | 10 files |
+| Phase 04 P02 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Keep Node FCX diagnostics behind resetFcxGlobalState() and getFcxConfigIssues() instead of extending JsAnalysisResult.
 - [Phase 03]: Populate FCX issue state in the Node adapter from existing ClassicConfig/scangame helpers so binding code stays thin.
 - [Phase 03]: Track FcxResetError as deferred Tier-2 parity while runtime-verifying the new Node-only FCX exports.
+- [Phase 04]: Use LazyLock<quick_cache::sync::Cache<...>> with capacity 64 for SETTINGS_CACHE.
+- [Phase 04]: Keep cache_keys() as the only public key-listing helper while CacheStats stays canonical.
+- [Phase 04]: Validate bounded quick_cache behavior by capacity and stats, not exact eviction victim order.
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T02:47:26.542Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-04-06T04:35:54.912Z
+Stopped at: Completed 04-bounded-cache-replacement-02-PLAN.md
 Resume file: None

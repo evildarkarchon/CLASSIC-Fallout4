@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Deprecated API Migration** - Migrate all callers off deprecated methods and add binding-surface deprecation warnings
 - [ ] **Phase 2: Dead Code Removal** - Delete dead code items, remove deprecated methods, eliminate legacy fallback path
 - [ ] **Phase 3: FCX State Hardening** - Fix silent reset bug, expose FCX reset/issues in all binding surfaces, add contention tests
-- [ ] **Phase 4: Bounded Cache Replacement** - Replace three unbounded DashMap caches with quick_cache LRU, expose CacheStats
+- [ ] **Phase 4: Bounded Cache Replacement** - Replace three unbounded DashMap caches with bounded quick_cache eviction, expose CacheStats
 - [ ] **Phase 5: Pattern Caching and Performance** - Cache compiled regex/AhoCorasick in mod detector hot paths, cache LogParser in bridge, add benchmarks
 - [ ] **Phase 6: mmap TOCTOU Safety** - Switch mmap to map_copy_read_only with Windows benchmark validation
 - [ ] **Phase 7: Consistency Sweep** - Replace once_cell::sync::Lazy with std::sync::LazyLock across all crates
@@ -71,7 +71,7 @@ Plans:
 - [x] 03-03-PLAN.md -- Add Node FCX reset/issues APIs, auto-reset wiring, and carryover coverage (SAFE-03, SAFE-04, TEST-04)
 
 ### Phase 4: Bounded Cache Replacement
-**Goal**: All global caches have bounded memory with LRU eviction and expose consistent observability through CacheStats
+**Goal**: All global caches have bounded memory with `quick_cache` eviction semantics and expose consistent observability through CacheStats
 **Depends on**: Nothing (independent workstream)
 **Requirements**: CACHE-01, CACHE-02, CACHE-03, CONS-03
 **Success Criteria** (what must be TRUE):
@@ -80,16 +80,14 @@ Plans:
   3. `HASH_CACHE` uses `quick_cache::sync::Cache` with capacity 1024 instead of unbounded `DashMap`
   4. All three caches expose a consistent `CacheStats` struct with hits, misses, hit_rate, size, and capacity fields
   5. Existing tests pass with bounded caches (clear/reset APIs preserved for test isolation)
-**Plans**: 8 plans
+**Plans**: 6 plans
 Plans:
 - [ ] 04-01-PLAN.md -- Replace YAML_CACHE with a 128-entry bounded quick_cache and canonical CacheStats
-- [ ] 04-02-PLAN.md -- Replace SETTINGS_CACHE with a 64-entry bounded quick_cache and canonical CacheStats
+- [x] 04-02-PLAN.md -- Replace SETTINGS_CACHE with a 64-entry bounded quick_cache and canonical CacheStats
 - [ ] 04-03-PLAN.md -- Replace HASH_CACHE with a 1024-entry bounded quick_cache and add public hash cache stats
-- [ ] 04-04-PLAN.md -- Align Node YAML/settings/hash cache stats, tests, and committed TypeScript contract to the canonical contract
-- [ ] 04-05-PLAN.md -- Align Python YAML/settings/hash cache stats, stubs, and runtime smoke coverage to the canonical contract
+- [ ] 04-04-PLAN.md -- Align Node YAML/settings/hash cache stats, tests, committed TypeScript contract, and Node parity artifacts to the canonical contract
+- [ ] 04-05-PLAN.md -- Align Python YAML/settings/hash cache stats, stubs, runtime smoke coverage, and Python parity artifacts to the canonical contract
 - [ ] 04-06-PLAN.md -- Add C++ YAML/settings/hash cache stats entrypoints and document the new parity surface
-- [ ] 04-07-PLAN.md -- Refresh Node parity runtime-coverage artifacts for the new cache helper surface
-- [ ] 04-08-PLAN.md -- Refresh Python parity runtime-coverage artifacts for the new cache helper surface
 
 ### Phase 5: Pattern Caching and Performance
 **Goal**: Hot-path regex compilation and LogParser allocation happen once, not per-call, with criterion benchmarks proving the improvement

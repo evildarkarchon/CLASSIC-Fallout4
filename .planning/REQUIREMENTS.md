@@ -38,7 +38,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Cache Eviction
 
 - [ ] **CACHE-01**: Replace unbounded `DashMap` in `YAML_CACHE` with `quick_cache::sync::Cache` (capacity 128)
-- [ ] **CACHE-02**: Replace unbounded `DashMap` in `SETTINGS_CACHE` with `quick_cache::sync::Cache` (capacity 64)
+- [x] **CACHE-02**: Replace unbounded `DashMap` in `SETTINGS_CACHE` with `quick_cache::sync::Cache` (capacity 64)
 - [ ] **CACHE-03**: Replace unbounded `DashMap` in `HASH_CACHE` with `quick_cache::sync::Cache` (capacity 1024)
 
 ### Workspace and Infrastructure
@@ -60,7 +60,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
 - [x] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
-- [ ] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
+- [x] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
 - [ ] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
 
 ## Out of Scope
@@ -104,7 +104,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-03 | Phase 5 | Pending |
 | PERF-04 | Phase 5 | Pending |
 | CACHE-01 | Phase 4 | Pending |
-| CACHE-02 | Phase 4 | Pending |
+| CACHE-02 | Phase 4 | Complete |
 | CACHE-03 | Phase 4 | Pending |
 | INFRA-01 | Phase 8 | Pending |
 | INFRA-02 | Phase 8 | Pending |
@@ -117,7 +117,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-04 | Phase 3 | Complete |
 | CONS-01 | Phase 7 | Pending |
 | CONS-02 | Phase 3 | Complete |
-| CONS-03 | Phase 4 | Pending |
+| CONS-03 | Phase 4 | Complete |
 | CONS-04 | Phase 5 | Pending |
 
 **Coverage:**
