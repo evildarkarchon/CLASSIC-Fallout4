@@ -133,7 +133,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 07-01-PLAN.md -- Migrate `classic-scanlog-core` from direct `once_cell` usage to `std::sync::{LazyLock, OnceLock}` and drop its direct manifest dependency
-- [ ] 07-02-PLAN.md -- Finish the registry/perf sweep, remove remaining owned direct `once_cell` manifests, and align touched `docs/api` pages
+- [x] 07-02-PLAN.md -- Finish the registry/perf sweep, remove remaining owned direct `once_cell` manifests, and align touched `docs/api` pages
 
 ### Phase 8: Workspace and Infrastructure
 **Goal**: Workspace dependency management is clean, Linux Proton path discovery works end-to-end, and Node type definitions are committed with CI freshness checks
