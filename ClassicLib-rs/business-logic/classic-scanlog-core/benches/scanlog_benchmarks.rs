@@ -18,6 +18,7 @@
 //! ```
 
 use criterion::{BatchSize, BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use aho_corasick::{AhoCorasick, MatchKind};
 use std::collections::HashSet;
 use std::hint::black_box;
 use std::sync::Arc;
@@ -32,12 +33,13 @@ mod db_fixtures;
 use classic_config_core::CoreModEntry;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin,
-    contains_record, detect_mods_batch, detect_mods_important, detect_mods_single,
+    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner,
+    contains_plugin, contains_record, detect_mods_batch, detect_mods_single,
     detect_plugins_batch, scan_records_batch,
 };
 use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
+use regex::Regex;
 
 // =============================================================================
 // Real Crash Log Fixtures (embedded at compile time)
@@ -137,6 +139,35 @@ fn create_phase5_cached_regex_yaml() -> IndexMap<String, String> {
     ])
 }
 
+fn create_phase5_cached_regex_yaml_variant(seed: usize) -> IndexMap<String, String> {
+    IndexMap::from([
+        (
+            format!("unofficial fallout 4 patch {seed}"),
+            format!("Unofficial Fallout 4 Patch {seed}\nBaseline hotspot token."),
+        ),
+        (
+            format!("workshop framework {seed}"),
+            format!("Workshop Framework {seed}\nSynthetic cached-regex benchmark token."),
+        ),
+        (
+            format!("sim settlements 2 {seed}"),
+            format!("Sim Settlements 2 {seed}\nSynthetic cached-regex benchmark token."),
+        ),
+        (
+            format!("hudframework {seed}"),
+            format!("HUDFramework {seed}\nSynthetic cached-regex benchmark token."),
+        ),
+        (
+            format!("looksmenu {seed}"),
+            format!("LooksMenu {seed}\nSynthetic cached-regex benchmark token."),
+        ),
+        (
+            format!("fallui {seed}"),
+            format!("FallUI {seed}\nSynthetic cached-regex benchmark token."),
+        ),
+    ])
+}
+
 fn create_phase5_synthetic_plugins(count: usize) -> IndexMap<String, String> {
     let seed_plugins = [
         "Unofficial Fallout 4 Patch.esp",
@@ -160,6 +191,29 @@ fn create_phase5_synthetic_plugins(count: usize) -> IndexMap<String, String> {
     plugins
 }
 
+fn create_phase5_synthetic_plugins_variant(seed: usize, count: usize) -> IndexMap<String, String> {
+    let seed_plugins = [
+        format!("Unofficial Fallout 4 Patch {seed}.esp"),
+        format!("Workshop Framework {seed}.esm"),
+        format!("Sim Settlements 2 {seed}.esm"),
+        format!("HUDFramework {seed}.esm"),
+        format!("LooksMenu {seed}.esp"),
+        format!("FallUI {seed}.esp"),
+    ];
+
+    let mut plugins = IndexMap::new();
+    for index in 0..count {
+        let id = format!("{:02X}", index % 0xFD);
+        let plugin_name = if index < seed_plugins.len() {
+            seed_plugins[index].clone()
+        } else {
+            format!("SyntheticBenchmarkMod{seed:03}_{index:03}.esp")
+        };
+        plugins.insert(plugin_name, id);
+    }
+    plugins
+}
+
 fn create_phase5_batch_plugins(
     batch_size: usize,
     plugins_per_log: usize,
@@ -169,6 +223,24 @@ fn create_phase5_batch_plugins(
             let mut plugins = create_phase5_synthetic_plugins(plugins_per_log);
             plugins.insert(
                 format!("BatchUnique{:02}.esp", batch_index),
+                format!("{:02X}", (batch_index + plugins_per_log) % 0xFD),
+            );
+            plugins
+        })
+        .collect()
+}
+
+fn create_phase5_batch_plugins_variant(
+    seed: usize,
+    batch_size: usize,
+    plugins_per_log: usize,
+) -> Vec<IndexMap<String, String>> {
+    (0..batch_size)
+        .map(|batch_index| {
+            let mut plugins =
+                create_phase5_synthetic_plugins_variant(seed * 100 + batch_index, plugins_per_log);
+            plugins.insert(
+                format!("BatchUnique{seed:03}_{batch_index:02}.esp"),
                 format!("{:02X}", (batch_index + plugins_per_log) % 0xFD),
             );
             plugins
@@ -219,6 +291,47 @@ fn create_phase5_important_xse_modules() -> HashSet<String> {
         "f4se_plugin_preloader.dll".to_string(),
         "x-cell-fo4.dll".to_string(),
     ])
+}
+
+fn phase5_important_combined_text(
+    plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> String {
+    let plugin_text = plugins.keys().map(|name| name.to_lowercase());
+    let xse_text = xse_modules.iter().map(|name| name.to_lowercase());
+    plugin_text.chain(xse_text).collect::<Vec<_>>().join("\n")
+}
+
+fn detect_mods_important_legacy_regex_count(
+    entries: &[CoreModEntry],
+    plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> usize {
+    let combined_text = phase5_important_combined_text(plugins, xse_modules);
+    entries
+        .iter()
+        .filter(|entry| {
+            let escaped = regex::escape(&entry.detect.to_lowercase());
+            Regex::new(&escaped)
+                .expect("legacy important-mod benchmark regex should compile")
+                .is_match(&combined_text)
+        })
+        .count()
+}
+
+fn detect_mods_important_aho_count(
+    entries: &[CoreModEntry],
+    plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> usize {
+    let combined_text = phase5_important_combined_text(plugins, xse_modules);
+    let patterns: Vec<String> = entries.iter().map(|entry| entry.detect.to_lowercase()).collect();
+    let matcher = AhoCorasick::builder()
+        .match_kind(MatchKind::LeftmostLongest)
+        .build(patterns)
+        .expect("important-mod aho benchmark matcher should build");
+
+    matcher.find_iter(&combined_text).count()
 }
 
 fn extract_fixture_plugins(content: &str) -> IndexMap<String, String> {
@@ -739,12 +852,48 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
 
     let mut cached_regex_group = c.benchmark_group("phase5_cached_regex_paths");
     cached_regex_group.throughput(Throughput::Elements(synthetic_plugins.len() as u64));
+    let mut single_uncached_seed = 0usize;
+    cached_regex_group.bench_function("detect_mods_single_synthetic_uncached", |b| {
+        b.iter_batched(
+            || {
+                let seed = single_uncached_seed;
+                single_uncached_seed += 1;
+                (
+                    create_phase5_cached_regex_yaml_variant(seed),
+                    create_phase5_synthetic_plugins_variant(seed, 48),
+                )
+            },
+            |(yaml_dict, plugins)| {
+                detect_mods_single(yaml_dict, plugins)
+                    .expect("single uncached benchmark should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
     cached_regex_group.bench_function("detect_mods_single_synthetic_cached", |b| {
         b.iter_batched(
             || (yaml_dict.clone(), synthetic_plugins.clone()),
             |(yaml_dict, plugins)| {
                 detect_mods_single(yaml_dict, plugins)
                     .expect("single cached benchmark should succeed")
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    let mut batch_uncached_seed = 0usize;
+    cached_regex_group.bench_function("detect_mods_batch_synthetic_uncached", |b| {
+        b.iter_batched(
+            || {
+                let seed = batch_uncached_seed;
+                batch_uncached_seed += 1;
+                (
+                    create_phase5_cached_regex_yaml_variant(seed),
+                    create_phase5_batch_plugins_variant(seed, 16, 40),
+                )
+            },
+            |(yaml_dict, plugins)| {
+                detect_mods_batch(yaml_dict, plugins)
+                    .expect("batch uncached benchmark should succeed")
             },
             BatchSize::SmallInput,
         );
@@ -762,6 +911,25 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
     cached_regex_group.finish();
 
     let mut important_group = c.benchmark_group("phase5_detect_mods_important");
+    important_group.bench_function("legacy_regex_plugin_and_xse_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    synthetic_plugins.clone(),
+                    synthetic_xse_modules.clone(),
+                )
+            },
+            |(entries, plugins, xse_modules)| {
+                black_box(detect_mods_important_legacy_regex_count(
+                    &entries,
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
     important_group.bench_function("synthetic_plugin_and_xse_surface", |b| {
         b.iter_batched(
             || {
@@ -772,8 +940,26 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
                 )
             },
             |(entries, plugins, xse_modules)| {
-                detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules)
-                    .expect("important synthetic benchmark should succeed")
+                black_box(detect_mods_important_aho_count(&entries, &plugins, &xse_modules))
+            },
+            BatchSize::SmallInput,
+        );
+    });
+    important_group.bench_function("legacy_regex_real_fixture_plugin_surface", |b| {
+        b.iter_batched(
+            || {
+                (
+                    important_entries.clone(),
+                    fixture_plugins.clone(),
+                    fixture_xse_modules.clone(),
+                )
+            },
+            |(entries, plugins, xse_modules)| {
+                black_box(detect_mods_important_legacy_regex_count(
+                    &entries,
+                    &plugins,
+                    &xse_modules,
+                ))
             },
             BatchSize::SmallInput,
         );
@@ -788,8 +974,7 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
                 )
             },
             |(entries, plugins, xse_modules)| {
-                detect_mods_important(&entries, &plugins, Some("amd"), &xse_modules)
-                    .expect("important fixture benchmark should succeed")
+                black_box(detect_mods_important_aho_count(&entries, &plugins, &xse_modules))
             },
             BatchSize::SmallInput,
         );
