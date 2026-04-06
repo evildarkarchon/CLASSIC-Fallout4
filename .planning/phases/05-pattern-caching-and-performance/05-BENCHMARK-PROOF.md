@@ -9,8 +9,8 @@
 
 ```powershell
 $env:BENCH_MODE = "thorough"
-cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks phase5_ -- --save-baseline phase5-before
-cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks phase5_ -- --baseline phase5-before
+cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks phase5_detect_mods_important -- --save-baseline phase5-important-followup
+cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks phase5_detect_mods_important -- --baseline phase5-important-followup
 cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks -- --test
 ```
 
@@ -22,7 +22,7 @@ cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --b
 
 ## Results
 
-The save/compare workflow above was run to keep the proof reproducible and focused on the Phase 5 groups. Because the saved baseline was captured from the same checked-out implementation, the Criterion `change:` sections are treated as reproducibility/noise checks. The actual Phase 5 before/after proof comes from the paired benchmark variants inside each group (`*_uncached` vs `*_cached`, `legacy_regex_*` vs current matcher path, and `parser_per_call_*` vs `cached_parser_*`).
+The save/compare workflow above was rerun with an important-mod-only filter to keep this follow-up focused on the remaining hotspot. Because the saved baseline was captured from the same checked-out implementation, the Criterion `change:` sections are treated as reproducibility/noise checks. The actual Phase 5 before/after proof comes from the paired benchmark variants inside each group (`*_uncached` vs `*_cached`, `legacy_regex_*` vs current matcher path, and `parser_per_call_*` vs `cached_parser_*`).
 
 ### `phase5_cached_regex_paths`
 
@@ -37,10 +37,20 @@ The save/compare workflow above was run to keep the proof reproducible and focus
 
 | Hotspot | Before (median) | After (median) | Delta | 5% bar |
 | --- | ---: | ---: | ---: | --- |
-| `legacy_regex_plugin_and_xse_surface` → `synthetic_plugin_and_xse_surface` | 22.668 µs | 41.896 µs | **84.8% slower** | FAIL |
-| `legacy_regex_real_fixture_plugin_surface` → `real_fixture_plugin_surface` | 51.143 µs | 70.198 µs | **37.3% slower** | FAIL |
+| `legacy_regex_plugin_and_xse_surface` → `synthetic_plugin_and_xse_surface` | 28.938 µs | 5.906 µs | **79.6% faster** (`4.90x`) | PASS |
+| `legacy_regex_real_fixture_plugin_surface` → `real_fixture_plugin_surface` | 52.366 µs | 40.424 µs | **22.8% faster** (`1.30x`) | PASS |
 
-**Interpretation:** The current Aho-Corasick path still does not clear the Phase 5 performance threshold for the small literal sets exercised here. The change remains intentional because Phase 5 also locked parity-preserving literal semantics, combined plugin/XSE matching, and removal of per-entry regex construction from the production path. This proof records the regression honestly rather than overstating a win; follow-up optimization remains future work.
+**Interpretation:** The follow-up clears the Phase 5 no-regression bar on both tracked surfaces. Task 1's cost-center slices showed that one-per-call matcher construction dominated the synthetic regression (`aho_compile_only_synthetic_literals`: `34.261 µs`), which justified moving `detect_mods_important` onto the same bounded matcher-cache pattern used elsewhere in Phase 5. After that cache landed, the real-fixture residual cost was mostly haystack preparation rather than matching (`aho_build_haystack_only_real_fixture_plugin_surface`: `35.695 µs` vs `aho_cached_match_only_real_fixture_plugin_surface`: `11.012 µs`), so the final optimization cut avoidable lowercase/string-allocation work by building the haystack in one pass and skipping the plugin-name set unless `exclude_when` is actually present.
+
+#### Important-mod root-cause slices
+
+| Slice | Median | Notes |
+| --- | ---: | --- |
+| `aho_compile_only_synthetic_literals` | 34.261 µs | Matcher compilation alone was slower than the legacy synthetic comparator, so uncached Aho construction could not meet the bar. |
+| `aho_uncached_plugin_and_xse_surface` | 34.554 µs | Confirms the synthetic path regresses when the matcher is rebuilt each call. |
+| `aho_cached_match_only_plugin_and_xse_surface` | 2.588 µs | With compile and haystack setup removed, literal matching itself is cheap. |
+| `aho_build_haystack_only_real_fixture_plugin_surface` | 35.695 µs | After caching, most of the real-fixture cost came from lowercasing and concatenating the large plugin/XSE surface. |
+| `aho_cached_match_only_real_fixture_plugin_surface` | 11.012 µs | Cached matching stayed well below the full-path real-fixture time, confirming haystack prep as the remaining dominant cost center. |
 
 ### `phase5_bridge_crash_pattern_replica`
 
@@ -54,7 +64,7 @@ The save/compare workflow above was run to keep the proof reproducible and focus
 ## Reproducibility Notes
 
 - Raw Criterion artifacts remain local-only under `ClassicLib-rs/target/criterion/`.
-- The focused `phase5_` filter keeps save/compare runs bounded to the Phase 5 proof surfaces instead of rerunning unrelated benches.
+- The focused `phase5_detect_mods_important` filter keeps the follow-up bounded to the residual hotspot instead of rerunning unrelated Phase 5 benches.
 - `cargo bench ... -- --test` passed after the proof helpers and paired hotspot variants were added.
 
 ## Requirement Boundary Clarification
