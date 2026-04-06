@@ -2,20 +2,19 @@
 
 use crate::error::Result;
 use crate::loader::{load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync};
-use dashmap::DashMap;
-use once_cell::sync::Lazy;
+use quick_cache::sync::Cache;
 use serde::Serialize;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::trace;
 use yaml_rust2::Yaml;
 
 /// Global settings cache storage.
 ///
-/// Uses DashMap for lock-free concurrent access to cached YAML settings.
+/// Uses quick_cache for bounded concurrent access to cached YAML settings.
 /// Each cache entry stores the parsed YAML documents for a file.
-static SETTINGS_CACHE: Lazy<DashMap<String, Arc<Vec<Yaml>>>> = Lazy::new(DashMap::new);
+static SETTINGS_CACHE: LazyLock<Cache<String, Arc<Vec<Yaml>>>> = LazyLock::new(|| Cache::new(64));
 
 /// Global counter for cache hits.
 static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
@@ -46,8 +45,8 @@ pub struct CacheStats {
     pub hit_rate: f64,
     /// Current number of entries in the cache.
     pub size: usize,
-    /// List of cache keys.
-    pub keys: Vec<String>,
+    /// Maximum bounded cache capacity.
+    pub capacity: usize,
 }
 
 /// Get current cache statistics.
@@ -77,7 +76,7 @@ pub fn cache_stats() -> CacheStats {
             0.0
         },
         size: SETTINGS_CACHE.len(),
-        keys: cache_keys(),
+        capacity: SETTINGS_CACHE.capacity() as usize,
     }
 }
 
@@ -264,7 +263,7 @@ pub fn get_cached(key: &str) -> Option<Arc<Vec<Yaml>>> {
         Some(entry) => {
             CACHE_HITS.fetch_add(1, Ordering::Relaxed);
             trace!(cache = "settings", key = %key, "cache hit");
-            Some(entry.value().clone())
+            Some(entry)
         }
         None => {
             CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
@@ -389,10 +388,7 @@ pub fn cache_size() -> usize {
 /// # }
 /// ```
 pub fn cache_keys() -> Vec<String> {
-    SETTINGS_CACHE
-        .iter()
-        .map(|entry| entry.key().clone())
-        .collect()
+    SETTINGS_CACHE.iter().map(|(key, _)| key).collect()
 }
 
 #[cfg(test)]
