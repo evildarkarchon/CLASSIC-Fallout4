@@ -1130,6 +1130,31 @@ mod tests {
     }
 
     #[test]
+    fn test_detect_crash_pattern_positive_fixture_excerpt() {
+        let result = detect_crash_pattern(include_str!(
+            "../../../business-logic/classic-scanlog-core/benches/fixtures/crash-2022-06-05-12-58-02.log"
+        ));
+
+        assert_eq!(
+            result,
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF6A1C08F6A Fallout4.exe+1AF8F6A"
+        );
+    }
+
+    #[test]
+    fn test_detect_crash_pattern_repeated_calls_keep_same_positive_result() {
+        let input = include_str!(
+            "../../../business-logic/classic-scanlog-core/benches/fixtures/crash-2022-06-05-12-58-02.log"
+        );
+
+        let first = detect_crash_pattern(input);
+        let second = detect_crash_pattern(input);
+
+        assert!(!first.is_empty());
+        assert_eq!(first, second);
+    }
+
+    #[test]
     fn test_build_full_scan_config_invalid_dirs() {
         let result = build_full_scan_config(
             "nonexistent_root",
