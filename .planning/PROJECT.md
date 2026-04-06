@@ -36,7 +36,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
 - [ ] Replace per-entry regex in `detect_mods_important` with AhoCorasick or combined pattern
 - [ ] Add before/after criterion benchmarks for performance improvements
-- [ ] Switch mmap from `Mmap::map()` to `MmapOptions::map_copy()` for TOCTOU safety
+- [ ] Switch mmap from `Mmap::map()` to `MmapOptions::map_copy_read_only()` for TOCTOU safety
 - [ ] Promote `winreg` and `phf` to workspace dependencies
 - [ ] Document or remove `zerovec` workaround dependency
 - [ ] Commit or document Node `index.d.ts` build-first requirement
@@ -72,7 +72,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Switch mmap to map_copy() | TOCTOU safety outweighs potential perf cost for >1MB files | -- Pending |
+| Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | -- Pending |
 | Keep Proton path code, wire it up | Linux support is planned; don't delete partial work | -- Pending |
 | Bounded `quick_cache` eviction for caches | Bounded memory is more important than unlimited cache hits for long-running processes, and Phase 4 standardizes on the repo's existing `quick_cache` implementation | Validated in Phase 4 |
 | Promote only shared deps to workspace | TUI deps are local to one crate; workspace promotion adds management overhead for no benefit | -- Pending |

@@ -26,7 +26,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **SAFE-02**: Expose `reset_fcx_global_state()` in C++ bridge CXX extern block, called before each scan session
 - [x] **SAFE-03**: Expose `resetFcxState()` NAPI function in Node bindings, called before each scan session
 - [x] **SAFE-04**: Expose `ConfigIssue` list in Node bindings via `JsConfigIssue` NAPI struct and `getFcxIssues()` function
-- [ ] **SAFE-05**: Switch `read_file_mmap` from `Mmap::map()` to `MmapOptions::map_copy()` for TOCTOU safety on Windows
+- [ ] **SAFE-05**: Switch `read_file_mmap` from `Mmap::map()` to `MmapOptions::map_copy_read_only()` for TOCTOU safety on Windows
 
 ### Performance
 
