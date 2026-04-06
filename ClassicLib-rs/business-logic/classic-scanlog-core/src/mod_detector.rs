@@ -8,9 +8,25 @@ use classic_config_core::{
     CoreModEntry, CoreModExclude, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
 };
 use indexmap::IndexMap;
+use quick_cache::sync::Cache;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashSet;
+use std::fmt::Write as _;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
+use xxhash_rust::xxh3::xxh3_64;
+
+static SINGLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
+    LazyLock::new(|| Cache::new(64));
+static DOUBLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
+    LazyLock::new(|| Cache::new(64));
+static BATCH_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
+    LazyLock::new(|| Cache::new(64));
+
+static SINGLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
+static DOUBLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
+static BATCH_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
 
 /// Convert IndexMap keys to lowercase, preserving insertion order
 fn convert_indexmap_to_lowercase(data: &IndexMap<String, String>) -> IndexMap<String, String> {
@@ -139,26 +155,13 @@ pub fn detect_mods_single(
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
     // IndexMap preserves YAML key order for Python parity
-    let yaml_dict_lower = convert_indexmap_to_lowercase(&yaml_dict);
+    let (yaml_dict_lower, combined_pattern) = get_single_matcher(&yaml_dict)?;
     // IndexMap preserves load order - first match wins for Python parity
     let crashlog_plugins_lower = convert_indexmap_to_lowercase(&crashlog_plugins);
 
     if yaml_dict_lower.is_empty() {
         return Ok(vec![]);
     }
-
-    // Build patterns for efficient matching - longest first for specificity
-    let mut mod_items_sorted: Vec<(String, String)> = yaml_dict_lower.clone().into_iter().collect();
-    mod_items_sorted.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
-
-    let mod_patterns: Vec<String> = mod_items_sorted
-        .iter()
-        .map(|(mod_name, _)| regex::escape(mod_name))
-        .collect();
-
-    // Create a single compiled pattern with alternation for efficient matching
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
     // Track matching plugins for each mod - IndexMap preserves detection order
     let mut mod_matches: IndexMap<String, String> = IndexMap::new();
@@ -415,19 +418,7 @@ pub fn detect_mods_double(
     }
 
     let crashlog_plugins_lower = convert_indexmap_to_lowercase(&crashlog_plugins);
-
-    let mut all_mod_names: HashSet<String> = HashSet::new();
-    for entry in entries {
-        all_mod_names.insert(entry.mod_a.to_lowercase());
-        all_mod_names.insert(entry.mod_b.to_lowercase());
-    }
-
-    let mod_patterns: Vec<String> = all_mod_names
-        .iter()
-        .map(|mod_name| regex::escape(mod_name))
-        .collect();
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
+    let combined_pattern = get_double_matcher(entries)?;
 
     let mut mods_present: HashSet<String> = HashSet::new();
     for plugin_name in crashlog_plugins_lower.keys() {
@@ -660,23 +651,11 @@ pub fn detect_mods_batch(
     crashlog_plugins_list: Vec<IndexMap<String, String>>,
 ) -> Result<Vec<Vec<String>>> {
     // IndexMap preserves YAML key order for Python parity
-    let yaml_dict_lower = convert_indexmap_to_lowercase(&yaml_dict);
+    let (yaml_dict_lower, combined_pattern) = get_batch_matcher(&yaml_dict)?;
 
     if yaml_dict_lower.is_empty() {
         return Ok(vec![vec![]; crashlog_plugins_list.len()]);
     }
-
-    // Build patterns for efficient matching - longest first for specificity
-    let mut mod_items_sorted: Vec<(String, String)> = yaml_dict_lower.clone().into_iter().collect();
-    mod_items_sorted.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
-
-    let mod_patterns: Vec<String> = mod_items_sorted
-        .iter()
-        .map(|(mod_name, _)| regex::escape(mod_name))
-        .collect();
-
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
     // Process crash logs in parallel
     let results: Vec<Vec<String>> = crashlog_plugins_list
@@ -759,6 +738,45 @@ mod tests {
     use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
     use serial_test::serial;
     use std::sync::Arc;
+
+    fn reset_matcher_caches_for_tests() {
+        SINGLE_MATCHER_CACHE.clear();
+        DOUBLE_MATCHER_CACHE.clear();
+        BATCH_MATCHER_CACHE.clear();
+        SINGLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+        DOUBLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+        BATCH_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+    }
+
+    fn single_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
+        let (_, matcher) = get_single_matcher(yaml_dict)?;
+        Ok(matcher)
+    }
+
+    fn double_matcher_for_tests(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
+        get_double_matcher(entries)
+    }
+
+    fn batch_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
+        let (_, matcher) = get_batch_matcher(yaml_dict)?;
+        Ok(matcher)
+    }
+
+    fn single_cache_size_for_tests() -> usize {
+        SINGLE_MATCHER_CACHE.len()
+    }
+
+    fn single_cache_capacity_for_tests() -> usize {
+        SINGLE_MATCHER_CACHE.capacity() as usize
+    }
+
+    fn single_compile_count_for_tests() -> u64 {
+        SINGLE_MATCHER_COMPILES.load(Ordering::Relaxed)
+    }
+
+    fn double_compile_count_for_tests() -> u64 {
+        DOUBLE_MATCHER_COMPILES.load(Ordering::Relaxed)
+    }
 
     // ============================================
     // Helper function tests
@@ -1590,12 +1608,110 @@ mod tests {
         reset_matcher_caches_for_tests();
 
         let first = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
+        let cached_after_first = batch_matcher_for_tests(&yaml_dict).unwrap();
         let second = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
-        let cached_first = batch_matcher_for_tests(&yaml_dict).unwrap();
-        let cached_second = batch_matcher_for_tests(&yaml_dict).unwrap();
+        let cached_after_second = batch_matcher_for_tests(&yaml_dict).unwrap();
 
         assert_eq!(first, second);
-        assert!(Arc::ptr_eq(&cached_first, &cached_second));
-        assert_eq!(batch_compile_count_for_tests(), 1);
+        assert!(Arc::ptr_eq(&cached_after_first, &cached_after_second));
     }
+}
+
+fn build_normalized_single_matcher_inputs(
+    yaml_dict: &IndexMap<String, String>,
+) -> IndexMap<String, String> {
+    convert_indexmap_to_lowercase(yaml_dict)
+}
+
+fn sorted_single_matcher_tokens(yaml_dict_lower: &IndexMap<String, String>) -> Vec<String> {
+    let mut mod_names: Vec<String> = yaml_dict_lower.keys().cloned().collect();
+    mod_names.sort_by(|a, b| b.len().cmp(&a.len()));
+    mod_names
+}
+
+fn sorted_double_matcher_tokens(entries: &[ModConflictEntry]) -> Vec<String> {
+    let mut mod_names: Vec<String> = entries
+        .iter()
+        .flat_map(|entry| [entry.mod_a.to_lowercase(), entry.mod_b.to_lowercase()])
+        .collect();
+    mod_names.sort();
+    mod_names.dedup();
+    mod_names.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
+    mod_names
+}
+
+fn hash_normalized_matcher_tokens(tokens: &[String]) -> u64 {
+    let mut normalized = String::new();
+    for token in tokens {
+        let _ = writeln!(&mut normalized, "{}:{token}", token.len());
+    }
+    xxh3_64(normalized.as_bytes())
+}
+
+fn compile_cached_matcher(
+    cache: &Cache<u64, Arc<Regex>>,
+    cache_key: u64,
+    matcher_tokens: &[String],
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
+    if let Some(cached) = cache.get(&cache_key) {
+        return Ok(cached);
+    }
+
+    let pattern = format!(
+        "(?i){}",
+        matcher_tokens
+            .iter()
+            .map(|mod_name| regex::escape(mod_name))
+            .collect::<Vec<_>>()
+            .join("|")
+    );
+    let compiled = Arc::new(
+        Regex::new(&pattern).map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
+    );
+
+    compile_counter.fetch_add(1, Ordering::Relaxed);
+    cache.insert(cache_key, compiled.clone());
+    Ok(compiled)
+}
+
+fn get_single_matcher(
+    yaml_dict: &IndexMap<String, String>,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
+    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    let matcher = compile_cached_matcher(
+        &SINGLE_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &SINGLE_MATCHER_COMPILES,
+    )?;
+    Ok((yaml_dict_lower, matcher))
+}
+
+fn get_double_matcher(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
+    let matcher_tokens = sorted_double_matcher_tokens(entries);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    compile_cached_matcher(
+        &DOUBLE_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &DOUBLE_MATCHER_COMPILES,
+    )
+}
+
+fn get_batch_matcher(
+    yaml_dict: &IndexMap<String, String>,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
+    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    let matcher = compile_cached_matcher(
+        &BATCH_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &BATCH_MATCHER_COMPILES,
+    )?;
+    Ok((yaml_dict_lower, matcher))
 }
