@@ -260,6 +260,7 @@ impl FileHasher {
 mod tests {
     use super::*;
     use serial_test::serial;
+    use std::collections::HashSet;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -288,6 +289,7 @@ mod tests {
     #[serial]
     fn test_hash_file_caching() -> Result<(), Box<dyn std::error::Error>> {
         FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
 
         let mut temp_file = NamedTempFile::new()?;
         temp_file.write_all(b"Test caching")?;
@@ -296,11 +298,21 @@ mod tests {
         // First call - should cache
         let hash1 = FileHasher::hash_file(temp_file.path())?;
         assert_eq!(FileHasher::cache_size(), 1);
+        let miss_stats = FileHasher::cache_stats();
+        assert_eq!(miss_stats.misses, 1);
+        assert_eq!(miss_stats.hits, 0);
+        assert_eq!(miss_stats.size, 1);
 
         // Second call - should hit cache
         let hash2 = FileHasher::hash_file(temp_file.path())?;
         assert_eq!(hash1, hash2);
         assert_eq!(FileHasher::cache_size(), 1);
+        let hit_stats = FileHasher::cache_stats();
+        assert_eq!(hit_stats.misses, 1);
+        assert_eq!(hit_stats.hits, 1);
+        assert_eq!(hit_stats.size, 1);
+        assert_eq!(hit_stats.capacity, 1024);
+        assert_eq!(hit_stats.hit_rate, 0.5);
 
         FileHasher::clear_cache();
         assert_eq!(FileHasher::cache_size(), 0);
@@ -377,6 +389,76 @@ mod tests {
 
         // Verify hash was calculated successfully
         assert_eq!(hash.len(), 64);
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn test_hash_cache_stats_reset_preserves_cache_entries(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
+
+        let mut temp_file = NamedTempFile::new()?;
+        temp_file.write_all(b"stats reset")?;
+        temp_file.flush()?;
+
+        FileHasher::hash_file(temp_file.path())?;
+        assert_eq!(FileHasher::cache_size(), 1);
+
+        FileHasher::reset_cache_stats();
+        let stats = FileHasher::cache_stats();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+        assert_eq!(stats.size, 1);
+        assert_eq!(stats.capacity, 1024);
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn test_hash_cache_bounded_eviction() -> Result<(), Box<dyn std::error::Error>> {
+        FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
+
+        let mut temp_files = Vec::new();
+        let mut first_hash = None;
+
+        for index in 0..1025 {
+            let mut temp_file = NamedTempFile::new()?;
+            temp_file.write_all(format!("bounded-cache-{index}").as_bytes())?;
+            temp_file.flush()?;
+
+            let hash = FileHasher::hash_file(temp_file.path())?;
+            if index == 0 {
+                first_hash = Some((temp_file.path().to_path_buf(), hash));
+            }
+            temp_files.push(temp_file);
+        }
+
+        let stats = FileHasher::cache_stats();
+        assert_eq!(stats.capacity, 1024);
+        assert_eq!(stats.size, 1024);
+        assert_eq!(stats.misses, 1025);
+        assert_eq!(stats.hits, 0);
+
+        let (first_path, original_hash) = first_hash.expect("first file should exist");
+        let rehashed = FileHasher::hash_file(&first_path)?;
+        assert_eq!(rehashed, original_hash);
+
+        let after_rehash = FileHasher::cache_stats();
+        assert_eq!(after_rehash.size, 1024);
+        assert_eq!(after_rehash.capacity, 1024);
+        assert!(after_rehash.hits + after_rehash.misses >= 1026);
+        assert!(after_rehash.misses >= 1025);
+
+        let distinct_hashes = temp_files
+            .iter()
+            .map(|file| FileHasher::hash_file(file.path()))
+            .collect::<Result<HashSet<_>, _>>()?;
+        assert_eq!(distinct_hashes.len(), 1025);
 
         Ok(())
     }
