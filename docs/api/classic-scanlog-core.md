@@ -76,6 +76,12 @@ Analysis helpers used by the orchestrator and usable independently.
 - `SuspectScanner` - known error/stack suspect matching
 - `detect_mods_single()`, `detect_mods_double()`, `detect_mods_important()` - standalone mod checks
 
+`mod_detector` contributor note:
+
+- `detect_mods_single()`, `detect_mods_double()`, and `detect_mods_batch()` now reuse process-wide bounded `LazyLock<quick_cache::sync::Cache<...>>` matcher caches keyed by normalized content hashes of the relevant mod-list inputs.
+- Those caches intentionally cover only input-derived alternation regexes in the hot paths. They are not a repo-wide "make every regex static" sweep; truly constant regex helpers should still compile once through dedicated `LazyLock` statics.
+- Cache validation should assert reuse and bounded capacity/stat behavior, not a specific eviction victim.
+
 ### `report`
 
 Report composition primitives.

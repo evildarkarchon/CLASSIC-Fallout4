@@ -17,6 +17,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock};
 use xxhash_rust::xxh3::xxh3_64;
 
+// These caches only store matchers whose pattern bodies are derived from caller-provided
+// YAML/config content. Truly constant regexes should compile through their own LazyLock
+// statics, but the single/double/batch hot paths intentionally stay on bounded hash-keyed
+// matcher caches because their alternation bodies vary with mod-list inputs.
 static SINGLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
     LazyLock::new(|| Cache::new(64));
 static DOUBLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> =
@@ -730,6 +734,105 @@ pub fn detect_mods_batch(
         .collect();
 
     Ok(results)
+}
+
+fn build_normalized_single_matcher_inputs(
+    yaml_dict: &IndexMap<String, String>,
+) -> IndexMap<String, String> {
+    convert_indexmap_to_lowercase(yaml_dict)
+}
+
+fn sorted_single_matcher_tokens(yaml_dict_lower: &IndexMap<String, String>) -> Vec<String> {
+    let mut mod_names: Vec<String> = yaml_dict_lower.keys().cloned().collect();
+    mod_names.sort_by_key(|mod_name| std::cmp::Reverse(mod_name.len()));
+    mod_names
+}
+
+fn sorted_double_matcher_tokens(entries: &[ModConflictEntry]) -> Vec<String> {
+    let mut mod_names: Vec<String> = entries
+        .iter()
+        .flat_map(|entry| [entry.mod_a.to_lowercase(), entry.mod_b.to_lowercase()])
+        .collect();
+    mod_names.sort();
+    mod_names.dedup();
+    mod_names.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
+    mod_names
+}
+
+fn hash_normalized_matcher_tokens(tokens: &[String]) -> u64 {
+    let mut normalized = String::new();
+    for token in tokens {
+        let _ = writeln!(&mut normalized, "{}:{token}", token.len());
+    }
+    xxh3_64(normalized.as_bytes())
+}
+
+fn compile_cached_matcher(
+    cache: &Cache<u64, Arc<Regex>>,
+    cache_key: u64,
+    matcher_tokens: &[String],
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
+    if let Some(cached) = cache.get(&cache_key) {
+        return Ok(cached);
+    }
+
+    let pattern = format!(
+        "(?i){}",
+        matcher_tokens
+            .iter()
+            .map(|mod_name| regex::escape(mod_name))
+            .collect::<Vec<_>>()
+            .join("|")
+    );
+    let compiled = Arc::new(
+        Regex::new(&pattern).map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
+    );
+
+    compile_counter.fetch_add(1, Ordering::Relaxed);
+    cache.insert(cache_key, compiled.clone());
+    Ok(compiled)
+}
+
+fn get_single_matcher(
+    yaml_dict: &IndexMap<String, String>,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
+    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    let matcher = compile_cached_matcher(
+        &SINGLE_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &SINGLE_MATCHER_COMPILES,
+    )?;
+    Ok((yaml_dict_lower, matcher))
+}
+
+fn get_double_matcher(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
+    let matcher_tokens = sorted_double_matcher_tokens(entries);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    compile_cached_matcher(
+        &DOUBLE_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &DOUBLE_MATCHER_COMPILES,
+    )
+}
+
+fn get_batch_matcher(
+    yaml_dict: &IndexMap<String, String>,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
+    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    let matcher = compile_cached_matcher(
+        &BATCH_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &BATCH_MATCHER_COMPILES,
+    )?;
+    Ok((yaml_dict_lower, matcher))
 }
 
 #[cfg(test)]
@@ -1615,103 +1718,4 @@ mod tests {
         assert_eq!(first, second);
         assert!(Arc::ptr_eq(&cached_after_first, &cached_after_second));
     }
-}
-
-fn build_normalized_single_matcher_inputs(
-    yaml_dict: &IndexMap<String, String>,
-) -> IndexMap<String, String> {
-    convert_indexmap_to_lowercase(yaml_dict)
-}
-
-fn sorted_single_matcher_tokens(yaml_dict_lower: &IndexMap<String, String>) -> Vec<String> {
-    let mut mod_names: Vec<String> = yaml_dict_lower.keys().cloned().collect();
-    mod_names.sort_by(|a, b| b.len().cmp(&a.len()));
-    mod_names
-}
-
-fn sorted_double_matcher_tokens(entries: &[ModConflictEntry]) -> Vec<String> {
-    let mut mod_names: Vec<String> = entries
-        .iter()
-        .flat_map(|entry| [entry.mod_a.to_lowercase(), entry.mod_b.to_lowercase()])
-        .collect();
-    mod_names.sort();
-    mod_names.dedup();
-    mod_names.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
-    mod_names
-}
-
-fn hash_normalized_matcher_tokens(tokens: &[String]) -> u64 {
-    let mut normalized = String::new();
-    for token in tokens {
-        let _ = writeln!(&mut normalized, "{}:{token}", token.len());
-    }
-    xxh3_64(normalized.as_bytes())
-}
-
-fn compile_cached_matcher(
-    cache: &Cache<u64, Arc<Regex>>,
-    cache_key: u64,
-    matcher_tokens: &[String],
-    compile_counter: &AtomicU64,
-) -> Result<Arc<Regex>> {
-    if let Some(cached) = cache.get(&cache_key) {
-        return Ok(cached);
-    }
-
-    let pattern = format!(
-        "(?i){}",
-        matcher_tokens
-            .iter()
-            .map(|mod_name| regex::escape(mod_name))
-            .collect::<Vec<_>>()
-            .join("|")
-    );
-    let compiled = Arc::new(
-        Regex::new(&pattern).map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
-    );
-
-    compile_counter.fetch_add(1, Ordering::Relaxed);
-    cache.insert(cache_key, compiled.clone());
-    Ok(compiled)
-}
-
-fn get_single_matcher(
-    yaml_dict: &IndexMap<String, String>,
-) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
-    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
-    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
-    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
-    let matcher = compile_cached_matcher(
-        &SINGLE_MATCHER_CACHE,
-        cache_key,
-        &matcher_tokens,
-        &SINGLE_MATCHER_COMPILES,
-    )?;
-    Ok((yaml_dict_lower, matcher))
-}
-
-fn get_double_matcher(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
-    let matcher_tokens = sorted_double_matcher_tokens(entries);
-    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
-    compile_cached_matcher(
-        &DOUBLE_MATCHER_CACHE,
-        cache_key,
-        &matcher_tokens,
-        &DOUBLE_MATCHER_COMPILES,
-    )
-}
-
-fn get_batch_matcher(
-    yaml_dict: &IndexMap<String, String>,
-) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
-    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
-    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
-    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
-    let matcher = compile_cached_matcher(
-        &BATCH_MATCHER_CACHE,
-        cache_key,
-        &matcher_tokens,
-        &BATCH_MATCHER_COMPILES,
-    )?;
-    Ok((yaml_dict_lower, matcher))
 }
