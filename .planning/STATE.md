@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-bounded-cache-replacement-04-PLAN.md
-last_updated: "2026-04-06T05:00:45.239Z"
+status: verifying
+stopped_at: Completed 04-bounded-cache-replacement-05-PLAN.md
+last_updated: "2026-04-06T05:06:42.367Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 6
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 
 Phase: 04 (bounded-cache-replacement) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-06
 
 Progress: [█░░░░░░░░░] 6%
@@ -63,6 +63,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 04-bounded-cache-replacement P01 | 7min | 2 tasks | 4 files |
 | Phase 04-bounded-cache-replacement P06 | 11min | 2 tasks | 6 files |
 | Phase 04-bounded-cache-replacement P04 | 8 min | 2 tasks | 12 files |
+| Phase 04-bounded-cache-replacement P05 | 15min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Recent decisions affecting current work:
 - [Phase 04-bounded-cache-replacement]: Preserve exact snake_case cache stat names in Node by using explicit NAPI naming overrides and typed return annotations.
 - [Phase 04-bounded-cache-replacement]: Classify the new hash cache helpers as runtime-verified Tier-2 aux coverage in the Node registry.
 - [Phase 04-bounded-cache-replacement]: Validate bounded hash cache behavior through capacity and stats counters instead of eviction-victim order assertions.
+- [Phase 04-bounded-cache-replacement]: Use explicit TypedDict cache stats aliases in Python stubs so the canonical five-field contract is visible to static tooling.
+- [Phase 04-bounded-cache-replacement]: Track Python hash cache helpers as registry-only Tier-2 runtime coverage instead of broadening the Python parity parser to every aux module.
+- [Phase 04-bounded-cache-replacement]: Keep FileHasher.cache_size() as a deferred compatibility adapter while cache_stats/reset_cache_stats own the Phase 4 runtime smoke contract.
 
 ### Pending Todos
 
@@ -114,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T05:00:45.234Z
-Stopped at: Completed 04-bounded-cache-replacement-04-PLAN.md
+Last session: 2026-04-06T05:06:42.362Z
+Stopped at: Completed 04-bounded-cache-replacement-05-PLAN.md
 Resume file: None

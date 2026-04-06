@@ -86,7 +86,7 @@ Plans:
 - [x] 04-02-PLAN.md -- Replace SETTINGS_CACHE with a 64-entry bounded quick_cache and canonical CacheStats
 - [x] 04-03-PLAN.md -- Replace HASH_CACHE with a 1024-entry bounded quick_cache and add public hash cache stats
 - [x] 04-04-PLAN.md -- Align Node YAML/settings/hash cache stats, tests, committed TypeScript contract, and Node parity artifacts to the canonical contract
-- [ ] 04-05-PLAN.md -- Align Python YAML/settings/hash cache stats, stubs, runtime smoke coverage, and Python parity artifacts to the canonical contract
+- [x] 04-05-PLAN.md -- Align Python YAML/settings/hash cache stats, stubs, runtime smoke coverage, and Python parity artifacts to the canonical contract
 - [x] 04-06-PLAN.md -- Add C++ YAML/settings/hash cache stats entrypoints and document the new parity surface
 
 ### Phase 5: Pattern Caching and Performance
