@@ -120,7 +120,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 06-01-PLAN.md -- Swap `read_file_mmap()` to `map_copy_read_only()` and align active docs to the locked Phase 6 contract
-- [ ] 06-02-PLAN.md -- Add the Phase 6 mmap benchmark group and commit the markdown throughput proof workflow
+- [x] 06-02-PLAN.md -- Add the Phase 6 mmap benchmark group and commit the markdown throughput proof workflow
 
 ### Phase 7: Consistency Sweep
 **Goal**: The codebase uses only `std::sync::LazyLock` for lazy statics, eliminating the `once_cell` dependency where it is no longer needed

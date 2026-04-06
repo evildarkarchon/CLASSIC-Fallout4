@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-04-06T10:10:45.501Z"
+status: verifying
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-04-06T10:22:59.244Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
   percent: 6
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 
 Phase: 06 (mmap-toctou-safety) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-06
 
 Progress: [█░░░░░░░░░] 6%
@@ -72,6 +72,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 05-pattern-caching-and-performance P06 | 43min | 2 tasks | 5 files |
 | Phase 05-pattern-caching-and-performance P07 | 17min | 3 tasks | 3 files |
 | Phase 06 P01 | 1 min | 2 tasks | 4 files |
+| Phase 06 P02 | 6 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -133,8 +134,11 @@ Recent decisions affecting current work:
 - [Phase 05-pattern-caching-and-performance]: Skipped plugin-name set construction unless an important-mod entry actually uses exclude_when because the real-fixture slices showed haystack preparation dominated the remaining cost.
 - [Phase 06]: Use MmapOptions::map_copy_read_only() on all platforms for the 1 MB+ read_file_mmap branch.
 - [Phase 06]: Document the mmap change conservatively as a safer snapshot-style mitigation rather than a blanket upstream safety guarantee.
+- [Phase 06]: Keep the Phase 6 throughput proof in classic-file-io-core's existing file_io_benchmarks harness instead of creating a new benchmark target.
+- [Phase 06]: Treat map_copy_read_only() as acceptable for Windows validation because it wins at 1 MiB+4 KiB and 4 MiB and stays below a 10% slowdown even when 16 MiB crosses the 5% warning bar.
 
 ### Pending Todos
+
 None yet.
 
 ### Blockers/Concerns
@@ -145,6 +149,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T10:10:45.498Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-04-06T10:22:59.240Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
