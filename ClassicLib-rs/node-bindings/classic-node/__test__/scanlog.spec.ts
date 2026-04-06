@@ -1,15 +1,18 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, writeFileSync, rmSync } from "fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import {
   createAnalysisConfig,
   createAnalysisConfigFromYamlContent,
+  getFcxConfigIssues,
+  resetFcxGlobalState,
   getVersion,
   processLog,
   processLogsBatch,
   processLogWithYamlContent,
   processLogsBatchWithYamlContent,
+  setApplicationDir,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -113,6 +116,30 @@ Mods_SOLU: []
 const IGNORE_YAML = `
 CLASSIC_Ignore_Fallout4: []
 `;
+
+const MISSING_LOG_PATH = join("Z:", "nonexistent", "classic-fcx.log");
+
+const normalizeYamlPath = (path: string): string => path.replace(/\\/g, "/");
+
+const writeFcxAppFixture = (name: string, withIssue: boolean): string => {
+  const appDir = mkdtempSync(join(tmpdir(), `${name}-`));
+  const gameRoot = join(appDir, "Fallout4");
+
+  mkdirSync(gameRoot, { recursive: true });
+  writeFileSync(join(gameRoot, "Fallout4.exe"), "", "utf8");
+
+  if (withIssue) {
+    writeFileSync(join(gameRoot, "epo.ini"), "[Particles]\niMaxDesired=10000\n", "utf8");
+  }
+
+  writeFileSync(
+    join(appDir, "CLASSIC Settings.yaml"),
+    `paths:\n  game_root: ${normalizeYamlPath(gameRoot)}\n`,
+    "utf8",
+  );
+
+  return appDir;
+};
 
 // ============================================================================
 // Version & Config
@@ -311,6 +338,143 @@ describe("YAML-backed analysis entry points", () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].success).toBe(false);
+  });
+});
+
+describe("FCX scan state isolation", () => {
+  const fcxOptions = { fcxMode: true };
+  const scanVariants = [
+    {
+      name: "processLog",
+      run: async () => {
+        const config = createAnalysisConfigFromYamlContent(
+          MAIN_YAML,
+          GAME_YAML,
+          IGNORE_YAML,
+          "Fallout4",
+          "auto",
+        );
+        config.fcxMode = true;
+
+        try {
+          await processLog(MISSING_LOG_PATH, config);
+        } catch {
+          // FCX state is prepared before file I/O; a missing log still exercises scan-start reset.
+        }
+      },
+    },
+    {
+      name: "processLogsBatch",
+      run: async () => {
+        const config = createAnalysisConfigFromYamlContent(
+          MAIN_YAML,
+          GAME_YAML,
+          IGNORE_YAML,
+          "Fallout4",
+          "auto",
+        );
+        config.fcxMode = true;
+
+        await processLogsBatch([MISSING_LOG_PATH], config, 1);
+      },
+    },
+    {
+      name: "processLogWithYamlContent",
+      run: async () => {
+        try {
+          await processLogWithYamlContent(
+            MISSING_LOG_PATH,
+            MAIN_YAML,
+            GAME_YAML,
+            IGNORE_YAML,
+            "Fallout4",
+            "auto",
+            fcxOptions,
+          );
+        } catch {
+          // FCX state is prepared before file I/O; a missing log still exercises scan-start reset.
+        }
+      },
+    },
+    {
+      name: "processLogsBatchWithYamlContent",
+      run: async () => {
+        await processLogsBatchWithYamlContent(
+          [MISSING_LOG_PATH],
+          MAIN_YAML,
+          GAME_YAML,
+          IGNORE_YAML,
+          "Fallout4",
+          "auto",
+          fcxOptions,
+          1,
+        );
+      },
+    },
+  ];
+
+  afterEach(() => {
+    resetFcxGlobalState();
+  });
+
+  for (const { name, run } of scanVariants) {
+    test(`${name} resets stale FCX issues before the next scan session`, async () => {
+      const issueAppDir = writeFcxAppFixture("classic-node-fcx-issue", true);
+      const cleanAppDir = writeFcxAppFixture("classic-node-fcx-clean", false);
+
+      try {
+        setApplicationDir(issueAppDir);
+        await run();
+
+        expect(getFcxConfigIssues()).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              filePath: expect.stringContaining("epo.ini"),
+              setting: expect.any(String),
+              severity: expect.any(String),
+            }),
+          ]),
+        );
+
+        setApplicationDir(cleanAppDir);
+        await run();
+
+        expect(getFcxConfigIssues()).toEqual([]);
+      } finally {
+        rmSync(issueAppDir, { recursive: true, force: true });
+        rmSync(cleanAppDir, { recursive: true, force: true });
+      }
+    });
+  }
+
+  test("resetFcxGlobalState clears getFcxConfigIssues explicitly", async () => {
+    const issueAppDir = writeFcxAppFixture("classic-node-fcx-reset", true);
+
+    try {
+      setApplicationDir(issueAppDir);
+
+      try {
+        await processLogWithYamlContent(
+          MISSING_LOG_PATH,
+          MAIN_YAML,
+          GAME_YAML,
+          IGNORE_YAML,
+          "Fallout4",
+          "auto",
+          fcxOptions,
+        );
+      } catch {
+        // FCX state is prepared before file I/O; a missing log still exercises scan-start reset.
+      }
+
+      expect(getFcxConfigIssues().length).toBeGreaterThan(0);
+
+      resetFcxGlobalState();
+
+      expect(getFcxConfigIssues()).toEqual([]);
+    } finally {
+      rmSync(issueAppDir, { recursive: true, force: true });
+    }
   });
 });
 

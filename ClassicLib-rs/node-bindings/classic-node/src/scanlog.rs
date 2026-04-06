@@ -11,7 +11,10 @@
 //! Parsing utilities (`parseLogSegments`, `extractFormIds`, `extractPluginList`,
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
-use classic_config_core::YamlDataCore;
+use classic_config_core::{ClassicConfig, YamlDataCore};
+use classic_constants_core::GameId;
+use classic_scangame_core::integrity::IntegrityConfig;
+use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::OrchestratorCore;
 use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
@@ -32,6 +35,122 @@ fn normalize_max_concurrent(max_concurrent: Option<u32>) -> Option<usize> {
         Some(0) | None => None,
         Some(value) => Some(value as usize),
     }
+}
+
+async fn load_classic_config() -> napi::Result<ClassicConfig> {
+    ClassicConfig::load_or_default()
+        .await
+        .map_err(|error| to_napi_err(format!("failed to load CLASSIC config: {error}")))
+}
+
+fn infer_game_id(config: &ClassicConfig) -> Option<GameId> {
+    let game_root = &config.paths.game_root;
+    if !game_root.as_os_str().is_empty() {
+        if let Some(game_id) = GameId::all()
+            .into_iter()
+            .find(|game_id| game_root.join(game_id.exe_name()).exists())
+        {
+            return Some(game_id);
+        }
+
+        if let Some(name) = game_root.file_name().and_then(|name| name.to_str())
+            && let Ok(game_id) = name.parse::<GameId>()
+        {
+            return Some(game_id);
+        }
+    }
+
+    None
+}
+
+fn build_setup_check_config(config: &ClassicConfig, game_id: GameId) -> Option<SetupCheckConfig> {
+    if config.paths.game_root.as_os_str().is_empty() {
+        return None;
+    }
+
+    Some(SetupCheckConfig {
+        integrity: IntegrityConfig::new(
+            config.paths.game_root.join(game_id.exe_name()),
+            Vec::new(),
+            game_id.as_str().to_string(),
+        ),
+        game_name: game_id.as_str().to_string(),
+        docs_path: config
+            .paths
+            .docs_root
+            .as_ref()
+            .or(config.paths.ini_folder.as_ref())
+            .map(|path| path.to_string_lossy().into_owned()),
+        xse_hashes: Vec::new(),
+    })
+}
+
+fn to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {
+    ConfigIssue::new(
+        issue.file_path.display().to_string(),
+        Some(issue.section),
+        issue.setting,
+        issue.current_value,
+        issue.recommended_value,
+        issue.description,
+        match issue.severity {
+            classic_scangame_core::IssueSeverity::Error => "error",
+            classic_scangame_core::IssueSeverity::Warning => "warning",
+            classic_scangame_core::IssueSeverity::Info => "info",
+        }
+        .to_string(),
+    )
+}
+
+fn format_detected_issues(issues: &[ConfigIssue]) -> String {
+    issues.iter().map(ConfigIssue::format_report).collect()
+}
+
+async fn run_fcx_scan_state_checks() -> napi::Result<()> {
+    let config = load_classic_config().await?;
+    let game_id = infer_game_id(&config).ok_or_else(|| {
+        to_napi_err("failed to infer game id from configured game root; run path detection first")
+    })?;
+
+    let main_result = build_setup_check_config(&config, game_id)
+        .map(|setup_config| run_combined_checks(&setup_config).combined())
+        .unwrap_or_default();
+
+    let rust_issues: Vec<ConfigIssue> = if config.paths.game_root.as_os_str().is_empty() {
+        Vec::new()
+    } else {
+        detect_config_issues(&config.paths.game_root, game_id.as_str())
+            .into_iter()
+            .map(to_scanlog_issue)
+            .collect()
+    };
+    let game_result = format_detected_issues(&rust_issues);
+
+    let mut global_handler = GLOBAL_FCX_HANDLER.lock();
+    global_handler.checks_run = true;
+    global_handler.fcx_mode = true;
+    global_handler.set_main_files_result(main_result);
+    global_handler.set_game_files_result(game_result);
+    global_handler.set_detected_issues(rust_issues);
+
+    Ok(())
+}
+
+async fn prepare_fcx_state_for_scan(fcx_mode: bool) -> napi::Result<()> {
+    match FcxModeHandler::reset_global_state() {
+        Ok(()) | Err(FcxResetError::Unnecessary) => {}
+        Err(error) => {
+            return Err(to_napi_err(format!(
+                "failed to reset FCX global state before scan: {error}"
+            )));
+        }
+    }
+
+    if fcx_mode {
+        run_fcx_scan_state_checks().await?;
+    }
+
+    Ok(())
 }
 
 /// Detect crashgen settings section markers within parser `settings` lines.
@@ -290,6 +409,8 @@ pub async fn process_log_with_yaml_content(
     game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisResult> {
+    let (_, fcx_mode, _, _) = resolve_build_options(options.clone());
+    prepare_fcx_state_for_scan(fcx_mode).await?;
     let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
         game_content,
@@ -329,6 +450,8 @@ pub async fn process_logs_batch_with_yaml_content(
     options: Option<JsAnalysisBuildOptions>,
     max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
+    let (_, fcx_mode, _, _) = resolve_build_options(options.clone());
+    prepare_fcx_state_for_scan(fcx_mode).await?;
     let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
         game_content,
@@ -372,6 +495,7 @@ pub async fn process_log(
     log_path: String,
     config: JsAnalysisConfig,
 ) -> napi::Result<JsAnalysisResult> {
+    prepare_fcx_state_for_scan(config.fcx_mode).await?;
     let core_config = _js_config_to_core(&config);
     let handle = classic_shared_core::get_runtime().handle().clone();
 
@@ -404,6 +528,7 @@ pub async fn process_logs_batch(
     config: JsAnalysisConfig,
     max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
+    prepare_fcx_state_for_scan(config.fcx_mode).await?;
     let core_config = _js_config_to_core(&config);
     let handle = classic_shared_core::get_runtime().handle().clone();
     let max_concurrent = normalize_max_concurrent(max_concurrent);
