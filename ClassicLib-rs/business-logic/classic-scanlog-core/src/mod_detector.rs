@@ -3,6 +3,7 @@
 //! This module provides exact behavioral parity with Python's DetectMods
 //! while leveraging Rust's performance optimizations.
 
+use aho_corasick::{AhoCorasick, MatchKind};
 use crate::error::{Result, ScanLogError};
 use classic_config_core::{
     CoreModEntry, CoreModExclude, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
@@ -499,82 +500,35 @@ pub fn detect_mods_important(
     user_gpu: Option<&str>,
     xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    let mut lines = Vec::new();
+    detect_mods_important_legacy(entries, crashlog_plugins, user_gpu, xse_modules)
+}
 
-    let plugin_names_lower: Vec<String> =
-        crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
-    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
-    let plugins_text = plugin_names_lower.join(" ");
+fn build_important_mod_haystack(
+    crashlog_plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> (HashSet<String>, String) {
+    let _ = (crashlog_plugins, xse_modules);
+    todo!("RED phase: add fixture-backed important-mod haystack builder")
+}
 
-    let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
-    let modules_text = module_names_lower.join(" ");
+fn detect_mods_important_legacy(
+    entries: &[CoreModEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+    user_gpu: Option<&str>,
+    xse_modules: &HashSet<String>,
+) -> Result<Vec<String>> {
+    let _ = (entries, crashlog_plugins, user_gpu, xse_modules);
+    todo!("RED phase: preserve the legacy important-mod regex path behind a helper")
+}
 
-    let all_text = format!("{} {}", plugins_text, modules_text);
-
-    for entry in entries {
-        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
-            continue;
-        }
-
-        let pattern = Regex::new(&format!(
-            "(?i){}",
-            regex::escape(&entry.detect.to_lowercase())
-        ))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
-
-        let mod_found = pattern.is_match(&all_text);
-
-        // gpu_mismatch: entry is for a specific GPU that the user does NOT have
-        let gpu_mismatch = entry
-            .gpu
-            .as_ref()
-            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug)));
-
-        // gpu_matches_user: entry is for a specific GPU that the user DOES have
-        let gpu_matches_user = entry
-            .gpu
-            .as_ref()
-            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug)));
-
-        if mod_found {
-            if gpu_mismatch {
-                if let Some(ref warning) = entry.gpu_mismatch_warning {
-                    let warning_md = warning.trim_end().replace('\n', "\n\n");
-                    lines.push(format!("❓ {}\n\n", warning_md));
-                } else {
-                    let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
-                    lines.push(format!(
-                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
-                        entry.name, gpu_label
-                    ));
-                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
-                }
-            } else {
-                lines.push(format!("✔️ {} is installed!\n\n", entry.name));
-            }
-        } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
-            // Show "not installed" for universal mods and mods matching the user's GPU
-            if !entry.description.is_empty() {
-                let desc_lines: Vec<&str> = entry.description.trim_end().lines().collect();
-                let first_line = desc_lines.first().map(|s| s.trim()).unwrap_or("");
-
-                lines.push(format!(
-                    "❌ {} is not installed! {}  \n",
-                    entry.name, first_line
-                ));
-
-                for line in desc_lines.iter().skip(1) {
-                    let trimmed = line.trim();
-                    if !trimmed.is_empty() {
-                        lines.push(format!("{}  \n", trimmed));
-                    }
-                }
-                lines.push("\n".to_string());
-            }
-        }
-    }
-
-    Ok(lines)
+fn detect_mods_important_aho(
+    entries: &[CoreModEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+    user_gpu: Option<&str>,
+    xse_modules: &HashSet<String>,
+) -> Result<Vec<String>> {
+    let _ = (entries, crashlog_plugins, user_gpu, xse_modules);
+    todo!("RED phase: add Aho-Corasick parity path for important mods")
 }
 
 /// Checks whether a `CoreModExclude` condition is met by the current plugin list.
@@ -839,8 +793,13 @@ fn get_batch_matcher(
 mod tests {
     use super::*;
     use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
+    use crate::{plugin_analyzer::PluginAnalyzer, segment_key, LogParser};
     use serial_test::serial;
+    use std::sync::Arc as StdArc;
     use std::sync::Arc;
+
+    const IMPORTANT_MODS_FIXTURE_LOG: &str =
+        include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
 
     fn reset_matcher_caches_for_tests() {
         SINGLE_MATCHER_CACHE.clear();
@@ -1358,6 +1317,155 @@ mod tests {
             gpu_mismatch_warning: None,
             exclude_when: None,
         }
+    }
+
+    fn important_fixture_plugins() -> IndexMap<String, String> {
+        let parser = LogParser::new(None).expect("fixture parser should build");
+        let fixture_lines: Vec<StdArc<str>> = IMPORTANT_MODS_FIXTURE_LOG
+            .lines()
+            .map(StdArc::<str>::from)
+            .collect();
+        let sections = parser.parse_all_sections_arc(&fixture_lines);
+        let plugin_lines: Vec<String> = sections
+            .get(segment_key::PLUGINS)
+            .expect("fixture should include a plugins section")
+            .iter()
+            .map(|line| line.to_string())
+            .collect();
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.2.72".to_string(),
+        )
+        .expect("fixture plugin analyzer should build");
+        let (plugins, _limit_triggered, _limit_disabled) = analyzer
+            .loadorder_scan_log(&plugin_lines, None, None)
+            .expect("fixture plugins should parse");
+        assert!(
+            plugins.contains_key("DLCUltraHighResolution.esm"),
+            "fixture should contain a known plugin exercised by parity coverage"
+        );
+        plugins
+    }
+
+    fn parity_fixture_entries() -> Vec<CoreModEntry> {
+        vec![
+            make_core_entry(
+                "DLCUltraHighResolution.esm",
+                "High Resolution DLC",
+                "Disable the official texture pack.\nIt causes crashes and stutter.",
+            ),
+            CoreModEntry {
+                detect: "skip-me.esp".to_string(),
+                name: "Skipped Entry".to_string(),
+                description: "This line should stay excluded.".to_string(),
+                gpu: None,
+                gpu_mismatch_warning: None,
+                exclude_when: Some(CoreModExclude::PluginAny(vec![
+                    "DLCUltraHighResolution.esm".to_string(),
+                ])),
+            },
+            make_core_entry(
+                "EngineFixes.esp",
+                "Engine Fixes",
+                "Highly recommended for stability.\nLink: https://example.com/mod",
+            ),
+        ]
+    }
+
+    #[test]
+    fn test_detect_mods_important_fixture_parity_matches_legacy_and_aho_paths() {
+        let entries = parity_fixture_entries();
+        let plugins = important_fixture_plugins();
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let legacy = detect_mods_important_legacy(&entries, &plugins, Some("amd"), &xse_modules)
+            .unwrap();
+        let aho = detect_mods_important_aho(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+
+        assert_eq!(aho, legacy);
+    }
+
+    #[test]
+    fn test_detect_mods_important_aho_prefers_leftmost_longest_overlap_match() {
+        let entries = vec![
+            make_core_entry("f4se", "Short Match", "Short overlap should lose."),
+            make_core_entry(
+                "f4se_plugin_preloader",
+                "Long Match",
+                "Long overlap should win.",
+            ),
+        ];
+        let plugins: IndexMap<String, String> = IndexMap::new();
+        let xse_modules = HashSet::from(["f4se_plugin_preloader.dll".to_string()]);
+
+        let output = detect_mods_important_aho(&entries, &plugins, None, &xse_modules)
+            .unwrap()
+            .join("");
+
+        assert!(output.contains("Long Match is installed"));
+        assert!(!output.contains("Short Match is installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_fixture_entries_keep_gpu_exclude_and_not_installed_quirks() {
+        let plugins = important_fixture_plugins();
+        let xse_modules: HashSet<String> = HashSet::new();
+        let entries = vec![
+            CoreModEntry {
+                detect: "DLCUltraHighResolution.esm".to_string(),
+                name: "NVIDIA High Resolution DLC".to_string(),
+                description: "For NVIDIA GPUs only!".to_string(),
+                gpu: Some("nvidia".to_string()),
+                gpu_mismatch_warning: None,
+                exclude_when: None,
+            },
+            CoreModEntry {
+                detect: "skip-me.esp".to_string(),
+                name: "Skipped Entry".to_string(),
+                description: "This line should stay excluded.".to_string(),
+                gpu: None,
+                gpu_mismatch_warning: None,
+                exclude_when: Some(CoreModExclude::PluginAny(vec![
+                    "DLCUltraHighResolution.esm".to_string(),
+                ])),
+            },
+            make_core_entry(
+                "EngineFixes.esp",
+                "Engine Fixes",
+                "Highly recommended for stability.\nLink: https://example.com/mod",
+            ),
+        ];
+
+        let output = detect_mods_important_aho(&entries, &plugins, Some("amd"), &xse_modules)
+            .unwrap()
+            .join("");
+
+        assert!(output.contains("❓ NVIDIA High Resolution DLC is installed"));
+        assert!(!output.contains("Skipped Entry"));
+        assert!(output.contains("❌ Engine Fixes is not installed! Highly recommended for stability."));
+        assert!(output.contains("Link: https://example.com/mod"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_fixture_detect_values_match_as_literals_not_regex() {
+        let entries = vec![make_core_entry(
+            "DLCUltraHighResolution.esm",
+            "High Resolution DLC",
+            "Literal dots should stay literal.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("DLCUltraHighResolutionXesm".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let legacy = detect_mods_important_legacy(&entries, &plugins, None, &xse_modules)
+            .unwrap();
+        let aho = detect_mods_important_aho(&entries, &plugins, None, &xse_modules).unwrap();
+
+        assert!(legacy.is_empty());
+        assert!(aho.is_empty());
     }
 
     #[test]
