@@ -58,7 +58,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Codebase Consistency (Differentiators)
 
-- [ ] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
+- [x] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
 - [x] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
 - [x] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
 - [x] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
@@ -115,7 +115,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-02 | Phase 2 | Complete |
 | TEST-03 | Phase 8 | Pending |
 | TEST-04 | Phase 3 | Complete |
-| CONS-01 | Phase 7 | Pending |
+| CONS-01 | Phase 7 | Complete |
 | CONS-02 | Phase 3 | Complete |
 | CONS-03 | Phase 4 | Complete |
 | CONS-04 | Phase 5 | Complete |

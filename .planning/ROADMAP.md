@@ -130,7 +130,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. No crate in the workspace imports `once_cell::sync::Lazy` -- all replaced with `std::sync::LazyLock`
   2. `once_cell` is removed from `[workspace.dependencies]` if no other `once_cell` APIs (e.g., `OnceCell`) are still in use
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [x] 07-01-PLAN.md -- Migrate `classic-scanlog-core` from direct `once_cell` usage to `std::sync::{LazyLock, OnceLock}` and drop its direct manifest dependency
+- [ ] 07-02-PLAN.md -- Finish the registry/perf sweep, remove remaining owned direct `once_cell` manifests, and align touched `docs/api` pages
 
 ### Phase 8: Workspace and Infrastructure
 **Goal**: Workspace dependency management is clean, Linux Proton path discovery works end-to-end, and Node type definitions are committed with CI freshness checks
@@ -156,5 +159,5 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 4. Bounded Cache Replacement | 0/6 | Planned | - |
 | 5. Pattern Caching and Performance | 0/4 | Planned | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
-| 7. Consistency Sweep | 0/TBD | Not started | - |
+| 7. Consistency Sweep | 0/2 | Planned | - |
 | 8. Workspace and Infrastructure | 0/TBD | Not started | - |
