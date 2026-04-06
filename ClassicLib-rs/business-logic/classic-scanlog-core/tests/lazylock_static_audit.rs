@@ -1,3 +1,5 @@
+//! Contract audit for the Phase 7 LazyLock migration sweep.
+
 const FCX_HANDLER_RS: &str = include_str!("../src/fcx_handler.rs");
 const PARSER_RS: &str = include_str!("../src/parser.rs");
 const VERSION_RS: &str = include_str!("../src/version.rs");

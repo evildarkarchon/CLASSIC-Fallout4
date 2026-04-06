@@ -46,7 +46,6 @@ futures = { workspace = true }
 quick_cache = { workspace = true }
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
-once_cell = { workspace = true }
 lru = { workspace = true }
 linked-hash-map = { workspace = true }
 

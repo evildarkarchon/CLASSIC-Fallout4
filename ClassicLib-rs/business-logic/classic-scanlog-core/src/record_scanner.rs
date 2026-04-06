@@ -4,9 +4,9 @@
 //! No PyO3 dependencies - accepts plain data structures.
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
-use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::sync::OnceLock;
 
 /// Record scanner for detecting and analyzing named records in crash logs
 pub struct RecordScanner {
@@ -14,8 +14,8 @@ pub struct RecordScanner {
     lower_ignore: HashSet<String>,
     crashgen_name: String,
     // Aho-Corasick automaton for efficient multi-pattern matching
-    record_matcher: OnceCell<AhoCorasick>,
-    ignore_matcher: OnceCell<AhoCorasick>,
+    record_matcher: OnceLock<AhoCorasick>,
+    ignore_matcher: OnceLock<AhoCorasick>,
 }
 
 impl RecordScanner {
@@ -37,7 +37,7 @@ impl RecordScanner {
     ///
     /// # Performance
     ///
-    /// - Aho-Corasick automatons built lazily (OnceCell)
+    /// - Aho-Corasick automatons built lazily (`OnceLock`)
     /// - Multi-pattern matching: O(n) scan regardless of pattern count
     /// - Typical: 5-10ms for 10,000 lines with 200 target records
     ///
@@ -72,8 +72,8 @@ impl RecordScanner {
             lower_records,
             lower_ignore,
             crashgen_name,
-            record_matcher: OnceCell::new(),
-            ignore_matcher: OnceCell::new(),
+            record_matcher: OnceLock::new(),
+            ignore_matcher: OnceLock::new(),
         }
     }
 
@@ -211,7 +211,7 @@ impl RecordScanner {
     /// Clears internal caches (currently a no-op for API compatibility).
     ///
     /// This method is provided for API consistency with other scanners that may have caching.
-    /// Currently, `RecordScanner` uses `OnceCell` for Aho-Corasick automatons which cannot
+    /// Currently, `RecordScanner` uses `OnceLock` for Aho-Corasick automatons which cannot
     /// be cleared after initialization, so this is a no-op. Future versions may add clearable
     /// caches if needed.
     ///
@@ -224,7 +224,7 @@ impl RecordScanner {
     /// scanner.clear_cache();  // No-op currently
     /// ```
     pub fn clear_cache(&self) {
-        // Currently no caching beyond OnceCell, but provided for API compatibility
+        // Currently no caching beyond OnceLock, but provided for API compatibility
     }
 
     /// Internal method to find matching records
@@ -778,6 +778,54 @@ mod tests {
         assert!(matches.iter().any(|line| line.contains("Weapon_Pistol")));
     }
 
+    #[test]
+    fn test_matchers_are_built_lazily_once_per_scanner_instance() {
+        let scanner = RecordScanner::new(
+            vec!["ActorBase".to_string()],
+            vec!["System".to_string()],
+            "Buffout 4".to_string(),
+        );
+
+        assert!(scanner.record_matcher.get().is_none());
+        assert!(scanner.ignore_matcher.get().is_none());
+
+        let callstack = vec!["ActorBase_Player reference".to_string()];
+        let _ = scanner.scan_named_records(&callstack);
+
+        let record_matcher = scanner
+            .record_matcher
+            .get()
+            .expect("record matcher should initialize on first scan");
+        let ignore_matcher = scanner
+            .ignore_matcher
+            .get()
+            .expect("ignore matcher should initialize on first scan");
+
+        let record_matcher_ptr = std::ptr::from_ref(record_matcher);
+        let ignore_matcher_ptr = std::ptr::from_ref(ignore_matcher);
+
+        let _ = scanner.scan_named_records(&callstack);
+
+        assert_eq!(
+            std::ptr::from_ref(
+                scanner
+                    .record_matcher
+                    .get()
+                    .expect("record matcher should stay cached")
+            ),
+            record_matcher_ptr,
+        );
+        assert_eq!(
+            std::ptr::from_ref(
+                scanner
+                    .ignore_matcher
+                    .get()
+                    .expect("ignore matcher should stay cached")
+            ),
+            ignore_matcher_ptr,
+        );
+    }
+
     // ============================================
     // clear_cache tests
     // ============================================
@@ -854,7 +902,7 @@ mod tests {
     #[test]
     fn test_scan_records_batch_rsp_format() {
         let segments = vec![vec![
-            "[RSP+50] 0x12345678 0xABCD ActorBase_Player".to_string(),
+            "[RSP+50] 0x12345678 0xABCD ActorBase_Player".to_string()
         ]];
         let targets = vec!["ActorBase".to_string()];
         let ignores: Vec<String> = vec![];

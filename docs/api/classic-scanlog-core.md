@@ -72,7 +72,7 @@ Analysis helpers used by the orchestrator and usable independently.
 
 - `PluginAnalyzer` - plugin extraction, plugin-limit checks, plugin suspect matching
 - `FormIDAnalyzerCore` - async FormID correlation and optional DB-backed value lookup
-- `RecordScanner` - named-record detection
+- `RecordScanner` - named-record detection with per-instance `OnceLock<AhoCorasick>` matcher caches built on first use
 - `SuspectScanner` - known error/stack suspect matching
 - `detect_mods_single()`, `detect_mods_double()`, `detect_mods_important()` - standalone mod checks
 
