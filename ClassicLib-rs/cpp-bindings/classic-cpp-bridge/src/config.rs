@@ -8,6 +8,10 @@
 //! are isolated and can't share opaque types across modules.
 
 use classic_config_core::{ClassicConfig, ModSolutionCriteria, YamlDataCore};
+use classic_settings_core::{
+    cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
+    reset_cache_stats as reset_settings_core_cache_stats,
+};
 use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 
@@ -302,8 +306,39 @@ fn yaml_data_mods_solu_entries(data: &YamlData) -> Vec<ffi::YamlDataModSolutionE
         .collect()
 }
 
+fn settings_cache_clear() {
+    clear_settings_cache();
+}
+
+fn settings_cache_size() -> usize {
+    settings_cache_stats().size
+}
+
+fn settings_cache_stats() -> ffi::CacheStats {
+    let stats = settings_core_cache_stats();
+    ffi::CacheStats {
+        hits: stats.hits,
+        misses: stats.misses,
+        hit_rate: stats.hit_rate,
+        size: stats.size,
+        capacity: stats.capacity,
+    }
+}
+
+fn reset_settings_cache_stats() {
+    reset_settings_core_cache_stats();
+}
+
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
+    struct CacheStats {
+        hits: u64,
+        misses: u64,
+        hit_rate: f64,
+        size: usize,
+        capacity: usize,
+    }
+
     struct YamlDataModSolutionCriteria {
         any: Vec<String>,
         all: Vec<String>,
@@ -378,13 +413,20 @@ mod ffi {
         fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
         fn yaml_data_mods_solu_entries(data: &YamlData) -> Vec<YamlDataModSolutionEntry>;
+
+        fn settings_cache_clear();
+        fn settings_cache_size() -> usize;
+        fn settings_cache_stats() -> CacheStats;
+        fn reset_settings_cache_stats();
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
     use tempfile::tempdir;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_yaml_data_load_invalid_dirs() {
@@ -512,5 +554,29 @@ CLASSIC_Ignore_Fallout4: []
             yaml["Game_Info"]["Root_Folder_Docs"].as_str(),
             Some("C:/Users/Test/Documents/My Games/Fallout4")
         );
+    }
+
+    #[test]
+    fn test_settings_cache_stats_helpers_forward_core_surface() {
+        settings_cache_clear();
+        reset_settings_cache_stats();
+
+        assert_eq!(settings_cache_size(), 0);
+        let initial = settings_cache_stats();
+        assert_eq!(initial.hits, 0);
+        assert_eq!(initial.misses, 0);
+        assert_eq!(initial.size, 0);
+        assert_eq!(initial.capacity, 64);
+
+        let mut file = NamedTempFile::new().expect("create temp yaml");
+        file.write_all(b"key: value\n").expect("write temp yaml");
+        file.flush().expect("flush temp yaml");
+
+        classic_settings_core::load_settings_sync("bridge-settings", file.path())
+            .expect("load settings into cache");
+
+        let populated = settings_cache_stats();
+        assert_eq!(settings_cache_size(), 1);
+        assert_eq!(populated.size, 1);
     }
 }
