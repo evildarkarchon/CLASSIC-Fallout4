@@ -993,6 +993,10 @@ mod tests {
         DOUBLE_MATCHER_COMPILES.load(Ordering::Relaxed)
     }
 
+    fn double_compile_snapshot_for_tests() -> u64 {
+        double_compile_count_for_tests()
+    }
+
     // ============================================
     // Helper function tests
     // ============================================
@@ -1449,12 +1453,13 @@ mod tests {
         ];
 
         reset_matcher_caches_for_tests();
+        let starting_compiles = double_compile_snapshot_for_tests();
 
         let first = double_matcher_for_tests(&entries).unwrap();
         let second = double_matcher_for_tests(&entries).unwrap();
 
         assert!(Arc::ptr_eq(&first, &second));
-        assert_eq!(double_compile_count_for_tests(), 1);
+        assert_eq!(double_compile_count_for_tests() - starting_compiles, 1);
     }
 
     // ============================================
