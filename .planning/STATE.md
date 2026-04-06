@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-06-PLAN.md
-last_updated: "2026-04-06T04:54:42.096Z"
+stopped_at: Completed 04-bounded-cache-replacement-04-PLAN.md
+last_updated: "2026-04-06T05:00:45.239Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 6
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 Phase: 04 (bounded-cache-replacement) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -62,6 +62,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 04-bounded-cache-replacement P03 | 4min | 2 tasks | 2 files |
 | Phase 04-bounded-cache-replacement P01 | 7min | 2 tasks | 4 files |
 | Phase 04-bounded-cache-replacement P06 | 11min | 2 tasks | 6 files |
+| Phase 04-bounded-cache-replacement P04 | 8 min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Serialize YAML integration cache tests so clear/reset helpers remain deterministic without cache-internal assertions.
 - [Phase 04-bounded-cache-replacement]: Keep the bridge layer adapter-only: cache stats are computed in Rust core crates and only reshaped for CXX transport.
 - [Phase 04-bounded-cache-replacement]: Keep legacy *_cache_size helpers as compatibility shims over the canonical stats DTO instead of removing them mid-phase.
+- [Phase 04-bounded-cache-replacement]: Preserve exact snake_case cache stat names in Node by using explicit NAPI naming overrides and typed return annotations.
+- [Phase 04-bounded-cache-replacement]: Classify the new hash cache helpers as runtime-verified Tier-2 aux coverage in the Node registry.
+- [Phase 04-bounded-cache-replacement]: Validate bounded hash cache behavior through capacity and stats counters instead of eviction-victim order assertions.
 
 ### Pending Todos
 
@@ -110,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T04:54:42.089Z
-Stopped at: Completed 04-06-PLAN.md
+Last session: 2026-04-06T05:00:45.234Z
+Stopped at: Completed 04-bounded-cache-replacement-04-PLAN.md
 Resume file: None
