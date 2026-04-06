@@ -52,7 +52,6 @@ num_cpus = { workspace = true }
 # Caching and concurrency
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
-once_cell = { workspace = true }
 lru = { workspace = true }
 rustc-hash = { workspace = true }
 xxhash-rust = { workspace = true }

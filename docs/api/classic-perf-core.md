@@ -194,7 +194,7 @@ This crate is explicitly process-global.
 
 Implementation details visible in `src/metrics.rs`:
 
-- storage is one `static` `once_cell::sync::Lazy<DashMap<String, Vec<f64>>>`
+- storage is one `static` `std::sync::LazyLock<DashMap<String, Vec<f64>>>`
 - initialization happens on first access
 - operation names are shared across the whole process namespace
 - each operation stores every recorded sample in a `Vec<f64>`
@@ -215,7 +215,7 @@ The crate's own tests use `serial_test` because the metrics store is global muta
 Important direct dependencies:
 
 - `dashmap` - concurrent process-wide metrics storage
-- `once_cell` - lazy initialization of the global store
+- `std::sync::LazyLock` - standard-library lazy initialization of the global store
 - `serde` - serialization support on `MetricsSummary`
 
 Related CLASSIC crates and wrappers:

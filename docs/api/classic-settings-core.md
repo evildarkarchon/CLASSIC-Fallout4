@@ -402,7 +402,7 @@ Important direct dependencies visible in current behavior:
 
 - `yaml-rust2` - YAML parsing and exposed `Yaml` type
 - `tokio` - async file I/O and spawned async batch tasks
-- `dashmap` and `once_cell` - process-global concurrent cache
+- `quick_cache` and `std::sync::LazyLock` - bounded process-global concurrent cache
 - `serde` - `CacheStats` serialization support
 - `thiserror` - `SettingsError`
 - `tracing` - cache hit/miss instrumentation in `get_cached()`

@@ -34,7 +34,6 @@ indexmap = { workspace = true }
 
 # Caching
 dashmap = { workspace = true }
-once_cell = { workspace = true }
 quick_cache = { workspace = true }
 
 # Error handling
