@@ -500,7 +500,7 @@ pub fn detect_mods_important(
     user_gpu: Option<&str>,
     xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    detect_mods_important_legacy(entries, crashlog_plugins, user_gpu, xse_modules)
+    detect_mods_important_aho(entries, crashlog_plugins, user_gpu, xse_modules)
 }
 
 fn build_important_mod_haystack(
