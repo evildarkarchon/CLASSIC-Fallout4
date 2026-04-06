@@ -307,9 +307,24 @@ The report module is designed around Python-parity text output, not a stable int
 - `version`: `CrashgenVersion`, `CrashgenVersionStatus`, `crashgen_version_gen()`, `check_crashgen_version_status()`
 - `gpu_detector`: `GpuVendor`, `GpuInfo`, `GpuDetector`
 - `papyrus`: `PapyrusAnalyzer`, `PapyrusStats`, `PapyrusError`
-- `fcx_handler`: `FcxModeHandler`, `ConfigIssue`, `GLOBAL_FCX_HANDLER`
+- `fcx_handler`: `FcxModeHandler`, `FcxResetError`, `ConfigIssue`, `GLOBAL_FCX_HANDLER`
 - `formid`: `RustFormIDAnalyzer`, `FormIDAnalyzer` legacy wrapper
 - `detect_vr_log(content)` - simple Fallout 4 VR log detection helper
+
+### FCX global state reset contract
+
+`FcxModeHandler::reset_global_state()` is the contributor-facing reset hook for the process-wide FCX singleton.
+
+- Signature: `Result<(), FcxResetError>`
+- Locking behavior: it uses a blocking mutex lock, so reset requests wait for in-flight FCX work instead of silently skipping under contention
+- Success path: `Ok(())` means stale cached FCX results were cleared for a new scan session
+- No-op path: `Err(FcxResetError::Unnecessary)` means the singleton was already clean; bindings should treat this as benign and continue
+
+Binding expectation:
+
+- binding entrypoints should auto-call the reset hook at scan start so each scan session begins from clean FCX state
+- bindings may expose explicit reset entrypoints for callers that want to clear the singleton between sessions
+- bindings should not treat `Unnecessary` as a scan-start failure
 
 ---
 

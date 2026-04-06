@@ -45,7 +45,7 @@ pub mod version;
 // Re-export key types for convenience
 pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
 pub use error::ScanLogError;
-pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};
+pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
 pub use formid_analyzer::{
     FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
