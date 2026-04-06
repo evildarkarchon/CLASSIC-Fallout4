@@ -507,8 +507,14 @@ fn build_important_mod_haystack(
     crashlog_plugins: &IndexMap<String, String>,
     xse_modules: &HashSet<String>,
 ) -> (HashSet<String>, String) {
-    let _ = (crashlog_plugins, xse_modules);
-    todo!("RED phase: add fixture-backed important-mod haystack builder")
+    let plugin_names_lower: Vec<String> = crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
+    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
+    let plugins_text = plugin_names_lower.join(" ");
+
+    let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
+    let modules_text = module_names_lower.join(" ");
+
+    (plugin_names_lower_set, format!("{} {}", plugins_text, modules_text))
 }
 
 fn detect_mods_important_legacy(
@@ -517,8 +523,74 @@ fn detect_mods_important_legacy(
     user_gpu: Option<&str>,
     xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    let _ = (entries, crashlog_plugins, user_gpu, xse_modules);
-    todo!("RED phase: preserve the legacy important-mod regex path behind a helper")
+    let mut lines = Vec::new();
+
+    let (plugin_names_lower_set, all_text) = build_important_mod_haystack(crashlog_plugins, xse_modules);
+
+    for entry in entries {
+        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
+            continue;
+        }
+
+        let pattern = Regex::new(&format!(
+            "(?i){}",
+            regex::escape(&entry.detect.to_lowercase())
+        ))
+        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
+
+        let mod_found = pattern.is_match(&all_text);
+
+        // gpu_mismatch: entry is for a specific GPU that the user does NOT have
+        let gpu_mismatch = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug)));
+
+        // gpu_matches_user: entry is for a specific GPU that the user DOES have
+        let gpu_matches_user = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug)));
+
+        if mod_found {
+            if gpu_mismatch {
+                if let Some(ref warning) = entry.gpu_mismatch_warning {
+                    let warning_md = warning.trim_end().replace('\n', "\n\n");
+                    lines.push(format!("❓ {}\n\n", warning_md));
+                } else {
+                    let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
+                    lines.push(format!(
+                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
+                        entry.name, gpu_label
+                    ));
+                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
+                }
+            } else {
+                lines.push(format!("✔️ {} is installed!\n\n", entry.name));
+            }
+        } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
+            // Show "not installed" for universal mods and mods matching the user's GPU
+            if !entry.description.is_empty() {
+                let desc_lines: Vec<&str> = entry.description.trim_end().lines().collect();
+                let first_line = desc_lines.first().map(|s| s.trim()).unwrap_or("");
+
+                lines.push(format!(
+                    "❌ {} is not installed! {}  \n",
+                    entry.name, first_line
+                ));
+
+                for line in desc_lines.iter().skip(1) {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() {
+                        lines.push(format!("{}  \n", trimmed));
+                    }
+                }
+                lines.push("\n".to_string());
+            }
+        }
+    }
+
+    Ok(lines)
 }
 
 fn detect_mods_important_aho(
@@ -527,8 +599,81 @@ fn detect_mods_important_aho(
     user_gpu: Option<&str>,
     xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    let _ = (entries, crashlog_plugins, user_gpu, xse_modules);
-    todo!("RED phase: add Aho-Corasick parity path for important mods")
+    let mut lines = Vec::new();
+
+    if entries.is_empty() {
+        return Ok(lines);
+    }
+
+    let (plugin_names_lower_set, all_text) = build_important_mod_haystack(crashlog_plugins, xse_modules);
+    let detect_literals: Vec<String> = entries.iter().map(|entry| entry.detect.to_lowercase()).collect();
+    let matcher = AhoCorasick::builder()
+        .match_kind(MatchKind::LeftmostLongest)
+        .build(&detect_literals)
+        .map_err(|e| ScanLogError::InvalidInput(format!("Aho-Corasick error: {}", e)))?;
+    let matched_pattern_ids: HashSet<usize> = matcher
+        .find_iter(&all_text)
+        .map(|mat| mat.pattern().as_usize())
+        .collect();
+
+    for (pattern_index, entry) in entries.iter().enumerate() {
+        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
+            continue;
+        }
+
+        let mod_found = matched_pattern_ids.contains(&pattern_index);
+
+        // gpu_mismatch: entry is for a specific GPU that the user does NOT have
+        let gpu_mismatch = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug)));
+
+        // gpu_matches_user: entry is for a specific GPU that the user DOES have
+        let gpu_matches_user = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug)));
+
+        if mod_found {
+            if gpu_mismatch {
+                if let Some(ref warning) = entry.gpu_mismatch_warning {
+                    let warning_md = warning.trim_end().replace('\n', "\n\n");
+                    lines.push(format!("❓ {}\n\n", warning_md));
+                } else {
+                    let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
+                    lines.push(format!(
+                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
+                        entry.name, gpu_label
+                    ));
+                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
+                }
+            } else {
+                lines.push(format!("✔️ {} is installed!\n\n", entry.name));
+            }
+        } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
+            // Show "not installed" for universal mods and mods matching the user's GPU
+            if !entry.description.is_empty() {
+                let desc_lines: Vec<&str> = entry.description.trim_end().lines().collect();
+                let first_line = desc_lines.first().map(|s| s.trim()).unwrap_or("");
+
+                lines.push(format!(
+                    "❌ {} is not installed! {}  \n",
+                    entry.name, first_line
+                ));
+
+                for line in desc_lines.iter().skip(1) {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() {
+                        lines.push(format!("{}  \n", trimmed));
+                    }
+                }
+                lines.push("\n".to_string());
+            }
+        }
+    }
+
+    Ok(lines)
 }
 
 /// Checks whether a `CoreModExclude` condition is met by the current plugin list.
