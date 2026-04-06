@@ -8,7 +8,7 @@
 //! - **YamlDocument class**: Stateful wrapper that holds a parsed YAML document in memory
 //!   for repeated reads and mutations without re-parsing.
 
-use classic_yaml_core::{YamlError, YamlOperations};
+use classic_yaml_core::{cache_stats as yaml_cache_stats, YamlError, YamlOperations};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
@@ -355,17 +355,18 @@ pub fn yaml_clear_cache() {
 
 /// Get statistics about the global YAML file cache.
 ///
-/// @returns An object with `cachedFiles` (number) and `totalBytes` (number).
-#[napi]
+/// @returns An object with canonical cache stats fields.
+#[napi(
+    ts_return_type = "{ hits: number; misses: number; hit_rate: number; size: number; capacity: number }"
+)]
 pub fn yaml_get_cache_stats() -> serde_json::Value {
-    let ops = YamlOperations::new();
-    let stats = ops.get_cache_stats();
-
-    let cached_files = stats.get("cached_files").copied().unwrap_or(0);
-    let total_bytes = stats.get("total_bytes").copied().unwrap_or(0);
+    let stats = yaml_cache_stats();
 
     serde_json::json!({
-        "cachedFiles": cached_files,
-        "totalBytes": total_bytes,
+        "hits": stats.hits,
+        "misses": stats.misses,
+        "hit_rate": stats.hit_rate,
+        "size": stats.size,
+        "capacity": stats.capacity,
     })
 }

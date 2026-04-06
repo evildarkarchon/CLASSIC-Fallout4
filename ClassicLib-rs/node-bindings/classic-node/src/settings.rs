@@ -82,11 +82,12 @@ pub struct SettingsCacheStats {
     /// Number of cache misses since last reset.
     pub misses: i64,
     /// Hit rate as a fraction (0.0 to 1.0).
+    #[napi(js_name = "hit_rate")]
     pub hit_rate: f64,
     /// Current number of entries in the cache.
     pub size: u32,
-    /// List of cache keys.
-    pub keys: Vec<String>,
+    /// Maximum bounded cache capacity.
+    pub capacity: u32,
 }
 
 // ============================================================================
@@ -195,7 +196,7 @@ pub fn settings_cache_keys() -> Vec<String> {
 // Statistics
 // ============================================================================
 
-/// Get cache performance statistics (hits, misses, hit rate, size, keys).
+/// Get cache performance statistics (hits, misses, hit rate, size, capacity).
 #[napi]
 pub fn get_settings_cache_stats() -> SettingsCacheStats {
     let stats = core::cache_stats();
@@ -204,7 +205,7 @@ pub fn get_settings_cache_stats() -> SettingsCacheStats {
         misses: stats.misses as i64,
         hit_rate: stats.hit_rate,
         size: stats.size as u32,
-        keys: stats.keys,
+        capacity: stats.capacity as u32,
     }
 }
 
