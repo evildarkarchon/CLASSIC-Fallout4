@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 05-pattern-caching-and-performance-02-PLAN.md
-last_updated: "2026-04-06T07:41:58.201Z"
+status: verifying
+stopped_at: Completed 05-pattern-caching-and-performance-04-PLAN.md
+last_updated: "2026-04-06T07:51:45.246Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
   percent: 6
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 
 Phase: 05 (pattern-caching-and-performance) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-06
 
 Progress: [█░░░░░░░░░] 6%
@@ -67,6 +67,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 05-pattern-caching-and-performance P03 | 4min | 2 tasks | 2 files |
 | Phase 05-pattern-caching-and-performance P01 | 8min | 2 tasks | 3 files |
 | Phase 05-pattern-caching-and-performance P02 | 9min | 2 tasks | 1 files |
+| Phase 05-pattern-caching-and-performance P04 | 12min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 05-pattern-caching-and-performance]: Kept the legacy regex path as a private helper so fixture-backed parity stays executable while detect_mods_important uses Aho-Corasick.
 - [Phase 05-pattern-caching-and-performance]: Used the large crash-log fixture for important-mod parity because the smaller fixture lacks a plugin section.
 - [Phase 05-pattern-caching-and-performance]: Kept the Aho-Corasick automaton one-per-call in PERF-02 and deferred cache reuse to later performance proof work.
+- [Phase 05-pattern-caching-and-performance]: Kept Phase 5 performance proof in the existing scanlog Criterion harness and mirrored bridge crash-pattern behavior with a Rust helper instead of an FFI benchmark.
+- [Phase 05-pattern-caching-and-performance]: Primed cached single and batch matchers before timed loops and used Criterion iter_batched to avoid timing benchmark input setup.
+- [Phase 05-pattern-caching-and-performance]: Scoped the legacy important-mod regex helper to tests after bench verification exposed a dead-code lint failure in non-test builds.
 
 ### Pending Todos
 
@@ -128,6 +132,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T07:41:58.197Z
-Stopped at: Completed 05-pattern-caching-and-performance-02-PLAN.md
+Last session: 2026-04-06T07:51:45.241Z
+Stopped at: Completed 05-pattern-caching-and-performance-04-PLAN.md
 Resume file: None
