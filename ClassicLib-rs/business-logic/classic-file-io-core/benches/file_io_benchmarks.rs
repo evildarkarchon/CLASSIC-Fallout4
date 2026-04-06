@@ -18,7 +18,10 @@
 //! ```
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use std::path::PathBuf;
+use memmap2::MmapOptions;
+use std::fs::File;
+use std::hint::black_box;
+use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 // Import shared benchmark configuration from workspace benches/common/
@@ -29,6 +32,31 @@ use tempfile::TempDir;
 mod common;
 
 use classic_file_io_core::{EncodingDetector, FileIOCore};
+
+const PHASE6_MMAP_SIZES: &[(usize, &str)] = &[
+    (1_048_576 + 4_096, "1mb_plus_4kb"),
+    (4 * 1_048_576, "4mb"),
+    (16 * 1_048_576, "16mb"),
+];
+
+#[derive(Clone, Copy, Debug)]
+enum MmapVariant {
+    Map,
+    MapCopy,
+    MapCopyReadOnly,
+}
+
+impl MmapVariant {
+    const ALL: [Self; 3] = [Self::Map, Self::MapCopy, Self::MapCopyReadOnly];
+
+    const fn name(self) -> &'static str {
+        match self {
+            Self::Map => "map",
+            Self::MapCopy => "map_copy",
+            Self::MapCopyReadOnly => "map_copy_read_only",
+        }
+    }
+}
 
 // =============================================================================
 // Synthetic Data Generation
@@ -94,6 +122,101 @@ fn generate_path_list(count: usize) -> Vec<PathBuf> {
             PathBuf::from(format!("{}/file_{}{}", prefix, i, ext))
         })
         .collect()
+}
+
+fn decode_mmap_bytes(
+    detector: &EncodingDetector,
+    default_errors: &str,
+    path: &Path,
+    bytes: &[u8],
+) -> Result<String, String> {
+    let encoding = detector.detect(&bytes[..bytes.len().min(8192)]);
+
+    if encoding.name() == "UTF-8" || encoding.name() == "ASCII" {
+        match std::str::from_utf8(bytes) {
+            Ok(s) => return Ok(s.to_string()),
+            Err(_) => {
+                let (decoded, _) = encoding.decode_without_bom_handling(bytes);
+                return Ok(decoded.into_owned());
+            }
+        }
+    }
+
+    let (decoded, had_errors) = encoding.decode_without_bom_handling(bytes);
+    if had_errors && default_errors != "ignore" {
+        return Err(format!("Encoding errors in file: {}", path.display()));
+    }
+
+    Ok(decoded.into_owned())
+}
+
+fn read_file_with_variant(
+    detector: &EncodingDetector,
+    default_errors: &str,
+    path: &Path,
+    variant: MmapVariant,
+) -> Result<String, String> {
+    let file = File::open(path).map_err(|err| err.to_string())?;
+
+    match variant {
+        MmapVariant::Map => {
+            let mmap = unsafe { MmapOptions::new().map(&file).map_err(|err| err.to_string())? };
+            decode_mmap_bytes(detector, default_errors, path, &mmap)
+        }
+        MmapVariant::MapCopy => {
+            let mmap = unsafe {
+                MmapOptions::new()
+                    .map_copy(&file)
+                    .map_err(|err| err.to_string())?
+            };
+            decode_mmap_bytes(detector, default_errors, path, &mmap)
+        }
+        MmapVariant::MapCopyReadOnly => {
+            let mmap = unsafe {
+                MmapOptions::new()
+                    .map_copy_read_only(&file)
+                    .map_err(|err| err.to_string())?
+            };
+            decode_mmap_bytes(detector, default_errors, path, &mmap)
+        }
+    }
+}
+
+fn phase6_mmap_variants(c: &mut Criterion) {
+    let mut group = c.benchmark_group("phase6_mmap_variants");
+    let temp_dir = TempDir::new().expect("create phase 6 temp dir");
+    let detector = EncodingDetector::new();
+    let default_errors = "strict";
+
+    let inputs: Vec<_> = PHASE6_MMAP_SIZES
+        .iter()
+        .map(|(size, label)| {
+            let path = temp_dir.path().join(format!("phase6-{}.log", label));
+            std::fs::write(&path, generate_utf8_content(*size)).expect("write phase 6 mmap bench file");
+            (*size, *label, path)
+        })
+        .collect();
+
+    for (size, label, path) in &inputs {
+        group.throughput(Throughput::Bytes(*size as u64));
+
+        for variant in MmapVariant::ALL {
+            group.bench_with_input(
+                BenchmarkId::new(variant.name(), label),
+                path,
+                |b, path| {
+                    b.iter(|| {
+                        black_box(
+                            read_file_with_variant(&detector, default_errors, path, variant)
+                                .expect("phase 6 mmap variant should decode synthetic UTF-8"),
+                        )
+                    });
+                },
+            );
+        }
+    }
+
+    group.finish();
 }
 
 // =============================================================================
@@ -389,6 +512,7 @@ criterion_group! {
         encoding_detection_benchmarks,
         path_filtering_benchmarks,
         file_io_core_benchmarks,
+        phase6_mmap_variants,
         log_pattern_benchmarks,
         dds_parsing_benchmarks
 }
