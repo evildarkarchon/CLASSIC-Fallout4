@@ -149,6 +149,11 @@ mod tests {
     use serial_test::serial;
 
     #[test]
+    fn test_metrics_store_uses_std_lazy_lock() {
+        assert!(std::any::type_name_of_val(&METRICS).contains("LazyLock"));
+    }
+
+    #[test]
     #[serial]
     fn test_record_and_retrieve() {
         clear_metrics();

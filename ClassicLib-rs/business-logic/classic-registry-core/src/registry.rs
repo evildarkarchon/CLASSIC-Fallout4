@@ -471,6 +471,11 @@ mod tests {
     use serial_test::serial;
 
     #[test]
+    fn test_registry_uses_std_lazy_lock() {
+        assert!(std::any::type_name_of_val(&REGISTRY).contains("LazyLock"));
+    }
+
+    #[test]
     #[serial]
     fn test_register_and_get_string() {
         clear_all();
