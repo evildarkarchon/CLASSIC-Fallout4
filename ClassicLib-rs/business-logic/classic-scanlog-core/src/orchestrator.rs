@@ -38,11 +38,10 @@ use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
 use indexmap::IndexMap;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 /// Coarse-grained scan progress phases emitted at orchestration boundaries.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -641,8 +640,8 @@ where
 {
     // Pre-compiled regex pattern to extract module name (everything up to .dll)
     // Pattern: (.*?\.dll)\s*v?.* - captures filename.dll, ignoring version info
-    static MODULE_PATTERN: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"(?i)(.*?\.dll)\s*v?.*").unwrap());
+    static MODULE_PATTERN: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?i)(.*?\.dll)\s*v?.*").unwrap());
 
     let mut result = HashSet::new();
 

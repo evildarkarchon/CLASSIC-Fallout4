@@ -10,8 +10,8 @@
 //! for manual fixes.
 
 use crate::report::ReportFragment;
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
+use std::sync::LazyLock;
 use thiserror::Error;
 
 /// Global FCX mode handler for shared state across scan sessions
@@ -21,8 +21,8 @@ use thiserror::Error;
 ///
 /// Call `FcxModeHandler::reset_global_state()` at the start of each scan session
 /// to clear cached results.
-pub static GLOBAL_FCX_HANDLER: Lazy<Mutex<FcxModeHandler>> =
-    Lazy::new(|| Mutex::new(FcxModeHandler::new(false)));
+pub static GLOBAL_FCX_HANDLER: LazyLock<Mutex<FcxModeHandler>> =
+    LazyLock::new(|| Mutex::new(FcxModeHandler::new(false)));
 
 /// Typed outcome for resetting the global FCX handler state.
 #[derive(Clone, Debug, Error, Eq, PartialEq)]

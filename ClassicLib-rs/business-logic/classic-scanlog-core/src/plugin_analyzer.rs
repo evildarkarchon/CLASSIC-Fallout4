@@ -7,16 +7,15 @@ use crate::version::crashgen_version_gen;
 use aho_corasick::AhoCorasickBuilder;
 use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
 use indexmap::IndexMap;
-use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-
+use std::sync::LazyLock;
 
 /// Precompiled plugin pattern - exact match to Python's pattern
 /// Pattern: r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)"
-static PLUGIN_PATTERN: Lazy<Regex> = Lazy::new(|| {
+static PLUGIN_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)").unwrap()
 });
 
