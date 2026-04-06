@@ -150,6 +150,35 @@ fn decode_mmap_bytes(
     Ok(decoded.into_owned())
 }
 
+#[allow(unsafe_code)]
+fn map_file_shared(file: &File) -> Result<memmap2::Mmap, String> {
+    // SAFETY: The benchmark keeps the file handle alive for the full mapping lifetime
+    // and only reads/decode bytes from a stable synthetic input file.
+    unsafe { MmapOptions::new().map(file).map_err(|err| err.to_string()) }
+}
+
+#[allow(unsafe_code)]
+fn map_file_copy(file: &File) -> Result<memmap2::MmapMut, String> {
+    // SAFETY: The benchmark keeps the file handle alive for the full mapping lifetime
+    // and only reads/decode bytes from a stable synthetic input file.
+    unsafe {
+        MmapOptions::new()
+            .map_copy(file)
+            .map_err(|err| err.to_string())
+    }
+}
+
+#[allow(unsafe_code)]
+fn map_file_copy_read_only(file: &File) -> Result<memmap2::Mmap, String> {
+    // SAFETY: The benchmark keeps the file handle alive for the full mapping lifetime
+    // and only reads/decode bytes from a stable synthetic input file.
+    unsafe {
+        MmapOptions::new()
+            .map_copy_read_only(file)
+            .map_err(|err| err.to_string())
+    }
+}
+
 fn read_file_with_variant(
     detector: &EncodingDetector,
     default_errors: &str,
@@ -160,25 +189,17 @@ fn read_file_with_variant(
 
     match variant {
         MmapVariant::Map => {
-            let mmap = unsafe { MmapOptions::new().map(&file).map_err(|err| err.to_string())? };
-            decode_mmap_bytes(detector, default_errors, path, &mmap)
+            decode_mmap_bytes(detector, default_errors, path, &map_file_shared(&file)?)
         }
         MmapVariant::MapCopy => {
-            let mmap = unsafe {
-                MmapOptions::new()
-                    .map_copy(&file)
-                    .map_err(|err| err.to_string())?
-            };
-            decode_mmap_bytes(detector, default_errors, path, &mmap)
+            decode_mmap_bytes(detector, default_errors, path, &map_file_copy(&file)?)
         }
-        MmapVariant::MapCopyReadOnly => {
-            let mmap = unsafe {
-                MmapOptions::new()
-                    .map_copy_read_only(&file)
-                    .map_err(|err| err.to_string())?
-            };
-            decode_mmap_bytes(detector, default_errors, path, &mmap)
-        }
+        MmapVariant::MapCopyReadOnly => decode_mmap_bytes(
+            detector,
+            default_errors,
+            path,
+            &map_file_copy_read_only(&file)?,
+        ),
     }
 }
 
@@ -192,7 +213,8 @@ fn phase6_mmap_variants(c: &mut Criterion) {
         .iter()
         .map(|(size, label)| {
             let path = temp_dir.path().join(format!("phase6-{}.log", label));
-            std::fs::write(&path, generate_utf8_content(*size)).expect("write phase 6 mmap bench file");
+            std::fs::write(&path, generate_utf8_content(*size))
+                .expect("write phase 6 mmap bench file");
             (*size, *label, path)
         })
         .collect();
@@ -201,18 +223,14 @@ fn phase6_mmap_variants(c: &mut Criterion) {
         group.throughput(Throughput::Bytes(*size as u64));
 
         for variant in MmapVariant::ALL {
-            group.bench_with_input(
-                BenchmarkId::new(variant.name(), label),
-                path,
-                |b, path| {
-                    b.iter(|| {
-                        black_box(
-                            read_file_with_variant(&detector, default_errors, path, variant)
-                                .expect("phase 6 mmap variant should decode synthetic UTF-8"),
-                        )
-                    });
-                },
-            );
+            group.bench_with_input(BenchmarkId::new(variant.name(), label), path, |b, path| {
+                b.iter(|| {
+                    black_box(
+                        read_file_with_variant(&detector, default_errors, path, variant)
+                            .expect("phase 6 mmap variant should decode synthetic UTF-8"),
+                    )
+                });
+            });
         }
     }
 
