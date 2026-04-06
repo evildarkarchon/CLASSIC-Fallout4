@@ -1342,6 +1342,8 @@ mod tests {
         }
     }
 
+    // Keep detect_mods_double coverage serial so shared matcher compile counters stay scoped
+    // to each regression proof during grouped test runs.
     #[test]
     #[serial]
     fn test_detect_mods_double_empty() {
