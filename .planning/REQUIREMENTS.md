@@ -23,7 +23,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Correctness and Safety
 
 - [x] **SAFE-01**: Fix `GLOBAL_FCX_HANDLER.reset_global_state()` silent drop -- replace `try_lock()` with `lock()` (parking_lot non-poisoning)
-- [ ] **SAFE-02**: Expose `reset_fcx_global_state()` in C++ bridge CXX extern block, called before each scan session
+- [x] **SAFE-02**: Expose `reset_fcx_global_state()` in C++ bridge CXX extern block, called before each scan session
 - [ ] **SAFE-03**: Expose `resetFcxState()` NAPI function in Node bindings, called before each scan session
 - [ ] **SAFE-04**: Expose `ConfigIssue` list in Node bindings via `JsConfigIssue` NAPI struct and `getFcxIssues()` function
 - [ ] **SAFE-05**: Switch `read_file_mmap` from `Mmap::map()` to `MmapOptions::map_copy()` for TOCTOU safety on Windows
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-09 | Phase 2 | Complete |
 | DEBT-10 | Phase 1 | Complete |
 | SAFE-01 | Phase 3 | Complete |
-| SAFE-02 | Phase 3 | Pending |
+| SAFE-02 | Phase 3 | Complete |
 | SAFE-03 | Phase 3 | Pending |
 | SAFE-04 | Phase 3 | Pending |
 | SAFE-05 | Phase 6 | Pending |

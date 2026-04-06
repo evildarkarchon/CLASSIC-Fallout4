@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-04-06T02:21:19.599Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-04-06T02:29:43.518Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 6
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 Phase: 03 (fcx-state-hardening) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -56,6 +56,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 02 P01 | 11min | 2 tasks | 2 files |
 | Phase 02 P03 | 6min | 2 tasks | 1 files |
 | Phase 03 P01 | 0 min | 2 tasks | 3 files |
+| Phase 03 P02 | 6 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Removed orphaned has_real_buffout_module from settings_validator.rs -- orchestrator.rs retains its own copy
 - [Phase 03]: Use blocking GLOBAL_FCX_HANDLER.lock() for FCX reset so contention cannot silently skip cleanup.
 - [Phase 03]: Treat an already-clean FCX singleton as Err(FcxResetError::Unnecessary) so bindings can keep the no-op path benign.
+- [Phase 03]: Keep the C++ FCX surface reset-only in Phase 3
+- [Phase 03]: Preserve existing C++ batch signatures by short-circuiting with failed batch DTOs on reset failure
 
 ### Pending Todos
 
@@ -89,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T02:21:19.595Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-04-06T02:29:43.514Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
