@@ -99,7 +99,13 @@ Plans:
   3. C++ bridge `detect_crash_pattern` uses a module-level `LazyLock<LogParser>` instead of per-call `LogParser::new(None)`
   4. Static regex patterns in `mod_detector` use `LazyLock` with `Regex::new().unwrap()` to move compilation failure to startup
   5. Criterion benchmarks exist for `detect_mods_important`, `detect_mods_single`/`batch`, `detect_crash_pattern`, and show measurable improvement over baseline
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md -- Add bounded matcher caches for `detect_mods_single`/`double`/`batch` and move touched static regexes to `LazyLock` (PERF-01, CONS-04)
+- [ ] 05-02-PLAN.md -- Replace `detect_mods_important` regex-per-entry matching with `Aho-Corasick` guarded by fixture-backed parity coverage (PERF-02)
+- [x] 05-03-PLAN.md -- Cache the C++ bridge `detect_crash_pattern` parser with a module-level `LazyLock<LogParser>` and add positive bridge coverage (PERF-03)
+- [ ] 05-04-PLAN.md -- Extend `scanlog_benchmarks.rs` with Phase 5 hotspot proof and document the local Criterion baseline workflow (PERF-04)
 
 ### Phase 6: mmap TOCTOU Safety
 **Goal**: Memory-mapped file reads are safe against time-of-check-to-time-of-use races on Windows
@@ -141,7 +147,7 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 2. Dead Code Removal | 0/3 | Not started | - |
 | 3. FCX State Hardening | 0/TBD | Not started | - |
 | 4. Bounded Cache Replacement | 0/6 | Planned | - |
-| 5. Pattern Caching and Performance | 0/TBD | Not started | - |
+| 5. Pattern Caching and Performance | 0/4 | Planned | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
 | 7. Consistency Sweep | 0/TBD | Not started | - |
 | 8. Workspace and Infrastructure | 0/TBD | Not started | - |
