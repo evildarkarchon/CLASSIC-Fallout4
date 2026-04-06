@@ -80,7 +80,7 @@ Plans:
   3. `HASH_CACHE` uses `quick_cache::sync::Cache` with capacity 1024 instead of unbounded `DashMap`
   4. All three caches expose a consistent `CacheStats` struct with hits, misses, hit_rate, size, and capacity fields
   5. Existing tests pass with bounded caches (clear/reset APIs preserved for test isolation)
-**Plans**: 6 plans
+**Plans**: 7 plans
 Plans:
 - [x] 04-01-PLAN.md -- Replace YAML_CACHE with a 128-entry bounded quick_cache and canonical CacheStats
 - [x] 04-02-PLAN.md -- Replace SETTINGS_CACHE with a 64-entry bounded quick_cache and canonical CacheStats
@@ -108,6 +108,7 @@ Plans:
 - [x] 05-04-PLAN.md -- Extend `scanlog_benchmarks.rs` with Phase 5 hotspot proof and document the local Criterion baseline workflow (PERF-04)
 - [x] 05-05-PLAN.md -- Stabilize the `detect_mods_double` matcher-cache reuse proof so grouped detector test runs pass deterministically (PERF-01 gap closure)
 - [x] 05-06-PLAN.md -- Commit a reproducible Phase 5 benchmark proof artifact and align PERF-04 wording with Phase 6 mmap ownership (PERF-04 gap closure)
+- [x] 05-07-PLAN.md -- Investigate and eliminate the residual `detect_mods_important` benchmark regression without relaxing parity or benchmark-proof requirements (PERF-02, PERF-04)
 
 ### Phase 6: mmap TOCTOU Safety
 **Goal**: Memory-mapped file reads are safe against time-of-check-to-time-of-use races on Windows

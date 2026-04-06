@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-pattern-caching-and-performance-06-PLAN.md
-last_updated: "2026-04-06T09:01:11.942Z"
+stopped_at: Completed 05-pattern-caching-and-performance-07-PLAN.md
+last_updated: "2026-04-06T09:32:09.325Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 5
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 21
+  completed_plans: 21
   percent: 6
 ---
 
@@ -70,6 +70,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 05-pattern-caching-and-performance P04 | 12min | 2 tasks | 3 files |
 | Phase 05-pattern-caching-and-performance P05 | 18min | 2 tasks | 2 files |
 | Phase 05-pattern-caching-and-performance P06 | 43min | 2 tasks | 5 files |
+| Phase 05-pattern-caching-and-performance P07 | 17min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,9 @@ Recent decisions affecting current work:
 - [Phase 05-pattern-caching-and-performance]: Focused the save/compare workflow on the phase5_ benchmark groups so proof runs stay bounded to the locked hotspots.
 - [Phase 05-pattern-caching-and-performance]: Added paired before/after benchmark variants in the existing harness because same-revision Criterion baseline comparisons alone cannot prove hotspot deltas.
 - [Phase 05-pattern-caching-and-performance]: Moved mmap throughput ownership out of PERF-04 and into SAFE-05 / Phase 6 to match the roadmap and actual harness scope.
+- [Phase 05-pattern-caching-and-performance]: Reused the repo-standard LazyLock + quick_cache bounded cache pattern for important-mod matcher reuse once the synthetic compile-only slice proved per-call automaton construction was the main regression source.
+- [Phase 05-pattern-caching-and-performance]: Preserved the existing Aho-Corasick, LeftmostLongest, and combined plugin/XSE haystack semantics while optimizing setup cost instead of parity-sensitive matching behavior.
+- [Phase 05-pattern-caching-and-performance]: Skipped plugin-name set construction unless an important-mod entry actually uses exclude_when because the real-fixture slices showed haystack preparation dominated the remaining cost.
 
 ### Pending Todos
 
@@ -139,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T09:01:11.937Z
-Stopped at: Completed 05-pattern-caching-and-performance-06-PLAN.md
+Last session: 2026-04-06T09:32:09.322Z
+Stopped at: Completed 05-pattern-caching-and-performance-07-PLAN.md
 Resume file: None
