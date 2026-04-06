@@ -4,7 +4,7 @@
 //! that involve multiple YAML operations working together.
 
 use classic_yaml_core::{
-    cache_stats, clear_global_yaml_cache, reset_cache_stats, YamlError, YamlOperations,
+    YamlError, YamlOperations, cache_stats, clear_global_yaml_cache, reset_cache_stats,
 };
 use serial_test::serial;
 use std::fs;
@@ -13,7 +13,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use tempfile::{tempdir, NamedTempFile};
+use tempfile::{NamedTempFile, tempdir};
 use yaml_rust2::Yaml;
 
 // ============================================================================
@@ -124,7 +124,11 @@ settings:
         // Verify each file was loaded correctly
         for path in &paths {
             let key = path.to_string_lossy().to_string();
-            assert!(results.get(&key).is_some(), "Should contain {}", key);
+            assert!(
+                results.keys().any(|loaded_path| loaded_path == &key),
+                "Should contain {}",
+                key
+            );
         }
     }
 
@@ -425,7 +429,7 @@ Features:
         );
         assert_eq!(results.get("Game_Config.debug"), Some(&Yaml::Boolean(true)));
         assert_eq!(results.get("Features.fcx_mode"), Some(&Yaml::Boolean(true)));
-        assert!(results.get("NonExistent.key").is_none());
+        assert!(!results.keys().any(|key| key == "NonExistent.key"));
     }
 
     /// Test updating multiple settings in a workflow
@@ -546,10 +550,9 @@ mod error_recovery {
 
         // Should only have the valid file
         assert_eq!(results.len(), 1, "Should only load valid file");
+        let valid_key = valid_path.to_string_lossy().to_string();
         assert!(
-            results
-                .get(&valid_path.to_string_lossy().to_string())
-                .is_some(),
+            results.keys().any(|loaded_path| loaded_path == &valid_key),
             "Should contain valid file"
         );
     }

@@ -1368,7 +1368,7 @@ mod tests {
     use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
-    use tempfile::{tempdir, NamedTempFile};
+    use tempfile::{NamedTempFile, tempdir};
 
     // ============================================================================
     // Basic Parse/Dump Tests (existing)
