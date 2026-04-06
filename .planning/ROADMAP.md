@@ -117,10 +117,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. `read_file_mmap` uses `MmapOptions::map_copy_read_only()` instead of `Mmap::map()`
   2. A criterion benchmark compares throughput of `map()`, `map_copy()`, and `map_copy_read_only()` on representative file sizes to confirm acceptable performance
-**Plans**: 2 plans
+**Plans**: 3 plans
 Plans:
 - [x] 06-01-PLAN.md -- Swap `read_file_mmap()` to `map_copy_read_only()` and align active docs to the locked Phase 6 contract
 - [x] 06-02-PLAN.md -- Add the Phase 6 mmap benchmark group and commit the markdown throughput proof workflow
+- [ ] 06-03-PLAN.md -- Scope benchmark-only unsafe mmap helpers so the Phase 6 crate lint gate passes (SAFE-05 gap closure)
 
 ### Phase 7: Consistency Sweep
 **Goal**: The codebase uses only `std::sync::LazyLock` for lazy statics, eliminating the `once_cell` dependency where it is no longer needed
