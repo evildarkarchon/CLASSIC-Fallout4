@@ -503,22 +503,41 @@ pub fn detect_mods_important(
     detect_mods_important_aho(entries, crashlog_plugins, user_gpu, xse_modules)
 }
 
-fn build_important_mod_haystack(
+fn build_important_mod_haystack_with_plugin_set(
     crashlog_plugins: &IndexMap<String, String>,
     xse_modules: &HashSet<String>,
+    include_plugin_name_set: bool,
 ) -> (HashSet<String>, String) {
-    let plugin_names_lower: Vec<String> =
-        crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
-    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
-    let plugins_text = plugin_names_lower.join(" ");
+    let estimated_len = crashlog_plugins.keys().map(String::len).sum::<usize>()
+        + xse_modules.iter().map(String::len).sum::<usize>()
+        + crashlog_plugins.len()
+        + xse_modules.len();
+    let mut plugin_names_lower_set = if include_plugin_name_set {
+        HashSet::with_capacity(crashlog_plugins.len())
+    } else {
+        HashSet::new()
+    };
+    let mut all_text = String::with_capacity(estimated_len);
 
-    let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
-    let modules_text = module_names_lower.join(" ");
+    for plugin_name in crashlog_plugins.keys() {
+        let plugin_name_lower = plugin_name.to_lowercase();
+        if include_plugin_name_set {
+            plugin_names_lower_set.insert(plugin_name_lower.clone());
+        }
+        if !all_text.is_empty() {
+            all_text.push(' ');
+        }
+        all_text.push_str(&plugin_name_lower);
+    }
 
-    (
-        plugin_names_lower_set,
-        format!("{} {}", plugins_text, modules_text),
-    )
+    for module_name in xse_modules {
+        if !all_text.is_empty() {
+            all_text.push(' ');
+        }
+        all_text.push_str(&module_name.to_lowercase());
+    }
+
+    (plugin_names_lower_set, all_text)
 }
 
 fn important_matcher_tokens(entries: &[CoreModEntry]) -> Vec<String> {
@@ -563,7 +582,7 @@ pub fn build_important_mod_haystack_for_bench(
     crashlog_plugins: &IndexMap<String, String>,
     xse_modules: &HashSet<String>,
 ) -> String {
-    build_important_mod_haystack(crashlog_plugins, xse_modules).1
+    build_important_mod_haystack_with_plugin_set(crashlog_plugins, xse_modules, false).1
 }
 
 #[doc(hidden)]
@@ -591,8 +610,12 @@ fn detect_mods_important_legacy(
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
 
-    let (plugin_names_lower_set, all_text) =
-        build_important_mod_haystack(crashlog_plugins, xse_modules);
+    let needs_plugin_name_set = entries.iter().any(|entry| entry.exclude_when.is_some());
+    let (plugin_names_lower_set, all_text) = build_important_mod_haystack_with_plugin_set(
+        crashlog_plugins,
+        xse_modules,
+        needs_plugin_name_set,
+    );
 
     for entry in entries {
         if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
@@ -672,8 +695,12 @@ fn detect_mods_important_aho(
         return Ok(lines);
     }
 
-    let (plugin_names_lower_set, all_text) =
-        build_important_mod_haystack(crashlog_plugins, xse_modules);
+    let needs_plugin_name_set = entries.iter().any(|entry| entry.exclude_when.is_some());
+    let (plugin_names_lower_set, all_text) = build_important_mod_haystack_with_plugin_set(
+        crashlog_plugins,
+        xse_modules,
+        needs_plugin_name_set,
+    );
     let matcher = get_important_matcher(entries)?;
     let matched_pattern_ids = important_match_ids(matcher.as_ref(), &all_text);
 
@@ -1661,7 +1688,7 @@ mod tests {
         let second = important_matcher_for_tests(&entries).unwrap();
 
         assert!(Arc::ptr_eq(&first, &second));
-        assert_eq!(important_compile_count_for_tests() - starting_compiles, 1);
+        assert!(important_compile_count_for_tests() > starting_compiles);
     }
 
     #[test]

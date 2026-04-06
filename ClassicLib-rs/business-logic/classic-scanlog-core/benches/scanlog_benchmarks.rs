@@ -984,6 +984,18 @@ fn phase5_hotspot_benchmarks(c: &mut Criterion) {
             BatchSize::SmallInput,
         );
     });
+    important_group.bench_function("aho_build_haystack_only_real_fixture_plugin_surface", |b| {
+        b.iter_batched(
+            || (fixture_plugins.clone(), fixture_xse_modules.clone()),
+            |(plugins, xse_modules)| {
+                black_box(build_important_mod_haystack_for_bench(
+                    &plugins,
+                    &xse_modules,
+                ))
+            },
+            BatchSize::SmallInput,
+        );
+    });
     important_group.bench_function("aho_uncached_plugin_and_xse_surface", |b| {
         b.iter_batched(
             || {
