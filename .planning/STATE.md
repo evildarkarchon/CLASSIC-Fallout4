@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-bounded-cache-replacement-01-PLAN.md
-last_updated: "2026-04-06T04:41:36.421Z"
+stopped_at: Completed 04-06-PLAN.md
+last_updated: "2026-04-06T04:54:42.096Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
   percent: 6
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 Phase: 04 (bounded-cache-replacement) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -61,6 +61,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 04 P02 | 3 | 2 tasks | 3 files |
 | Phase 04-bounded-cache-replacement P03 | 4min | 2 tasks | 2 files |
 | Phase 04-bounded-cache-replacement P01 | 7min | 2 tasks | 4 files |
+| Phase 04-bounded-cache-replacement P06 | 11min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Use quick_cache::sync::Cache with fixed capacity 128 while keeping YAML mtime validation and custom hit/miss counters.
 - [Phase 04]: Keep legacy get_cache_stats() as an adapter over canonical stats plus YAML-specific total_bytes detail.
 - [Phase 04]: Serialize YAML integration cache tests so clear/reset helpers remain deterministic without cache-internal assertions.
+- [Phase 04-bounded-cache-replacement]: Keep the bridge layer adapter-only: cache stats are computed in Rust core crates and only reshaped for CXX transport.
+- [Phase 04-bounded-cache-replacement]: Keep legacy *_cache_size helpers as compatibility shims over the canonical stats DTO instead of removing them mid-phase.
 
 ### Pending Todos
 
@@ -107,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T04:41:36.417Z
-Stopped at: Completed 04-bounded-cache-replacement-01-PLAN.md
+Last session: 2026-04-06T04:54:42.089Z
+Stopped at: Completed 04-06-PLAN.md
 Resume file: None

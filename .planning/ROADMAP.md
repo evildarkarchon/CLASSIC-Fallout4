@@ -87,7 +87,7 @@ Plans:
 - [x] 04-03-PLAN.md -- Replace HASH_CACHE with a 1024-entry bounded quick_cache and add public hash cache stats
 - [ ] 04-04-PLAN.md -- Align Node YAML/settings/hash cache stats, tests, committed TypeScript contract, and Node parity artifacts to the canonical contract
 - [ ] 04-05-PLAN.md -- Align Python YAML/settings/hash cache stats, stubs, runtime smoke coverage, and Python parity artifacts to the canonical contract
-- [ ] 04-06-PLAN.md -- Add C++ YAML/settings/hash cache stats entrypoints and document the new parity surface
+- [x] 04-06-PLAN.md -- Add C++ YAML/settings/hash cache stats entrypoints and document the new parity surface
 
 ### Phase 5: Pattern Caching and Performance
 **Goal**: Hot-path regex compilation and LogParser allocation happen once, not per-call, with criterion benchmarks proving the improvement
