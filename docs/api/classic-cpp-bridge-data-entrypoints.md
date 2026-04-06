@@ -84,6 +84,7 @@ This file is the largest bridge surface in this group.
 It owns:
 
 - YAML-backed scan config construction
+- explicit FCX singleton reset through `classic::scanner::fcx_reset_global_state()`
 - `OrchestratorCore` creation and single and batch scan entry points
 - bridge-local FormID DB path resolution and remove-list loading
 - progress callback DTOs for batch scanning
@@ -396,9 +397,29 @@ Current boundary:
 
 ## Scan execution
 
+### `fcx_reset_global_state() -> Result<()>`
+
+Forwards to `classic_scanlog_core::FcxModeHandler::reset_global_state()`.
+
+Current bridge behavior:
+
+- keeps C++ reset-only for FCX in this phase; there is no bridge API for inspecting FCX issues yet
+- maps `FcxResetError::Unnecessary` to success so callers can reset aggressively without aborting clean sessions
+- maps real reset failures to a returned bridge error string so callers can stop before reusing stale FCX state
+
+Contributor note:
+
+- this explicit reset entry point remains public even though the main scan-session functions below also auto-reset before work begins
+
 ### `orchestrator_process_log(orch, log_path) -> Result<ScanResult>`
 
 Forwards to `OrchestratorCore::process_log(...)`.
+
+Current bridge behavior:
+
+- calls `fcx_reset_global_state()` before starting scan work
+- treats `FcxResetError::Unnecessary` as success via the helper above
+- returns a bridge error and aborts the scan start if FCX reset fails for a real reason
 
 Bridge DTO shape:
 
@@ -422,8 +443,14 @@ Forwards to `OrchestratorCore::process_logs_batch(...)`.
 
 Current bridge behavior:
 
+- calls `fcx_reset_global_state()` before any batch work begins
 - `max_concurrent == 0` becomes `None`, which activates the crate adaptive concurrency path
 - results are returned in completion order, not input order, because the lower layer uses unordered buffering
+
+FCX reset failure mapping:
+
+- `FcxResetError::Unnecessary` stays on the normal execution path and does not abort the batch
+- a real reset failure short-circuits the batch before scan work starts and returns a single failed `ScanResult` carrying the reset error text
 
 ### `orchestrator_process_logs_batch_with_progress(...) -> Vec<BatchScanResult>`
 
@@ -431,11 +458,17 @@ This is mostly bridge-local orchestration around `OrchestratorCore::process_log_
 
 Current behavior that matters:
 
+- calls `fcx_reset_global_state()` before queuing or emitting any progress events
 - emits `Queued`, `Started`, `Phase`, `Completed`, and `Failed` events to the C++ callback
 - preserves `input_index` so callers can map completion-order results back to the original request list
 - computes adaptive concurrency locally when `max_concurrent == 0`
 - tries to drain ready phase events before terminal completion events so per-log event ordering stays monotonic
 - still returns results in completion order, not input order
+
+FCX reset failure mapping:
+
+- `FcxResetError::Unnecessary` remains non-fatal
+- a real reset failure aborts the scan session before callback activity begins and returns a single failed `BatchScanResult` with the reset error text
 
 ## Small scan utilities
 
@@ -549,6 +582,7 @@ Several entry points erase typed errors and return defaults instead:
 ## `src/scanner.rs`
 
 - exposes the main scan path, but not the full `OrchestratorCore` helper surface
+- keeps FCX bridge exposure reset-only in this phase; no C++ FCX issue DTO or getter exists yet
 - constructs DB path lists in bridge code instead of exposing a first-class config bridge for that data
 - drops `AnalysisResult` fields that some lower-level Rust and parity paths still use
 - adds bridge-local batch progress coordination, VR detection, crash-pattern extraction, and DB-profile tuning
@@ -593,8 +627,9 @@ When the C++ scan path diverges from the crate docs:
 1. check whether the frontend used `orchestrator_new()` or `orchestrator_new_minimal()`
 2. if FormID values are missing, verify `show_formid_values` was true when the full config was built
 3. remember that the bridge resolves FormID DB paths itself, including a hardcoded FOLON DB path for Fallout 4 modes
-4. if batch progress looks surprising, remember result order is completion order and `input_index` is the stable correlation key
-5. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
+4. if a scan aborts before work starts, check whether `fcx_reset_global_state()` failed and left an FCX reset error string in the bridge result path
+5. if batch progress looks surprising, remember result order is completion order and `input_index` is the stable correlation key
+6. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
 
 ## Papyrus flow
 
@@ -618,6 +653,7 @@ When Papyrus monitoring looks stale:
 - `src/database.rs::db_pool_get_entries_batch()` fixes batch size at `50` and flattens `formid:plugin` keys into tab-delimited strings
 - `src/scanner.rs` still reads `CLASSIC Settings.yaml` directly for user FormID DB paths
 - `src/scanner.rs` hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
+- `src/scanner.rs` exposes only FCX reset control in C++; FCX issue inspection remains out of scope for this phase
 - `src/scanner.rs::orchestrator_process_logs_batch_with_progress()` is bridge-local coordination on top of per-log crate calls, not a direct wrapper over one lower-level batch API
 - `src/scanner.rs::detect_vr_log()` is a simple substring heuristic, not a full parser
 - `src/scanner.rs::papyrus_check_updates()` intentionally hides update errors from C++ callers
