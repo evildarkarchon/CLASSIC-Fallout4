@@ -85,11 +85,10 @@
 //!     t.join()
 //! ```
 
-use classic_shared::{PathLike, define_exceptions, register_exceptions, without_gil};
-use classic_yaml_core::{YamlError, YamlOperations};
+use classic_shared::{define_exceptions, register_exceptions, without_gil, PathLike};
+use classic_yaml_core::{self as core, YamlError, YamlOperations};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use yaml_rust2::Yaml;
 
@@ -260,8 +259,15 @@ impl PyYamlOperations {
     }
 
     /// Get cache statistics
-    fn get_cache_stats(&self) -> PyResult<HashMap<String, usize>> {
-        Ok(self.inner.get_cache_stats())
+    fn get_cache_stats(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let stats = core::cache_stats();
+        let dict = PyDict::new(py);
+        dict.set_item("hits", stats.hits)?;
+        dict.set_item("misses", stats.misses)?;
+        dict.set_item("hit_rate", stats.hit_rate)?;
+        dict.set_item("size", stats.size)?;
+        dict.set_item("capacity", stats.capacity)?;
+        Ok(dict.unbind().into())
     }
 
     /// Extract a string value from YAML using a dot-separated key path

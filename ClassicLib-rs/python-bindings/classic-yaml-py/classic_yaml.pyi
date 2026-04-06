@@ -33,9 +33,18 @@ Usage:
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 __version__: str
+
+class YamlCacheStats(TypedDict):
+    """Canonical YAML cache statistics contract."""
+
+    hits: int
+    misses: int
+    hit_rate: float
+    size: int
+    capacity: int
 
 class YamlOperations:
     """Main YAML operations handler using yaml-rust2.
@@ -322,22 +331,24 @@ class YamlOperations:
 
         """
 
-    def get_cache_stats(self) -> dict[str, int]:
+    def get_cache_stats(self) -> YamlCacheStats:
         """Get cache statistics.
 
-        Returns information about the current cache state including the number
-        of cached entries and estimated memory usage.
+        Returns the canonical Phase 4 cache statistics contract.
 
         Returns:
             Dictionary with cache statistics:
-                - 'entries': Number of cached items
-                - 'memory_bytes': Estimated memory usage in bytes
+                - 'hits': Number of cache hits
+                - 'misses': Number of cache misses
+                - 'hit_rate': Hit ratio as a float from 0.0 to 1.0
+                - 'size': Current number of cached entries
+                - 'capacity': Maximum retained cache entries
 
         Example:
             >>> yaml_ops = YamlOperations()
             >>> yaml_ops.load_yaml_file("config.yaml")
             >>> stats = yaml_ops.get_cache_stats()
-            >>> print(f"Cached items: {stats['entries']}")
-            >>> print(f"Memory used: {stats['memory_bytes']} bytes")
+            >>> print(f"Cache hits: {stats['hits']}")
+            >>> print(f"Capacity: {stats['capacity']}")
 
         """

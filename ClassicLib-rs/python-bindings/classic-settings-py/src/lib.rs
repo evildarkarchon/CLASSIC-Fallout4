@@ -336,7 +336,7 @@ fn cache_keys() -> Vec<String> {
 /// - misses: Number of cache misses
 /// - hit_rate: Hit rate as fraction (0.0 to 1.0)
 /// - size: Current number of entries
-/// - keys: List of cache keys
+/// - capacity: Maximum bounded cache capacity
 ///
 /// Example:
 ///     >>> import classic_settings
@@ -350,13 +350,7 @@ fn cache_stats(py: Python) -> PyResult<Py<PyAny>> {
     dict.set_item("misses", stats.misses)?;
     dict.set_item("hit_rate", stats.hit_rate)?;
     dict.set_item("size", stats.size)?;
-
-    // Convert Vec<String> to Python list
-    let keys_list = PyList::empty(py);
-    for key in stats.keys {
-        keys_list.append(key)?;
-    }
-    dict.set_item("keys", keys_list)?;
+    dict.set_item("capacity", stats.capacity)?;
 
     Ok(dict.unbind().into())
 }
