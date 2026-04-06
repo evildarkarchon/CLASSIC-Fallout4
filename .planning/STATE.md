@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-pattern-caching-and-performance-05-PLAN.md
-last_updated: "2026-04-06T08:15:20.601Z"
+stopped_at: Completed 05-pattern-caching-and-performance-06-PLAN.md
+last_updated: "2026-04-06T09:01:11.942Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 20
-  completed_plans: 19
+  completed_plans: 20
   percent: 6
 ---
 
@@ -69,6 +69,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 05-pattern-caching-and-performance P02 | 9min | 2 tasks | 1 files |
 | Phase 05-pattern-caching-and-performance P04 | 12min | 2 tasks | 3 files |
 | Phase 05-pattern-caching-and-performance P05 | 18min | 2 tasks | 2 files |
+| Phase 05-pattern-caching-and-performance P06 | 43min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,9 @@ Recent decisions affecting current work:
 - [Phase 05-pattern-caching-and-performance]: Scoped the legacy important-mod regex helper to tests after bench verification exposed a dead-code lint failure in non-test builds.
 - [Phase 05-pattern-caching-and-performance]: Measured the double-matcher reuse proof with a scoped compile-count snapshot instead of an absolute global counter.
 - [Phase 05-pattern-caching-and-performance]: Serialized detect_mods_double regression tests so grouped runs cannot pollute the shared double-matcher compile counter.
+- [Phase 05-pattern-caching-and-performance]: Focused the save/compare workflow on the phase5_ benchmark groups so proof runs stay bounded to the locked hotspots.
+- [Phase 05-pattern-caching-and-performance]: Added paired before/after benchmark variants in the existing harness because same-revision Criterion baseline comparisons alone cannot prove hotspot deltas.
+- [Phase 05-pattern-caching-and-performance]: Moved mmap throughput ownership out of PERF-04 and into SAFE-05 / Phase 6 to match the roadmap and actual harness scope.
 
 ### Pending Todos
 
@@ -135,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T08:15:20.596Z
-Stopped at: Completed 05-pattern-caching-and-performance-05-PLAN.md
+Last session: 2026-04-06T09:01:11.937Z
+Stopped at: Completed 05-pattern-caching-and-performance-06-PLAN.md
 Resume file: None

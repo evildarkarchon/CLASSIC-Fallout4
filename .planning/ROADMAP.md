@@ -107,7 +107,7 @@ Plans:
 - [x] 05-03-PLAN.md -- Cache the C++ bridge `detect_crash_pattern` parser with a module-level `LazyLock<LogParser>` and add positive bridge coverage (PERF-03)
 - [x] 05-04-PLAN.md -- Extend `scanlog_benchmarks.rs` with Phase 5 hotspot proof and document the local Criterion baseline workflow (PERF-04)
 - [x] 05-05-PLAN.md -- Stabilize the `detect_mods_double` matcher-cache reuse proof so grouped detector test runs pass deterministically (PERF-01 gap closure)
-- [ ] 05-06-PLAN.md -- Commit a reproducible Phase 5 benchmark proof artifact and align PERF-04 wording with Phase 6 mmap ownership (PERF-04 gap closure)
+- [x] 05-06-PLAN.md -- Commit a reproducible Phase 5 benchmark proof artifact and align PERF-04 wording with Phase 6 mmap ownership (PERF-04 gap closure)
 
 ### Phase 6: mmap TOCTOU Safety
 **Goal**: Memory-mapped file reads are safe against time-of-check-to-time-of-use races on Windows
