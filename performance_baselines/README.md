@@ -30,6 +30,24 @@ cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --b
 - Treat a stable comparison that clears the repo's existing `warning > 5%` threshold as the minimum meaningful win bar for this phase.
 - If a hotspot does not clear that bar, the Phase 5 summary must explain why the structural change still shipped per D-12 instead of claiming benchmark proof that is not there.
 
+## Phase 6 Criterion Baseline Workflow
+
+Phase 6 proof for `classic-file-io-core` stays in the existing `file_io_benchmarks` harness and uses local Criterion baselines for the `phase6_mmap_variants` group only.
+
+```powershell
+# Save a local baseline for the Phase 6 mmap comparison group
+$env:BENCH_MODE = "thorough"
+cargo bench -p classic-file-io-core --manifest-path ClassicLib-rs/Cargo.toml --bench file_io_benchmarks phase6_mmap_variants -- --save-baseline phase6-mmap-baseline
+
+# Compare the current Phase 6 mmap comparison group against that saved baseline
+cargo bench -p classic-file-io-core --manifest-path ClassicLib-rs/Cargo.toml --bench file_io_benchmarks phase6_mmap_variants -- --baseline phase6-mmap-baseline
+```
+
+- Keep raw Criterion output under `ClassicLib-rs/target/criterion/` local-only by default.
+- Do not commit the raw `phase6-mmap-baseline` directory unless a later request explicitly asks for a shareable export.
+- The committed proof artifact for this workflow lives at `.planning/phases/06-mmap-toctou-safety/06-BENCHMARK-PROOF.md`.
+- Use the proof artifact to record the measured `map`, `map_copy`, and `map_copy_read_only` medians plus the Windows acceptability call instead of checking in raw reports.
+
 See `docs/performance/rust_db_benchmark_baseline.md` for:
 
 - canonical DB/FormID scenario IDs,
