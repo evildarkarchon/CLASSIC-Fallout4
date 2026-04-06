@@ -5,7 +5,7 @@
 use dashmap::DashMap;
 use std::any::Any;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use crate::Keys;
 
@@ -19,8 +19,7 @@ type RegistryValue = Arc<dyn Any + Send + Sync>;
 ///
 /// Uses `DashMap` for lock-free concurrent access with minimal contention.
 /// The registry is lazily initialized on first access.
-static REGISTRY: once_cell::sync::Lazy<DashMap<String, RegistryValue>> =
-    once_cell::sync::Lazy::new(DashMap::new);
+static REGISTRY: LazyLock<DashMap<String, RegistryValue>> = LazyLock::new(DashMap::new);
 
 /// Register a value in the global registry.
 ///

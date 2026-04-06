@@ -3,13 +3,13 @@
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Global metrics storage.
 ///
 /// Uses `DashMap` for lock-free concurrent access. Each operation name
 /// maps to a vector of timing samples (in seconds).
-static METRICS: once_cell::sync::Lazy<DashMap<String, Vec<f64>>> =
-    once_cell::sync::Lazy::new(DashMap::new);
+static METRICS: LazyLock<DashMap<String, Vec<f64>>> = LazyLock::new(DashMap::new);
 
 /// Summary statistics for a single operation.
 ///
