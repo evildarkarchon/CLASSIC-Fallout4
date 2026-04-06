@@ -15,7 +15,7 @@ crate-type = ["rlib"] # Pure Rust library only - no PyO3
 semver = "1.0"
 
 # String collections
-phf = { version = "0.13.1", features = ["macros"] }
+phf = { workspace = true }
 
 # Serialization (for potential YAML integration)
 serde = { workspace = true, features = ["derive"] }

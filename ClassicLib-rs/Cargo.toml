@@ -124,6 +124,7 @@ ba2 = "3.0.1"
 regex = "1.12.2"
 memchr = "2.7.6"
 aho-corasick = "1.1.4"
+phf = { version = "0.13.1", features = ["macros"] }
 
 # Alternative allocator (Phase 16 optimization - optional)
 mimalloc = { version = "0.1.43", default-features = false }
@@ -173,6 +174,9 @@ cxx-build = "1.0"
 # GUI (Slint)
 slint = "1.15.0"
 slint-build = "1.15.0"
+
+# Platform-specific
+winreg = "0.52"
 
 # Markdown
 pulldown-cmark = { version = "0.13", default-features = false }
