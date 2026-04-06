@@ -80,7 +80,16 @@ Plans:
   3. `HASH_CACHE` uses `quick_cache::sync::Cache` with capacity 1024 instead of unbounded `DashMap`
   4. All three caches expose a consistent `CacheStats` struct with hits, misses, hit_rate, size, and capacity fields
   5. Existing tests pass with bounded caches (clear/reset APIs preserved for test isolation)
-**Plans**: TBD
+**Plans**: 8 plans
+Plans:
+- [ ] 04-01-PLAN.md -- Replace YAML_CACHE with a 128-entry bounded quick_cache and canonical CacheStats
+- [ ] 04-02-PLAN.md -- Replace SETTINGS_CACHE with a 64-entry bounded quick_cache and canonical CacheStats
+- [ ] 04-03-PLAN.md -- Replace HASH_CACHE with a 1024-entry bounded quick_cache and add public hash cache stats
+- [ ] 04-04-PLAN.md -- Align Node YAML/settings/hash cache stats, tests, and committed TypeScript contract to the canonical contract
+- [ ] 04-05-PLAN.md -- Align Python YAML/settings/hash cache stats, stubs, and runtime smoke coverage to the canonical contract
+- [ ] 04-06-PLAN.md -- Add C++ YAML/settings/hash cache stats entrypoints and document the new parity surface
+- [ ] 04-07-PLAN.md -- Refresh Node parity runtime-coverage artifacts for the new cache helper surface
+- [ ] 04-08-PLAN.md -- Refresh Python parity runtime-coverage artifacts for the new cache helper surface
 
 ### Phase 5: Pattern Caching and Performance
 **Goal**: Hot-path regex compilation and LogParser allocation happen once, not per-call, with criterion benchmarks proving the improvement
@@ -133,7 +142,7 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 1. Deprecated API Migration | 1/2 | In Progress | - |
 | 2. Dead Code Removal | 0/3 | Not started | - |
 | 3. FCX State Hardening | 0/TBD | Not started | - |
-| 4. Bounded Cache Replacement | 0/TBD | Not started | - |
+| 4. Bounded Cache Replacement | 0/6 | Planned | - |
 | 5. Pattern Caching and Performance | 0/TBD | Not started | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
 | 7. Consistency Sweep | 0/TBD | Not started | - |
