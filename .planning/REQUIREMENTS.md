@@ -105,61 +105,59 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 
 ## Traceability
 
-Empty initially. Populated by the roadmapper subagent during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CXXG-01 | — | Pending |
-| CXXG-02 | — | Pending |
-| CXXG-03 | — | Pending |
-| CXXG-04 | — | Pending |
-| CXXG-05 | — | Pending |
-| CXXS-01 | — | Pending |
-| CXXS-02 | — | Pending |
-| CXXS-03 | — | Pending |
-| CXXS-04 | — | Pending |
-| CXXS-05 | — | Pending |
-| CXXS-06 | — | Pending |
-| CXXS-07 | — | Pending |
-| CXXS-08 | — | Pending |
-| CXXS-09 | — | Pending |
-| CXXS-10 | — | Pending |
-| PYT-01 | — | Pending |
-| PYT-02 | — | Pending |
-| PYT-03 | — | Pending |
-| PYT-04 | — | Pending |
-| PYT-05 | — | Pending |
-| PYT-06 | — | Pending |
-| NODE-01 | — | Pending |
-| NODE-02 | — | Pending |
-| NODE-03 | — | Pending |
-| NODE-04 | — | Pending |
-| NODE-05 | — | Pending |
-| NODE-06 | — | Pending |
-| HARM-01 | — | Pending |
-| HARM-02 | — | Pending |
-| HARM-03 | — | Pending |
-| HARM-04 | — | Pending |
-| HARM-05 | — | Pending |
-| CI-01 | — | Pending |
-| CI-02 | — | Pending |
-| CI-03 | — | Pending |
-| CI-04 | — | Pending |
-| CI-05 | — | Pending |
-| CI-06 | — | Pending |
-| DOC-01 | — | Pending |
-| DOC-02 | — | Pending |
-| DOC-03 | — | Pending |
-| DOC-04 | — | Pending |
-| DOC-05 | — | Pending |
-| DOC-06 | — | Pending |
-| DOC-07 | — | Pending |
+| CXXG-01 | Phase 1 | Pending |
+| CXXG-02 | Phase 1 | Pending |
+| CXXG-03 | Phase 1 | Pending |
+| CXXG-04 | Phase 1 | Pending |
+| CXXG-05 | Phase 1 | Pending |
+| CXXS-01 | Phase 2 | Pending |
+| CXXS-02 | Phase 2 | Pending |
+| CXXS-03 | Phase 2 | Pending |
+| CXXS-04 | Phase 2 | Pending |
+| CXXS-05 | Phase 2 | Pending |
+| CXXS-06 | Phase 2 | Pending |
+| CXXS-07 | Phase 2 | Pending |
+| CXXS-08 | Phase 2 | Pending |
+| CXXS-09 | Phase 2 | Pending |
+| CXXS-10 | Phase 2 | Pending |
+| PYT-01 | Phase 3 | Pending |
+| PYT-02 | Phase 3 | Pending |
+| PYT-03 | Phase 3 | Pending |
+| PYT-04 | Phase 3 | Pending |
+| PYT-05 | Phase 3 | Pending |
+| PYT-06 | Phase 3 | Pending |
+| NODE-01 | Phase 4 | Pending |
+| NODE-02 | Phase 4 | Pending |
+| NODE-03 | Phase 4 | Pending |
+| NODE-04 | Phase 4 | Pending |
+| NODE-05 | Phase 4 | Pending |
+| NODE-06 | Phase 4 | Pending |
+| HARM-01 | Phase 4 | Pending |
+| HARM-02 | Phase 4 | Pending |
+| HARM-03 | Phase 3 | Pending |
+| HARM-04 | Phase 3 | Pending |
+| HARM-05 | Phase 6 | Pending |
+| CI-01 | Phase 5 | Pending |
+| CI-02 | Phase 5 | Pending |
+| CI-03 | Phase 5 | Pending |
+| CI-04 | Phase 5 | Pending |
+| CI-05 | Phase 5 | Pending |
+| CI-06 | Phase 5 | Pending |
+| DOC-01 | Phase 6 | Pending |
+| DOC-02 | Phase 6 | Pending |
+| DOC-03 | Phase 6 | Pending |
+| DOC-04 | Phase 6 | Pending |
+| DOC-05 | Phase 6 | Pending |
+| DOC-06 | Phase 6 | Pending |
+| DOC-07 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 45 total
-- Mapped to phases: 0 (filled by roadmapper)
-- Unmapped: 45 ⚠️ (will be 0 after roadmap)
+- Mapped to phases: 45
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after milestone v9.1.0-bindings initial requirements*
+*Last updated: 2026-04-06 after roadmap created for v9.1.0-bindings*

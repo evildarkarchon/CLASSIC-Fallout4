@@ -4,11 +4,11 @@ milestone: v9.1.0-bindings
 milestone_name: Full Bindings Parity
 current_plan: null
 status: defining_requirements
-stopped_at: Defining requirements for v9.1.0-bindings
+stopped_at: Roadmap created for v9.1.0-bindings; ready for /gsd:plan-phase 1
 last_updated: "2026-04-06T00:00:00Z"
-last_activity: 2026-04-06 — Milestone v9.1.0-bindings started
+last_activity: 2026-04-06 — Roadmap created for v9.1.0-bindings (6 phases, 45 requirements)
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,16 +21,16 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-04-06)
 
-**Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** v9.1.0-bindings — Full Bindings Parity (defining requirements)
+**Core value:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python — no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
+**Current focus:** v9.1.0-bindings — Full Bindings Parity (roadmap defined, ready to plan Phase 1)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (roadmap created)
 Plan: —
 Current Plan: —
-Status: Defining requirements
-Last activity: 2026-04-06 — Milestone v9.1.0-bindings started
+Status: Roadmap defined; ready for /gsd:plan-phase 1
+Last activity: 2026-04-06 — Roadmap created for v9.1.0-bindings
 
 Progress: [          ] 0%
 
@@ -164,6 +164,12 @@ Recent decisions affecting current work:
 - [Phase 11-workspace-infra-verification-completion]: Created the missing authoritative report in the original Phase 8 folder instead of inventing a Phase 11-only verification artifact.
 - [Phase 11-workspace-infra-verification-completion]: Kept Phase 8 summaries as provenance only and promoted the exact validation commands into direct requirement evidence rows.
 - [Phase 11-workspace-infra-verification-completion]: Recorded INFRA-05 as one Node governance bundle covering the tracked snapshot, freshness script, local gates, and CI workflow together.
+- [Roadmap v9.1.0-bindings]: Phase numbering reset to 1 for new milestone (--reset-phase-numbers applied at /gsd:new-milestone)
+- [Roadmap v9.1.0-bindings]: CXX gate tooling (Phase 1) must precede CXX bridge expansion (Phase 2) — gate is the acceptance criterion for bridge surface changes
+- [Roadmap v9.1.0-bindings]: Python collapse (Phase 3) and Node collapse (Phase 4) are independent — can run in parallel with each other and with CXX work
+- [Roadmap v9.1.0-bindings]: HARM-01/02 (PE-version) bundled with Node collapse Phase 4; HARM-03/04 (classic_shared) bundled with Python collapse Phase 3; HARM-05 (error-contract doc) in Phase 6
+- [Roadmap v9.1.0-bindings]: CI enforcement (Phase 5) depends on all three gate phases (1, 3, 4) being complete before branch protection is wired
+- [Roadmap v9.1.0-bindings]: Documentation reset (Phase 6) is last — governance file deletion MUST follow gate green status and CI enforcement
 
 ### Pending Todos
 
@@ -171,9 +177,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: The `deprecated = "deny"` lint requires careful sequencing -- temporarily relax to `warn`, migrate, then restore
-- [Phase 5]: AhoCorasick semantic parity must be verified against test fixtures before removing regex path
-- [Phase 6]: Windows `map_copy_read_only()` behavior must be empirically validated, not inferred from Linux
+- [Phase 1]: The CXX gate regex parser must handle all 14 bridge source file patterns correctly — test against all modules in `classic-cpp-bridge/build.rs` enumeration before committing baseline
+- [Phase 2]: CXXS-04 (scangame widening) requires DTO design review — CXX shared-struct rules restrict which Rust types can cross the FFI boundary; review before implementing all orchestration entry points
+- [Phase 3]: The 289 deferred Python entries include many sub-module symbols not re-exported at `lib.rs` — each promotion requires a `pub use` addition before the parity parser can see it (Pitfall 2)
+- [Phase 4]: All 109 Node contract rows must use camelCase `nodeExport` values — validate against `index.d.ts` TypeScript identifiers, not Rust snake_case names (Pitfall 3)
+- [Phase 6]: Gate scripts must be made deferred-registry-tolerant BEFORE governance files are deleted (Pitfall 1); DOC-01 must land in the same commit as file deletions
 
 ### Quick Tasks Completed
 
@@ -183,6 +191,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T04:42:43.667Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-04-06 (roadmap creation)
+Stopped at: Roadmap created for v9.1.0-bindings — 6 phases, 45 requirements mapped
 Resume file: None
+Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
