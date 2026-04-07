@@ -445,6 +445,170 @@ def parse_cxx_bridge_surface(
     }
 
 
+# ---- Diff report generation ----
+
+
+def _row_key(row: dict[str, Any]) -> str:
+    """Stable key for diff matching. Uses id (sha256(sym:kind:module)[:16])."""
+    return row["id"]
+
+
+def _normalize_row_for_compare(row: dict[str, Any]) -> dict[str, Any]:
+    """Return a stripped copy of a row suitable for equality comparison.
+
+    Strips the id field (already part of the key) and keeps only the
+    semantic content: signature (functions), fields (structs), variants
+    (enums), blockOrigin (always). sourceFile is NOT compared because
+    moving a file does not change the API contract.
+    """
+    kind = row["kind"]
+    result: dict[str, Any] = {
+        "rustSymbol": row["rustSymbol"],
+        "kind": kind,
+        "bridgeModule": row["bridgeModule"],
+        "blockOrigin": row.get("blockOrigin", "Rust"),
+    }
+    if kind == "function":
+        result["signature"] = row.get("signature", {})
+    elif kind == "struct":
+        result["fields"] = row.get("fields", [])
+    elif kind == "enum":
+        result["variants"] = row.get("variants", [])
+    # opaque has no additional comparable fields
+    return result
+
+
+def generate_diff_report(
+    contract: dict[str, Any],
+    current_surface: dict[str, Any],
+) -> dict[str, Any]:
+    """Compare committed baseline (contract) against fresh surface."""
+    contract_rows = {_row_key(r): r for r in contract.get("entries", [])}
+    current_rows = {_row_key(r): r for r in current_surface.get("entries", [])}
+
+    contract_results: list[dict[str, Any]] = []
+    matched_count = 0
+    missing_from_current = 0
+    signature_mismatch = 0
+
+    for row_id, c_row in contract_rows.items():
+        base = {
+            "id": row_id,
+            "rustSymbol": c_row["rustSymbol"],
+            "kind": c_row["kind"],
+            "bridgeModule": c_row["bridgeModule"],
+        }
+        if row_id not in current_rows:
+            missing_from_current += 1
+            contract_results.append({
+                **base,
+                "status": "missing_from_current",
+                "reason": (
+                    f"Symbol `{c_row['rustSymbol']}` in baseline but not in "
+                    f"current bridge source for module `{c_row['bridgeModule']}`"
+                ),
+            })
+            continue
+        cur_row = current_rows[row_id]
+        if _normalize_row_for_compare(c_row) != _normalize_row_for_compare(cur_row):
+            signature_mismatch += 1
+            contract_results.append({
+                **base,
+                "status": "signature_mismatch",
+                "reason": "Signature/fields/variants differ from baseline",
+            })
+            continue
+        matched_count += 1
+        contract_results.append({**base, "status": "matched", "reason": "-"})
+
+    new_entries: list[dict[str, Any]] = []
+    for row_id, cur_row in current_rows.items():
+        if row_id in contract_rows:
+            continue
+        new_entries.append({
+            "id": row_id,
+            "rustSymbol": cur_row["rustSymbol"],
+            "kind": cur_row["kind"],
+            "bridgeModule": cur_row["bridgeModule"],
+            "status": "missing_from_contract",
+        })
+
+    missing_from_contract = len(new_entries)
+
+    return {
+        "summary": {
+            "contract_total": len(contract_rows),
+            "current_total": len(current_rows),
+            "matched": matched_count,
+            "missing_from_current": missing_from_current,
+            "missing_from_contract": missing_from_contract,
+            "signature_mismatch": signature_mismatch,
+        },
+        "contract_results": contract_results,
+        "new_entries": new_entries,
+    }
+
+
+# ---- Diff markdown rendering ----
+
+
+def render_diff_markdown(diff_report: dict[str, Any]) -> str:
+    """Render a human-readable markdown diff report.
+
+    No '- Generated:' header line here -- the caller prepends one if needed
+    (and the comparator in check_parity_gate.py skips those lines).
+    """
+    summary = diff_report["summary"]
+    lines: list[str] = [
+        "# CXX Parity Diff Report",
+        "",
+        f"- Contract total: **{summary['contract_total']}**",
+        f"- Current total: **{summary['current_total']}**",
+        f"- Matched: **{summary['matched']}**",
+        f"- Missing from current: **{summary['missing_from_current']}**",
+        f"- Missing from contract: **{summary['missing_from_contract']}**",
+        f"- Signature mismatch: **{summary['signature_mismatch']}**",
+        "",
+    ]
+
+    failing = [r for r in diff_report["contract_results"] if r["status"] != "matched"]
+    new_entries = diff_report.get("new_entries", [])
+
+    if not failing and not new_entries:
+        lines.extend(("## Result", "", "No drift detected.", ""))
+        return "\n".join(lines)
+
+    if failing:
+        lines.extend((
+            "## Contract Drift",
+            "",
+            "| ID | Bridge Module | Rust Symbol | Kind | Status | Reason |",
+            "|---|---|---|---|---|---|",
+        ))
+        for row in failing:
+            lines.append(
+                f"| `{row['id']}` | `{row['bridgeModule']}` | `{row['rustSymbol']}` | "
+                f"`{row['kind']}` | `{row['status']}` | {row['reason']} |"
+            )
+        lines.append("")
+
+    if new_entries:
+        lines.extend((
+            "## New Entries (in bridge source, not in baseline)",
+            "",
+            "| ID | Bridge Module | Rust Symbol | Kind |",
+            "|---|---|---|---|",
+        ))
+        for row in new_entries:
+            lines.append(
+                f"| `{row['id']}` | `{row['bridgeModule']}` | "
+                f"`{row['rustSymbol']}` | `{row['kind']}` |"
+            )
+        lines.append("")
+
+    return "\n".join(lines)
+
+
 # ---- CLI entrypoint (used by Plan 02's bootstrap run) ----
 
 
@@ -462,14 +626,55 @@ def main() -> int:
         default="ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts",
         help="Directory for generated artifacts, relative to repo root.",
     )
+    parser.add_argument(
+        "--baseline-output-dir",
+        default="docs/implementation/cxx_api_parity/baseline",
+        help="Directory for committed baseline artifacts, relative to repo root.",
+    )
+    parser.add_argument(
+        "--write-baseline",
+        action="store_true",
+        help="Also write parity_contract.json to --baseline-output-dir "
+             "(used by the initial bootstrap; normal operation is "
+             "check_parity_gate.py --update-baseline).",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     output_dir = repo_root / args.output_dir
+    baseline_output_dir = repo_root / args.baseline_output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
     surface = parse_cxx_bridge_surface(repo_root)
     write_json(output_dir / "rust_api_surface.json", surface)
+
+    if args.write_baseline:
+        # Bootstrap path: the contract IS the fresh surface on the first run.
+        # schema_version is locked at 1 for this milestone.
+        contract = {
+            "generated_at_utc": surface["generated_at_utc"],
+            "schema_version": 1,
+            "entries": surface["entries"],
+        }
+        baseline_output_dir.mkdir(parents=True, exist_ok=True)
+        write_json(baseline_output_dir / "parity_contract.json", contract)
+        write_json(baseline_output_dir / "rust_api_surface.json", surface)
+        # Bootstrap diff: contract vs current = 100% matched (empty drift).
+        diff = generate_diff_report(contract, surface)
+        write_json(baseline_output_dir / "cxx_diff_report.json", diff)
+        (baseline_output_dir / "cxx_diff_report.md").write_text(
+            render_diff_markdown(diff) + "\n", encoding="utf-8",
+        )
+        # Gate report will be written by check_parity_gate.py; the bootstrap
+        # writes a placeholder that check_parity_gate.py can overwrite.
+        (baseline_output_dir / "cxx_gate_report.md").write_text(
+            "# CXX Parity Gate Report\n\n"
+            f"- Contract rows: **{len(contract['entries'])}**\n"
+            f"- Matched: **{diff['summary']['matched']}**\n"
+            "\n## Result\n\nCXX parity gate passed.\n",
+            encoding="utf-8",
+        )
+        print(f"Wrote committed baseline to {baseline_output_dir}")
 
     print(
         f"Wrote surface JSON with {len(surface['entries'])} entries to "
