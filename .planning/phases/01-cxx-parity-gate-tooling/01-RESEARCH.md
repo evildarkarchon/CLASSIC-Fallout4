@@ -716,7 +716,7 @@ Create `tools/cxx_api_parity/tests/fixtures/` with minimal synthetic `.rs` files
 - `mixed_ffi.rs`: enum + struct + opaque type + `unsafe extern "C++"` type + extern Rust functions (mirrors scanner complexity)
 - `fake_build.rs`: fake `build.rs` content with `cxx_build::bridges([...])` pointing to the fixture files
 
-Test file `tools/cxx_api_parity/tests/test_parser.py` can use `pytest` with `uv run pytest`.
+Test file `tools/cxx_api_parity/tests/test_parser.py` runs via the existing python-bindings venv: `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py`. **No venv at repo root** — the python-bindings venv is the only Python venv in the repo and is hand-managed via `ClassicLib-rs/python-bindings/requirements-ci.txt`.
 
 ---
 
@@ -757,7 +757,7 @@ Step 2.6: Phase 1 is purely code/config changes (Python scripts, JSON files, one
 | Dependency | Required By | Available | Version | Fallback |
 |------------|------------|-----------|---------|----------|
 | Python 3.12+ | Gate scripts | Assumed (CI uses `setup-python 3.12`) | 3.12 | — |
-| pytest | Gate tests | Available via `uv run pytest` (existing `.venv`) | — | Skip tests if uv unavailable |
+| pytest 9.x | Gate tests | Already installed in `ClassicLib-rs/python-bindings/.venv` from `requirements-ci.txt` | — | If venv missing: `cd ClassicLib-rs/python-bindings && uv venv && uv pip install -r requirements-ci.txt` |
 
 **No blocking dependencies.**
 
@@ -771,31 +771,31 @@ Step 2.6: Phase 1 is purely code/config changes (Python scripts, JSON files, one
 
 | Property | Value |
 |----------|-------|
-| Framework | pytest (existing, via `uv run pytest`) |
-| Config file | None detected for `tools/` — needs `tools/cxx_api_parity/tests/` directory |
-| Quick run command | `uv run pytest tools/cxx_api_parity/tests/ -q` |
-| Full suite command | `uv run pytest tools/cxx_api_parity/tests/ -v` |
+| Framework | pytest 9.x (existing, from `ClassicLib-rs/python-bindings/.venv`; installed via `requirements-ci.txt`) |
+| Config file | None detected for `tools/` — needs `tools/cxx_api_parity/tests/` directory. No `pyproject.toml` at repo root; **no venv allowed at repo root**. |
+| Quick run command | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q` |
+| Full suite command | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -v` |
 
 ### Phase Requirements → Test Map
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| CXXG-01 | `parse_cxx_bridge_surface()` extracts functions from `extern "Rust"` | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_rust_functions -x` | ❌ Wave 0 |
-| CXXG-01 | `parse_cxx_bridge_surface()` extracts shared structs with fields | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_shared_structs -x` | ❌ Wave 0 |
-| CXXG-01 | `parse_cxx_bridge_surface()` extracts enums with variants (including discriminants) | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_enums -x` | ❌ Wave 0 |
-| CXXG-01 | `parse_cxx_bridge_surface()` extracts opaque types | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_opaque_types -x` | ❌ Wave 0 |
-| CXXG-01 | `parse_cxx_bridge_surface()` handles `unsafe extern "C++"` block | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_cpp -x` | ❌ Wave 0 |
-| CXXG-01 | `parse_build_rs_file_list()` extracts file list from multi-line `cxx_build::bridges([...])` | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_build_rs -x` | ❌ Wave 0 |
-| CXXG-01 | `parse_build_rs_file_list()` exits non-zero if `cxx_build::bridges` not found | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_build_rs_missing_bridges -x` | ❌ Wave 0 |
-| CXXG-01 | Parser produces deterministic JSON (sorted entries, stable id hashes) | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_deterministic_output -x` | ❌ Wave 0 |
-| CXXG-02 | Generated baseline at `docs/implementation/cxx_api_parity/baseline/parity_contract.json` exists after `generate_baseline.py` run | integration | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_file_exists -x` | ❌ Wave 0 |
-| CXXG-02 | Baseline contains all 14 bridge modules | integration | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_covers_14_modules -x` | ❌ Wave 0 |
-| CXXG-03 | `check_parity_gate.py` exits 0 on unchanged source (born green) | integration/smoke | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_passes_on_unchanged_source -x` | ❌ Wave 0 |
-| CXXG-03 | `check_parity_gate.py` exits 1 when a function is added to a bridge file (not in baseline) | drift detection | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_added_function -x` | ❌ Wave 0 |
-| CXXG-03 | `check_parity_gate.py` exits 1 when a function is removed from a bridge file | drift detection | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_removed_function -x` | ❌ Wave 0 |
-| CXXG-03 | `check_parity_gate.py` exits 1 when a struct field is renamed | drift detection | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_struct_field_rename -x` | ❌ Wave 0 |
-| CXXG-03 | `check_parity_gate.py` exits 1 when committed baseline artifacts are stale | stale-artifact | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_stale_artifact -x` | ❌ Wave 0 |
-| CXXG-04 | `check_parity_gate.py` has no `--deferred-registry` argument | CLI surface | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_no_deferred_registry_arg -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_cxx_bridge_surface()` extracts functions from `extern "Rust"` | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_rust_functions -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_cxx_bridge_surface()` extracts shared structs with fields | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_shared_structs -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_cxx_bridge_surface()` extracts enums with variants (including discriminants) | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_enums -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_cxx_bridge_surface()` extracts opaque types | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_opaque_types -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_cxx_bridge_surface()` handles `unsafe extern "C++"` block | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_cpp -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_build_rs_file_list()` extracts file list from multi-line `cxx_build::bridges([...])` | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_build_rs -x` | ❌ Wave 0 |
+| CXXG-01 | `parse_build_rs_file_list()` exits non-zero if `cxx_build::bridges` not found | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_build_rs_missing_bridges -x` | ❌ Wave 0 |
+| CXXG-01 | Parser produces deterministic JSON (sorted entries, stable id hashes) | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_deterministic_output -x` | ❌ Wave 0 |
+| CXXG-02 | Generated baseline at `docs/implementation/cxx_api_parity/baseline/parity_contract.json` exists after `generate_baseline.py` run | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_file_exists -x` | ❌ Wave 0 |
+| CXXG-02 | Baseline contains all 14 bridge modules | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_covers_14_modules -x` | ❌ Wave 0 |
+| CXXG-03 | `check_parity_gate.py` exits 0 on unchanged source (born green) | integration/smoke | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_passes_on_unchanged_source -x` | ❌ Wave 0 |
+| CXXG-03 | `check_parity_gate.py` exits 1 when a function is added to a bridge file (not in baseline) | drift detection | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_added_function -x` | ❌ Wave 0 |
+| CXXG-03 | `check_parity_gate.py` exits 1 when a function is removed from a bridge file | drift detection | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_removed_function -x` | ❌ Wave 0 |
+| CXXG-03 | `check_parity_gate.py` exits 1 when a struct field is renamed | drift detection | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_struct_field_rename -x` | ❌ Wave 0 |
+| CXXG-03 | `check_parity_gate.py` exits 1 when committed baseline artifacts are stale | stale-artifact | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_stale_artifact -x` | ❌ Wave 0 |
+| CXXG-04 | `check_parity_gate.py` has no `--deferred-registry` argument | CLI surface | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_no_deferred_registry_arg -x` | ❌ Wave 0 |
 | CXXG-04 | Gate exits cleanly (pass or fail for drift, never crash) with minimal args | smoke | `python tools/cxx_api_parity/check_parity_gate.py --repo-root . --help` exits 0 | ❌ Wave 0 |
 
 ### Parser Determinism Guarantees

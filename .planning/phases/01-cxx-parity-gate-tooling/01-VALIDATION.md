@@ -17,18 +17,19 @@ created: 2026-04-06
 
 | Property | Value |
 |----------|-------|
-| **Framework** | pytest 7.x (existing, via `uv run pytest`) |
-| **Config file** | none — Wave 0 creates `tools/cxx_api_parity/tests/` |
-| **Quick run command** | `uv run pytest tools/cxx_api_parity/tests/ -q` |
-| **Full suite command** | `uv run pytest tools/cxx_api_parity/tests/ -v` |
+| **Framework** | pytest 9.x (existing, installed in `ClassicLib-rs/python-bindings/.venv` from `requirements-ci.txt`) |
+| **Config file** | none — Wave 0 creates `tools/cxx_api_parity/tests/`. The repo has no `pyproject.toml`; the python-bindings venv is hand-managed |
+| **Venv location** | `ClassicLib-rs/python-bindings/.venv` (Windows: `Scripts/pytest`). **No venv lives at the repo root** — repo root must stay venv-free |
+| **Quick run command** | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q` |
+| **Full suite command** | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -v` |
 | **Estimated runtime** | ~10 seconds (pure Python parsing, fixture-based, no network or build) |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `uv run pytest tools/cxx_api_parity/tests/ -q`
-- **After every plan wave:** Run `uv run pytest tools/cxx_api_parity/tests/ -v`
+- **After every task commit:** Run `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q`
+- **After every plan wave:** Run `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -v`
 - **Before `/gsd:verify-work`:** Full suite must be green AND `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` must exit 0
 - **Max feedback latency:** 15 seconds
 
@@ -41,22 +42,22 @@ created: 2026-04-06
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | TBD | 01 | 0 | CXXG-01 | scaffolding | `test -d tools/cxx_api_parity/tests/fixtures` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_rust_functions -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_shared_structs -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_enums -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_opaque_types -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_cpp -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_build_rs -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_build_rs_missing_bridges -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `uv run pytest tools/cxx_api_parity/tests/test_parser.py::test_deterministic_output -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-02 | integration | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_file_exists -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-02 | integration | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_covers_14_modules -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | smoke | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_passes_on_unchanged_source -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | drift | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_added_function -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | drift | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_removed_function -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | drift | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_struct_field_rename -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | stale-artifact | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_stale_artifact -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-04 | CLI surface | `uv run pytest tools/cxx_api_parity/tests/test_gate.py::test_no_deferred_registry_arg -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_rust_functions -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_shared_structs -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_enums -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_opaque_types -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_cpp -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_build_rs -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_build_rs_missing_bridges -x` | ❌ W0 | ⬜ pending |
+| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_deterministic_output -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-02 | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_file_exists -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-02 | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_covers_14_modules -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-03 | smoke | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_passes_on_unchanged_source -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_added_function -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_removed_function -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_struct_field_rename -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-03 | stale-artifact | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_stale_artifact -x` | ❌ W0 | ⬜ pending |
+| TBD | 02 | 2 | CXXG-04 | CLI surface | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_no_deferred_registry_arg -x` | ❌ W0 | ⬜ pending |
 | TBD | 02 | 2 | CXXG-04 | smoke | `python tools/cxx_api_parity/check_parity_gate.py --help` exits 0 | ❌ W0 | ⬜ pending |
 | TBD | 03 | 3 | CXXG-02 | end-to-end | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 against committed baseline | ❌ W0 | ⬜ pending |
 | TBD | 03 | 3 | CXXG-05 | doc presence | `test -f docs/api/cxx-parity-gate.md && grep -q "## Local Run" docs/api/cxx-parity-gate.md` | ❌ W0 | ⬜ pending |
@@ -82,7 +83,7 @@ Test infrastructure must be created before any parser/gate code is written:
 - [ ] `tools/cxx_api_parity/tests/fixtures/mixed_ffi.rs` — scanner-like complex fixture (`unsafe extern "C++"`, `include!()`, multi-arg fns)
 - [ ] `tools/cxx_api_parity/tests/fixtures/fake_build.rs` — fake `build.rs` for parser unit tests
 
-> Existing infrastructure provides: `pyproject.toml` at repo root with pytest dependency, `uv` runner. No new framework install needed.
+> Existing infrastructure: `ClassicLib-rs/python-bindings/.venv` (hand-managed via `ClassicLib-rs/python-bindings/requirements-ci.txt`) ships pytest 9.x. No `pyproject.toml` or `.python-version` exists at the repo root; the gate tests run via the explicit venv-bin path. **Do not** add a venv at the repo root.
 
 ---
 
