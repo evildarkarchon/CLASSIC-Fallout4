@@ -153,11 +153,13 @@ class TestParseExternCpp:
         and marks them with blockOrigin="C++". include!() is skipped."""
         crate = tmp_path / "bridge"
         (crate / "src").mkdir(parents=True)
+        # Install the mixed_ffi.rs fixture as src/mixed.rs so the bridgeModule
+        # filename stem matches the namespace last segment ("mixed").
         (crate / "build.rs").write_text(
-            'fn main() { cxx_build::bridges(["src/mixed_ffi.rs"]).compile("x"); }\n',
+            'fn main() { cxx_build::bridges(["src/mixed.rs"]).compile("x"); }\n',
             encoding="utf-8",
         )
-        (crate / "src/mixed_ffi.rs").write_text(
+        (crate / "src/mixed.rs").write_text(
             _load_fixture(fixture_dir, "mixed_ffi.rs"), encoding="utf-8"
         )
 
@@ -252,11 +254,13 @@ class TestMixedFfiInventory:
         """CXXG-01: mixed_ffi.rs produces exactly the hand-counted 7 rows."""
         crate = tmp_path / "bridge"
         (crate / "src").mkdir(parents=True)
+        # Install the mixed_ffi.rs fixture as src/mixed.rs so the bridgeModule
+        # filename stem matches the namespace last segment ("mixed").
         (crate / "build.rs").write_text(
-            'fn main() { cxx_build::bridges(["src/mixed_ffi.rs"]).compile("x"); }\n',
+            'fn main() { cxx_build::bridges(["src/mixed.rs"]).compile("x"); }\n',
             encoding="utf-8",
         )
-        (crate / "src/mixed_ffi.rs").write_text(
+        (crate / "src/mixed.rs").write_text(
             _load_fixture(fixture_dir, "mixed_ffi.rs"), encoding="utf-8"
         )
 
