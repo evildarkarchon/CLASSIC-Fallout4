@@ -1,24 +1,25 @@
 ---
 phase: 01-deprecated-api-migration
-verified: 2026-04-07T03:12:55Z
-status: gaps_found
-score: 4/5 success criteria verified
+verified: 2026-04-07T03:14:34Z
+status: passed
+score: 5/5 success criteria verified
 re_verification:
   previous_status: gaps_found
   previous_score: 4/5
   gaps_closed:
     - "Replaced the stale REQUIREMENTS-sync narrative with fresh Rust and Python rerun evidence for DEBT-05, DEBT-06, DEBT-07, and DEBT-10."
     - "Confirmed the Python parity gate still passes with 59/59 Tier-1 rows matched during the closure rerun."
-  gaps_remaining:
-    - "Success Criterion 5 is still open until the repo-standard Node local parity gate is rerun and recorded."
+    - "Reran the repo-standard Node local parity gate and recorded fresh cross-binding proof for Success Criterion 5."
+    - "Reconciled `.planning/REQUIREMENTS.md` so DEBT-05, DEBT-06, DEBT-07, and DEBT-10 are marked complete under Phase 9 traceability."
+  gaps_remaining: []
   regressions: []
 ---
 
 # Phase 01: Deprecated API Migration Verification Report
 
 **Phase Goal:** All binding surfaces use current APIs with deprecation warnings emitted for end-users still calling legacy Python methods.
-**Verified:** 2026-04-07T03:12:55Z
-**Status:** gaps_found — fresh Rust and Python proof is green, but the Node local parity rerun required for full SC5 closure is not yet recorded in this artifact.
+**Verified:** 2026-04-07T03:14:34Z
+**Status:** passed — all declared Rust, Python, and Node closure proof reruns are now recorded in this artifact.
 **Re-verification:** Yes — Phase 09 closure refresh.
 
 ## Re-Verification Summary
@@ -45,9 +46,9 @@ The Phase 1 summaries (`01-01-SUMMARY.md`, `01-02-SUMMARY.md`) are treated here 
 | SC2 | Python `generate_suspect_section` internally calls `generate_suspect_section_header` + `generate_suspect_found_footer` | VERIFIED | Targeted pytest warning coverage reran green for the deprecated report surface |
 | SC3 | All tests formerly using `#[allow(deprecated)]` on `is_outdated` now exercise `check_version_status()` | VERIFIED | Fresh `version::tests` cargo rerun passed all 24 targeted tests |
 | SC4 | `PyFormIDAnalyzerCore::new` emits `DeprecationWarning` when receiving legacy `PyDict` format for `mods_single` | VERIFIED | Targeted pytest warning coverage reran green for `formid_analyzer_legacy_dict_deprecation_warning` |
-| SC5 | Python and Node parity gates pass after all migrations | PARTIAL | Python parity gate rerun passed; Node local parity rerun is still pending in this intermediate refresh |
+| SC5 | Python and Node parity gates pass after all migrations | VERIFIED | Python parity gate rerun passed (59/59 Tier-1 matched); `bun run parity:gate:local` rerun passed with the Node Tier-1 gate at 261/261 matched |
 
-**Score:** 4/5 truths currently verified.
+**Score:** 5/5 truths verified.
 
 ## Requirement Coverage
 
@@ -67,6 +68,16 @@ The Phase 1 summaries (`01-01-SUMMARY.md`, `01-02-SUMMARY.md`) are treated here 
 - Tier-1 signature mismatch: **0**
 - Runtime coverage summary generated with **1 newly uncovered** Python surface; this does not fail the Tier-1 gate and should be handled through the parity-governance workflow rather than misreported as a Phase 1 regression.
 
+## Node Parity Gate Snapshot
+
+- Command: `bun run parity:gate:local`
+- Tier-1 contract rows: **261**
+- Tier-1 matched: **261**
+- Tier-1 missing Rust: **0**
+- Tier-1 missing Node: **0**
+- Tier-1 signature mismatch: **0**
+- Runtime coverage summary generated with **0 newly uncovered** Node surfaces.
+
 ## Supporting Artifact Cross-Check
 
 | Artifact | Role in closure | Status |
@@ -76,17 +87,13 @@ The Phase 1 summaries (`01-01-SUMMARY.md`, `01-02-SUMMARY.md`) are treated here 
 | `01-02-SUMMARY.md` | Historical completion claim for DEBT-05/06/10 | Cross-checked, not treated as proof by itself |
 | `.planning/REQUIREMENTS.md` | Current milestone traceability file | Cross-checked; no longer used as the primary blocker narrative in this artifact |
 
-## Remaining Gap Before Full Closure
-
-The remaining blocker is narrow and current: rerun the repo-standard Node local parity gate from `ClassicLib-rs/node-bindings/classic-node` and record the result here so Success Criterion 5 has fresh cross-binding proof. No requirement in this report is being held open because of the old REQUIREMENTS-sync story.
-
 ## Gaps Summary
 
 - **Closed:** The stale claim that this phase was blocked primarily by `REQUIREMENTS.md` bookkeeping.
 - **Closed:** Missing fresh Rust and Python runtime proof for DEBT-05, DEBT-06, DEBT-07, and DEBT-10.
-- **Open:** Fresh recorded Node local parity proof for SC5.
+- **Closed:** Missing fresh recorded Node local parity proof for SC5.
 
 ---
 
-_Verified: 2026-04-07T03:12:55Z_
+_Verified: 2026-04-07T03:14:34Z_
 _Verifier: GPT-5.4 (gsd plan executor)_
