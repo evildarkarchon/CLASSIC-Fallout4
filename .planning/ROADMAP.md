@@ -63,8 +63,17 @@ Plans:
   3. The CXX parity gate (`check_parity_gate.py`) passes with the updated baseline that includes all new and widened bridge entry points — 0 drift from the committed baseline JSON
   4. `classic-cpp-bridge::scangame` exposes the same orchestration entry points that Python and Node bindings expose for classic-scangame-core (verified by reading the gate report — no scangame narrowing gaps remain)
   5. `classic-cpp-bridge::database`, `registry`, `config`, `path`, and `xse` surface gaps are closed: the gate report shows no missing-from-bridge entries for these domains
-**Plans**: TBD
+**Plans**: 8 plans
 **UI hint**: yes
+Plans:
+- [ ] 02-cxx-bridge-surface-expansion/02-01-path-promotion-and-widening-PLAN.md — Promote src/path.rs into build.rs and widen for full classic-path-core surface (CXXS-08); migrate pathdialog.cpp to classic::path::check_restricted_path (D-11)
+- [ ] 02-cxx-bridge-surface-expansion/02-02-constants-bridge-PLAN.md — New src/constants.rs exposing classic-constants-core enums + helpers (CXXS-01, D-04)
+- [ ] 02-cxx-bridge-surface-expansion/02-03-web-bridge-PLAN.md — New src/web.rs exposing classic-web-core URL/user-agent/ModSite helpers (CXXS-02)
+- [ ] 02-cxx-bridge-surface-expansion/02-04-xse-and-version-registry-split-PLAN.md — Split XSE and version registry from game.rs into dedicated bridge modules (CXXS-06, CXXS-09; D-01, D-02, D-08 shims preserved)
+- [ ] 02-cxx-bridge-surface-expansion/02-05-scangame-widening-ba2-ini-enb-PLAN.md — Widen scangame.rs with BA2 / INI / ENB sub-domain entry points (CXXS-04 part 1; D-06 split)
+- [ ] 02-cxx-bridge-surface-expansion/02-06-scangame-widening-toml-wrye-integrity-setup-PLAN.md — Widen scangame.rs with TOML / Wrye / Integrity / Setup structured / Crashgen orchestrator (CXXS-04 part 2)
+- [ ] 02-cxx-bridge-surface-expansion/02-07-config-suspect-rules-and-database-typed-PLAN.md — config suspect-rule DTOs (CXXS-07) + database typed FormID API (CXXS-05; D-08 additive)
+- [ ] 02-cxx-bridge-surface-expansion/02-08-fcx-getter-and-final-verification-PLAN.md — scanner.rs FCX issue getter (CXXS-03) + final clean-build pair + Phase 2 baseline closeout (CXXS-10)
 
 ### Phase 3: Python Tier Collapse
 **Goal**: All 289 currently-deferred Python parity entries are promoted to the single enforced contract tier; the Python parity gate exits zero with no deferred entries; classic_shared is wired as a gate-enrolled build target
@@ -121,7 +130,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
-| 2. CXX Bridge Surface Expansion | 0/TBD | Not started | - |
+| 2. CXX Bridge Surface Expansion | 0/8 | Not started | - |
 | 3. Python Tier Collapse | 0/TBD | Not started | - |
 | 4. Node Tier Collapse | 0/TBD | Not started | - |
 | 5. CI Enforcement | 0/TBD | Not started | - |
