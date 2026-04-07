@@ -47,7 +47,11 @@
   3. A committed `tools/cxx_api_parity/cxx_baseline_surface.json` baseline captures every current CXX bridge export and is regenerable by `generate_baseline.py` without a Rust build
   4. The gate script accepts a missing-deferred-registry path gracefully (no FileNotFoundError crash) — deferred registry concept is absent from the gate design
   5. A contributor can follow `docs/api/cxx-parity-gate.md` to run the gate locally and refresh the baseline after an intentional bridge change
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-cxx-parity-gate-tooling/01-01-PLAN.md — Parser TDD (parse_cxx_bridge_surface + helpers; Wave 0 scaffolding + 9 unit tests; CXXG-01)
+- [ ] 01-cxx-parity-gate-tooling/01-02-PLAN.md — Gate scripts + born-green baseline bootstrap + integration tests (CXXG-02, CXXG-03, CXXG-04)
+- [ ] 01-cxx-parity-gate-tooling/01-03-PLAN.md — Contributor doc + .gitignore + doc index entry + VALIDATION.md task-id backfill (CXXG-05, CXXG-04)
 
 ### Phase 2: CXX Bridge Surface Expansion
 **Goal**: The C++ bridge exposes the full surface of every shared Rust crate it currently narrows, plus first-time exposure for classic-constants-core, classic-web-core, and the FCX issue getter — and the CXX parity gate baseline is updated to reflect the complete surface
@@ -116,7 +120,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. CXX Parity Gate Tooling | 0/TBD | Not started | - |
+| 1. CXX Parity Gate Tooling | 0/3 | Not started | - |
 | 2. CXX Bridge Surface Expansion | 0/TBD | Not started | - |
 | 3. Python Tier Collapse | 0/TBD | Not started | - |
 | 4. Node Tier Collapse | 0/TBD | Not started | - |
