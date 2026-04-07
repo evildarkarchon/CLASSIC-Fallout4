@@ -525,11 +525,22 @@ def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> N
 
 
 def test_parse_segments_parallel_deprecation_warning() -> None:
-    """parse_segments_parallel emits DeprecationWarning and returns dict."""
+    """parse_segments_parallel matches parse_all_sections output."""
     import classic_scanlog
 
     parser = classic_scanlog.LogParser()
-    sample_lines = ["[Compatibility]", "Buffout4.dll"]
+    repo_root = Path(__file__).resolve().parents[3]
+    log_path = (
+        repo_root
+        / "ClassicLib-rs"
+        / "business-logic"
+        / "classic-scanlog-core"
+        / "benches"
+        / "fixtures"
+        / "crash-12624.log"
+    )
+    sample_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    expected = parser.parse_all_sections(sample_lines)
 
     with pytest.warns(
         DeprecationWarning, match="parse_segments_parallel is deprecated"
@@ -537,20 +548,45 @@ def test_parse_segments_parallel_deprecation_warning() -> None:
         result = parser.parse_segments_parallel(sample_lines)
 
     assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
+    assert result == expected
+    assert result["plugins"][:3] == [
+        "\t[00]Fallout4.esm",
+        "\t[01]DLCRobot.esm",
+        "\t[02]DLCworkshop01.esm",
+    ]
 
 
 def test_generate_suspect_section_deprecation_warning() -> None:
-    """generate_suspect_section emits DeprecationWarning and returns ReportFragment."""
+    """generate_suspect_section matches header plus footer outputs."""
     import classic_scanlog
 
     report_gen = classic_scanlog.ReportGenerator()
+    header_lines = report_gen.generate_suspect_section_header().to_list()
+    empty_footer_lines = report_gen.generate_suspect_found_footer(False).to_list()
+    found_footer_lines = report_gen.generate_suspect_found_footer(True).to_list()
 
     with pytest.warns(
         DeprecationWarning, match="generate_suspect_section is deprecated"
     ):
-        fragment = report_gen.generate_suspect_section(["SomeSuspect"])
+        empty_fragment = report_gen.generate_suspect_section([])
 
-    assert fragment is not None
+    with pytest.warns(
+        DeprecationWarning, match="generate_suspect_section is deprecated"
+    ):
+        found_fragment = report_gen.generate_suspect_section(["SomeSuspect"])
+
+    assert empty_fragment.to_list() == header_lines + empty_footer_lines
+    assert found_fragment.to_list() == header_lines + found_footer_lines
+    assert empty_fragment.to_list() == [
+        "### Checking for Known Crash Messages, Errors and Suspects\n\n",
+        "* **NO SUSPECTS DETECTED** *\n\n",
+        "---\n\n",
+    ]
+    assert found_fragment.to_list() == [
+        "### Checking for Known Crash Messages, Errors and Suspects\n\n",
+        "* **ONE OR MORE SUSPECTS DETECTED! CHECK LOG ABOVE FOR MORE INFORMATION!** *\n\n",
+        "---\n\n",
+    ]
 
 
 def test_formid_analyzer_legacy_dict_deprecation_warning() -> None:

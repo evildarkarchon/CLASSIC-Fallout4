@@ -17,10 +17,10 @@ use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::OrchestratorCore;
 use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
-use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
+use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 use std::collections::{HashMap, HashSet};
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js, js_rules_to_core};
@@ -291,7 +291,9 @@ pub fn create_analysis_config(game: String, game_version: String) -> JsAnalysisC
 pub fn reset_fcx_global_state() -> napi::Result<()> {
     match FcxModeHandler::reset_global_state() {
         Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
-        Err(error) => Err(to_napi_err(format!("failed to reset FCX global state: {error}"))),
+        Err(error) => Err(to_napi_err(format!(
+            "failed to reset FCX global state: {error}"
+        ))),
     }
 }
 

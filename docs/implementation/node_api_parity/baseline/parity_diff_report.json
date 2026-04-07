@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-04-06T02:43:59.632646+00:00",
+  "generated_at_utc": "2026-04-07T00:10:23.584707+00:00",
   "summary": {
     "tier1_contract_total": 261,
     "tier1_matched": 261,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 124,
+    "total_gaps": 128,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 124
+    "tier2_gap_total": 128
   },
   "contract_results": [
     {
@@ -4219,6 +4219,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "node_export": "HashCacheStats",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "interface"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -4579,6 +4589,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "node_export": "clearHashCache",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -4649,6 +4669,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "node_export": "getHashCacheStats",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
@@ -4699,6 +4729,16 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": null,
+      "node_export": "resetHashCacheStats",
+      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
+      "kind": "function"
+    },
+    {
+      "gap_type": "node_unmapped",
+      "tier": "tier2",
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
@@ -4719,7 +4759,7 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 31
+      "tier2": 35
     },
     "scanlog": {
       "tier2": 72

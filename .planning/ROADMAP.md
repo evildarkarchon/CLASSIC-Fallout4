@@ -153,10 +153,14 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Deprecated API Migration | 1/2 | In Progress | - |
-| 2. Dead Code Removal | 0/3 | Not started | - |
-| 3. FCX State Hardening | 0/TBD | Not started | - |
-| 4. Bounded Cache Replacement | 0/6 | Planned | - |
+| 1. Deprecated API Migration | 2/2 | Complete | 2026-04-06 |
+| 2. Dead Code Removal | 3/3 | Complete | 2026-04-06 |
+| 3. FCX State Hardening | 3/3 | Complete | 2026-04-06 |
+| 4. Bounded Cache Replacement | 6/6 | Complete | 2026-04-06 |
+| 5. Pattern Caching and Performance | 7/7 | Complete | 2026-04-06 |
+| 6. mmap TOCTOU Safety | 3/3 | Complete | 2026-04-06 |
+| 7. Consistency Sweep | 2/2 | Complete | 2026-04-06 |
+| 8. Workspace and Infrastructure | 3/3 | Complete | 2026-04-06 |
 | 5. Pattern Caching and Performance | 0/4 | Planned | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
 | 7. Consistency Sweep | 0/2 | Planned | - |

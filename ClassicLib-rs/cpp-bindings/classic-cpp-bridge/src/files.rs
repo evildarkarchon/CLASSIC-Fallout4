@@ -3,12 +3,12 @@
 //! Bridges `classic_file_io_core` for backup management, game files,
 //! log collection, file similarity, and encoding-aware file I/O.
 
+use classic_file_io_core::FileIOCore;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::game_files::GameFilesManager;
 use classic_file_io_core::hash::FileHasher;
 use classic_file_io_core::log_collection::LogCollector;
 use classic_file_io_core::similarity::calculate_similarity;
-use classic_file_io_core::FileIOCore;
 use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 

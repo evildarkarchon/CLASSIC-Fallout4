@@ -870,8 +870,8 @@ impl ClassicConfig {
 mod tests {
     use super::*;
     use classic_settings_core::{merge_yaml_documents, parse_yaml_content};
-    use std::sync::{Mutex, OnceLock};
     use serial_test::serial;
+    use std::sync::{Mutex, OnceLock};
     use tempfile::tempdir;
 
     fn current_dir_lock() -> &'static Mutex<()> {

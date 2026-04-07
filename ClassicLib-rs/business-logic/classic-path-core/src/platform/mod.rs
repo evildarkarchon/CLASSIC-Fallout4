@@ -15,7 +15,6 @@ use std::path::PathBuf;
 #[cfg(target_os = "windows")]
 pub mod windows;
 
-#[cfg(target_os = "linux")]
 pub mod linux;
 
 /// Get the system documents path using platform-specific methods.

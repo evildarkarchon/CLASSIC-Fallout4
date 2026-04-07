@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-05T08:43:34.696376+00:00",
+  "generated_at_utc": "2026-04-06T05:01:55.520645+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -247,7 +247,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::ConfigIssue",
       "tier": "tier2"
     },
@@ -297,8 +297,18 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::FcxModeHandler",
+      "tier": "tier2"
+    },
+    {
+      "symbol": "FcxResetError",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
+      "source_expr": "fcx_handler::FcxResetError",
       "tier": "tier2"
     },
     {
@@ -327,7 +337,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, GLOBAL_FCX_HANDLER};",
+      "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::GLOBAL_FCX_HANDLER",
       "tier": "tier2"
     },

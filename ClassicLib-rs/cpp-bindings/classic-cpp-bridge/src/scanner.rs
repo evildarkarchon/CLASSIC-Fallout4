@@ -17,8 +17,8 @@ use log::info;
 use std::collections::{HashSet, VecDeque};
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::{Arc, LazyLock};
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
 use std::time::Duration;
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).

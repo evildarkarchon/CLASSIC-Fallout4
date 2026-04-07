@@ -425,8 +425,8 @@ mod ffi {
 mod tests {
     use super::*;
     use std::io::Write;
-    use tempfile::tempdir;
     use tempfile::NamedTempFile;
+    use tempfile::tempdir;
 
     #[test]
     fn test_yaml_data_load_invalid_dirs() {

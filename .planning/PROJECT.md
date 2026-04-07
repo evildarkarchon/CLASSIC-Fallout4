@@ -29,19 +29,19 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ YAML, settings, and hash cache stats now expose one canonical five-field contract across Rust, Node, Python, and C++ — Validated in Phase 4: Bounded Cache Replacement
 - ✓ Large-file mmap reads use `MmapOptions::map_copy_read_only()` with validated Windows benchmark proof — Validated in Phase 6: mmap TOCTOU Safety
 - ✓ Owned workspace lazy statics now use `std::sync::LazyLock`, and the remaining scanlog `OnceCell` cache uses `std::sync::OnceLock` with direct `once_cell` manifests removed — Validated in Phase 7: Consistency Sweep
+- ✓ Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete) — Validated in Phase 8: Workspace and Infrastructure
+- ✓ Promote `winreg` and `phf` to workspace dependencies — Validated in Phase 8: Workspace and Infrastructure
+- ✓ Document or remove `zerovec` workaround dependency — Validated in Phase 8: Workspace and Infrastructure
+- ✓ Commit or document Node `index.d.ts` build-first requirement — Validated in Phase 8: Workspace and Infrastructure
+- ✓ Add test coverage: Linux Proton path — Validated in Phase 8: Workspace and Infrastructure
 
 ### Active
 
-- [ ] Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete)
 - [x] Migrate Python FormID analyzer away from legacy map format with deprecation warnings — Validated in Phase 1
 - [ ] Cache compiled regex patterns in mod detector hot paths (detect_mods_single/double/batch/important)
 - [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
 - [ ] Replace per-entry regex in `detect_mods_important` with AhoCorasick or combined pattern
 - [ ] Add before/after criterion benchmarks for performance improvements
-- [ ] Promote `winreg` and `phf` to workspace dependencies
-- [ ] Document or remove `zerovec` workaround dependency
-- [ ] Commit or document Node `index.d.ts` build-first requirement
-- [ ] Add test coverage: Linux Proton path
 
 ### Out of Scope
 

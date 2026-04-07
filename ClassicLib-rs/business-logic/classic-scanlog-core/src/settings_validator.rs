@@ -1343,8 +1343,7 @@ mod tests {
 
         // 3. Verify the production entry actually uses rules (not the legacy path)
         // by calling scan_all_settings_bucketed and confirming rules-driven output.
-        let validator =
-            SettingsValidator::new("Buffout 4".to_string(), production_buffout);
+        let validator = SettingsValidator::new("Buffout 4".to_string(), production_buffout);
         let mut crashgen = HashMap::new();
         crashgen.insert("Achievements".to_string(), "true".to_string());
         let xse = HashSet::new();

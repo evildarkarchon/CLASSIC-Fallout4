@@ -113,9 +113,7 @@ impl PyLogParser {
             1,
         )?;
         let arc_lines = to_arc_str_vec(&lines);
-        let named_sections = without_gil(py, || {
-            self.inner.parse_all_sections_arc(&arc_lines)
-        });
+        let named_sections = without_gil(py, || self.inner.parse_all_sections_arc(&arc_lines));
         let dict = PyDict::new(py);
         for (key, section_lines) in &named_sections {
             let py_lines: Vec<&str> = section_lines.iter().map(|s| s.as_ref()).collect();

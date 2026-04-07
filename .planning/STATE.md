@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-stopped_at: Completed 08-workspace-and-infrastructure-01-PLAN.md
-last_updated: "2026-04-07T00:01:38.185Z"
+status: complete
+stopped_at: Completed 08-workspace-and-infrastructure-03-PLAN.md
+last_updated: "2026-04-07T01:05:00.000Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 29
-  completed_plans: 27
-  percent: 93
+  completed_plans: 29
+  percent: 100
 ---
 
 # Project State
@@ -21,35 +21,35 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Phase 08 — workspace-and-infrastructure
+**Current focus:** Milestone wrap-up complete
 
 ## Current Position
 
 Phase: 8
-Current Plan: 2 of 3 in Phase
-Status: In progress — 08-01 completed, 08-02 next
+Current Plan: 3 of 3 in Phase
+Status: Complete — 08-01, 08-02, and 08-03 completed
 Last activity: 2026-04-07
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 1
-- Average duration: 3min
-- Total execution time: 0.05 hours
+- Total plans completed: 29
+- Average duration: 15min
+- Total execution time: 7.75 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1 | 3min | 3min |
+| 08-workspace-and-infrastructure | 3 | 43min | 14min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (3min)
-- Trend: baseline
+- Last 5 plans: 07-02 (5min), 08-01 (13min), 08-02 (19min), 08-03 (11min)
+- Trend: completed
 
 *Updated after each plan completion*
 | Phase 02 P02 | 9min | 2 tasks | 5 files |
@@ -77,6 +77,8 @@ Progress: [█████████░] 93%
 | Phase 07 P01 | 7h 8m | 2 tasks | 13 files |
 | Phase 07 P02 | 5 min | 2 tasks | 11 files |
 | Phase 08-workspace-and-infrastructure P01 | 13min | 2 tasks | 5 files |
+| Phase 08-workspace-and-infrastructure P02 | 19min | 2 tasks | 7 files |
+| Phase 08-workspace-and-infrastructure P03 | 11min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -147,6 +149,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Treat Phase 7 success as removal of owned direct once_cell usage and manifest declarations, while allowing transitive lockfile once_cell entries to remain.
 - [Phase 08-workspace-and-infrastructure]: Promoted winreg and phf into ClassicLib-rs/Cargo.toml without changing pinned versions so member crates only inherit ownership.
 - [Phase 08-workspace-and-infrastructure]: Removed the classic-shared-core zerovec workaround outright and documented gui-bridge as building directly from workspace Slint dependencies after build proof passed.
+- [Phase 08-workspace-and-infrastructure]: Kept Linux documents-path ownership in DocsPathFinder and reused the existing Proton helpers instead of duplicating logic in bindings.
+- [Phase 08-workspace-and-infrastructure]: Treated classic-node/index.d.ts as the tracked generated Node contract artifact and kept the existing freshness/parity workflow as the only enforcement path.
 
 ### Pending Todos
 
@@ -160,6 +164,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T00:01:38.178Z
-Stopped at: Completed 08-workspace-and-infrastructure-01-PLAN.md
+Last session: 2026-04-07T01:05:00.000Z
+Stopped at: Completed 08-workspace-and-infrastructure-03-PLAN.md
 Resume file: None

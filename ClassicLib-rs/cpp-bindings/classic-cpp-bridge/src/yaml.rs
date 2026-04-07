@@ -8,7 +8,7 @@
 //! as a `YamlValue` shared struct with type information.
 
 use classic_yaml_core::{
-    cache_stats as yaml_cache_stats, CacheStats as YamlCacheStats, YamlOperations,
+    CacheStats as YamlCacheStats, YamlOperations, cache_stats as yaml_cache_stats,
 };
 use std::path::Path;
 use yaml_rust2::Yaml;

@@ -62,7 +62,8 @@ Current characteristics:
 - one package exposes many shared crates through a flat JS/TS export surface
 - DTOs usually stay closer to Rust model shape than the C++ bridge does
 - async Rust APIs remain async at the JS boundary where that improves fidelity
-- `index.d.ts` is the quickest contributor view of the current public Node contract
+- committed `index.d.ts` is the tracked generated contract artifact and the quickest contributor view of the current public Node contract
+- contributors can inspect that committed snapshot directly without building first; builds are for regeneration and verification
 
 ## Python bindings
 

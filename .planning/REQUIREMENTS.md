@@ -108,12 +108,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CACHE-03 | Phase 4 | Complete |
 | INFRA-01 | Phase 8 | Complete |
 | INFRA-02 | Phase 8 | Complete |
-| INFRA-03 | Phase 8 | Pending |
+| INFRA-03 | Phase 8 | Complete |
 | INFRA-04 | Phase 8 | Complete |
-| INFRA-05 | Phase 8 | Pending |
+| INFRA-05 | Phase 8 | Complete |
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 2 | Complete |
-| TEST-03 | Phase 8 | Pending |
+| TEST-03 | Phase 8 | Complete |
 | TEST-04 | Phase 3 | Complete |
 | CONS-01 | Phase 7 | Complete |
 | CONS-02 | Phase 3 | Complete |

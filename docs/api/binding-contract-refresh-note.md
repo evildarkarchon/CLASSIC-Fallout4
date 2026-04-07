@@ -40,6 +40,8 @@ So today:
 
 Refresh [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts) when the public Node export surface changes.
 
+Treat it as a tracked generated artifact: contributors should review the committed snapshot first, and any public Node export change should refresh and commit `index.d.ts` in the same change rather than leaving freshness to CI later.
+
 Typical triggers already documented in the repo include:
 
 - changes in [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/)

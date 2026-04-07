@@ -8,7 +8,7 @@
 //! - **YamlDocument class**: Stateful wrapper that holds a parsed YAML document in memory
 //!   for repeated reads and mutations without re-parsing.
 
-use classic_yaml_core::{cache_stats as yaml_cache_stats, YamlError, YamlOperations};
+use classic_yaml_core::{YamlError, YamlOperations, cache_stats as yaml_cache_stats};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::Path;

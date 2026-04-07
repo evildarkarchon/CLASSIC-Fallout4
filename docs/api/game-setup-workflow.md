@@ -128,8 +128,9 @@ Current strategy order in `find_docs_path()`:
 
 1. cached path, if provided and valid
 2. Windows documents registry lookup plus the game-relative suffix on Windows
-3. `home/.local/share/<relative_path>` on non-Windows builds
-4. `DocsPathError::NotFound` if all strategies fail
+3. on non-Windows builds, a valid Fallout 4 Proton documents path resolved from Steam metadata
+4. `home/.local/share/<relative_path>` on non-Windows builds when Steam lookup fails or the Proton documents path is invalid
+5. `DocsPathError::NotFound` if all strategies fail
 
 After the folder is found, follow-up checks may use:
 

@@ -5,8 +5,8 @@ use crate::loader::{load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync
 use quick_cache::sync::Cache;
 use serde::Serialize;
 use std::path::Path;
-use std::sync::{Arc, LazyLock};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
 use tracing::trace;
 use yaml_rust2::Yaml;
 
