@@ -47,9 +47,6 @@ gui-bridge = ["slint", "tokio-util"]
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 serial_test = "3.2"
-# Workaround: icu_properties (transitive via slint) requires zerovec/alloc
-# when building classic-shared-core with gui-bridge in isolation.
-zerovec = { version = "0.11", features = ["alloc"] }
 
 [[bench]]
 name = "string_benchmarks"

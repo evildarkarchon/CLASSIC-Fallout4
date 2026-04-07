@@ -477,6 +477,7 @@ What `gui-bridge` changes:
 Contributor note:
 
 - outside `gui-bridge`, the crate still provides the shared runtime and foundation helpers, but none of the Slint bridge API exists
+- `gui-bridge` now builds directly from the workspace `slint` dependency set; `classic-shared-core` no longer carries a crate-local `zerovec` workaround for this feature path
 
 ---
 
