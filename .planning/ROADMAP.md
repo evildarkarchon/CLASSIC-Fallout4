@@ -144,7 +144,7 @@ Plans:
   2. `construct_proton_docs_path` is wired into the Linux docs-path discovery workflow and an integration test using a mock Proton prefix structure passes
   3. The `zerovec` workaround in `classic-shared-core` is either removed (if Slint 1.15+ resolved it) or documented with a tracking comment
   4. Node `index.d.ts` is committed as a snapshot with a CI freshness check that fails if the generated output differs from the committed version
-**Plans**: TBD
+**Plans**: 08-01 workspace dependency promotion + `zerovec` removal proof; 08-02 Proton docs-path wiring + integration proof; 08-03 Node declaration contract + freshness workflow cleanup
 
 ## Progress
 
@@ -160,4 +160,4 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 5. Pattern Caching and Performance | 0/4 | Planned | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
 | 7. Consistency Sweep | 0/2 | Planned | - |
-| 8. Workspace and Infrastructure | 0/TBD | Not started | - |
+| 8. Workspace and Infrastructure | 0/3 | Planned | - |

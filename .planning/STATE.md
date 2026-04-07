@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 8 context gathered
-last_updated: "2026-04-06T12:28:26.629Z"
+status: in_progress
+stopped_at: Completed 08-workspace-and-infrastructure-01-PLAN.md
+last_updated: "2026-04-07T00:01:38.185Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 26
-  completed_plans: 26
-  percent: 6
+  total_plans: 29
+  completed_plans: 27
+  percent: 93
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Phase 07 — consistency-sweep
+**Current focus:** Phase 08 — workspace-and-infrastructure
 
 ## Current Position
 
 Phase: 8
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-06
+Current Plan: 2 of 3 in Phase
+Status: In progress — 08-01 completed, 08-02 next
+Last activity: 2026-04-07
 
-Progress: [█░░░░░░░░░] 6%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [█░░░░░░░░░] 6%
 | Phase 06 P03 | 1 min | 1 tasks | 1 files |
 | Phase 07 P01 | 7h 8m | 2 tasks | 13 files |
 | Phase 07 P02 | 5 min | 2 tasks | 11 files |
+| Phase 08-workspace-and-infrastructure P01 | 13min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -144,6 +145,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Kept RecordScanner on per-instance get_or_init semantics by swapping OnceCell to OnceLock instead of redesigning construction flow.
 - [Phase 07]: Use std::sync::LazyLock with DashMap::new for registry and perf globals to match the Phase 4/5 repo pattern without API churn.
 - [Phase 07]: Treat Phase 7 success as removal of owned direct once_cell usage and manifest declarations, while allowing transitive lockfile once_cell entries to remain.
+- [Phase 08-workspace-and-infrastructure]: Promoted winreg and phf into ClassicLib-rs/Cargo.toml without changing pinned versions so member crates only inherit ownership.
+- [Phase 08-workspace-and-infrastructure]: Removed the classic-shared-core zerovec workaround outright and documented gui-bridge as building directly from workspace Slint dependencies after build proof passed.
 
 ### Pending Todos
 
@@ -157,6 +160,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T12:28:26.625Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-workspace-and-infrastructure/08-CONTEXT.md
+Last session: 2026-04-07T00:01:38.178Z
+Stopped at: Completed 08-workspace-and-infrastructure-01-PLAN.md
+Resume file: None

@@ -43,10 +43,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Workspace and Infrastructure
 
-- [ ] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
-- [ ] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
+- [x] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
+- [x] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
 - [ ] **INFRA-03**: Wire `construct_proton_docs_path` into Linux docs-path discovery workflow with unit tests using mock Proton prefix
-- [ ] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
+- [x] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
 - [ ] **INFRA-05**: Commit generated `index.d.ts` snapshot for Node bindings with CI freshness check
 
 ### Test Coverage
@@ -106,10 +106,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CACHE-01 | Phase 4 | Complete |
 | CACHE-02 | Phase 4 | Complete |
 | CACHE-03 | Phase 4 | Complete |
-| INFRA-01 | Phase 8 | Pending |
-| INFRA-02 | Phase 8 | Pending |
+| INFRA-01 | Phase 8 | Complete |
+| INFRA-02 | Phase 8 | Complete |
 | INFRA-03 | Phase 8 | Pending |
-| INFRA-04 | Phase 8 | Pending |
+| INFRA-04 | Phase 8 | Complete |
 | INFRA-05 | Phase 8 | Pending |
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 2 | Complete |
