@@ -1,24 +1,25 @@
 ---
 phase: 05-pattern-caching-and-performance
-verified: 2026-04-06T08:35:00Z
+verified: 2026-04-07T03:41:38Z
 status: passed
-score: 2/2 must-haves verified
+score: 5/5 phase requirements verified
 re_verification:
-  previous_status: gaps_found
-  previous_score: 4/5
+  previous_status: passed
+  previous_score: 2/2 must-haves verified
   gaps_closed:
-    - "Cache-reuse proof for the hot-path matcher work is stable and passing"
-    - "Committed benchmark-proof artifact exists and PERF-04 now aligns mmap ownership to SAFE-05 / Phase 6"
+    - "Added explicit PERF-03 bridge parser reuse evidence from current tests, docs, and benchmark proof"
+    - "Added explicit CONS-04 evidence using the accepted bounded-cache plus true-constant LazyLock interpretation"
+    - "Restored one coherent Phase 5 requirements story across PERF-01, PERF-02, PERF-03, PERF-04, and CONS-04"
   gaps_remaining: []
   regressions: []
 ---
 
 # Phase 05: Pattern Caching and Performance Verification Report
 
-**Phase Goal:** Hot-path regex compilation and LogParser allocation happen once, not per-call, with criterion benchmarks proving the improvement  
-**Verified:** 2026-04-06T08:35:00Z  
+**Phase Goal:** Hot-path regex compilation and `LogParser` allocation happen once, not per-call, with Criterion benchmarks proving the improvement  
+**Verified:** 2026-04-07T03:41:38Z  
 **Status:** passed  
-**Re-verification:** Yes — after gap closure
+**Re-verification:** Yes - Phase 10 audit-gap closure
 
 ## Goal Achievement
 
@@ -26,58 +27,66 @@ re_verification:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | The focused Phase 5 detector regression command passes reliably under grouped runs | ✓ VERIFIED | `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml detect_mods_double` passed (7/7) and `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml detect_mods_` passed (43/43). |
-| 2 | Phase 5 now has a committed, reproducible benchmark-proof artifact and PERF-04 no longer claims Phase 5 owns mmap throughput benchmarking | ✓ VERIFIED | `.planning/phases/05-pattern-caching-and-performance/05-BENCHMARK-PROOF.md` exists with commands, groups, and measured deltas; `.planning/REQUIREMENTS.md:36` assigns mmap throughput to `SAFE-05` / Phase 6. |
+| 1 | The Phase 5 grouped detector regression suite still passes after the caching work, including the important-mod path and the shared matcher-cache coverage | ✓ VERIFIED | `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml detect_mods_` passed (`44 passed; 0 failed`). |
+| 2 | The C++ bridge crash-pattern helper still preserves observable behavior while reusing one module-level parser instead of constructing `LogParser::new(None)` per call | ✓ VERIFIED | `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml detect_crash_pattern` passed (`3 passed; 0 failed`); `scanner.rs:43-44` defines `CRASH_PATTERN_PARSER`; `docs/api/classic-cpp-bridge-data-entrypoints.md:541-555` documents the cached parser contract. |
+| 3 | The committed Phase 5 benchmark proof still matches a live smoke run and explicitly contains the bridge parser hotspot evidence | ✓ VERIFIED | `cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks -- --test` passed all benchmark groups, including `phase5_bridge_crash_pattern_replica`; `05-BENCHMARK-PROOF.md:55-68` records the before/after medians and passing deltas for cached bridge parser reuse. |
+| 4 | CONS-04 is satisfied by the accepted implementation story: input-derived regexes remain on bounded `LazyLock<quick_cache::sync::Cache<...>>` caches, while contributor docs reserve standalone `LazyLock` statics for true constants | ✓ VERIFIED | `mod_detector.rs:21-29` defines bounded `LazyLock` matcher caches and documents why these hot paths are not fake static regexes; `docs/api/classic-scanlog-core.md:79-83` states the same rule explicitly. |
 
-**Score:** 2/2 truths verified
+**Score:** 4/4 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs` | Deterministic grouped-run-safe double matcher reuse proof | ✓ VERIFIED | `double_compile_snapshot_for_tests()` (`996-998`), serial double-detector tests (`1345-1457`), scoped delta assertion (`1463-1470`). |
-| `ClassicLib-rs/business-logic/classic-scanlog-core/benches/scanlog_benchmarks.rs` | Phase 5 hotspot proof variants | ✓ VERIFIED | Paired `uncached/cached`, `legacy/current`, and `parser_per_call/cached_parser` variants wired in `phase5_hotspot_benchmarks()` (`839-1017`). |
-| `.planning/phases/05-pattern-caching-and-performance/05-BENCHMARK-PROOF.md` | Shareable proof artifact with measured results | ✓ VERIFIED | Includes exact commands, covered groups, medians, deltas, threshold outcomes, and Phase 6 mmap clarification. |
-| `performance_baselines/README.md` | Repro workflow for local-only baselines plus committed proof handoff | ✓ VERIFIED | Documents `phase5-before` save/compare workflow and points to `05-BENCHMARK-PROOF.md`. |
-| `.planning/REQUIREMENTS.md` | PERF-04/SAFE-05 ownership alignment | ✓ VERIFIED | `PERF-04` now covers hotspot measurements only; `SAFE-05` remains Phase 6. |
+| `ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs` | Phase 5 hot paths use bounded process-wide matcher reuse without inventing false static-regex claims | ✓ VERIFIED | `SINGLE_MATCHER_CACHE`, `DOUBLE_MATCHER_CACHE`, `BATCH_MATCHER_CACHE`, and `IMPORTANT_MATCHER_CACHE` live behind `LazyLock<Cache<...>>` (`21-29`); `detect_mods_important` uses the cached Aho-Corasick path (`497-704`). |
+| `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs` | `detect_crash_pattern` reuses one default parser for bridge calls | ✓ VERIFIED | `CRASH_PATTERN_PARSER` is a module-level `LazyLock<LogParser>` at `43-44`; bridge tests for empty, positive, and repeated-call behavior passed. |
+| `docs/api/classic-scanlog-core.md` | Contributor guidance explains the accepted CONS-04 boundary honestly | ✓ VERIFIED | `79-83` documents bounded matcher caches for input-derived alternation regexes and reserves dedicated `LazyLock` statics for true constants. |
+| `docs/api/classic-cpp-bridge-data-entrypoints.md` | Bridge API docs describe cached parser reuse and unchanged fail-soft behavior | ✓ VERIFIED | `541-555` states `detect_crash_pattern` reuses one module-level parser and still returns `""` on parse failure. |
+| `.planning/phases/05-pattern-caching-and-performance/05-BENCHMARK-PROOF.md` | Phase 5 proof artifact contains current benchmark-backed hotspot evidence, including bridge parser reuse | ✓ VERIFIED | `55-68` records the `phase5_bridge_crash_pattern_replica` deltas and notes that `cargo bench ... -- --test` passes. |
+| `.planning/REQUIREMENTS.md` | Phase 10 traceability no longer leaves PERF-03 and CONS-04 orphaned | ✓ VERIFIED | `PERF-03` and `CONS-04` are now checked complete in the milestone checklist and marked `Phase 10 | Complete` in traceability. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `mod_detector.rs` | `DOUBLE_MATCHER_CACHE` | test-only reset/snapshot helper | ✓ WIRED | `reset_matcher_caches_for_tests()` clears cache/counters (`957-964`) and `double_compile_snapshot_for_tests()` reads scoped counter state (`996-998`). |
-| `mod_detector.rs` | `get_double_matcher` | cache-reuse regression proof | ✓ WIRED | `double_matcher_for_tests()` delegates to `get_double_matcher()` (`971-973`); reuse proof asserts `Arc::ptr_eq` + delta `== 1` (`1466-1470`). |
-| `05-BENCHMARK-PROOF.md` | `scanlog_benchmarks.rs` | named Phase 5 groups and recorded commands | ✓ WIRED | Proof artifact cites `phase5_cached_regex_paths`, `phase5_detect_mods_important`, and `phase5_bridge_crash_pattern_replica`, all present in the harness. |
-| `.planning/REQUIREMENTS.md` | Phase 6 mmap TOCTOU Safety | requirement wording / ownership clarification | ✓ WIRED | `SAFE-05` stays mapped to Phase 6 and `PERF-04` explicitly defers mmap throughput to it. |
+| `scanner.rs` | `detect_crash_pattern` bridge contract | module-level parser reuse | ✓ WIRED | `CRASH_PATTERN_PARSER` (`43-44`) backs the helper documented at `classic-cpp-bridge-data-entrypoints.md:541-555`. |
+| `05-BENCHMARK-PROOF.md` | bridge parser hotspot claim | `phase5_bridge_crash_pattern_replica` benchmark group | ✓ WIRED | The proof artifact's bridge rows (`55-62`) correspond to the live smoke-run benchmark group that completed successfully. |
+| `mod_detector.rs` | `classic-scanlog-core.md` contributor rule | bounded cache plus true-constant `LazyLock` split | ✓ WIRED | Source comments at `21-24` and docs at `79-83` describe the same accepted CONS-04 interpretation. |
+| `mod_detector.rs` | PERF-02 proof story | cached important-mod matcher path plus parity tests | ✓ WIRED | `detect_mods_important -> detect_mods_important_aho` (`497-704`) and the grouped `detect_mods_` test run keep the Phase 5 important-mod optimization in the same authoritative artifact. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| `mod_detector.rs` | `starting_compiles` / `DOUBLE_MATCHER_COMPILES` delta | `double_compile_snapshot_for_tests()` + `get_double_matcher()` | Yes — the assertion measures only compiles triggered after cache reset in the current test run | ✓ FLOWING |
-| `05-BENCHMARK-PROOF.md` | before/after medians and deltas | paired benchmark variants in `scanlog_benchmarks.rs` | Yes — proof rows map directly to executable bench variants present in the harness | ✓ FLOWING |
+| `scanner.rs` | parsed `main_error` text | `CRASH_PATTERN_PARSER.parse_crash_header(...)` inside `detect_crash_pattern` | Yes - the bridge helper still returns the observable crash-pattern string used by C++ callers while avoiding per-call parser construction. | ✓ FLOWING |
+| `mod_detector.rs` | normalized matcher cache keys and compiled matchers | bounded `LazyLock<Cache<...>>` helpers in the single/double/batch/important paths | Yes - actual YAML/config-derived matcher inputs are normalized, hashed, cached, and reused in the detector hot paths. | ✓ FLOWING |
+| `05-BENCHMARK-PROOF.md` | before/after medians and pass/fail deltas | executable `phase5_` benchmark groups in `scanlog_benchmarks.rs` | Yes - the committed proof rows map directly to benchmark groups that still execute in the smoke run. | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Exact double-matcher reuse proof passes | `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml mod_detector::tests::test_detect_mods_double_reuses_cached_matcher_for_same_conflict_set -- --exact` | `1 passed; 0 failed` | ✓ PASS |
-| Grouped double-detector run stays green | `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml detect_mods_double` | `7 passed; 0 failed` | ✓ PASS |
-| Full grouped detector regression run stays green | `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml detect_mods_` | `43 passed; 0 failed` | ✓ PASS |
-| Benchmark harness still executes after proof changes | `cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks -- --test` | All benchmark groups, including all `phase5_` groups, reported `Success` | ✓ PASS |
+| Grouped detector regression suite stays green | `cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml detect_mods_` | `44 passed; 0 failed` | ✓ PASS |
+| Bridge crash-pattern helper stays green | `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml detect_crash_pattern` | `3 passed; 0 failed` | ✓ PASS |
+| Bridge docs still advertise cached parser reuse | `rg -n "detect_crash_pattern|cached default parser" docs/api/classic-cpp-bridge-data-entrypoints.md` | Matches at `541`, `547` | ✓ PASS |
+| CONS-04 source/docs audit still matches the accepted implementation story | `rg -n "LazyLock|quick_cache|bounded matcher-cache" ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs docs/api/classic-scanlog-core.md` | Matches in `mod_detector.rs:12,18,22,25-29` and `classic-scanlog-core.md:81-82` | ✓ PASS |
+| Phase 5 benchmark harness still executes after the verification refresh | `cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks -- --test` | All benchmark groups, including `phase5_bridge_crash_pattern_replica`, reported `Success` | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| `PERF-01` | `05-05-PLAN.md` | Stable grouped-run proof for cached matcher reuse | ✓ SATISFIED | `mod_detector.rs:1345-1470`; grouped detector commands now pass. |
-| `PERF-04` | `05-06-PLAN.md` | Committed benchmark proof and clarified mmap ownership | ✓ SATISFIED | `05-BENCHMARK-PROOF.md`, `performance_baselines/README.md`, `.planning/REQUIREMENTS.md:36`. |
+| `PERF-01` | `05-01-PLAN.md`, `05-05-PLAN.md` | Cache compiled regexes for single/double/batch hot paths with stable reuse proof | ✓ SATISFIED | `mod_detector.rs:21-27`; grouped `detect_mods_` tests passed; `05-BENCHMARK-PROOF.md` retains the cached single/batch hotspot slices. |
+| `PERF-02` | `05-02-PLAN.md`, `05-07-PLAN.md` | Important-mod detection avoids per-entry regex compilation while preserving parity and benchmark proof | ✓ SATISFIED | `mod_detector.rs:497-704`; grouped `detect_mods_` tests include important-mod coverage; `05-BENCHMARK-PROOF.md:45-53` records the important-mod root-cause and cached-match slices. |
+| `PERF-03` | `05-03-PLAN.md` | Cached bridge parser reuse for `detect_crash_pattern` | ✓ SATISFIED | `scanner.rs:43-44`; `docs/api/classic-cpp-bridge-data-entrypoints.md:541-555`; `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml detect_crash_pattern`; `05-BENCHMARK-PROOF.md:55-62`. |
+| `PERF-04` | `05-04-PLAN.md`, `05-06-PLAN.md`, `05-07-PLAN.md` | Benchmark proof is committed, reproducible, and aligned with actual Phase 5 hotspot ownership | ✓ SATISFIED | `05-BENCHMARK-PROOF.md`; live benchmark smoke run passed; `.planning/REQUIREMENTS.md` still keeps mmap throughput under `SAFE-05` / Phase 6. |
+| `CONS-04` | `05-01-PLAN.md` | Use `LazyLock` correctly for static patterns without fabricating static regexes for input-derived matcher bodies | ✓ SATISFIED | `mod_detector.rs:21-29`; `docs/api/classic-scanlog-core.md:79-83`; source/doc audit matches the accepted Phase 5 rule that bounded caches own input-derived alternation regexes while true constants belong on dedicated `LazyLock` statics. |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 | --- | --- | --- | --- | --- |
-| `05-BENCHMARK-PROOF.md` | 40-43 | Measured `detect_mods_important` regressions are documented instead of hidden | ⚠️ Warning | The closure artifact is honest and valid, but one Phase 5 hotspot still lacks a measured win. |
+| None | - | No fake static-regex narrative, placeholder proof, or summary-only evidence remains in the authoritative Phase 5 artifact | ℹ️ Info | Phase 10 closes the audit gap without changing the underlying implementation story. |
 
 ### Human Verification Required
 
@@ -85,11 +94,11 @@ None.
 
 ### Gaps Summary
 
-Both previously identified gap-closure targets are now closed in the codebase. The `detect_mods_double` cache-reuse proof is deterministic under grouped runs, and the benchmark-proof/requirement-alignment gap is resolved with a committed report plus explicit Phase 6 ownership for mmap throughput benchmarking.
+Phase 10 closes the audit gap in the original Phase 5 artifact. `05-VERIFICATION.md` now carries the current source, docs, test, and benchmark-backed evidence for every remaining Phase 5 requirement, including the previously orphaned `PERF-03` and `CONS-04` rows.
 
-Residual risk remains: the committed proof shows `phase5_detect_mods_important` is slower than the legacy benchmark replica in this environment. That does not reopen the specific closure gaps, but it does mean future optimization work may still be warranted if Phase 5's roadmap success criterion is interpreted as every hotspot showing a net benchmark win.
+The earlier Phase 5 summaries remain provenance only. The authoritative closure story is now this refreshed verification artifact plus the synchronized Phase 10 traceability rows in `.planning/REQUIREMENTS.md`.
 
 ---
 
-_Verified: 2026-04-06T08:35:00Z_  
+_Verified: 2026-04-07T03:41:38Z_  
 _Verifier: the agent (gsd-verifier)_
