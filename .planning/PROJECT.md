@@ -19,6 +19,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ 19 business-logic `-core` crates with no PyO3 dependencies — existing
 - ✓ Parity tooling for Node and Python bindings — existing
 - ✓ All deprecated API callers migrated with deprecation warnings — Validated in Phase 1: Deprecated API Migration
+- ✓ Phase 1 deprecated API migration closure evidence refreshed and audit traceability reconciled — Validated in Phase 9: Deprecated API Verification Closure
 - ✓ All deprecated APIs removed (parse_segments, parse_segments_parallel, is_outdated) — Validated in Phase 2: Dead Code Removal
 - ✓ Dead code removed (SEGMENT_BOUNDARIES, YamlFormatConfig, PluginAnalyzer.case_cache, PyGpuDetector.inner) — Validated in Phase 2: Dead Code Removal
 - ✓ Legacy `scan_all_settings_legacy_bucketed` fallback path eliminated with assertion test — Validated in Phase 2: Dead Code Removal
@@ -99,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after Phase 7 completion*
+*Last updated: 2026-04-07 after Phase 9 completion*
