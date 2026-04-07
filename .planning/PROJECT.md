@@ -1,8 +1,18 @@
-# CLASSIC Codebase Health Milestone
+# CLASSIC
+
+## Current State
+
+**Latest shipped milestone:** v9.1.0-bugfixes CLASSIC Codebase Health (2026-04-07)
+
+The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
+
+## Next Milestone Goals
+
+No phases planned yet. Use `/gsd:new-milestone` to start the next milestone cycle.
 
 ## What This Is
 
-A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase. Addresses all concerns surfaced during codebase mapping: tech debt removal, performance optimization, fragility hardening, security improvements, test coverage gaps, scaling limits, and missing binding features. The goal is a healthier, more maintainable codebase with no dead code, no silent legacy fallbacks, and consistent behavior across all binding surfaces (C++, Python, Node).
+The CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase: a Rust-core / multi-binding (C++, Python, Node) workspace with native CLI/GUI/TUI frontends for analyzing Fallout 4 / Bethesda crash logs.
 
 ## Core Value
 
@@ -30,19 +40,20 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ YAML, settings, and hash cache stats now expose one canonical five-field contract across Rust, Node, Python, and C++ — Validated in Phase 4: Bounded Cache Replacement
 - ✓ Large-file mmap reads use `MmapOptions::map_copy_read_only()` with validated Windows benchmark proof — Validated in Phase 6: mmap TOCTOU Safety
 - ✓ Owned workspace lazy statics now use `std::sync::LazyLock`, and the remaining scanlog `OnceCell` cache uses `std::sync::OnceLock` with direct `once_cell` manifests removed — Validated in Phase 7: Consistency Sweep
-- ✓ Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete) — Validated in Phase 8: Workspace and Infrastructure
-- ✓ Promote `winreg` and `phf` to workspace dependencies — Validated in Phase 8: Workspace and Infrastructure
-- ✓ Document or remove `zerovec` workaround dependency — Validated in Phase 8: Workspace and Infrastructure
-- ✓ Commit or document Node `index.d.ts` build-first requirement — Validated in Phase 8: Workspace and Infrastructure
-- ✓ Add test coverage: Linux Proton path — Validated in Phase 8: Workspace and Infrastructure
+- ✓ Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete) — Validated in Phase 8 / Phase 11
+- ✓ Promote `winreg` and `phf` to workspace dependencies — Validated in Phase 8 / Phase 11
+- ✓ Document or remove `zerovec` workaround dependency — Validated in Phase 8 / Phase 11
+- ✓ Commit or document Node `index.d.ts` build-first requirement — Validated in Phase 8 / Phase 11
+- ✓ Add test coverage: Linux Proton path — Validated in Phase 8 / Phase 11
+- ✓ Migrate Python FormID analyzer away from legacy map format with deprecation warnings — Validated in Phase 1 / Phase 9
+- ✓ Cache compiled regex patterns in mod detector hot paths (detect_mods_single/double/batch/important) — Validated in Phase 5
+- ✓ Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser — Validated in Phase 5 / Phase 10
+- ✓ Replace per-entry regex in `detect_mods_important` with AhoCorasick — Validated in Phase 5
+- ✓ Add before/after criterion benchmarks for performance improvements — Validated in Phase 5 / Phase 6
 
 ### Active
 
-- [x] Migrate Python FormID analyzer away from legacy map format with deprecation warnings — Validated in Phase 1
-- [ ] Cache compiled regex patterns in mod detector hot paths (detect_mods_single/double/batch/important)
-- [ ] Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser
-- [ ] Replace per-entry regex in `detect_mods_important` with AhoCorasick or combined pattern
-- [ ] Add before/after criterion benchmarks for performance improvements
+(None — all v9.1.0-bugfixes requirements shipped. Run `/gsd:new-milestone` to define the next cycle.)
 
 ### Out of Scope
 
@@ -74,13 +85,17 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | Validated in Phase 6 |
-| Keep Proton path code, wire it up | Linux support is planned; don't delete partial work | -- Pending |
-| Bounded `quick_cache` eviction for caches | Bounded memory is more important than unlimited cache hits for long-running processes, and Phase 4 standardizes on the repo's existing `quick_cache` implementation | Validated in Phase 4 |
-| Standardize owned lazy initialization on std primitives | `LazyLock`/`OnceLock` are stable in the repo MSRV and remove the need for direct `once_cell` ownership in workspace code | Validated in Phase 7 |
-| Promote only shared deps to workspace | TUI deps are local to one crate; workspace promotion adds management overhead for no benefit | -- Pending |
-| Before/after benchmarks for perf work | Prove improvements with data; criterion benchmarks become regression guards | -- Pending |
-| Binding parity in-scope | FCX and deprecated API issues span core + bindings; splitting would leave incomplete fixes | -- Pending |
+| Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | ✓ Validated in Phase 6 |
+| Keep Proton path code, wire it up | Linux support is planned; don't delete partial work | ✓ Validated in Phase 8 / Phase 11 |
+| Bounded `quick_cache` eviction for caches | Bounded memory is more important than unlimited cache hits for long-running processes, and Phase 4 standardizes on the repo's existing `quick_cache` implementation | ✓ Validated in Phase 4 |
+| Standardize owned lazy initialization on std primitives | `LazyLock`/`OnceLock` are stable in the repo MSRV and remove the need for direct `once_cell` ownership in workspace code | ✓ Validated in Phase 7 |
+| Promote only shared deps to workspace | TUI deps are local to one crate; workspace promotion adds management overhead for no benefit | ✓ Validated in Phase 8 (winreg + phf only) |
+| Before/after benchmarks for perf work | Prove improvements with data; criterion benchmarks become regression guards | ✓ Validated in Phase 5 / Phase 6 |
+| Binding parity in-scope | FCX and deprecated API issues span core + bindings; splitting would leave incomplete fixes | ✓ Validated in Phases 1, 3, 4, 8 |
+| Use bounded `LazyLock<quick_cache::Cache>` for input-derived alternation regexes (CONS-04 interpretation) | Repo-standard pattern; bounded caches own input-derived regexes while only true constants belong on dedicated `LazyLock` statics | ✓ Validated in Phase 5 / Phase 10 |
+| Treat FCX `Unnecessary` as success across bindings | Lets binding code keep the no-op reset path benign without breaking explicit-failure handling | ✓ Validated in Phase 3 |
+| In-place verification refresh for gap-closure phases (9/10/11) | Avoids parallel verification artifacts; the parent phase verification stays the single source of truth | ✓ Validated in Phase 9, 10, 11 |
+| Internal milestone label `v1.0` renamed to `v9.1.0-bugfixes` at ship time | Keeps the project's existing v8.x version progression contiguous and avoids the duplicate v1.0 entry that would otherwise collide with the 2026-02 "Codebase Cleanup" milestone | ✓ Applied at v9.1.0-bugfixes ship 2026-04-07 |
 
 ## Evolution
 
@@ -100,4 +115,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after Phase 9 completion*
+*Last updated: 2026-04-07 after v9.1.0-bugfixes milestone completion*

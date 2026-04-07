@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-current_plan: 11-01
-status: complete
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-04-07T04:42:43.673Z"
-last_activity: "2026-04-07 - Completed Phase 11 Plan 01: Workspace/infra verification completion."
+milestone: v9.1.0-bugfixes
+milestone_name: CLASSIC Codebase Health
+current_plan: null
+status: shipped
+stopped_at: Shipped v9.1.0-bugfixes 2026-04-07
+last_updated: "2026-04-07T05:15:00Z"
+last_activity: 2026-04-07 — Shipped v9.1.0-bugfixes (CLASSIC Codebase Health)
 progress:
   total_phases: 11
   completed_phases: 11
@@ -22,15 +22,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Phase 11 — workspace/infra-verification-completion
+**Current focus:** Planning next milestone (v9.1.0-bugfixes shipped 2026-04-07)
 
 ## Current Position
 
-Phase: 11
-Plan: 01
-Current Plan: 11-01
-Status: Complete
-Last activity: 2026-04-07 - Completed Phase 11 Plan 01: Workspace/infra verification completion.
+Phase: —
+Plan: —
+Current Plan: —
+Status: Shipped (v9.1.0-bugfixes)
+Last activity: 2026-04-07 — Shipped v9.1.0-bugfixes (CLASSIC Codebase Health)
 
 Progress: [██████████] 100%
 
