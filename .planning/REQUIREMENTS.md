@@ -32,7 +32,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **PERF-01**: Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch` keyed by hash of mod list contents
 - [x] **PERF-02**: Replace per-entry `Regex::new` in `detect_mods_important` with `str::contains` (patterns are escaped literals) or AhoCorasick for large lists
-- [ ] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
+- [x] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
 - [x] **PERF-04**: Add criterion benchmarks and committed proof for `detect_mods_important`, `detect_mods_single`/`batch`, and `detect_crash_pattern` hotspot measurements; mmap throughput benchmarking is owned by **SAFE-05** / Phase 6
 
 ### Cache Eviction
@@ -43,17 +43,17 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Workspace and Infrastructure
 
-- [ ] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
-- [ ] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
-- [ ] **INFRA-03**: Wire `construct_proton_docs_path` into Linux docs-path discovery workflow with unit tests using mock Proton prefix
-- [ ] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
-- [ ] **INFRA-05**: Commit generated `index.d.ts` snapshot for Node bindings with CI freshness check
+- [x] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
+- [x] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
+- [x] **INFRA-03**: Wire `construct_proton_docs_path` into Linux docs-path discovery workflow with unit tests using mock Proton prefix
+- [x] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
+- [x] **INFRA-05**: Commit generated `index.d.ts` snapshot for Node bindings with CI freshness check
 
 ### Test Coverage
 
 - [x] **TEST-01**: Add test for FCX contention reset (concurrent scan scenario where mutex is held during reset)
 - [x] **TEST-02**: Add assertion test that standard production crashgen configs do NOT hit `scan_all_settings_legacy_bucketed`
-- [ ] **TEST-03**: Add integration test for Linux Proton docs-path discovery with mock Proton prefix structure
+- [x] **TEST-03**: Add integration test for Linux Proton docs-path discovery with mock Proton prefix structure
 - [x] **TEST-04**: Add test for Node binding FCX state carryover between scan calls in a single process
 
 ### Codebase Consistency (Differentiators)
@@ -61,7 +61,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
 - [x] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
 - [x] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
-- [ ] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
+- [x] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
 
 ## Out of Scope
 
@@ -101,24 +101,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAFE-05 | Phase 6 | Complete |
 | PERF-01 | Phase 5 | Complete |
 | PERF-02 | Phase 5 | Complete |
-| PERF-03 | Phase 10 | Pending |
+| PERF-03 | Phase 10 | Complete |
 | PERF-04 | Phase 5 | Complete |
 | CACHE-01 | Phase 4 | Complete |
 | CACHE-02 | Phase 4 | Complete |
 | CACHE-03 | Phase 4 | Complete |
-| INFRA-01 | Phase 11 | Pending |
-| INFRA-02 | Phase 11 | Pending |
-| INFRA-03 | Phase 11 | Pending |
-| INFRA-04 | Phase 11 | Pending |
-| INFRA-05 | Phase 11 | Pending |
+| INFRA-01 | Phase 11 | Complete |
+| INFRA-02 | Phase 11 | Complete |
+| INFRA-03 | Phase 11 | Complete |
+| INFRA-04 | Phase 11 | Complete |
+| INFRA-05 | Phase 11 | Complete |
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 2 | Complete |
-| TEST-03 | Phase 11 | Pending |
+| TEST-03 | Phase 11 | Complete |
 | TEST-04 | Phase 3 | Complete |
 | CONS-01 | Phase 7 | Complete |
 | CONS-02 | Phase 3 | Complete |
 | CONS-03 | Phase 4 | Complete |
-| CONS-04 | Phase 10 | Pending |
+| CONS-04 | Phase 10 | Complete |
 
 **Coverage:**
 - v1 requirements: 35 total
@@ -127,4 +127,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-04*
-*Last updated: 2026-04-06 after milestone gap closure phases 9-11 were added*
+*Last updated: 2026-04-07 after Phase 11 workspace/infra verification closure*
