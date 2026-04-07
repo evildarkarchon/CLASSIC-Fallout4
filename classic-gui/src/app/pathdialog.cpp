@@ -9,6 +9,7 @@
 #include <QMessageBox>
 
 #include "classic_cxx_bridge/game.h"
+#include "classic_cxx_bridge/path.h"
 
 ManualPathDialog::ManualPathDialog(bool needsGamePath,
                                    bool needsDocsPath,
@@ -137,7 +138,7 @@ void ManualPathDialog::validateAndAccept()
         }
 
         try {
-            if (classic::game::check_restricted_path(std::string(gamePath.toUtf8().constData()))) {
+            if (classic::path::check_restricted_path(std::string(gamePath.toUtf8().constData()))) {
                 QMessageBox::warning(
                     this,
                     QStringLiteral("Invalid Game Folder"),

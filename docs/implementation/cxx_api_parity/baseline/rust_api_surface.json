@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-07T07:44:46Z",
+  "generated_at_utc": "2026-04-07T23:33:21Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
@@ -2177,6 +2177,432 @@
         ],
         "returnType": null
       }
+    },
+    {
+      "id": "12499068ea3118fb",
+      "rustSymbol": "backup_create_timestamped",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "source_path",
+            "type": "&str"
+          },
+          {
+            "name": "game_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
+    },
+    {
+      "id": "31c8949e2bfdacaf",
+      "rustSymbol": "backup_list_existing",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "source_path",
+            "type": "&str"
+          },
+          {
+            "name": "game_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "26c83f9c366e11ce",
+      "rustSymbol": "check_restricted_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "616cd4e4697c377e",
+      "rustSymbol": "detect_fallout4_docs_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "cached_path",
+            "type": "&str"
+          },
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "bf56cb23a9a4c33b",
+      "rustSymbol": "detect_fallout4_game_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "cached_path",
+            "type": "&str"
+          },
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "250ec3783388f0b4",
+      "rustSymbol": "docs_checker_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "docs_path",
+            "type": "&str"
+          },
+          {
+            "name": "game_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "ba316345b137172b",
+      "rustSymbol": "docs_checker_validate_ini_file",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "docs_path",
+            "type": "&str"
+          },
+          {
+            "name": "game_name",
+            "type": "&str"
+          },
+          {
+            "name": "ini_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "IniCheckResultDto"
+      }
+    },
+    {
+      "id": "ba8eea7df3e21c2f",
+      "rustSymbol": "find_game_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_exe",
+            "type": "&str"
+          },
+          {
+            "name": "xse_loader",
+            "type": "&str"
+          },
+          {
+            "name": "game_name",
+            "type": "&str"
+          },
+          {
+            "name": "is_vr",
+            "type": "bool"
+          },
+          {
+            "name": "cached_path",
+            "type": "&str"
+          },
+          {
+            "name": "xse_log_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "3e7173a2014af233",
+      "rustSymbol": "is_restricted_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "18b69f0fbebc68bc",
+      "rustSymbol": "is_valid_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "b1292e6711b8c02f",
+      "rustSymbol": "parse_xse_log",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "log_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
+    },
+    {
+      "id": "67cdcd293768260c",
+      "rustSymbol": "path_validate_custom_scan",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<()>"
+      }
+    },
+    {
+      "id": "05e39e517d1d52d7",
+      "rustSymbol": "path_validate_exists",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<()>"
+      }
+    },
+    {
+      "id": "cda253fce9192d69",
+      "rustSymbol": "path_validate_is_directory",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<()>"
+      }
+    },
+    {
+      "id": "92a0085674e7c6c0",
+      "rustSymbol": "path_validate_is_file",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<()>"
+      }
+    },
+    {
+      "id": "cff13ceeb2ccbf58",
+      "rustSymbol": "path_validate_required_files",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "dir",
+            "type": "&str"
+          },
+          {
+            "name": "required",
+            "type": "&[String]"
+          }
+        ],
+        "returnType": "Result<()>"
+      }
+    },
+    {
+      "id": "2cd440ef71f6e18d",
+      "rustSymbol": "resolve_fallout4_exe_name",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "5318454026bb9a08",
+      "rustSymbol": "validate_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "0e07d936b2a180bb",
+      "rustSymbol": "IniCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "ini_name",
+          "type": "String"
+        },
+        {
+          "name": "exists",
+          "type": "bool"
+        },
+        {
+          "name": "is_valid",
+          "type": "bool"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "issue_or_empty",
+          "type": "String"
+        },
+        {
+          "name": "has_issue",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "d3107ca39007d3a7",
+      "rustSymbol": "mirroring",
+      "kind": "struct",
+      "bridgeModule": "path",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "ini_name",
+          "type": "String"
+        },
+        {
+          "name": "exists",
+          "type": "bool"
+        },
+        {
+          "name": "is_valid",
+          "type": "bool"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "issue_or_empty",
+          "type": "String"
+        },
+        {
+          "name": "has_issue",
+          "type": "bool"
+        }
+      ]
     },
     {
       "id": "1e32a6af317a1a05",

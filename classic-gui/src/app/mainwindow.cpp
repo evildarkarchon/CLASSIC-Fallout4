@@ -1440,7 +1440,7 @@ bool MainWindow::validateCustomScanFolder(const QString& path)
 
     // Check if path is a restricted Windows system directory
     try {
-        if (classic::game::check_restricted_path(std::string(path.toUtf8().constData()))) {
+        if (classic::path::check_restricted_path(std::string(path.toUtf8().constData()))) {
             QMessageBox::warning(this, QStringLiteral("Invalid Custom Scan Path"),
                                  QStringLiteral("The entered directory cannot be used as a custom scan path.\n\n"
                                                 "System directories (Program Files, Windows, etc.) are restricted "
