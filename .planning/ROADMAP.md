@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6: mmap TOCTOU Safety** - Switch mmap to map_copy_read_only with Windows benchmark validation
 - [ ] **Phase 7: Consistency Sweep** - Replace once_cell::sync::Lazy with std::sync::LazyLock across all crates
 - [ ] **Phase 8: Workspace and Infrastructure** - Promote workspace deps, wire Proton path, resolve zerovec, commit Node types
-- [ ] **Phase 9: Deprecated API Verification Closure** - Re-verify Phase 1 now that requirement bookkeeping is synchronized
+- [x] **Phase 9: Deprecated API Verification Closure** - Re-verify Phase 1 now that requirement bookkeeping is synchronized
 - [ ] **Phase 10: Pattern Caching Verification Backfill** - Backfill missing Phase 5 verification coverage for orphaned requirements
 - [ ] **Phase 11: Workspace/Infra Verification Completion** - Complete missing Phase 8 verification coverage and restore audit traceability
 
@@ -200,7 +200,7 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 6. mmap TOCTOU Safety | 3/3 | Complete | 2026-04-06 |
 | 7. Consistency Sweep | 2/2 | Complete | 2026-04-06 |
 | 8. Workspace and Infrastructure | 3/3 | Complete | 2026-04-06 |
-| 9. Deprecated API Verification Closure | 0/TBD | Planned | - |
+| 9. Deprecated API Verification Closure | 1/1 | Complete | 2026-04-07 |
 | 10. Pattern Caching Verification Backfill | 0/TBD | Planned | - |
 | 11. Workspace/Infra Verification Completion | 0/TBD | Planned | - |
 | 5. Pattern Caching and Performance | 0/4 | Planned | - |
