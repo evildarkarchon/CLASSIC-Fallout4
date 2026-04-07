@@ -21,8 +21,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 7: Consistency Sweep** - Replace once_cell::sync::Lazy with std::sync::LazyLock across all crates
 - [ ] **Phase 8: Workspace and Infrastructure** - Promote workspace deps, wire Proton path, resolve zerovec, commit Node types
 - [x] **Phase 9: Deprecated API Verification Closure** - Re-verify Phase 1 now that requirement bookkeeping is synchronized
-- [ ] **Phase 10: Pattern Caching Verification Backfill** - Backfill missing Phase 5 verification coverage for orphaned requirements
-- [ ] **Phase 11: Workspace/Infra Verification Completion** - Complete missing Phase 8 verification coverage and restore audit traceability
+- [x] **Phase 10: Pattern Caching Verification Backfill** - Backfill missing Phase 5 verification coverage for orphaned requirements
+- [x] **Phase 11: Workspace/Infra Verification Completion** - Complete missing Phase 8 verification coverage and restore audit traceability (completed 2026-04-07)
 
 ## Phase Details
 
@@ -172,7 +172,10 @@ Plans:
   1. Phase 5 verification coverage explicitly includes PERF-03 for cached C++ `detect_crash_pattern`
   2. Phase 5 verification coverage explicitly includes CONS-04 for static `LazyLock` regex compilation behavior
   3. The final Phase 5 verification story is internally consistent for the requirements still assigned to the phase
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [x] 10-01-PLAN.md -- Refresh Phase 5 verification evidence, rerun PERF-03/CONS-04 proof, and reconcile Phase 10 requirement bookkeeping
 
 ### Phase 11: Workspace/Infra Verification Completion
 **Goal**: Phase 8 has complete verification coverage for all workspace and infrastructure requirements claimed by the milestone
@@ -183,7 +186,10 @@ Plans:
   1. `08-VERIFICATION.md` exists and covers all six assigned requirements with evidence
   2. The verification artifact accounts for workspace dependency ownership, Proton docs-path wiring, Node declaration freshness, and the Proton integration test
   3. Milestone audit traceability can map all six Phase 8 requirements to a concrete verification report
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [x] 11-01-PLAN.md -- Create the authoritative `08-VERIFICATION.md` artifact and sync Phase 8 workspace/infra requirement traceability
 
 ## Progress
 
@@ -201,8 +207,8 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 7. Consistency Sweep | 2/2 | Complete | 2026-04-06 |
 | 8. Workspace and Infrastructure | 3/3 | Complete | 2026-04-06 |
 | 9. Deprecated API Verification Closure | 1/1 | Complete | 2026-04-07 |
-| 10. Pattern Caching Verification Backfill | 0/TBD | Planned | - |
-| 11. Workspace/Infra Verification Completion | 0/TBD | Planned | - |
+| 10. Pattern Caching Verification Backfill | 1/1 | Complete | 2026-04-07 |
+| 11. Workspace/Infra Verification Completion | 1/1 | Complete   | 2026-04-07 |
 | 5. Pattern Caching and Performance | 0/4 | Planned | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
 | 7. Consistency Sweep | 0/2 | Planned | - |
