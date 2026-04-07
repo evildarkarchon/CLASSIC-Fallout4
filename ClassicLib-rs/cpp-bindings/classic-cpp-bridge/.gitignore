@@ -1,0 +1,4 @@
+# Ephemeral parity gate artifacts (D-08 / Phase 1 CXX gate).
+# The committed baseline lives at docs/implementation/cxx_api_parity/baseline/.
+# Regenerate with: python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+parity-artifacts/
