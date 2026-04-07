@@ -28,7 +28,7 @@
 
 ### v9.1.0-bindings Full Bindings Parity (Active Milestone — Phase numbering reset to 1)
 
-- [ ] **Phase 1: CXX Parity Gate Tooling** — Build the first-class C++ bridge parity gate before any bridge surface changes
+- [x] **Phase 1: CXX Parity Gate Tooling** (3/3 plans) — completed 2026-04-07 — first-class C++ bridge parity gate operational; born-green 202-entry baseline; 22 passing tests; contributor doc at docs/api/cxx-parity-gate.md
 - [ ] **Phase 2: CXX Bridge Surface Expansion** — Close all narrowing gaps and add first-time C++ surfaces for constants, web, and FCX inspection
 - [ ] **Phase 3: Python Tier Collapse** — Promote all 289 deferred Python entries to one enforced tier; wire classic_shared module
 - [ ] **Phase 4: Node Tier Collapse** — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction
@@ -49,9 +49,9 @@
   5. A contributor can follow `docs/api/cxx-parity-gate.md` to run the gate locally and refresh the baseline after an intentional bridge change
 **Plans**: 3 plans
 Plans:
-- [ ] 01-cxx-parity-gate-tooling/01-01-PLAN.md — Parser TDD (parse_cxx_bridge_surface + helpers; Wave 0 scaffolding + 9 unit tests; CXXG-01)
-- [ ] 01-cxx-parity-gate-tooling/01-02-PLAN.md — Gate scripts + born-green baseline bootstrap + integration tests (CXXG-02, CXXG-03, CXXG-04)
-- [ ] 01-cxx-parity-gate-tooling/01-03-PLAN.md — Contributor doc + .gitignore + doc index entry + VALIDATION.md task-id backfill (CXXG-05, CXXG-04)
+- [x] 01-cxx-parity-gate-tooling/01-01-PLAN.md — Parser TDD (parse_cxx_bridge_surface + helpers; Wave 0 scaffolding + 9 unit tests; CXXG-01)
+- [x] 01-cxx-parity-gate-tooling/01-02-PLAN.md — Gate scripts + born-green baseline bootstrap + integration tests (CXXG-02, CXXG-03, CXXG-04)
+- [x] 01-cxx-parity-gate-tooling/01-03-PLAN.md — Contributor doc + .gitignore + doc index entry + VALIDATION.md task-id backfill (CXXG-05, CXXG-04)
 
 ### Phase 2: CXX Bridge Surface Expansion
 **Goal**: The C++ bridge exposes the full surface of every shared Rust crate it currently narrows, plus first-time exposure for classic-constants-core, classic-web-core, and the FCX issue getter — and the CXX parity gate baseline is updated to reflect the complete surface
