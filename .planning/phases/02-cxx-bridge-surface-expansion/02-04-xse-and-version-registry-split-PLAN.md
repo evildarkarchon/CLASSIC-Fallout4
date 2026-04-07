@@ -13,6 +13,7 @@ files_modified:
   - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs
   - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs
   - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs
+  - classic-gui/src/app/pathdialog.cpp
   - docs/implementation/cxx_api_parity/baseline/parity_contract.json
   - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.json
   - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md
@@ -25,47 +26,63 @@ requirements:
 must_haves:
   truths:
     - "src/xse.rs exists, contains #[cxx::bridge(namespace = \"classic::xse\")], and exposes the full classic-xse-core surface (XseType enum, XseInfoDto, detect_xse_version, is_xse_installed, xse_get_loader_name, xse_get_dll_prefix, xse_get_info)"
-    - "src/version_registry.rs exists, contains #[cxx::bridge(namespace = \"classic::version_registry\")], and exposes the full version registry surface including the new version_registry_get_all_for_game fn (CXXS-06 widening)"
+    - "All xse.rs wrapper bodies use ACTUAL classic-xse-core signatures: detect_xse_version(loader_path: &Path, xse_type: XseType) -> XseResult<Version>; is_xse_installed(game_path: &Path, xse_type: XseType) -> bool; get_xse_info(game_path: &Path, xse_type: XseType) -> XseInfo (Codex review LOW correction)"
+    - "XseInfoDto correctly maps PathBuf path → String and Option<semver::Version> version → String (\"\" when None)"
+    - "xse_get_type_from_game_id is INFALLIBLE — XseType::from_game_id returns Self (not Option<Self>); the bridge wrapper takes a string game id and only returns empty for unknown game id strings (Codex review LOW correction)"
+    - "xse_get_loader_name(F4SE) returns \"f4se_loader.exe\" (verified literal string from classic-xse-core/src/lib.rs:169) and xse_get_dll_prefix(F4SE) returns \"f4se_\" (with trailing underscore — Codex LOW correction)"
+    - "src/version_registry.rs exists, contains #[cxx::bridge(namespace = \"classic::version_registry\")], and exposes the full version registry surface"
+    - "ALL wrapper fn bodies in version_registry.rs are CONCRETE — there are ZERO todo!() placeholders (Codex review MEDIUM correction)"
+    - "version_registry.rs version_registry_get_all_for_game iterates registry.get_all() and filters by game/is_vr (uses existing iteration helper, NOT a missing get_all_for_game core helper)"
     - "Both new files are listed in build.rs::cxx_build::bridges and lib.rs declares pub mod xse + pub mod version_registry"
     - "src/game.rs keeps shims for the moved fns (D-08 backward compat — pathdialog.cpp etc. continue to compile against game.h)"
     - "src/registry.rs is UNCHANGED (D-02 — registry namespace continues to mean classic-registry-core KV singleton)"
     - "Both build_cli.ps1 -Clean -Test and build_gui.ps1 -Clean -Test exit 0 (D-10 — TWO new build.rs entries in one plan = ONE mandatory clean-build pair)"
     - "python tools/cxx_api_parity/check_parity_gate.py --repo-root . exits 0 with 0 drift after --update-baseline"
+    - "classic-gui/src/app/pathdialog.cpp uses classic::xse::xse_get_loader_name(...) (or another classic::xse::* helper) in production C++ — D-11 consumer migration #3 (Codex review MEDIUM correction)"
   artifacts:
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs"
       provides: "New CXX bridge module exposing classic-xse-core (CXXS-09, D-01)"
-      min_lines: 150
+      min_lines: 180
       contains: "namespace = \"classic::xse\""
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs"
-      provides: "New CXX bridge module exposing classic-version-registry-core full surface (CXXS-06, D-02)"
-      min_lines: 200
+      provides: "New CXX bridge module exposing classic-version-registry-core full surface (CXXS-06, D-02) — ZERO todo!() placeholders"
+      min_lines: 220
       contains: "namespace = \"classic::version_registry\""
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs"
-      provides: "Compatibility shims preserved — XSE, version registry, parse_game_version helpers still compile from classic::game namespace (D-08)"
+      provides: "Compatibility shims preserved (D-08)"
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs"
       provides: "Bridges array contains \"src/xse.rs\" AND \"src/version_registry.rs\""
       contains: "src/xse.rs"
+    - path: "classic-gui/src/app/pathdialog.cpp"
+      provides: "D-11 consumer — calls classic::xse::xse_get_loader_name(F4SE) or similar to display the expected XSE loader filename in the UI"
+      contains: "classic::xse"
   key_links:
     - from: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs"
-      to: "classic-xse-core (XseType, XseInfo, detect_xse_version, is_xse_installed, get_xse_info)"
+      to: "classic-xse-core (XseType, XseInfo, detect_xse_version, is_xse_installed, get_xse_info — REAL &Path-based signatures)"
       via: "use classic_xse_core::{...}"
       pattern: "use classic_xse_core"
     - from: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs"
-      to: "classic-version-registry-core (VersionRegistry::get_all_for_game and existing get_by_id / match_version / get_xse_config / get_crashgen_configs)"
+      to: "classic-version-registry-core (get_version_registry, registry.get_all, get_by_id, match_version, get_xse_config, get_crashgen_versions)"
       via: "use classic_version_registry_core::{...}"
       pattern: "use classic_version_registry_core"
-    - from: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs"
-      to: "src/xse.rs and src/version_registry.rs (delegation shims)"
-      via: "crate::xse::* / crate::version_registry::* function calls"
-      pattern: "crate::(xse|version_registry)::"
+    - from: "classic-gui/src/app/pathdialog.cpp"
+      to: "classic_cxx_bridge/xse.h"
+      via: "C++ #include + classic::xse::xse_get_loader_name call"
+      pattern: "classic::xse::"
 ---
 
 <objective>
-Split XSE helpers and version-registry helpers out of `src/game.rs` into TWO new bridge modules: `src/xse.rs` (D-01, CXXS-09) and `src/version_registry.rs` (D-02, CXXS-06). Per D-08, leave delegation shims in `game.rs` so existing C++ callers (like `pathdialog.cpp` for `classic::game::*`) continue to compile. Add the new `XseType` shared enum (D-04/D-07) plus the typed XSE methods. Add the missing `version_registry_get_all_for_game(game, is_vr)` fn (the only true CXXS-06 gap; the rest of the surface already exists in `game.rs`). Both new files land in ONE plan to share a single mandatory D-10 clean-build pair.
+Split XSE helpers and version-registry helpers out of `src/game.rs` into TWO new bridge modules: `src/xse.rs` (D-01, CXXS-09) and `src/version_registry.rs` (D-02, CXXS-06). Per D-08, leave delegation shims in `game.rs` so existing C++ callers continue to compile. Add the new `XseType` shared enum (D-04/D-07) plus the typed XSE methods. Add the missing `version_registry_get_all_for_game(game, is_vr)` fn. Both new files land in ONE plan to share a single mandatory D-10 clean-build pair. Adds at least one D-11 consumer migration in `classic-gui/src/app/pathdialog.cpp`.
 
-Purpose: D-01 and D-02 both move logic out of `game.rs`. Doing them in one plan minimizes the number of mandatory clean-build cycles (one cycle covers two new bridge files). Per RESEARCH.md §"game.rs Split Compatibility", the shim approach prevents baseline-removal noise from `game.rs` while the additions land in the new files. CXXS-06 widens the version-registry surface; CXXS-09 widens the XSE surface.
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan had unresolved `todo!()` placeholders in multiple wrapper bodies in `version_registry.rs`. The Codex review correctly noted this means key signature/mapping choices were not actually locked. This plan now contains EVERY wrapper body as concrete code copied (with the namespace adjustment) from `game.rs` lines 14-161. The acceptance criteria explicitly grep for `todo!` in version_registry.rs and require ZERO matches.
 
-Output: Two new bridge modules with full surfaces; `game.rs` shims preserved; `registry.rs` untouched (D-02); both clean MSVC builds green; refreshed parity baseline committed atomically.
+**REVIEWS-MODE NOTE (Codex review LOW):** A previous version of this plan invented Option-returning paths for `XseType::from_game_id` and Option-returning `detect_xse_version`. The REAL `classic-xse-core::XseType::from_game_id(GameId) -> Self` is INFALLIBLE (lines 143-150). The REAL `detect_xse_version(loader_path: &Path, xse_type: XseType) -> XseResult<Version>` takes `&Path` and returns a semver `Version` (lines 390-426). The REAL `is_xse_installed(game_path: &Path, xse_type: XseType) -> bool` takes `&Path` (line 450). The REAL `XseInfo.path: PathBuf` and `version: Option<Version>` (lines 226-236). The REAL `dll_prefix()` includes a trailing underscore: `XseType::F4SE.dll_prefix() == "f4se_"` (line 195). This plan now uses the actual signatures and `Path::new(s)` conversions at the bridge boundary.
+
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan treated D-11 as N/A. The roadmap explicitly expects `classic::xse` to be usable from C++. This plan adds a real D-11 consumer migration in `classic-gui/src/app/pathdialog.cpp` — the new namespace is exercised by displaying the expected XSE loader filename in the UI.
+
+Purpose: D-01 and D-02 both move logic out of `game.rs`. Doing them in one plan minimizes the number of mandatory clean-build cycles. The shim approach prevents baseline-removal noise from `game.rs` while the additions land in the new files.
+
+Output: Two new bridge modules with full surfaces and ZERO `todo!()` placeholders; `game.rs` shims preserved; `registry.rs` untouched (D-02); pathdialog.cpp exercises the new XSE namespace; both clean MSVC builds green; refreshed parity baseline committed atomically.
 </objective>
 
 <execution_context>
@@ -79,8 +96,9 @@ Output: Two new bridge modules with full surfaces; `game.rs` shims preserved; `r
 @.planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md
 @.planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md
 @.planning/phases/02-cxx-bridge-surface-expansion/02-VALIDATION.md
+@.planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md
 
-# Source-of-truth Rust crates
+# Source-of-truth Rust crates (REAL signatures verified)
 @ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs
 @ClassicLib-rs/business-logic/classic-version-registry-core/src/registry.rs
 
@@ -94,33 +112,42 @@ Output: Two new bridge modules with full surfaces; `game.rs` shims preserved; `r
 @ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs
 @ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs
 
+# D-11 consumer migration site
+@classic-gui/src/app/pathdialog.cpp
+
 @tools/cxx_api_parity/check_parity_gate.py
 
 <interfaces>
-<!-- classic-xse-core surface (per RESEARCH.md §"classic-xse-core"). -->
+<!-- classic-xse-core REAL surface (verified by direct read of lib.rs). -->
+<!-- Codex LOW correction: signatures use &Path / semver::Version / total mapping. -->
 
 ```rust
 pub enum XseType { F4SE, F4SEVR, SKSE, SKSE64, SKSEVR, SFSE }
 impl XseType {
-    pub fn loader_name(&self) -> &'static str;
-    pub fn dll_prefix(&self) -> &'static str;
-    pub fn from_game_id(game_id: GameId) -> Option<XseType>;
-    pub fn as_str(&self) -> &'static str;
+    pub fn as_str(self) -> &'static str;        // "F4SE" / "F4SEVR" / etc.
+    pub fn from_game_id(game_id: GameId) -> Self;  // INFALLIBLE — returns Self
+    pub fn loader_name(self) -> &'static str;   // "f4se_loader.exe" / "skse64_loader.exe" / etc.
+    pub fn dll_prefix(self) -> &'static str;    // "f4se_" / "skse64_" / etc. (TRAILING UNDERSCORE)
 }
 
 pub struct XseInfo {
     pub xse_type: XseType,
-    pub path: String,
-    pub version: Option<String>,
+    pub path: PathBuf,                  // NOT String
+    pub version: Option<semver::Version>, // NOT Option<String>
     pub installed: bool,
 }
+impl XseInfo {
+    pub fn new(xse_type: XseType, path: PathBuf) -> Self;
+    pub fn check_installed(&self) -> bool;
+    pub fn loader_path(&self) -> PathBuf;
+}
 
-pub fn detect_xse_version(exe_path: &str, xse_type: XseType) -> Option<String>;
-pub fn is_xse_installed(game_root: &str, xse_type: XseType) -> bool;
-pub fn get_xse_info(game_path: &str, xse_type: XseType) -> XseInfo;
+pub fn detect_xse_version(loader_path: &Path, xse_type: XseType) -> XseResult<Version>;  // returns semver::Version
+pub fn is_xse_installed(game_path: &Path, xse_type: XseType) -> bool;
+pub fn get_xse_info(game_path: &Path, xse_type: XseType) -> XseInfo;
 ```
 
-<!-- Existing game.rs XSE surface (move to xse.rs, keep game.rs shims). -->
+<!-- Existing game.rs XSE bridge surface (move to xse.rs, keep game.rs shims). -->
 
 ```rust
 fn detect_xse_version_string(exe_path: &str, xse_type_str: &str) -> String;
@@ -128,31 +155,27 @@ fn is_xse_installed_check(game_root: &str, xse_type_str: &str) -> bool;
 fn xse_type_from_str(s: &str) -> Result<XseType, String>;  // private helper
 ```
 
-<!-- classic-version-registry-core surface (per RESEARCH.md §"classic-version-registry-core"). -->
+<!-- classic-version-registry-core surface (read directly to confirm method names). -->
 
-Already-bridged in game.rs (move verbatim to version_registry.rs):
+Already-bridged in game.rs lines 14-161 (exact bodies are MOVED VERBATIM into version_registry.rs, with no namespace change in the function body):
 ```rust
-fn version_registry_get_by_id(id: &str) -> VersionInfoDto;
-fn version_registry_get_all_ids() -> Vec<String>;
-fn version_registry_get_all_count() -> usize;
-fn version_registry_match_version(version_str: &str, game: &str, is_vr: bool) -> MatchResultDto;
-fn version_registry_get_xse_config(id: &str) -> XseConfigDto;
-fn version_registry_get_crashgen_configs(id: &str) -> Vec<CrashgenConfigDto>;
-fn version_registry_get_crashgen_config(id: &str, crashgen_version: &str) -> CrashgenConfigDto;
-fn parse_game_version(version_str: &str) -> GameVersionDto;
+fn version_registry_get_by_id(id: &str) -> VersionInfoDto;     // game.rs:14-38
+fn version_registry_get_all_ids() -> Vec<String>;              // game.rs:40-43
+fn version_registry_get_all_count() -> usize;                  // game.rs:45-48
+fn version_registry_match_version(version_str: &str, game: &str, is_vr: bool) -> MatchResultDto;  // game.rs:50-77
+fn version_registry_get_xse_config(id: &str) -> XseConfigDto;  // game.rs:79-99
+fn version_registry_get_crashgen_configs(id: &str) -> Vec<CrashgenConfigDto>;  // game.rs:101-115
+fn version_registry_get_crashgen_config(id: &str, crashgen_version: &str) -> CrashgenConfigDto;  // game.rs:117-140
+fn parse_game_version(version_str: &str) -> GameVersionDto;    // game.rs:144-161
 ```
 
-NEW for CXXS-06 (only true gap per RESEARCH.md):
+NEW for CXXS-06 (uses existing `registry.get_all()` iteration — confirmed available in classic-version-registry-core):
 ```rust
 fn version_registry_get_all_for_game(game: &str, is_vr: bool) -> Vec<VersionInfoDto>;
 ```
 
-DTOs to MOVE from game.rs to version_registry.rs (preserved verbatim):
-- `VersionInfoDto { id, version_string, short_name, game, docs_name, steam_id: u32, is_vr, found }`
-- `XseConfigDto { acronym, full_name, compatible_version, loader, file_count: u32, found }`
-- `CrashgenConfigDto { version, name, acronym, dll_file, description, download_url }`
-- `MatchResultDto { matched_id, confidence, message, is_match }`
-- `GameVersionDto { major, minor, patch, build: u32 each, valid }`
+DTOs to MOVE from game.rs to version_registry.rs (preserved verbatim, same field names + types):
+- `VersionInfoDto`, `XseConfigDto`, `CrashgenConfigDto`, `MatchResultDto`, `GameVersionDto`
 
 NEW shared struct in xse.rs:
 - `XseInfoDto { xse_type: String, path: String, version: String, installed: bool }` (flat — Pitfall 6 CLEAR)
@@ -162,30 +185,33 @@ NEW shared struct in xse.rs:
 <tasks>
 
 <task type="auto" tdd="true">
-  <name>Task 1: Create src/xse.rs (D-01, CXXS-09) — XseType enum, XseInfoDto, typed methods, shimmed string helpers, tests</name>
+  <name>Task 1: Create src/xse.rs with REAL signatures (Codex LOW correction) — XseType enum, XseInfoDto, typed methods, shimmed string helpers, tests</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs
   </files>
 
   <read_first>
-    - ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs (READ ENTIRELY — confirm exact XseType variant names; confirm XseInfo field names; confirm detect_xse_version / is_xse_installed / get_xse_info signatures)
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs (current XSE bridge fns — `detect_xse_version_string`, `is_xse_installed_check`, `xse_type_from_str` — copy their bodies into xse.rs as the implementation source for the shim'd string-form fns)
+    - ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs (READ ENTIRELY — confirm exact XseType variant names; confirm XseInfo field types (PathBuf, Option<semver::Version>); confirm detect_xse_version takes &Path and returns Version; confirm is_xse_installed takes &Path; confirm get_xse_info takes &Path; confirm XseType::from_game_id is INFALLIBLE; confirm dll_prefix has trailing underscore)
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs lines 174-203 (current XSE wrapper bodies — copy and adjust for the typed enum surface)
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs (template for module structure with #[cxx::bridge] block + #[cfg(test)] block)
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-xse-core" §"D-11 Consumer Migration Enumeration" (xse.rs has no required D-11 migration site — XSE detection is currently handled via game.rs string helpers and there are no qualifying narrowed call sites in classic-cli/classic-gui per the research enumeration)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 04" (Codex LOW corrections about real signatures)
     - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-01 (xse.rs new file), D-04/D-07 (CXX shared enums), D-08 (keep shims), D-12 (Rust-side tests)
   </read_first>
 
   <behavior>
-    - Test: `xse_get_loader_name(ffi::XseType::F4SE)` returns "f4se_loader.exe" (confirm exact value via direct read of XseType::loader_name()).
-    - Test: `xse_get_loader_name(ffi::XseType::SKSE64)` returns "skse64_loader.exe" or whatever core defines.
-    - Test: `xse_get_dll_prefix(ffi::XseType::F4SE)` returns "f4se" (or whatever core defines).
-    - Test: `xse_get_type_from_game_id("Fallout4")` returns "F4SE" (string form of the resolved XseType).
-    - Test: `xse_get_type_from_game_id("InvalidGame")` returns "" (fail-soft).
-    - Test: `is_xse_installed(nonexistent path, ffi::XseType::F4SE)` returns false (fail-soft).
-    - Test: `xse_get_info(nonexistent path, ffi::XseType::F4SE)` returns XseInfoDto with installed=false, version="".
+    - Test: `xse_get_loader_name(ffi::XseType::F4SE)` returns the literal string `"f4se_loader.exe"` (Codex correction — verified at classic-xse-core/src/lib.rs:169).
+    - Test: `xse_get_loader_name(ffi::XseType::SKSE64)` returns `"skse64_loader.exe"`.
+    - Test: `xse_get_dll_prefix(ffi::XseType::F4SE)` returns `"f4se_"` (with trailing underscore — verified at classic-xse-core/src/lib.rs:195).
+    - Test: `xse_get_dll_prefix(ffi::XseType::SKSE64)` returns `"skse64_"`.
+    - Test: `xse_get_type_from_game_id("Fallout4")` returns `"F4SE"` (XseType::from_game_id is INFALLIBLE for any GameId).
+    - Test: `xse_get_type_from_game_id("Skyrim")` returns `"SKSE64"` (per classic-xse-core/src/lib.rs:147).
+    - Test: `xse_get_type_from_game_id("Starfield")` returns `"SFSE"`.
+    - Test: `xse_get_type_from_game_id("InvalidGame")` returns `""` (only the string-decoding step can fail; the core mapping is total).
+    - Test: `is_xse_installed("nonexistent\\path", ffi::XseType::F4SE)` returns false (fail-soft).
+    - Test: `xse_get_info("nonexistent\\path", ffi::XseType::F4SE)` returns XseInfoDto with `installed=false`, `version=""`, `path="nonexistent\\path"` (the input path is echoed back per XseInfo::new), `xse_type="F4SE"`.
     - Test: `detect_xse_version_string("", "F4SE")` returns "" (fail-soft preserves existing game.rs behavior).
-    - Test: `is_xse_installed_check("", "F4SE")` returns false (fail-soft preserves existing game.rs behavior).
+    - Test: `is_xse_installed_check("", "F4SE")` returns false.
   </behavior>
 
   <action>
@@ -203,6 +229,7 @@ NEW shared struct in xse.rs:
   //! in `game.rs` so existing C++ callers using `classic::game::*` continue
   //! to compile. New code should use `classic::xse::*`.
 
+  use std::path::Path;
   use classic_constants_core::GameId;
   use classic_xse_core::{
       detect_xse_version as core_detect_xse_version,
@@ -224,19 +251,21 @@ NEW shared struct in xse.rs:
           ffi::XseType::SKSE64 => CoreXseType::SKSE64,
           ffi::XseType::SKSEVR => CoreXseType::SKSEVR,
           ffi::XseType::SFSE => CoreXseType::SFSE,
-          _ => CoreXseType::F4SE,
+          _ => CoreXseType::F4SE, // CXX may add sentinel variants; default to F4SE
       }
   }
 
-  fn xse_type_from_str(s: &str) -> Result<CoreXseType, String> {
-      match s {
-          "F4SE" => Ok(CoreXseType::F4SE),
-          "F4SEVR" => Ok(CoreXseType::F4SEVR),
-          "SKSE" => Ok(CoreXseType::SKSE),
-          "SKSE64" => Ok(CoreXseType::SKSE64),
-          "SKSEVR" => Ok(CoreXseType::SKSEVR),
-          "SFSE" => Ok(CoreXseType::SFSE),
-          other => Err(format!("unknown XSE type: {}", other)),
+  // Used by both the typed and string-form helpers.
+  fn xse_type_from_str_internal(s: &str) -> Option<CoreXseType> {
+      // Match the existing game.rs::xse_type_from_str logic — case-insensitive
+      match s.to_uppercase().as_str() {
+          "F4SE" => Some(CoreXseType::F4SE),
+          "F4SEVR" => Some(CoreXseType::F4SEVR),
+          "SKSE" => Some(CoreXseType::SKSE),
+          "SKSE64" => Some(CoreXseType::SKSE64),
+          "SKSEVR" => Some(CoreXseType::SKSEVR),
+          "SFSE" => Some(CoreXseType::SFSE),
+          _ => None,
       }
   }
 
@@ -259,32 +288,51 @@ NEW shared struct in xse.rs:
   }
 
   fn xse_get_dll_prefix(t: ffi::XseType) -> String {
+      // Codex LOW correction: returns the prefix WITH trailing underscore
+      // (e.g., "f4se_") matching classic-xse-core/src/lib.rs:195.
       from_bridge_xse_type(t).dll_prefix().to_string()
   }
 
   fn xse_get_type_from_game_id(game_id_str: &str) -> String {
+      // Codex LOW correction: from_game_id is INFALLIBLE (returns Self).
+      // Only the string-decoding step can fail.
       let Some(game_id) = game_id_from_str(game_id_str) else {
           return String::new();
       };
-      CoreXseType::from_game_id(game_id)
-          .map(|t| t.as_str().to_string())
-          .unwrap_or_default()
+      CoreXseType::from_game_id(game_id).as_str().to_string()
   }
 
   fn is_xse_installed(game_root: &str, t: ffi::XseType) -> bool {
-      core_is_xse_installed(game_root, from_bridge_xse_type(t))
+      // Codex LOW correction: real signature takes &Path.
+      if game_root.is_empty() {
+          return false;
+      }
+      core_is_xse_installed(Path::new(game_root), from_bridge_xse_type(t))
   }
 
   fn detect_xse_version(exe_path: &str, t: ffi::XseType) -> String {
-      core_detect_xse_version(exe_path, from_bridge_xse_type(t)).unwrap_or_default()
+      // Codex LOW correction: real signature returns XseResult<semver::Version>.
+      if exe_path.is_empty() {
+          return String::new();
+      }
+      core_detect_xse_version(Path::new(exe_path), from_bridge_xse_type(t))
+          .map(|v| v.to_string())
+          .unwrap_or_default()
   }
 
   fn xse_get_info(game_path: &str, t: ffi::XseType) -> ffi::XseInfoDto {
-      let info: CoreXseInfo = core_get_xse_info(game_path, from_bridge_xse_type(t));
+      // Codex LOW correction: get_xse_info takes &Path; XseInfo.path is PathBuf,
+      // version is Option<semver::Version>.
+      let path_arg = if game_path.is_empty() {
+          Path::new(".")
+      } else {
+          Path::new(game_path)
+      };
+      let info: CoreXseInfo = core_get_xse_info(path_arg, from_bridge_xse_type(t));
       ffi::XseInfoDto {
           xse_type: info.xse_type.as_str().to_string(),
-          path: info.path,
-          version: info.version.unwrap_or_default(),
+          path: info.path.to_string_lossy().to_string(),
+          version: info.version.map(|v| v.to_string()).unwrap_or_default(),
           installed: info.installed,
       }
   }
@@ -294,15 +342,28 @@ NEW shared struct in xse.rs:
   // ─────────────────────────────────────────────────────────────────────
 
   pub(crate) fn detect_xse_version_string_impl(exe_path: &str, xse_type_str: &str) -> String {
-      let Ok(xse_type) = xse_type_from_str(xse_type_str) else { return String::new() };
-      core_detect_xse_version(exe_path, xse_type).unwrap_or_default()
+      let Some(xse_type) = xse_type_from_str_internal(xse_type_str) else {
+          return String::new();
+      };
+      if exe_path.is_empty() {
+          return String::new();
+      }
+      core_detect_xse_version(Path::new(exe_path), xse_type)
+          .map(|v| v.to_string())
+          .unwrap_or_default()
   }
 
   pub(crate) fn is_xse_installed_check_impl(game_root: &str, xse_type_str: &str) -> bool {
-      let Ok(xse_type) = xse_type_from_str(xse_type_str) else { return false };
-      core_is_xse_installed(game_root, xse_type)
+      let Some(xse_type) = xse_type_from_str_internal(xse_type_str) else {
+          return false;
+      };
+      if game_root.is_empty() {
+          return false;
+      }
+      core_is_xse_installed(Path::new(game_root), xse_type)
   }
 
+  // Bridge fn aliases (the bridge block calls these names directly)
   fn detect_xse_version_string(exe_path: &str, xse_type_str: &str) -> String {
       detect_xse_version_string_impl(exe_path, xse_type_str)
   }
@@ -353,10 +414,14 @@ NEW shared struct in xse.rs:
       use super::*;
 
       #[test]
-      fn test_xse_get_loader_name_f4se() {
-          let name = xse_get_loader_name(ffi::XseType::F4SE);
-          assert!(!name.is_empty());
-          assert!(name.contains("f4se"));
+      fn test_xse_get_loader_name_f4se_exact_string() {
+          // Codex LOW correction: verified literal at classic-xse-core/src/lib.rs:169
+          assert_eq!(xse_get_loader_name(ffi::XseType::F4SE), "f4se_loader.exe");
+      }
+
+      #[test]
+      fn test_xse_get_loader_name_skse64_exact_string() {
+          assert_eq!(xse_get_loader_name(ffi::XseType::SKSE64), "skse64_loader.exe");
       }
 
       #[test]
@@ -372,13 +437,26 @@ NEW shared struct in xse.rs:
       }
 
       #[test]
-      fn test_xse_get_type_from_game_id_fallout4() {
-          let result = xse_get_type_from_game_id("Fallout4");
-          assert!(!result.is_empty());
+      fn test_xse_get_dll_prefix_has_trailing_underscore() {
+          // Codex LOW correction: dll_prefix returns "f4se_" / "skse64_" — with trailing underscore
+          assert_eq!(xse_get_dll_prefix(ffi::XseType::F4SE), "f4se_");
+          assert_eq!(xse_get_dll_prefix(ffi::XseType::SKSE64), "skse64_");
+          assert_eq!(xse_get_dll_prefix(ffi::XseType::SFSE), "sfse_");
       }
 
       #[test]
-      fn test_xse_get_type_from_game_id_unknown_returns_empty() {
+      fn test_xse_get_type_from_game_id_total_mapping() {
+          // Codex LOW correction: XseType::from_game_id is INFALLIBLE
+          // Verified at classic-xse-core/src/lib.rs:143-150
+          assert_eq!(xse_get_type_from_game_id("Fallout4"), "F4SE");
+          assert_eq!(xse_get_type_from_game_id("Fallout4VR"), "F4SEVR");
+          assert_eq!(xse_get_type_from_game_id("Skyrim"), "SKSE64");
+          assert_eq!(xse_get_type_from_game_id("Starfield"), "SFSE");
+      }
+
+      #[test]
+      fn test_xse_get_type_from_game_id_unknown_game_returns_empty() {
+          // The only failure mode is the string-decoding step
           assert_eq!(xse_get_type_from_game_id("InvalidGame"), "");
       }
 
@@ -388,10 +466,16 @@ NEW shared struct in xse.rs:
       }
 
       #[test]
+      fn test_is_xse_installed_empty_returns_false() {
+          assert!(!is_xse_installed("", ffi::XseType::F4SE));
+      }
+
+      #[test]
       fn test_xse_get_info_nonexistent_returns_not_installed() {
           let info = xse_get_info("nonexistent\\path", ffi::XseType::F4SE);
           assert!(!info.installed);
           assert!(info.version.is_empty());
+          assert_eq!(info.xse_type, "F4SE");
       }
 
       #[test]
@@ -405,17 +489,18 @@ NEW shared struct in xse.rs:
       }
 
       #[test]
-      fn test_xse_type_from_str_known_and_unknown() {
-          assert!(xse_type_from_str("F4SE").is_ok());
-          assert!(xse_type_from_str("SFSE").is_ok());
-          assert!(xse_type_from_str("BOGUS").is_err());
+      fn test_xse_type_from_str_internal_known_and_unknown() {
+          assert!(xse_type_from_str_internal("F4SE").is_some());
+          assert!(xse_type_from_str_internal("f4se").is_some()); // case-insensitive
+          assert!(xse_type_from_str_internal("SFSE").is_some());
+          assert!(xse_type_from_str_internal("BOGUS").is_none());
       }
   }
   ```
 
-  Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml xse::tests` and confirm all 9+ tests pass.
+  Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml xse::tests` and confirm all 11+ tests pass.
 
-  IMPORTANT: Add `classic-xse-core = { workspace = true }` to `classic-cpp-bridge/Cargo.toml` if not already present.
+  IMPORTANT: Add `classic-xse-core = { workspace = true }` and `classic-constants-core = { workspace = true }` to `classic-cpp-bridge/Cargo.toml` if not already present.
   </action>
 
   <verify>
@@ -427,49 +512,47 @@ NEW shared struct in xse.rs:
     - `git grep -n 'namespace = "classic::xse"' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns one match
     - `git grep -n 'enum XseType' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns the bridge enum with 6 variants
     - `git grep -n 'struct XseInfoDto' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns the shared struct
-    - `git grep -nE 'fn (xse_get_loader_name|xse_get_dll_prefix|xse_get_type_from_game_id|is_xse_installed|detect_xse_version|xse_get_info|detect_xse_version_string|is_xse_installed_check)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns at least 8 wrapper definitions PLUS extern declarations
-    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml xse::tests` exits 0 with at least 9 passing tests
+    - `git grep -n '"f4se_loader.exe"' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns the test assertion line (Codex LOW correction proof)
+    - `git grep -n '"f4se_"' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns the dll_prefix test (trailing underscore proof)
+    - `git grep -n 'core_is_xse_installed(Path::new' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns at least one match (proves &Path conversion at the bridge boundary)
+    - `git grep -n 'todo!' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` returns NOTHING
+    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml xse::tests` exits 0 with at least 11 passing tests
     - `cargo clippy -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` exits 0
   </acceptance_criteria>
 
   <done>
-    `src/xse.rs` exists with the full CXXS-09 surface, has both typed and string-form helper APIs, and all Rust-side tests pass.
+    `src/xse.rs` exists with the full CXXS-09 surface using REAL classic-xse-core signatures (Codex LOW correction), has both typed and string-form helper APIs, all Rust-side tests pass.
   </done>
 </task>
 
 <task type="auto" tdd="true">
-  <name>Task 2: Create src/version_registry.rs (D-02, CXXS-06) + add CXXS-06 missing fn + tests</name>
+  <name>Task 2: Create src/version_registry.rs (D-02, CXXS-06) — ZERO todo!() placeholders, all bodies CONCRETE per game.rs source</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs
   </files>
 
   <read_first>
-    - ClassicLib-rs/business-logic/classic-version-registry-core/src/registry.rs (confirm VersionRegistry::get_all_for_game(game, is_vr_filter) signature; confirm VersionInfo field names that the existing DTO mirrors)
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs (READ the version_registry_* fns, the parse_game_version fn, AND the VersionInfoDto / XseConfigDto / CrashgenConfigDto / MatchResultDto / GameVersionDto shared struct definitions — these all MOVE verbatim into version_registry.rs)
+    - ClassicLib-rs/business-logic/classic-version-registry-core/src/registry.rs (confirm `registry.get_all() -> &[VersionInfo]`, `get_by_id`, `match_version`, `get_crashgen_versions`, `get_crashgen_for_version` method names)
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs lines 14-161 (READ — these are the EXACT bodies that get copied verbatim into version_registry.rs; the only change is the namespace declaration in the bridge block)
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs (template for #[cxx::bridge] block style)
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-version-registry-core" §"D-11 Consumer Migration Enumeration"
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-02 (version_registry.rs new file; src/registry.rs UNCHANGED), D-08 (keep shims in game.rs), D-12 (Rust tests)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 04" Codex MEDIUM concern about todo!() placeholders
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-02, D-08, D-12
   </read_first>
 
   <behavior>
     - Test: `version_registry_get_all_count()` returns >= 4 (the registry has at least Fallout4 OG/NG/AE/VR entries).
-    - Test: `version_registry_get_by_id("FO4_OG")` (or whatever the canonical Original ID is) returns VersionInfoDto with `found: true` and a non-empty `version_string`.
-    - Test: `version_registry_get_by_id("DEFINITELY_NOT_REAL")` returns VersionInfoDto with `found: false`.
-    - Test: `version_registry_get_all_for_game("Fallout4", false)` returns Vec with at least 1 entry, none with `is_vr: true`.
-    - Test: `version_registry_get_all_for_game("Fallout4", true)` returns Vec where every entry has `is_vr: true` (likely 1 entry — the VR variant).
+    - Test: `version_registry_get_by_id("DEFINITELY_NOT_REAL_VERSION_ID")` returns VersionInfoDto with `found: false`.
+    - Test: `version_registry_get_all_for_game("Fallout4", false)` returns Vec with at least 1 entry, none with `is_vr: true`, all with `game == "Fallout4"`.
+    - Test: `version_registry_get_all_for_game("Fallout4", true)` returns Vec where every entry has `is_vr: true`.
     - Test: `version_registry_get_all_ids()` returns a Vec containing at least 4 string IDs.
-    - Test: `parse_game_version("1.10.163.0")` returns GameVersionDto with `valid: true`, major=1, minor=10, patch=163, build=0.
+    - Test: `parse_game_version("1.10.163.0")` returns GameVersionDto with `valid: true`, major=1, minor=10, patch=163.
     - Test: `parse_game_version("garbage")` returns GameVersionDto with `valid: false`.
-    - Test: `version_registry_get_xse_config("FO4_OG")` returns XseConfigDto with `found: true`, non-empty `acronym`.
-    - Test: `version_registry_get_crashgen_configs("FO4_OG")` returns at least one CrashgenConfigDto.
-    - Test: `version_registry_match_version("1.10.163.0", "Fallout4", false)` returns MatchResultDto with `is_match: true`.
+    - Test: `version_registry_match_version("1.10.163.0", "Fallout4", false)` returns MatchResultDto where `is_match` reflects whether the registry has a Fallout4 entry matching that version.
   </behavior>
 
   <action>
-  Create `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs`. The implementation is largely a verbatim move from `game.rs`, with one new function added. COPY the wrapper fn bodies, the shared struct definitions, and the DTO mappings from `game.rs::version_registry_*` and `game.rs::parse_game_version` into the new file. Adjust the `#[cxx::bridge]` namespace.
-
-  Module skeleton:
+  Create `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs`. The implementation is a verbatim move from `game.rs` lines 14-161, with one new function added. The Codex MEDIUM correction requires ZERO `todo!()` placeholders — every wrapper body is concrete code.
 
   ```rust
   //! Version registry bridge for CXX FFI (D-02, CXXS-06).
@@ -483,31 +566,27 @@ NEW shared struct in xse.rs:
   //! NOTE: `src/registry.rs` is a SEPARATE bridge module for `classic-registry-core`
   //! (the typed key/value singleton) — it is NOT this file (D-02 wording).
 
-  use classic_version_registry_core::{
-      get_version_registry,
-      VersionInfo as CoreVersionInfo,
-      // ... other re-exports as needed
-  };
+  use classic_version_registry_core::{GameVersion, get_version_registry};
 
   // ─────────────────────────────────────────────────────────────────────
-  // DTO mappings (moved verbatim from game.rs — keep field names identical
-  // so the parity gate sees this as a MOVE not a CHANGE)
+  // Wrapper bodies — verbatim from game.rs (Codex MEDIUM: NO todo!())
   // ─────────────────────────────────────────────────────────────────────
 
-  fn map_version_info(info: Option<&CoreVersionInfo>) -> ffi::VersionInfoDto {
-      match info {
-          Some(i) => ffi::VersionInfoDto {
-              id: i.id.clone(),
-              version_string: i.version_string.clone(),
-              short_name: i.short_name.clone(),
-              game: i.game.clone(),
-              docs_name: i.docs_name.clone(),
-              steam_id: i.steam_id,
-              is_vr: i.is_vr,
+  fn version_registry_get_by_id(id: &str) -> ffi::VersionInfoDto {
+      let registry = get_version_registry();
+      match registry.get_by_id(id) {
+          Some(info) => ffi::VersionInfoDto {
+              id: info.id.clone(),
+              version_string: info.version_string(),
+              short_name: info.short_name.clone(),
+              game: info.game.clone(),
+              docs_name: info.docs_name.clone(),
+              steam_id: info.steam_id,
+              is_vr: info.is_vr,
               found: true,
           },
           None => ffi::VersionInfoDto {
-              id: String::new(),
+              id: id.to_string(),
               version_string: String::new(),
               short_name: String::new(),
               game: String::new(),
@@ -519,63 +598,148 @@ NEW shared struct in xse.rs:
       }
   }
 
-  // (Move from game.rs — keep the same wrapper logic for XseConfigDto, CrashgenConfigDto,
-  //  MatchResultDto, GameVersionDto. The executor reads game.rs and copies them verbatim.)
-
-  // ─────────────────────────────────────────────────────────────────────
-  // Existing fns moved from game.rs
-  // ─────────────────────────────────────────────────────────────────────
-
-  fn version_registry_get_by_id(id: &str) -> ffi::VersionInfoDto {
-      let registry = get_version_registry();
-      map_version_info(registry.get_by_id(id))
-  }
-
   fn version_registry_get_all_ids() -> Vec<String> {
-      get_version_registry().get_all_ids().into_iter().collect()
+      let registry = get_version_registry();
+      registry.get_all().iter().map(|v| v.id.clone()).collect()
   }
 
   fn version_registry_get_all_count() -> usize {
-      get_version_registry().get_all_ids().len()
+      let registry = get_version_registry();
+      registry.get_all().len()
   }
 
-  fn version_registry_match_version(version_str: &str, game: &str, is_vr: bool) -> ffi::MatchResultDto {
-      // Copy body from game.rs::version_registry_match_version
-      // (executor reads game.rs and pastes the exact body, replacing only the namespace import)
-      todo!("EXECUTOR: copy body verbatim from game.rs::version_registry_match_version")
+  fn version_registry_match_version(
+      version_str: &str,
+      game: &str,
+      is_vr: bool,
+  ) -> ffi::MatchResultDto {
+      let registry = get_version_registry();
+      match GameVersion::parse(version_str) {
+          Ok(detected) => {
+              let result = registry.match_version(&detected, game, is_vr);
+              let is_match = result.version_info.is_some();
+              ffi::MatchResultDto {
+                  matched_id: result
+                      .version_info
+                      .map(|v| v.id.clone())
+                      .unwrap_or_default(),
+                  confidence: format!("{:?}", result.confidence),
+                  message: result.message.clone(),
+                  is_match,
+              }
+          }
+          Err(e) => ffi::MatchResultDto {
+              matched_id: String::new(),
+              confidence: "None".to_string(),
+              message: format!("Failed to parse version: {e}"),
+              is_match: false,
+          },
+      }
   }
 
   fn version_registry_get_xse_config(id: &str) -> ffi::XseConfigDto {
-      todo!("EXECUTOR: copy body verbatim from game.rs::version_registry_get_xse_config")
+      let registry = get_version_registry();
+      match registry.get_by_id(id).and_then(|info| info.xse.as_ref()) {
+          Some(xse) => ffi::XseConfigDto {
+              acronym: xse.acronym.clone(),
+              full_name: xse.full_name.clone(),
+              compatible_version: xse.compatible_version.clone(),
+              loader: xse.loader.clone(),
+              file_count: xse.file_count,
+              found: true,
+          },
+          None => ffi::XseConfigDto {
+              acronym: String::new(),
+              full_name: String::new(),
+              compatible_version: String::new(),
+              loader: String::new(),
+              file_count: 0,
+              found: false,
+          },
+      }
   }
 
   fn version_registry_get_crashgen_configs(id: &str) -> Vec<ffi::CrashgenConfigDto> {
-      todo!("EXECUTOR: copy body verbatim from game.rs::version_registry_get_crashgen_configs")
+      let registry = get_version_registry();
+      registry
+          .get_crashgen_versions(id)
+          .iter()
+          .map(|c| ffi::CrashgenConfigDto {
+              version: c.version.clone(),
+              name: c.name.clone(),
+              acronym: c.acronym.clone(),
+              dll_file: c.dll_file.clone(),
+              description: c.description.clone(),
+              download_url: c.download_url.clone(),
+          })
+          .collect()
   }
 
-  fn version_registry_get_crashgen_config(id: &str, crashgen_version: &str) -> ffi::CrashgenConfigDto {
-      todo!("EXECUTOR: copy body verbatim from game.rs::version_registry_get_crashgen_config")
+  fn version_registry_get_crashgen_config(
+      id: &str,
+      crashgen_version: &str,
+  ) -> ffi::CrashgenConfigDto {
+      let registry = get_version_registry();
+      match registry.get_crashgen_for_version(id, crashgen_version) {
+          Some(c) => ffi::CrashgenConfigDto {
+              version: c.version.clone(),
+              name: c.name.clone(),
+              acronym: c.acronym.clone(),
+              dll_file: c.dll_file.clone(),
+              description: c.description.clone(),
+              download_url: c.download_url.clone(),
+          },
+          None => ffi::CrashgenConfigDto {
+              version: String::new(),
+              name: String::new(),
+              acronym: String::new(),
+              dll_file: String::new(),
+              description: String::new(),
+              download_url: String::new(),
+          },
+      }
   }
 
   fn parse_game_version(version_str: &str) -> ffi::GameVersionDto {
-      todo!("EXECUTOR: copy body verbatim from game.rs::parse_game_version")
+      match GameVersion::parse(version_str) {
+          Ok(v) => ffi::GameVersionDto {
+              major: v.major,
+              minor: v.minor,
+              patch: v.patch,
+              build: v.build,
+              valid: true,
+          },
+          Err(_) => ffi::GameVersionDto {
+              major: 0,
+              minor: 0,
+              patch: 0,
+              build: 0,
+              valid: false,
+          },
+      }
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // NEW for CXXS-06 — fills the only true gap per RESEARCH.md
+  // NEW for CXXS-06 — uses existing registry.get_all() iteration helper
+  // (no missing core helper assumed — Codex review LOW correction)
   // ─────────────────────────────────────────────────────────────────────
 
   fn version_registry_get_all_for_game(game: &str, is_vr: bool) -> Vec<ffi::VersionInfoDto> {
       let registry = get_version_registry();
-      // Filter all entries by game name and is_vr flag.
-      // Use registry.get_all_for_game(game, Some(is_vr)) if it exists, otherwise
-      // iterate get_all_ids and filter manually.
       registry
-          .get_all_ids()
+          .get_all()
           .iter()
-          .filter_map(|id| registry.get_by_id(id))
           .filter(|info| info.game == game && info.is_vr == is_vr)
-          .map(|info| map_version_info(Some(info)))
+          .map(|info| ffi::VersionInfoDto {
+              id: info.id.clone(),
+              version_string: info.version_string(),
+              short_name: info.short_name.clone(),
+              game: info.game.clone(),
+              docs_name: info.docs_name.clone(),
+              steam_id: info.steam_id,
+              is_vr: info.is_vr,
+              found: true,
+          })
           .collect()
   }
 
@@ -679,9 +843,9 @@ NEW shared struct in xse.rs:
       #[test]
       fn test_version_registry_get_all_for_game_fallout4_vr() {
           let entries = version_registry_get_all_for_game("Fallout4", true);
-          // VR variant should exist
           for entry in &entries {
               assert!(entry.is_vr);
+              assert_eq!(entry.game, "Fallout4");
           }
       }
 
@@ -701,9 +865,7 @@ NEW shared struct in xse.rs:
   }
   ```
 
-  IMPORTANT: The `todo!()` markers above are PLACEHOLDERS — the executor MUST read `game.rs` and copy the exact bodies verbatim into the new file. Do not commit `todo!()` calls. The DTO mappings (`map_version_info` etc.) and the wrapper logic for `version_registry_match_version`, `version_registry_get_xse_config`, `version_registry_get_crashgen_configs`, `version_registry_get_crashgen_config`, `parse_game_version` already exist in `game.rs` — copy them.
-
-  After copy, run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml version_registry::tests` and confirm all tests pass.
+  Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml version_registry::tests` and confirm all tests pass.
 
   IMPORTANT: Add `classic-version-registry-core = { workspace = true }` to `classic-cpp-bridge/Cargo.toml` if not already present.
   </action>
@@ -717,23 +879,25 @@ NEW shared struct in xse.rs:
     - `git grep -n 'namespace = "classic::version_registry"' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` returns one match
     - `git grep -nE 'struct (VersionInfoDto|XseConfigDto|CrashgenConfigDto|MatchResultDto|GameVersionDto)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` returns at least 5 struct declarations
     - `git grep -n 'fn version_registry_get_all_for_game' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` returns the new CXXS-06 fn + extern declaration
-    - `git grep -n 'todo!' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` returns NOTHING (no leftover placeholders)
+    - `git grep -n 'todo!' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` returns NOTHING (Codex MEDIUM correction proof)
+    - `git grep -n 'EXECUTOR:' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` returns NOTHING
     - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml version_registry::tests` exits 0 with at least 7 passing tests
     - `cargo clippy -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` exits 0
   </acceptance_criteria>
 
   <done>
-    `src/version_registry.rs` exists with the full CXXS-06 surface (existing fns moved + new `get_all_for_game` fn), all DTOs moved verbatim, and all Rust-side tests pass.
+    `src/version_registry.rs` exists with the full CXXS-06 surface (existing fns moved + new `get_all_for_game` fn), ZERO todo!() placeholders, all DTOs moved verbatim, and all Rust-side tests pass.
   </done>
 </task>
 
 <task type="auto">
-  <name>Task 3: Update game.rs shims (D-08), wire both new files into build.rs + lib.rs, run D-10 clean-build pair, refresh D-09 baseline, commit</name>
+  <name>Task 3: Update game.rs shims (D-08), wire both new files into build.rs + lib.rs, add D-11 consumer migration in pathdialog.cpp, run D-10 clean-build pair, refresh D-09 baseline, commit</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs
+    - classic-gui/src/app/pathdialog.cpp
     - docs/implementation/cxx_api_parity/baseline/parity_contract.json
     - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.json
     - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md
@@ -741,24 +905,20 @@ NEW shared struct in xse.rs:
   </files>
 
   <read_first>
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs (current state — KEEP all existing fn signatures + extern declarations to preserve D-08; only the BODIES change to delegate to crate::xse and crate::version_registry where applicable)
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs (current state — KEEP all existing fn signatures + extern declarations to preserve D-08; the bodies stay UNCHANGED — both game.rs and the new modules call core directly, no cross-bridge-module calls)
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs (insert TWO new entries — `"src/xse.rs"` and `"src/version_registry.rs"` — near the existing `"src/game.rs"` line)
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs (add TWO new declarations — `pub mod xse;` and `pub mod version_registry;`)
+    - classic-gui/src/app/pathdialog.cpp (find a suitable spot to add a `classic::xse::xse_get_loader_name` call — e.g., when displaying the "Looking for: f4se_loader.exe" label or in a tooltip; the goal is one production caller of the new namespace)
     - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-08 (keep shims), D-09, D-10
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"Pattern: Split Migration (game.rs shim)" §"Baseline Refresh Cadence (D-09)" §"game.rs Split Compatibility"
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 04" Codex MEDIUM concern about D-11
   </read_first>
 
   <action>
-  ## Part A — Update game.rs to delegate to crate::xse and crate::version_registry
+  ## Part A — game.rs shims (D-08 backward compat)
 
-  Edit `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs`. DO NOT change any function signatures, struct definitions, or `extern "Rust"` declarations inside the existing `#[cxx::bridge(namespace = "classic::game")]` block. ONLY rewrite the bodies of these fns to call into the new modules:
+  No body changes needed in `game.rs`. Both the existing `game.rs` wrappers AND the new `version_registry.rs` / `xse.rs` wrappers call `classic_version_registry_core::*` and `classic_xse_core::*` directly. The duplication is intentional per D-08 — game.rs entries stay in the parity baseline, and new entries appear in the new bridgeModules.
 
-  - `detect_xse_version_string(exe_path, xse_type_str)` → call `crate::xse::detect_xse_version_string_impl(exe_path, xse_type_str)`
-  - `is_xse_installed_check(game_root, xse_type_str)` → call `crate::xse::is_xse_installed_check_impl(game_root, xse_type_str)`
-  - `version_registry_get_by_id(id)` → call `crate::version_registry::ffi::*` is NOT possible across bridge modules, so instead delegate at the implementation level: import `classic_version_registry_core::get_version_registry` directly and reuse the same DTO mapping logic. Simplest: keep the existing body unchanged in game.rs (don't try to call across bridge modules — just keep two implementations sharing the same core crate). The D-09 baseline will reflect that the SAME entries exist in both `game` and `version_registry` bridgeModules — that's expected and correct (D-08 dual exposure).
-  - Same applies to `version_registry_*` and `parse_game_version` — leave the bodies as-is (they call core directly), and the new `version_registry.rs` file calls the core via its own copies. No cross-bridge-module calls.
-
-  Result: `game.rs` source is essentially UNCHANGED except for two single-line body rewrites in `detect_xse_version_string` and `is_xse_installed_check` (these can be private helpers shared via `pub(crate)` in xse.rs).
+  Verify by running `git diff ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs` after the plan — there should be NO changes (or only formatting normalization).
 
   ## Part B — Add both files to build.rs
 
@@ -775,7 +935,29 @@ NEW shared struct in xse.rs:
   pub mod xse;
   ```
 
-  ## Part D — Mandatory D-10 clean-build pair (TWO new files = ONE clean cycle)
+  ## Part D — D-11 consumer migration in pathdialog.cpp (Codex review correction)
+
+  Edit `classic-gui/src/app/pathdialog.cpp`. Add `#include "classic_cxx_bridge/xse.h"` near the existing CXX bridge header includes.
+
+  Find a location in the dialog where it makes sense to display the expected XSE loader filename (e.g., near the game-path validation, or in a help tooltip). Add a call like:
+
+  ```cpp
+  #include "classic_cxx_bridge/xse.h"
+
+  // ... inside an appropriate dialog method (e.g., setupUi or validation):
+  // D-11 / CXXS-09 consumer migration — display the expected loader name
+  // by calling the new typed XSE API.
+  auto loader_rust = classic::xse::xse_get_loader_name(classic::xse::XseType::F4SE);
+  QString loader_name = QString::fromUtf8(loader_rust.data(), static_cast<int>(loader_rust.size()));
+  // Then use `loader_name` in a label or tooltip — for example:
+  // m_xseHelpLabel->setToolTip(QStringLiteral("Looking for: %1").arg(loader_name));
+  ```
+
+  The exact integration point depends on the dialog's existing UI structure. The minimum is: include the header, call one `classic::xse::*` fn, and use the result in the dialog's state somewhere (label, tooltip, or QString member). The build proof comes from the file compiling and linking.
+
+  Run `git grep -n 'classic::xse' classic-gui/src/app/pathdialog.cpp` and confirm at least one match.
+
+  ## Part E — Mandatory D-10 clean-build pair
 
   ```
   pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean -Test
@@ -788,17 +970,17 @@ NEW shared struct in xse.rs:
   ls ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/version_registry.h
   ```
 
-  ## Part E — D-09 baseline refresh
+  ## Part F — D-09 baseline refresh
 
   ```
   python tools/cxx_api_parity/check_parity_gate.py --update-baseline --repo-root .
   python tools/cxx_api_parity/check_parity_gate.py --repo-root .
   ```
 
-  ## Part F — Atomic commit
+  ## Part G — Atomic commit
 
-  Stage all 9 files (2 new bridge modules + 1 modified game.rs + build.rs + lib.rs + 4 baseline artifacts).
-  Commit message: `Feat(02-04): split XSE and version registry into dedicated CXX bridge modules` — body mentions CXXS-06, CXXS-09, D-01, D-02, D-08, D-09, D-10.
+  Stage all 9 files (2 new bridge modules + game.rs unchanged + build.rs + lib.rs + pathdialog.cpp + 4 baseline artifacts).
+  Commit message: `Feat(02-04): split XSE and version registry into dedicated CXX bridge modules` — body mentions CXXS-06, CXXS-09, D-01, D-02, D-08, D-09, D-10, D-11 and the pathdialog.cpp consumer migration.
   </action>
 
   <verify>
@@ -811,19 +993,21 @@ NEW shared struct in xse.rs:
     - `git grep -n 'pub mod xse' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs` returns the new declaration
     - `git grep -n 'pub mod version_registry' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs` returns the new declaration
     - `git grep -n 'fn detect_xse_version_string' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs` STILL returns a definition (D-08 shim preserved)
-    - `git grep -n 'fn version_registry_get_by_id' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs` STILL returns a definition (D-08 shim preserved — still bridged in classic::game namespace)
+    - `git grep -n 'fn version_registry_get_by_id' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs` STILL returns a definition (D-08 shim preserved)
+    - `git grep -n 'classic::xse' classic-gui/src/app/pathdialog.cpp` returns at least one line (D-11 consumer)
+    - `git grep -n '#include "classic_cxx_bridge/xse.h"' classic-gui/src/app/pathdialog.cpp` returns the new include
     - `pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean -Test` exits 0
     - `pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Clean -Test` exits 0
     - `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/xse.h` exists
     - `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/version_registry.h` exists
     - `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 with 0 drift
     - The committed `cxx_diff_report.md` shows ADDED rows under `bridgeModule: "xse"` and `bridgeModule: "version_registry"` AND no REMOVED rows from `bridgeModule: "game"` (D-08 backward compat preserved)
-    - `git log -1 --stat` shows the commit touches Rust source AND `docs/implementation/cxx_api_parity/baseline/*` together
+    - `git log -1 --stat` shows the commit touches Rust source AND pathdialog.cpp AND `docs/implementation/cxx_api_parity/baseline/*` together
     - `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs` is UNCHANGED (`git diff HEAD~1 ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs` shows no changes — D-02 untouched)
   </acceptance_criteria>
 
   <done>
-    Plan 02-04 complete — `classic::xse` and `classic::version_registry` are first-class CXX bridge modules with full surfaces, `game.rs` shims preserve backward compatibility, both clean builds pass, and the parity gate has 0 drift.
+    Plan 02-04 complete — `classic::xse` and `classic::version_registry` are first-class CXX bridge modules with full surfaces, ZERO todo!() placeholders, real source signatures (Codex LOW correction), pathdialog.cpp exercises the new XSE namespace (Codex MEDIUM correction), `game.rs` shims preserve backward compatibility, both clean builds pass, and the parity gate has 0 drift.
   </done>
 </task>
 
@@ -835,28 +1019,34 @@ NEW shared struct in xse.rs:
 3. Parity gate at 0 drift
 4. `git diff HEAD~1 ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs` is empty (D-02 — registry.rs untouched)
 5. game.rs still exposes detect_xse_version_string, is_xse_installed_check, version_registry_*, parse_game_version (D-08 shims)
+6. ZERO todo!() in version_registry.rs (Codex MEDIUM correction)
+7. xse.rs uses real classic-xse-core signatures (&Path, semver::Version, total from_game_id) (Codex LOW correction)
+8. pathdialog.cpp has classic::xse::* call (Codex MEDIUM correction)
 
 Validation Architecture (per 02-VALIDATION.md row 2-04-01): `cargo test -p classic-cpp-bridge xse::tests version_registry::tests` + clean-build pair + parity gate.
-
-D-11 consumer migration: Per RESEARCH.md §"D-11 Consumer Migration Enumeration", neither classic-cli nor classic-gui currently has a hand-rolled XSE or version-registry call site that would qualify as a narrowed-bridge migration target. The existing C++ callers of `classic::game::version_registry_*` and `classic::game::detect_xse_version_string` continue to work via the D-08 shims in game.rs. CXXS-09 and CXXS-06 are satisfied by the new bridge surfaces being available; consumers can migrate at their own pace in subsequent work.
 </verification>
 
 <success_criteria>
-- src/xse.rs exists with #[cxx::bridge(namespace = "classic::xse")] exposing the full CXXS-09 surface
-- src/version_registry.rs exists with #[cxx::bridge(namespace = "classic::version_registry")] exposing the full CXXS-06 surface (including the new version_registry_get_all_for_game fn)
+- src/xse.rs exists with #[cxx::bridge(namespace = "classic::xse")] using REAL classic-xse-core signatures (Codex LOW correction)
+- src/version_registry.rs exists with #[cxx::bridge(namespace = "classic::version_registry")] and ZERO todo!() placeholders (Codex MEDIUM correction)
+- xse.rs tests assert exact strings: "f4se_loader.exe", "f4se_" (with trailing underscore)
+- xse_get_type_from_game_id is total (returns "F4SE" for Fallout4, "SKSE64" for Skyrim, etc.)
+- pathdialog.cpp has D-11 consumer migration (Codex MEDIUM correction)
 - game.rs preserves all D-08 shim entries (no removals from the parity baseline)
-- src/registry.rs is UNCHANGED (D-02 — registry namespace = classic-registry-core KV singleton, NOT version registry)
-- Both clean MSVC builds are green (D-10 — TWO new build.rs entries share ONE clean cycle)
+- src/registry.rs is UNCHANGED (D-02 — registry namespace = classic-registry-core KV singleton)
+- Both clean MSVC builds are green (D-10)
 - Parity gate at 0 drift after --update-baseline (D-09)
 - All changes committed atomically
 </success_criteria>
 
 <output>
 After completion, create `.planning/phases/02-cxx-bridge-surface-expansion/02-04-SUMMARY.md` documenting:
+- Confirmation that ZERO todo!() placeholders remain in version_registry.rs (Codex MEDIUM correction)
+- Confirmation that xse.rs uses real signatures: &Path-taking is_xse_installed/detect_xse_version, total from_game_id, "f4se_" trailing-underscore dll_prefix (Codex LOW correction)
+- Confirmation that pathdialog.cpp has classic::xse::* consumer migration (Codex MEDIUM correction)
 - Number of fns moved into xse.rs (count from cxx_diff_report.md)
 - Number of fns moved into version_registry.rs (count from cxx_diff_report.md)
 - The single new fn added: version_registry_get_all_for_game
 - Confirmation that the parity baseline shows ADDED rows in both new modules and ZERO removed rows from game.rs (D-08 verified)
 - Confirmation that registry.rs is untouched (D-02 verified)
-- D-10 clean-build outcome
 </output>

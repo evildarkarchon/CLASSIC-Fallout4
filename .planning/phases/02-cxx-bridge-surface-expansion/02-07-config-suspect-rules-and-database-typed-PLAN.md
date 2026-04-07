@@ -23,18 +23,20 @@ requirements:
 must_haves:
   truths:
     - "src/config.rs exposes SuspectErrorRuleDto + yaml_data_suspects_error_rules() returning the full rule set with severity and main_error_contains_any patterns (CXXS-07)"
-    - "src/config.rs exposes SuspectStackRuleDto + SuspectStackCountRuleDto + yaml_data_suspects_stack_rules() returning the full rule set with all match patterns and count rules (CXXS-07)"
+    - "src/config.rs exposes a FLATTENED suspect-stack surface — Pitfall 6 elimination via TWO bridge fns: yaml_data_suspects_stack_rules_metadata() returning Vec<SuspectStackRuleMetadataDto> (NO nested Vec<SuspectStackCountRuleDto>) AND yaml_data_suspects_stack_count_rules_for_id(rule_id) returning Vec<SuspectStackCountRuleDto> for one rule's count rules (Codex review HIGH correction)"
     - "src/database.rs exposes FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed (CXXS-05 additive per D-08; existing tab-delimited fns UNCHANGED)"
-    - "All new shared structs are valid CXX shared types — SuspectStackRuleDto contains Vec<SuspectStackCountRuleDto> where SuspectStackCountRuleDto has NO Vec fields (Pitfall 6 CLEAR per RESEARCH.md DTO table)"
+    - "Bridge db_pool_get_entries_batch_typed contract is documented: hit-only HashMap from core, fail-soft repackaging into per-input FormIdEntryDto with `found: false` for misses, recommended chunk size to avoid UI stalls (Codex review MEDIUM correction)"
+    - "All new shared structs are flat — SuspectStackRuleMetadataDto contains only String + i32 + Vec<String> fields (NO nested Vec<Struct>); SuspectStackCountRuleDto has only String + u32 fields; FormIdEntryDto has only String + bool fields (Pitfall 6 CLEAR per Codex HIGH correction)"
     - "Existing config.rs and database.rs fns UNCHANGED (D-08 additive — no replacements)"
     - "Incremental build_cli.ps1 -Test and build_gui.ps1 -Test exit 0"
     - "python tools/cxx_api_parity/check_parity_gate.py --repo-root . exits 0 with 0 drift"
+    - "Plan documents the D-11 N/A justification with evidence (no current narrowed call sites for typed FormID or suspect rules in classic-cli/classic-gui per grep search) — Codex review MEDIUM correction"
   artifacts:
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs"
-      provides: "Widened config bridge with SuspectErrorRuleDto + SuspectStackRuleDto + suspects_error_rules() + suspects_stack_rules() (CXXS-07)"
+      provides: "Widened config bridge with SuspectErrorRuleDto + flattened SuspectStackRuleMetadataDto + SuspectStackCountRuleDto + suspects_error_rules() + suspects_stack_rules_metadata() + suspects_stack_count_rules_for_id() (CXXS-07 with Pitfall 6 fix)"
       contains: "yaml_data_suspects_error_rules"
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs"
-      provides: "Widened database bridge with FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed (CXXS-05)"
+      provides: "Widened database bridge with FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed (CXXS-05) — documented hit-only batch contract"
       contains: "FormIdEntryDto"
   key_links:
     - from: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs"
@@ -42,17 +44,29 @@ must_haves:
       via: "use classic_config_core::yamldata::*"
       pattern: "SuspectErrorRule"
     - from: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs"
-      to: "classic-database-core::pool_sqlx (typed get_entry / get_entries_batch returns)"
+      to: "classic-database-core::pool_sqlx (DbPool::get_entry / get_entries_batch returning Option/HashMap of hits)"
       via: "DbPool method calls returning typed Option/HashMap, mapped to FormIdEntryDto"
       pattern: "FormIdEntryDto"
 ---
 
 <objective>
-Add CXXS-07 (config suspect-rule subset) and CXXS-05 (database typed result API) bridge surfaces. Both are ADDITIVE per D-08 — existing helpers stay unchanged. Per RESEARCH.md §"classic-config-core" §"RESOLUTION for CXXS-07", `SuspectErrorRuleDto { id, name, severity, main_error_contains_any: Vec<String> }` is Pitfall 6 valid (Vec<String> inner is OK), and `SuspectStackRuleDto` contains a `Vec<SuspectStackCountRuleDto>` where `SuspectStackCountRuleDto` has only String + u32 fields (no Vecs) — also valid. Per RESEARCH.md §"classic-database-core pool_sqlx.rs (CXXS-05)", `FormIdEntryDto { formid, plugin, value, found }` is a flat additive complement to the existing tab-delimited path.
+Add CXXS-07 (config suspect-rule subset) and CXXS-05 (database typed result API) bridge surfaces. Both are ADDITIVE per D-08 — existing helpers stay unchanged. The suspect-stack rule structure is FLATTENED into a metadata DTO + a separate count-rule getter to clear Pitfall 6. The database typed batch fn explicitly documents hit-only semantics and a recommended chunk size.
 
-Purpose: These two CXXS items both touch existing bridge files (`config.rs` and `database.rs`) and share a common pattern (additive structured DTO alongside legacy fail-soft path). Combining them in one plan keeps each plan focused and within context budget. No new build.rs entries → no D-10 mandatory clean-build pair → incremental builds suffice.
+**REVIEWS-MODE NOTE (Codex review HIGH — Pitfall 6):** A previous version of this plan defined `SuspectStackRuleDto` containing `stack_contains_at_least: Vec<SuspectStackCountRuleDto>` and returned `Vec<SuspectStackRuleDto>` from `yaml_data_suspects_stack_rules`. That is `Vec<StructWithVec>` — the exact pattern the phase's own Pitfall 6 rule forbids. This plan flattens to TWO bridge fns:
+1. `yaml_data_suspects_stack_rules_metadata() -> Vec<SuspectStackRuleMetadataDto>` — the metadata DTO has `id`, `name`, `severity`, plus the four `Vec<String>` pattern fields, but NO `Vec<SuspectStackCountRuleDto>` field.
+2. `yaml_data_suspects_stack_count_rules_for_id(rule_id: &str) -> Vec<SuspectStackCountRuleDto>` — keyed by rule id; C++ callers iterate the metadata first, then call this getter for each rule that needs its count rules.
 
-Output: Widened config + database bridges with new typed surfaces; refreshed parity baseline committed atomically.
+The previous note that "SuspectStackCountRuleDto has no Vec fields, satisfying the rule" was a misreading: Pitfall 6 forbids `Vec<StructWithVec>` regardless of whether the inner struct has vec-of-struct fields. Vec<String> inside the inner struct is irrelevant — what matters is that the OUTER Vec contains a Struct with a Vec field. The existing `Vec<YamlDataModSolutionEntry>` precedent is NOT a license for arbitrary nesting; it's a single specific case where the inner Vec<String> happens to work. The CXX rule is restrictive, and the safest path is to flatten.
+
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan did not document the batch-lookup contract. The REAL `classic_database_core::pool_sqlx::DbPool::get_entries_batch` returns `HashMap<String, String>` keyed by `"formid:plugin"` containing ONLY hits — misses are absent. The bridge wrapper MUST repackage the result into a per-input Vec where missing inputs get `found: false`. This contract is now spelled out in a dedicated section below.
+
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan treated D-11 as N/A without evidence. This plan adds an explicit D-11 N/A JUSTIFICATION section documenting the grep searches that prove no current narrowed call sites exist in `classic-cli` or `classic-gui` for typed FormID lookups or suspect-rule readers. The new typed surfaces remain available for FUTURE consumer migration in subsequent plans / phases.
+
+Per RESEARCH.md §"classic-config-core" §"RESOLUTION for CXXS-07", the SuspectErrorRule case is simpler: `SuspectErrorRuleDto { id, name, severity, main_error_contains_any: Vec<String> }` is Pitfall 6 valid because the inner Vec<String> is the established precedent (matches `YamlDataModSolutionCriteria.any: Vec<String>`). The complication is the suspect-stack rule's nested `Vec<SuspectStackCountRule>`, which the flattening above eliminates.
+
+Purpose: These two CXXS items both touch existing bridge files (`config.rs` and `database.rs`) and share a common pattern (additive structured DTO alongside legacy fail-soft path). Combining them in one plan keeps each plan focused. No new build.rs entries → no D-10 mandatory clean-build pair → incremental builds suffice.
+
+Output: Widened config + database bridges with new typed surfaces, Pitfall-6-clean DTOs, documented batch contract, explicit D-11 N/A justification; refreshed parity baseline committed atomically.
 </objective>
 
 <execution_context>
@@ -66,6 +80,7 @@ Output: Widened config + database bridges with new typed surfaces; refreshed par
 @.planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md
 @.planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md
 @.planning/phases/02-cxx-bridge-surface-expansion/02-VALIDATION.md
+@.planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md
 
 # Source-of-truth Rust crates
 @ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs
@@ -78,9 +93,9 @@ Output: Widened config + database bridges with new typed surfaces; refreshed par
 @tools/cxx_api_parity/check_parity_gate.py
 
 <interfaces>
-<!-- Per RESEARCH.md §"classic-config-core" and §"classic-database-core pool_sqlx.rs". -->
+<!-- SuspectErrorRule + SuspectStackRule + SuspectStackCountRule REAL surface
+     verified at classic-config-core/src/yamldata.rs:117-158. -->
 
-SuspectErrorRule (per RESEARCH.md):
 ```rust
 pub struct SuspectErrorRule {
     pub id: String,
@@ -88,10 +103,12 @@ pub struct SuspectErrorRule {
     pub severity: i32,
     pub main_error_contains_any: Vec<String>,
 }
-```
 
-SuspectStackRule:
-```rust
+pub struct SuspectStackCountRule {
+    pub substring: String,
+    pub count: usize,    // bridged as u32
+}
+
 pub struct SuspectStackRule {
     pub id: String,
     pub name: String,
@@ -100,29 +117,21 @@ pub struct SuspectStackRule {
     pub main_error_optional_any: Vec<String>,
     pub stack_contains_any: Vec<String>,
     pub exclude_if_stack_contains_any: Vec<String>,
-    pub stack_contains_at_least: Vec<SuspectStackCountRule>,
-}
-pub struct SuspectStackCountRule {
-    pub substring: String,
-    pub count: usize,
+    pub stack_contains_at_least: Vec<SuspectStackCountRule>,  // <<< Pitfall 6 hazard
 }
 ```
 
-Bridge DTOs (Pitfall 6 CLEAR per RESEARCH.md DTO table):
+Bridge DTOs (Pitfall 6 CLEAR via flattening — Codex HIGH correction):
 ```rust
 struct SuspectErrorRuleDto {
     id: String,
     name: String,
     severity: i32,
-    main_error_contains_any: Vec<String>,  // VALID — Vec<String> inner is OK (matches YamlDataModSolutionCriteria precedent)
+    main_error_contains_any: Vec<String>,  // Vec<String> inner is OK
 }
 
-struct SuspectStackCountRuleDto {
-    substring: String,
-    count: u32,  // narrowed from usize
-}
-
-struct SuspectStackRuleDto {
+// Metadata only — NO Vec<SuspectStackCountRuleDto> field
+struct SuspectStackRuleMetadataDto {
     id: String,
     name: String,
     severity: i32,
@@ -130,20 +139,21 @@ struct SuspectStackRuleDto {
     main_error_optional_any: Vec<String>,
     stack_contains_any: Vec<String>,
     exclude_if_stack_contains_any: Vec<String>,
-    stack_contains_at_least: Vec<SuspectStackCountRuleDto>,  // VALID — SuspectStackCountRuleDto has NO Vec fields
+}
+
+// Returned by a separate getter keyed by rule id
+struct SuspectStackCountRuleDto {
+    substring: String,
+    count: u32,
 }
 ```
 
-The yamldata.rs accessors must expose the underlying SuspectErrorRule and SuspectStackRule lists. Look for fields like `data.suspects_error: Vec<SuspectErrorRule>` and `data.suspects_stack: Vec<SuspectStackRule>` (or whatever the actual field names are — confirm via direct read of yamldata.rs).
-
-The existing bridge fns `yaml_data_suspects_error_keys/values/stack_keys` only expose the IDs/names — these stay UNCHANGED. The new fns return the full structured rules.
-
-Bridge fns to add to config.rs:
+The bridge fns:
 - `yaml_data_suspects_error_rules(data: &YamlData) -> Vec<SuspectErrorRuleDto>`
-- `yaml_data_suspects_stack_rules(data: &YamlData) -> Vec<SuspectStackRuleDto>`
+- `yaml_data_suspects_stack_rules_metadata(data: &YamlData) -> Vec<SuspectStackRuleMetadataDto>` (NEW — flattened)
+- `yaml_data_suspects_stack_count_rules_for_id(data: &YamlData, rule_id: &str) -> Vec<SuspectStackCountRuleDto>` (NEW — separate getter)
 
-For database.rs, add to the existing `#[cxx::bridge(namespace = "classic::database")]` block:
-
+For database.rs, the FormIdEntryDto + bridge fns:
 ```rust
 struct FormIdEntryDto {
     formid: String,
@@ -153,35 +163,115 @@ struct FormIdEntryDto {
 }
 ```
 
-Bridge fns to add:
+Bridge fns:
 - `db_pool_get_entry_typed(pool: &DbPool, formid: &str, plugin: &str) -> FormIdEntryDto`
 - `db_pool_get_entries_batch_typed(pool: &DbPool, formids: &[String], plugins: &[String]) -> Vec<FormIdEntryDto>`
-
-The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get_entries_batch` (returns `Vec<String>` tab-delimited) are UNCHANGED.
 </interfaces>
+
+<batch_lookup_contract>
+<!-- Codex review MEDIUM correction: spell out the batch contract explicitly. -->
+
+**Core API behavior** (verified at `classic-database-core/src/pool_sqlx.rs:1037-1042`):
+```rust
+pub async fn get_entries_batch(
+    &self,
+    formid_plugin_pairs: Vec<(String, String)>,
+    table: Option<&str>,
+    batch_size: usize,
+) -> Result<HashMap<String, String>, DatabaseError>
+```
+
+The returned `HashMap` is **hit-only**: keys are `"formid:plugin"` strings, values are entry text. Missing pairs are ABSENT from the map — not present with empty value, not present with `null`. This is a MAJOR contract distinction that C++ callers must understand.
+
+**Bridge wrapper repackaging contract:**
+
+`db_pool_get_entries_batch_typed` MUST iterate the input `(formids, plugins)` parallel slices and produce ONE `FormIdEntryDto` PER INPUT PAIR. For each input pair:
+- If the core HashMap contains an entry for `"{formid}:{plugin}"` → `FormIdEntryDto { formid, plugin, value, found: true }`
+- Otherwise → `FormIdEntryDto { formid, plugin, value: String::new(), found: false }`
+
+This positional repackaging means C++ callers can rely on `result[i]` corresponding to `(formids[i], plugins[i])` — even when the input is huge and most pairs are misses. Without this repackaging, C++ callers would have to parse the HashMap key format themselves and reconcile against the input list, which is error-prone.
+
+**Recommended chunk size:**
+
+- The core's `batch_size` parameter has a clamped maximum (`MAX_STABLE_BATCH_BUCKET` per `pool_sqlx.rs:1103`). The bridge wrapper passes `100` as the default chunk size, which empirically balances SQL query overhead against UI thread responsiveness.
+- C++ callers requesting more than ~1000 entries in one call should chunk on their side to avoid blocking the Qt event loop. The bridge wrapper does NOT chunk on behalf of the caller; it processes the entire `formids` slice in one runtime block_on call.
+- Future enhancement: a `db_pool_get_entries_batch_typed_chunked(pool, formids, plugins, chunk_size)` variant could expose the chunk_size parameter directly. NOT in scope for Phase 2.
+
+**Length-mismatch handling:**
+
+If `formids.len() != plugins.len()`, the bridge wrapper returns an empty `Vec<FormIdEntryDto>` (fail-soft, NOT an error). This matches the existing `db_pool_get_entries_batch` (tab-delimited) behavior pattern and is documented in the wrapper's doc comment.
+
+**Empty-input handling:**
+
+If `formids.is_empty()`, the bridge wrapper returns an empty `Vec<FormIdEntryDto>` immediately without calling the core fn (avoids unnecessary runtime block_on cost).
+
+**Single-entry contract:**
+
+`db_pool_get_entry_typed` (the singular variant) takes one `(formid, plugin)` pair and returns one `FormIdEntryDto`. Cache hits, cache misses, and core errors all map to a single DTO with `found: true` (cache hit or DB hit) or `found: false` (miss or error). This matches the existing fail-soft `db_pool_get_entry` (returns `""`) behavior pattern but adds the `found` flag for unambiguous miss detection.
+</batch_lookup_contract>
+
+<d11_na_justification>
+<!-- Codex review MEDIUM correction: explicit evidence-backed N/A. -->
+
+**D-11 status: N/A (justified)** — neither typed FormID lookups nor suspect-rule structured readers have any current narrowed call sites in `classic-cli` or `classic-gui`.
+
+**Evidence (grep searches performed):**
+
+```bash
+# Typed FormID API consumers
+grep -rn 'db_pool_get_entry\|db_pool_get_entries_batch' classic-cli/src/ classic-gui/src/
+# Result: NO matches in either frontend (the FormID lookup pipeline is entirely
+# wrapped by classic::scanner::* and stays in the Rust orchestrator).
+
+# Suspect-rule readers
+grep -rn 'yaml_data_suspects_\|SuspectErrorRule\|SuspectStackRule' classic-cli/src/ classic-gui/src/
+# Result: NO matches (suspect rule consumption is entirely inside classic-scanlog-core's
+# Rust analysis pipeline; C++ frontends consume only the rendered scan report text).
+
+# General config bridge consumers
+grep -rn 'classic::config::yaml_data_' classic-cli/src/ classic-gui/src/
+# Result: NO matches (the config bridge YamlData type is not currently passed
+# across the C++ boundary by either frontend; classic-gui uses classic::yaml::*
+# for raw YAML ops via settingsdialog.cpp, not the high-level YamlData wrapper).
+```
+
+**Why the typed surfaces still belong in this plan despite N/A D-11:**
+
+1. CXXS-05 and CXXS-07 are explicit phase requirements — the parity gate must show the surface exists.
+2. Future plans (e.g., a Phase 6 "single-source-of-truth scanner UI" or a Phase 5 CI gate that exercises every bridge fn from a synthetic test) need these surfaces to be discoverable from C++.
+3. Adding a synthetic / debug-only consumer purely to satisfy D-11 would be artificial padding — it wouldn't represent a real product flow and would have to be removed later. The Codex review explicitly allows N/A "if a plan has TRULY no real caller (defensible only after investigation)".
+
+**Follow-up backlog (out of Phase 2 scope):**
+
+- A future Phase could migrate `classic-cli/src/scanner.cpp` to call `db_pool_get_entry_typed` directly for the FormID resolution loop (currently delegated to `classic::scanner::orchestrator_*`).
+- A future Phase could expose the suspect-rule list in a Settings tab in `classic-gui` (e.g., "Diagnostic rule editor"), which would consume `yaml_data_suspects_*_rules`.
+</d11_na_justification>
 </context>
 
 <tasks>
 
 <task type="auto" tdd="true">
-  <name>Task 1: Widen config.rs with SuspectErrorRuleDto + SuspectStackRuleDto + new suspects_error_rules / suspects_stack_rules bridge fns + tests (CXXS-07)</name>
+  <name>Task 1: Widen config.rs with SuspectErrorRuleDto + FLATTENED suspect-stack surface (Codex HIGH Pitfall 6 fix) + tests</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs
   </files>
 
   <read_first>
-    - ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs (READ — confirm exact SuspectErrorRule and SuspectStackRule field names; confirm SuspectStackCountRule field names; confirm how to ACCESS them from a YamlData instance — likely a getter or a public field like `data.suspects_error: Vec<SuspectErrorRule>`)
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs (current state — has the YamlDataModSolutionEntry / YamlDataModSolutionCriteria pattern as the precedent for nested Vec<String> shared structs; the new SuspectErrorRuleDto follows the SAME pattern)
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-config-core (CXXS-07)" §"RESOLUTION for CXXS-07" §"Pitfall 6 DTO Validation"
+    - ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs (READ — confirm exact SuspectErrorRule and SuspectStackRule field names; confirm SuspectStackCountRule field names; confirm how to ACCESS them from a YamlData instance — likely via `data.inner.suspects_error_rules` or a getter; read parse_suspect_error_rules around line 964 to see how the fields are populated)
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs (current state — has the YamlDataModSolutionEntry / YamlDataModSolutionCriteria pattern; the new SuspectErrorRuleDto follows the SAME pattern; the new SuspectStackRuleMetadataDto has flat Vec<String> fields ONLY)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 07" (the HIGH Pitfall 6 concern)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-config-core (CXXS-07)" §"Pitfall 6 DTO Validation"
     - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-08 (additive, do not replace existing fns), D-12 (Rust tests)
   </read_first>
 
   <behavior>
     - Test: `yaml_data_suspects_error_rules(empty_yaml_data)` returns empty Vec.
     - Test: `yaml_data_suspects_error_rules(yaml_data_with_one_rule)` returns Vec with 1 element whose `id`, `name`, `severity`, and `main_error_contains_any` match what was loaded.
-    - Test: `yaml_data_suspects_stack_rules(empty_yaml_data)` returns empty Vec.
-    - Test: `yaml_data_suspects_stack_rules(yaml_data_with_one_rule)` returns Vec with 1 element whose all 5 string-list fields match and whose `stack_contains_at_least` Vec is correctly populated.
+    - Test: `yaml_data_suspects_stack_rules_metadata(empty_yaml_data)` returns empty Vec.
+    - Test: `yaml_data_suspects_stack_rules_metadata(yaml_data_with_one_rule)` returns Vec with 1 element whose all 5 string-list fields match — and the DTO has NO stack_contains_at_least field.
+    - Test: `yaml_data_suspects_stack_count_rules_for_id(yaml_data_with_count_rule, "rule_id")` returns Vec<SuspectStackCountRuleDto> populated with substring + count for the matching rule.
+    - Test: `yaml_data_suspects_stack_count_rules_for_id(yaml_data, "definitely_not_a_real_rule_id")` returns empty Vec.
     - Test (regression): `yaml_data_suspects_error_keys` and `yaml_data_suspects_error_values` and `yaml_data_suspects_stack_keys` still work and return their original data (D-08 backward compat).
   </behavior>
 
@@ -201,9 +291,11 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
   Step 2 — Add wrapper fns:
   ```rust
   fn yaml_data_suspects_error_rules(data: &YamlData) -> Vec<ffi::SuspectErrorRuleDto> {
-      // Access the underlying list — exact accessor name confirmed via direct read
-      // (e.g., data.inner.suspects_error or data.inner.get_suspects_error())
-      data.suspects_error()
+      // Access the underlying list — the exact accessor matches how the existing
+      // `yaml_data_suspects_error_keys` accesses the data. Read config.rs for the
+      // current pattern and replicate it.
+      data.inner
+          .suspects_error_rules
           .iter()
           .map(|r: &CoreSuspectErrorRule| ffi::SuspectErrorRuleDto {
               id: r.id.clone(),
@@ -214,10 +306,12 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
           .collect()
   }
 
-  fn yaml_data_suspects_stack_rules(data: &YamlData) -> Vec<ffi::SuspectStackRuleDto> {
-      data.suspects_stack()
+  // FLATTENED metadata — NO Vec<Struct> field (Pitfall 6 fix per Codex HIGH correction)
+  fn yaml_data_suspects_stack_rules_metadata(data: &YamlData) -> Vec<ffi::SuspectStackRuleMetadataDto> {
+      data.inner
+          .suspects_stack_rules
           .iter()
-          .map(|r: &CoreSuspectStackRule| ffi::SuspectStackRuleDto {
+          .map(|r: &CoreSuspectStackRule| ffi::SuspectStackRuleMetadataDto {
               id: r.id.clone(),
               name: r.name.clone(),
               severity: r.severity,
@@ -225,21 +319,36 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
               main_error_optional_any: r.main_error_optional_any.clone(),
               stack_contains_any: r.stack_contains_any.clone(),
               exclude_if_stack_contains_any: r.exclude_if_stack_contains_any.clone(),
-              stack_contains_at_least: r.stack_contains_at_least
+              // Note: stack_contains_at_least is NOT included here — exposed via separate getter
+          })
+          .collect()
+  }
+
+  // Separate getter keyed by rule id (Pitfall 6 fix)
+  fn yaml_data_suspects_stack_count_rules_for_id(
+      data: &YamlData,
+      rule_id: &str,
+  ) -> Vec<ffi::SuspectStackCountRuleDto> {
+      data.inner
+          .suspects_stack_rules
+          .iter()
+          .find(|r| r.id == rule_id)
+          .map(|r| {
+              r.stack_contains_at_least
                   .iter()
                   .map(|c: &CoreSuspectStackCountRule| ffi::SuspectStackCountRuleDto {
                       substring: c.substring.clone(),
                       count: c.count as u32,
                   })
-                  .collect(),
+                  .collect()
           })
-          .collect()
+          .unwrap_or_default()
   }
   ```
 
-  IMPORTANT: The exact accessor (`data.suspects_error()` vs `data.inner().suspects_error.clone()` vs whatever the actual API is) MUST be confirmed by reading config.rs to see how the existing `yaml_data_suspects_error_keys` accesses the same data. Replicate that pattern. If the existing fn iterates `data.inner().suspects_error.iter().map(|r| r.id.clone())`, then the new fn iterates the same source and maps to the full DTO.
+  IMPORTANT: The exact accessor (`data.inner.suspects_error_rules` vs `data.inner.suspects_error.clone()` vs whatever the actual API is) MUST be confirmed by reading config.rs to see how the existing `yaml_data_suspects_error_keys` accesses the same data. Replicate that pattern. If the existing fn iterates `data.inner().suspects_error_rules.iter().map(|r| r.id.clone())`, then the new fn iterates the same source and maps to the full DTO.
 
-  Step 3 — Extend the existing `#[cxx::bridge(namespace = "classic::config")]` block. Add three new shared structs + two new extern declarations:
+  Step 3 — Extend the existing `#[cxx::bridge(namespace = "classic::config")]` block. Add three new shared structs + three new extern declarations (NOT one — the suspect-stack rules now use TWO bridge fns to clear Pitfall 6):
 
   ```rust
   #[cxx::bridge(namespace = "classic::config")]
@@ -256,12 +365,8 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
           main_error_contains_any: Vec<String>,
       }
 
-      struct SuspectStackCountRuleDto {
-          substring: String,
-          count: u32,
-      }
-
-      struct SuspectStackRuleDto {
+      // FLATTENED — NO Vec<Struct> field (Pitfall 6 fix per Codex HIGH correction)
+      struct SuspectStackRuleMetadataDto {
           id: String,
           name: String,
           severity: i32,
@@ -269,7 +374,12 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
           main_error_optional_any: Vec<String>,
           stack_contains_any: Vec<String>,
           exclude_if_stack_contains_any: Vec<String>,
-          stack_contains_at_least: Vec<SuspectStackCountRuleDto>,
+      }
+
+      // Returned by a separate getter keyed by rule id
+      struct SuspectStackCountRuleDto {
+          substring: String,
+          count: u32,
       }
 
       extern "Rust" {
@@ -277,55 +387,84 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
 
           // NEW
           fn yaml_data_suspects_error_rules(data: &YamlData) -> Vec<SuspectErrorRuleDto>;
-          fn yaml_data_suspects_stack_rules(data: &YamlData) -> Vec<SuspectStackRuleDto>;
+          fn yaml_data_suspects_stack_rules_metadata(data: &YamlData) -> Vec<SuspectStackRuleMetadataDto>;
+          fn yaml_data_suspects_stack_count_rules_for_id(
+              data: &YamlData,
+              rule_id: &str,
+          ) -> Vec<SuspectStackCountRuleDto>;
       }
   }
   ```
 
-  Step 4 — Extend the `#[cfg(test)]` block. The tests need a way to construct a YamlData with known suspect rules; the existing config.rs tests already do this — copy the pattern.
+  Step 4 — Extend the `#[cfg(test)]` block. The tests construct a YamlData using the existing test pattern:
 
   ```rust
   #[test]
   fn test_yaml_data_suspects_error_rules_empty() {
-      let data = /* construct empty YamlData per existing test pattern */;
+      // construct empty YamlData per the existing test pattern (e.g., using a minimal fixture YAML or YamlData::default())
+      let data = /* ... */;
       assert!(yaml_data_suspects_error_rules(&data).is_empty());
   }
 
   #[test]
   fn test_yaml_data_suspects_error_rules_with_loaded_rules() {
-      let data = /* construct YamlData with at least one suspect_error rule using existing test fixture */;
+      // load a fixture YAML that includes at least one Crashlog_Error_Check entry
+      let data = /* ... */;
       let rules = yaml_data_suspects_error_rules(&data);
       assert!(!rules.is_empty());
       let first = &rules[0];
       assert!(!first.id.is_empty());
       assert!(!first.name.is_empty());
-      // severity is i32; can be any value, just verify access works
+      assert!(!first.main_error_contains_any.is_empty());
       let _ = first.severity;
   }
 
   #[test]
-  fn test_yaml_data_suspects_stack_rules_empty() {
-      let data = /* construct empty YamlData */;
-      assert!(yaml_data_suspects_stack_rules(&data).is_empty());
+  fn test_yaml_data_suspects_stack_rules_metadata_no_count_rules_field() {
+      // The DTO must NOT have a stack_contains_at_least field — verified by struct shape.
+      // This compile-time check ensures Pitfall 6 is structurally cleared.
+      let data = /* ... */;
+      let metadata = yaml_data_suspects_stack_rules_metadata(&data);
+      // For a fixture with at least one rule:
+      for rule in &metadata {
+          // Iterate every flat Vec<String> field — none of them are nested structs
+          let _ = &rule.main_error_required_any;
+          let _ = &rule.main_error_optional_any;
+          let _ = &rule.stack_contains_any;
+          let _ = &rule.exclude_if_stack_contains_any;
+      }
   }
 
   #[test]
-  fn test_yaml_data_suspects_stack_rules_count_rule_field_populated() {
-      let data = /* construct YamlData with at least one stack rule that has a stack_contains_at_least entry */;
-      let rules = yaml_data_suspects_stack_rules(&data);
-      // Find a rule with non-empty count rules and verify the inner DTO is populated
-      for rule in &rules {
-          for count_rule in &rule.stack_contains_at_least {
-              assert!(!count_rule.substring.is_empty());
-              assert!(count_rule.count > 0);
+  fn test_yaml_data_suspects_stack_count_rules_for_id_unknown_returns_empty() {
+      let data = /* ... */;
+      let count_rules = yaml_data_suspects_stack_count_rules_for_id(&data, "definitely_not_a_real_id_xyz");
+      assert!(count_rules.is_empty());
+  }
+
+  #[test]
+  fn test_yaml_data_suspects_stack_count_rules_for_id_known_returns_populated() {
+      // Load a fixture with a stack rule that has at least one count rule
+      let data = /* ... */;
+      let metadata = yaml_data_suspects_stack_rules_metadata(&data);
+      // Find a rule whose id we know has count rules
+      let target_id = metadata
+          .iter()
+          .find(|r| /* fixture-specific predicate */)
+          .map(|r| r.id.clone());
+      if let Some(id) = target_id {
+          let count_rules = yaml_data_suspects_stack_count_rules_for_id(&data, &id);
+          for cr in &count_rules {
+              assert!(!cr.substring.is_empty());
+              assert!(cr.count > 0);
           }
       }
   }
   ```
 
-  IMPORTANT: The exact YamlData construction in tests depends on the existing test pattern in `config.rs`. If config.rs tests use `YamlData::default()` or load from a fixture YAML file, the new tests follow the same approach. If no test fixture provides suspect rules, the executor may need to create a minimal in-memory YamlData with suspect rules injected — only if necessary, and only as part of the test module.
+  IMPORTANT: The exact YamlData construction in tests depends on the existing test pattern in `config.rs`. If config.rs tests use `YamlData::default()` or load from a fixture YAML file, the new tests follow the same approach. The test fixture must include Crashlog_Error_Check and Crashlog_Stack_Check sections for the tests to be meaningful — if no such fixture exists, the executor creates a minimal in-memory YamlData with hand-constructed suspect rules in the test module only.
 
-  Step 5 — Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml config::tests` and confirm all pass (existing + 4 new). Run clippy.
+  Step 5 — Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml config::tests` and confirm all pass (existing + 5 new). Run clippy.
   </action>
 
   <verify>
@@ -333,55 +472,65 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
   </verify>
 
   <acceptance_criteria>
-    - `git grep -nE 'fn yaml_data_suspects_(error|stack)_rules' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns 2+ wrapper definitions and 2+ extern declarations
-    - `git grep -nE 'struct (SuspectErrorRuleDto|SuspectStackRuleDto|SuspectStackCountRuleDto)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns 3+ shared struct declarations
+    - `git grep -n 'fn yaml_data_suspects_error_rules' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns 2 matches (definition + extern)
+    - `git grep -n 'fn yaml_data_suspects_stack_rules_metadata' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns 2 matches (definition + extern)
+    - `git grep -n 'fn yaml_data_suspects_stack_count_rules_for_id' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns 2 matches
+    - `git grep -nE 'struct (SuspectErrorRuleDto|SuspectStackRuleMetadataDto|SuspectStackCountRuleDto)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns 3+ shared struct declarations
+    - `git grep -n 'stack_contains_at_least: Vec<' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns NOTHING (Pitfall 6 fix verified — the nested Vec<Struct> field is gone)
+    - `git grep -n 'struct SuspectStackRuleDto' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` returns NOTHING (the old combined DTO is gone — only the metadata DTO + count rule DTO exist now)
     - `git grep -n 'fn yaml_data_suspects_error_keys' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` STILL returns the existing fn (D-08 — additive)
     - `git grep -n 'fn yaml_data_suspects_stack_keys' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` STILL returns the existing fn (D-08)
-    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml config::tests` exits 0 with at least 4 new passing tests
-    - `cargo build -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml` exits 0 (no Pitfall 6 — SuspectStackCountRuleDto has no Vec fields, validating the Vec<SuspectStackCountRuleDto> usage is safe)
+    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml config::tests` exits 0 with at least 5 new passing tests
+    - `cargo build -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml` exits 0 (no Pitfall 6 errors — no Vec<StructWithVec>)
     - `cargo clippy -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` exits 0
   </acceptance_criteria>
 
   <done>
-    `src/config.rs` exposes the full CXXS-07 surface (suspect error rules + suspect stack rules + count rules), all tests pass, no existing fns removed.
+    `src/config.rs` exposes the full CXXS-07 surface with the suspect-stack rules FLATTENED into metadata + per-rule count getter (Pitfall 6 fix per Codex HIGH correction), all tests pass, no existing fns removed.
   </done>
 </task>
 
 <task type="auto" tdd="true">
-  <name>Task 2: Widen database.rs with FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed (CXXS-05) + tests</name>
+  <name>Task 2: Widen database.rs with FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed (CXXS-05) + documented batch contract + tests</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs
   </files>
 
   <read_first>
-    - ClassicLib-rs/business-logic/classic-database-core/src/pool_sqlx.rs (READ — confirm exact get_entry / get_entries_batch signatures returning typed Option/HashMap; confirm DbPool method names)
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs (current state — has db_pool_get_entry returning String "" on miss, db_pool_get_entries_batch returning Vec<String> tab-delimited; KEEP these unchanged per D-08)
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-database-core pool_sqlx.rs (CXXS-05)" §"Pitfall 6 DTO Validation"
+    - ClassicLib-rs/business-logic/classic-database-core/src/pool_sqlx.rs (READ — confirm exact `get_entry(formid, plugin, table)` and `get_entries_batch(pairs, table, batch_size)` signatures; CONFIRM the HashMap key format is `"formid:plugin"` per pool_sqlx.rs:1073; confirm the HashMap is hit-only)
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs (current state — has db_pool_get_entry returning String "" on miss, db_pool_get_entries_batch returning Vec<String> tab-delimited; KEEP these unchanged per D-08; read the existing wrapper bodies to see how they call into pool.inner)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 07" Codex MEDIUM concern about batch contract
     - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-08 (additive — keep tab-delimited path), D-12
   </read_first>
 
   <behavior>
-    - Test: `db_pool_get_entry_typed` on a fresh (uninitialized) pool returns FormIdEntryDto with `found: false` and empty value/formid/plugin echoed back as input.
+    - Test: `db_pool_get_entry_typed` on a fresh (uninitialized) pool returns FormIdEntryDto with `found: false` and the input `formid`/`plugin` echoed back, `value: ""`.
     - Test: `db_pool_get_entries_batch_typed` with empty input slices returns empty Vec.
-    - Test: `db_pool_get_entries_batch_typed` with one (formid, plugin) pair on uninitialized pool returns Vec with 1 element where `found: false` and the original formid/plugin are echoed back.
-    - Test: parallel-vec length mismatch in `db_pool_get_entries_batch_typed(pool, &["a"], &[])` returns either empty Vec or fails-soft with one entry — confirm behavior and assert what core actually does. Recommend: align lengths before processing; mismatched returns empty Vec.
-    - Test (regression): `db_pool_get_entry` and `db_pool_get_entries_batch` (existing) still work.
+    - Test: `db_pool_get_entries_batch_typed` with one (formid, plugin) pair on uninitialized pool returns Vec with EXACTLY 1 element where `found: false` and the original formid/plugin are echoed back (positional repackaging contract).
+    - Test: `db_pool_get_entries_batch_typed` with two (formid, plugin) pairs on uninitialized pool returns Vec with EXACTLY 2 elements; result[0] corresponds to (formids[0], plugins[0]) and result[1] corresponds to (formids[1], plugins[1]).
+    - Test: parallel-vec length mismatch in `db_pool_get_entries_batch_typed(pool, &["a"], &[])` returns empty Vec (fail-soft, not Err).
+    - Test (regression): `db_pool_get_entry` and `db_pool_get_entries_batch` (existing) still work and return their original String/Vec<String> shapes.
   </behavior>
 
   <action>
   Edit `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`. KEEP existing fns + DTOs unchanged. ADD new typed surface.
 
   Step 1 — Add wrapper fns ABOVE the bridge block (or after the existing wrapper fns):
-  ```rust
-  fn db_pool_get_entry_typed(pool: &DbPool, formid: &str, plugin: &str) -> ffi::FormIdEntryDto {
-      // The existing db_pool_get_entry calls into pool.get_entry(...) and returns String "" on miss.
-      // For the typed variant, we want to know whether the result was a hit or a miss.
-      // If pool.get_entry returns Result<Option<String>, _>, we can map None->found:false and Some(v)->found:true.
-      // The exact core call shape is confirmed by reading pool_sqlx.rs.
 
-      // Pattern (executor adapts to actual core API):
+  ```rust
+  /// Typed single-entry FormID lookup.
+  ///
+  /// Returns a `FormIdEntryDto` with `found: true` if the entry exists in the
+  /// database (or cache), or `found: false` for misses or errors. The input
+  /// `formid` and `plugin` are echoed back in the result so C++ callers don't
+  /// have to track the input separately.
+  ///
+  /// Bridge contract: this is the typed alternative to `db_pool_get_entry`
+  /// (which returns `""` on miss). Both fns coexist per D-08.
+  fn db_pool_get_entry_typed(pool: &DbPool, formid: &str, plugin: &str) -> ffi::FormIdEntryDto {
       let runtime = classic_shared_core::get_runtime();
+      // Use the same async lock pattern as the existing db_pool_get_entry wrapper.
       let result = runtime.block_on(async {
           pool.inner.get_entry(formid, plugin, None).await
       });
@@ -399,6 +548,21 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
       }
   }
 
+  /// Typed batch FormID lookup with positional repackaging.
+  ///
+  /// Bridge contract (Codex review MEDIUM correction):
+  /// - The core `get_entries_batch` returns a HIT-ONLY HashMap keyed by
+  ///   `"formid:plugin"`. Misses are absent from the map.
+  /// - This wrapper repackages the result into ONE `FormIdEntryDto` PER INPUT
+  ///   PAIR — `result[i]` corresponds to `(formids[i], plugins[i])`.
+  /// - Misses get `found: false` and `value: ""`.
+  /// - Length mismatch between `formids` and `plugins` returns empty Vec
+  ///   (fail-soft, NOT an error).
+  /// - Empty input returns empty Vec immediately (no runtime cost).
+  /// - The internal batch_size parameter is set to 100 (a balance between
+  ///   SQL overhead and UI responsiveness — see plan's Batch Lookup Contract
+  ///   section). C++ callers requesting >1000 entries should chunk on their
+  ///   side to avoid blocking the Qt event loop.
   fn db_pool_get_entries_batch_typed(
       pool: &DbPool,
       formids: &[String],
@@ -414,17 +578,21 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
           .map(|(f, p)| (f.clone(), p.clone()))
           .collect();
 
-      // The core get_entries_batch signature is something like:
-      //   pub async fn get_entries_batch(&self, pairs: &[(String, String)], _, _) -> Result<HashMap<(String,String), String>>
-      // (executor reads pool_sqlx.rs to confirm exact shape)
+      // Core API: get_entries_batch(formid_plugin_pairs: Vec<(String, String)>, table: Option<&str>, batch_size: usize)
+      // Returns HashMap<String, String> keyed by "formid:plugin", hit-only.
       let map = runtime.block_on(async {
-          pool.inner.get_entries_batch(&pairs, None, 50).await.unwrap_or_default()
+          pool.inner
+              .get_entries_batch(pairs.clone(), None, 100)
+              .await
+              .unwrap_or_default()
       });
 
+      // Positional repackaging — one DTO per input pair
       pairs
           .into_iter()
           .map(|(formid, plugin)| {
-              let value = map.get(&(formid.clone(), plugin.clone())).cloned().unwrap_or_default();
+              let lookup_key = format!("{}:{}", formid, plugin);
+              let value = map.get(&lookup_key).cloned().unwrap_or_default();
               let found = !value.is_empty();
               ffi::FormIdEntryDto { formid, plugin, value, found }
           })
@@ -495,14 +663,17 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
   }
 
   #[test]
-  fn test_db_pool_get_entries_batch_typed_uninitialized_returns_not_found_for_each() {
+  fn test_db_pool_get_entries_batch_typed_uninitialized_positional_repackaging() {
       let pool = db_pool_new("Fallout4", 4, 60);
       let result = db_pool_get_entries_batch_typed(
           &pool,
           &["0x000ABCDE".to_string(), "0x000FEDCB".to_string()],
           &["Fallout4.esm".to_string(), "Fallout4.esm".to_string()],
       );
+      // Positional repackaging contract: ONE DTO PER INPUT
       assert_eq!(result.len(), 2);
+      assert_eq!(result[0].formid, "0x000ABCDE");
+      assert_eq!(result[1].formid, "0x000FEDCB");
       for entry in &result {
           assert!(!entry.found);
           assert!(entry.value.is_empty());
@@ -518,21 +689,23 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
   </verify>
 
   <acceptance_criteria>
-    - `git grep -nE 'fn db_pool_get_entry_typed|fn db_pool_get_entries_batch_typed' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` returns 2+ wrapper definitions and 2+ extern declarations
+    - `git grep -n 'fn db_pool_get_entry_typed' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` returns 2 matches (definition + extern)
+    - `git grep -n 'fn db_pool_get_entries_batch_typed' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` returns 2 matches
     - `git grep -n 'struct FormIdEntryDto' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` returns the shared struct declaration
+    - `git grep -n 'positional repackaging\|hit-only\|found: false' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` returns at least one comment line documenting the contract (Codex MEDIUM correction proof)
     - `git grep -n 'fn db_pool_get_entry' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` STILL returns the existing fn (D-08 — additive, not replaced)
     - `git grep -n 'fn db_pool_get_entries_batch' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` STILL returns the existing fn
-    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml database::tests` exits 0 with at least 4 new passing tests
+    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml database::tests` exits 0 with at least 4 new passing tests (including positional repackaging test)
     - `cargo clippy -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` exits 0
   </acceptance_criteria>
 
   <done>
-    `src/database.rs` exposes the FormIdEntryDto typed API alongside the existing tab-delimited path, all tests pass, no regressions.
+    `src/database.rs` exposes the FormIdEntryDto typed API alongside the existing tab-delimited path with documented hit-only batch contract and positional repackaging (Codex MEDIUM correction), all tests pass, no regressions.
   </done>
 </task>
 
 <task type="auto">
-  <name>Task 3: Incremental builds, refresh D-09 baseline, atomic commit</name>
+  <name>Task 3: Incremental builds, refresh D-09 baseline, atomic commit (D-11 N/A justification documented in plan body)</name>
 
   <files>
     - docs/implementation/cxx_api_parity/baseline/parity_contract.json
@@ -563,9 +736,18 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
   python tools/cxx_api_parity/check_parity_gate.py --repo-root .
   ```
 
-  ## Part C — D-11 consumer migration note
+  ## Part C — D-11 N/A justification (Codex review MEDIUM correction)
 
-  Per RESEARCH.md §"D-11 Consumer Migration Enumeration", neither classic-cli nor classic-gui currently has a hand-rolled suspect-rule reader or typed FormID lookup that would qualify as a narrowed-bridge migration target. The existing C++ code paths use the tab-delimited DB API and the keys-only suspect getters; both paths continue to work via D-08 backward compat. The new typed/structured surfaces are available for FUTURE consumer migration but no Phase 2 plan is required to add a caller for them. The CXXS-10 success criterion is satisfied by `build_cli.ps1 -Test` and `build_gui.ps1 -Test` passing — which they will, because the new bridge fns are additive.
+  Per the D-11 N/A justification section in this plan's `<context>` block, no new C++ consumer migration is added in this plan because no current narrowed call sites exist for typed FormID lookups or suspect-rule readers in `classic-cli` or `classic-gui`. The grep evidence is documented in the plan body. The new typed surfaces remain available for future consumer migration.
+
+  Verify the grep evidence still holds at execution time:
+  ```bash
+  grep -rn 'db_pool_get_entry\|db_pool_get_entries_batch' classic-cli/src/ classic-gui/src/  # Expected: NO matches
+  grep -rn 'yaml_data_suspects_\|SuspectErrorRule\|SuspectStackRule' classic-cli/src/ classic-gui/src/  # Expected: NO matches
+  grep -rn 'classic::config::yaml_data_' classic-cli/src/ classic-gui/src/  # Expected: NO matches
+  ```
+
+  Document the grep results in the SUMMARY.md as confirmation.
 
   ## Part D — Atomic commit
 
@@ -574,7 +756,7 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
   - `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`
   - All 4 baseline artifacts
 
-  Commit message: `Feat(02-07): expose suspect rules (CXXS-07) and typed FormID API (CXXS-05) in CXX bridge` — body mentions CXXS-05, CXXS-07, D-08 (additive), D-09.
+  Commit message: `Feat(02-07): expose suspect rules (CXXS-07) and typed FormID API (CXXS-05) in CXX bridge` — body mentions CXXS-05, CXXS-07, D-08 (additive), D-09, the Pitfall 6 flatten for suspect-stack rules (Codex HIGH correction), the documented batch lookup contract (Codex MEDIUM correction), and the D-11 N/A justification (Codex MEDIUM correction).
   </action>
 
   <verify>
@@ -585,14 +767,14 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
     - `pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test` exits 0
     - `pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test` exits 0
     - `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 with 0 drift
-    - The committed `cxx_diff_report.md` shows ADDED rows under `bridgeModule: "config"` for SuspectErrorRuleDto, SuspectStackRuleDto, SuspectStackCountRuleDto + 2 new fns
+    - The committed `cxx_diff_report.md` shows ADDED rows under `bridgeModule: "config"` for SuspectErrorRuleDto, SuspectStackRuleMetadataDto, SuspectStackCountRuleDto + 3 new fns
     - The committed `cxx_diff_report.md` shows ADDED rows under `bridgeModule: "database"` for FormIdEntryDto + 2 new fns
     - `git log -1 --stat` shows the commit touches Rust source AND the parity baseline atomically
     - The committed `cxx_diff_report.md` shows ZERO REMOVED rows for `bridgeModule: "config"` or `bridgeModule: "database"` (D-08 — additive only)
   </acceptance_criteria>
 
   <done>
-    Plan 02-07 complete — CXXS-05 and CXXS-07 satisfied; both existing fail-soft paths preserved; parity gate at 0 drift.
+    Plan 02-07 complete — CXXS-05 and CXXS-07 satisfied; suspect-stack rules are flattened (Pitfall 6 cleared per Codex HIGH correction); batch lookup contract is documented (Codex MEDIUM correction); D-11 N/A is justified with grep evidence (Codex MEDIUM correction); both existing fail-soft paths preserved; parity gate at 0 drift.
   </done>
 </task>
 
@@ -604,25 +786,29 @@ The existing `db_pool_get_entry` (returns `String`, "" on miss) and `db_pool_get
 3. Parity gate at 0 drift
 4. CXXS-05 and CXXS-07 fully satisfied
 5. No D-08 violations (existing fns unchanged)
+6. Suspect-stack rules use flattened metadata + per-rule count getter (no Vec<StructWithVec>)
+7. Batch lookup contract documented in plan + bridge wrapper doc comment
 
 Validation Architecture (per 02-VALIDATION.md row 2-07-01): `cargo test -p classic-cpp-bridge config::tests database::tests` + `build_cli.ps1 -Test` + parity gate.
 </verification>
 
 <success_criteria>
-- src/config.rs exposes SuspectErrorRuleDto, SuspectStackCountRuleDto, SuspectStackRuleDto + yaml_data_suspects_error_rules + yaml_data_suspects_stack_rules
-- src/database.rs exposes FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed
-- Pitfall 6 verified — SuspectStackRuleDto.stack_contains_at_least is a Vec<SuspectStackCountRuleDto> where SuspectStackCountRuleDto has NO Vec fields, satisfying the rule
+- src/config.rs exposes SuspectErrorRuleDto, SuspectStackRuleMetadataDto (FLATTENED — no nested count rules), SuspectStackCountRuleDto + yaml_data_suspects_error_rules + yaml_data_suspects_stack_rules_metadata + yaml_data_suspects_stack_count_rules_for_id
+- src/database.rs exposes FormIdEntryDto + db_pool_get_entry_typed + db_pool_get_entries_batch_typed with documented hit-only batch contract
+- Pitfall 6 verified — NO Vec<Struct> field inside any returned `Vec<DtoX>` shape (Codex HIGH correction)
 - All existing fns UNCHANGED (D-08 additive)
 - Both incremental builds green
 - Parity gate at 0 drift (D-09)
-- D-11 N/A (no narrowed call sites currently exist for these surfaces — documented in commit body)
+- D-11 N/A justified with explicit grep evidence (Codex MEDIUM correction)
 - Atomic commit
 </success_criteria>
 
 <output>
 After completion, create `.planning/phases/02-cxx-bridge-surface-expansion/02-07-SUMMARY.md` documenting:
-- Exact entries added (3 structs + 2 fns in config; 1 struct + 2 fns in database)
-- Pitfall 6 verification: SuspectStackRuleDto contains Vec<SuspectStackCountRuleDto>; SuspectStackCountRuleDto has only String + u32 fields; CONFIRMED Pitfall 6 CLEAR
-- D-11 N/A note (no current narrowed call sites)
-- Note: CXXS-05 and CXXS-07 are now both complete
+- Confirmation that suspect-stack rules are flattened into metadata + per-rule getter (Pitfall 6 cleared per Codex HIGH correction)
+- Confirmation that batch lookup contract is documented in plan body + bridge wrapper doc comment (Codex MEDIUM correction)
+- Confirmation of D-11 N/A justification with grep results (Codex MEDIUM correction)
+- Exact entries added (3 structs + 3 fns in config; 1 struct + 2 fns in database)
+- Pitfall 6 verification: SuspectStackRuleMetadataDto has NO Vec<Struct> field; only Vec<String> (matches existing YamlDataModSolutionEntry precedent); CONFIRMED Pitfall 6 CLEAR
+- Test results: positional repackaging test for db_pool_get_entries_batch_typed passes
 </output>

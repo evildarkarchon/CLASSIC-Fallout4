@@ -8,6 +8,7 @@ files_modified:
   - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs
   - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs
   - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs
+  - classic-gui/src/workers/updateworker.cpp
   - docs/implementation/cxx_api_parity/baseline/parity_contract.json
   - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.json
   - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md
@@ -19,16 +20,18 @@ requirements:
 must_haves:
   truths:
     - "src/web.rs exists and contains a #[cxx::bridge(namespace = \"classic::web\")] block"
-    - "ModSite is exposed as a CXX shared enum (D-04 / D-07) with the exact 3 variants from classic-web-core"
+    - "ModSite is exposed as a CXX shared enum (D-04 / D-07) with the exact 3 variants from classic-web-core (NexusMods, BethesdaNet, ModDB)"
+    - "ModSite-taking helper fns use the SHARED ENUM directly — NOT raw strings (Codex review MEDIUM correction)"
     - "URL helpers (is_valid_url, validate_url, extract_domain, get_user_agent, get_user_agent_with_suffix, join_url, build_url_with_query) are bridged"
-    - "ModSite methods (base_url, name, game_url) are bridged using string-based dispatch (no cross-module GameId reference per RESEARCH.md Open Question 4)"
+    - "validate_url returns the normalized URL string on success (preserving canonicalization), not just bool — Codex review MEDIUM correction"
     - "src/web.rs is in build.rs::cxx_build::bridges and lib.rs declares pub mod web"
     - "Both build_cli.ps1 -Clean -Test and build_gui.ps1 -Clean -Test exit 0 (D-10)"
     - "python tools/cxx_api_parity/check_parity_gate.py --repo-root . exits 0 with 0 drift after --update-baseline"
+    - "classic-gui/src/workers/updateworker.cpp uses classic::web::get_user_agent or another classic::web::* helper in production C++ — D-11 consumer migration (Codex review MEDIUM correction)"
   artifacts:
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs"
       provides: "New CXX bridge module exposing classic-web-core URL/user-agent/mod-site helpers (CXXS-02)"
-      min_lines: 100
+      min_lines: 130
       contains: "namespace = \"classic::web\""
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs"
       provides: "Bridges array now includes \"src/web.rs\""
@@ -36,6 +39,9 @@ must_haves:
     - path: "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs"
       provides: "pub mod web declaration under #[cfg(windows)]"
       contains: "pub mod web"
+    - path: "classic-gui/src/workers/updateworker.cpp"
+      provides: "D-11 consumer — calls classic::web::get_user_agent (or another classic::web::* fn) in the existing GitHub check flow"
+      contains: "classic::web"
     - path: "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
       provides: "Refreshed CXX baseline including new web entries (D-09)"
   key_links:
@@ -47,14 +53,24 @@ must_haves:
       to: "classic-web-core (validate_url, is_valid_url, extract_domain, get_user_agent, build_url_with_query, ModSite)"
       via: "use classic_web_core::{...}"
       pattern: "use classic_web_core"
+    - from: "classic-gui/src/workers/updateworker.cpp"
+      to: "classic_cxx_bridge/web.h"
+      via: "C++ #include + classic::web::get_user_agent call"
+      pattern: "classic::web::"
 ---
 
 <objective>
-Create a brand-new CXX bridge module `src/web.rs` exposing `classic-web-core` (CXXS-02). Per D-04, declares `ModSite` as a CXX shared enum and bridges all URL helpers, user-agent helpers, and ModSite methods. Per RESEARCH.md "Open Question 4", uses string-based dispatch for `mod_site_game_url(site_name, game_id_str)` to avoid cross-module shared-enum referencing problems with `classic::constants::GameId`. Adds the file to `build.rs` and runs the mandatory D-10 clean-build pair.
+Create a brand-new CXX bridge module `src/web.rs` exposing `classic-web-core` (CXXS-02). Per D-04, declares `ModSite` as a CXX shared enum AND uses it directly (not via string dispatch) for ModSite-taking helpers. Bridges all URL helpers, user-agent helpers, and ModSite methods. Adds the file to `build.rs` and runs the mandatory D-10 clean-build pair. Adds at least one D-11 consumer migration in `classic-gui/src/workers/updateworker.cpp`.
 
-Purpose: First-time exposure of `classic-web-core` to C++ frontends. Independent of `constants.rs` (no shared types cross the module boundary because we use string dispatch), so this plan can run in parallel with Plan 02-02 in Wave 1.
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan used string-based dispatch for `mod_site_*(site_name: &str, ...)` helpers, giving up the type safety that the bridge ModSite shared enum was supposed to provide. The Codex review correctly noted this creates invalid-input states that don't exist in Rust. This plan now uses the shared `ModSite` enum directly. For `mod_site_game_url`, the GameId is also passed as a CXX shared enum (declared as a SECOND shared enum in `web.rs` to avoid cross-module references — same variant set as `classic::constants::GameId`, but a separate type per the per-bridge-module shared-enum scoping rule).
 
-Output: New `src/web.rs` with bridged URL/user-agent/mod-site helpers; `build.rs` and `lib.rs` updated; both clean MSVC builds green; refreshed parity baseline committed atomically.
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan defined `validate_url_string(url) -> Result<()>`, collapsing `classic-web-core::validate_url`'s parsed `Url` return value to a bool/error. The Codex review correctly noted this loses canonicalization. This plan now defines `validate_url_string(url) -> Result<String>` returning the normalized URL string on success.
+
+**REVIEWS-MODE NOTE (Codex review MEDIUM):** A previous version of this plan treated D-11 as N/A. This plan adds a real consumer migration in `updateworker.cpp` where the existing `github_check_for_updates` call is paired with `classic::web::get_user_agent()` (used in a logging or pre-call diagnostic line, since the actual user-agent string used by the GitHub HTTP client lives inside the Rust core).
+
+Purpose: First-time exposure of `classic-web-core` to C++ frontends. Independent of `constants.rs` (no shared types cross the module boundary), so this plan can run in parallel with Plan 02-02 in Wave 1.
+
+Output: New `src/web.rs` with bridged URL/user-agent/mod-site helpers using typed enums; `build.rs` and `lib.rs` updated; updateworker.cpp exercises the new namespace; both clean MSVC builds green; refreshed parity baseline committed atomically.
 </objective>
 
 <execution_context>
@@ -68,9 +84,13 @@ Output: New `src/web.rs` with bridged URL/user-agent/mod-site helpers; `build.rs
 @.planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md
 @.planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md
 @.planning/phases/02-cxx-bridge-surface-expansion/02-VALIDATION.md
+@.planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md
 
 # Source of truth — what classic-web-core exposes
 @ClassicLib-rs/business-logic/classic-web-core/src/lib.rs
+
+# Source of truth — GameId for the second shared enum
+@ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs
 
 # Reference patterns
 @ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs
@@ -80,76 +100,84 @@ Output: New `src/web.rs` with bridged URL/user-agent/mod-site helpers; `build.rs
 @ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs
 @ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs
 
+# D-11 consumer migration site
+@classic-gui/src/workers/updateworker.cpp
+
 # Parity gate
 @tools/cxx_api_parity/check_parity_gate.py
 
 <interfaces>
-<!-- classic-web-core public surface (per RESEARCH.md §"classic-web-core"). -->
+<!-- classic-web-core public surface (per RESEARCH.md §"classic-web-core" + direct read). -->
 
 ```rust
-pub fn validate_url(url_str: &str) -> Result<(), String>;
+pub fn validate_url(url_str: &str) -> Result<Url, WebError>;  // returns parsed Url on success
 pub fn is_valid_url(url_str: &str) -> bool;
-pub fn extract_domain(url_str: &str) -> Result<String, String>;
+pub fn extract_domain(url_str: &str) -> Result<String, WebError>;
 pub fn get_user_agent() -> String;
 pub fn get_user_agent_with_suffix(suffix: &str) -> String;
-pub fn join_url(base: &str, path: &str) -> Result<String, String>;
-pub fn build_url_with_query(base: &str, params: &[(&str, &str)]) -> Result<String, String>;
+pub fn join_url(base: &str, path: &str) -> Result<String, WebError>;
+pub fn build_url_with_query(base: &str, params: &[(&str, &str)]) -> Result<String, WebError>;
 
 pub enum ModSite { NexusMods, BethesdaNet, ModDB }
 impl ModSite {
     pub fn base_url(&self) -> &'static str;
     pub fn name(&self) -> &'static str;
-    pub fn game_url(&self, game_id: GameId) -> String;  // takes classic_constants_core::GameId
+    pub fn game_url(&self, game_id: GameId) -> String;
 }
 ```
 
-CXX bridging strategy (per D-04, D-07, RESEARCH.md):
+CXX bridging strategy (Codex review MEDIUM corrections):
 - Declare `ModSite` as a CXX shared enum INSIDE `#[cxx::bridge(namespace = "classic::web")]`
-- For ModSite methods, expose free fns that take a string discriminant (NOT the bridge enum, NOT GameId from constants) — `mod_site_base_url(site_name: &str) -> String`, etc.
-- This avoids cross-module shared-enum referencing problems entirely (Open Question 4 resolution)
-- For `build_url_with_query`, the `&[(&str, &str)]` slice-of-tuples is NOT CXX-bridgeable. Take two parallel `&[String]` vectors (keys + values). Pattern documented in RESEARCH.md §"Architecture Patterns".
+- Declare `WebGameId` as a SECOND CXX shared enum in the SAME bridge block (mirrors `classic::constants::GameId` but is a separate type — CXX shared enums don't cross bridge module boundaries cleanly)
+- For ModSite methods, the bridge fns take the **shared enum directly** — `mod_site_base_url(site: ModSite) -> String`, NOT `mod_site_base_url(site_name: &str)`
+- For `mod_site_game_url`, take both shared enums: `mod_site_game_url(site: ModSite, game: WebGameId) -> String`
+- For `validate_url_string`, return `Result<String>` (the normalized URL on success) — preserves canonicalization per Codex MEDIUM correction
+- For `build_url_with_query`, the `&[(&str, &str)]` slice-of-tuples is NOT CXX-bridgeable. Take two parallel `&[String]` vectors (keys + values).
 </interfaces>
 </context>
 
 <tasks>
 
 <task type="auto" tdd="true">
-  <name>Task 1: Create src/web.rs with shared ModSite enum + URL helpers + tests</name>
+  <name>Task 1: Create src/web.rs with shared ModSite + WebGameId enums (NOT string dispatch) + URL helpers + Result<String> validate + tests</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs
   </files>
 
   <read_first>
-    - ClassicLib-rs/business-logic/classic-web-core/src/lib.rs (READ ENTIRELY — confirm exact ModSite variant names; confirm validate_url / is_valid_url / extract_domain / get_user_agent / get_user_agent_with_suffix / join_url / build_url_with_query signatures; confirm ModSite::base_url / name / game_url method names)
-    - ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs (only read GameId — needed if game_url() requires constructing one from a string)
+    - ClassicLib-rs/business-logic/classic-web-core/src/lib.rs (READ ENTIRELY — confirm exact ModSite variant names; confirm validate_url ACTUAL return type is Result<Url, _> not Result<(), _>; confirm is_valid_url / extract_domain / get_user_agent / get_user_agent_with_suffix / join_url / build_url_with_query signatures; confirm ModSite::base_url / name / game_url method names)
+    - ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs (only read GameId enum — needed because `ModSite::game_url()` takes a `GameId`)
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs (template for single-purpose bridge module with #[cfg(test)] mod tests)
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs (template — extern "Rust" Result<T> declarations and slice parameters)
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-web-core" §"Pattern: build_url_with_query key/value parallel vectors" §"Open Question 4"
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-04, D-07 (CXX shared enums for ModSite + constants), D-12 (Rust-side tests)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 03" (the MEDIUM concerns about string dispatch and validate_url collapsing)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-RESEARCH.md §"classic-web-core" §"Pattern: build_url_with_query key/value parallel vectors"
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-04, D-07 (CXX shared enums for ModSite + GameId), D-12 (Rust-side tests)
   </read_first>
 
   <behavior>
     - Test: `is_valid_url("https://nexusmods.com")` returns true.
     - Test: `is_valid_url("not-a-url")` returns false.
-    - Test: `validate_url_string("https://nexusmods.com")` returns Ok(()).
+    - Test: `validate_url_string("https://nexusmods.com")` returns Ok with a normalized URL string (e.g., "https://nexusmods.com/").
     - Test: `validate_url_string("garbage")` returns Err with non-empty message.
     - Test: `extract_domain_string("https://nexusmods.com/games/fallout4")` returns Ok("nexusmods.com").
-    - Test: `web_get_user_agent()` returns a non-empty string starting with the project's user-agent prefix (whatever core defines).
+    - Test: `web_get_user_agent()` returns a non-empty string.
     - Test: `web_get_user_agent_with_suffix("test-suffix")` returns a string CONTAINING "test-suffix".
-    - Test: `web_join_url("https://example.com", "path")` returns Ok("https://example.com/path") (or whatever core's join_url defines for the trailing-slash policy).
-    - Test: `web_build_url_with_query("https://example.com", &["a".into(), "b".into()], &["1".into(), "2".into()])` returns Ok with a query string containing both `a=1` and `b=2`.
-    - Test: `web_build_url_with_query("https://example.com", &["only_one".into()], &[])` returns Err (parallel-vec length mismatch).
-    - Test: `mod_site_name("NexusMods")` returns the exact name() string from `ModSite::NexusMods.name()`.
-    - Test: `mod_site_base_url("NexusMods")` returns a string starting with "https://".
-    - Test: `mod_site_game_url("NexusMods", "Fallout4")` returns a non-empty URL (exact form depends on core).
-    - Test: `mod_site_name("InvalidSite")` returns "" (fail-soft on unknown discriminant).
+    - Test: `web_join_url("https://example.com", "path")` returns Ok with a URL containing "/path".
+    - Test: `web_build_url_with_query("https://example.com", &["a","b"], &["1","2"])` returns Ok with a query string containing both `a=1` and `b=2`.
+    - Test: `web_build_url_with_query("https://example.com", &["only_one"], &[])` returns Err (parallel-vec length mismatch).
+    - Test: `mod_site_name(ffi::ModSite::NexusMods)` returns the exact string from `ModSite::NexusMods.name()`.
+    - Test: `mod_site_base_url(ffi::ModSite::NexusMods)` returns a string starting with "https://".
+    - Test: `mod_site_game_url(ffi::ModSite::NexusMods, ffi::WebGameId::Fallout4)` returns a non-empty URL.
+    - Test: All ModSite variants × all WebGameId variants — enumerate the matrix and verify no panics, all returns are non-empty strings.
   </behavior>
 
   <action>
   Create the file `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs`.
 
-  Step 1 — Read `ClassicLib-rs/business-logic/classic-web-core/src/lib.rs` end-to-end. Note the EXACT ModSite variant names (research says NexusMods, BethesdaNet, ModDB but verify by direct read).
+  Step 1 — Read `ClassicLib-rs/business-logic/classic-web-core/src/lib.rs` end-to-end. CONFIRM:
+  - ModSite variant names: `NexusMods`, `BethesdaNet`, `ModDB`
+  - `validate_url` ACTUAL return type — likely `Result<Url, WebError>` (NOT `Result<()>`); the bridge wrapper preserves the canonicalized URL string
 
   Step 2 — Write the file:
 
@@ -160,12 +188,17 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
   //! `ModSite` enum so C++ frontends can build canonical mod-site URLs and
   //! validate user-supplied URLs without hardcoding strings.
   //!
-  //! Per D-04 and D-07, `ModSite` is a CXX shared enum. Per RESEARCH.md
-  //! "Open Question 4", `mod_site_game_url` takes a string game-id discriminant
-  //! to avoid referencing `classic::constants::GameId` from a separate bridge
-  //! module.
+  //! Per D-04 and D-07, `ModSite` and `WebGameId` are CXX shared enums declared
+  //! INSIDE this bridge block. The Codex review (MEDIUM) corrected an earlier
+  //! string-dispatch design — bridge fns now take the typed enums directly.
+  //!
+  //! Note on cross-module shared enums: CXX shared enums don't share across
+  //! `#[cxx::bridge]` modules. `WebGameId` here mirrors the variant set of
+  //! `classic::constants::GameId` but is a separate CXX type. C++ callers
+  //! that have a `classic::constants::GameId` value translate via the value
+  //! (both enums use the same `#[repr(u8)]` discriminants).
 
-  use classic_constants_core::GameId;
+  use classic_constants_core::GameId as CoreGameId;
   use classic_web_core::{
       build_url_with_query as core_build_url_with_query,
       extract_domain as core_extract_domain,
@@ -174,8 +207,31 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
       is_valid_url as core_is_valid_url,
       join_url as core_join_url,
       validate_url as core_validate_url,
-      ModSite,
+      ModSite as CoreModSite,
   };
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Enum mappers (Codex MEDIUM correction: typed enums, not string dispatch)
+  // ─────────────────────────────────────────────────────────────────────
+
+  fn from_bridge_mod_site(site: ffi::ModSite) -> CoreModSite {
+      match site {
+          ffi::ModSite::NexusMods => CoreModSite::NexusMods,
+          ffi::ModSite::BethesdaNet => CoreModSite::BethesdaNet,
+          ffi::ModSite::ModDB => CoreModSite::ModDB,
+          _ => CoreModSite::NexusMods,
+      }
+  }
+
+  fn from_bridge_web_game_id(g: ffi::WebGameId) -> CoreGameId {
+      match g {
+          ffi::WebGameId::Fallout4 => CoreGameId::Fallout4,
+          ffi::WebGameId::Fallout4VR => CoreGameId::Fallout4VR,
+          ffi::WebGameId::Skyrim => CoreGameId::Skyrim,
+          ffi::WebGameId::Starfield => CoreGameId::Starfield,
+          _ => CoreGameId::Fallout4,
+      }
+  }
 
   // ─────────────────────────────────────────────────────────────────────
   // URL helpers
@@ -185,8 +241,12 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
       core_is_valid_url(url_str)
   }
 
-  fn validate_url_string(url_str: &str) -> Result<(), String> {
-      core_validate_url(url_str).map_err(|e| e.to_string())
+  // Codex MEDIUM correction: return the canonicalized URL string on success
+  // (preserves Url::parse normalization), not Result<()>.
+  fn validate_url_string(url_str: &str) -> Result<String, String> {
+      core_validate_url(url_str)
+          .map(|url| url.to_string())  // Url -> normalized String
+          .map_err(|e| e.to_string())
   }
 
   fn extract_domain_string(url_str: &str) -> Result<String, String> {
@@ -230,52 +290,23 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // ModSite helpers — string-based dispatch (Open Question 4 resolution)
+  // ModSite helpers — TYPED ENUM dispatch (Codex MEDIUM correction)
   // ─────────────────────────────────────────────────────────────────────
 
-  fn mod_site_from_str(name: &str) -> Option<ModSite> {
-      match name {
-          "NexusMods" => Some(ModSite::NexusMods),
-          "BethesdaNet" => Some(ModSite::BethesdaNet),
-          "ModDB" => Some(ModSite::ModDB),
-          _ => None,
-      }
+  fn mod_site_base_url(site: ffi::ModSite) -> String {
+      from_bridge_mod_site(site).base_url().to_string()
   }
 
-  fn game_id_from_str(name: &str) -> Option<GameId> {
-      match name {
-          "Fallout4" => Some(GameId::Fallout4),
-          "Fallout4VR" => Some(GameId::Fallout4VR),
-          "Skyrim" => Some(GameId::Skyrim),
-          "Starfield" => Some(GameId::Starfield),
-          _ => None,
-      }
+  fn mod_site_name(site: ffi::ModSite) -> String {
+      from_bridge_mod_site(site).name().to_string()
   }
 
-  fn mod_site_base_url(site_name: &str) -> String {
-      mod_site_from_str(site_name)
-          .map(|s| s.base_url().to_string())
-          .unwrap_or_default()
-  }
-
-  fn mod_site_name(site_name: &str) -> String {
-      mod_site_from_str(site_name)
-          .map(|s| s.name().to_string())
-          .unwrap_or_default()
-  }
-
-  fn mod_site_game_url(site_name: &str, game_id_str: &str) -> String {
-      let Some(site) = mod_site_from_str(site_name) else {
-          return String::new();
-      };
-      let Some(game_id) = game_id_from_str(game_id_str) else {
-          return String::new();
-      };
-      site.game_url(game_id)
+  fn mod_site_game_url(site: ffi::ModSite, game: ffi::WebGameId) -> String {
+      from_bridge_mod_site(site).game_url(from_bridge_web_game_id(game))
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // CXX bridge block — D-04 shared enum + extern "Rust" helper fns
+  // CXX bridge block — D-04 shared enums + extern "Rust" helper fns
   // ─────────────────────────────────────────────────────────────────────
 
   #[cxx::bridge(namespace = "classic::web")]
@@ -287,10 +318,23 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
           ModDB = 2,
       }
 
+      // Mirrors classic::constants::GameId variant set; declared separately
+      // because CXX shared enums don't cross bridge module boundaries.
+      // Discriminant values match classic::constants::GameId so C++ callers
+      // can `static_cast` between the two if needed.
+      #[repr(u8)]
+      enum WebGameId {
+          Fallout4 = 0,
+          Fallout4VR = 1,
+          Skyrim = 2,
+          Starfield = 3,
+      }
+
       extern "Rust" {
           // URL validation
           fn is_valid_url(url_str: &str) -> bool;
-          fn validate_url_string(url_str: &str) -> Result<()>;
+          // Returns the canonicalized URL string on success (preserves Url::parse normalization)
+          fn validate_url_string(url_str: &str) -> Result<String>;
           fn extract_domain_string(url_str: &str) -> Result<String>;
           fn web_join_url(base: &str, path: &str) -> Result<String>;
           fn web_build_url_with_query(
@@ -303,10 +347,10 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
           fn web_get_user_agent() -> String;
           fn web_get_user_agent_with_suffix(suffix: &str) -> String;
 
-          // ModSite methods (string dispatch)
-          fn mod_site_base_url(site_name: &str) -> String;
-          fn mod_site_name(site_name: &str) -> String;
-          fn mod_site_game_url(site_name: &str, game_id_str: &str) -> String;
+          // ModSite methods (TYPED enum dispatch — Codex MEDIUM correction)
+          fn mod_site_base_url(site: ModSite) -> String;
+          fn mod_site_name(site: ModSite) -> String;
+          fn mod_site_game_url(site: ModSite, game: WebGameId) -> String;
       }
   }
 
@@ -323,11 +367,14 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
           assert!(!is_valid_url("not-a-url"));
       }
       #[test]
-      fn test_validate_url_string_ok() {
-          assert!(validate_url_string("https://nexusmods.com").is_ok());
+      fn test_validate_url_string_returns_canonicalized() {
+          let result = validate_url_string("https://nexusmods.com");
+          assert!(result.is_ok());
+          let normalized = result.unwrap();
+          assert!(normalized.starts_with("https://nexusmods.com"));
       }
       #[test]
-      fn test_validate_url_string_err() {
+      fn test_validate_url_string_err_for_garbage() {
           assert!(validate_url_string("garbage").is_err());
       }
       #[test]
@@ -367,39 +414,50 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
           assert!(result.is_err());
       }
       #[test]
-      fn test_mod_site_base_url_known() {
-          let url = mod_site_base_url("NexusMods");
+      fn test_mod_site_base_url_typed_enum() {
+          // Codex MEDIUM correction: typed enum dispatch, not string
+          let url = mod_site_base_url(ffi::ModSite::NexusMods);
           assert!(url.starts_with("https://"));
+          assert_eq!(url, CoreModSite::NexusMods.base_url());
       }
       #[test]
-      fn test_mod_site_base_url_unknown_returns_empty() {
-          assert_eq!(mod_site_base_url("InvalidSite"), "");
+      fn test_mod_site_name_typed_enum_all_variants() {
+          let pairs = [
+              (ffi::ModSite::NexusMods, CoreModSite::NexusMods),
+              (ffi::ModSite::BethesdaNet, CoreModSite::BethesdaNet),
+              (ffi::ModSite::ModDB, CoreModSite::ModDB),
+          ];
+          for (bridge, core) in pairs {
+              assert_eq!(mod_site_name(bridge), core.name());
+          }
       }
       #[test]
-      fn test_mod_site_name_known() {
-          assert_eq!(mod_site_name("NexusMods"), ModSite::NexusMods.name());
-      }
-      #[test]
-      fn test_mod_site_game_url_nonempty_for_valid_pair() {
-          let url = mod_site_game_url("NexusMods", "Fallout4");
-          assert!(!url.is_empty());
-      }
-      #[test]
-      fn test_mod_site_game_url_empty_for_invalid_site() {
-          assert_eq!(mod_site_game_url("InvalidSite", "Fallout4"), "");
-      }
-      #[test]
-      fn test_mod_site_game_url_empty_for_invalid_game() {
-          assert_eq!(mod_site_game_url("NexusMods", "InvalidGame"), "");
+      fn test_mod_site_game_url_typed_enums_all_combinations() {
+          // Cross-product: 3 ModSites × 4 GameIds = 12 calls, all non-empty, no panics
+          for site in [
+              ffi::ModSite::NexusMods,
+              ffi::ModSite::BethesdaNet,
+              ffi::ModSite::ModDB,
+          ] {
+              for game in [
+                  ffi::WebGameId::Fallout4,
+                  ffi::WebGameId::Fallout4VR,
+                  ffi::WebGameId::Skyrim,
+                  ffi::WebGameId::Starfield,
+              ] {
+                  let url = mod_site_game_url(site, game);
+                  assert!(!url.is_empty(), "mod_site_game_url returned empty for site/game combination");
+              }
+          }
       }
   }
   ```
 
-  Step 3 — Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml web::tests` and confirm all 14 tests pass.
+  Step 3 — Run `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml web::tests` and confirm all 12+ tests pass.
 
-  IMPORTANT: If `classic-web-core` or `classic-constants-core` is not in `classic-cpp-bridge/Cargo.toml`, add it as a workspace dependency: `classic-web-core = { workspace = true }`. Verify the workspace `Cargo.toml` lists it; add if missing.
+  IMPORTANT: If `classic-web-core` or `classic-constants-core` is not in `classic-cpp-bridge/Cargo.toml`, add as workspace dependencies.
 
-  IMPORTANT: If the actual ModSite variant names differ from `NexusMods/BethesdaNet/ModDB`, update both the `mod_site_from_str` match arms AND the bridge enum block.
+  IMPORTANT: If the actual ModSite variant names differ from `NexusMods/BethesdaNet/ModDB`, update both the bridge enum block AND the `from_bridge_mod_site` match arms. The Codex review confirmed the variant set; verify by direct read.
   </action>
 
   <verify>
@@ -410,22 +468,27 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
     - `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` exists
     - `git grep -n 'namespace = "classic::web"' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns one match
     - `git grep -n 'enum ModSite' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns the bridge enum declaration
-    - `git grep -nE 'fn (is_valid_url|validate_url_string|extract_domain_string|web_get_user_agent|web_join_url|web_build_url_with_query|mod_site_base_url|mod_site_name|mod_site_game_url)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns at least 9 wrapper definitions plus 9 extern declarations
-    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml web::tests` exits 0 with at least 14 passing tests
+    - `git grep -n 'enum WebGameId' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns the second bridge enum declaration
+    - `git grep -n 'fn mod_site_base_url(site: ModSite)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns the typed-enum signature (NOT a `&str` parameter — Codex MEDIUM correction)
+    - `git grep -n 'fn mod_site_game_url(site: ModSite, game: WebGameId)' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns the dual-typed-enum signature
+    - `git grep -n 'fn validate_url_string' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` shows it returns `Result<String>` not `Result<()>` (Codex MEDIUM correction — preserves canonicalization)
+    - `git grep -n 'mod_site_from_str\|game_id_from_str' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` returns NOTHING (the string-dispatch helpers are gone)
+    - `cargo test -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml web::tests` exits 0 with at least 12 passing tests
     - `cargo clippy -p classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` exits 0
   </acceptance_criteria>
 
   <done>
-    `src/web.rs` exists with all CXXS-02 helpers, ModSite as a CXX shared enum, and every bridge fn has a passing Rust-side test.
+    `src/web.rs` exists with all CXXS-02 helpers, ModSite + WebGameId as CXX shared enums dispatched directly (no string fallback), validate_url_string returns the canonicalized URL, every bridge fn has a passing Rust-side test.
   </done>
 </task>
 
 <task type="auto">
-  <name>Task 2: Wire web.rs into build.rs + lib.rs, run D-10 clean-build pair, refresh D-09 baseline, commit</name>
+  <name>Task 2: Wire web.rs into build.rs + lib.rs, add D-11 consumer migration in updateworker.cpp, run D-10 clean-build pair, refresh D-09 baseline, commit</name>
 
   <files>
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs
     - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs
+    - classic-gui/src/workers/updateworker.cpp
     - docs/implementation/cxx_api_parity/baseline/parity_contract.json
     - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.json
     - docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md
@@ -433,16 +496,18 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
   </files>
 
   <read_first>
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs (current bridges array — add `"src/web.rs"` after constants.rs OR near the start; web.rs uses string discriminants so cross-module ordering doesn't matter, but listing it consistently with constants.rs keeps the layout predictable)
-    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs (add `pub mod web;` under `#[cfg(windows)]` alphabetically — likely between `pub mod update;` and `pub mod yaml;`)
-    - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-09, D-10
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs (current bridges array)
+    - ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs (add `pub mod web;` under `#[cfg(windows)]` alphabetically)
+    - classic-gui/src/workers/updateworker.cpp (the existing checkForUpdates flow that calls classic::update::github_check_for_updates — D-11 target)
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-CONTEXT.md decisions D-09, D-10, D-11
+    - .planning/phases/02-cxx-bridge-surface-expansion/02-REVIEWS.md §"Plan 03" MEDIUM concern about D-11
     - .planning/phases/02-cxx-bridge-surface-expansion/02-VALIDATION.md row 2-03-01
   </read_first>
 
   <action>
   ## Part A — Add to build.rs
 
-  Edit `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs`. Insert `"src/web.rs",` into the `cxx_build::bridges([...])` array. A safe location is near the end (right before `"src/markdown.rs"`) or anywhere after the foundation modules — since `web.rs` doesn't reference shared types from other bridge modules, ordering is not critical.
+  Edit `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs`. Insert `"src/web.rs",` into the `cxx_build::bridges([...])` array. A safe location is near the end (right before `"src/markdown.rs"`) or anywhere after the foundation modules.
 
   ## Part B — Add to lib.rs
 
@@ -455,7 +520,43 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
 
   Place it alphabetically (between `pub mod update;` and `pub mod yaml;`).
 
-  ## Part C — Mandatory D-10 clean-build pair
+  ## Part C — D-11 consumer migration in updateworker.cpp (Codex review correction)
+
+  Edit `classic-gui/src/workers/updateworker.cpp`. Add `#include "classic_cxx_bridge/web.h"` next to the existing `#include "classic_cxx_bridge/update.h"`.
+
+  In the existing `checkForUpdates` method body, BEFORE the `classic::update::github_check_for_updates` call, add a one-line use of `classic::web::get_user_agent()` so the bridge fn is exercised by production code. The simplest pattern:
+
+  ```cpp
+  #include "classic_cxx_bridge/web.h"
+
+  void UpdateWorker::checkForUpdates(const QString& currentVersion)
+  {
+      try {
+          // D-11 / CXXS-02 consumer migration: classic::web::get_user_agent
+          // is called here so the new bridge namespace is exercised in
+          // production C++. The user-agent string returned is the same one
+          // the underlying GitHub HTTP client uses internally; logging it
+          // here gives users visibility into the request signature without
+          // duplicating the HTTP layer in C++.
+          auto user_agent = classic::web::web_get_user_agent();
+          qDebug() << "Update check user-agent:"
+                   << QString::fromUtf8(user_agent.data(), static_cast<int>(user_agent.size()));
+
+          auto result = classic::update::github_check_for_updates(
+              "evildarkarchon",
+              "CLASSIC-Fallout4",
+              classic::toRustString(currentVersion));
+          // ... rest unchanged
+      }
+      // ... catch blocks unchanged
+  }
+  ```
+
+  Add `#include <QDebug>` if not already present.
+
+  Run `git grep -n 'classic::web' classic-gui/src/workers/updateworker.cpp` and confirm at least one match.
+
+  ## Part D — Mandatory D-10 clean-build pair
 
   ```
   pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean -Test
@@ -469,16 +570,16 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
   ls ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/web.h
   ```
 
-  ## Part D — D-09 baseline refresh
+  ## Part E — D-09 baseline refresh
 
   ```
   python tools/cxx_api_parity/check_parity_gate.py --update-baseline --repo-root .
   python tools/cxx_api_parity/check_parity_gate.py --repo-root .
   ```
 
-  ## Part E — Atomic commit
+  ## Part F — Atomic commit
 
-  Stage all 7 files (the new `web.rs`, `build.rs`, `lib.rs`, plus the 4 baseline artifacts). Commit message: `Feat(02-03): expose classic-web-core via classic::web CXX bridge` — body mentions CXXS-02, D-04, D-07, D-09, D-10.
+  Stage all 8 files (the new `web.rs`, `build.rs`, `lib.rs`, `updateworker.cpp`, plus the 4 baseline artifacts). Commit message: `Feat(02-03): expose classic-web-core via classic::web CXX bridge` — body mentions CXXS-02, D-04, D-07, D-09, D-10, D-11 and notes the updateworker.cpp consumer migration.
   </action>
 
   <verify>
@@ -488,16 +589,18 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
   <acceptance_criteria>
     - `git grep -n '"src/web.rs"' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs` returns exactly one line inside the bridges array
     - `git grep -n 'pub mod web' ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs` returns the new declaration
+    - `git grep -n 'classic::web' classic-gui/src/workers/updateworker.cpp` returns at least one line (D-11 consumer)
+    - `git grep -n '#include "classic_cxx_bridge/web.h"' classic-gui/src/workers/updateworker.cpp` returns the new include
     - `pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean -Test` exits 0
     - `pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Clean -Test` exits 0
     - `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/web.h` exists
     - `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 with 0 drift
-    - The committed `cxx_diff_report.md` shows ADDED rows under `bridgeModule: "web"` for the ModSite shared enum and all 10 bridge fns
-    - `git log -1 --stat` shows the commit touches Rust source AND `docs/implementation/cxx_api_parity/baseline/*` (D-09 atomicity)
+    - The committed `cxx_diff_report.md` shows ADDED rows under `bridgeModule: "web"` for the ModSite + WebGameId shared enums and all 10 bridge fns
+    - `git log -1 --stat` shows the commit touches Rust source AND updateworker.cpp AND `docs/implementation/cxx_api_parity/baseline/*` (D-09 atomicity)
   </acceptance_criteria>
 
   <done>
-    Plan 02-03 complete — `classic::web` is a first-class CXX bridge module locked in the parity contract, both clean builds pass, CXXS-02 satisfied.
+    Plan 02-03 complete — `classic::web` is a first-class CXX bridge module with typed-enum dispatch (no string fallback), validate_url_string returns canonicalized URLs, updateworker.cpp exercises the new namespace, both clean builds pass, CXXS-02 satisfied.
   </done>
 </task>
 
@@ -509,23 +612,27 @@ CXX bridging strategy (per D-04, D-07, RESEARCH.md):
 3. `pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Clean -Test` — exits 0
 4. `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` — exits 0 with 0 drift
 5. Generated header `include/classic_cxx_bridge/web.h` exists
+6. updateworker.cpp has the D-11 consumer migration
 
-Validation Architecture (per 02-VALIDATION.md row 2-03-01): `cargo test -p classic-cpp-bridge web::tests` + clean-build pair + parity gate.
+Validation Architecture (per 02-VALIDATION.md row 2-03-01): `cargo test -p classic-cpp-bridge web::tests` + clean-build pair + parity gate + D-11 consumer.
 </verification>
 
 <success_criteria>
-- src/web.rs exists with #[cxx::bridge(namespace = "classic::web")] and exposes ModSite as CXX shared enum + 10 bridge fns
-- All helper bridge fns are tested and pass (14+ tests)
+- src/web.rs exists with #[cxx::bridge(namespace = "classic::web")] exposing ModSite AND WebGameId as CXX shared enums + 10 bridge fns using TYPED dispatch (Codex MEDIUM correction)
+- validate_url_string returns Result<String> with the canonicalized URL on success (Codex MEDIUM correction — preserves Url::parse normalization)
+- All helper bridge fns are tested and pass (12+ tests)
+- updateworker.cpp has at least one classic::web::* call site (D-11 consumer migration — Codex MEDIUM correction)
 - Both clean MSVC builds are green (D-10)
 - Parity gate at 0 drift after --update-baseline (D-09)
 - All changes committed atomically
-- D-11 N/A: first-time exposure of classic-web-core, no narrowed call sites to migrate
 </success_criteria>
 
 <output>
 After completion, create `.planning/phases/02-cxx-bridge-surface-expansion/02-03-SUMMARY.md` documenting:
+- Confirmation that ModSite + WebGameId use typed enum dispatch (Codex MEDIUM correction — no string fallback)
+- Confirmation that validate_url_string returns Result<String> (Codex MEDIUM correction — canonicalization preserved)
+- Confirmation that updateworker.cpp has D-11 consumer migration (Codex MEDIUM correction)
 - Exact ModSite variant names found in classic-web-core
-- Entries added to the parity contract (count of fns, count of enum variants)
+- Entries added to the parity contract (count of fns, count of enum variants — including the second WebGameId enum)
 - D-10 clean-build outcome
-- Note on D-11 N/A status (first-time exposure)
 </output>
