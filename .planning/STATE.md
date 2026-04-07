@@ -1,38 +1,38 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.1.0-bugfixes
-milestone_name: CLASSIC Codebase Health
+milestone: v9.1.0-bindings
+milestone_name: Full Bindings Parity
 current_plan: null
-status: shipped
-stopped_at: Shipped v9.1.0-bugfixes 2026-04-07
-last_updated: "2026-04-07T05:15:00Z"
-last_activity: 2026-04-07 — Shipped v9.1.0-bugfixes (CLASSIC Codebase Health)
+status: defining_requirements
+stopped_at: Defining requirements for v9.1.0-bindings
+last_updated: "2026-04-06T00:00:00Z"
+last_activity: 2026-04-06 — Milestone v9.1.0-bindings started
 progress:
-  total_phases: 11
-  completed_phases: 11
-  total_plans: 32
-  completed_plans: 32
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-04)
+See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Planning next milestone (v9.1.0-bugfixes shipped 2026-04-07)
+**Current focus:** v9.1.0-bindings — Full Bindings Parity (defining requirements)
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
 Current Plan: —
-Status: Shipped (v9.1.0-bugfixes)
-Last activity: 2026-04-07 — Shipped v9.1.0-bugfixes (CLASSIC Codebase Health)
+Status: Defining requirements
+Last activity: 2026-04-06 — Milestone v9.1.0-bindings started
 
-Progress: [██████████] 100%
+Progress: [          ] 0%
 
 ## Performance Metrics
 

@@ -6,9 +6,18 @@
 
 The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
 
-## Next Milestone Goals
+## Current Milestone: v9.1.0-bindings Full Bindings Parity
 
-No phases planned yet. Use `/gsd:new-milestone` to start the next milestone cycle.
+**Goal:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python -- no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
+
+**Target features:**
+- Collapse Python Tier-1/Tier-2 to a single enforced tier (promote all 285 currently deferred entries; rebuild parity contract, runtime coverage registry, and `.pyi` stubs)
+- Collapse Node Tier-1/Tier-2 to a single enforced tier (promote all 101 currently deferred entries; rebuild Node parity contract, runtime coverage, and committed `index.d.ts`)
+- Build a first-class C++ bridge parity gate equivalent to the Python and Node gates (no parity tooling exists for the CXX bridge today)
+- Close C++ bridge narrowing across `classic-scangame-core`, `classic-database-core`, `classic-version-registry-core`, `classic-config-core` (suspect rules), `classic-path-core`, `classic-xse-core`, plus first-time C++ exposure for `classic-constants-core`, `classic-web-core`, and the FCX issue getter
+- Cross-binding harmonization: Node gains PE-version extraction; Python gains explicit `classic_shared` runtime helpers; per-binding error-contract conventions documented
+- CI enforcement: Python, Node, and the new C++ gate all run in CI; any new Rust public API fails the gate until all three bindings expose it; extend `index.d.ts`-style freshness gating to generated C++ headers
+- Documentation reset: `binding-parity-overview.md` rewritten as the "harmony achieved" reference; Tier-2 backlog/governance files deleted; single source-of-truth parity policy added
 
 ## What This Is
 
@@ -53,7 +62,19 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 
 ### Active
 
-(None — all v9.1.0-bugfixes requirements shipped. Run `/gsd:new-milestone` to define the next cycle.)
+<!-- v9.1.0-bindings: Full Bindings Parity. Detailed REQ-IDs in REQUIREMENTS.md. -->
+
+- [ ] Python Tier-1/Tier-2 collapsed: all 285 deferred entries promoted to one enforced contract
+- [ ] Node Tier-1/Tier-2 collapsed: all 101 deferred entries promoted to one enforced contract
+- [ ] First-class C++ bridge parity gate exists with baseline + diff + CI enforcement
+- [ ] C++ bridge exposes the full surface of every shared Rust crate it currently narrows (scangame, database, version-registry, config suspect rules, path, xse) plus first-time C++ surfaces for `classic-constants-core`, `classic-web-core`, and the FCX issue getter
+- [ ] Node binding gains PE-version extraction parity with C++/Python
+- [ ] Python binding gains explicit `classic_shared` runtime helpers
+- [ ] Per-binding error-contract conventions documented (string sentinel vs null vs exception)
+- [ ] CI runs Python, Node, and C++ parity gates; new Rust public APIs cannot land until all three bindings cover them
+- [ ] `binding-parity-overview.md` rewritten as the harmony-achieved reference
+- [ ] Tier-2 backlog/governance/manifest files deleted from `docs/implementation/{python,node}_api_parity/governance/`
+- [ ] Single source-of-truth parity policy doc added
 
 ### Out of Scope
 
@@ -96,6 +117,9 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 | Treat FCX `Unnecessary` as success across bindings | Lets binding code keep the no-op reset path benign without breaking explicit-failure handling | ✓ Validated in Phase 3 |
 | In-place verification refresh for gap-closure phases (9/10/11) | Avoids parallel verification artifacts; the parent phase verification stays the single source of truth | ✓ Validated in Phase 9, 10, 11 |
 | Internal milestone label `v1.0` renamed to `v9.1.0-bugfixes` at ship time | Keeps the project's existing v8.x version progression contiguous and avoids the duplicate v1.0 entry that would otherwise collide with the 2026-02 "Codebase Cleanup" milestone | ✓ Applied at v9.1.0-bugfixes ship 2026-04-07 |
+| Full bindings parity in v9.1.0-bindings: collapse Python/Node Tier-1/Tier-2 into one enforced tier and add a first-class C++ bridge parity gate | Tier-2 deferral was a tactical choice during v9.1.0-bugfixes; the user's stated goal is "everything in harmony, keeping the parity gates to prevent drift" -- this requires deleting Tier-2 governance and gating C++ bridge surface alongside Python and Node | — Pending |
+| Delete (not empty) Tier-2 backlog/manifest/governance files | Active Tier-2 files would otherwise leak back into discussions of "deferred for next milestone"; the milestone goal is one tier and only one tier | — Pending |
+| Continue phase numbering from v9.1.0-bugfixes (next phase = Phase 12) | No `--reset-phase-numbers` requested; v9.1.0-bugfixes archive flow stays compatible with continuous numbering | — Pending |
 
 ## Evolution
 
@@ -115,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after v9.1.0-bugfixes milestone completion*
+*Last updated: 2026-04-06 after v9.1.0-bindings milestone start*
