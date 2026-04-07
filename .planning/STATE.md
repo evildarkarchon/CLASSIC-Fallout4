@@ -30,7 +30,7 @@ Phase: 11
 Plan: TBD
 Current Plan: TBD
 Status: Awaiting Phase 11 planning
-Last activity: 2026-04-07
+Last activity: 2026-04-07 - Completed quick task 260406-syy: Resolve the newly uncovered Python parity surface for FcxResetError so the Python parity gate no longer reports uncovered runtime metadata.
 
 Progress: [██████████] 100%
 
@@ -170,6 +170,12 @@ None yet.
 - [Phase 1]: The `deprecated = "deny"` lint requires careful sequencing -- temporarily relax to `warn`, migrate, then restore
 - [Phase 5]: AhoCorasick semantic parity must be verified against test fixtures before removing regex path
 - [Phase 6]: Windows `map_copy_read_only()` behavior must be empirically validated, not inferred from Linux
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260406-syy | Resolve the newly uncovered Python parity surface for FcxResetError so the Python parity gate no longer reports uncovered runtime metadata. | 2026-04-07 | 8f4a9324 | Verified | [260406-syy-resolve-the-newly-uncovered-python-parit](./quick/260406-syy-resolve-the-newly-uncovered-python-parit/) |
 
 ## Session Continuity
 
