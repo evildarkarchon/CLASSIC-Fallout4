@@ -11,6 +11,7 @@ fn main() {
         "src/files.rs",
         "src/scangame.rs",
         "src/game.rs",
+        "src/path.rs",
         "src/update.rs",
         "src/message.rs",
         "src/perf.rs",
