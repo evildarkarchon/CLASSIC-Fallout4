@@ -139,3 +139,15 @@ Test infrastructure must be created before any parser/gate code is written:
 6. `test_gate.py::TestNoDeferredRegistry::test_unknown_deferred_registry_arg_rejected` (CXXG-04, CLI surface)
 
 These rows already existed in `tools/cxx_api_parity/tests/test_{parser,gate}.py`; the audit only added the references in this file so the per-task map now reflects 22 of 22 actual pytest tests plus 4 non-pytest checks (26 verifications across 5 requirements). Phase 1 remains `nyquist_compliant: true`; no test files were created or modified.
+
+## Validation Re-Audit 2026-04-07 (afternoon)
+
+| Metric | Count |
+|--------|-------|
+| Rows audited | 26 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+| Extra coverage surfaced | 0 |
+
+**Method:** Re-ran every command in the per-task map a second time on the same day. `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -v` → 22 passed in 2.87s (Python 3.14.3, pytest 9.0.2). All four non-pytest commands re-verified: `test -d tools/cxx_api_parity/tests/fixtures` ok; `python tools/cxx_api_parity/check_parity_gate.py --help` ok and `--deferred-registry` still absent from argparse; `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 with `CXX parity gate passed.`; `test -f docs/api/cxx-parity-gate.md && grep -q '## Local Run' …` ok. No drift since the morning audit; no test files created or modified; per-task map and Manual-Only section unchanged. Phase 1 remains `nyquist_compliant: true`.
