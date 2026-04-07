@@ -158,7 +158,10 @@ Plans:
   1. `01-VERIFICATION.md` is updated from `gaps_found` to a status consistent with the current code and requirements state
   2. Phase 1 requirement coverage explicitly accounts for DEBT-05, DEBT-06, DEBT-07, and DEBT-10 without relying on stale documentation gaps
   3. Any remaining parity or runtime proof needed for Phase 1 verification is captured in the refreshed verification artifact
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [x] 09-01-PLAN.md -- Refresh Phase 1 verification evidence, rerun parity/runtime proof, and reconcile Phase 9 requirement bookkeeping
 
 ### Phase 10: Pattern Caching Verification Backfill
 **Goal**: Phase 5 verification artifacts fully cover all requirements claimed complete by the phase summaries

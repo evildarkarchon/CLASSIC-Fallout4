@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: complete
-stopped_at: Completed 08-workspace-and-infrastructure-03-PLAN.md
-last_updated: "2026-04-07T01:05:00.000Z"
-last_activity: 2026-04-06
+current_plan: 1
+status: verifying
+stopped_at: Completed 09-deprecated-api-verification-closure-01-PLAN.md
+last_updated: "2026-04-07T03:17:11.276Z"
+last_activity: 2026-04-07
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 29
-  completed_plans: 29
+  total_phases: 11
+  completed_phases: 9
+  total_plans: 30
+  completed_plans: 30
   percent: 100
 ---
 
@@ -21,13 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
-**Current focus:** Milestone wrap-up complete
+**Current focus:** Phase 09 — deprecated-api-verification-closure
 
 ## Current Position
 
-Phase: 8
-Current Plan: 3 of 3 in Phase
-Status: Complete — 08-01, 08-02, and 08-03 completed
+Phase: 09 (deprecated-api-verification-closure) — EXECUTING
+Plan: 1 of 1
+Current Plan: 1
+Status: Phase complete — ready for verification
 Last activity: 2026-04-07
 
 Progress: [██████████] 100%
@@ -79,6 +81,7 @@ Progress: [██████████] 100%
 | Phase 08-workspace-and-infrastructure P01 | 13min | 2 tasks | 5 files |
 | Phase 08-workspace-and-infrastructure P02 | 19min | 2 tasks | 7 files |
 | Phase 08-workspace-and-infrastructure P03 | 11min | 2 tasks | 4 files |
+| Phase 09-deprecated-api-verification-closure P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -151,6 +154,8 @@ Recent decisions affecting current work:
 - [Phase 08-workspace-and-infrastructure]: Removed the classic-shared-core zerovec workaround outright and documented gui-bridge as building directly from workspace Slint dependencies after build proof passed.
 - [Phase 08-workspace-and-infrastructure]: Kept Linux documents-path ownership in DocsPathFinder and reused the existing Proton helpers instead of duplicating logic in bindings.
 - [Phase 08-workspace-and-infrastructure]: Treated classic-node/index.d.ts as the tracked generated Node contract artifact and kept the existing freshness/parity workflow as the only enforcement path.
+- [Phase 09-deprecated-api-verification-closure]: Closed Phase 1 by rewriting the existing verification artifact in repo-standard re-verification form instead of adding a separate Phase 09 verification file
+- [Phase 09-deprecated-api-verification-closure]: Recorded fresh Rust, Python, and Node command results directly in the verification artifact and treated prior summaries as provenance only
 
 ### Pending Todos
 
@@ -164,6 +169,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T01:05:00.000Z
-Stopped at: Completed 08-workspace-and-infrastructure-03-PLAN.md
+Last session: 2026-04-07T03:17:11.272Z
+Stopped at: Completed 09-deprecated-api-verification-closure-01-PLAN.md
 Resume file: None
