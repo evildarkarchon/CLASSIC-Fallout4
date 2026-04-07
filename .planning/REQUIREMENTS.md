@@ -11,9 +11,9 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 ### CXX Parity Gate (CXXG)
 
 - [x] **CXXG-01**: A new `tools/cxx_api_parity/` Python tool parses every `#[cxx::bridge]` source file enumerated by `classic-cpp-bridge/build.rs` and emits a structured surface inventory JSON
-- [ ] **CXXG-02**: A committed `tools/cxx_api_parity/parity_contract.json` baseline captures every CXX bridge export and is regenerated/diffed by the gate script
-- [ ] **CXXG-03**: A `tools/cxx_api_parity/check_parity_gate.py` script fails non-zero on baseline drift, missing-from-bridge entries, and orphaned bridge entries (no Rust source-of-truth)
-- [ ] **CXXG-04**: The gate script's deferred-registry path is optional from day one (hardcoded-path pattern from the Python gate is not repeated)
+- [x] **CXXG-02**: A committed `tools/cxx_api_parity/parity_contract.json` baseline captures every CXX bridge export and is regenerated/diffed by the gate script
+- [x] **CXXG-03**: A `tools/cxx_api_parity/check_parity_gate.py` script fails non-zero on baseline drift, missing-from-bridge entries, and orphaned bridge entries (no Rust source-of-truth)
+- [x] **CXXG-04**: The gate script's deferred-registry path is optional from day one (hardcoded-path pattern from the Python gate is not repeated)
 - [ ] **CXXG-05**: Contributor docs at `docs/api/cxx-parity-gate.md` describe how to run the gate locally and how to refresh the baseline after intentional bridge changes
 
 ### CXX Bridge Surface (CXXS)
@@ -108,9 +108,9 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CXXG-01 | Phase 1 | Complete |
-| CXXG-02 | Phase 1 | Pending |
-| CXXG-03 | Phase 1 | Pending |
-| CXXG-04 | Phase 1 | Pending |
+| CXXG-02 | Phase 1 | Complete |
+| CXXG-03 | Phase 1 | Complete |
+| CXXG-04 | Phase 1 | Complete |
 | CXXG-05 | Phase 1 | Pending |
 | CXXS-01 | Phase 2 | Pending |
 | CXXS-02 | Phase 2 | Pending |

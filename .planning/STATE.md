@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 01-cxx-parity-gate-tooling/01-01-PLAN.md
-last_updated: "2026-04-07T07:40:04.581Z"
+stopped_at: Completed 01-cxx-parity-gate-tooling/01-02-PLAN.md
+last_updated: "2026-04-07T07:48:27.195Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 01 (cxx-parity-gate-tooling) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-07
@@ -85,6 +85,7 @@ Progress: [          ] 0%
 | Phase quick-260406-syy-resolve-the-newly-uncovered-python-parit P01 | 8min | 2 tasks | 6 files |
 | Phase 11-workspace-infra-verification-completion P01 | 5min | 2 tasks | 2 files |
 | Phase 01-cxx-parity-gate-tooling P01 | 6min | 2 tasks | 11 files |
+| Phase 01-cxx-parity-gate-tooling P02 | 8min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -175,6 +176,10 @@ Recent decisions affecting current work:
 - [Phase 01-cxx-parity-gate-tooling]: Skip struct/enum names that fall inside extern blocks via pre-computed extern spans to avoid cross-attribution between cxx shared types and extern items.
 - [Phase 01-cxx-parity-gate-tooling]: Sort entries by (bridgeModule, kind, rustSymbol) and use sha256[:16] of f'{rustSymbol}:{kind}:{bridgeModule}' for deterministic id field.
 - [Phase 01-cxx-parity-gate-tooling]: When fixture filename and intended bridgeModule differ in synthetic test layouts, install the fixture file at src/<bridgeModule>.rs so the documented filename-stem rule keeps holding.
+- [Phase 01-cxx-parity-gate-tooling]: Compare contract rows by sha256 id and exclude sourceFile from semantic comparison so file moves do not register as drift
+- [Phase 01-cxx-parity-gate-tooling]: Bootstrap writes a placeholder cxx_gate_report.md and reconciliation requires one --update-baseline run; this sequence is baked into _bootstrap_synthetic_gate
+- [Phase 01-cxx-parity-gate-tooling]: Lock schema_version=1 in parity_contract.json so future schema migrations have a discriminator
+- [Phase 01-cxx-parity-gate-tooling]: Use synthetic single-file _SIMPLE_BRIDGE under tmp_path for hermetic drift integration tests
 
 ### Pending Todos
 
@@ -196,7 +201,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T07:40:04.577Z
-Stopped at: Completed 01-cxx-parity-gate-tooling/01-01-PLAN.md
+Last session: 2026-04-07T07:48:27.191Z
+Stopped at: Completed 01-cxx-parity-gate-tooling/01-02-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
