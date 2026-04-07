@@ -727,6 +727,17 @@
       "wave": "wave1"
     },
     {
+      "gap_id": "scanlog-055-rust-fcx-reset-error",
+      "owner_module": "scanlog",
+      "ordinal_in_module": 56,
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "rust_symbol": "FcxResetError",
+      "python_module": null,
+      "python_export_path": null,
+      "wave": "wave1"
+    },
+    {
       "gap_id": "version_registry-001",
       "owner_module": "version_registry",
       "ordinal_in_module": 1,
