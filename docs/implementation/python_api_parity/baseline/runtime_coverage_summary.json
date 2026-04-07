@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-05T00:00:00+00:00",
+  "generated_at_utc": "2026-04-07T04:07:00.899157+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
@@ -7,10 +7,10 @@
     "deferred_registry": "docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json"
   },
   "summary": {
-    "tracked_surface_total": 357,
-    "runtime_verified_total": 69,
+    "tracked_surface_total": 360,
+    "runtime_verified_total": 71,
     "contract_mapped_total": 0,
-    "deferred_total": 288,
+    "deferred_total": 289,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 59,
     "tier1_missing_runtime_total": 0,
@@ -24,14 +24,14 @@
       "deferred": 1
     },
     "config": {
-      "runtime_verified": 17,
-      "total": 43,
+      "runtime_verified": 19,
+      "total": 45,
       "deferred": 26
     },
     "scanlog": {
       "runtime_verified": 24,
-      "total": 251,
-      "deferred": 227
+      "total": 252,
+      "deferred": 228
     },
     "version_registry": {
       "runtime_verified": 25,
@@ -1573,6 +1573,25 @@
       "rustSymbol": "FcxModeHandler",
       "bindingIdentifier": null,
       "coverageId": "python-deferred-scanlog-016",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
+    },
+    {
+      "trackedId": "binding:rust:FcxResetError",
+      "trackedType": "gap",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "deferred",
+      "rustSymbol": "FcxResetError",
+      "bindingIdentifier": null,
+      "coverageId": "python-deferred-scanlog-066",
       "verificationMode": null,
       "testSuite": null,
       "testCaseId": null,
@@ -6770,11 +6789,49 @@
       "notes": null
     },
     {
+      "trackedId": "binding:classic_config.YamlData.classic_version",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.YamlData.classic_version",
+      "coverageId": "python-tier2-config-runtime",
+      "verificationMode": "field_inspection",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "config-tier2-smoke",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": null
+    },
+    {
+      "trackedId": "binding:classic_config.YamlData.warn_outdated",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.YamlData.warn_outdated",
+      "coverageId": "python-tier2-config-runtime",
+      "verificationMode": "field_inspection",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "config-tier2-smoke",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": null
+    },
+    {
       "trackedId": "binding:classic_file_io.FileHasher.cache_stats",
-      "trackedType": "gap",
+      "trackedType": "registry_only",
       "ownerModule": "aux",
       "tier": "tier2",
-      "gapType": "python_unmapped",
+      "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
       "bindingIdentifier": "classic_file_io.FileHasher.cache_stats",
@@ -6786,14 +6843,14 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Phase 4 canonical cache stats smoke coverage."
+      "notes": null
     },
     {
       "trackedId": "binding:classic_file_io.FileHasher.reset_cache_stats",
-      "trackedType": "gap",
+      "trackedType": "registry_only",
       "ownerModule": "aux",
       "tier": "tier2",
-      "gapType": "python_unmapped",
+      "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
       "bindingIdentifier": "classic_file_io.FileHasher.reset_cache_stats",
@@ -6805,14 +6862,14 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Phase 4 canonical cache stats smoke coverage."
+      "notes": null
     },
     {
       "trackedId": "binding:classic_file_io.FileHasher.clear_cache",
-      "trackedType": "gap",
+      "trackedType": "registry_only",
       "ownerModule": "aux",
       "tier": "tier2",
-      "gapType": "python_unmapped",
+      "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
       "bindingIdentifier": "classic_file_io.FileHasher.clear_cache",
@@ -6824,14 +6881,14 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Phase 4 canonical cache stats smoke coverage."
+      "notes": null
     },
     {
       "trackedId": "binding:classic_file_io.FileHasher.cache_size",
-      "trackedType": "gap",
+      "trackedType": "registry_only",
       "ownerModule": "aux",
       "tier": "tier2",
-      "gapType": "python_unmapped",
+      "gapType": "registry_only",
       "classification": "deferred",
       "rustSymbol": null,
       "bindingIdentifier": "classic_file_io.FileHasher.cache_size",

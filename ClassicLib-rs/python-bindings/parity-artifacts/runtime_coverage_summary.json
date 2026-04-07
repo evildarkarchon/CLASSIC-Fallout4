@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-07T01:51:21.468222+00:00",
+  "generated_at_utc": "2026-04-07T04:07:00.899157+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
@@ -10,8 +10,8 @@
     "tracked_surface_total": 360,
     "runtime_verified_total": 71,
     "contract_mapped_total": 0,
-    "deferred_total": 288,
-    "newly_uncovered_total": 1,
+    "deferred_total": 289,
+    "newly_uncovered_total": 0,
     "tier1_contract_total": 59,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
@@ -31,8 +31,7 @@
     "scanlog": {
       "runtime_verified": 24,
       "total": 252,
-      "deferred": 227,
-      "newly_uncovered": 1
+      "deferred": 228
     },
     "version_registry": {
       "runtime_verified": 25,
@@ -1589,9 +1588,18 @@
       "ownerModule": "scanlog",
       "tier": "tier2",
       "gapType": "rust_unmapped",
-      "classification": "newly_uncovered",
+      "classification": "deferred",
       "rustSymbol": "FcxResetError",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "python-deferred-scanlog-066",
+      "verificationMode": null,
+      "testSuite": null,
+      "testCaseId": null,
+      "fixtureRefs": [],
+      "wave": "wave1",
+      "owner": "Squad A",
+      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "notes": null
     },
     {
       "trackedId": "binding:rust:FormIDAnalyzer",
