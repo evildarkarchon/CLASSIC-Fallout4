@@ -3,8 +3,7 @@
   "granularity": "fine",
   "parallelization": true,
   "commit_docs": true,
-  "model_profile": "inherit",
-  "resolve_model_ids": "omit",
+  "model_profile": "balanced",
   "workflow": {
     "research": true,
     "plan_check": true,
