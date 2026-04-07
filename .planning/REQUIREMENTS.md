@@ -13,12 +13,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **DEBT-02**: Remove `YamlFormatConfig` struct and `format_config` field from `YamlOperations` in `classic-yaml-core/src/lib.rs` (dead code, never shipped)
 - [x] **DEBT-03**: Remove `PluginAnalyzer.case_cache` field from `classic-scanlog-core/src/plugin_analyzer.rs` (allocated per orchestrator but never written or read)
 - [x] **DEBT-04**: Remove `PyGpuDetector.inner` field from `classic-scanlog-py/src/gpu_detector.rs` and convert to stateless Python class
-- [x] **DEBT-05**: Migrate Python binding `parse_segments_parallel` caller to wrapper over `parse_all_sections_arc`, update `.pyi` contract
-- [x] **DEBT-06**: Migrate Python `generate_suspect_section` legacy method to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately
-- [x] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
+- [ ] **DEBT-05**: Migrate Python binding `parse_segments_parallel` caller to wrapper over `parse_all_sections_arc`, update `.pyi` contract
+- [ ] **DEBT-06**: Migrate Python `generate_suspect_section` legacy method to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately
+- [ ] **DEBT-07**: Rewrite tests using `#[allow(deprecated)]` on `CrashgenVersion::is_outdated` to exercise `check_version_status()` instead
 - [x] **DEBT-08**: Delete deprecated `parse_segments`, `parse_segments_parallel`, and `is_outdated` methods after all callers migrated
 - [x] **DEBT-09**: Eliminate `scan_all_settings_legacy_bucketed` fallback path with tracing warning, assertion test, and removal
-- [x] **DEBT-10**: Add deprecation warning via `PyErr::warn` when `PyFormIDAnalyzerCore::new` receives legacy `PyDict` format for `mods_single`
+- [ ] **DEBT-10**: Add deprecation warning via `PyErr::warn` when `PyFormIDAnalyzerCore::new` receives legacy `PyDict` format for `mods_single`
 
 ### Correctness and Safety
 
@@ -32,7 +32,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **PERF-01**: Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch` keyed by hash of mod list contents
 - [x] **PERF-02**: Replace per-entry `Regex::new` in `detect_mods_important` with `str::contains` (patterns are escaped literals) or AhoCorasick for large lists
-- [x] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
+- [ ] **PERF-03**: Replace per-call `LogParser::new(None)` in C++ bridge `detect_crash_pattern` with module-level `LazyLock<LogParser>`
 - [x] **PERF-04**: Add criterion benchmarks and committed proof for `detect_mods_important`, `detect_mods_single`/`batch`, and `detect_crash_pattern` hotspot measurements; mmap throughput benchmarking is owned by **SAFE-05** / Phase 6
 
 ### Cache Eviction
@@ -43,10 +43,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Workspace and Infrastructure
 
-- [x] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
-- [x] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
+- [ ] **INFRA-01**: Promote `winreg` to `[workspace.dependencies]` in root `Cargo.toml`
+- [ ] **INFRA-02**: Promote `phf` to `[workspace.dependencies]` in root `Cargo.toml`
 - [ ] **INFRA-03**: Wire `construct_proton_docs_path` into Linux docs-path discovery workflow with unit tests using mock Proton prefix
-- [x] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
+- [ ] **INFRA-04**: Document or resolve `zerovec` workaround dependency in `classic-shared-core` (check if Slint 1.15+ resolved it)
 - [ ] **INFRA-05**: Commit generated `index.d.ts` snapshot for Node bindings with CI freshness check
 
 ### Test Coverage
@@ -61,7 +61,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CONS-01**: Replace `once_cell::sync::Lazy` with `std::sync::LazyLock` across all crates still using `once_cell`
 - [x] **CONS-02**: Return `Result<(), FcxResetError>` from `reset_global_state()` so callers can distinguish success, unnecessary, and failure
 - [x] **CONS-03**: Expose consistent `CacheStats` struct (hits, misses, hit rate, size, capacity) on all three bounded caches
-- [x] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
+- [ ] **CONS-04**: Use `LazyLock` with `Regex::new().unwrap()` for static patterns in `mod_detector` to move compilation failure to startup
 
 ## Out of Scope
 
@@ -88,12 +88,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-02 | Phase 2 | Complete |
 | DEBT-03 | Phase 2 | Complete |
 | DEBT-04 | Phase 2 | Complete |
-| DEBT-05 | Phase 1 | Complete |
-| DEBT-06 | Phase 1 | Complete |
-| DEBT-07 | Phase 1 | Complete |
+| DEBT-05 | Phase 9 | Pending |
+| DEBT-06 | Phase 9 | Pending |
+| DEBT-07 | Phase 9 | Pending |
 | DEBT-08 | Phase 2 | Complete |
 | DEBT-09 | Phase 2 | Complete |
-| DEBT-10 | Phase 1 | Complete |
+| DEBT-10 | Phase 9 | Pending |
 | SAFE-01 | Phase 3 | Complete |
 | SAFE-02 | Phase 3 | Complete |
 | SAFE-03 | Phase 3 | Complete |
@@ -101,24 +101,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAFE-05 | Phase 6 | Complete |
 | PERF-01 | Phase 5 | Complete |
 | PERF-02 | Phase 5 | Complete |
-| PERF-03 | Phase 5 | Complete |
+| PERF-03 | Phase 10 | Pending |
 | PERF-04 | Phase 5 | Complete |
 | CACHE-01 | Phase 4 | Complete |
 | CACHE-02 | Phase 4 | Complete |
 | CACHE-03 | Phase 4 | Complete |
-| INFRA-01 | Phase 8 | Complete |
-| INFRA-02 | Phase 8 | Complete |
-| INFRA-03 | Phase 8 | Complete |
-| INFRA-04 | Phase 8 | Complete |
-| INFRA-05 | Phase 8 | Complete |
+| INFRA-01 | Phase 11 | Pending |
+| INFRA-02 | Phase 11 | Pending |
+| INFRA-03 | Phase 11 | Pending |
+| INFRA-04 | Phase 11 | Pending |
+| INFRA-05 | Phase 11 | Pending |
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 2 | Complete |
-| TEST-03 | Phase 8 | Complete |
+| TEST-03 | Phase 11 | Pending |
 | TEST-04 | Phase 3 | Complete |
 | CONS-01 | Phase 7 | Complete |
 | CONS-02 | Phase 3 | Complete |
 | CONS-03 | Phase 4 | Complete |
-| CONS-04 | Phase 5 | Complete |
+| CONS-04 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 35 total
@@ -127,4 +127,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-04*
-*Last updated: 2026-04-06 after Phase 5 benchmark-proof alignment*
+*Last updated: 2026-04-06 after milestone gap closure phases 9-11 were added*

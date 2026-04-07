@@ -20,6 +20,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6: mmap TOCTOU Safety** - Switch mmap to map_copy_read_only with Windows benchmark validation
 - [ ] **Phase 7: Consistency Sweep** - Replace once_cell::sync::Lazy with std::sync::LazyLock across all crates
 - [ ] **Phase 8: Workspace and Infrastructure** - Promote workspace deps, wire Proton path, resolve zerovec, commit Node types
+- [ ] **Phase 9: Deprecated API Verification Closure** - Re-verify Phase 1 now that requirement bookkeeping is synchronized
+- [ ] **Phase 10: Pattern Caching Verification Backfill** - Backfill missing Phase 5 verification coverage for orphaned requirements
+- [ ] **Phase 11: Workspace/Infra Verification Completion** - Complete missing Phase 8 verification coverage and restore audit traceability
 
 ## Phase Details
 
@@ -143,8 +146,41 @@ Plans:
   1. `winreg` and `phf` are declared in `[workspace.dependencies]` with crate-level `workspace = true` references and `winreg` gated on `cfg(windows)`
   2. `construct_proton_docs_path` is wired into the Linux docs-path discovery workflow and an integration test using a mock Proton prefix structure passes
   3. The `zerovec` workaround in `classic-shared-core` is either removed (if Slint 1.15+ resolved it) or documented with a tracking comment
-  4. Node `index.d.ts` is committed as a snapshot with a CI freshness check that fails if the generated output differs from the committed version
+   4. Node `index.d.ts` is committed as a snapshot with a CI freshness check that fails if the generated output differs from the committed version
 **Plans**: 08-01 workspace dependency promotion + `zerovec` removal proof; 08-02 Proton docs-path wiring + integration proof; 08-03 Node declaration contract + freshness workflow cleanup
+
+### Phase 9: Deprecated API Verification Closure
+**Goal**: Phase 1 audit blockers are cleared by re-verifying the deprecated API migration work against the current planning state and evidence
+**Depends on**: Phase 1
+**Requirements**: DEBT-05, DEBT-06, DEBT-07, DEBT-10
+**Gap Closure**: Closes stale Phase 1 verification status from `v1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `01-VERIFICATION.md` is updated from `gaps_found` to a status consistent with the current code and requirements state
+  2. Phase 1 requirement coverage explicitly accounts for DEBT-05, DEBT-06, DEBT-07, and DEBT-10 without relying on stale documentation gaps
+  3. Any remaining parity or runtime proof needed for Phase 1 verification is captured in the refreshed verification artifact
+**Plans**: TBD
+
+### Phase 10: Pattern Caching Verification Backfill
+**Goal**: Phase 5 verification artifacts fully cover all requirements claimed complete by the phase summaries
+**Depends on**: Phase 5
+**Requirements**: PERF-03, CONS-04
+**Gap Closure**: Closes orphaned Phase 5 requirements from `v1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. Phase 5 verification coverage explicitly includes PERF-03 for cached C++ `detect_crash_pattern`
+  2. Phase 5 verification coverage explicitly includes CONS-04 for static `LazyLock` regex compilation behavior
+  3. The final Phase 5 verification story is internally consistent for the requirements still assigned to the phase
+**Plans**: TBD
+
+### Phase 11: Workspace/Infra Verification Completion
+**Goal**: Phase 8 has complete verification coverage for all workspace and infrastructure requirements claimed by the milestone
+**Depends on**: Phase 8
+**Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05, TEST-03
+**Gap Closure**: Closes missing Phase 8 verification coverage from `v1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `08-VERIFICATION.md` exists and covers all six assigned requirements with evidence
+  2. The verification artifact accounts for workspace dependency ownership, Proton docs-path wiring, Node declaration freshness, and the Proton integration test
+  3. Milestone audit traceability can map all six Phase 8 requirements to a concrete verification report
+**Plans**: TBD
 
 ## Progress
 
@@ -161,6 +197,9 @@ Phases 1 and 2 are sequential. Phases 3-6 and 8 can run in parallel after Phase 
 | 6. mmap TOCTOU Safety | 3/3 | Complete | 2026-04-06 |
 | 7. Consistency Sweep | 2/2 | Complete | 2026-04-06 |
 | 8. Workspace and Infrastructure | 3/3 | Complete | 2026-04-06 |
+| 9. Deprecated API Verification Closure | 0/TBD | Planned | - |
+| 10. Pattern Caching Verification Backfill | 0/TBD | Planned | - |
+| 11. Workspace/Infra Verification Completion | 0/TBD | Planned | - |
 | 5. Pattern Caching and Performance | 0/4 | Planned | - |
 | 6. mmap TOCTOU Safety | 0/TBD | Not started | - |
 | 7. Consistency Sweep | 0/2 | Planned | - |
