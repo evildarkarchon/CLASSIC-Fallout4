@@ -11,10 +11,10 @@
 //! where multiple versions can be valid for a single game version (e.g., FO4_OG
 //! supports both 1.28.6 and 1.37.0).
 
-use once_cell::sync::Lazy;
 use regex::Regex;
 use semver::Version;
 use std::cmp::Ordering;
+use std::sync::LazyLock;
 
 /// Status of a crash generator version relative to valid versions.
 ///
@@ -33,8 +33,8 @@ pub enum CrashgenVersionStatus {
 }
 
 /// Pattern to extract version numbers from strings like "Buffout 4 v1.28.0"
-static VERSION_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"v?(\d+)\.(\d+)\.?(\d*)").expect("Invalid version regex pattern"));
+static VERSION_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"v?(\d+)\.(\d+)\.?(\d*)").expect("Invalid version regex pattern"));
 
 /// Represents a crashgen version that can be compared
 ///
@@ -124,7 +124,11 @@ impl CrashgenVersion {
                 .get(3)
                 .and_then(|m| {
                     let s = m.as_str();
-                    if s.is_empty() { None } else { s.parse().ok() }
+                    if s.is_empty() {
+                        None
+                    } else {
+                        s.parse().ok()
+                    }
                 })
                 .unwrap_or(0);
 
@@ -161,64 +165,6 @@ impl CrashgenVersion {
     /// A tuple `(u32, u32, u32)` suitable for `SettingsValidator::scan_archivelimit_setting()`.
     pub fn to_tuple(&self) -> (u32, u32, u32) {
         (self.major as u32, self.minor as u32, self.patch as u32)
-    }
-
-    /// Checks if this version is outdated compared to the latest versions.
-    ///
-    /// **Deprecated**: Use `check_version_status()` with a list of valid versions instead.
-    /// This legacy method only supports single-version comparison.
-    ///
-    /// This matches Python's version comparison logic:
-    /// - If VR mode: Check against both version_latest_vr AND version_latest
-    /// - If non-VR: Check only against version_latest
-    ///
-    /// # Arguments
-    ///
-    /// * `latest` - The latest non-VR version
-    /// * `latest_vr` - The latest VR version
-    /// * `selected_version_is_vr` - Whether the selected version is VR
-    ///
-    /// # Returns
-    ///
-    /// `true` if the current version is outdated, `false` otherwise.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::version::CrashgenVersion;
-    ///
-    /// let current = CrashgenVersion::new(1, 26, 0);
-    /// let latest = CrashgenVersion::new(1, 28, 0);
-    /// let latest_vr = CrashgenVersion::new(1, 27, 0);
-    ///
-    /// // Non-VR: only compare against latest
-    /// assert!(current.is_outdated(&latest, &latest_vr, false));
-    ///
-    /// // VR: compare against both
-    /// assert!(current.is_outdated(&latest, &latest_vr, true));
-    /// ```
-    #[deprecated(
-        since = "0.2.0",
-        note = "Use check_version_status() with a list of valid versions instead"
-    )]
-    pub fn is_outdated(
-        &self,
-        latest: &CrashgenVersion,
-        latest_vr: &CrashgenVersion,
-        selected_version_is_vr: bool,
-    ) -> bool {
-        // Port of Python logic:
-        // if (version_current < version_latest_vr and version_current != version_latest) or
-        //    (not game_is_vr and version_current < version_latest):
-        //     # outdated
-
-        if selected_version_is_vr {
-            // VR mode: Check against VR version, but allow if matches non-VR latest
-            self < latest_vr && self != latest
-        } else {
-            // Non-VR mode: Check against non-VR latest
-            self < latest
-        }
     }
 
     /// Checks this version against a list of valid versions.
@@ -451,36 +397,78 @@ mod tests {
         assert!(v1 < v3);
     }
 
-    // Legacy tests for deprecated is_outdated method
-    #[test]
-    #[allow(deprecated)]
-    fn test_is_outdated_non_vr() {
-        let current = CrashgenVersion::new(1, 26, 0);
-        let latest = CrashgenVersion::new(1, 28, 0);
-        let latest_vr = CrashgenVersion::new(1, 27, 0);
+    // Replacement tests for deprecated is_outdated method -- now exercise check_version_status directly
 
-        assert!(current.is_outdated(&latest, &latest_vr, false));
+    #[test]
+    fn test_check_version_status_non_vr_outdated_scenario() {
+        // Replaces test_is_outdated_non_vr: version 1.26.0 is outdated against valid [1.28.0]
+        let current = CrashgenVersion::new(1, 26, 0);
+        let valid = vec![CrashgenVersion::new(1, 28, 0)];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Outdated);
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_is_outdated_vr() {
+    fn test_check_version_status_vr_outdated_scenario() {
+        // Replaces test_is_outdated_vr: version 1.26.0 is outdated against VR valid [1.27.0]
         let current = CrashgenVersion::new(1, 26, 0);
-        let latest = CrashgenVersion::new(1, 28, 0);
-        let latest_vr = CrashgenVersion::new(1, 27, 0);
-
-        assert!(current.is_outdated(&latest, &latest_vr, true));
+        let valid = vec![CrashgenVersion::new(1, 27, 0)];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Outdated);
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_not_outdated_when_matches_latest() {
+    fn test_check_version_status_vr_matches_valid() {
+        // Replaces test_not_outdated_when_matches_latest: version 1.28.0 matches a VR valid entry
         let current = CrashgenVersion::new(1, 28, 0);
-        let latest = CrashgenVersion::new(1, 28, 0);
-        let latest_vr = CrashgenVersion::new(1, 27, 0);
+        let valid = vec![
+            CrashgenVersion::new(1, 27, 0),
+            CrashgenVersion::new(1, 28, 0),
+        ];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Valid);
+    }
 
-        // VR mode: not outdated if matches non-VR latest
-        assert!(!current.is_outdated(&latest, &latest_vr, true));
+    #[test]
+    fn test_check_version_status_vr_newer_than_known() {
+        // VR version 1.30.0 is newer than all known VR valid versions [1.27.0, 1.28.0]
+        let current = CrashgenVersion::new(1, 30, 0);
+        let valid = vec![
+            CrashgenVersion::new(1, 27, 0),
+            CrashgenVersion::new(1, 28, 0),
+        ];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::NewerThanKnown);
+    }
+
+    #[test]
+    fn test_check_version_status_vr_empty_valid_list() {
+        // Any version checked against empty VR valid list returns NoSupportedVersion
+        let current = CrashgenVersion::new(1, 27, 0);
+        let valid: Vec<CrashgenVersion> = vec![];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::NoSupportedVersion);
+    }
+
+    #[test]
+    fn test_check_version_status_vr_single_valid() {
+        // VR version exactly matching the single valid entry returns Valid
+        let current = CrashgenVersion::new(1, 27, 0);
+        let valid = vec![CrashgenVersion::new(1, 27, 0)];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Valid);
+    }
+
+    #[test]
+    fn test_check_version_status_vr_between_entries() {
+        // VR version 1.27.5 between valid entries [1.27.0, 1.28.0] is not in list, below max
+        let current = CrashgenVersion::new(1, 27, 5);
+        let valid = vec![
+            CrashgenVersion::new(1, 27, 0),
+            CrashgenVersion::new(1, 28, 0),
+        ];
+        let status = current.check_version_status(&valid);
+        assert_eq!(status, CrashgenVersionStatus::Outdated);
     }
 
     #[test]

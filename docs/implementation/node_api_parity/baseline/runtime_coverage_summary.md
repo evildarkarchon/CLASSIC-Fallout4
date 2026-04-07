@@ -1,10 +1,10 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-03-30T12:22:20.270588+00:00`
-- Tracked surfaces: **381**
-- Runtime verified: **273**
+- Generated: `2026-04-07T04:40:51.275512+00:00`
+- Tracked surfaces: **396**
+- Runtime verified: **287**
 - Contract mapped only: **0**
-- Deferred: **108**
+- Deferred: **109**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -12,9 +12,9 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|
-| `aux` | 143 | 0 | 12 | 0 | 155 |
-| `config` | 53 | 0 | 26 | 0 | 79 |
-| `scanlog` | 21 | 0 | 66 | 0 | 87 |
+| `aux` | 150 | 0 | 12 | 0 | 162 |
+| `config` | 59 | 0 | 26 | 0 | 85 |
+| `scanlog` | 22 | 0 | 67 | 0 | 89 |
 | `version_registry` | 56 | 0 | 4 | 0 | 60 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.

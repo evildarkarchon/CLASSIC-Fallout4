@@ -1,192 +1,238 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-04
 
 ## Tech Debt
 
-**Deprecated API Shims Awaiting Removal (scanlog-core parser):**
-- Issue: Two deprecated methods `parse_segments` and `parse_segments_parallel` marked `#[deprecated(since = "9.0.0")]` remain in the public API as backward-compatibility shims over `parse_all_sections_arc`. Each has an explicit `# TODO: Remove once all callers have migrated` doc comment.
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/parser.rs` lines 459, 475
-- Impact: Dead code surface, compile-time deprecation warnings suppressed with `#[allow(deprecated)]` in test files. Signals incomplete migration.
-- Fix approach: Audit all binding and bridge callers. Both Python and C++ bridge do not currently call these methods; confirm Node binding does not call `parseLogSegments` via the deprecated path. Remove shims once confirmed.
+**Deprecated Parser API Not Fully Removed:**
+- Issue: Two deprecated shim methods (`parse_segments`, `parse_segments_parallel`) in the core `LogParser` remain in production code marked with `#[deprecated(since = "9.0.0")]`. The Python binding (`classic-scanlog-py/src/parser.rs`) still calls `parse_segments_parallel` with `#[allow(deprecated)]`, keeping these shims alive.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/parser.rs:459,475`, `ClassicLib-rs/python-bindings/classic-scanlog-py/src/parser.rs:98`
+- Impact: Cannot remove deprecated API until all Python callers migrate to `parse_all_sections_arc`. Both TODO comments note pending removal.
+- Fix approach: Replace `parse_segments_parallel` in Python bindings with a wrapper over `parse_all_sections_arc`, then delete the two deprecated methods.
 
-**Deprecated `is_outdated` Method in scanlog-core version:**
-- Issue: `is_outdated` marked deprecated on `CrashgenVersion`; callers in test files use `#[allow(deprecated)]`.
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/version.rs` line 200
-- Impact: Minor — test-only concern. No known production callers.
-- Fix approach: Remove the method once no callers remain.
+**Deprecated `is_outdated` Version Check Still Has Callers:**
+- Issue: `CrashgenVersion::is_outdated` is marked `#[deprecated(since = "0.2.0")]` but tests use `#[allow(deprecated)]`. The Python binding re-exposes the equivalent API (`generate_suspect_section` legacy method in `report.rs:651`) without deprecation marking.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/version.rs:200`, `ClassicLib-rs/python-bindings/classic-scanlog-py/src/report.rs:307`
+- Impact: Callers remain coupled to a single-version comparison that doesn't support multi-version checking. Migration path is `check_version_status()`.
+- Fix approach: Migrate Python binding `generate_suspect_section` to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately; then remove the legacy method.
 
-**FormID Settings Split (Dual Representation):**
-- Issue: There are two separate, incompatible representations for per-game FormID database paths. `ClassicConfig.formid_databases` (top-level YAML key `formid_databases`) is used by Rust config API and bindings. `CLASSIC_Settings.FormID Databases.{game}` (nested legacy key) is used by the C++ bridge at scan startup and the Qt GUI settings dialog. The two keys are never reconciled at runtime.
-- Files: `ClassicLib-rs/business-logic/classic-config-core/src/config.rs`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs` (lines 717, 754), `classic-gui/src/app/settingsdialog.cpp`
-- Impact: A path saved through `ClassicConfig::save_to_yaml()` or the Python/Node binding is ignored by actual scan startup. A path saved through the GUI's settings dialog affects scanning but is invisible to the Rust config API. This is documented but unfixed in `docs/api/formid-settings-boundary.md`.
-- Fix approach: Migrate `scanner.rs::build_full_scan_config` to read `ClassicConfig` using a bridge-side loader, or add a settings migration step that writes the Rust model key when saving through the GUI.
+**Legacy Settings Validator Fallback Path:**
+- Issue: `SettingsValidator::scan_all_settings` falls back to `scan_all_settings_legacy_bucketed` for crashgen configs that lack structured `CrashgenEntry` rules. This legacy path is not deprecated but is structurally separate code.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/settings_validator.rs:192,195`
+- Impact: Two distinct validation code paths for settings checks; inconsistent results depending on whether `CrashgenEntry` is populated.
+- Fix approach: Migrate all crashgen configs to use structured rules and eliminate the legacy bucketed path.
 
-**`YamlFormatConfig` Dead Field in yaml-core:**
-- Issue: `YamlOperations` holds a `format_config: YamlFormatConfig` field marked `#[allow(dead_code)]` with a comment "Reserved for future format preservation features." The field is allocated but never read.
-- Files: `ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs` lines 507-509
-- Impact: Unused struct memory per `YamlOperations` instance. Signals incomplete feature design.
-- Fix approach: Either implement format preservation using the field or remove it entirely.
+**Python FormID Analyzer Accepts Legacy Map Format:**
+- Issue: Python binding's `PyFormIDAnalyzerCore::new` still accepts `mods_single` as a plain `PyDict` (key→value string map) via `legacy_mod_map_to_entries()`. The Rust-native API uses structured `ModSolutionEntry` sequences (as mandated by docs/api/README.md).
+- Files: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/formid_analyzer.rs:11,102`
+- Impact: Binding silently converts old-format input, hiding the migration boundary. Python callers can pass legacy maps indefinitely.
+- Fix approach: Add a deprecation warning when `mods_single` dict is detected; document expected `mods_double`-style sequence; reject or warn on legacy map in a future release.
 
-**`dead_code` Suppressions in plugin_analyzer:**
-- Issue: A struct field in `plugin_analyzer.rs` is marked `#[allow(dead_code)]` with comment "Reserved for future case-insensitive matching optimization."
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/plugin_analyzer.rs` line 67
-- Impact: Dormant field with no completion timeline.
-- Fix approach: Implement or remove.
+**`SEGMENT_BOUNDARIES` Static Is Dead Code:**
+- Issue: `static SEGMENT_BOUNDARIES` in the parser is kept for "backward compat" but marked `#[allow(dead_code)]`. Nothing references it.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/parser.rs:70`
+- Impact: Clutters the parser crate. No functional impact but masks future dead code warnings.
+- Fix approach: Remove the static; the named section approach via `parse_all_sections_arc` is the canonical path.
 
-**`dead_code` Suppression in parser.rs:**
-- Issue: Two `#[allow(dead_code)]` suppressions exist in `parser.rs` at lines 70 and 1208.
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/parser.rs`
-- Impact: Unreachable or unused production code reduces clarity.
-- Fix approach: Remove unused code or promote to active use.
+**`YamlFormatConfig` Field Reserved But Unused:**
+- Issue: `YamlOperations.format_config` field is `#[allow(dead_code)]` and marked "reserved for future format preservation features." The feature has never shipped.
+- Files: `ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs:507`
+- Impact: Empty struct field adds confusion. No runtime cost.
+- Fix approach: Either implement YAML format preservation or remove the field and the `YamlFormatConfig` struct.
 
-**Python Binding Parity — Large Deferred Backlog:**
-- Issue: Python parity tooling tracks 353 surfaces total. Only 66 are runtime-verified; 287 are "deferred." The `scanlog` module has 227 deferred surfaces and only 24 runtime-verified ones.
-- Files: `ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`, `ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.md`
-- Impact: Tier-1 contract (59 rows) passes, but the large deferred backlog means regressions in Tier-2 `scanlog` surfaces go undetected by CI. Node bindings have better coverage (273/381 runtime-verified vs 66/353 for Python).
-- Fix approach: Promote high-priority scanlog surfaces from deferred to runtime-verified in the parity governance backlog at `ClassicLib-rs/python-bindings/parity-artifacts/`.
+**`PluginAnalyzer.case_cache` Allocated But Never Written:**
+- Issue: `PluginAnalyzer` holds an `Arc<DashMap<String, String>>` for `case_cache` marked `#[allow(dead_code)] // Reserved for future case-insensitive matching optimization`. The cache is allocated on each `PluginAnalyzer::new` call but never populated or read.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/plugin_analyzer.rs:67`
+- Impact: Small heap allocation per orchestrator construction; no functional effect. If batch scanning creates many orchestrators, the cost accumulates.
+- Fix approach: Remove the field or implement the optimization.
 
-**Node Binding Tier-2 Gaps:**
-- Issue: Node parity report shows 120 total gaps (Tier-1 + Tier-2). Tier-2 breakdown: `scanlog` 71, `config` 29, `aux` 15, `version_registry` 5. All Tier-1 (261 rows) pass.
-- Files: `ClassicLib-rs/node-bindings/classic-node/parity-artifacts/parity_diff_report.md`
-- Impact: Tier-2 scanlog surfaces (71) and config surfaces (29) in Node bindings lack parity coverage. Regressions in these areas are not caught by the parity gate.
-- Fix approach: Promote priority Tier-2 rows to Tier-1 contract in the Node parity baseline.
+**`PyGpuDetector.inner` Field Allocated But Unused:**
+- Issue: Python binding `PyGpuDetector` holds an `inner: GpuDetector` field that is explicitly unused (the `GpuDetector` methods are static). Marked `#[allow(dead_code)]`.
+- Files: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/gpu_detector.rs:118`
+- Impact: Cosmetic / slight allocation waste per Python `GpuDetector` instance.
+- Fix approach: Remove the `inner` field; convert to a pure-methods Python class with no state.
 
----
+**`construct_proton_docs_path` Linux Function Is Dead Code:**
+- Issue: `construct_proton_docs_path` in the Linux platform module is `#[allow(dead_code)]`. It is not used by any code path.
+- Files: `ClassicLib-rs/business-logic/classic-path-core/src/platform/linux.rs:170`
+- Impact: Linux path detection is incomplete; Proton path support is partially implemented.
+- Fix approach: Either wire up `construct_proton_docs_path` to the docs-path discovery workflow or remove it.
 
-## Known Bugs
+**Node `index.d.ts` Is Not Pre-Generated:**
+- Issue: `package.json` declares `"types": "index.d.ts"` but no `index.d.ts` exists in the repository. It is only generated post-build via `napi build`. The TypeScript type system for consumers is not source-controlled.
+- Files: `ClassicLib-rs/node-bindings/classic-node/package.json`
+- Impact: Contributors cloning the repo have no type definitions until they run a full build. CI freshness tooling (`dts:freshness:check`) checks this but the file itself is gitignored.
+- Fix approach: Either commit a generated `index.d.ts` snapshot or document the build-first requirement explicitly in the Node binding README.
 
-**`FCX` Global State Not Reset in C++ Bridge Scan Session:**
-- Symptoms: `GLOBAL_FCX_HANDLER` is a process-wide `Lazy<Mutex<FcxModeHandler>>` singleton. The doc comment in `fcx_handler.rs` instructs callers to call `FcxModeHandler::reset_global_state()` at the start of each scan session. The Python binding exposes `reset_fcx_checks()`. However, the C++ bridge (`scanner.rs`) does not call `reset_global_state()` before starting a scan. In a multi-scan session via the C++ path, cached FCX check results from a prior scan will bleed into subsequent scans.
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs` lines 21-24, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`
-- Trigger: Run multiple scan sessions in the same process using the C++ bridge with `fcx_mode: true`. The second scan will reuse cached FCX results from the first.
-- Workaround: None in the C++ path. Python callers must call `FcxModeHandler.reset_fcx_checks()` manually before each scan session.
+**`ratatui`, `arboard`, and `crossterm` Not in Workspace Dependencies:**
+- Issue: The TUI application pins `ratatui = "0.30"`, `arboard = "3"`, `crossterm = "0.28"`, and `open = "5"` as crate-local deps, not declared in the root workspace `[workspace.dependencies]`.
+- Files: `ClassicLib-rs/ui-applications/classic-tui/Cargo.toml:15,37-42`
+- Impact: Version updates require editing the crate's Cargo.toml separately; not centrally managed like all other deps.
+- Fix approach: Promote to workspace dependencies if the TUI is expected to grow.
 
----
-
-## Security Considerations
-
-**No security-specific concerns identified in application code.** The codebase handles local game files and YAML configuration; there are no network-exposed surfaces, credential storage, or privilege escalation paths.
-
-**Relative Path Resolution for FormID DB (no existence check):**
-- Risk: `scanner.rs::resolve_formid_db_paths` assembles DB paths from user-provided YAML without checking file existence at assembly time. Nonexistent relative paths are silently passed to `DatabasePool::initialize()`, which skips them with a warning rather than a hard error.
-- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs` lines 679-754
-- Current mitigation: `DatabasePool::initialize()` logs a warning for missing files.
-- Recommendations: Add an optional path-existence pre-check step with a structured warning in the scan config build phase so callers receive feedback earlier.
+**`zerovec` Workaround Dep in `classic-shared-core`:**
+- Issue: `classic-shared-core` has a dev-dependency `zerovec = { version = "0.11", features = ["alloc"] }` documented as a "workaround: icu_properties (transitive via slint) requires zerovec/alloc when building with gui-bridge in isolation."
+- Files: `ClassicLib-rs/foundation/classic-shared-core/Cargo.toml:50-52`
+- Impact: Fragile workaround that may break on Slint or zerovec upgrades. Undocumented in workspace-level docs.
+- Fix approach: Track the upstream Slint/icu_properties issue; remove when resolved.
 
 ---
 
 ## Performance Bottlenecks
 
-**Per-Call `Regex::new` in `mod_detector.rs`:**
-- Problem: `detect_mods_single`, `detect_mods_double`, `detect_mods_important`, and `detect_mods_batch` each call `Regex::new(&format!(...))` to compile a combined alternation pattern from the mod list on every invocation. Regex compilation is expensive.
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs` lines 160, 429, 520, 674
-- Cause: The pattern is built dynamically from YAML-loaded mod data, which requires a fresh compile per call when the input set changes. However, for batch scanning the same YAML the pattern is identical across calls.
-- Improvement path: Cache the compiled `Regex` keyed by the sorted mod name set, using a `DashMap` or `once_cell`-based memo. Alternatively, accept a pre-compiled pattern as a parameter from the orchestrator.
+**Dynamic Regex Compilation in Hot Scan Paths:**
+- Problem: `detect_mods_single`, `detect_mods_double`, `detect_mods_batch`, and `detect_mods_important` all call `Regex::new(...)` at runtime during each scan invocation, building combined alternation patterns from YAML-loaded mod lists.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs:160,429,524,678`
+- Cause: Mod lists are loaded at runtime from config and vary per user, preventing static compilation.
+- Improvement path: Cache compiled patterns keyed by a hash of the mod list contents (similar to the existing pattern cache in `LogParser`). Reset cache on config reload.
 
-**Per-Call `Regex::new` in `classic-path-core` backup:**
-- Problem: `extract_version_from_xse_log` compiles `Regex::new(r"(?i)(?:runtime )?version\s*[=:]\s*(\d+(?:\.\d+)+)").unwrap()` inside a non-`static`/`Lazy` function body on every call.
-- Files: `ClassicLib-rs/business-logic/classic-path-core/src/backup.rs` line 205-206
-- Cause: Regex not extracted to a `static Lazy<Regex>`.
-- Improvement path: Move the regex to a `static Lazy<Regex>` at module level.
+**`detect_crash_pattern` in C++ Bridge Creates New Parser Per Call:**
+- Problem: `detect_crash_pattern` in the C++ bridge function calls `classic_scanlog_core::LogParser::new(None).unwrap()` on every invocation, rebuilding all compiled patterns each time.
+- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs:671`
+- Cause: No parser instance is cached at the bridge level.
+- Improvement path: Make `detect_crash_pattern` a method on a bridge-owned `Orchestrator` or hold a `Lazy<LogParser>` at module level.
 
-**`block_on` Wrapping for All Async Operations in C++ Bridge:**
-- Problem: The C++ bridge wraps every async Rust operation with `get_runtime().block_on(...)`. There are 38 `block_on` calls across `config.rs`, `database.rs`, `files.rs`, `scangame.rs`, `scanner.rs`, and `yaml.rs`. Each call blocks a thread for the duration of the async operation.
-- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`
-- Cause: CXX FFI requires synchronous entry points; the bridge design uses a shared Tokio runtime with blocking callers.
-- Improvement path: For scan-heavy operations, consider exposing async callbacks to C++ so the Qt worker thread does not block. This is a structural constraint documented in the bridge design.
+**`detect_mods_important` Compiles One Regex Per Entry:**
+- Problem: Unlike `detect_mods_single`/`detect_mods_double` which build a single combined alternation pattern, `detect_mods_important` compiles a separate `Regex::new` for every entry in the list on each call.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs:524`
+- Cause: Entries need individual match semantics (gpu checks, exclusions).
+- Improvement path: Pre-compile all patterns into an `AhoCorasick` automaton or build a combined pattern with named capture groups; check exclusions after matching.
+
+**`detect_mods_important` Joins All Plugin Strings on Each Call:**
+- Problem: The function joins all plugin names into a concatenated string (`plugins_text`, `modules_text`, `all_text`) on every invocation.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/mod_detector.rs:512-517`
+- Cause: Pattern matching against a full joined string rather than per-item lookup.
+- Improvement path: Match against a `HashSet` using individual `contains` checks, or use `AhoCorasick` to search a flat byte slice.
 
 ---
 
 ## Fragile Areas
 
-**`OrchestratorCore` in `orchestrator.rs` (3,139 Lines):**
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs`
-- Why fragile: The file is 3,139 lines and contains all of `OrchestratorCore`'s construction, initialization, scan execution, batch logic, FCX handling, crashgen version checking, and helper factory methods (`create_report_generator`, `create_settings_validator`, `create_record_scanner`, `create_fcx_handler`). Changes to any one concern risk unintended cross-cutting effects.
-- Safe modification: Read the full method list before adding new behavior. Changes to `process_log` or `process_logs_batch` affect both CLI and GUI paths through the C++ bridge. New helper methods belong at the bottom of the `impl` block; never add business logic inline in `process_log`.
-- Test coverage: Inline `#[test]` block at the bottom of the file (tests section starting line 2088). Not exhaustive for all code paths.
+**`GLOBAL_FCX_HANDLER` Singleton - Silent Drop on Contention:**
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs:23,296`
+- Why fragile: `reset_global_state()` uses `try_lock()` — if the mutex is held (e.g., concurrent batch scan), the reset silently does nothing. The next scan session may inherit stale FCX state.
+- Safe modification: Always call `FcxModeHandler::reset_global_state()` from a single coordinating thread before scan initiation. Do not call from concurrent workers.
+- Test coverage: No test covers the contention-drop case.
 
-**`yamldata.rs` (3,309 Lines):**
-- Files: `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs`
-- Why fragile: The largest single file in the codebase at 3,309 lines. Contains `YamlDataCore` and all its accessors for Main, Game, and Ignore YAML sections. Very wide API surface.
-- Safe modification: Use the Tier-1 parity contract before touching public accessors; any signature change triggers Node and Python parity failures. Run the parity gate locally after changes.
+**`VersionRegistry` Singleton Cannot Be Reloaded:**
+- Files: `ClassicLib-rs/business-logic/classic-version-registry-core/src/registry.rs:22`
+- Why fragile: Uses `OnceLock` — the registry is initialized once on first access and cannot be refreshed at runtime. Any YAML-backed customization or test isolation requires a process restart.
+- Safe modification: Tests that touch registry-dependent code must run in separate processes or accept the default initialized state.
+- Test coverage: Registry-dependent tests are isolated via process restart or accept defaults; direct registry mutation in tests is absent.
 
-**`scanner.rs` Bridge (1,771 Lines) with `build_full_scan_config`:**
-- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`
-- Why fragile: Contains both scan orchestration (30 `#[test]` inline tests) and FormID DB path resolution using the legacy `CLASSIC_Settings.FormID Databases.{game}` key. Settings changes to the Rust config model do not automatically propagate here due to the FormID split. Also contains hardcoded FOLON FormID DB path (line 683).
-- Safe modification: Any change to FormID DB path resolution must be verified against both the `ClassicConfig` model and this bridge's resolution logic. The hardcoded FOLON path in `hardcoded_formid_db_relpaths` is not configurable.
+**FCX Global State Not Accessible from C++ Bridge or Node Bindings:**
+- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`, `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs`
+- Why fragile: The C++ bridge and Node bindings expose `fcx_mode` as a config flag but never call `FcxModeHandler::reset_global_state()`. If fcx mode is used in a scan, the global handler state from that scan persists for subsequent scans in the same process.
+- Safe modification: Add explicit reset calls in bridge/binding scan entry points before each scan session.
+- Test coverage: Not tested across the bridge or Node binding layer.
 
-**Test Current-Directory Mutation in `config-core`:**
-- Files: `ClassicLib-rs/business-logic/classic-config-core/src/config.rs` lines 1079-1113
-- Why fragile: `test_load_local_yaml_paths_merges_multiple_documents` mutates the process working directory using `std::env::set_current_dir`. It uses a custom `current_dir_lock()` `Mutex` to serialize against other config tests, but this lock is local to the config-core test module. If tests from `classic-file-io-core/src/generation.rs` run concurrently with config-core tests in the same process (possible under `cargo test --workspace`), both independently mutate the current directory without cross-crate coordination. `generation.rs` uses the `serial_test::serial` attribute but not the config-core lock.
-- Safe modification: Do not add new `set_current_dir` tests to either crate without confirming cross-crate isolation. Prefer using absolute paths in tests over `set_current_dir`.
+**`scan_all_settings_legacy_bucketed` Has No Clear Deprecation Path:**
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/settings_validator.rs:195`
+- Why fragile: The function is reachable whenever a `CrashgenEntry` is `None`, which happens silently. No warning is emitted; callers may not know they are hitting the legacy path.
+- Safe modification: Add tracing/logging at the entry point to indicate legacy path activation. Add a test asserting the legacy path is not hit for standard configs.
+- Test coverage: The legacy path is tested implicitly; no explicit "legacy path is not hit for known configs" assertion exists.
 
-**`GLOBAL_FCX_HANDLER` Process-Wide Singleton:**
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs` lines 21-24
-- Why fragile: Global mutable state shared across all scan sessions in the same process. `reset_global_state()` uses `try_lock()` (non-blocking), so if a scan session holds the lock during reset, the reset silently does nothing. This means stale FCX state can survive into subsequent scans.
-- Safe modification: Any feature that adds new FCX check types must also update `reset_global_state` and verify callers reset before each session. The C++ bridge does not reset this state.
-- Test coverage: Unit tests in `fcx_handler.rs` cover individual FcxModeHandler instances but not the global reset behavior under contention.
-
----
-
-## Scaling Limits
-
-**SQLite FormID Database Pool:**
-- Current capacity: The `DatabasePool` in `classic-database-core` manages per-game SQLite connection pools. The default max connections setting is configurable; large FormID DBs (e.g., `Fallout4 FormIDs Main.db`) are loaded at scan startup and pooled for the scan duration.
-- Limit: Each scan session initializes pools from scratch. For batch scans with many workers, the pool is shared via `Arc<DatabasePool>` but all workers share the same connection limit, which can become a bottleneck.
-- Scaling path: Increase `max_connections` per pool or partition DB access by game type if Skyrim/Starfield support is added.
+**`read_file_mmap` Assumes File Stability:**
+- Files: `ClassicLib-rs/business-logic/classic-file-io-core/src/core.rs:1029-1050`
+- Why fragile: The memory-mapped read path explicitly warns callers that concurrent file modification during the map window is unsafe. This is a correctness guarantee that relies on external (caller) enforcement.
+- Safe modification: Only call `read_file_mmap` on files that are fully written before scanning (archived crash logs). Use `read_file_with_encoding` for any file that may still be appended (active Papyrus logs).
+- Test coverage: No test verifies behavior when a file is modified during a mmap read.
 
 ---
 
-## Dependencies at Risk
+## Security Considerations
 
-**`once_cell` (process-wide static singletons):**
-- Risk: `GLOBAL_FCX_HANDLER`, `METRICS` (in `classic-perf-core`), and `REGISTRY` (in `classic-registry-core`) all use `once_cell::sync::Lazy`. These are initialized once per process and cannot be re-initialized. In test scenarios with multiple test binaries (e.g., `--workspace`), each test binary gets its own singleton. However, within a single binary, any global state corruption or accumulation affects all tests.
-- Impact: Test isolation issues if singletons are not reset between tests.
-- Migration plan: `once_cell` is being merged into std (`std::sync::LazyLock` in Rust 1.80+). The codebase can migrate to `std::sync::OnceLock`/`LazyLock` when minimum Rust version allows.
+**`unsafe` Memory Map in File I/O:**
+- Risk: Memory-mapped file read (`Mmap::map`) in `read_file_mmap` is marked safe by the author's reasoning (read-only, file handle held, dropped before return) but the underlying OS allows another process to modify the file during the map window on Windows.
+- Files: `ClassicLib-rs/business-logic/classic-file-io-core/src/core.rs:1050`
+- Current mitigation: `#[allow(unsafe_code)]` with documented safety invariants. Only used for files >1MB.
+- Recommendations: Consider using `MmapOptions::map_copy()` (copy-on-write) to avoid TOCTOU issues, or confine `read_file_mmap` to read-only opened file handles.
 
----
-
-## Missing Critical Features
-
-**`macOS` Platform Support:**
-- Problem: `classic-path-core/src/platform/` has only `windows.rs` and `linux.rs`. No `macos.rs`. The `get_system_documents_path()` function has `#[cfg(target_os = "windows")]` and `#[cfg(target_os = "linux")]` variants but no macOS variant. Compilation on macOS would fail to link `get_system_documents_path`.
-- Blocks: Any macOS deployment.
+**`unsafe extern "C++"` CXX Bridge Block:**
+- Risk: The CXX bridge declares `unsafe extern "C++"` for the `ScanBatchProgressCallback` type. Misuse of the C++ callback (e.g., passing a dangling pointer) would be undefined behavior.
+- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs:888`
+- Current mitigation: CXX provides pinning/lifetime enforcement for opaque C++ types. The callback is C++-owned and passed by reference.
+- Recommendations: No immediate action required; maintain CXX version upgrades promptly to pick up safety fixes.
 
 ---
 
 ## Test Coverage Gaps
 
-**`formid_analyzer.rs` (991 Lines — No Test Module Header):**
-- What's not tested: The file contains 8 public/pub(crate) functions and has inline `#[tokio::test]` blocks in a test helper section at the bottom (from line 764). However, `formid_match`, `formid_match_with_crashgen_name`, and `lookup_formid_value` are async database-touching paths that depend on test fixture DBs. If fixture setup is absent in CI or the SQLite DB is missing, these tests silently pass without coverage.
-- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/formid_analyzer.rs`
-- Risk: Changes to FormID lookup logic may not be caught if test DB fixtures are missing.
+**FCX Global Handler Contention Reset:**
+- What's not tested: Silent drop of reset when mutex is held during concurrent scan.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs:295-298`
+- Risk: Stale FCX state persists across scan sessions in long-running batch operations.
 - Priority: Medium
 
-**C++ Bridge `scanner.rs` — FCX Mode Coverage:**
-- What's not tested: The C++ bridge `scanner.rs` has 30 inline tests but none specifically test `fcx_mode: true` scan sessions or verify that `GLOBAL_FCX_HANDLER` state does not bleed between multiple orchestrator lifecycles created in the same test binary.
-- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`
-- Risk: The FCX state bleed issue described above is not caught by existing bridge tests.
-- Priority: High
-
-**TUI Application (`classic-tui`) — Render and Event Tests:**
-- What's not tested: The TUI has tests in `tests/event_tests.rs` and `tests/render_tests.rs` plus inline tests in `app.rs`, `results_markdown.rs`, and `tabs/main_tab.rs`. However, the TUI is not referenced in any CI workflow (confirmed absent from all `.github/workflows/*.yml` files by search). The workspace `cargo test --workspace` in `ci-rust.yml` does cover `classic-tui` since it is in `Cargo.toml`'s members list. No dedicated TUI CI job exists.
-- Files: `ClassicLib-rs/ui-applications/classic-tui/`, `.github/workflows/ci-rust.yml`
-- Risk: TUI test failures are reported alongside all other Rust tests under the generic `ci-rust.yml` test step. There is no targeted TUI CI job with TUI-specific setup or output capture.
-- Priority: Low
-
-**CI `rustfmt` Check is Non-Blocking:**
-- What's not tested: The `format` job in `ci-rust.yml` sets `continue-on-error: true`. Rustfmt failures do not block the CI pipeline or prevent merging.
-- Files: `.github/workflows/ci-rust.yml` line 19
-- Risk: Formatting drift accumulates silently. Only `clippy` (with `-D warnings`) is blocking.
-- Priority: Low
-
-**Python Runtime Coverage Deferred Backlog (287/353 Surfaces):**
-- What's not tested: 287 of 353 tracked Python API surfaces are marked "deferred" in the parity governance system. The `scanlog` module has 227 deferred surfaces. These are not covered by runtime tests.
-- Files: `ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`
-- Risk: Silent regressions in Python `classic_scanlog` behavior not caught by the Tier-1 gate.
+**Legacy Fallback Path in `SettingsValidator`:**
+- What's not tested: No assertion that standard production configs do NOT hit `scan_all_settings_legacy_bucketed`.
+- Files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/settings_validator.rs:195`
+- Risk: Regressions in `CrashgenEntry` population silently fall back to legacy behavior with no warning.
 - Priority: Medium
+
+**`detect_crash_pattern` in C++ Bridge with Parser Allocation:**
+- What's not tested: Performance regression of re-allocating `LogParser` per bridge call in realistic scan workloads.
+- Files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs:671`
+- Risk: No latency regression detection for high-throughput C++ scan paths.
+- Priority: Low
+
+**Linux Proton Path Discovery:**
+- What's not tested: `construct_proton_docs_path` is dead code with no test coverage; the Linux docs-path workflow has no integration tests against a real Proton prefix structure.
+- Files: `ClassicLib-rs/business-logic/classic-path-core/src/platform/linux.rs:170`
+- Risk: Linux support for Proton-based game installs may be silently broken.
+- Priority: Medium
+
+**Node Binding FCX State Reset:**
+- What's not tested: `GLOBAL_FCX_HANDLER` state carryover between Node binding scan calls in a single process.
+- Files: `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs`
+- Risk: Node consumers running multiple scans in one process may see FCX state from a prior scan.
+- Priority: Low
 
 ---
 
-*Concerns audit: 2026-03-30*
+## Dependencies at Risk
+
+**`winreg = "0.52"` Not in Workspace:**
+- Risk: Version pinned only in `classic-path-core/Cargo.toml`, not the root workspace. Future contributors adding registry access to another crate may pin a different version.
+- Impact: Duplicate `winreg` versions in the dependency graph, inflating binary size.
+- Migration plan: Promote to `[workspace.dependencies]`.
+
+**`phf = "0.13.1"` Not in Workspace:**
+- Risk: Pinned only in `classic-constants-core/Cargo.toml`. If PHF is needed elsewhere a version mismatch is possible.
+- Impact: Inconsistent PHF version across potential future consumers.
+- Migration plan: Promote to `[workspace.dependencies]`.
+
+**`slint = "1.15.0"` Transitive Dep Workaround:**
+- Risk: `zerovec` workaround in `classic-shared-core` dev-deps is tied to the current Slint/icu_properties ABI. Slint upgrades that change the zerovec requirement will silently break the `gui-bridge` feature build.
+- Impact: `gui-bridge` feature may fail to compile after Slint updates without noticing the root cause.
+- Migration plan: Add a CI check or comment referencing the upstream Slint issue tracker item.
+
+---
+
+## Scaling Limits
+
+**`YAML_CACHE` and `SETTINGS_CACHE` Are Global Process-Wide:**
+- Current capacity: Unbounded `DashMap` in `classic-yaml-core` (`YAML_CACHE`) and `classic-settings-core` (`SETTINGS_CACHE`).
+- Limit: In long-running server or batch processes that load many distinct YAML files, memory grows without bound.
+- Scaling path: Apply the same TTL/LRU eviction strategy used by `DatabasePool` to `YAML_CACHE` and `SETTINGS_CACHE`. A `clear_global_yaml_cache` function already exists but must be called manually.
+
+**`HASH_CACHE` Is Unbounded:**
+- Current capacity: Global `Arc<DashMap<PathBuf, String>>` in `classic-file-io-core/src/hash.rs:51`.
+- Limit: Grows with the number of unique file paths hashed across a session; never evicted.
+- Scaling path: Add TTL or capacity eviction similar to `DatabasePool`.
+
+---
+
+## Missing Critical Features
+
+**Node Binding FCX Handler Exposure:**
+- Problem: The Node binding exposes `fcx_mode` as a config bool but has no way to call `FcxModeHandler::reset_global_state()` or access the detected issues list (`ConfigIssue` list). The FCX result surface is Python-only.
+- Blocks: Node consumers cannot use FCX mode effectively in multi-scan sessions.
+
+**C++ Bridge FCX State Reset:**
+- Problem: The C++ bridge does not expose a reset for `GLOBAL_FCX_HANDLER`. Batch scans via the bridge that use `fcx_mode: true` accumulate state.
+- Blocks: C++ bridge callers cannot safely re-use the same process for multiple independent scan sessions with FCX enabled.
+
+---
+
+*Concerns audit: 2026-04-04*

@@ -5,6 +5,8 @@
 //! - Steam library VDF parsing
 //! - Proton prefix path construction
 
+#![cfg_attr(target_os = "windows", allow(dead_code))]
+
 use crate::error::{DocsPathError, DocsPathResult};
 use std::fs;
 use std::path::PathBuf;
@@ -49,10 +51,10 @@ pub fn get_home_directory() -> DocsPathResult<PathBuf> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::platform::linux::parse_steam_library_vdf;
+/// use classic_path_core::parse_steam_library;
 ///
 /// // Find Fallout 4 (Steam ID: 377160)
-/// let library = parse_steam_library_vdf(377160)?;
+/// let library = parse_steam_library(377160)?;
 /// println!("Library: {}", library.display());
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
@@ -159,13 +161,14 @@ fn extract_vdf_value(line: &str) -> Option<String> {
 ///
 /// # Examples
 ///
-/// ```rust,no_run
-/// use classic_path_core::platform::linux::construct_proton_docs_path;
-/// use std::path::PathBuf;
-///
-/// let library = PathBuf::from("/home/user/.local/share/Steam");
-/// let docs_path = construct_proton_docs_path(&library, 377160, "My Games/Fallout4");
-/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```ignore
+/// // Internal helper used by DocsPathFinder's Linux workflow.
+/// let library = std::path::PathBuf::from("/home/user/.local/share/Steam");
+/// let docs_path = classic_path_core::platform::linux::construct_proton_docs_path(
+///     &library,
+///     377160,
+///     "My Games/Fallout4",
+/// );
 /// ```
 #[allow(dead_code)]
 pub fn construct_proton_docs_path(

@@ -6,6 +6,7 @@
 use classic_file_io_core::FileIOCore;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::game_files::GameFilesManager;
+use classic_file_io_core::hash::FileHasher;
 use classic_file_io_core::log_collection::LogCollector;
 use classic_file_io_core::similarity::calculate_similarity;
 use classic_shared_core::get_runtime;
@@ -274,8 +275,39 @@ fn read_report_file(path: &str) -> Result<String, String> {
     read_file_with_encoding(path)
 }
 
+fn hash_cache_clear() {
+    FileHasher::clear_cache();
+}
+
+fn hash_cache_size() -> usize {
+    hash_cache_stats().size
+}
+
+fn hash_cache_stats() -> ffi::CacheStats {
+    let stats = FileHasher::cache_stats();
+    ffi::CacheStats {
+        hits: stats.hits,
+        misses: stats.misses,
+        hit_rate: stats.hit_rate,
+        size: stats.size,
+        capacity: stats.capacity,
+    }
+}
+
+fn reset_hash_cache_stats() {
+    FileHasher::reset_cache_stats();
+}
+
 #[cxx::bridge(namespace = "classic::files")]
 mod ffi {
+    struct CacheStats {
+        hits: u64,
+        misses: u64,
+        hit_rate: f64,
+        size: usize,
+        capacity: usize,
+    }
+
     /// Resolved targeted-input result passed across the FFI boundary.
     struct TargetedResolutionDto {
         /// Deduplicated crash-log paths that were accepted.
@@ -330,6 +362,10 @@ mod ffi {
 
         // Standalone utilities
         fn calculate_file_similarity(path1: &str, path2: &str) -> Result<f64>;
+        fn hash_cache_clear();
+        fn hash_cache_size() -> usize;
+        fn hash_cache_stats() -> CacheStats;
+        fn reset_hash_cache_stats();
         fn read_file_with_encoding(path: &str) -> Result<String>;
         fn write_file_string(path: &str, content: &str) -> Result<()>;
 
@@ -380,6 +416,27 @@ mod tests {
         write_file_string(path_str, "test content").unwrap();
         let content = read_file_with_encoding(path_str).unwrap();
         assert_eq!(content.trim(), "test content");
+    }
+
+    #[test]
+    fn test_hash_cache_helpers_forward_core_surface() {
+        hash_cache_clear();
+        reset_hash_cache_stats();
+
+        let initial = hash_cache_stats();
+        assert_eq!(initial.size, 0);
+        assert_eq!(initial.capacity, 1024);
+        assert_eq!(hash_cache_size(), 0);
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("hash-target.txt");
+        std::fs::write(&path, "hash me").unwrap();
+
+        FileHasher::hash_file(&path).unwrap();
+
+        let populated = hash_cache_stats();
+        assert_eq!(populated.size, 1);
+        assert_eq!(hash_cache_size(), 1);
     }
 
     #[test]

@@ -3,7 +3,10 @@
 //! These tests verify cross-component workflows and file I/O operations
 //! that involve multiple YAML operations working together.
 
-use classic_yaml_core::{YamlError, YamlFormatConfig, YamlOperations, clear_global_yaml_cache};
+use classic_yaml_core::{
+    YamlError, YamlOperations, cache_stats, clear_global_yaml_cache, reset_cache_stats,
+};
+use serial_test::serial;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -22,6 +25,7 @@ mod file_workflows {
 
     /// Test complete load-modify-save workflow
     #[test]
+    #[serial]
     fn test_load_modify_save_workflow() {
         clear_global_yaml_cache();
 
@@ -89,6 +93,7 @@ settings:
 
     /// Test batch file loading workflow
     #[test]
+    #[serial]
     fn test_batch_file_loading_workflow() {
         clear_global_yaml_cache();
 
@@ -119,12 +124,17 @@ settings:
         // Verify each file was loaded correctly
         for path in &paths {
             let key = path.to_string_lossy().to_string();
-            assert!(results.contains_key(&key), "Should contain {}", key);
+            assert!(
+                results.keys().any(|loaded_path| loaded_path == &key),
+                "Should contain {}",
+                key
+            );
         }
     }
 
     /// Test atomic write ensures no data corruption on concurrent access
     #[test]
+    #[serial]
     fn test_atomic_write_integrity() {
         clear_global_yaml_cache();
 
@@ -196,8 +206,10 @@ mod cache_workflows {
 
     /// Test cache behavior across multiple operations
     #[test]
-    fn test_cache_performance_benefit() {
+    #[serial]
+    fn test_cache_records_hit_and_miss_through_public_stats() {
         clear_global_yaml_cache();
+        reset_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "data: test\ncount: 100").expect("Failed to write");
@@ -205,34 +217,29 @@ mod cache_workflows {
         let ops = YamlOperations::new();
         let path = temp_file.path();
 
-        // First load - populates cache
-        let start1 = std::time::Instant::now();
         let yaml1 = ops.load_yaml_file(path).expect("First load should succeed");
-        let elapsed1 = start1.elapsed();
-
-        // Second load - should hit cache
-        let start2 = std::time::Instant::now();
         let yaml2 = ops
             .load_yaml_file(path)
             .expect("Second load should succeed");
-        let elapsed2 = start2.elapsed();
 
-        // Verify same content
         assert_eq!(
             ops.get_string_value(&yaml1, "data", ""),
             ops.get_string_value(&yaml2, "data", "")
         );
 
-        // Cache hit should generally be faster (not guaranteed but typical)
-        // Just verify both loads succeed
-        assert!(elapsed1 >= Duration::ZERO);
-        assert!(elapsed2 >= Duration::ZERO);
+        let stats = cache_stats();
+        assert_eq!(stats.misses, 1, "First unchanged read should miss once");
+        assert_eq!(stats.hits, 1, "Second unchanged read should hit once");
+        assert_eq!(stats.size, 1, "Exactly one YAML file should be cached");
+        assert_eq!(stats.capacity, 128, "YAML cache capacity should stay fixed");
     }
 
     /// Test cache invalidation on file modification
     #[test]
+    #[serial]
     fn test_cache_invalidation_on_external_modification() {
         clear_global_yaml_cache();
+        reset_cache_stats();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config_path = temp_dir.path().join("invalidation_test.yaml");
@@ -263,39 +270,107 @@ mod cache_workflows {
             Some(Yaml::Integer(2)),
             "Should see updated content after external modification"
         );
+
+        let stats = cache_stats();
+        assert_eq!(stats.hits, 0, "Stale entries should not count as hits");
+        assert_eq!(
+            stats.misses, 2,
+            "Initial read and stale reload should both miss"
+        );
+        assert_eq!(
+            stats.size, 1,
+            "Reload should replace the stale cached entry"
+        );
+        assert_eq!(stats.capacity, 128, "YAML cache capacity should stay fixed");
     }
 
-    /// Test cache with caching disabled
+    /// Test cache clear/reset helpers provide deterministic isolation
     #[test]
-    fn test_disabled_cache_always_reads_file() {
+    #[serial]
+    fn test_cache_clear_and_reset_helpers_isolate_state() {
         clear_global_yaml_cache();
+        reset_cache_stats();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        let config_path = temp_dir.path().join("no_cache_test.yaml");
+        let config_path = temp_dir.path().join("isolation_test.yaml");
 
-        let mut ops = YamlOperations::new();
-        ops.set_cache_enabled(false);
+        let ops = YamlOperations::new();
 
-        // Create file
         fs::write(&config_path, "value: 1").expect("Failed to write");
 
-        // Load
-        let yaml1 = ops
+        let _ = ops
             .load_yaml_file(&config_path)
             .expect("First load should succeed");
-        assert_eq!(ops.get_setting(&yaml1, "value"), Some(Yaml::Integer(1)));
-
-        // Modify file
-        fs::write(&config_path, "value: 2").expect("Failed to overwrite");
-
-        // Load again - should always read from file when cache disabled
-        let yaml2 = ops
+        let _ = ops
             .load_yaml_file(&config_path)
             .expect("Second load should succeed");
+
+        let stats_before_clear = cache_stats();
+        assert_eq!(stats_before_clear.misses, 1);
+        assert_eq!(stats_before_clear.hits, 1);
+        assert_eq!(stats_before_clear.size, 1);
+
+        clear_global_yaml_cache();
+        let stats_after_clear = cache_stats();
         assert_eq!(
-            ops.get_setting(&yaml2, "value"),
-            Some(Yaml::Integer(2)),
-            "Should always read fresh with cache disabled"
+            stats_after_clear.size, 0,
+            "Clearing should drop cached entries"
+        );
+        assert_eq!(
+            stats_after_clear.hits, 1,
+            "Clearing should not reset counters"
+        );
+        assert_eq!(
+            stats_after_clear.misses, 1,
+            "Clearing should not reset counters"
+        );
+
+        reset_cache_stats();
+        let stats_after_reset = cache_stats();
+        assert_eq!(stats_after_reset.hits, 0, "Reset should clear hit counter");
+        assert_eq!(
+            stats_after_reset.misses, 0,
+            "Reset should clear miss counter"
+        );
+        assert_eq!(
+            stats_after_reset.size, 0,
+            "Reset should preserve the cleared cache state"
+        );
+        assert_eq!(
+            stats_after_reset.capacity, 128,
+            "Capacity should remain observable"
+        );
+    }
+
+    /// Test bounded cache behavior without asserting a specific victim key
+    #[test]
+    #[serial]
+    fn test_cache_capacity_is_enforced_without_internal_eviction_assertions() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let ops = YamlOperations::new();
+
+        for index in 0..129 {
+            let path = temp_dir.path().join(format!("bounded-{index}.yaml"));
+            fs::write(&path, format!("index: {index}\n")).expect("Failed to write test file");
+            let yaml = ops.load_yaml_file(&path).expect("Load should succeed");
+            assert_eq!(ops.get_setting(&yaml, "index"), Some(Yaml::Integer(index)));
+        }
+
+        let stats = cache_stats();
+        assert_eq!(
+            stats.capacity, 128,
+            "Capacity should expose the fixed bound"
+        );
+        assert!(
+            stats.size <= stats.capacity,
+            "Bounded eviction should keep size within capacity"
+        );
+        assert_eq!(
+            stats.misses, 129,
+            "Each first-time file load should miss once"
         );
     }
 }
@@ -309,6 +384,7 @@ mod settings_workflows {
 
     /// Test loading config and extracting multiple settings
     #[test]
+    #[serial]
     fn test_config_extraction_workflow() {
         let ops = YamlOperations::new();
 
@@ -353,11 +429,12 @@ Features:
         );
         assert_eq!(results.get("Game_Config.debug"), Some(&Yaml::Boolean(true)));
         assert_eq!(results.get("Features.fcx_mode"), Some(&Yaml::Boolean(true)));
-        assert!(!results.contains_key("NonExistent.key"));
+        assert!(!results.keys().any(|key| key == "NonExistent.key"));
     }
 
     /// Test updating multiple settings in a workflow
     #[test]
+    #[serial]
     fn test_settings_update_workflow() {
         let ops = YamlOperations::new();
 
@@ -411,6 +488,7 @@ mod error_recovery {
 
     /// Test graceful handling of malformed YAML
     #[test]
+    #[serial]
     fn test_malformed_yaml_handling() {
         let ops = YamlOperations::new();
 
@@ -438,6 +516,7 @@ mod error_recovery {
 
     /// Test handling of file not found
     #[test]
+    #[serial]
     fn test_file_not_found_handling() {
         let ops = YamlOperations::new();
         let result = ops.load_yaml_file(Path::new("/nonexistent/path/file.yaml"));
@@ -452,6 +531,7 @@ mod error_recovery {
 
     /// Test batch loading with partial failures
     #[test]
+    #[serial]
     fn test_batch_load_partial_failure() {
         clear_global_yaml_cache();
 
@@ -470,37 +550,11 @@ mod error_recovery {
 
         // Should only have the valid file
         assert_eq!(results.len(), 1, "Should only load valid file");
+        let valid_key = valid_path.to_string_lossy().to_string();
         assert!(
-            results.contains_key(&valid_path.to_string_lossy().to_string()),
+            results.keys().any(|loaded_path| loaded_path == &valid_key),
             "Should contain valid file"
         );
-    }
-}
-
-// ============================================================================
-// Format Configuration Tests
-// ============================================================================
-
-mod format_config {
-    use super::*;
-
-    /// Test custom format configuration
-    #[test]
-    fn test_custom_format_config() {
-        let custom_config = YamlFormatConfig {
-            preserve_quotes: false,
-            width: 80,
-            indent_mapping: 4,
-            indent_sequence: 4,
-            indent_offset: 0,
-        };
-
-        let ops = YamlOperations::with_config(custom_config);
-        assert!(ops.is_cache_enabled(), "Cache should be enabled by default");
-
-        // Basic operations should still work
-        let yaml = ops.parse_yaml("key: value").expect("Parse should succeed");
-        assert!(ops.get_setting(&yaml, "key").is_some());
     }
 }
 
@@ -513,6 +567,7 @@ mod thread_safety {
 
     /// Test concurrent file operations from multiple threads
     #[test]
+    #[serial]
     fn test_concurrent_file_operations() {
         clear_global_yaml_cache();
 

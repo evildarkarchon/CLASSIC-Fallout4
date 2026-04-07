@@ -1,175 +1,188 @@
+---
+gsd_state_version: 1.0
+milestone: v9.1.0-bugfixes
+milestone_name: CLASSIC Codebase Health
+current_plan: null
+status: shipped
+stopped_at: Shipped v9.1.0-bugfixes 2026-04-07
+last_updated: "2026-04-07T05:15:00Z"
+last_activity: 2026-04-07 — Shipped v9.1.0-bugfixes (CLASSIC Codebase Health)
+progress:
+  total_phases: 11
+  completed_phases: 11
+  total_plans: 32
+  completed_plans: 32
+  percent: 100
+---
+
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-05)
+See: .planning/PROJECT.md (updated 2026-04-04)
 
-**Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** Phase 27 -- Test Coverage Evaluation and Improvement
+**Core value:** Every concern identified in the codebase audit is resolved -- no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
+**Current focus:** Planning next milestone (v9.1.0-bugfixes shipped 2026-04-07)
 
 ## Current Position
 
-Phase: 27 of 27 (Test Coverage Evaluation and Improvement)
-Plan: 9 of 9 in current phase
-Status: COMPLETE -- All phases finished
-Last activity: 2026-04-01 - Completed quick task 260401-0cc: Deduplicate conflicting mods detected CAUTION header
+Phase: —
+Plan: —
+Current Plan: —
+Status: Shipped (v9.1.0-bugfixes)
+Last activity: 2026-04-07 — Shipped v9.1.0-bugfixes (CLASSIC Codebase Health)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 9/9]
-[############################################################] 100% (68/68 plans)
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
-**v1.0 Velocity:**
-- Total plans completed: 14
-- Average duration: 12m
-- Total execution time: ~2.8 hours
+**Velocity:**
 
-**v8.2.0-part2 Velocity:**
-- Total plans completed: 14
-- Average duration: ~12m
-- Total execution time: ~2.7 hours
+- Total plans completed: 31
+- Average duration: 15min
+- Total execution time: 7.75 hours
 
-**v8.3.0 Velocity:**
-- Plans completed: 15
-- Total execution time: ~2.8 hours
-- Commits: 80
-- Files changed: 111
+**By Phase:**
 
-**v9.0.0 Velocity:**
-- Plans completed: 16
-- Average duration: 7m
-- Commits: 39
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 08-workspace-and-infrastructure | 3 | 43min | 14min |
+
+**Recent Trend:**
+
+- Last 5 plans: 08-01 (13min), 08-02 (19min), 08-03 (11min), 09-01 (3min), 10-01 (12min)
+- Trend: completed
+
+*Updated after each plan completion*
+| Phase 02 P02 | 9min | 2 tasks | 5 files |
+| Phase 02 P01 | 11min | 2 tasks | 2 files |
+| Phase 02 P03 | 6min | 2 tasks | 1 files |
+| Phase 03 P01 | 0 min | 2 tasks | 3 files |
+| Phase 03 P02 | 6 min | 2 tasks | 2 files |
+| Phase 03 P03 | 8 min | 3 tasks | 10 files |
+| Phase 04 P02 | 3 | 2 tasks | 3 files |
+| Phase 04-bounded-cache-replacement P03 | 4min | 2 tasks | 2 files |
+| Phase 04-bounded-cache-replacement P01 | 7min | 2 tasks | 4 files |
+| Phase 04-bounded-cache-replacement P06 | 11min | 2 tasks | 6 files |
+| Phase 04-bounded-cache-replacement P04 | 8 min | 2 tasks | 12 files |
+| Phase 04-bounded-cache-replacement P05 | 15min | 2 tasks | 13 files |
+| Phase 05-pattern-caching-and-performance P03 | 4min | 2 tasks | 2 files |
+| Phase 05-pattern-caching-and-performance P01 | 8min | 2 tasks | 3 files |
+| Phase 05-pattern-caching-and-performance P02 | 9min | 2 tasks | 1 files |
+| Phase 05-pattern-caching-and-performance P04 | 12min | 2 tasks | 3 files |
+| Phase 05-pattern-caching-and-performance P05 | 18min | 2 tasks | 2 files |
+| Phase 05-pattern-caching-and-performance P06 | 43min | 2 tasks | 5 files |
+| Phase 05-pattern-caching-and-performance P07 | 17min | 3 tasks | 3 files |
+| Phase 06 P01 | 1 min | 2 tasks | 4 files |
+| Phase 06 P02 | 6 min | 2 tasks | 3 files |
+| Phase 06 P03 | 1 min | 1 tasks | 1 files |
+| Phase 07 P01 | 7h 8m | 2 tasks | 13 files |
+| Phase 07 P02 | 5 min | 2 tasks | 11 files |
+| Phase 08-workspace-and-infrastructure P01 | 13min | 2 tasks | 5 files |
+| Phase 08-workspace-and-infrastructure P02 | 19min | 2 tasks | 7 files |
+| Phase 08-workspace-and-infrastructure P03 | 11min | 2 tasks | 4 files |
+| Phase 09-deprecated-api-verification-closure P01 | 3min | 2 tasks | 2 files |
+| Phase quick-260406-syy-resolve-the-newly-uncovered-python-parit P01 | 8min | 2 tasks | 6 files |
+| Phase 11-workspace-infra-verification-completion P01 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
 ### Decisions
 
-| Date | Phase | Decision | Rationale |
-|------|-------|----------|-----------|
-| 2026-02-05 | 19-01 | Skia renderer for Windows | Hardware-accelerated graphics, builds successfully with MSVC |
-| 2026-02-05 | 19-01 | Initialize Tokio before Slint | ONE RUNTIME RULE compliance |
-| 2026-02-05 | 19-01 | Workspace dependencies for Slint | Version consistency across crates |
-| 2026-02-05 | 19-02 | scan- prefix for properties | Distinguishes scan-related properties from future general properties |
-| 2026-02-05 | 19-02 | ScanWindowProperties trait | Enables testing without Slint-generated code dependency |
-| 2026-02-05 | 20-01 | fluent-dark at build time | CompilerConfiguration ensures dark theme without runtime config |
-| 2026-02-05 | 20-01 | 3 tabs only | Main Options, Results, Settings (removed placeholders per CONTEXT.md) |
-| 2026-02-05 | 20-01 | PathInput widget pattern | Reusable path input in widgets/ directory |
-| 2026-02-05 | 20-02 | directories crate for config | Cross-platform user config directory via ProjectDirs |
-| 2026-02-05 | 20-02 | rfd 0.15 for dialogs | De facto standard for native Rust file dialogs |
-| 2026-02-05 | 20-02 | Save on significant changes | Tab change, path selection, and exit ensures state preserved |
-| 2026-02-05 | 20-02 | Initialization flag pattern | Prevents saves during window setup overwriting restored state |
-| 2026-02-06 | 21-01 | Morphing Scan/Cancel button | Single button per CONTEXT.md, replaces separate Scan and Cancel buttons |
-| 2026-02-06 | 21-01 | Negative progress = indeterminate | -1.0 signals ProgressIndicator to show spinning animation |
-| 2026-02-06 | 21-01 | Minimal AnalysisConfig per scan | Full YAML config deferred to Phase 24 Settings |
-| 2026-02-06 | 21-01 | 5s auto-clear for status bar | Status clears after delay via spawn_background timer |
-| 2026-02-06 | 21-02 | Explicit 0% progress transition | Shows "Found N logs, analyzing..." between discovery and analysis |
-| 2026-02-06 | 21-02 | has_results() encapsulation | Clean API method instead of inline field checks for tab-switch decision |
-| 2026-02-06 | 21-02 | Auto-clear resets to "Ready" | Matches initial window state instead of empty string |
-| 2026-02-06 | 22-01 | VecModel rebuild for filter/sort | Simpler than FilterModel, keeps results.rs Slint-independent |
-| 2026-02-06 | 22-01 | ReportEntryData intermediate type | Decouples business logic from Slint-generated code |
-| 2026-02-06 | 22-01 | arboard v3 for clipboard | De facto Rust clipboard crate, maintained by 1Password |
-| 2026-02-06 | 22-01 | Consolas monospace font | Slint no CSS font fallback; Consolas universally available on Windows |
-| 2026-02-06 | 22-01 | Fixed 400px max list panel width | Avoids Slint binding loop from root.width circular dependency |
-| 2026-02-06 | 23-01 | types.slint for shared structs | Avoids circular imports between main.slint and widget files |
-| 2026-02-06 | 23-01 | Block-level formatting flattening | Bold/italic per-block not inline, matches CLASSIC report line-level formatting |
-| 2026-02-06 | 23-01 | Dual property pattern (content + blocks) | Raw markdown preserved for Copy All, parsed blocks for rendering |
-| 2026-02-06 | 23-01 | pulldown-cmark 0.13 for markdown parsing | CommonMark compliant, pure Rust, lighter than comrak |
-| 2026-02-06 | 24-01 | Nested TabWidget for settings sub-tabs | Standard Slint component, works with fluent-dark theme |
-| 2026-02-06 | 24-01 | Inline confirmation for Reset to Defaults | Show/hide confirm row; simpler than modal popup in Slint |
-| 2026-02-06 | 24-01 | setting- prefix for settings properties | Distinguishes from scan/results properties on MainWindow |
-| 2026-02-06 | 24-01 | VR mode migration in ClassicConfig | vr_mode=true + no game_version -> game_version="VR" on load |
-| 2026-02-06 | 24-02 | Full config save on each change | Simpler than individual YAML key updates, avoids partial-write issues |
-| 2026-02-06 | 24-02 | Empty path clears setting | Entering empty text clears the path (sets to None) without error |
-| 2026-02-06 | 24-02 | Stub game version detection | Checks VR/standard exe; full EXE version detection deferred |
-| 2026-02-06 | 24-02 | Reset disables initialized flag | Prevents cascading saves during UI repopulation after reset |
-| 2026-02-06 | 25-01 | tracing::warn! for all eprintln! | Non-fatal save/load errors are warnings, not errors |
-| 2026-02-06 | 25-01 | Log file truncated on each launch | Fresh start per session, not appended |
-| 2026-02-06 | 25-01 | data_dir() for log location | Logs are data, not config |
-| 2026-02-06 | 25-02 | Crate-local .cargo/config.toml for static CRT | Scoped to GUI binary only, not PyO3 crates |
-| 2026-02-06 | 25-02 | catch_unwind for self-healing state | Wraps load functions for panic recovery on corrupted files |
-| 2026-02-06 | 25-02 | Off-screen validation -200..10000 range | Handles disconnected monitors gracefully |
-| 2026-02-06 | 25-02 | 800x600 default window size | Reasonable default when no saved geometry |
-| 2026-02-06 | 25-02 | Renderer fallback Skia -> software -> exit | Graceful degradation with logging |
-| 2026-02-06 | 26-01 | std::sync::LazyLock over once_cell::Lazy | Standard library, no external dependency needed |
-| 2026-02-06 | 26-01 | One canonical name: AsyncBridge | Removed Bridge alias to avoid confusion |
-| 2026-02-06 | 26-02 | OnceLock dispatcher with get_or_init default | Production needs no explicit init; tests call set_dispatcher() |
-| 2026-02-06 | 26-02 | Log-and-drop over Result for dispatch failures | Fire-and-forget methods cannot return errors; keeps app stable |
-| 2026-02-06 | 26-02 | Option<R> for run_cancellable | Cancellation is expected outcome, not error; cleaner for callers |
-| 2026-02-06 | 26-03 | Dual cancellation pattern | run_cancellable for bridge-level + CancellationToken for per-log inner-loop |
-| 2026-02-06 | 26-03 | Explicit set_dispatcher at startup | Makes init order explicit rather than relying on get_or_init default |
-| 2026-02-06 | 26-03 | Browse callbacks unchanged | No timeout/cancellation needs; migration adds complexity without benefit |
-| 2026-02-06 | 26-03 | Unit tests with MockDispatcher | 15 tests validate contracts without Slint event loop; OnceLock limits integration tests |
-| 2026-02-06 | 27-01 | Exclude PyO3 crates from coverage test run | Require Python DLL at runtime; thin adapters over -core crates |
-| 2026-02-06 | 27-01 | Use --ignore-run-fail for coverage | Pre-existing flaky test blocks coverage collection without it |
-| 2026-02-06 | 27-01 | Two-phase coverage approach | --ignore-filename-regex is report-only; separate test run from report generation |
-| 2026-02-06 | 27-02 | Skip plan -- scanlog-core already above 60% | Baseline shows 62.0% (3,120/5,033 lines); no gap-filling needed |
-| 2026-02-06 | 27-03 | Skip plan -- file-io-core and path-core above 60% | Baseline shows 90.4% and 84.5% respectively; no gap-filling needed |
-| 2026-02-06 | 27-04 | Skip plan -- scangame-core and version-registry-core above 60% | Baseline shows 71.9% and 88.8% respectively; no gap-filling needed |
-| 2026-02-06 | 27-05 | Yaml-core already above 60% per-crate (91.4%); added 26 tests for untested functions | Workspace baseline showed 19.6% but per-crate measurement showed 91.4%; improved to 97.9% |
-| 2026-02-06 | 27-05 | Skip config-core and settings-core | Baseline shows 88.9% and 97.3% respectively; well above 60% |
-| 2026-02-06 | 27-06 | Skip plan -- database-core, message-core, constants-core above 60% | Baseline shows 89.4%, 100.0%, and 88.9% respectively; no gap-filling needed |
-| 2026-02-06 | 27-07 | Skip plan -- all 8 small business-logic crates above 60% | Baseline shows 65.2%-100.0% for all 8 crates; no gap-filling needed |
-| 2026-02-06 | 27-09 | classic-gui documented as structural exception at 57.4% | main.rs binary (787 lines) requires Slint event loop; lib.rs at 87.9% exceeds target |
+Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- [Roadmap]: TS-2 (deprecated API migration) must complete before TS-1 (dead code removal) -- `deprecated = "deny"` lint constraint
+- [Roadmap]: Tests and benchmarks accompany their feature phases, not in a separate test phase
+- [Roadmap]: CONS-02 (FCX error returns) paired with SAFE-01 (FCX fix) in Phase 3
+- [Roadmap]: CONS-03 (CacheStats) paired with CACHE-01/02/03 in Phase 4
+- [Roadmap]: Phase 7 (LazyLock sweep) depends on Phases 4 and 5 since both introduce new LazyLock usage
+- [01-01]: Followed D-05 -- expanded check_version_status test coverage beyond minimal equivalents to include VR-specific edge cases
+- [Phase 02]: Renamed yaml_config_benchmarks to yaml_operations_benchmarks since config variants no longer exist
+- [Phase 02]: Removed unused memchr imports after fast_contains deletion (only consumer of those symbols)
+- [Phase 02]: Kept once_cell::sync::Lazy import in parser.rs -- still used by COMMON_PATTERNS and CRASHGEN_HEADER_PATTERN
+- [Phase 02]: Removed orphaned has_real_buffout_module from settings_validator.rs -- orchestrator.rs retains its own copy
+- [Phase 03]: Use blocking GLOBAL_FCX_HANDLER.lock() for FCX reset so contention cannot silently skip cleanup.
+- [Phase 03]: Treat an already-clean FCX singleton as Err(FcxResetError::Unnecessary) so bindings can keep the no-op path benign.
+- [Phase 03]: Keep the C++ FCX surface reset-only in Phase 3
+- [Phase 03]: Preserve existing C++ batch signatures by short-circuiting with failed batch DTOs on reset failure
+- [Phase 03]: Keep Node FCX diagnostics behind resetFcxGlobalState() and getFcxConfigIssues() instead of extending JsAnalysisResult.
+- [Phase 03]: Populate FCX issue state in the Node adapter from existing ClassicConfig/scangame helpers so binding code stays thin.
+- [Phase 03]: Track FcxResetError as deferred Tier-2 parity while runtime-verifying the new Node-only FCX exports.
+- [Phase 04]: Use LazyLock<quick_cache::sync::Cache<...>> with capacity 64 for SETTINGS_CACHE.
+- [Phase 04]: Keep cache_keys() as the only public key-listing helper while CacheStats stays canonical.
+- [Phase 04]: Validate bounded quick_cache behavior by capacity and stats, not exact eviction victim order.
+- [Phase 04]: Keep cache_size() as a compatibility adapter over the canonical hash cache stats.
+- [Phase 04]: Validate hash cache boundedness through quick_cache capacity and stats behavior instead of strict victim-order assertions.
+- [Phase 04]: Use quick_cache::sync::Cache with fixed capacity 128 while keeping YAML mtime validation and custom hit/miss counters.
+- [Phase 04]: Keep legacy get_cache_stats() as an adapter over canonical stats plus YAML-specific total_bytes detail.
+- [Phase 04]: Serialize YAML integration cache tests so clear/reset helpers remain deterministic without cache-internal assertions.
+- [Phase 04-bounded-cache-replacement]: Keep the bridge layer adapter-only: cache stats are computed in Rust core crates and only reshaped for CXX transport.
+- [Phase 04-bounded-cache-replacement]: Keep legacy *_cache_size helpers as compatibility shims over the canonical stats DTO instead of removing them mid-phase.
+- [Phase 04-bounded-cache-replacement]: Preserve exact snake_case cache stat names in Node by using explicit NAPI naming overrides and typed return annotations.
+- [Phase 04-bounded-cache-replacement]: Classify the new hash cache helpers as runtime-verified Tier-2 aux coverage in the Node registry.
+- [Phase 04-bounded-cache-replacement]: Validate bounded hash cache behavior through capacity and stats counters instead of eviction-victim order assertions.
+- [Phase 04-bounded-cache-replacement]: Use explicit TypedDict cache stats aliases in Python stubs so the canonical five-field contract is visible to static tooling.
+- [Phase 04-bounded-cache-replacement]: Track Python hash cache helpers as registry-only Tier-2 runtime coverage instead of broadening the Python parity parser to every aux module.
+- [Phase 04-bounded-cache-replacement]: Keep FileHasher.cache_size() as a deferred compatibility adapter while cache_stats/reset_cache_stats own the Phase 4 runtime smoke contract.
+- [Phase 05-pattern-caching-and-performance]: Kept bridge regression coverage focused on observable main_error output instead of parser internals.
+- [Phase 05-pattern-caching-and-performance]: Reused one module-level default LogParser with LazyLock while preserving empty-string fail-soft behavior for parse failures.
+- [Phase 05-pattern-caching-and-performance]: Keep single, double, and batch matcher caches separate while sharing normalization and compile helpers.
+- [Phase 05-pattern-caching-and-performance]: Validate bounded matcher caches by reuse and capacity behavior instead of eviction-victim order.
+- [Phase 05-pattern-caching-and-performance]: Kept the legacy regex path as a private helper so fixture-backed parity stays executable while detect_mods_important uses Aho-Corasick.
+- [Phase 05-pattern-caching-and-performance]: Used the large crash-log fixture for important-mod parity because the smaller fixture lacks a plugin section.
+- [Phase 05-pattern-caching-and-performance]: Kept the Aho-Corasick automaton one-per-call in PERF-02 and deferred cache reuse to later performance proof work.
+- [Phase 05-pattern-caching-and-performance]: Kept Phase 5 performance proof in the existing scanlog Criterion harness and mirrored bridge crash-pattern behavior with a Rust helper instead of an FFI benchmark.
+- [Phase 05-pattern-caching-and-performance]: Primed cached single and batch matchers before timed loops and used Criterion iter_batched to avoid timing benchmark input setup.
+- [Phase 05-pattern-caching-and-performance]: Scoped the legacy important-mod regex helper to tests after bench verification exposed a dead-code lint failure in non-test builds.
+- [Phase 05-pattern-caching-and-performance]: Measured the double-matcher reuse proof with a scoped compile-count snapshot instead of an absolute global counter.
+- [Phase 05-pattern-caching-and-performance]: Serialized detect_mods_double regression tests so grouped runs cannot pollute the shared double-matcher compile counter.
+- [Phase 05-pattern-caching-and-performance]: Focused the save/compare workflow on the phase5_ benchmark groups so proof runs stay bounded to the locked hotspots.
+- [Phase 05-pattern-caching-and-performance]: Added paired before/after benchmark variants in the existing harness because same-revision Criterion baseline comparisons alone cannot prove hotspot deltas.
+- [Phase 05-pattern-caching-and-performance]: Moved mmap throughput ownership out of PERF-04 and into SAFE-05 / Phase 6 to match the roadmap and actual harness scope.
+- [Phase 05-pattern-caching-and-performance]: Reused the repo-standard LazyLock + quick_cache bounded cache pattern for important-mod matcher reuse once the synthetic compile-only slice proved per-call automaton construction was the main regression source.
+- [Phase 05-pattern-caching-and-performance]: Preserved the existing Aho-Corasick, LeftmostLongest, and combined plugin/XSE haystack semantics while optimizing setup cost instead of parity-sensitive matching behavior.
+- [Phase 05-pattern-caching-and-performance]: Skipped plugin-name set construction unless an important-mod entry actually uses exclude_when because the real-fixture slices showed haystack preparation dominated the remaining cost.
+- [Phase 06]: Use MmapOptions::map_copy_read_only() on all platforms for the 1 MB+ read_file_mmap branch.
+- [Phase 06]: Document the mmap change conservatively as a safer snapshot-style mitigation rather than a blanket upstream safety guarantee.
+- [Phase 06]: Keep the Phase 6 throughput proof in classic-file-io-core's existing file_io_benchmarks harness instead of creating a new benchmark target.
+- [Phase 06]: Treat map_copy_read_only() as acceptable for Windows validation because it wins at 1 MiB+4 KiB and 4 MiB and stays below a 10% slowdown even when 16 MiB crosses the 5% warning bar.
+- [Phase 06]: Keep the Phase 6 benchmark contract unchanged and move the three unsafe mmap constructors into narrowly allowed helper functions instead of weakening lint policy.
+- [Phase 07]: Used TDD audit tests to lock the std LazyLock/OnceLock migration contract before implementation.
+- [Phase 07]: Kept RecordScanner on per-instance get_or_init semantics by swapping OnceCell to OnceLock instead of redesigning construction flow.
+- [Phase 07]: Use std::sync::LazyLock with DashMap::new for registry and perf globals to match the Phase 4/5 repo pattern without API churn.
+- [Phase 07]: Treat Phase 7 success as removal of owned direct once_cell usage and manifest declarations, while allowing transitive lockfile once_cell entries to remain.
+- [Phase 08-workspace-and-infrastructure]: Promoted winreg and phf into ClassicLib-rs/Cargo.toml without changing pinned versions so member crates only inherit ownership.
+- [Phase 08-workspace-and-infrastructure]: Removed the classic-shared-core zerovec workaround outright and documented gui-bridge as building directly from workspace Slint dependencies after build proof passed.
+- [Phase 08-workspace-and-infrastructure]: Kept Linux documents-path ownership in DocsPathFinder and reused the existing Proton helpers instead of duplicating logic in bindings.
+- [Phase 08-workspace-and-infrastructure]: Treated classic-node/index.d.ts as the tracked generated Node contract artifact and kept the existing freshness/parity workflow as the only enforcement path.
+- [Phase 09-deprecated-api-verification-closure]: Closed Phase 1 by rewriting the existing verification artifact in repo-standard re-verification form instead of adding a separate Phase 09 verification file
+- [Phase 09-deprecated-api-verification-closure]: Recorded fresh Rust, Python, and Node command results directly in the verification artifact and treated prior summaries as provenance only
+- [Phase 10-pattern-caching-verification-backfill]: Refreshed the original Phase 5 verification artifact in place so PERF-03 and CONS-04 now have current explicit evidence without creating a parallel closure file
+- [Phase 10-pattern-caching-verification-backfill]: Verified CONS-04 against the accepted bounded-cache plus true-constant LazyLock rule instead of inventing a fake static-regex refactor in mod_detector
+- [Phase quick-260406-syy-resolve-the-newly-uncovered-python-parit]: Kept FcxResetError as a deferred Tier-2 Python gap and refreshed only the required runtime coverage summaries.
+- [Phase 11-workspace-infra-verification-completion]: Created the missing authoritative report in the original Phase 8 folder instead of inventing a Phase 11-only verification artifact.
+- [Phase 11-workspace-infra-verification-completion]: Kept Phase 8 summaries as provenance only and promoted the exact validation commands into direct requirement evidence rows.
+- [Phase 11-workspace-infra-verification-completion]: Recorded INFRA-05 as one Node governance bundle covering the tracked snapshot, freshness script, local gates, and CI workflow together.
 
 ### Pending Todos
 
-None.
+None yet.
 
 ### Blockers/Concerns
 
-- Slint async integration validated -- AsyncBridge pattern working with progress callbacks
-- Cancellation pattern tested -- CancellationToken cooperatively stops async operations
-- ONE RUNTIME RULE confirmed -- no runtime panics during execution
-- Markdown rendering uses pulldown-cmark (Slint native markdown is experimental)
-- State persistence working -- JSON file in user config directory
-- OrchestratorCore runs with minimal config -- full analysis requires Phase 24 YAML settings
-- Phase 21 complete -- full scan UX with discovery, analysis, cancellation, auto-switch, auto-clear
-- Phase 22 complete -- Results tab with master-detail layout, search/filter/sort, clipboard copy
-- Phase 23 complete -- Markdown renderer with pulldown-cmark, 6 block types, styled ScrollView viewer
-- Phase 24 complete -- Settings tab fully functional: UI layout, live persistence, path validation, reset to defaults
-- Plan 25-01 complete -- File logging infrastructure ready, all eprintln! replaced with tracing macros
-- Phase 25 complete -- GUI is distribution-ready: console-less, logged, DPI-aware, self-healing, embedded icon, static CRT
-- Phase 26 complete -- Async bridge audited: dead code removed, BridgeError/EventLoopDispatcher added, run_with_timeout/run_cancellable APIs, 15 unit tests, call sites migrated
-- Coverage baseline established -- 72% workspace aggregate, 18/21 crates above 60%, 3 gaps: classic-yaml-core (19.6%), classic-gui (37.4%), classic-shared-core (49.2%)
-- classic-scanlog-core verified at 62.0% -- no gap-filling needed (plan 27-02 skipped)
-- classic-file-io-core verified at 90.4% -- no gap-filling needed (plan 27-03 skipped)
-- classic-path-core verified at 84.5% -- no gap-filling needed (plan 27-03 skipped)
-- classic-scangame-core verified at 71.9% -- no gap-filling needed (plan 27-04 skipped)
-- classic-version-registry-core verified at 88.8% -- no gap-filling needed (plan 27-04 skipped)
-- classic-database-core verified at 89.4% -- no gap-filling needed (plan 27-06 skipped)
-- classic-message-core verified at 100.0% -- no gap-filling needed (plan 27-06 skipped)
-- classic-constants-core verified at 88.9% -- no gap-filling needed (plan 27-06 skipped)
-- classic-yaml-core per-crate: 97.9% (was 91.4% before 27-05, workspace baseline showed 19.6% due to attribution artifact)
-- classic-config-core verified at 88.9% -- no gap-filling needed (plan 27-05)
-- classic-settings-core verified at 97.3% -- no gap-filling needed (plan 27-05)
-- classic-update-core verified at 91.7% -- no gap-filling needed (plan 27-07 skipped)
-- classic-web-core verified at 99.4% -- no gap-filling needed (plan 27-07 skipped)
-- classic-registry-core verified at 89.0% -- no gap-filling needed (plan 27-07 skipped)
-- classic-resource-core verified at 69.1% -- no gap-filling needed (plan 27-07 skipped)
-- classic-perf-core verified at 99.6% -- no gap-filling needed (plan 27-07 skipped)
-- classic-version-core verified at 90.2% -- no gap-filling needed (plan 27-07 skipped)
-- classic-xse-core verified at 65.2% -- no gap-filling needed (plan 27-07 skipped)
-- classic-pybridge-core verified at 100.0% -- no gap-filling needed (plan 27-07 skipped)
-- Flaky test noted -- classic-yaml-core::test_cache_stats_empty fails intermittently due to global state contamination
-- Phase 27 COMPLETE -- Final coverage: 79.8% workspace aggregate, 20/21 non-PyO3 crates at 60%+, classic-gui documented exception
-- ALL PHASES COMPLETE -- 68/68 plans across 5 milestones (v1.0, v8.2.0-part2, v8.3.0, v9.0.0, Phase 27)
+- [Phase 1]: The `deprecated = "deny"` lint requires careful sequencing -- temporarily relax to `warn`, migrate, then restore
+- [Phase 5]: AhoCorasick semantic parity must be verified against test fixtures before removing regex path
+- [Phase 6]: Windows `map_copy_read_only()` behavior must be empirically validated, not inferred from Linux
 
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
-| 001 | fix missing documentation warnings | 2026-02-05 | 70d4553a | | [001-fix-missing-documentation-warnings](./quick/001-fix-missing-documentation-warnings/) |
-| 260331-4d1 | set up self-signing of compiled code in build scripts | 2026-03-31 | 811fea95, 72b0e81f | Verified | [260331-4d1-set-up-self-signing-of-compiled-code-in-](./quick/260331-4d1-set-up-self-signing-of-compiled-code-in-/) |
-| 260401-0cc | deduplicate conflicting mods detected CAUTION header | 2026-04-01 | 078ce481 | Verified | [260401-0cc-deduplicate-conflicting-mods-detected-ca](./quick/260401-0cc-deduplicate-conflicting-mods-detected-ca/) |
-
-### Roadmap Evolution
-
-- Phase 26 added: Audit the async_bridge module of classic-shared-core for potential improvements for Slint GUI
-- Phase 27 added: Evaluate test coverage and work on improving it
+| 260406-syy | Resolve the newly uncovered Python parity surface for FcxResetError so the Python parity gate no longer reports uncovered runtime metadata. | 2026-04-07 | 8f4a9324 | Verified | [260406-syy-resolve-the-newly-uncovered-python-parit](./quick/260406-syy-resolve-the-newly-uncovered-python-parit/) |
 
 ## Session Continuity
 
-Last session: 2026-04-01
-Stopped at: Completed quick task 260401-0cc (Deduplicate conflicting mods CAUTION header)
+Last session: 2026-04-07T04:42:43.667Z
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None
-Next action: All phases complete. No pending work.

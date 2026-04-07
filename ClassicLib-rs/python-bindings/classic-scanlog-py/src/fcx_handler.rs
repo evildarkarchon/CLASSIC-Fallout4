@@ -4,7 +4,7 @@ use classic_config_core::ClassicConfig;
 use classic_constants_core::GameId;
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
-use classic_scanlog_core::{ConfigIssue, FcxModeHandler};
+use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError};
 use classic_shared_core::get_runtime;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
@@ -352,7 +352,11 @@ impl PyFcxModeHandler {
     /// ```
     #[classmethod]
     fn reset_fcx_checks(_cls: &Bound<'_, PyType>) -> PyResult<()> {
-        FcxModeHandler::reset_global_state();
-        Ok(())
+        match FcxModeHandler::reset_global_state() {
+            Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
+            Err(error) => Err(PyRuntimeError::new_err(format!(
+                "failed to reset FCX global state: {error}"
+            ))),
+        }
     }
 }

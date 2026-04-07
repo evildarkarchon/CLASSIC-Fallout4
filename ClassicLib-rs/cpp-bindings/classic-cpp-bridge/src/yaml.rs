@@ -7,7 +7,9 @@
 //! YAML content is exchanged as strings and settings values are returned
 //! as a `YamlValue` shared struct with type information.
 
-use classic_yaml_core::YamlOperations;
+use classic_yaml_core::{
+    CacheStats as YamlCacheStats, YamlOperations, cache_stats as yaml_cache_stats,
+};
 use std::path::Path;
 use yaml_rust2::Yaml;
 
@@ -182,8 +184,22 @@ fn yaml_ops_clear_cache(ops: &YamlOps) {
 }
 
 fn yaml_ops_cache_size(ops: &YamlOps) -> usize {
-    let stats = ops.ops.get_cache_stats();
-    stats.get("cached_files").copied().unwrap_or(0)
+    yaml_ops_cache_stats(ops).size
+}
+
+fn yaml_cache_stats_from(stats: YamlCacheStats) -> ffi::CacheStats {
+    ffi::CacheStats {
+        hits: stats.hits,
+        misses: stats.misses,
+        hit_rate: stats.hit_rate,
+        size: stats.size,
+        capacity: stats.capacity,
+    }
+}
+
+fn yaml_ops_cache_stats(ops: &YamlOps) -> ffi::CacheStats {
+    let _ = ops;
+    yaml_cache_stats_from(yaml_cache_stats())
 }
 
 fn yaml_ops_has_document(ops: &YamlOps) -> bool {
@@ -192,6 +208,15 @@ fn yaml_ops_has_document(ops: &YamlOps) -> bool {
 
 #[cxx::bridge(namespace = "classic::yaml")]
 mod ffi {
+    /// Canonical cache stats DTO shared by C++ cache-observability helpers.
+    struct CacheStats {
+        hits: u64,
+        misses: u64,
+        hit_rate: f64,
+        size: usize,
+        capacity: usize,
+    }
+
     /// Typed YAML value for cross-FFI returns.
     struct YamlValue {
         /// String representation of the value
@@ -240,6 +265,7 @@ mod ffi {
         // Cache management
         fn yaml_ops_clear_cache(ops: &YamlOps);
         fn yaml_ops_cache_size(ops: &YamlOps) -> usize;
+        fn yaml_ops_cache_stats(ops: &YamlOps) -> CacheStats;
         fn yaml_ops_has_document(ops: &YamlOps) -> bool;
     }
 }
@@ -355,6 +381,9 @@ mod tests {
         let ops = yaml_ops_new();
         yaml_ops_clear_cache(&ops); // Clear first to ensure a clean state
         assert_eq!(yaml_ops_cache_size(&ops), 0);
+        let stats = yaml_ops_cache_stats(&ops);
+        assert_eq!(stats.size, 0);
+        assert_eq!(stats.capacity, 128);
         yaml_ops_clear_cache(&ops); // Should not panic on empty cache
     }
 

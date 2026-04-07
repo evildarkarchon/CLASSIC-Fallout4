@@ -28,7 +28,7 @@ regex = { workspace = true }
 
 # Windows registry access
 [target.'cfg(windows)'.dependencies]
-winreg = "0.52"
+winreg = { workspace = true }
 
 [dev-dependencies]
 # Testing

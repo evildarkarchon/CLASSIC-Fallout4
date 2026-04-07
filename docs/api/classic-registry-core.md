@@ -160,7 +160,7 @@ The registry flow in current source is simple and fully global:
 
 1. A caller picks a string key, usually from `Keys`.
 2. The caller stores a `'static` value with `register(...)`.
-3. The global `once_cell::sync::Lazy` initializes the underlying `DashMap` on first use.
+3. The global `std::sync::LazyLock` initializes the underlying `DashMap` on first use.
 4. Another caller checks presence with `is_registered(...)` or requests the concrete type with `get::<_, T>(...)`.
 5. If the key is removed with `unregister(...)` or all state is wiped with `clear_all()`, later lookups return `None` or default through convenience helpers.
 
@@ -260,7 +260,7 @@ This crate is explicitly process-global and concurrent.
 
 Implementation details visible in `src/registry.rs`:
 
-- storage is a single `static` `once_cell::sync::Lazy<DashMap<String, Arc<dyn Any + Send + Sync>>>`
+- storage is a single `static` `std::sync::LazyLock<DashMap<String, Arc<dyn Any + Send + Sync>>>`
 - initialization is lazy and happens on first registry access
 - `DashMap` provides concurrent access without one global mutex around every operation
 - values must be `Send + Sync + 'static` to be stored safely
@@ -282,7 +282,7 @@ The tests in this crate and in `classic-cpp-bridge` use `serial_test` specifical
 Important direct dependencies:
 
 - `dashmap` - concurrent map backing the registry
-- `once_cell` - lazy initialization of the global map
+- `std::sync::LazyLock` - standard-library lazy initialization of the global map
 - `serde` and `serde_json` - not used for a typed crate API here, but used by some consumers such as Node bindings storing JSON values
 
 Related CLASSIC crates and wrappers:

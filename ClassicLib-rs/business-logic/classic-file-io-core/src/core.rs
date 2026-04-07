@@ -10,7 +10,7 @@
 
 use dashmap::DashMap;
 use lru::LruCache;
-use memmap2::Mmap;
+use memmap2::MmapOptions;
 use quick_cache::sync::Cache; // Optimization 1.3: Lock-free concurrent cache
 use rayon::prelude::*;
 use std::fs::File;
@@ -1013,22 +1013,18 @@ impl FileIOCore {
     ///
     /// This function uses `unsafe` internally for memory mapping, but the interface
     /// is safe. The memory map is properly managed and dropped when the function returns.
-    /// The unsafe block is safe because:
-    /// 1. We only read, never write to the mapped memory
+    /// The unsafe block is scoped to a conservative snapshot-style mitigation because:
+    /// 1. Large files use `MmapOptions::map_copy_read_only()` to avoid shared writable views
     /// 2. The mapping is dropped after reading, before the function returns
     /// 3. The file handle remains open for the duration of the mapping
     ///
     /// # External Modification Warning
     ///
-    /// **IMPORTANT**: This function assumes the file will not be modified by external
-    /// processes during the mapping lifetime. If an external process modifies the file
-    /// while it is memory-mapped, the behavior is undefined and could result in:
-    /// - Reading inconsistent or corrupted data
-    /// - Potential memory safety issues on some platforms
-    ///
-    /// Callers should ensure file stability during the operation. For files that may be
-    /// concurrently modified (e.g., actively written log files), use the regular
-    /// `read_file_with_encoding()` method instead, which reads a snapshot of the file.
+    /// For files at or above the mmap threshold, Phase 6 uses
+    /// `MmapOptions::map_copy_read_only()` as the repository's safer snapshot-style
+    /// mitigation against shared-map TOCTOU races while keeping the existing decode path.
+    /// This remains an `unsafe` operation at the constructor boundary, so callers should
+    /// still prefer conservative usage when concurrent external mutation is expected.
     #[allow(unsafe_code)]
     pub async fn read_file_mmap(&self, path: &Path) -> Result<String, FileIOError> {
         // Optimization 1.7: Check file size to determine read strategy
@@ -1042,12 +1038,13 @@ impl FileIOCore {
             return self.read_file_with_encoding(path).await;
         }
 
-        // Large file: use memory-mapped I/O for zero-copy reading
+        // Large file: use a copy-on-write read-only map so we keep the existing decode path
+        // while avoiding a shared mapping view for the production large-file branch.
         let file = File::open(path)?;
 
-        // Safety: We're only reading, not writing, and the file won't be modified
-        // while we hold the mapping
-        let mmap = unsafe { Mmap::map(&file)? };
+        // Safety: We expose only read access, hold the file handle for the mapping lifetime,
+        // and use the conservative copy-on-write read-only view selected for this crate.
+        let mmap = unsafe { MmapOptions::new().map_copy_read_only(&file)? };
 
         // Detect encoding from first chunk (up to 8KB)
         let encoding = self.encoding_detector.detect(&mmap[..mmap.len().min(8192)]);
@@ -2075,7 +2072,23 @@ mod tests {
 
         let core = FileIOCore::default();
         let content = core.read_file_mmap(&file_path).await.unwrap();
-        assert_eq!(content.len(), large_content.len());
+        assert_eq!(content, large_content);
+    }
+
+    #[tokio::test]
+    async fn test_read_file_mmap_large_non_utf8_matches_existing_decode_contract() {
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("large-windows-1252.txt");
+
+        let mut bytes = vec![0xA9; 1024 * 1024 + 100];
+        bytes.extend_from_slice(b" mmap contract");
+        std::fs::write(&file_path, &bytes).unwrap();
+
+        let core = FileIOCore::default();
+        let expected = core.read_file_with_encoding(&file_path).await.unwrap();
+        let mapped = core.read_file_mmap(&file_path).await.unwrap();
+
+        assert_eq!(mapped, expected);
     }
 
     // ==================== Encoding Tests ====================

@@ -2,12 +2,13 @@
 
 Contributor-facing documentation for the active C++ bridge entry points in:
 
+- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs)
 - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs)
 
-This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
+This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for YAML operations, config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
 
 It is intentionally about the bridge surface that exists in source today. It does **not** describe a future unified bridge and it does **not** imply that the bridge exposes every capability of the underlying Rust crates.
 
@@ -39,9 +40,25 @@ For crate-level behavior, see:
 
 ## Current Bridge Ownership
 
+## `src/yaml.rs` -> `classic::yaml`
+
+This file exposes a stateful `YamlOps` wrapper over `classic_yaml_core::YamlOperations` plus bridge-local `YamlValue` and `CacheStats` DTOs that CXX can move by value.
+
+It owns:
+
+- YAML parse/load/save helpers through `yaml_ops_*`
+- typed setting inspection and mutation helpers through `YamlValue`
+- YAML cache helpers `yaml_ops_clear_cache()`, `yaml_ops_cache_stats()`, and the narrowed `yaml_ops_cache_size()` adapter
+
+Current cache-observability behavior:
+
+- `yaml_ops_cache_stats()` forwards to the canonical `classic_yaml_core::cache_stats()` contract with `hits`, `misses`, `hit_rate`, `size`, and `capacity`
+- `yaml_ops_cache_size()` intentionally stays as `yaml_ops_cache_stats().size` for older C++ callers that only need a count
+- YAML-specific legacy byte totals remain on the Rust side through `YamlOperations::get_cache_stats()` and are not widened into the C++ `CacheStats` DTO
+
 ## `src/config.rs` -> `classic::config`
 
-This file exposes a mostly read-oriented bridge around `classic_config_core::YamlDataCore` plus a small Local-YAML path persistence helper.
+This file exposes a mostly read-oriented bridge around `classic_config_core::YamlDataCore`, a small Local-YAML path persistence helper, and settings-cache observability helpers that forward into `classic_settings_core`.
 
 It owns:
 
@@ -49,6 +66,7 @@ It owns:
 - Local-YAML path persistence through `save_local_yaml_paths(...)`
 - field getters for selected scalar and `Vec<String>` values
 - flattened `IndexMap` access for suspect and mod dictionaries
+- settings cache helpers `settings_cache_clear()`, `settings_cache_stats()`, `settings_cache_size()`, and `reset_settings_cache_stats()`
 
 It does not expose the full `YamlDataCore` model, general `ClassicConfig` save APIs, or raw crashgen registry data.
 
@@ -61,6 +79,7 @@ It owns:
 - typed backup workflows through `classic_file_io_core::backup::BackupManager`
 - generic file-group backup, restore, and remove through `classic_file_io_core::game_files::GameFilesManager`
 - crash-log collection through `classic_file_io_core::log_collection::LogCollector`
+- hash cache helpers `hash_cache_clear()`, `hash_cache_stats()`, `hash_cache_size()`, and `reset_hash_cache_stats()` through `classic_file_io_core::hash::FileHasher`
 - small standalone helpers for file similarity, encoding-aware reads and writes, and AUTOSCAN report files
 
 Some report-file helpers are bridge-local convenience code, not direct crate re-exports.
@@ -84,6 +103,7 @@ This file is the largest bridge surface in this group.
 It owns:
 
 - YAML-backed scan config construction
+- explicit FCX singleton reset through `classic::scanner::fcx_reset_global_state()`
 - `OrchestratorCore` creation and single and batch scan entry points
 - bridge-local FormID DB path resolution and remove-list loading
 - progress callback DTOs for batch scanning
@@ -96,7 +116,36 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 ## FFI Surface By File
 
+## `classic::yaml` entry points
+
+### Cache stats helpers
+
+These helpers keep the C++ YAML surface aligned with the canonical Phase 4 cache stats contract:
+
+- `yaml_ops_clear_cache(ops)` forwards to `YamlOperations::clear_cache()`
+- `yaml_ops_cache_stats(ops) -> CacheStats` forwards to `classic_yaml_core::cache_stats()`
+- `yaml_ops_cache_size(ops) -> usize` is a narrowed adapter over `yaml_ops_cache_stats(ops).size`
+
+Current bridge behavior:
+
+- the returned `CacheStats` DTO uses the exact shared five-field cache stats contract
+- C++ does not receive YAML-specific `total_bytes`; that legacy detail remains Rust-only
+
 ## `classic::config` entry points
+
+### Settings cache helpers
+
+These helpers give C++ the same bounded-cache observability surface that Node and Python expose for `classic_settings_core`:
+
+- `settings_cache_clear()` forwards to `classic_settings_core::clear_cache()`
+- `settings_cache_stats() -> CacheStats` forwards to `classic_settings_core::cache_stats()`
+- `settings_cache_size() -> usize` is a narrowed adapter over `settings_cache_stats().size`
+- `reset_settings_cache_stats()` forwards to `classic_settings_core::reset_cache_stats()`
+
+Current bridge behavior:
+
+- the C++ `CacheStats` DTO matches the canonical Phase 4 contract exactly: `hits`, `misses`, `hit_rate`, `size`, `capacity`
+- cache ownership and invalidation semantics stay in Rust core; the bridge only reshapes the DTO for CXX
 
 ### `yaml_data_load(yaml_dir_root, yaml_dir_data, game, game_version) -> Result<Box<YamlData>>`
 
@@ -157,6 +206,20 @@ Important current boundary:
 ---
 
 ## `classic::files` entry points
+
+## Hash cache helpers
+
+These helpers expose the `classic_file_io_core::hash::FileHasher` cache directly to C++ callers:
+
+- `hash_cache_clear()` forwards to `FileHasher::clear_cache()`
+- `hash_cache_stats() -> CacheStats` forwards to `FileHasher::cache_stats()`
+- `hash_cache_size() -> usize` is a narrowed adapter over `hash_cache_stats().size`
+- `reset_hash_cache_stats()` forwards to `FileHasher::reset_cache_stats()`
+
+Current bridge behavior:
+
+- the returned `CacheStats` DTO uses the same five-field cache stats contract as `classic::yaml` and `classic::config`
+- hash calculation and cache semantics remain owned by `classic-file-io-core`; the bridge just forwards the data
 
 ## Backup helpers
 
@@ -396,9 +459,29 @@ Current boundary:
 
 ## Scan execution
 
+### `fcx_reset_global_state() -> Result<()>`
+
+Forwards to `classic_scanlog_core::FcxModeHandler::reset_global_state()`.
+
+Current bridge behavior:
+
+- keeps C++ reset-only for FCX in this phase; there is no bridge API for inspecting FCX issues yet
+- maps `FcxResetError::Unnecessary` to success so callers can reset aggressively without aborting clean sessions
+- maps real reset failures to a returned bridge error string so callers can stop before reusing stale FCX state
+
+Contributor note:
+
+- this explicit reset entry point remains public even though the main scan-session functions below also auto-reset before work begins
+
 ### `orchestrator_process_log(orch, log_path) -> Result<ScanResult>`
 
 Forwards to `OrchestratorCore::process_log(...)`.
+
+Current bridge behavior:
+
+- calls `fcx_reset_global_state()` before starting scan work
+- treats `FcxResetError::Unnecessary` as success via the helper above
+- returns a bridge error and aborts the scan start if FCX reset fails for a real reason
 
 Bridge DTO shape:
 
@@ -422,8 +505,14 @@ Forwards to `OrchestratorCore::process_logs_batch(...)`.
 
 Current bridge behavior:
 
+- calls `fcx_reset_global_state()` before any batch work begins
 - `max_concurrent == 0` becomes `None`, which activates the crate adaptive concurrency path
 - results are returned in completion order, not input order, because the lower layer uses unordered buffering
+
+FCX reset failure mapping:
+
+- `FcxResetError::Unnecessary` stays on the normal execution path and does not abort the batch
+- a real reset failure short-circuits the batch before scan work starts and returns a single failed `ScanResult` carrying the reset error text
 
 ### `orchestrator_process_logs_batch_with_progress(...) -> Vec<BatchScanResult>`
 
@@ -431,11 +520,17 @@ This is mostly bridge-local orchestration around `OrchestratorCore::process_log_
 
 Current behavior that matters:
 
+- calls `fcx_reset_global_state()` before queuing or emitting any progress events
 - emits `Queued`, `Started`, `Phase`, `Completed`, and `Failed` events to the C++ callback
 - preserves `input_index` so callers can map completion-order results back to the original request list
 - computes adaptive concurrency locally when `max_concurrent == 0`
 - tries to drain ready phase events before terminal completion events so per-log event ordering stays monotonic
 - still returns results in completion order, not input order
+
+FCX reset failure mapping:
+
+- `FcxResetError::Unnecessary` remains non-fatal
+- a real reset failure aborts the scan session before callback activity begins and returns a single failed `BatchScanResult` with the reset error text
 
 ## Small scan utilities
 
@@ -445,11 +540,19 @@ This is bridge-local logic. It checks only for the substrings `Fallout4VR.esm` o
 
 ### `detect_crash_pattern(content) -> String`
 
-Creates `classic_scanlog_core::LogParser::new(None)` and forwards to `LogParser::parse_crash_header(...)`, returning only the parsed `main_error` text.
+Reuses one module-level default `LogParser` and forwards to `LogParser::parse_crash_header(...)`, returning only the parsed `main_error` text.
+
+Contributor note:
+
+- `detect_crash_pattern` keeps the same fail-soft `""` behavior, but it now reuses a cached default parser internally instead of constructing `LogParser::new(None)` on every call
 
 Fail-soft behavior:
 
-- parser construction failure or header parse failure becomes `""`
+- header parse failure becomes `""`
+
+Initialization note:
+
+- default parser construction is now a one-time module initialization step rather than per-call bridge work
 
 ## Papyrus monitoring
 
@@ -549,6 +652,7 @@ Several entry points erase typed errors and return defaults instead:
 ## `src/scanner.rs`
 
 - exposes the main scan path, but not the full `OrchestratorCore` helper surface
+- keeps FCX bridge exposure reset-only in this phase; no C++ FCX issue DTO or getter exists yet
 - constructs DB path lists in bridge code instead of exposing a first-class config bridge for that data
 - drops `AnalysisResult` fields that some lower-level Rust and parity paths still use
 - adds bridge-local batch progress coordination, VR detection, crash-pattern extraction, and DB-profile tuning
@@ -593,8 +697,9 @@ When the C++ scan path diverges from the crate docs:
 1. check whether the frontend used `orchestrator_new()` or `orchestrator_new_minimal()`
 2. if FormID values are missing, verify `show_formid_values` was true when the full config was built
 3. remember that the bridge resolves FormID DB paths itself, including a hardcoded FOLON DB path for Fallout 4 modes
-4. if batch progress looks surprising, remember result order is completion order and `input_index` is the stable correlation key
-5. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
+4. if a scan aborts before work starts, check whether `fcx_reset_global_state()` failed and left an FCX reset error string in the bridge result path
+5. if batch progress looks surprising, remember result order is completion order and `input_index` is the stable correlation key
+6. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
 
 ## Papyrus flow
 
@@ -618,6 +723,7 @@ When Papyrus monitoring looks stale:
 - `src/database.rs::db_pool_get_entries_batch()` fixes batch size at `50` and flattens `formid:plugin` keys into tab-delimited strings
 - `src/scanner.rs` still reads `CLASSIC Settings.yaml` directly for user FormID DB paths
 - `src/scanner.rs` hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
+- `src/scanner.rs` exposes only FCX reset control in C++; FCX issue inspection remains out of scope for this phase
 - `src/scanner.rs::orchestrator_process_logs_batch_with_progress()` is bridge-local coordination on top of per-log crate calls, not a direct wrapper over one lower-level batch API
 - `src/scanner.rs::detect_vr_log()` is a simple substring heuristic, not a full parser
 - `src/scanner.rs::papyrus_check_updates()` intentionally hides update errors from C++ callers

@@ -1,5 +1,59 @@
 # Project Milestones: CLASSIC
 
+## v9.1.0-bugfixes CLASSIC Codebase Health (Shipped: 2026-04-07)
+
+**Delivered:** Resolved every concern from the codebase audit — deprecated API removal, dead code elimination, FCX state hardening across bindings, bounded cache replacement with canonical CacheStats, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance.
+
+**Phases completed:** 11 phases, 32 plans, 61 tasks (Phases 1-8 planned work plus Phases 9-11 verification gap-closure)
+
+**Internal milestone label during execution:** v1.0 (renamed to v9.1.0-bugfixes at ship time to continue the v8.x project version progression).
+
+**Stats:**
+
+- 154 commits over 4 days (2026-04-04 → 2026-04-07)
+- 35/35 v1 requirements satisfied
+- 11/11 phases verified passed (all Nyquist-compliant)
+- 13/13 cross-phase wiring claims verified
+- 8/8 end-to-end flows complete
+- Audit: `.planning/milestones/v9.1.0-bugfixes-MILESTONE-AUDIT.md`
+
+**Git range:** `6604979b` (`docs: complete project research`) → `87d3f551` (`Docs: refresh v1.0 milestone audit after Phase 9/10/11 closure`) on `gsd/v1.0-milestone`
+
+**Key accomplishments:**
+
+- Three Python binding methods migrated off deprecated scanlog-core APIs with DeprecationWarning emission via PyO3 PyErr::warn, pytest coverage, and updated .pyi/API docs
+- Migrated 3 deprecated shim tests to parse_all_sections_arc, then deleted parse_segments, parse_segments_parallel, is_outdated, SEGMENT_BOUNDARIES, fast_contains, and named_sections_to_positional from scanlog-core
+- Assertion test proving production configs never hit legacy fallback, then scan_all_settings_legacy_bucketed method and fallback branch deleted
+- Blocking FCX singleton reset with a typed unnecessary outcome and contention-tested stale-state cleanup for downstream bindings.
+- C++ bridge FCX reset helper plus automatic pre-scan state cleanup on every public scan session entrypoint.
+- Node scanlog bindings now expose flat FCX reset/issue APIs, isolate FCX state across sequential scans, and publish refreshed parity metadata for the new contract.
+- 128-entry quick_cache-backed YAML caching with preserved mtime freshness and canonical five-field cache stats
+- 64-entry quick_cache-backed settings caching with canonical stats and separate cache_keys helper documentation
+- Bounded SHA256 path-hash caching with canonical hits/misses observability via quick_cache
+- Node now ships one canonical cache stats contract for YAML, settings, and hash helpers with committed snake_case TypeScript declarations and refreshed parity coverage metadata.
+- Python now exposes the Phase 4 cache stats contract for YAML, settings, and hashes, with typed stubs, hash-cache smoke coverage, and parity metadata that tracks the new helper surface.
+- C++ bridge cache stats entrypoints for YAML, settings, and hashes with matching parity docs across the active binding surfaces.
+- Bounded xxh3-keyed regex matcher caches for mod_detector single/double/batch paths with contributor-facing LazyLock guidance
+- Important-mod detection now uses a LeftmostLongest Aho-Corasick literal matcher with fixture-backed parity tests and a retained legacy regex helper for semantic proof.
+- Cached `detect_crash_pattern` on one shared `LogParser` while adding positive bridge coverage and documenting the unchanged fail-soft contract.
+- Criterion proof coverage for cached regex matchers, important-mod Aho-Corasick scans, and bridge-style crash-pattern parser reuse with a documented local baseline workflow
+- Deterministic double-matcher cache reuse proof using scoped compile deltas and grouped-run-safe detector tests
+- Shareable Phase 5 benchmark proof with paired hotspot deltas, focused `phase5_` reproduction commands, and mmap ownership clarified for Phase 6
+- Important-mod detection now reuses a bounded cached Aho-Corasick matcher, trims real-fixture haystack setup cost, and has proof showing both tracked surfaces beat the legacy regex comparator.
+- Large-file reads now use `map_copy_read_only()` with unchanged text decoding and aligned Phase 6 safety documentation.
+- Criterion now benchmarks `map`, `map_copy`, and `map_copy_read_only()` in `classic-file-io-core`, with a committed Windows proof showing the safer mapping stays acceptable.
+- The Phase 6 mmap benchmark now keeps `map`, `map_copy`, and `map_copy_read_only` coverage intact while isolating benchmark-only unsafe constructors behind explicit helper functions that pass crate clippy validation.
+- classic-scanlog-core now uses std::sync::LazyLock and OnceLock for its remaining lazy state, with matching crate-manifest cleanup and updated contributor docs.
+- Registry and perf global stores now use std::sync::LazyLock, and the remaining owned direct once_cell manifest/docs references were removed from the Phase 7 target set.
+- Workspace-owned `winreg`/`phf` pins plus removal of the `classic-shared-core` `zerovec` workaround with validated `gui-bridge` docs.
+- Shared Linux documents-path discovery now prefers a valid Fallout 4 Proton documents path before falling back to the legacy local-share path, with crate-level integration proof and aligned docs.
+- The committed Node declaration snapshot is now the documented first-class contract artifact, the `.gitignore` policy no longer contradicts that, and the existing local Node gates passed without needing a declaration diff.
+- Phase 1 deprecated API migration now has fresh Rust, Python, and Node closure proof recorded in `01-VERIFICATION.md`, with DEBT-05/06/07/10 traceability synchronized in `REQUIREMENTS.md`.
+- Phase 5 now has one coherent verification artifact again: `05-VERIFICATION.md` explicitly covers PERF-03 and CONS-04 with current source, docs, test, and benchmark-backed evidence, and Phase 10 traceability is closed in the planning files.
+- Authoritative Phase 8 verification coverage for workspace-owned deps, Proton docs-path proof, gui-bridge cleanup, and Node declaration freshness governance.
+
+---
+
 ## v8.3.0 Performance & Polish (Shipped: 2026-02-05)
 
 **Delivered:** Established comprehensive performance infrastructure — Criterion benchmarks across all Rust crates, GIL release audit, profiling tooling, hot path optimization based on data, and CI-based regression detection.

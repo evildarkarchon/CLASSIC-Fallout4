@@ -1,147 +1,119 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-04
 
 ## APIs & External Services
 
-**GitHub Releases API:**
-- Used for: checking for new CLASSIC releases and downloading update metadata
-- SDK/Client: `reqwest` 0.13.1 (async HTTP)
-- Crate: `ClassicLib-rs/business-logic/classic-update-core/src/github.rs`
-- Auth: `GITHUB_TOKEN` env var (optional); loaded via `dotenvy` from `.env` file
-- Endpoint: `https://api.github.com/repos/evildarkarchon/CLASSIC-Fallout4/releases/latest`
-- Rate limit: 60 req/hr unauthenticated, 5,000 req/hr with token
-- User-agent: `CLASSIC-Update/<version>`
+**Update Checking:**
+- GitHub Releases API (`https://api.github.com`) — checks for new CLASSIC releases
+  - SDK/Client: `reqwest 0.13.1` (async HTTP)
+  - Auth: `GITHUB_TOKEN` env var (optional; loaded via `dotenvy` from `.env` file)
+  - Endpoints used: `GET /repos/{owner}/{repo}/releases/latest` and `GET /repos/{owner}/{repo}/releases`
+  - Unauthenticated rate limit: 60 req/hr; authenticated: 5,000 req/hr
+  - Implementation: `ClassicLib-rs/business-logic/classic-update-core/src/github.rs`
 
-**Mod Site URL Helpers (reference only — no live API calls):**
-- NexusMods (`https://www.nexusmods.com`) — URL validation and domain extraction
-- Bethesda.net (`https://bethesda.net`) — URL validation and domain extraction
-- ModDB (`https://www.moddb.com`) — URL validation and domain extraction
-- Crate: `ClassicLib-rs/business-logic/classic-web-core/src/lib.rs` (`ModSite` enum)
-- These are URL utilities only; no API key or HTTP calls are made to these services
+**Mod Distribution Sites (URL utilities only — no live API calls):**
+- NexusMods (`https://www.nexusmods.com`) — URL construction and validation helpers
+- Bethesda.net — URL helpers
+  - SDK/Client: `url 2.5` crate for URL parsing/validation
+  - Implementation: `ClassicLib-rs/business-logic/classic-web-core/src/lib.rs`
+  - Note: These are URL helper utilities only; no API authentication or live queries are made
 
 ## Data Storage
 
 **Databases:**
-- Type: SQLite (local file-based, no server)
-- Client: `sqlx` 0.8 (async, WAL mode) + `rusqlite` 0.38.0 (bundled, sync fallback)
-- Pool crate: `ClassicLib-rs/business-logic/classic-database-core/`
-- Location: `CLASSIC Data/databases/` (shipped with application)
-- Known databases:
-  - `Fallout4 FormIDs Main.db` — base game FormID lookup
-  - `Fallout4 FormIDs Local.db` — local/user FormID database
-  - `aSW FormIDs.db` — additional mod FormID database
-  - `FOLON FormIDs.db` — Fallout London mod FormIDs
-  - `FormIDs.db` — general FormID database
-- User-configured paths: `CLASSIC Settings.yaml` under `CLASSIC_Settings.FormID Databases`
-- Access pattern: async connection pool with TTL-based query caching and WAL concurrency
+- SQLite (local bundled) — FormID lookup databases for crash log analysis
+  - Connection: local file path from config (not an env var); databases shipped with the app
+  - Client: `sqlx 0.8` (async, runtime-tokio) for pool management and queries; `rusqlite 0.38.0` (bundled, backup) for synchronous paths
+  - Implementation: `ClassicLib-rs/business-logic/classic-database-core/`
+  - Database files: `CLASSIC Data/databases/` — shipped as static data assets (`.yaml`, game-specific lookup files)
+  - Schema conventions: `docs/api/formid-sqlite-conventions.md`
+
+**YAML Config Files:**
+- Local YAML files (`CLASSIC Main.yaml`, `CLASSIC Fallout4.yaml`) — app settings and game-version metadata
+  - Parser: `yaml-rust2 0.11.0` (custom; not serde_yaml)
+  - Implementation: `ClassicLib-rs/business-logic/classic-yaml-core/`, `ClassicLib-rs/business-logic/classic-config-core/`
+  - Runtime schema: `docs/api/classic-config-core-yaml-schema.md`
 
 **File Storage:**
-- Local filesystem only — no cloud storage integration
-- Game archive reading: Bethesda BA2 archives via `ba2` 3.0.1 crate (read-only)
-- Log collection: crash log files from game documents directory or custom scan path
+- Local filesystem only — crash logs read from user-specified directories
+- Game files read from Windows game installation paths (discovered via registry or config)
+- BA2 archive files parsed via `ba2 3.0.1`
+- DDS texture files validated via `ddsfile 0.5`
 
 **Caching:**
-- In-process only — `quick_cache` 0.6 (lock-free), `lru` 0.16.3
-- YAML file cache keyed by path + mtime (in `classic-yaml-core`)
-- Settings cache with sync/async loaders (in `classic-settings-core`)
-- No external cache service (Redis, Memcached, etc.)
+- In-process only — `quick_cache 0.6`, `lru 0.16.3`, `dashmap 6.1` for runtime caches
+- No external cache service
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None — application does not authenticate users
-- `GITHUB_TOKEN` is an optional developer/CI token for raising API rate limits (not user auth)
-
-## Game Platform Integrations
-
-**Steam (Windows):**
-- Integration: Windows Registry reads (`HKEY_LOCAL_MACHINE`) to locate game installation path
-- Crate: `ClassicLib-rs/business-logic/classic-path-core/src/platform/windows.rs`
-- Dependency: `winreg` 0.52 (Windows target only)
-
-**Steam (Linux/Proton):**
-- Integration: Steam library VDF file parsing (`~/.local/share/Steam/steamapps/libraryfolders.vdf`)
-- Crate: `ClassicLib-rs/business-logic/classic-path-core/src/platform/linux.rs`
-- No external library; custom VDF parser
-
-**GOG:**
-- Integration: Windows Registry reads alongside Steam paths
-- Crate: `ClassicLib-rs/business-logic/classic-path-core/src/game_path.rs`
-
-## File Format Integrations
-
-**Bethesda BA2 Archives:**
-- Format: Fallout 4 BA2 (GNRL general and DX10 texture formats)
-- Library: `ba2` 3.0.1
-- Used by: `ClassicLib-rs/business-logic/classic-scangame-core/src/ba2.rs`
-- Purpose: scanning game archives for file presence and validation
-
-**PE (Windows Portable Executable) Files:**
-- Format: Windows `.exe`/`.dll` version resources (`VS_VERSIONINFO`)
-- Library: `pelite` 0.10
-- Used by: `ClassicLib-rs/business-logic/classic-version-core/src/pe_version.rs`
-- Purpose: extracting game version from `Fallout4.exe` and XSE loader DLLs
-
-**DDS Texture Files:**
-- Library: `ddsfile` 0.5
-- Purpose: texture file validation in loose-file scanning
-
-**INI Files:**
-- Library: `configparser` 3.1
-- Purpose: parsing Fallout 4 `.ini` configuration files (game settings discovery)
-- Used by: `ClassicLib-rs/business-logic/classic-path-core/`
+- None for end users
+- GitHub token optional for update-check rate limiting (developer/CI use)
+  - Implementation: `dotenvy 0.15` loads `GITHUB_TOKEN` from `.env` at runtime in `classic-update-core`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None — no external error tracking service (Sentry, Bugsnag, etc.)
+- None (no Sentry, Rollbar, or similar service integrated)
 
 **Logs:**
-- Rust: `log` 0.4.29 facade + `env_logger` 0.11` for environment-driven log levels
-- Rust async: `tracing` 0.1.44 + `tracing-subscriber` 0.3.22 + `tracing-appender` 0.2 for structured async-aware logging with file appender support
-- TUI: tracing with file appender (`ClassicLib-rs/ui-applications/classic-tui/`)
+- `log 0.4.29` facade + `env_logger 0.11` for Rust library logging
+- `tracing 0.1.44` + `tracing-subscriber 0.3.22` + `tracing-appender 0.2` for structured/async-aware tracing
+- TUI uses `tracing-appender` for file-backed log output
+- Log output goes to stdout/stderr or rotating file; no remote log aggregation
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- GitHub: `https://github.com/evildarkarchon/CLASSIC-Fallout4`
-- Releases distributed as standalone Windows ZIP archives via GitHub Releases
+- GitHub (`https://github.com/evildarkarchon/CLASSIC-Fallout4`) — source repository and release hosting
 
 **CI Pipeline:**
-- GitHub Actions (`.github/workflows/`)
-- `ci-rust.yml` — rustfmt, Clippy, Rust tests (runs on `windows-latest`)
-- `ci-cpp.yml` — C++ CLI and GUI builds + CTest/Catch2/QtTest (runs on `windows-latest`, uses `ilammy/msvc-dev-cmd@v1`)
-- `ci-python-bindings.yml` — Python parity gates, stub validation, pytest (runs on `windows-latest`, uses `astral-sh/setup-uv@v7`)
-- `ci-typescript.yml` — Node parity gates, Bun tests, DTS freshness (runs on `windows-latest`, uses `oven-sh/setup-bun@v2`)
-- `benchmarks.yml` — Criterion benchmarks on PRs to `main` with PR comment reporting
+- GitHub Actions (`windows-latest` runners for all jobs)
+  - `ci-rust.yml` — rustfmt, clippy, build, test for Rust workspace
+  - `ci-cpp.yml` — MSVC build, Catch2 CLI tests, Qt GUI tests via CTest
+  - `ci-python-bindings.yml` — parity gates, maturin build, pytest smoke tests
+  - `ci-typescript.yml` — NAPI-RS build, parity gates, Bun and Node runtime tests
+  - `benchmarks.yml` — Criterion benchmark runs
+- Caching: GitHub Actions cache for `~/.cargo/registry`, `~/.cargo/git`, `ClassicLib-rs/target`, vcpkg root and archives
 
-**CI Build Caching:**
-- `actions/cache@v5` for `~/.cargo/registry` and `~/.cargo/git`, keyed by `Cargo.lock` hash
-- Python venv cached by `astral-sh/setup-uv@v7`
+**Distribution:**
+- Releases published as GitHub Releases (ZIP packages via CPack for CLI; app bundle for GUI)
+- Python wheels built with maturin (not published to PyPI; installed locally)
+- Node addon distributed as `.node` binary alongside TypeScript types (`index.d.ts`)
+
+## Windows Platform Integrations
+
+**Windows Registry:**
+- Read-only — game installation path discovery (Fallout 4 Steam/GOG paths)
+- Implementation: `ClassicLib-rs/business-logic/classic-path-core/`
+
+**PE File Parsing:**
+- `pelite 0.10` — reads version resources from game executables and XSE loader DLLs to detect installed versions
+- Implementation: `ClassicLib-rs/business-logic/classic-version-core/`
+
+**MSVC Linker:**
+- Required at build time; `tools/use_msvc_from_git_bash.sh` sets up environment so Git's `link.exe` does not shadow the VS linker
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None — the application does not expose any web endpoints
+- None — no HTTP server or webhook receiver
 
 **Outgoing:**
-- GitHub API: outgoing HTTPS GET to `api.github.com` for release checks (user-triggered or automated at startup when `Update Check: true` in settings)
+- None — only outbound HTTP is the GitHub Releases API check (pull-only, no push/webhook)
 
 ## Environment Configuration
 
-**Required env vars (build/dev):**
-- `VCPKG_ROOT` — path to vcpkg installation (required for C++ builds)
+**Required env vars:**
+- `VCPKG_ROOT` — must point to vcpkg installation for C++ builds
 
-**Optional env vars (runtime):**
-- `GITHUB_TOKEN` — GitHub personal access token for higher API rate limit; loaded from `.env` by `dotenvy` in `classic-update-core`
-- `RUST_BACKTRACE` — Rust panic backtraces (set to `1` or `full` in CI)
-- `CARGO_TERM_COLOR` — Cargo output coloring (set to `always` in CI)
+**Optional env vars:**
+- `GITHUB_TOKEN` — GitHub personal access token; read from `.env` via `dotenvy` to increase update-check API rate limit
 
 **Secrets location:**
-- `.env` file at repo root (gitignored) — stores `GITHUB_TOKEN` for local development
-- GitHub Actions secrets — `GITHUB_TOKEN` injected as workflow env for CI
+- `.env` file at repo root (not committed; gitignored); used only for `GITHUB_TOKEN` during development/CI
 
 ---
 
-*Integration audit: 2026-03-30*
+*Integration audit: 2026-04-04*

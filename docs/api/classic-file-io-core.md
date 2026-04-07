@@ -165,7 +165,7 @@ Batch I/O:
 Behavior worth knowing from the source:
 
 - `read_file()` checks the instance-local read cache first and does not validate mtimes, so external file changes are invisible until the caller clears that `FileIOCore` instance's cache or writes through the same instance.
-- `read_file()` always delegates to `read_file_mmap()`, which uses regular async reads below 1 MB and memory mapping at 1 MB or above.
+- `read_file()` always delegates to `read_file_mmap()`, which uses regular async reads below 1 MB and `MmapOptions::map_copy_read_only()` at 1 MB or above.
 - `write_file()` does not create parent directories; `write_bytes()`, `append_file()`, and `write_multiple_files()` do.
 - `write_file()` invalidates both metadata and text-read cache entries for that path; `write_bytes()` invalidates only metadata cache entries.
 - `walk_directory()` filters by file name only, not full path, and silently skips traversal entries that `walkdir` returns as errors.
@@ -250,14 +250,27 @@ Contributor notes:
 - `hash_file(path) -> Result<String, FileIOError>`
 - `hash_files_parallel(paths) -> Result<Vec<(PathBuf, Option<String>)>, FileIOError>`
 - `hash_files_to_map(paths) -> Result<HashMap<PathBuf, String>, FileIOError>`
+- `cache_stats() -> CacheStats`
+- `reset_cache_stats()`
 - `clear_cache()`
 - `cache_size() -> usize`
+
+`CacheStats` exposes the canonical Phase 4 cache contract:
+
+- `hits: u64`
+- `misses: u64`
+- `hit_rate: f64`
+- `size: usize`
+- `capacity: usize`
 
 Contributor notes:
 
 - the hash cache is global and keyed only by `PathBuf`
+- the hash cache is bounded to 1024 entries through `quick_cache::sync::Cache`
 - the implementation does not compare mtimes or file size before returning a cached hash
 - callers that hash mutable files should clear the cache explicitly when freshness matters
+- `clear_cache()` empties cached entries only; `reset_cache_stats()` clears hit/miss counters without dropping entries
+- Phase 4 validates bounded `quick_cache` eviction semantics rather than strict LRU victim order, because the locked cache implementation is `quick_cache`
 - batch hashing is fail-soft per file: the overall call succeeds and failed files get `None`
 
 ## `LogCollector`
@@ -399,7 +412,7 @@ The main source-visible `FileIOCore` text-read flow is:
 3. On cache miss, the crate caches metadata when possible.
 4. `read_file_mmap(path)` chooses the read strategy:
    - files smaller than 1 MB -> `read_file_with_encoding()` using `tokio::fs::read`
-   - files at or above 1 MB -> `memmap2::Mmap`
+   - files at or above 1 MB -> `memmap2::MmapOptions::map_copy_read_only()`
 5. Encoding detection runs over the bytes:
    - UTF-8 BOM -> UTF-8
    - otherwise valid UTF-8 -> UTF-8
@@ -410,7 +423,7 @@ The main source-visible `FileIOCore` text-read flow is:
 Important implications:
 
 - the current implementation does not validate that a cached text entry still matches the on-disk file
-- mmap reads assume the file is not externally modified during the mapping lifetime
+- Phase 6 treats `map_copy_read_only()` as this repo's safer snapshot-style mitigation for large-file reads, while still keeping the existing decode/error contract and the upstream `unsafe` constructor boundary in mind
 - callers that need a fresh on-disk snapshot should clear caches explicitly before re-reading
 
 Directory traversal flow for `walk_directory()`:

@@ -190,6 +190,34 @@ def _surface_row_from_gap(
     return item
 
 
+def _surface_row_from_registry_only(
+    *,
+    binding_identifier: str | None,
+    rust_symbol: str | None,
+    registry_entry: dict[str, Any],
+) -> dict[str, Any]:
+    tracked_key = binding_identifier or f"rust:{rust_symbol}"
+    return {
+        "trackedId": f"binding:{tracked_key}",
+        "trackedType": "registry_only",
+        "ownerModule": registry_entry.get("ownerModule", "unknown"),
+        "tier": registry_entry.get("tier"),
+        "gapType": "registry_only",
+        "classification": registry_entry["classification"],
+        "rustSymbol": rust_symbol,
+        "bindingIdentifier": binding_identifier,
+        "coverageId": registry_entry.get("coverageId"),
+        "verificationMode": registry_entry.get("verificationMode"),
+        "testSuite": registry_entry.get("testSuite"),
+        "testCaseId": registry_entry.get("testCaseId"),
+        "fixtureRefs": registry_entry.get("fixtureRefs", []),
+        "wave": registry_entry.get("wave"),
+        "owner": registry_entry.get("owner"),
+        "deferReason": registry_entry.get("deferReason"),
+        "notes": registry_entry.get("notes"),
+    }
+
+
 def build_coverage_summary(
     *,
     binding: str,
@@ -231,6 +259,37 @@ def build_coverage_summary(
         tracked_surface.append(
             _surface_row_from_gap(binding, runtime_or_deferred_lookup, gap_row)
         )
+
+    tracked_ids = {item["trackedId"] for item in tracked_surface}
+    for registry_entry in [*runtime_entries, *deferred_entries]:
+        binding_identifiers = registry_entry.get("bindingIdentifiers", [])
+        rust_symbols = registry_entry.get("rustSymbols", [])
+
+        for binding_identifier in binding_identifiers:
+            tracked_id = f"binding:{binding_identifier}"
+            if tracked_id in tracked_ids:
+                continue
+            tracked_surface.append(
+                _surface_row_from_registry_only(
+                    binding_identifier=binding_identifier,
+                    rust_symbol=None,
+                    registry_entry=registry_entry,
+                )
+            )
+            tracked_ids.add(tracked_id)
+
+        for rust_symbol in rust_symbols:
+            tracked_id = f"binding:rust:{rust_symbol}"
+            if tracked_id in tracked_ids:
+                continue
+            tracked_surface.append(
+                _surface_row_from_registry_only(
+                    binding_identifier=None,
+                    rust_symbol=rust_symbol,
+                    registry_entry=registry_entry,
+                )
+            )
+            tracked_ids.add(tracked_id)
 
     per_owner_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     classification_counts: dict[str, int] = defaultdict(int)

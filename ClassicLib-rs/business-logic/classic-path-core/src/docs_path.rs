@@ -38,6 +38,8 @@ use crate::IniFile;
 use crate::error::{DocsPathError, DocsPathResult};
 use std::path::{Path, PathBuf};
 
+const FALLOUT_4_STEAM_APP_ID: u32 = 377160;
+
 /// Documents path finder with multi-strategy detection.
 ///
 /// This struct provides game-agnostic documents path detection using multiple
@@ -92,7 +94,7 @@ impl DocsPathFinder {
     /// Attempts to find the documents path in this order:
     /// 1. Use cached path if provided and valid
     /// 2. Query Windows registry (Windows only)
-    /// 3. Use home directory (Linux)
+    /// 3. Use the shared Linux workflow (Proton first, then local share)
     /// 4. Return error if all strategies fail
     ///
     /// # Arguments
@@ -173,9 +175,10 @@ impl DocsPathFinder {
         Ok(docs_path)
     }
 
-    /// Find documents path on Linux using home directory.
+    /// Find documents path on Linux using Proton-first selection plus local-share fallback.
     ///
-    /// Uses the home directory + ".local/share" for Wine/Proton compatibility.
+    /// Uses the home directory to prefer a valid Proton documents path for Fallout 4,
+    /// then falls back to the legacy `.local/share` location.
     ///
     /// # Returns
     ///
@@ -186,15 +189,40 @@ impl DocsPathFinder {
     /// Returns error if home directory cannot be determined or path doesn't exist.
     #[cfg(not(target_os = "windows"))]
     fn find_docs_path_linux(&self) -> DocsPathResult<PathBuf> {
-        use crate::platform::linux::get_home_directory;
+        use crate::platform::linux::{get_home_directory, parse_steam_library_vdf};
 
         let home = get_home_directory()?;
 
-        // For Linux, use Wine's compatibility folder structure
-        let docs_path = home.join(".local/share").join(&self.relative_path);
-        self.validate_docs_path(&docs_path)?;
+        self.find_docs_path_linux_with(&home, parse_steam_library_vdf(FALLOUT_4_STEAM_APP_ID))
+    }
 
-        Ok(docs_path)
+    /// Resolve the Linux documents path from injected home and Steam-library inputs.
+    ///
+    /// This helper keeps the shared Linux selection logic testable on non-Linux hosts.
+    #[doc(hidden)]
+    pub fn find_docs_path_linux_with(
+        &self,
+        home: &Path,
+        steam_library: DocsPathResult<PathBuf>,
+    ) -> DocsPathResult<PathBuf> {
+        use crate::platform::linux::construct_proton_docs_path;
+
+        if let Ok(steam_library) = steam_library {
+            let proton_docs_path = construct_proton_docs_path(
+                &steam_library,
+                FALLOUT_4_STEAM_APP_ID,
+                &self.relative_path,
+            );
+
+            if self.validate_docs_path(&proton_docs_path).is_ok() {
+                return Ok(proton_docs_path);
+            }
+        }
+
+        let local_share_path = home.join(".local/share").join(&self.relative_path);
+        self.validate_docs_path(&local_share_path)?;
+
+        Ok(local_share_path)
     }
 
     /// Validate that a documents path exists and is a directory.

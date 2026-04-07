@@ -24,7 +24,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 #[path = "../../../benches/common/mod.rs"]
 mod common;
 
-use classic_yaml_core::{YamlFormatConfig, YamlOperations};
+use classic_yaml_core::YamlOperations;
 
 // =============================================================================
 // Test Data Generation
@@ -295,53 +295,22 @@ fn yaml_modification_benchmarks(c: &mut Criterion) {
 // Configuration Variants Benchmarks
 // =============================================================================
 
-fn yaml_config_benchmarks(c: &mut Criterion) {
-    let mut group = c.benchmark_group("yaml_config_variants");
+fn yaml_operations_benchmarks(c: &mut Criterion) {
+    let mut group = c.benchmark_group("yaml_operations");
 
     let content = generate_yaml_content(1000);
-
-    // Default config
-    let default_ops = YamlOperations::new();
-
-    // Custom config with different formatting
-    let custom_config = YamlFormatConfig {
-        preserve_quotes: false,
-        width: 80,
-        indent_mapping: 4,
-        indent_sequence: 4,
-        indent_offset: 0,
-    };
-    let custom_ops = YamlOperations::with_config(custom_config);
+    let ops = YamlOperations::new();
 
     group.throughput(Throughput::Bytes(content.len() as u64));
 
-    group.bench_function("parse_with_default_config", |b| {
-        b.iter(|| {
-            default_ops
-                .parse_yaml(&content)
-                .expect("parse should succeed")
-        });
+    group.bench_function("parse", |b| {
+        b.iter(|| ops.parse_yaml(&content).expect("parse should succeed"));
     });
 
-    group.bench_function("parse_with_custom_config", |b| {
-        b.iter(|| {
-            custom_ops
-                .parse_yaml(&content)
-                .expect("parse should succeed")
-        });
-    });
+    let parsed = ops.parse_yaml(&content).expect("parse should succeed");
 
-    // Serialization with different configs
-    let parsed = default_ops
-        .parse_yaml(&content)
-        .expect("parse should succeed");
-
-    group.bench_function("dump_with_default_config", |b| {
-        b.iter(|| default_ops.dump_yaml(&parsed).expect("dump should succeed"));
-    });
-
-    group.bench_function("dump_with_custom_config", |b| {
-        b.iter(|| custom_ops.dump_yaml(&parsed).expect("dump should succeed"));
+    group.bench_function("dump", |b| {
+        b.iter(|| ops.dump_yaml(&parsed).expect("dump should succeed"));
     });
 
     group.finish();
@@ -359,7 +328,7 @@ criterion_group! {
         yaml_serialization_benchmarks,
         yaml_traversal_benchmarks,
         yaml_modification_benchmarks,
-        yaml_config_benchmarks
+        yaml_operations_benchmarks
 }
 
 criterion_main!(benches);

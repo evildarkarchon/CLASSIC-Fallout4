@@ -727,6 +727,17 @@
       "wave": "wave1"
     },
     {
+      "gap_id": "scanlog-055-rust-fcx-reset-error",
+      "owner_module": "scanlog",
+      "ordinal_in_module": 56,
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "rust_symbol": "FcxResetError",
+      "python_module": null,
+      "python_export_path": null,
+      "wave": "wave1"
+    },
+    {
       "gap_id": "version_registry-001",
       "owner_module": "version_registry",
       "ordinal_in_module": 1,
@@ -3112,6 +3123,17 @@
       "python_module": "classic_version_registry",
       "python_export_path": "XseConfig",
       "wave": "wave3"
+    },
+    {
+      "gap_id": "aux-001",
+      "owner_module": "aux",
+      "ordinal_in_module": 1,
+      "gap_type": "python_unmapped",
+      "tier": "tier2",
+      "rust_symbol": null,
+      "python_module": "classic_file_io",
+      "python_export_path": "FileHasher.cache_size",
+      "wave": "wave4"
     }
   ]
 }

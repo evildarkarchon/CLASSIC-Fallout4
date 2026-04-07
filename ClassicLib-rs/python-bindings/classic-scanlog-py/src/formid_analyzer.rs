@@ -5,6 +5,7 @@ use classic_config_core::{CoreModEntry, ModConflictEntry, ModSolutionCriteria, M
 use classic_scanlog_core::FormIDAnalyzerCore;
 use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
 use classic_shared_core::get_runtime;
+use pyo3::exceptions::PyDeprecationWarning;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList};
 
@@ -62,6 +63,7 @@ impl PyFormIDAnalyzerCore {
     #[new]
     #[pyo3(signature = (show_formid_values=false, crashgen_name="".to_string(), important_mods=None, mods_single=None, mods_double=None))]
     pub fn new(
+        py: Python<'_>,
         show_formid_values: bool,
         crashgen_name: String,
         important_mods: Option<&Bound<'_, PyAny>>,
@@ -100,6 +102,14 @@ impl PyFormIDAnalyzerCore {
             .unwrap_or_default();
         let mods_single_entries =
             legacy_mod_map_to_entries(pydict_to_indexmap_str_optional(mods_single));
+        if mods_single.is_some() {
+            PyErr::warn(
+                py,
+                &py.get_type::<PyDeprecationWarning>(),
+                c"Passing mods_single as dict[str, str] is deprecated. Use structured ModSolutionEntry format instead.",
+                1,
+            )?;
+        }
         let mods_double_vec: Vec<ModConflictEntry> = mods_double
             .and_then(|v| v.cast::<PyList>().ok())
             .map(|list| {

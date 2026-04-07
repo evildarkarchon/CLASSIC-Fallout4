@@ -113,15 +113,11 @@ impl PyGpuInfo {
 ///
 /// Detects GPU information from crash log system specifications.
 #[pyclass(name = "GpuDetector")]
-pub struct PyGpuDetector {
-    /// Inner Rust GpuDetector instance (currently unused as methods are static)
-    #[allow(dead_code)]
-    inner: GpuDetector,
-}
+pub struct PyGpuDetector;
 
 impl Default for PyGpuDetector {
     fn default() -> Self {
-        Self::new()
+        Self
     }
 }
 
@@ -130,9 +126,7 @@ impl PyGpuDetector {
     /// Create a new GPU detector instance
     #[new]
     pub fn new() -> Self {
-        Self {
-            inner: GpuDetector::new(),
-        }
+        Self
     }
 
     /// Extract GPU information from system specification

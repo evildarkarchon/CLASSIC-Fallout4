@@ -4,13 +4,34 @@
 //! while leveraging Rust's performance optimizations.
 
 use crate::error::{Result, ScanLogError};
+use aho_corasick::{AhoCorasick, MatchKind};
 use classic_config_core::{
     CoreModEntry, CoreModExclude, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
 };
 use indexmap::IndexMap;
+use quick_cache::sync::Cache;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashSet;
+use std::fmt::Write as _;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
+use xxhash_rust::xxh3::xxh3_64;
+
+// These caches only store matchers whose pattern bodies are derived from caller-provided
+// YAML/config content. Truly constant regexes should compile through their own LazyLock
+// statics, but the single/double/batch hot paths intentionally stay on bounded hash-keyed
+// matcher caches because their alternation bodies vary with mod-list inputs.
+static SINGLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
+static DOUBLE_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
+static BATCH_MATCHER_CACHE: LazyLock<Cache<u64, Arc<Regex>>> = LazyLock::new(|| Cache::new(64));
+static IMPORTANT_MATCHER_CACHE: LazyLock<Cache<u64, Arc<AhoCorasick>>> =
+    LazyLock::new(|| Cache::new(64));
+
+static SINGLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
+static DOUBLE_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
+static BATCH_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
+static IMPORTANT_MATCHER_COMPILES: AtomicU64 = AtomicU64::new(0);
 
 /// Convert IndexMap keys to lowercase, preserving insertion order
 fn convert_indexmap_to_lowercase(data: &IndexMap<String, String>) -> IndexMap<String, String> {
@@ -139,26 +160,13 @@ pub fn detect_mods_single(
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
     // IndexMap preserves YAML key order for Python parity
-    let yaml_dict_lower = convert_indexmap_to_lowercase(&yaml_dict);
+    let (yaml_dict_lower, combined_pattern) = get_single_matcher(&yaml_dict)?;
     // IndexMap preserves load order - first match wins for Python parity
     let crashlog_plugins_lower = convert_indexmap_to_lowercase(&crashlog_plugins);
 
     if yaml_dict_lower.is_empty() {
         return Ok(vec![]);
     }
-
-    // Build patterns for efficient matching - longest first for specificity
-    let mut mod_items_sorted: Vec<(String, String)> = yaml_dict_lower.clone().into_iter().collect();
-    mod_items_sorted.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
-
-    let mod_patterns: Vec<String> = mod_items_sorted
-        .iter()
-        .map(|(mod_name, _)| regex::escape(mod_name))
-        .collect();
-
-    // Create a single compiled pattern with alternation for efficient matching
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
     // Track matching plugins for each mod - IndexMap preserves detection order
     let mut mod_matches: IndexMap<String, String> = IndexMap::new();
@@ -415,19 +423,7 @@ pub fn detect_mods_double(
     }
 
     let crashlog_plugins_lower = convert_indexmap_to_lowercase(&crashlog_plugins);
-
-    let mut all_mod_names: HashSet<String> = HashSet::new();
-    for entry in entries {
-        all_mod_names.insert(entry.mod_a.to_lowercase());
-        all_mod_names.insert(entry.mod_b.to_lowercase());
-    }
-
-    let mod_patterns: Vec<String> = all_mod_names
-        .iter()
-        .map(|mod_name| regex::escape(mod_name))
-        .collect();
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
+    let combined_pattern = get_double_matcher(entries)?;
 
     let mut mods_present: HashSet<String> = HashSet::new();
     for plugin_name in crashlog_plugins_lower.keys() {
@@ -504,17 +500,122 @@ pub fn detect_mods_important(
     user_gpu: Option<&str>,
     xse_modules: &HashSet<String>,
 ) -> Result<Vec<String>> {
+    detect_mods_important_aho(entries, crashlog_plugins, user_gpu, xse_modules)
+}
+
+fn build_important_mod_haystack_with_plugin_set(
+    crashlog_plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+    include_plugin_name_set: bool,
+) -> (HashSet<String>, String) {
+    let estimated_len = crashlog_plugins.keys().map(String::len).sum::<usize>()
+        + xse_modules.iter().map(String::len).sum::<usize>()
+        + crashlog_plugins.len()
+        + xse_modules.len();
+    let mut plugin_names_lower_set = if include_plugin_name_set {
+        HashSet::with_capacity(crashlog_plugins.len())
+    } else {
+        HashSet::new()
+    };
+    let mut all_text = String::with_capacity(estimated_len);
+
+    for plugin_name in crashlog_plugins.keys() {
+        let plugin_name_lower = plugin_name.to_lowercase();
+        if include_plugin_name_set {
+            plugin_names_lower_set.insert(plugin_name_lower.clone());
+        }
+        if !all_text.is_empty() {
+            all_text.push(' ');
+        }
+        all_text.push_str(&plugin_name_lower);
+    }
+
+    for module_name in xse_modules {
+        if !all_text.is_empty() {
+            all_text.push(' ');
+        }
+        all_text.push_str(&module_name.to_lowercase());
+    }
+
+    (plugin_names_lower_set, all_text)
+}
+
+fn important_matcher_tokens(entries: &[CoreModEntry]) -> Vec<String> {
+    entries
+        .iter()
+        .map(|entry| entry.detect.to_lowercase())
+        .collect()
+}
+
+fn compile_cached_important_matcher(matcher_tokens: &[String]) -> Result<Arc<AhoCorasick>> {
+    let cache_key = hash_normalized_matcher_tokens(matcher_tokens);
+    if let Some(cached) = IMPORTANT_MATCHER_CACHE.get(&cache_key) {
+        return Ok(cached);
+    }
+
+    let compiled = Arc::new(
+        AhoCorasick::builder()
+            .match_kind(MatchKind::LeftmostLongest)
+            .build(matcher_tokens)
+            .map_err(|e| ScanLogError::InvalidInput(format!("Aho-Corasick error: {}", e)))?,
+    );
+
+    IMPORTANT_MATCHER_COMPILES.fetch_add(1, Ordering::Relaxed);
+    IMPORTANT_MATCHER_CACHE.insert(cache_key, compiled.clone());
+    Ok(compiled)
+}
+
+fn get_important_matcher(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+    let matcher_tokens = important_matcher_tokens(entries);
+    compile_cached_important_matcher(&matcher_tokens)
+}
+
+fn important_match_ids(matcher: &AhoCorasick, haystack: &str) -> HashSet<usize> {
+    matcher
+        .find_iter(haystack)
+        .map(|mat| mat.pattern().as_usize())
+        .collect()
+}
+
+#[doc(hidden)]
+pub fn build_important_mod_haystack_for_bench(
+    crashlog_plugins: &IndexMap<String, String>,
+    xse_modules: &HashSet<String>,
+) -> String {
+    build_important_mod_haystack_with_plugin_set(crashlog_plugins, xse_modules, false).1
+}
+
+#[doc(hidden)]
+pub fn build_important_matcher_for_bench(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+    get_important_matcher(entries)
+}
+
+#[doc(hidden)]
+pub fn reset_important_matcher_cache_for_bench() {
+    IMPORTANT_MATCHER_CACHE.clear();
+    IMPORTANT_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+}
+
+#[doc(hidden)]
+pub fn important_matcher_compile_count_for_bench() -> u64 {
+    IMPORTANT_MATCHER_COMPILES.load(Ordering::Relaxed)
+}
+
+#[cfg(test)]
+fn detect_mods_important_legacy(
+    entries: &[CoreModEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+    user_gpu: Option<&str>,
+    xse_modules: &HashSet<String>,
+) -> Result<Vec<String>> {
     let mut lines = Vec::new();
 
-    let plugin_names_lower: Vec<String> =
-        crashlog_plugins.keys().map(|k| k.to_lowercase()).collect();
-    let plugin_names_lower_set: HashSet<String> = plugin_names_lower.iter().cloned().collect();
-    let plugins_text = plugin_names_lower.join(" ");
-
-    let module_names_lower: Vec<String> = xse_modules.iter().map(|m| m.to_lowercase()).collect();
-    let modules_text = module_names_lower.join(" ");
-
-    let all_text = format!("{} {}", plugins_text, modules_text);
+    let needs_plugin_name_set = entries.iter().any(|entry| entry.exclude_when.is_some());
+    let (plugin_names_lower_set, all_text) = build_important_mod_haystack_with_plugin_set(
+        crashlog_plugins,
+        xse_modules,
+        needs_plugin_name_set,
+    );
 
     for entry in entries {
         if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
@@ -528,6 +629,87 @@ pub fn detect_mods_important(
         .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
         let mod_found = pattern.is_match(&all_text);
+
+        // gpu_mismatch: entry is for a specific GPU that the user does NOT have
+        let gpu_mismatch = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| !mod_gpu.eq_ignore_ascii_case(ug)));
+
+        // gpu_matches_user: entry is for a specific GPU that the user DOES have
+        let gpu_matches_user = entry
+            .gpu
+            .as_ref()
+            .is_some_and(|mod_gpu| user_gpu.is_some_and(|ug| mod_gpu.eq_ignore_ascii_case(ug)));
+
+        if mod_found {
+            if gpu_mismatch {
+                if let Some(ref warning) = entry.gpu_mismatch_warning {
+                    let warning_md = warning.trim_end().replace('\n', "\n\n");
+                    lines.push(format!("❓ {}\n\n", warning_md));
+                } else {
+                    let gpu_label = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
+                    lines.push(format!(
+                        "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
+                        entry.name, gpu_label
+                    ));
+                    lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
+                }
+            } else {
+                lines.push(format!("✔️ {} is installed!\n\n", entry.name));
+            }
+        } else if user_gpu.is_some() && (entry.gpu.is_none() || gpu_matches_user) {
+            // Show "not installed" for universal mods and mods matching the user's GPU
+            if !entry.description.is_empty() {
+                let desc_lines: Vec<&str> = entry.description.trim_end().lines().collect();
+                let first_line = desc_lines.first().map(|s| s.trim()).unwrap_or("");
+
+                lines.push(format!(
+                    "❌ {} is not installed! {}  \n",
+                    entry.name, first_line
+                ));
+
+                for line in desc_lines.iter().skip(1) {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() {
+                        lines.push(format!("{}  \n", trimmed));
+                    }
+                }
+                lines.push("\n".to_string());
+            }
+        }
+    }
+
+    Ok(lines)
+}
+
+fn detect_mods_important_aho(
+    entries: &[CoreModEntry],
+    crashlog_plugins: &IndexMap<String, String>,
+    user_gpu: Option<&str>,
+    xse_modules: &HashSet<String>,
+) -> Result<Vec<String>> {
+    let mut lines = Vec::new();
+
+    if entries.is_empty() {
+        return Ok(lines);
+    }
+
+    let needs_plugin_name_set = entries.iter().any(|entry| entry.exclude_when.is_some());
+    let (plugin_names_lower_set, all_text) = build_important_mod_haystack_with_plugin_set(
+        crashlog_plugins,
+        xse_modules,
+        needs_plugin_name_set,
+    );
+    let matcher = get_important_matcher(entries)?;
+    let matched_pattern_ids = important_match_ids(matcher.as_ref(), &all_text);
+
+    for (pattern_index, entry) in entries.iter().enumerate() {
+        if is_excluded(&entry.exclude_when, &plugin_names_lower_set) {
+            continue;
+        }
+
+        let mod_found = matched_pattern_ids.contains(&pattern_index);
 
         // gpu_mismatch: entry is for a specific GPU that the user does NOT have
         let gpu_mismatch = entry
@@ -660,23 +842,11 @@ pub fn detect_mods_batch(
     crashlog_plugins_list: Vec<IndexMap<String, String>>,
 ) -> Result<Vec<Vec<String>>> {
     // IndexMap preserves YAML key order for Python parity
-    let yaml_dict_lower = convert_indexmap_to_lowercase(&yaml_dict);
+    let (yaml_dict_lower, combined_pattern) = get_batch_matcher(&yaml_dict)?;
 
     if yaml_dict_lower.is_empty() {
         return Ok(vec![vec![]; crashlog_plugins_list.len()]);
     }
-
-    // Build patterns for efficient matching - longest first for specificity
-    let mut mod_items_sorted: Vec<(String, String)> = yaml_dict_lower.clone().into_iter().collect();
-    mod_items_sorted.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
-
-    let mod_patterns: Vec<String> = mod_items_sorted
-        .iter()
-        .map(|(mod_name, _)| regex::escape(mod_name))
-        .collect();
-
-    let combined_pattern = Regex::new(&format!("(?i){}", mod_patterns.join("|")))
-        .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?;
 
     // Process crash logs in parallel
     let results: Vec<Vec<String>> = crashlog_plugins_list
@@ -753,10 +923,170 @@ pub fn detect_mods_batch(
     Ok(results)
 }
 
+fn build_normalized_single_matcher_inputs(
+    yaml_dict: &IndexMap<String, String>,
+) -> IndexMap<String, String> {
+    convert_indexmap_to_lowercase(yaml_dict)
+}
+
+fn sorted_single_matcher_tokens(yaml_dict_lower: &IndexMap<String, String>) -> Vec<String> {
+    let mut mod_names: Vec<String> = yaml_dict_lower.keys().cloned().collect();
+    mod_names.sort_by_key(|mod_name| std::cmp::Reverse(mod_name.len()));
+    mod_names
+}
+
+fn sorted_double_matcher_tokens(entries: &[ModConflictEntry]) -> Vec<String> {
+    let mut mod_names: Vec<String> = entries
+        .iter()
+        .flat_map(|entry| [entry.mod_a.to_lowercase(), entry.mod_b.to_lowercase()])
+        .collect();
+    mod_names.sort();
+    mod_names.dedup();
+    mod_names.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
+    mod_names
+}
+
+fn hash_normalized_matcher_tokens(tokens: &[String]) -> u64 {
+    let mut normalized = String::new();
+    for token in tokens {
+        let _ = writeln!(&mut normalized, "{}:{token}", token.len());
+    }
+    xxh3_64(normalized.as_bytes())
+}
+
+fn compile_cached_matcher(
+    cache: &Cache<u64, Arc<Regex>>,
+    cache_key: u64,
+    matcher_tokens: &[String],
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
+    if let Some(cached) = cache.get(&cache_key) {
+        return Ok(cached);
+    }
+
+    let pattern = format!(
+        "(?i){}",
+        matcher_tokens
+            .iter()
+            .map(|mod_name| regex::escape(mod_name))
+            .collect::<Vec<_>>()
+            .join("|")
+    );
+    let compiled = Arc::new(
+        Regex::new(&pattern)
+            .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
+    );
+
+    compile_counter.fetch_add(1, Ordering::Relaxed);
+    cache.insert(cache_key, compiled.clone());
+    Ok(compiled)
+}
+
+fn get_single_matcher(
+    yaml_dict: &IndexMap<String, String>,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
+    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    let matcher = compile_cached_matcher(
+        &SINGLE_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &SINGLE_MATCHER_COMPILES,
+    )?;
+    Ok((yaml_dict_lower, matcher))
+}
+
+fn get_double_matcher(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
+    let matcher_tokens = sorted_double_matcher_tokens(entries);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    compile_cached_matcher(
+        &DOUBLE_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &DOUBLE_MATCHER_COMPILES,
+    )
+}
+
+fn get_batch_matcher(
+    yaml_dict: &IndexMap<String, String>,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
+    let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
+    let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
+    let matcher = compile_cached_matcher(
+        &BATCH_MATCHER_CACHE,
+        cache_key,
+        &matcher_tokens,
+        &BATCH_MATCHER_COMPILES,
+    )?;
+    Ok((yaml_dict_lower, matcher))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{LogParser, plugin_analyzer::PluginAnalyzer, segment_key};
     use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
+    use serial_test::serial;
+    use std::sync::Arc as StdArc;
+    use std::sync::Arc;
+
+    const IMPORTANT_MODS_FIXTURE_LOG: &str =
+        include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
+
+    fn reset_matcher_caches_for_tests() {
+        SINGLE_MATCHER_CACHE.clear();
+        DOUBLE_MATCHER_CACHE.clear();
+        BATCH_MATCHER_CACHE.clear();
+        IMPORTANT_MATCHER_CACHE.clear();
+        SINGLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+        DOUBLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+        BATCH_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+        IMPORTANT_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+    }
+
+    fn single_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
+        let (_, matcher) = get_single_matcher(yaml_dict)?;
+        Ok(matcher)
+    }
+
+    fn double_matcher_for_tests(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
+        get_double_matcher(entries)
+    }
+
+    fn batch_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
+        let (_, matcher) = get_batch_matcher(yaml_dict)?;
+        Ok(matcher)
+    }
+
+    fn single_cache_size_for_tests() -> usize {
+        SINGLE_MATCHER_CACHE.len()
+    }
+
+    fn single_cache_capacity_for_tests() -> usize {
+        SINGLE_MATCHER_CACHE.capacity() as usize
+    }
+
+    fn single_compile_count_for_tests() -> u64 {
+        SINGLE_MATCHER_COMPILES.load(Ordering::Relaxed)
+    }
+
+    fn double_compile_count_for_tests() -> u64 {
+        DOUBLE_MATCHER_COMPILES.load(Ordering::Relaxed)
+    }
+
+    fn double_compile_snapshot_for_tests() -> u64 {
+        double_compile_count_for_tests()
+    }
+
+    fn important_matcher_for_tests(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+        get_important_matcher(entries)
+    }
+
+    fn important_compile_count_for_tests() -> u64 {
+        IMPORTANT_MATCHER_COMPILES.load(Ordering::Relaxed)
+    }
 
     // ============================================
     // Helper function tests
@@ -897,6 +1227,47 @@ mod tests {
         let output = result.join("");
         // The longer pattern should match
         assert!(output.contains("Mod Extended") || output.contains("modextended"));
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_single_reuses_cached_matcher_for_same_normalized_input() {
+        let mut yaml_dict = IndexMap::new();
+        yaml_dict.insert(
+            "RepeatableMod".to_string(),
+            "Repeatable Mod\nCache me once.".to_string(),
+        );
+        yaml_dict.insert(
+            "RepeatableModExtended".to_string(),
+            "Repeatable Mod Extended\nStill cache me once.".to_string(),
+        );
+
+        reset_matcher_caches_for_tests();
+
+        let first = single_matcher_for_tests(&yaml_dict).unwrap();
+        let second = single_matcher_for_tests(&yaml_dict).unwrap();
+
+        assert!(Arc::ptr_eq(&first, &second));
+        assert_eq!(single_compile_count_for_tests(), 1);
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_single_cache_stays_bounded_without_victim_assertions() {
+        reset_matcher_caches_for_tests();
+
+        for index in 0..70 {
+            let mut yaml_dict = IndexMap::new();
+            yaml_dict.insert(
+                format!("bounded-single-{index}"),
+                format!("Bounded Single {index}\nKeep cache bounded."),
+            );
+            let _ = single_matcher_for_tests(&yaml_dict).unwrap();
+        }
+
+        assert_eq!(single_cache_capacity_for_tests(), 64);
+        assert!(single_cache_size_for_tests() <= single_cache_capacity_for_tests());
+        assert!(single_compile_count_for_tests() >= 64);
     }
 
     #[test]
@@ -1062,7 +1433,10 @@ mod tests {
         }
     }
 
+    // Keep detect_mods_double coverage serial so shared matcher compile counters stay scoped
+    // to each regression proof during grouped test runs.
     #[test]
+    #[serial]
     fn test_detect_mods_double_empty() {
         let entries: Vec<ModConflictEntry> = Vec::new();
         let plugins: IndexMap<String, String> = IndexMap::new();
@@ -1072,6 +1446,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_no_conflict() {
         let entries = vec![make_conflict("moda", "modb")];
 
@@ -1083,6 +1458,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_conflict_detected() {
         let entries = vec![make_conflict("moda", "modb")];
 
@@ -1098,6 +1474,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_case_insensitive() {
         let entries = vec![make_conflict("moda", "modb")];
 
@@ -1110,6 +1487,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_with_link() {
         let entries = vec![ModConflictEntry {
             mod_a: "modx".to_string(),
@@ -1131,6 +1509,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_detect_mods_double_multiple_conflicts_single_header() {
         let entries = vec![make_conflict("moda", "modb"), make_conflict("modc", "modd")];
 
@@ -1164,6 +1543,24 @@ mod tests {
         );
     }
 
+    #[test]
+    #[serial]
+    fn test_detect_mods_double_reuses_cached_matcher_for_same_conflict_set() {
+        let entries = vec![
+            make_conflict("repeat-double-a", "repeat-double-b"),
+            make_conflict("repeat-double-c", "repeat-double-d"),
+        ];
+
+        reset_matcher_caches_for_tests();
+        let starting_compiles = double_compile_snapshot_for_tests();
+
+        let first = double_matcher_for_tests(&entries).unwrap();
+        let second = double_matcher_for_tests(&entries).unwrap();
+
+        assert!(Arc::ptr_eq(&first, &second));
+        assert_eq!(double_compile_count_for_tests() - starting_compiles, 1);
+    }
+
     // ============================================
     // detect_mods_important tests
     // ============================================
@@ -1177,6 +1574,181 @@ mod tests {
             gpu_mismatch_warning: None,
             exclude_when: None,
         }
+    }
+
+    fn important_fixture_plugins() -> IndexMap<String, String> {
+        let parser = LogParser::new(None).expect("fixture parser should build");
+        let fixture_lines: Vec<StdArc<str>> = IMPORTANT_MODS_FIXTURE_LOG
+            .lines()
+            .map(StdArc::<str>::from)
+            .collect();
+        let sections = parser.parse_all_sections_arc(&fixture_lines);
+        let plugin_lines: Vec<String> = sections
+            .get(segment_key::PLUGINS)
+            .expect("fixture should include a plugins section")
+            .iter()
+            .map(|line| line.to_string())
+            .collect();
+        let analyzer = PluginAnalyzer::new(
+            vec![],
+            vec![],
+            "Buffout 4".to_string(),
+            "1.10.163".to_string(),
+            "1.2.72".to_string(),
+        )
+        .expect("fixture plugin analyzer should build");
+        let (plugins, _limit_triggered, _limit_disabled) = analyzer
+            .loadorder_scan_log(&plugin_lines, None, None)
+            .expect("fixture plugins should parse");
+        assert!(
+            plugins.contains_key("DLCUltraHighResolution.esm"),
+            "fixture should contain a known plugin exercised by parity coverage"
+        );
+        plugins
+    }
+
+    fn parity_fixture_entries() -> Vec<CoreModEntry> {
+        vec![
+            make_core_entry(
+                "DLCUltraHighResolution.esm",
+                "High Resolution DLC",
+                "Disable the official texture pack.\nIt causes crashes and stutter.",
+            ),
+            CoreModEntry {
+                detect: "skip-me.esp".to_string(),
+                name: "Skipped Entry".to_string(),
+                description: "This line should stay excluded.".to_string(),
+                gpu: None,
+                gpu_mismatch_warning: None,
+                exclude_when: Some(CoreModExclude::PluginAny(vec![
+                    "DLCUltraHighResolution.esm".to_string(),
+                ])),
+            },
+            make_core_entry(
+                "EngineFixes.esp",
+                "Engine Fixes",
+                "Highly recommended for stability.\nLink: https://example.com/mod",
+            ),
+        ]
+    }
+
+    #[test]
+    fn test_detect_mods_important_fixture_parity_matches_legacy_and_aho_paths() {
+        let entries = parity_fixture_entries();
+        let plugins = important_fixture_plugins();
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let legacy =
+            detect_mods_important_legacy(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+        let aho = detect_mods_important_aho(&entries, &plugins, Some("amd"), &xse_modules).unwrap();
+
+        assert_eq!(aho, legacy);
+    }
+
+    #[test]
+    fn test_detect_mods_important_aho_prefers_leftmost_longest_overlap_match() {
+        let entries = vec![
+            make_core_entry("f4se", "Short Match", "Short overlap should lose."),
+            make_core_entry(
+                "f4se_plugin_preloader",
+                "Long Match",
+                "Long overlap should win.",
+            ),
+        ];
+        let plugins: IndexMap<String, String> = IndexMap::new();
+        let xse_modules = HashSet::from(["f4se_plugin_preloader.dll".to_string()]);
+
+        let output = detect_mods_important_aho(&entries, &plugins, None, &xse_modules)
+            .unwrap()
+            .join("");
+
+        assert!(output.contains("Long Match is installed"));
+        assert!(!output.contains("Short Match is installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_reuses_cached_matcher_for_same_detect_literals() {
+        let entries = vec![
+            make_core_entry(
+                "bakascrapheap",
+                "Baka ScrapHeap",
+                "Synthetic important-mod literal benchmark token.",
+            ),
+            make_core_entry(
+                "x-cell-fo4.dll",
+                "X-Cell",
+                "Synthetic XSE-module benchmark token.",
+            ),
+        ];
+
+        reset_matcher_caches_for_tests();
+        let starting_compiles = important_compile_count_for_tests();
+
+        let first = important_matcher_for_tests(&entries).unwrap();
+        let second = important_matcher_for_tests(&entries).unwrap();
+
+        assert!(Arc::ptr_eq(&first, &second));
+        assert!(important_compile_count_for_tests() > starting_compiles);
+    }
+
+    #[test]
+    fn test_detect_mods_important_fixture_entries_keep_gpu_exclude_and_not_installed_quirks() {
+        let plugins = important_fixture_plugins();
+        let xse_modules: HashSet<String> = HashSet::new();
+        let entries = vec![
+            CoreModEntry {
+                detect: "DLCUltraHighResolution.esm".to_string(),
+                name: "NVIDIA High Resolution DLC".to_string(),
+                description: "For NVIDIA GPUs only!".to_string(),
+                gpu: Some("nvidia".to_string()),
+                gpu_mismatch_warning: None,
+                exclude_when: None,
+            },
+            CoreModEntry {
+                detect: "skip-me.esp".to_string(),
+                name: "Skipped Entry".to_string(),
+                description: "This line should stay excluded.".to_string(),
+                gpu: None,
+                gpu_mismatch_warning: None,
+                exclude_when: Some(CoreModExclude::PluginAny(vec![
+                    "DLCUltraHighResolution.esm".to_string(),
+                ])),
+            },
+            make_core_entry(
+                "EngineFixes.esp",
+                "Engine Fixes",
+                "Highly recommended for stability.\nLink: https://example.com/mod",
+            ),
+        ];
+
+        let output = detect_mods_important_aho(&entries, &plugins, Some("amd"), &xse_modules)
+            .unwrap()
+            .join("");
+
+        assert!(output.contains("❓ NVIDIA High Resolution DLC is installed"));
+        assert!(!output.contains("Skipped Entry"));
+        assert!(
+            output.contains("❌ Engine Fixes is not installed! Highly recommended for stability.")
+        );
+        assert!(output.contains("Link: https://example.com/mod"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_fixture_detect_values_match_as_literals_not_regex() {
+        let entries = vec![make_core_entry(
+            "DLCUltraHighResolution.esm",
+            "High Resolution DLC",
+            "Literal dots should stay literal.",
+        )];
+        let mut plugins = IndexMap::new();
+        plugins.insert("DLCUltraHighResolutionXesm".to_string(), "01".to_string());
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let legacy = detect_mods_important_legacy(&entries, &plugins, None, &xse_modules).unwrap();
+        let aho = detect_mods_important_aho(&entries, &plugins, None, &xse_modules).unwrap();
+
+        assert!(legacy.is_empty());
+        assert!(aho.is_empty());
     }
 
     #[test]
@@ -1501,5 +2073,40 @@ mod tests {
         // Second result should be about Mod2
         let output2 = result[1].join("");
         assert!(output2.contains("[02]") || output2.contains("Mod 2"));
+    }
+
+    #[test]
+    #[serial]
+    fn test_detect_mods_batch_reuses_cached_matcher_across_repeated_invocations() {
+        let mut yaml_dict = IndexMap::new();
+        yaml_dict.insert(
+            "repeatable-batch".to_string(),
+            "Repeatable Batch\nFirst warning.".to_string(),
+        );
+        yaml_dict.insert(
+            "repeatable-batch-extended".to_string(),
+            "Repeatable Batch Extended\nSecond warning.".to_string(),
+        );
+
+        let mut log1 = IndexMap::new();
+        log1.insert("Repeatable-Batch.esp".to_string(), "0A".to_string());
+
+        let mut log2 = IndexMap::new();
+        log2.insert(
+            "Repeatable-Batch-Extended.esp".to_string(),
+            "0B".to_string(),
+        );
+
+        let logs = vec![log1, log2];
+
+        reset_matcher_caches_for_tests();
+
+        let first = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
+        let cached_after_first = batch_matcher_for_tests(&yaml_dict).unwrap();
+        let second = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
+        let cached_after_second = batch_matcher_for_tests(&yaml_dict).unwrap();
+
+        assert_eq!(first, second);
+        assert!(Arc::ptr_eq(&cached_after_first, &cached_after_second));
     }
 }

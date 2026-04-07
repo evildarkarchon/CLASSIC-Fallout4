@@ -1,651 +1,513 @@
-# Feature Landscape: Slint GUI for CLASSIC
+# Feature Landscape: Codebase Health Milestone
 
-**Domain:** Desktop crash log analyzer GUI
-**Researched:** 2026-02-05
-**Overall Confidence:** MEDIUM
+**Domain:** Rust codebase health, tech debt removal, performance hardening, binding parity
+**Researched:** 2026-04-04
+**Overall Confidence:** HIGH
 
 ## Executive Summary
 
-Slint provides a solid foundation for building the CLASSIC GUI with native Rust integration. The existing Qt GUI requires:
-- Tabbed interface (4 tabs)
-- Crash log scanning with progress feedback
-- Markdown report viewing
-- Report list with context menus
-- Settings dialog with multiple tabs
-- Dark theme styling
-
-Slint covers most table stakes features but has notable gaps in markdown rendering and file dialogs that require external libraries or custom implementations.
+This milestone addresses every concern surfaced during the codebase audit of CLASSIC's 19 business-logic crates, 3 binding surfaces (CXX, PyO3, NAPI-RS), and supporting infrastructure. The features are not user-facing -- they are engineering health improvements that make the codebase more maintainable, performant, and correct. The features naturally cluster into six concern categories: dead code removal, deprecated API migration, singleton/state management, cache eviction, regex optimization, and binding parity. All features are scoped to resolve specific audit findings.
 
 ---
 
 ## Table Stakes
 
-Features users expect. Missing = product feels incomplete.
+Features that **must** be completed or the codebase health goal is unmet. If any of these are skipped, the audit remains open.
 
-### TabWidget (Tabbed Interface)
+### TS-1: Dead Code Removal
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Built-in `TabWidget` with `Tab` children |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Remove all `#[allow(dead_code)]` items identified in the audit. Every one of these hides potential future dead-code warnings and signals unfinished work.
 
-**Notes:** Native TabWidget with `current-index` property for programmatic tab switching. Maps directly to existing Qt tab structure (MAIN OPTIONS, FILE BACKUP, ARTICLES, RESULTS).
+| Item | Location | Complexity | Notes |
+|------|----------|------------|-------|
+| `SEGMENT_BOUNDARIES` static | `classic-scanlog-core/src/parser.rs:70` | Low | Pure deletion. No callers. Named-section parsing via `parse_all_sections_arc` is canonical. |
+| `YamlFormatConfig` struct + field | `classic-yaml-core/src/lib.rs:507` | Low | Reserved-for-future field never shipped. Remove struct and `format_config` field from `YamlOperations`. |
+| `PluginAnalyzer.case_cache` field | `classic-scanlog-core/src/plugin_analyzer.rs:67` | Low | `Arc<DashMap>` allocated per orchestrator but never written or read. Remove field. |
+| `PyGpuDetector.inner` field | `classic-scanlog-py/src/gpu_detector.rs:118` | Low | `GpuDetector` methods are static; binding holds unused instance. Convert to stateless Python class. |
 
-**Example:**
-```slint
-TabWidget {
-    Tab { title: "MAIN OPTIONS"; /* content */ }
-    Tab { title: "FILE BACKUP"; /* content */ }
-    Tab { title: "ARTICLES"; /* content */ }
-    Tab { title: "RESULTS"; /* content */ }
-}
-```
+**Best practice for dead code across FFI boundaries:** Before removing any public Rust symbol, verify it does not appear in:
+1. The Python parity surface (`rust_api_surface.json`, `python_api_surface.json`)
+2. The Node parity surface (NAPI `#[napi]` exports)
+3. The C++ bridge (`#[cxx::bridge]` declarations)
 
-**Sources:**
-- [TabWidget Documentation](https://releases.slint.dev/1.5.1/docs/slint/src/language/widgets/tabwidget)
+For this milestone, all four items are crate-internal or binding-internal -- none are cross-boundary public APIs. Deletion is safe without deprecation cycles.
+
+**Confidence:** HIGH -- all items verified in source with `#[allow(dead_code)]` annotations.
 
 ---
 
-### Buttons and Standard Controls
+### TS-2: Deprecated API Migration and Removal
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Built-in Button, CheckBox, ComboBox, SpinBox, LineEdit |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Complete the migration of all callers away from deprecated APIs, then delete the deprecated methods.
 
-**Current Qt Widgets to Map:**
-- QPushButton -> Button
-- QCheckBox -> CheckBox
-- QComboBox -> ComboBox
-- QSpinBox -> SpinBox
-- QLineEdit -> LineEdit
-- QTextEdit -> TextEdit
+| Deprecated API | Deprecation Version | Remaining Callers | Migration Target | Complexity |
+|----------------|--------------------|--------------------|------------------|------------|
+| `LogParser::parse_segments` | 9.0.0 | None (shim only) | `parse_all_sections_arc` | Low |
+| `LogParser::parse_segments_parallel` | 9.0.0 | Python binding `classic-scanlog-py/src/parser.rs:98` | `parse_all_sections_arc` | Medium |
+| `CrashgenVersion::is_outdated` | 0.2.0 | Tests (with `#[allow(deprecated)]`), Python `generate_suspect_section` legacy path | `check_version_status()` | Medium |
 
-**Notes:** All standard widgets available with consistent styling across Fluent/Material themes.
+**Migration approach:**
 
-**Sources:**
-- [Widgets Documentation](https://releases.slint.dev/1.1.0/docs/slint/src/builtins/widgets)
+1. **Python binding `parse_segments_parallel` caller:** Replace with a wrapper that calls `parse_all_sections_arc` and reshapes the return value to match the Python-facing type signature. The Python binding type contract (`classic_scanlog.pyi`) must be updated simultaneously.
 
----
+2. **Python `generate_suspect_section` legacy method:** Migrate to call `generate_suspect_section_header` + `generate_suspect_found_footer` separately. Mark the Python method as deprecated in the `.pyi` stub before removal.
 
-### Progress Indicator
+3. **Test callers of `is_outdated`:** Rewrite tests to exercise `check_version_status()` instead. Delete `#[allow(deprecated)]` guards.
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Built-in `ProgressIndicator` |
-| **Complexity** | MEDIUM (async updates require specific patterns) |
-| **Status** | AVAILABLE |
+4. **Final removal:** After all callers are migrated, delete the deprecated methods. The crate-level lint `deprecated = "deny"` (already set in `classic-scanlog-core/Cargo.toml`) will prevent any new `#[allow(deprecated)]` from sneaking back.
 
-**Current Usage:** Qt progress dialogs during scanning operations.
-
-**Slint Pattern for Async Updates:**
-```rust
-// Use upgrade_in_event_loop or channel communication
-let weak = ui.as_weak();
-tokio::spawn(async move {
-    // ... scanning work ...
-    weak.upgrade_in_event_loop(|ui| {
-        ui.set_scan_progress(0.5); // 50%
-    });
-});
-```
-
-**Sources:**
-- [ProgressIndicator Discussion](https://github.com/slint-ui/slint/discussions/8466)
-- [Async Progress Updates](https://github.com/slint-ui/slint/discussions/4175)
+**Confidence:** HIGH -- all callers are enumerated in CONCERNS.md and verified in source.
 
 ---
 
-### Dark Theme Styling
+### TS-3: Legacy Settings Fallback Elimination
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Built-in dark variants for Fluent and Material styles |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Eliminate the `scan_all_settings_legacy_bucketed` code path in `SettingsValidator`.
 
-**Options:**
-- `fluent-dark` - Windows-style dark theme
-- `material-dark` - Material Design dark theme
+| Aspect | Detail |
+|--------|--------|
+| **Current state** | `scan_all_settings` falls back to legacy path when `CrashgenEntry` is `None` |
+| **Risk** | Two structurally different validation paths produce inconsistent results |
+| **Complexity** | Medium |
 
-**Implementation:** Set at compile time or detect system preference automatically.
+**Approach:**
+1. Add a tracing warning when the legacy path activates (immediate, enables detection).
+2. Add an assertion test that standard production crashgen configs never hit the legacy path.
+3. Audit all config sources to confirm `CrashgenEntry` is always populated for production YAML files.
+4. Once confirmed, gate the legacy path behind a `#[deprecated]` marker, then remove it.
 
-**Current Qt Style:** Custom CSS-like stylesheet (DARK_MODE constant) with colors:
-- Background: #2b2b2b
-- Widget: #3c3c3c
-- Borders: #5c5c5c
-- Text: #ffffff
-- Accent: #0078d4
-
-**Sources:**
-- [Style Selection](https://releases.slint.dev/1.5.1/docs/slint/src/advanced/style)
+**Confidence:** HIGH -- the code path is clearly identified and the structured `CrashgenEntry` approach is canonical.
 
 ---
 
-### Report List (ListView)
+### TS-4: Python FormID Legacy Map Deprecation Warning
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Built-in `ListView` with virtualization |
-| **Complexity** | MEDIUM |
-| **Status** | AVAILABLE (with caveats) |
+Add a deprecation warning when `PyFormIDAnalyzerCore::new` receives `mods_single` as a plain `PyDict` (legacy map format) instead of the structured `ModSolutionEntry` sequence.
 
-**Current Usage:** QListWidget showing scan reports (*-AUTOSCAN.md files).
+| Aspect | Detail |
+|--------|--------|
+| **Current state** | `legacy_mod_map_to_entries()` silently converts old format |
+| **Target state** | Emit `DeprecationWarning` via `PyErr::warn` when legacy dict detected |
+| **Complexity** | Low |
 
-**Slint Strengths:**
-- Virtualization: Only visible items instantiated
-- Handles 50M+ items with recent optimizations
+**Approach:** Use PyO3's `PyErr::warn(py, pyo3::exceptions::PyDeprecationWarning, "...")` at the detection point. Do NOT remove the legacy path in this milestone -- the constraint says "deprecation warning first, not immediate removal."
 
-**Slint Concerns:**
-- Flickering reported with rapid content updates
-- Destruction performance issues with large lists
-- May need custom optimization for 10K+ items
-
-**Pattern:**
-```slint
-ListView {
-    for report in reports: Rectangle {
-        Text { text: report.name; }
-    }
-}
-```
-
-**Sources:**
-- [ListView Performance](https://github.com/slint-ui/slint/discussions/7986)
-- [Layout Optimization PR](https://github.com/slint-ui/slint/pull/7408)
+**Confidence:** HIGH -- PyO3 `PyErr::warn` is the standard pattern for Python deprecation warnings from Rust.
 
 ---
 
-### Context Menu (Right-Click)
+### TS-5: FCX Global State Hardening
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | `ContextMenuArea` with Menu/MenuItem (Slint 1.10+) |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Fix the silent-drop-on-contention bug in `GLOBAL_FCX_HANDLER.reset_global_state()` and expose reset/access across all binding surfaces.
 
-**Current Usage:** Right-click on reports list for View/Copy/Delete actions.
+| Sub-feature | Complexity | Notes |
+|-------------|------------|-------|
+| Fix `try_lock()` silent drop | Medium | Replace `try_lock()` with blocking `lock()` or return `Result<(), ResetError>` so callers know reset failed. |
+| Expose reset in C++ bridge | Low | Add `reset_fcx_global_state()` to CXX bridge extern block. Call before each scan session. |
+| Expose reset in Node bindings | Low | Add `resetFcxState()` NAPI function. Call before each scan session. |
+| Expose `ConfigIssue` list in Node | Medium | Define `JsConfigIssue` NAPI struct mirroring Rust `ConfigIssue`. Expose via `getFcxIssues()`. |
 
-**Slint Implementation:**
-```slint
-ContextMenuArea {
-    Menu {
-        MenuItem { text: "View Report"; }
-        MenuSeparator { }
-        MenuItem { text: "Copy to Clipboard"; }
-        MenuItem { text: "Delete"; }
-    }
-    // ... list content ...
-}
-```
+**Best practice for resettable singletons:** The current `parking_lot::Mutex` wrapping is correct for a resettable singleton. The problem is `try_lock()` -- in a long-running process, a failed reset is a correctness bug, not a performance optimization. Use `.lock()` (which never fails with `parking_lot` -- no poisoning) or at minimum return an error rather than silently succeeding.
 
-**Sources:**
-- [ContextMenuArea Docs](https://docs.slint.dev/latest/docs/slint/reference/window/contextmenuarea/)
-- [Menu Support Blog](https://slint.dev/blog/making-slint-desktop-ready)
+**Alternative considered:** Replace `Lazy<Mutex<FcxModeHandler>>` with a scoped handler passed through the orchestrator. Rejected -- this would be a major API redesign, out of scope for a health milestone.
+
+**Confidence:** HIGH -- the `try_lock()` behavior is directly observable in source; `parking_lot::Mutex::lock()` is non-poisoning and documented.
 
 ---
 
-### Modal Dialogs
+### TS-6: Cache Bounded Eviction
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | `Dialog` element with StandardButton |
-| **Complexity** | MEDIUM |
-| **Status** | PARTIAL |
+Add capacity limits to the three unbounded global caches identified in the audit.
 
-**Current Usage:**
-- Settings dialog (modal, tabbed)
-- About dialog
-- Error dialogs with details
-- Confirmation dialogs (delete report)
+| Cache | Current Type | Location | Eviction Strategy | Complexity |
+|-------|-------------|----------|-------------------|------------|
+| `YAML_CACHE` | `Lazy<DashMap<PathBuf, CachedYaml>>` | `classic-yaml-core/src/lib.rs:156` | LRU by access time | Medium |
+| `SETTINGS_CACHE` | `Lazy<DashMap<String, Arc<Vec<Yaml>>>>` | `classic-settings-core/src/cache.rs:18` | LRU by access time | Medium |
+| `HASH_CACHE` | `LazyLock<Arc<DashMap<PathBuf, String>>>` | `classic-file-io-core/src/hash.rs:51` | LRU by access time | Medium |
 
-**Slint Limitations:**
-- No built-in blocking modal behavior like Windows
-- PopupWindow "steals mouse input"
-- True modal parent/child relationship requires workarounds
+**Recommended approach:** Use the `quick_cache` crate (already a workspace dependency, version 0.6) to replace unbounded `DashMap` instances. `quick_cache::sync::Cache` provides:
+- Bounded capacity with automatic eviction
+- Lock-free concurrent access (no global mutex)
+- Built-in frequency/recency-aware eviction (inspired by Caffeine/W-TinyLFU)
+- Already used successfully in `classic-file-io-core` for file content caching
 
-**Pattern for Settings:**
-```slint
-export component SettingsDialog inherits Dialog {
-    TabWidget {
-        Tab { title: "General"; /* settings */ }
-        Tab { title: "Scanning"; /* settings */ }
-        Tab { title: "Paths"; /* settings */ }
-    }
-    StandardButton { kind: ok; }
-    StandardButton { kind: cancel; }
-}
-```
+**Why `quick_cache` over alternatives:**
+- `moka` is the other major option but adds a heavier dependency (background maintenance thread). `quick_cache` is already in the workspace and has proven itself in `classic-file-io-core`.
+- `lru` crate (also in workspace) requires external `RwLock` wrapping for concurrent access -- already used in `LogParser` but less ergonomic for global statics.
+- Wrapping `DashMap` with manual eviction logic is error-prone and duplicates what `quick_cache` provides.
 
-**Sources:**
-- [Dialog Documentation](https://docs.slint.dev/latest/docs/slint/reference/window/dialog/)
-- [Modal Dialog Discussion](https://github.com/slint-ui/slint/discussions/6028)
+**Capacity sizing recommendations:**
+- `YAML_CACHE`: 128 entries (typical CLASSIC session loads ~20-40 distinct YAML files; 128 gives generous headroom).
+- `SETTINGS_CACHE`: 64 entries (settings files are fewer and larger).
+- `HASH_CACHE`: 1024 entries (file hashing is high-throughput during scan; larger capacity avoids thrashing).
+
+**Confidence:** HIGH -- `quick_cache` is already proven in the codebase.
 
 ---
 
-### Clipboard Operations
+### TS-7: Mmap TOCTOU Safety
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | TextEdit/LineEdit have copy/paste; platform clipboard API |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Switch `read_file_mmap` from `Mmap::map()` to `MmapOptions::map_copy()` for copy-on-write safety.
 
-**Current Usage:** Copy report content to clipboard.
+| Aspect | Detail |
+|--------|--------|
+| **Current state** | `Mmap::map()` with documented safety invariants |
+| **Target state** | `MmapOptions::new().map_copy(&file)` for COW semantics |
+| **Complexity** | Low |
+| **Performance impact** | Negligible for read-only workloads -- COW pages are not copied until written (which never happens in CLASSIC's read-only path) |
 
-**Pattern:**
-```rust
-// Direct clipboard access from Rust
-use arboard::Clipboard;
-let mut clipboard = Clipboard::new()?;
-clipboard.set_text(report_content)?;
-```
+**Why this matters:** On Windows, another process can modify a file while it is memory-mapped. `map_copy()` creates a copy-on-write mapping where the process gets a private view -- external modifications do not affect the mapped data. Since CLASSIC only reads mmap'd data and never writes, the COW overhead is effectively zero.
 
-**Notes:** TextEdit widgets support Ctrl+C/Ctrl+V natively. For programmatic access, use `arboard` crate.
-
-**Sources:**
-- [Clipboard in Slint](https://docs.rs/slint/latest/slint/platform/enum.Clipboard.html)
-- [Clipboard Discussion](https://github.com/slint-ui/slint/discussions/2930)
+**Confidence:** HIGH -- `memmap2::MmapOptions::map_copy()` is documented and the performance characteristics are well-understood for read-only workloads.
 
 ---
 
-### Window Geometry Persistence
+### TS-8: Regex Optimization in Mod Detector Hot Paths
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Window properties accessible from Rust |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Cache compiled regex patterns in `detect_mods_single`, `detect_mods_double`, `detect_mods_batch`, and `detect_mods_important`.
 
-**Current Usage:** Save/restore window size per tab.
+| Sub-feature | Complexity | Impact |
+|-------------|------------|--------|
+| Cache combined alternation pattern in `detect_mods_single`/`double`/`batch` | Medium | Eliminate per-call `Regex::new()` for the same mod list |
+| Replace per-entry regex in `detect_mods_important` with AhoCorasick or `str::contains` | Medium | Eliminate N separate `Regex::new()` calls per invocation |
+| Cache `LogParser` in C++ bridge `detect_crash_pattern` | Low | Eliminate per-call `LogParser::new()` rebuilding all compiled patterns |
 
-**Pattern:** Store window dimensions in settings, restore on startup:
-```rust
-// On close
-let size = window.size();
-settings.set_window_width(size.width);
-settings.set_window_height(size.height);
+**Best practice analysis for `detect_mods_important`:**
 
-// On startup
-window.set_width(settings.window_width());
-window.set_height(settings.window_height());
-```
+The current code does `Regex::new(&format!("(?i){}", regex::escape(&entry.detect.to_lowercase())))` per entry. Since `regex::escape` produces a literal string, this is equivalent to a case-insensitive `str::contains` check. There are three valid approaches:
+
+1. **`str::contains` with lowercased inputs (simplest, recommended):** Since both the detect pattern and the search text are already lowercased, replace the regex with `all_text.contains(&entry.detect.to_lowercase())`. Zero compilation overhead. This is the right answer because the patterns are all escaped literals -- no regex features are used.
+
+2. **AhoCorasick automaton (best for large entry lists):** Pre-build an `AhoCorasick` automaton from all detect strings, scan the text once, then map matches back to entries. Ideal if the entry list is large (>50 patterns). The crate is already used extensively in `record_scanner.rs`, `patterns.rs`, and `plugin_analyzer.rs`.
+
+3. **HashSet lookup (best for exact-match):** If patterns are always full plugin names (not substrings), a `HashSet` lookup is O(1). But the current logic does substring matching against concatenated text, so this only works with structural changes.
+
+**Recommendation:** Use approach 1 (`str::contains`) for `detect_mods_important` since patterns are escaped literals. Use approach 2 (AhoCorasick) for the combined alternation patterns in `detect_mods_single`/`double`/`batch` if caching the compiled `Regex` is not sufficient -- but caching the `Regex` keyed by a hash of the mod list is simpler and adequate since the same mod list is reused across a scan session.
+
+**Caching strategy for combined patterns:** Key the cache by a hash of the sorted mod list entries (using `xxhash` which is already a workspace dependency). Invalidate on config reload. Store in a module-level `LazyLock<RwLock<HashMap<u64, Regex>>>` or use `quick_cache::sync::Cache`.
+
+**C++ bridge `LogParser` caching:** Replace `LogParser::new(None).unwrap()` in `detect_crash_pattern` with a `LazyLock<LogParser>` at module scope. `LogParser` is `Send + Sync` (it stores `Arc`-wrapped caches internally), so this is safe.
+
+**Confidence:** HIGH -- the regex-escape-to-literal equivalence is verifiable in source. AhoCorasick patterns are already established in the codebase.
 
 ---
 
-### Image/Icon Display
+### TS-9: Workspace Dependency Promotion
 
-| Aspect | Details |
-|--------|---------|
-| **Slint Support** | Built-in Image element, SVG/PNG/JPEG |
-| **Complexity** | LOW |
-| **Status** | AVAILABLE |
+Promote `winreg` and `phf` to workspace-level dependencies.
 
-**Current Usage:** Application icon, button icons.
+| Dependency | Current Location | Complexity |
+|------------|-----------------|------------|
+| `winreg = "0.52"` | `classic-path-core/Cargo.toml` only | Low |
+| `phf = "0.13.1"` | `classic-constants-core/Cargo.toml` only | Low |
 
-**Pattern:**
-```slint
-Image {
-    source: @image-url("CLASSIC.ico");
-    width: 128px;
-    height: 128px;
-}
-```
+**Approach:** Add to `[workspace.dependencies]` in root `Cargo.toml`, replace crate-local pins with `winreg = { workspace = true }`.
 
-**Supported Formats:** SVG, PNG, JPEG (plus many more with cargo feature).
+**Confidence:** HIGH -- mechanical change.
 
-**Sources:**
-- [Image Documentation](https://docs.slint.dev/latest/docs/slint/reference/elements/image/)
+---
+
+### TS-10: Proton Path Wiring
+
+Wire up `construct_proton_docs_path` to the Linux docs-path discovery workflow rather than deleting it.
+
+| Aspect | Detail |
+|--------|--------|
+| **Current state** | Function exists but is dead code (`#[allow(dead_code)]`) |
+| **Target state** | Called from Linux docs-path discovery; tested with mock Proton prefix |
+| **Complexity** | Medium |
+
+**Approach:** Integrate into the `discover_docs_path` Linux code path. Add unit tests with a temporary directory mimicking a Proton prefix structure.
+
+**Confidence:** MEDIUM -- the function exists and its signature is known, but the Linux docs-path discovery integration point needs exploration during implementation.
+
+---
+
+### TS-11: Test Coverage for Identified Gaps
+
+Add test coverage for the five specific gaps identified in the audit.
+
+| Test Gap | Priority | Complexity |
+|----------|----------|------------|
+| FCX contention reset (silent drop on `try_lock`) | Medium | Medium -- requires concurrent test setup |
+| Legacy settings path assertion (standard configs do NOT hit legacy path) | Medium | Low -- assert on known production config |
+| Linux Proton path discovery | Medium | Medium -- needs mock Proton prefix |
+| Node binding FCX state carryover | Low | Medium -- needs Node test harness |
+| C++ bridge `detect_crash_pattern` parser allocation regression | Low | Low -- criterion benchmark, not unit test |
+
+**Confidence:** HIGH -- all gaps are precisely specified with file locations.
+
+---
+
+### TS-12: Zerovec Workaround Documentation
+
+Document or resolve the `zerovec` workaround dependency in `classic-shared-core`.
+
+| Aspect | Detail |
+|--------|--------|
+| **Current state** | Dev-dependency workaround for Slint/icu_properties transitive dep |
+| **Complexity** | Low |
+| **Approach** | Add workspace-level comment referencing the upstream issue; check if Slint 1.15+ resolved it |
+
+**Confidence:** MEDIUM -- the workaround may already be unnecessary with current Slint version.
+
+---
+
+### TS-13: Node `index.d.ts` Build Requirement
+
+Document or commit the Node `index.d.ts` build-first requirement.
+
+| Aspect | Detail |
+|--------|--------|
+| **Current state** | `package.json` declares types but file is gitignored and only generated post-build |
+| **Complexity** | Low |
+| **Approach** | Commit a generated `index.d.ts` snapshot with a CI freshness check (already partially exists via `dts:freshness:check`) |
+
+**Confidence:** HIGH -- the CI tooling already exists; this is a documentation/process gap.
+
+---
+
+### TS-14: Criterion Benchmarks for Performance Changes
+
+Add before/after criterion benchmarks proving each performance improvement.
+
+| Benchmark Target | What to Measure | Complexity |
+|-----------------|-----------------|------------|
+| `detect_mods_important` | Latency per call with 50+ entry list | Medium |
+| `detect_mods_single`/`batch` | Latency with cached vs uncached regex | Medium |
+| `detect_crash_pattern` (bridge) | Latency with cached vs per-call `LogParser` | Low |
+| Mmap `map_copy` vs `map` | Read throughput for 1MB+ files | Low |
+
+**Note:** Criterion benchmarks already have infrastructure in `classic-scanlog-core/benches/scanlog_benchmarks.rs`. Extend, do not create a parallel framework.
+
+**Confidence:** HIGH -- criterion is already a dev-dependency with existing benchmark harness.
 
 ---
 
 ## Differentiators
 
-Features Slint does better than Qt/Python, or unique Slint advantages.
+Go-beyond improvements that are **valuable but not strictly required** by the audit findings.
 
-### Native Rust Integration
+### D-1: Replace `once_cell` with `std::sync::LazyLock`
 
-| Aspect | Details |
-|--------|---------|
-| **Advantage** | Direct call to Rust business logic, no FFI overhead |
-| **Complexity** | N/A (architectural benefit) |
+| Aspect | Detail |
+|--------|--------|
+| **Rationale** | `LazyLock` is stable since Rust 1.80; `once_cell::sync::Lazy` is the third-party predecessor. Some crates already use `LazyLock`, others use `once_cell`. |
+| **Complexity** | Low (mechanical find-replace per crate) |
+| **Value** | Reduces external dependency, unifies initialization pattern across codebase |
 
-**Current Pain Point:** Python GUI -> AsyncBridge -> Rust via PyO3 -> Back to Python.
-
-**Slint Advantage:** Rust GUI -> Direct Rust calls -> Same runtime.
-
-**Impact:**
-- Eliminate AsyncBridge complexity
-- Single Tokio runtime for everything
-- No GIL contention
-- Type-safe across entire stack
+**Current state in codebase:** Mixed -- `classic-shared-core`, `classic-file-io-core`, and `classic-node` use `std::sync::LazyLock`. `classic-yaml-core`, `classic-settings-core`, `classic-registry-core`, and `classic-perf-core` still use `once_cell::sync::Lazy`. This is a consistency improvement, not a correctness fix.
 
 ---
 
-### Compile-Time UI Validation
+### D-2: Structured Error Returns for FCX Reset
 
-| Aspect | Details |
-|--------|---------|
-| **Advantage** | .slint files validated at compile time |
-| **Complexity** | N/A (tooling benefit) |
+Instead of just fixing the `try_lock` silent drop, return a `Result<(), FcxResetError>` from `reset_global_state()` that callers can log or propagate. This makes failures observable across all surfaces, not just non-silent.
 
-**Current Pain Point:** Qt signals/slots can fail at runtime with typos.
-
-**Slint Advantage:**
-- Property bindings checked at compile
-- LSP integration for IDE errors
-- No runtime signal connection failures
+| Aspect | Detail |
+|--------|--------|
+| **Complexity** | Low |
+| **Value** | Callers can distinguish "reset succeeded" from "reset was unnecessary" from "reset failed" |
 
 ---
 
-### Lightweight Runtime
+### D-3: Cache Metrics Unification
 
-| Aspect | Details |
-|--------|---------|
-| **Advantage** | <300KB RAM footprint |
-| **Complexity** | N/A (runtime benefit) |
+All three bounded caches (YAML, settings, hash) should expose a consistent `CacheStats` struct with hits, misses, hit rate, size, and capacity. `SETTINGS_CACHE` already has this pattern; extend to `YAML_CACHE` and `HASH_CACHE`.
 
-**Current:** Qt + Python runtime is 50-100MB+.
-
-**Slint:** Entire runtime fits in <300KB RAM. Faster startup, smaller binary.
+| Aspect | Detail |
+|--------|--------|
+| **Complexity** | Low |
+| **Value** | Enables runtime observability for cache sizing tuning |
 
 ---
 
-### GPU-Accelerated Rendering
+### D-4: Compile-Time Regex Validation
 
-| Aspect | Details |
-|--------|---------|
-| **Advantage** | Skia or software renderer, GPU acceleration |
-| **Complexity** | N/A (rendering benefit) |
+For static patterns (crash patterns, section headers), use the `regex!` proc-macro or `LazyLock` with `Regex::new().unwrap()` to move compilation failure from runtime to startup. This is already the pattern in `LogParser` but not in `mod_detector`.
 
-**Renderers Available:**
-- Skia (GPU accelerated, best quality)
-- FemtoVG (OpenGL)
-- Software (fallback, works everywhere)
+| Aspect | Detail |
+|--------|--------|
+| **Complexity** | Low |
+| **Value** | Faster feedback on broken patterns; eliminates runtime `Result` propagation for known-good patterns |
 
 ---
 
-### Multi-Window Support (Slint 1.7+)
+### D-5: TUI Dependency Workspace Promotion
 
-| Aspect | Details |
-|--------|---------|
-| **Advantage** | Multiple windows with shared state |
-| **Complexity** | LOW |
+Promote `ratatui`, `arboard`, `crossterm`, and `open` to workspace dependencies for consistency with the rest of the codebase.
 
-**Pattern:** Define multiple Window components, manage from Rust.
+| Aspect | Detail |
+|--------|--------|
+| **Complexity** | Low |
+| **Value** | Central version management |
+| **PROJECT.md Decision** | Explicitly marked out-of-scope ("TUI deps are local to one crate") |
 
-**Sources:**
-- [Multi-Window Blog](https://slint.dev/blog/slint-1.7-released)
-
----
-
-### Tokio Integration
-
-| Aspect | Details |
-|--------|---------|
-| **Advantage** | Native async with existing Rust infrastructure |
-| **Complexity** | MEDIUM |
-
-**Pattern:**
-```rust
-slint::spawn_local(async move {
-    // Run on UI thread
-    let result = tokio::spawn(async {
-        // Background Tokio task
-        scan_logs().await
-    }).await;
-
-    ui.set_scan_result(result);
-});
-```
-
-**Sources:**
-- [Async Integration](https://github.com/slint-ui/slint/discussions/4377)
+**Include only if** the milestone scope is broadened. Respect the PROJECT.md decision boundary.
 
 ---
 
 ## Anti-Features
 
-Features Slint cannot do or should NOT try to do.
+Things to deliberately **NOT** do in this cleanup milestone.
 
-### Native Markdown Rendering
+### AF-1: Do NOT Redesign Singleton Architecture
 
-| Aspect | Details |
-|--------|---------|
-| **Why Avoid** | Not yet implemented in Slint |
-| **What To Do Instead** | Custom solution or external renderer |
-| **Severity** | HIGH (critical for CLASSIC) |
+**What to avoid:** Replacing `OnceLock`/`Lazy` singletons (VersionRegistry, YAML_CACHE, FCX handler) with dependency-injection or scoped-lifetime patterns.
 
-**Current State:** Rich text support is in active development (issue #9560, #6684) but NOT production-ready.
+**Why:** Singleton patterns are architectural decisions baked into the crate layering. Redesigning them changes APIs across all 3 binding surfaces and violates the "no major binding API redesigns" constraint. The health milestone fixes specific bugs (silent reset failure, unbounded growth) without structural rewrites.
 
-**Alternatives:**
-1. **Convert markdown to styled elements:** Parse markdown in Rust, render as Slint Text/Rectangle with styling
-2. **WebView integration:** Use embedded WebView with marked.js (adds complexity)
-3. **Pre-render to HTML:** Keep Qt-style HTML approach with embedded browser component
-
-**Recommendation:** Implement custom markdown-to-Slint renderer using `pulldown-cmark` (Rust markdown parser). Render headings, bold, lists, code blocks as styled Slint elements.
-
-**Complexity:** HIGH
-
-**Sources:**
-- [Rich Text Issue](https://github.com/slint-ui/slint/issues/9560)
-- [Markdown Issue](https://github.com/slint-ui/slint/issues/6684)
+**The VersionRegistry OnceLock is explicitly out of scope** per PROJECT.md -- process-restart isolation is acceptable for registry reloads.
 
 ---
 
-### Native File Dialogs
+### AF-2: Do NOT Remove Python FormID Legacy Map Path
 
-| Aspect | Details |
-|--------|---------|
-| **Why Avoid** | Slint has no built-in file dialog |
-| **What To Do Instead** | Use external crate |
-| **Severity** | MEDIUM |
+**What to avoid:** Deleting `legacy_mod_map_to_entries()` or rejecting legacy `PyDict` input.
 
-**Current Usage:**
-- Browse for INI folder
-- Open crash logs folder
-
-**Solution:** Use `rfd` (Rust File Dialog) or `native-dialog` crate:
-```rust
-use rfd::FileDialog;
-
-let folder = FileDialog::new()
-    .set_directory(&starting_path)
-    .pick_folder();
-```
-
-**Complexity:** LOW (well-documented integration)
-
-**Sources:**
-- [File Dialog Discussion](https://github.com/slint-ui/slint/discussions/3015)
-- [rfd crate](https://crates.io/crates/rfd)
+**Why:** PROJECT.md constraint: "Python FormID legacy map format gets deprecation warning first, not immediate removal." This milestone adds the warning; a future milestone removes the path.
 
 ---
 
-### Native Tooltips
+### AF-3: Do NOT Add New Features
 
-| Aspect | Details |
-|--------|---------|
-| **Why Avoid** | No built-in tooltip property |
-| **What To Do Instead** | Custom PopupWindow or skip |
-| **Severity** | LOW |
+**What to avoid:** Adding new user-facing functionality, new crate capabilities, or new binding surface methods beyond what is needed to fix parity gaps.
 
-**Current Usage:** Tooltips on buttons (e.g., "Refresh the reports list").
-
-**Workaround:** PopupWindow with delay, but it's clunky and "steals mouse input."
-
-**Recommendation:** For MVP, skip tooltips. Add later when Slint implements native support (tracked in issue #6446).
-
-**Sources:**
-- [Tooltip Discussion](https://github.com/slint-ui/slint/discussions/1617)
-- [Tooltip Issue](https://github.com/slint-ui/slint/issues/6446)
+**Why:** This is purely a health/hardening milestone. New features risk scope creep and complicate verification.
 
 ---
 
-### Native Splitter/Resizable Panes
+### AF-4: Do NOT Bulk-Refactor Error Handling
 
-| Aspect | Details |
-|--------|---------|
-| **Why Avoid** | No built-in splitter widget |
-| **What To Do Instead** | Custom implementation or fixed layout |
-| **Severity** | MEDIUM |
+**What to avoid:** Migrating all crates from `anyhow` to `thiserror`, or vice versa, or introducing a codebase-wide error taxonomy.
 
-**Current Usage:** QSplitter between reports list (30%) and markdown viewer (70%).
-
-**Workaround:** Custom splitter using TouchArea:
-```slint
-// Custom splitter implementation required
-Rectangle {
-    property <length> split-position: 300px;
-
-    // Left panel
-    Rectangle { width: split-position; }
-
-    // Drag handle
-    TouchArea {
-        moved => { split-position = mouse-x; }
-    }
-
-    // Right panel
-    Rectangle { x: split-position + 5px; }
-}
-```
-
-**Complexity:** MEDIUM
-
-**Sources:**
-- [Splitter Discussion](https://github.com/slint-ui/slint/discussions/343)
+**Why:** Error handling works. Individual crates use appropriate patterns. A bulk migration risks regressions with no audit-driven justification.
 
 ---
 
-### Blocking Modal Dialogs
+### AF-5: Do NOT Optimize Working Code Without Benchmarks
 
-| Aspect | Details |
-|--------|---------|
-| **Why Avoid** | Slint dialogs don't block like native OS modals |
-| **What To Do Instead** | Use callbacks, disable parent UI |
-| **Severity** | LOW |
+**What to avoid:** Preemptive optimization of code paths not identified in the audit. No "while we're here, let's also optimize X" changes.
 
-**Pattern:** Instead of blocking, use callback pattern:
-```rust
-ui.on_settings_accepted(|| {
-    // Handle save
-});
-ui.on_settings_cancelled(|| {
-    // Handle cancel
-});
-show_settings_dialog();
-// UI continues, callbacks handle result
-```
+**Why:** The audit identified specific performance bottlenecks (`detect_mods_important`, per-call `LogParser::new`, unbounded caches). Only those warrant optimization. Other code paths should be left alone unless criterion benchmarks reveal a regression.
 
 ---
 
-### System Tray (If Needed)
+### AF-6: Do NOT Touch CXX `unsafe extern "C++"` Blocks
 
-| Aspect | Details |
-|--------|---------|
-| **Why Avoid** | Not implemented in Slint |
-| **What To Do Instead** | External crate if needed |
-| **Severity** | N/A (not currently used) |
+**What to avoid:** Attempting to remove or restructure the `unsafe extern "C++"` declaration for `ScanBatchProgressCallback`.
 
-**Notes:** Current CLASSIC does not use system tray. If needed, use `tray-icon` crate.
+**Why:** CXX manages the safety boundary. Per PROJECT.md: "CXX framework manages this; no action needed beyond version upgrades."
+
+---
+
+### AF-7: Do NOT Introduce New Runtimes or Async Patterns
+
+**What to avoid:** Adding a background eviction thread for caches, using `tokio::spawn` for cache maintenance, or introducing any new runtime.
+
+**Why:** ONE RUNTIME RULE. `quick_cache` handles eviction inline during cache operations (no background thread). This is the correct pattern for the existing architecture.
 
 ---
 
 ## Feature Dependencies
 
 ```
-Window Setup
+TS-2 (Deprecated API migration)
     |
-    +-- Dark Theme (compile-time selection)
+    +-- Must complete BEFORE TS-1 (Dead code removal)
+    |   (deprecated shims reference patterns that dead code depends on)
     |
-    +-- TabWidget
-            |
-            +-- Main Tab
-            |       +-- Buttons
-            |       +-- Scan Controls
-            |       +-- Progress Indicator
-            |
-            +-- File Backup Tab
-            |       +-- Buttons
-            |       +-- File Operations (via rfd)
-            |
-            +-- Articles Tab
-            |       +-- Static Content
-            |
-            +-- Results Tab
-                    +-- Split Layout (custom)
-                    |       +-- ListView (reports)
-                    |       +-- Markdown Viewer (custom)
-                    |
-                    +-- Context Menu
-                    +-- Clipboard Operations
+    +-- TS-4 (Python FormID deprecation warning) is INDEPENDENT
+    |   (different crate, different API surface)
+    |
+TS-3 (Legacy settings elimination)
+    |
+    +-- TS-11 test gap: "legacy path not hit for standard configs"
+    |   (test should be added BEFORE or WITH the elimination)
 
-Settings Dialog (separate window)
-    +-- TabWidget
-    +-- Form Controls
-    +-- File Browser (via rfd)
+TS-5 (FCX hardening)
+    |
+    +-- Expose in C++ bridge (depends on fix in core)
+    +-- Expose in Node bindings (depends on fix in core)
+    +-- TS-11 test gaps: FCX contention, Node FCX state carryover
+    |   (tests should accompany or immediately follow the fix)
+
+TS-6 (Cache eviction) -- INDEPENDENT of all other features
+    |
+    +-- Can be done in any order
+    +-- TS-14 benchmarks should measure before/after
+
+TS-7 (Mmap TOCTOU) -- INDEPENDENT
+    |
+    +-- TS-14 benchmark to prove no regression
+
+TS-8 (Regex optimization) -- INDEPENDENT
+    |
+    +-- TS-14 benchmarks REQUIRED (before/after proof)
+
+TS-9 (Workspace deps) -- INDEPENDENT, can be done anytime
+
+TS-10 (Proton path) -- INDEPENDENT
+    |
+    +-- TS-11 test gap: Linux Proton path
+
+TS-12 (Zerovec docs) -- INDEPENDENT
+TS-13 (Node index.d.ts) -- INDEPENDENT
+TS-14 (Benchmarks) -- depends on TS-6, TS-7, TS-8 being in progress
 ```
 
 ---
 
 ## MVP Recommendation
 
-**Phase 1: Core Window**
-1. Main window with TabWidget (4 tabs)
-2. Dark theme (fluent-dark or material-dark)
-3. Basic buttons and controls
+**Priority order based on dependency chain and risk:**
 
-**Phase 2: Scanning**
-1. Scan buttons with enable/disable states
-2. Progress indicator with async updates
-3. Basic error dialogs
+1. **TS-8: Regex optimization** -- highest performance impact, most complex, benefits from early benchmarking. Start with `detect_mods_important` (the `str::contains` conversion is the clearest win).
 
-**Phase 3: Results Viewer**
-1. ListView for reports (without splitter initially)
-2. Basic text display (plain text, not markdown)
-3. Context menu for actions
-4. Clipboard copy
+2. **TS-5: FCX hardening** -- correctness bug (silent state corruption). Fix core first, then wire bindings.
 
-**Phase 4: Markdown Rendering**
-1. Custom markdown-to-Slint renderer
-2. Headers, bold, lists, code blocks
-3. Custom styling for CLASSIC report elements
+3. **TS-2: Deprecated API migration** -- unblocks dead code removal and reduces surface area.
 
-**Phase 5: Settings and Polish**
-1. Settings dialog with tabs
-2. File dialogs (via rfd)
-3. Window geometry persistence
-4. Splitter (if needed)
+4. **TS-1: Dead code removal** -- low risk, high clarity improvement. Do after TS-2.
 
-**Defer to Post-MVP:**
-- Tooltips (wait for Slint native support)
-- System tray (not currently used)
-- Rich text editing (read-only reports only)
+5. **TS-6: Cache eviction** -- memory safety for long-running processes. Independent, medium complexity.
+
+6. **TS-7: Mmap TOCTOU** -- low complexity, high safety value.
+
+7. **TS-3: Legacy settings elimination** -- medium complexity, needs test coverage first.
+
+8. **TS-9, TS-10, TS-12, TS-13** -- low-complexity housekeeping, can fill gaps.
+
+9. **TS-4: Python FormID warning** -- lowest risk, independent.
+
+10. **TS-11, TS-14: Tests and benchmarks** -- accompany their corresponding features, not a separate phase.
+
+**Defer to later milestones:**
+- D-1 (`once_cell` to `LazyLock` migration) -- nice but not audit-driven
+- D-5 (TUI dep promotion) -- explicitly out of scope per PROJECT.md
 
 ---
 
-## Sources Summary
+## Sources
 
 ### Official Documentation
-- [Slint Main Site](https://slint.dev/)
-- [Slint GitHub](https://github.com/slint-ui/slint)
-- [Widget Documentation](https://releases.slint.dev/1.1.0/docs/slint/src/builtins/widgets)
+- [Rust `OnceLock` std docs](https://doc.rust-lang.org/std/sync/struct.OnceLock.html)
+- [Rust `LazyLock` std docs](https://doc.rust-lang.org/std/sync/struct.LazyLock.html)
+- [memmap2 `MmapOptions::map_copy` docs](https://docs.rs/memmap2/latest/memmap2/struct.MmapOptions.html)
+- [aho-corasick crate docs](https://docs.rs/aho-corasick/latest/aho_corasick/)
+- [quick_cache crate docs](https://docs.rs/quick_cache/latest/quick_cache/)
+- [moka cache (alternative considered)](https://github.com/moka-rs/moka)
+- [parking_lot Mutex (non-poisoning)](https://docs.rs/parking_lot/latest/parking_lot/type.Mutex.html)
 
-### Blog Posts
-- [Slint 1.7 Release](https://slint.dev/blog/slint-1.7-released)
-- [Making Slint Desktop-Ready](https://slint.dev/blog/making-slint-desktop-ready)
+### Codebase Verification
+- All file locations and code patterns verified against current source in `ClassicLib-rs/`
+- `aho-corasick` already used in `record_scanner.rs`, `patterns.rs`, `plugin_analyzer.rs`, `logs.rs`
+- `quick_cache` already used in `classic-file-io-core/src/core.rs`
+- `lru` already used in `classic-scanlog-core/src/parser.rs` and `classic-file-io-core/src/core.rs`
+- Criterion benchmark harness already exists in `classic-scanlog-core/benches/scanlog_benchmarks.rs`
 
-### GitHub Discussions
-- [Async Integration](https://github.com/slint-ui/slint/discussions/4377)
-- [Progress Updates](https://github.com/slint-ui/slint/discussions/8466)
-- [File Dialogs](https://github.com/slint-ui/slint/discussions/3015)
-- [Context Menus](https://docs.slint.dev/latest/docs/slint/reference/window/contextmenuarea/)
-- [Modal Dialogs](https://github.com/slint-ui/slint/discussions/6028)
-
-### Known Issues
-- [Rich Text Issue #9560](https://github.com/slint-ui/slint/issues/9560)
-- [Markdown Issue #6684](https://github.com/slint-ui/slint/issues/6684)
-- [Tooltip Issue #6446](https://github.com/slint-ui/slint/issues/6446)
+### Web Research
+- [Rust caching strategies (2026)](https://oneuptime.com/blog/post/2026-02-01-rust-caching-strategies/view) -- MEDIUM confidence
+- [Aho-Corasick optimization for literal alternation (regex issue #891)](https://github.com/rust-lang/regex/issues/891) -- HIGH confidence
+- [Global mutable singletons in Rust (2026)](https://oneuptime.com/blog/post/2026-01-25-global-mutable-singletons-rust/view) -- MEDIUM confidence
+- [Rust mmap safety discussion](https://users.rust-lang.org/t/is-there-no-safe-way-to-use-mmap-in-rust/70338) -- HIGH confidence

@@ -1,161 +1,118 @@
 # CLASSIC
 
-## Current Milestone: v9.0.0 Slint GUI
+## Current State
 
-**Goal:** Replace PySide6/Qt with a Rust-native Slint GUI, starting with core workflow (scan logs, view results, configure settings).
+**Latest shipped milestone:** v9.1.0-bugfixes CLASSIC Codebase Health (2026-04-07)
 
-**Target features:**
-- Slint-based main window with crash log scanning
-- Results viewer with markdown report rendering
-- Settings dialog for scan configuration
-- Progress feedback during async operations
+The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
 
-**Previous:** v8.3.0 Performance & Polish — shipped 2026-02-05
+## Next Milestone Goals
 
----
-
-# CLASSIC Rust Migration
+No phases planned yet. Use `/gsd:new-milestone` to start the next milestone cycle.
 
 ## What This Is
 
-A Rust-first desktop application (CLASSIC — Crash Log Auto Scanner & Setup Integrity Checker) that analyzes crash logs from Bethesda games (Fallout 4, Skyrim). Python serves as a thin UI shell (PySide6/Qt GUI) while Rust owns ALL business logic through PyO3 bindings. Performance is systematically measured via Criterion benchmarks with CI regression detection.
+The CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase: a Rust-core / multi-binding (C++, Python, Node) workspace with native CLI/GUI/TUI frontends for analyzing Fallout 4 / Bethesda crash logs.
 
 ## Core Value
 
-Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-
-## Current State (After v8.3.0)
-
-**Architecture achieved:**
-- All scanning orchestration routes through Rust OrchestratorCore
-- All game detection routes through Rust GamePathFinder
-- All report generation routes through Rust ReportGenerator/ReportComposer
-- All settings loading routes through Rust classic-settings with DashMap cache
-- 7 Python analyzer files deleted, factory returns Rust components directly
-- 19 Rust modules bundled in PyInstaller build
-- 77+ Criterion benchmarks with statistical analysis
-- CI automatically detects performance regressions (>10% threshold)
-
-**Codebase metrics:**
-- Python: ~88,594 LOC (ClassicLib/ - UI shell, integration layer)
-- Rust: ~65,277+ LOC (rust/ - all business logic)
-- Benchmarks: 77+ Criterion benchmarks across yaml-core, scanlog-core, file-io-core
-- Tests: 3,849 passing with Rust as primary code path
-
-**Tech stack:** Python 3.12+, PySide6/Qt, Rust (PyO3 0.27), tokio async runtime, DashMap, Criterion
+Every concern identified in the codebase audit is resolved — no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
 
 ## Requirements
 
 ### Validated
 
-- ✓ Crash log scanning and analysis for Fallout 4 and Skyrim — existing
-- ✓ GUI interface via PySide6/Qt with tabbed layout — existing
-- ✓ CLI interface for headless/server operation — existing
-- ✓ TUI interface via Textual (in development) — existing
-- ✓ Rust acceleration for YAML parsing (15-30x speedup) — existing
-- ✓ Rust acceleration for database operations (25x speedup) — existing
-- ✓ Rust acceleration for crash log parsing (10-50x speedup) — existing
-- ✓ Async-first architecture with AsyncBridge for GUI sync contexts — existing
-- ✓ FormID analysis and mod conflict detection — existing
-- ✓ Settings/INI scanning and duplicate config detection — existing
-- ✓ Game path detection and XSE/ENB integrity checking — existing
-- ✓ Report generation in markdown format — existing
-- ✓ PyInstaller executable bundling for Windows distribution — existing
-- ✓ Remove duplicate logic (Python/Rust parallel implementations) — v1.0
-- ✓ Eliminate dead code (unused modules, functions, files) — v1.0
-- ✓ Flatten overlapping abstractions (wrappers around wrappers) — v1.0
-- ✓ Consolidate dual sync/async interfaces (remove deprecated sync wrappers) — v1.0
-- ✓ Clean up Python-Rust boundary (stubs, bindings, fallback patterns) — v1.0
-- ✓ Ensure clear single-owner for every piece of business logic — v1.0
-- ✓ Reduce overall code surface area — v1.0
-- ✓ Prepare clean separation points for future Rust migration — v1.0
-- ✓ Migrate scanning orchestration to Rust — v8.2.0-part2
-- ✓ Migrate game detection to Rust — v8.2.0-part2
-- ✓ Migrate report generation to Rust — v8.2.0-part2
-- ✓ Migrate settings management to Rust — v8.2.0-part2
-- ✓ Reduce Python to UI-only code — v8.2.0-part2
-- ✓ Benchmarks execute in release mode with statistical aggregation — v8.3.0
-- ✓ CI pipeline detects performance regressions (>10% threshold) — v8.3.0
-- ✓ Rust operations >1ms release Python GIL — v8.3.0
-- ✓ Flamegraph and py-spy profiling available — v8.3.0
-- ✓ DashMap cache hit rates instrumented — v8.3.0
-- ✓ test_clear_cache parallel test pollution fixed — v8.3.0
-- ✓ classic_settings() path resolution fixed — v8.3.0
+- ✓ Layered Rust core with thin multi-language adapter surfaces — existing
+- ✓ Single shared Tokio runtime (ONE RUNTIME RULE) — existing
+- ✓ C++, Python, and Node.js binding surfaces delegating to `-core` crates — existing
+- ✓ Windows-native C++ frontends (CLI + Qt GUI) via CXX bridge — existing
+- ✓ 19 business-logic `-core` crates with no PyO3 dependencies — existing
+- ✓ Parity tooling for Node and Python bindings — existing
+- ✓ All deprecated API callers migrated with deprecation warnings — Validated in Phase 1: Deprecated API Migration
+- ✓ Phase 1 deprecated API migration closure evidence refreshed and audit traceability reconciled — Validated in Phase 9: Deprecated API Verification Closure
+- ✓ All deprecated APIs removed (parse_segments, parse_segments_parallel, is_outdated) — Validated in Phase 2: Dead Code Removal
+- ✓ Dead code removed (SEGMENT_BOUNDARIES, YamlFormatConfig, PluginAnalyzer.case_cache, PyGpuDetector.inner) — Validated in Phase 2: Dead Code Removal
+- ✓ Legacy `scan_all_settings_legacy_bucketed` fallback path eliminated with assertion test — Validated in Phase 2: Dead Code Removal
+- ✓ FCX global state reset is blocking, typed, and contention-tested — Validated in Phase 3: FCX State Hardening
+- ✓ C++ bridge exposes explicit FCX reset and auto-resets before scan sessions — Validated in Phase 3: FCX State Hardening
+- ✓ Node bindings expose FCX reset plus structured issue inspection without same-process carryover — Validated in Phase 3: FCX State Hardening
+- ✓ YAML, settings, and hash caches now use bounded `quick_cache` eviction with capacities 128/64/1024 — Validated in Phase 4: Bounded Cache Replacement
+- ✓ YAML, settings, and hash cache stats now expose one canonical five-field contract across Rust, Node, Python, and C++ — Validated in Phase 4: Bounded Cache Replacement
+- ✓ Large-file mmap reads use `MmapOptions::map_copy_read_only()` with validated Windows benchmark proof — Validated in Phase 6: mmap TOCTOU Safety
+- ✓ Owned workspace lazy statics now use `std::sync::LazyLock`, and the remaining scanlog `OnceCell` cache uses `std::sync::OnceLock` with direct `once_cell` manifests removed — Validated in Phase 7: Consistency Sweep
+- ✓ Wire up `construct_proton_docs_path` to Linux docs-path discovery workflow (not delete) — Validated in Phase 8 / Phase 11
+- ✓ Promote `winreg` and `phf` to workspace dependencies — Validated in Phase 8 / Phase 11
+- ✓ Document or remove `zerovec` workaround dependency — Validated in Phase 8 / Phase 11
+- ✓ Commit or document Node `index.d.ts` build-first requirement — Validated in Phase 8 / Phase 11
+- ✓ Add test coverage: Linux Proton path — Validated in Phase 8 / Phase 11
+- ✓ Migrate Python FormID analyzer away from legacy map format with deprecation warnings — Validated in Phase 1 / Phase 9
+- ✓ Cache compiled regex patterns in mod detector hot paths (detect_mods_single/double/batch/important) — Validated in Phase 5
+- ✓ Replace per-call `LogParser::new` in C++ bridge `detect_crash_pattern` with cached parser — Validated in Phase 5 / Phase 10
+- ✓ Replace per-entry regex in `detect_mods_important` with AhoCorasick — Validated in Phase 5
+- ✓ Add before/after criterion benchmarks for performance improvements — Validated in Phase 5 / Phase 6
 
 ### Active
 
-- [ ] Slint GUI application with main window and tab structure — v9.0.0
-- [ ] Crash log scanning with progress feedback — v9.0.0
-- [ ] Results viewer with markdown rendering — v9.0.0
-- [ ] Report list with search and filtering — v9.0.0
-- [ ] Settings dialog for scan configuration — v9.0.0
-- [ ] Async operation feedback (progress indicators) — v9.0.0
+(None — all v9.1.0-bugfixes requirements shipped. Run `/gsd:new-milestone` to define the next cycle.)
 
 ### Out of Scope
 
-- Full GUI feature parity in v9.0.0 — Core workflow first (File Backup, Articles, Papyrus monitoring deferred)
-- egui/iced GUI frameworks — Slint chosen for declarative syntax
-- TUI migration — Ratatui TUI is already Rust-native
-- i18n/localization — Future scope, stick to English strings
-- HTML/RTF report output — Markdown is standard
-- Steam API integration — Rely on registry/XSE log
-- Game file scanning in Slint — Deferred to v9.1.0
+- TUI-specific dependencies (ratatui, arboard, crossterm, open) workspace promotion — these are local to classic-tui and not shared
+- VersionRegistry singleton reload — OnceLock design is intentional; process-restart isolation is acceptable
+- CXX bridge `unsafe extern "C++"` — CXX framework manages this; no action needed beyond version upgrades
+- Major binding API redesigns — this milestone fixes parity gaps and deprecations, not wholesale API changes
+- New feature development — this is purely a health/hardening milestone
 
 ## Context
 
-**v9.0.0 Focus:** Slint GUI to replace PySide6/Qt. All business logic already in Rust — this milestone adds a Rust-native UI layer.
-
-**Shipped v8.3.0** with comprehensive performance infrastructure:
-- 77+ Criterion benchmarks with statistical output
-- CI regression detection (10% threshold, PR comments)
-- GIL release audit (65 without_gil occurrences)
-- Profiling tooling (flamegraph, py-spy, dhat)
-- O(1) membership optimization in Python
-
-**Known issues:**
-- py-spy 0.4.1 incompatible with Python 3.14 (limits native frame profiling)
-
-**Tech debt:**
-- Report parity: 20 tests identify true Rust-Python differences (by design)
-- PySide6/Qt GUI will be deprecated after Slint achieves parity
+- All business logic lives in Rust `-core` crates under `ClassicLib-rs/business-logic/`
+- Three binding surfaces: C++ (CXX), Python (PyO3), Node (NAPI-RS)
+- Codebase map completed 2026-04-04 with detailed CONCERNS.md at `.planning/codebase/CONCERNS.md`
+- Performance concerns center on `classic-scanlog-core` mod_detector and the C++ bridge scanner
+- FCX (FormID Cross-reference) handler is a process-wide singleton with state management issues across binding boundaries
+- The `detect_mods_important` function is the most performance-critical path — compiles one regex per entry per call
+- Proton/Linux path support is partially implemented; should be wired up rather than removed
 
 ## Constraints
 
-- **Behavioral parity**: Slint GUI must match Qt GUI behavior for implemented features
-- **Test coverage**: Add Rust integration tests for Slint components
-- **TDD required**: All changes follow red-green-refactor per project standards
-- **Slint declarative UI**: Use `.slint` files for UI definition, Rust for logic
-- **Incremental migration**: Core workflow first, then expand feature set
-- **Reuse -core crates**: Slint calls existing business logic crates directly (no duplication)
-- **Performance baselines**: Maintain or improve on Qt GUI responsiveness
+- **Platform**: Native C++ targets are Windows-only (MSVC x64); Rust workspace is cross-platform at source level
+- **Runtime**: Single shared Tokio runtime — no new runtimes
+- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `parity:gate:local` for Node)
+- **Testing**: Use PowerShell build wrappers for C++ tests, never raw ctest
+- **Backwards compat**: Python FormID legacy map format gets deprecation warning first, not immediate removal
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Clean up before migrating to Rust | Can't migrate cleanly if you don't know what's live vs. dead | ✓ Good — removed 11,993 net lines, clear ownership |
-| Full-stack cleanup (Python + Rust) | Redundancies exist on both sides of the boundary | ✓ Good — 960-line acceleration pkg removed, Rust crates audited |
-| Improvements welcome during cleanup | Rigid "identical behavior" would prevent simplification | ✓ Good — enabled fallback removal, DISABLE_RUST elimination |
-| Future end state: Rust as engine, Python as GUI/glue | Informs which direction ownership should consolidate toward | ✓ Good — v8.2.0-part2 achieved this |
-| 5-phase bottom-up approach (v1.0) | Dead code first, fallback pruning last (irreversible) | ✓ Good — each phase unblocked the next safely |
-| lru_cache(maxsize=1) for global flags | Testable via cache_clear(), no mutable state | ✓ Good — 19+ globals test-friendly |
-| 13 Protocol types for factory contracts | Static analysis catches errors at type-check time | ✓ Good — pyright 0 errors |
-| Thin delegation pattern for wrappers | convert args → call Rust → convert return | ✓ Good — 60-75% wrapper reduction |
-| RuntimeError for missing Rust | Fail-fast, no silent degradation | ✓ Good — clear errors vs silent fallback |
-| validate_rust_modules() at startup | Early failure detection before user interaction | ✓ Good — catches missing modules immediately |
-| Rust-only, hard fail | No Python fallback for any migrated component | ✓ Good — clean architecture |
-| VR indicator removal | VR detection still works, just no display text | ✓ Good — simplified reports |
-| Delete Python orchestrators entirely | Not deprecate-first, immediate removal | ✓ Good — 1,223 lines removed cleanly |
-| asyncio.to_thread() for Rust batch processing | Avoid blocking event loop in async Python | ✓ Good — smooth async integration |
-| Arc<AtomicBool> for cancellation | Simpler than CancellationToken for between-logs checking | ✓ Good — clean Rust async pattern |
-| 1ms threshold for GIL release | Operations >1ms benefit from parallelism; faster ones don't justify overhead | ✓ Good — clear guideline |
-| Quick/thorough benchmark modes | BENCH_MODE env var controls depth (50 vs 200 samples) | ✓ Good — flexible for dev vs CI |
-| Shared benchmark config via #[path] | Benchmark utilities shared without crate dependency | ✓ Good — standard Rust pattern |
-| serial_test for cache-touching tests | Prevents parallel test pollution in global state tests | ✓ Good — BUG-01 fixed |
-| ResourceLoader.get_data_directory().parent as root | CWD-independent path resolution | ✓ Good — BUG-02 fixed |
-| Python-first optimization focus | Profiling showed 86% threading overhead, 0.3% Rust FFI | ✓ Good — right ROI |
-| ready_for_review trigger for CI benchmarks | Reduces noise vs all PR events | ✓ Good — less CI churn |
-| 5% warning / 10% failure thresholds | Balance sensitivity with noise tolerance | ✓ Good — actionable feedback |
+| Switch mmap to map_copy_read_only() | TOCTOU safety outweighs potential perf cost for >1MB files while preserving a conservative snapshot-style large-file read path | ✓ Validated in Phase 6 |
+| Keep Proton path code, wire it up | Linux support is planned; don't delete partial work | ✓ Validated in Phase 8 / Phase 11 |
+| Bounded `quick_cache` eviction for caches | Bounded memory is more important than unlimited cache hits for long-running processes, and Phase 4 standardizes on the repo's existing `quick_cache` implementation | ✓ Validated in Phase 4 |
+| Standardize owned lazy initialization on std primitives | `LazyLock`/`OnceLock` are stable in the repo MSRV and remove the need for direct `once_cell` ownership in workspace code | ✓ Validated in Phase 7 |
+| Promote only shared deps to workspace | TUI deps are local to one crate; workspace promotion adds management overhead for no benefit | ✓ Validated in Phase 8 (winreg + phf only) |
+| Before/after benchmarks for perf work | Prove improvements with data; criterion benchmarks become regression guards | ✓ Validated in Phase 5 / Phase 6 |
+| Binding parity in-scope | FCX and deprecated API issues span core + bindings; splitting would leave incomplete fixes | ✓ Validated in Phases 1, 3, 4, 8 |
+| Use bounded `LazyLock<quick_cache::Cache>` for input-derived alternation regexes (CONS-04 interpretation) | Repo-standard pattern; bounded caches own input-derived regexes while only true constants belong on dedicated `LazyLock` statics | ✓ Validated in Phase 5 / Phase 10 |
+| Treat FCX `Unnecessary` as success across bindings | Lets binding code keep the no-op reset path benign without breaking explicit-failure handling | ✓ Validated in Phase 3 |
+| In-place verification refresh for gap-closure phases (9/10/11) | Avoids parallel verification artifacts; the parent phase verification stays the single source of truth | ✓ Validated in Phase 9, 10, 11 |
+| Internal milestone label `v1.0` renamed to `v9.1.0-bugfixes` at ship time | Keeps the project's existing v8.x version progression contiguous and avoids the duplicate v1.0 entry that would otherwise collide with the 2026-02 "Codebase Cleanup" milestone | ✓ Applied at v9.1.0-bugfixes ship 2026-04-07 |
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd:transition`):
+1. Requirements invalidated? -> Move to Out of Scope with reason
+2. Requirements validated? -> Move to Validated with phase reference
+3. New requirements emerged? -> Add to Active
+4. Decisions to log? -> Add to Key Decisions
+5. "What This Is" still accurate? -> Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check -- still the right priority?
+3. Audit Out of Scope -- reasons still valid?
+4. Update Context with current state
 
 ---
-*Last updated: 2026-02-05 after starting v9.0.0 milestone*
+*Last updated: 2026-04-07 after v9.1.0-bugfixes milestone completion*

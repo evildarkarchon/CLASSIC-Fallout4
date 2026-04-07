@@ -289,21 +289,34 @@ describe("yamlGetHashmapVecValue", () => {
 // ---------------------------------------------------------------------------
 
 describe("yamlClearCache and yamlGetCacheStats", () => {
-  test("yamlGetCacheStats returns an object with expected fields", () => {
+  test("yamlGetCacheStats returns the canonical cache stats shape", () => {
     const stats = yamlGetCacheStats();
-    expect(typeof stats.cachedFiles).toBe("number");
-    expect(typeof stats.totalBytes).toBe("number");
+    expect(Object.keys(stats).sort()).toEqual([
+      "capacity",
+      "hit_rate",
+      "hits",
+      "misses",
+      "size",
+    ]);
+    expect(typeof stats.hits).toBe("number");
+    expect(typeof stats.misses).toBe("number");
+    expect(typeof stats.hit_rate).toBe("number");
+    expect(typeof stats.size).toBe("number");
+    expect(typeof stats.capacity).toBe("number");
   });
 
   test("yamlClearCache does not throw", () => {
     expect(() => yamlClearCache()).not.toThrow();
   });
 
-  test("cache stats after clear shows zero or unchanged", () => {
+  test("cache stats after clear report an empty cache", () => {
     yamlClearCache();
     const stats = yamlGetCacheStats();
-    expect(stats.cachedFiles).toBe(0);
-    expect(stats.totalBytes).toBe(0);
+    expect(stats.size).toBe(0);
+    expect(stats.capacity).toBeGreaterThan(0);
+    expect(stats.hits).toBeGreaterThanOrEqual(0);
+    expect(stats.misses).toBeGreaterThanOrEqual(0);
+    expect(stats.hit_rate).toBeGreaterThanOrEqual(0);
   });
 });
 

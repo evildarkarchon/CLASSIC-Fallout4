@@ -10,14 +10,12 @@
 use crate::error::Result;
 use dashmap::DashMap;
 use lru::LruCache;
-use memchr::{memchr, memmem};
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 // Type aliases for complex cache types (Clippy type_complexity fix)
 /// Cache for parsed named segments indexed by hash.
@@ -33,7 +31,7 @@ type PatternCache = Arc<RwLock<LruCache<String, Vec<(usize, String, String)>>>>;
 type CustomPatternsSnapshot = Arc<RwLock<Vec<(Arc<str>, Arc<Regex>)>>>;
 
 /// Pre-compiled regex patterns for common crash log patterns
-static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
+static COMMON_PATTERNS: LazyLock<HashMap<&'static str, Regex>> = LazyLock::new(|| {
     let mut patterns = HashMap::new();
     patterns.insert(
         "error",
@@ -61,22 +59,9 @@ static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
 });
 
 /// Pattern for crash generator header lines like "Addictol v1.0.0".
-static CRASHGEN_HEADER_PATTERN: Lazy<Regex> = Lazy::new(|| {
+static CRASHGEN_HEADER_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^[A-Za-z][A-Za-z0-9 _.\-]{1,80}\s+v\d+\.\d+(?:\.\d+){0,2}\b")
         .expect("Invalid crashgen header regex")
-});
-
-/// Legacy segment boundary definitions (kept for `parse_complete` backward compat only).
-#[allow(dead_code)]
-static SEGMENT_BOUNDARIES: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|| {
-    vec![
-        ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
-        ("PROBABLE CALL STACK:", "MODULES:"),
-        ("MODULES:", "PLUGINS:"),
-        ("PLUGINS:", "REGISTERS:"),
-        ("REGISTERS:", "STACK:"),
-        ("STACK:", "EOF"),
-    ]
 });
 
 /// High-performance log parser with parallel processing and SIMD optimizations
@@ -406,83 +391,6 @@ impl LogParser {
             || trimmed.starts_with("PLUGINS:")
             || trimmed.starts_with("REGISTERS:")
             || trimmed.starts_with("STACK:")
-    }
-
-    /// Convert named section map to deprecated positional segment vector.
-    fn named_sections_to_positional(
-        sections: &HashMap<String, Vec<Arc<str>>>,
-    ) -> Vec<Vec<Arc<str>>> {
-        use crate::segment_key;
-        vec![
-            sections
-                .get(segment_key::SETTINGS)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::SYSTEM)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::CALLSTACK)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::MODULES)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::XSE_MODULES)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::PLUGINS)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::REGISTERS)
-                .cloned()
-                .unwrap_or_default(),
-            sections
-                .get(segment_key::STACK_DUMP)
-                .cloned()
-                .unwrap_or_default(),
-        ]
-    }
-
-    /// Deprecated: parses log lines into a positional segment vector.
-    ///
-    /// This method is a backward-compatibility shim over `parse_all_sections_arc`.
-    /// It reconstructs the old positional `Vec<Vec<Arc<str>>>` from the named map.
-    /// Use `parse_all_sections_arc` for all new code.
-    ///
-    /// # TODO: Remove once all callers have migrated to `parse_all_sections_arc`.
-    #[deprecated(
-        since = "9.0.0",
-        note = "Use parse_all_sections_arc instead. This shim will be removed."
-    )]
-    pub fn parse_segments(&self, lines: &[Arc<str>]) -> Vec<Vec<Arc<str>>> {
-        let sections = self.parse_all_sections_arc(lines);
-        Self::named_sections_to_positional(&sections)
-    }
-
-    /// Deprecated: parse segments in parallel (delegates to `parse_all_sections_arc`).
-    ///
-    /// Segment parsing requires maintaining state across the entire log and cannot
-    /// be meaningfully parallelised at the line level. This method is kept for API
-    /// compatibility and simply delegates to `parse_all_sections_arc`.
-    ///
-    /// # TODO: Remove once all callers have migrated to `parse_all_sections_arc`.
-    #[deprecated(
-        since = "9.0.0",
-        note = "Use parse_all_sections_arc instead. Parallelism at the segment level is not meaningful."
-    )]
-    pub fn parse_segments_parallel(
-        &self,
-        lines: &[Arc<str>],
-        _chunk_size: Option<usize>,
-    ) -> Vec<Vec<Arc<str>>> {
-        let sections = self.parse_all_sections_arc(lines);
-        Self::named_sections_to_positional(&sections)
     }
 
     /// Finds all pattern matches in the log lines with parallel processing and caching.
@@ -1202,28 +1110,6 @@ impl LogParser {
             || CRASHGEN_HEADER_PATTERN.is_match(line)
     }
 
-    /// SIMD-optimized string contains check.
-    ///
-    /// Kept for potential use by `parse_complete` and other methods.
-    #[allow(dead_code)]
-    fn fast_contains(&self, haystack: &str, needle: &str) -> bool {
-        // Use memchr for single-byte patterns
-        if needle.len() == 1 {
-            if let Some(byte) = needle.bytes().next() {
-                return memchr(byte, haystack.as_bytes()).is_some();
-            }
-        }
-
-        // Use memmem for multi-byte patterns
-        if needle.len() < 32 {
-            let finder = memmem::Finder::new(needle);
-            return finder.find(haystack.as_bytes()).is_some();
-        }
-
-        // Fall back to standard contains for larger patterns
-        haystack.contains(needle)
-    }
-
     /// Optimized prefix matching for segment boundary detection.
     ///
     /// Uses direct byte slice comparison which is highly optimized by LLVM.
@@ -1557,6 +1443,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::segment_key;
 
     fn create_sample_log() -> Vec<Arc<str>> {
         vec![
@@ -1612,48 +1499,57 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_segment_parsing_deprecated_shim() {
+    fn test_parse_all_sections_arc_basic_segmentation() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = create_sample_log();
-        let segments = parser.parse_segments(&log_lines);
-        // Shim returns positional Vec; settings (segment 0) should have content
-        assert!(!segments.is_empty());
+        let sections = parser.parse_all_sections_arc(&log_lines);
+        // Named sections map should be non-empty and settings should have content
+        assert!(!sections.is_empty());
+        assert!(
+            !sections[segment_key::SETTINGS].is_empty(),
+            "settings section should contain log header lines"
+        );
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_segment_parsing_with_patches_first_boundary() {
+    fn test_parse_all_sections_arc_patches_in_settings() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = create_sample_log_patches_only();
-        // Anchor-first: [Patches] is just content in the settings segment
-        let segments = parser.parse_segments(&log_lines);
-        assert!(!segments.is_empty());
-        // settings segment (index 0) should contain the [Patches] line
+        let sections = parser.parse_all_sections_arc(&log_lines);
+        // Anchor-first: [Patches] content lives in the settings section
         assert!(
-            segments[0]
+            sections[segment_key::SETTINGS]
                 .iter()
-                .any(|line| line.contains("[Patches]") || line.contains("bThreads"))
+                .any(|line| line.contains("[Patches]") || line.contains("bThreads")),
+            "settings section should contain [Patches] or bThreads line"
         );
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_deprecated_parse_segments_preserves_xse_modules_slot() {
+    fn test_parse_all_sections_arc_preserves_xse_modules() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = make_log_with_known_header();
-        let segments = parser.parse_segments(&log_lines);
+        let sections = parser.parse_all_sections_arc(&log_lines);
 
-        // Deprecated positional layout should preserve a dedicated xse_modules slot
-        // between modules and plugins.
-        assert!(segments.len() >= 6);
-        assert!(segments[3].iter().any(|line| line.contains("module.dll")));
+        // Named sections should correctly separate modules, xse_modules, and plugins
         assert!(
-            segments[4]
+            sections[segment_key::MODULES]
                 .iter()
-                .any(|line| line.contains("f4se_plugin.dll"))
+                .any(|line| line.contains("module.dll")),
+            "modules section should contain module.dll"
         );
-        assert!(segments[5].iter().any(|line| line.contains("Fallout4.esm")));
+        assert!(
+            sections[segment_key::XSE_MODULES]
+                .iter()
+                .any(|line| line.contains("f4se_plugin.dll")),
+            "xse_modules section should contain f4se_plugin.dll"
+        );
+        assert!(
+            sections[segment_key::PLUGINS]
+                .iter()
+                .any(|line| line.contains("Fallout4.esm")),
+            "plugins section should contain Fallout4.esm"
+        );
     }
 
     // ===== Tests for parse_all_sections_arc (anchor-first segmentation) =====
@@ -1776,11 +1672,9 @@ mod tests {
         }
 
         // Unknown header [NewForkHeader] ends up in settings segment
-        assert!(
-            unknown[segment_key::SETTINGS]
-                .iter()
-                .any(|l| l.contains("[NewForkHeader]"))
-        );
+        assert!(unknown[segment_key::SETTINGS]
+            .iter()
+            .any(|l| l.contains("[NewForkHeader]")));
     }
 
     #[test]
@@ -1879,17 +1773,13 @@ mod tests {
         let sections = parser.parse_all_sections_arc(&log);
         use crate::segment_key;
         // System section should have CPU line
-        assert!(
-            sections[segment_key::SYSTEM]
-                .iter()
-                .any(|l| l.contains("CPU"))
-        );
+        assert!(sections[segment_key::SYSTEM]
+            .iter()
+            .any(|l| l.contains("CPU")));
         // Callstack should have frame
-        assert!(
-            sections[segment_key::CALLSTACK]
-                .iter()
-                .any(|l| l.contains("[0]"))
-        );
+        assert!(sections[segment_key::CALLSTACK]
+            .iter()
+            .any(|l| l.contains("[0]")));
     }
 
     #[test]
@@ -1917,11 +1807,9 @@ mod tests {
         // Settings segment should contain both [Patches] and bThreads lines
         let settings = &sections[segment_key::SETTINGS];
         assert!(!settings.is_empty(), "Settings segment should not be empty");
-        assert!(
-            settings
-                .iter()
-                .any(|l| l.trim() == "[Patches]" || l.contains("[Patches]"))
-        );
+        assert!(settings
+            .iter()
+            .any(|l| l.trim() == "[Patches]" || l.contains("[Patches]")));
         assert!(settings.iter().any(|l| l.contains("bThreads")));
     }
 
@@ -1946,11 +1834,9 @@ mod tests {
         let section = parser.get_section(&log_lines, "STACK");
         assert!(section.is_some());
         let section = section.unwrap();
-        assert!(
-            section
-                .iter()
-                .any(|line| line.contains("Fallout4.exe+0123456"))
-        );
+        assert!(section
+            .iter()
+            .any(|line| line.contains("Fallout4.exe+0123456")));
     }
 
     #[test]

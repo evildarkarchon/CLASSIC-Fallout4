@@ -140,12 +140,8 @@ Behavior visible in source:
 
 - `find_docs_path()` tries the cached string path first
 - on Windows it queries the registry-backed documents folder and appends `relative_path`
-- on non-Windows builds it uses `home/.local/share/<relative_path>`
+- on non-Windows builds it next tries a Fallout 4 Proton documents path resolved from Steam library metadata, then falls back to `home/.local/share/<relative_path>` if Proton metadata lookup fails or the Proton path is invalid
 - `validate_ini_files()` checks existence and then parses each required INI via `IniFile::load()`
-
-Source-observed limitation:
-
-- Linux-specific Steam/Proton helpers exist, but `DocsPathFinder` does not currently call `parse_steam_library()` or construct a Proton documents path automatically
 
 ## Validation helpers
 

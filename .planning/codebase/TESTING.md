@@ -1,135 +1,193 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-04
 
 ## Test Framework Overview
 
-This codebase has four parallel test layers, one per language:
+This is a multi-language project with distinct test frameworks per layer:
 
-| Layer | Framework | Location |
-|---|---|---|
-| Rust | `cargo test` (built-in) | `ClassicLib-rs/` |
-| C++ CLI | Catch2 v3 | `classic-cli/tests/` |
-| C++ GUI | Qt Test | `classic-gui/tests/` |
-| Node/Bun | `bun:test` | `ClassicLib-rs/node-bindings/classic-node/__test__/` |
-| Python | pytest | `ClassicLib-rs/python-bindings/tests/` |
+| Layer | Framework | Config |
+|-------|-----------|--------|
+| Rust (core crates) | `cargo test` + `tokio::test` | `ClassicLib-rs/Cargo.toml` |
+| C++ | Catch2 v3 | `classic-cli/CMakeLists.txt`, `classic-gui/CMakeLists.txt` |
+| Node/Bun bindings | Bun test + Node `node:test` | `ClassicLib-rs/node-bindings/classic-node/package.json` |
+| Python bindings | pytest | `ClassicLib-rs/python-bindings/tests/` |
 
----
+## Rust Test Framework
 
-## Rust Tests
+**Runner:** `cargo test` (standard Rust test harness)
 
-### Test Runner
+**Async test attribute:** `#[tokio::test]` for async tests (workspace dependency `tokio` with `features = ["full"]`)
 
-**Runner:** `cargo test`
-**Config:** `ClassicLib-rs/Cargo.toml` workspace config; no separate test config file
+**Serial tests:** `serial_test` crate with `#[serial]` attribute for tests that mutate global/filesystem state
 
 **Run Commands:**
 ```bash
-# All workspace tests
+# All workspace tests (excluding PyO3 crates)
 cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
 
 # Single crate
-cargo test --manifest-path ClassicLib-rs/Cargo.toml -p classic-config-core
+cargo test -p classic-config-core --manifest-path ClassicLib-rs/Cargo.toml
 
-# Coverage (uses cargo-llvm-cov via PowerShell wrapper)
-pwsh -ExecutionPolicy Bypass -File ClassicLib-rs/coverage_report.ps1
-pwsh -ExecutionPolicy Bypass -File ClassicLib-rs/coverage_report.ps1 -Package classic-scanlog-core
+# Named test
+cargo test --manifest-path ClassicLib-rs/Cargo.toml test_name
 ```
 
-### Test File Organization
+**Coverage Commands (PowerShell):**
+```powershell
+# Workspace coverage (HTML + JSON + lcov)
+./ClassicLib-rs/coverage_report.ps1
 
-**Two patterns coexist:**
+# Per-crate coverage
+./ClassicLib-rs/coverage_report.ps1 -Package classic-scanlog-core
 
-1. **Inline unit tests** (`#[cfg(test)]` module at bottom of source file):
-   - Located in the same `.rs` file as the code being tested
-   - Used in almost all crates: `classic-file-io-core/src/core.rs`, `classic-file-io-core/src/backup.rs`, `classic-file-io-core/src/hash.rs`, `classic-constants-core/src/lib.rs`, `classic-crashgen-settings-core/src/lib.rs`, `classic-database-core/src/pool_sqlx.rs`, `classic-message-core/src/*.rs`, `classic-path-core/src/*.rs`
+# Summary table (60% target threshold)
+./ClassicLib-rs/coverage_summary.ps1
+```
 
-2. **Separate integration test files** (in `tests/` directory):
-   - `ClassicLib-rs/business-logic/classic-config-core/tests/integration_tests.rs`
-   - `ClassicLib-rs/business-logic/classic-database-core/tests/integration_tests.rs`
-   - `ClassicLib-rs/business-logic/classic-yaml-core/tests/integration_tests.rs`
-   - `ClassicLib-rs/foundation/classic-shared-core/tests/test_path_lru.rs`
-   - `ClassicLib-rs/foundation/classic-shared-core/tests/test_rolling_stats.rs`
-   - `ClassicLib-rs/ui-applications/classic-tui/tests/event_tests.rs`
-   - `ClassicLib-rs/ui-applications/classic-tui/tests/render_tests.rs`
+**Coverage tool:** `cargo-llvm-cov` (LLVM instrumentation), outputs to `ClassicLib-rs/target/llvm-cov/`
 
-**Naming:**
-- Unit test functions: `test_<what_is_tested>` pattern: `test_rolling_stats_basic`, `test_lru_cache_bounded`
-- Integration test functions: longer descriptive names: `test_complete_config_load_workflow`, `test_from_yaml_content_merges_multiple_documents_per_input`
+## Rust Test File Organization
 
-### Test Suite Structure
+**Two patterns are used:**
 
-**Integration tests use nested modules** organized by concern:
+**1. Inline unit tests** — `#[cfg(test)]` module at the bottom of the source file. Used when tests exercise private internals or require close proximity to the implementation.
+
+Location: Bottom of source file (118 files use this pattern)
+
 ```rust
-// integration_tests.rs pattern
-mod config_loading_workflows {
+// src/core.rs (bottom)
+#[cfg(test)]
+mod tests {
     use super::*;
-    #[tokio::test]
-    async fn test_complete_config_load_workflow() { ... }
-}
+    use serial_test::serial;
+    use std::io::Write;
+    use tempfile::TempDir;
 
-mod error_handling_workflows {
-    use super::*;
     #[test]
-    fn test_invalid_yaml_error() { ... }
-}
+    fn test_new_with_default_parameters() {
+        let core = FileIOCore::default();
+        assert_eq!(core.default_encoding, "utf-8");
+    }
 
-mod parallel_loading {
-    use super::*;
     #[tokio::test]
-    async fn test_concurrent_config_loading() { ... }
-}
-
-mod clone_debug {
-    use super::*;
-    #[test]
-    fn test_config_clone() { ... }
+    async fn test_read_file_success() {
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("test.txt");
+        std::fs::write(&file_path, "Hello, World!").unwrap();
+        let core = FileIOCore::default();
+        let content = core.read_file(&file_path).await.unwrap();
+        assert_eq!(content, "Hello, World!");
+    }
 }
 ```
 
-**Section dividers** using `=` comments are used to group tests:
+**2. Separate integration test files** — `tests/integration_tests.rs` in a `tests/` directory alongside `src/`. Used for cross-component workflows.
+
+Location: `ClassicLib-rs/business-logic/<crate>/tests/integration_tests.rs`
+
+Known integration test files:
+- `ClassicLib-rs/business-logic/classic-config-core/tests/integration_tests.rs`
+- `ClassicLib-rs/business-logic/classic-database-core/tests/integration_tests.rs`
+- `ClassicLib-rs/business-logic/classic-yaml-core/tests/integration_tests.rs`
+- `ClassicLib-rs/foundation/classic-shared-core/tests/test_path_lru.rs`
+- `ClassicLib-rs/foundation/classic-shared-core/tests/test_rolling_stats.rs`
+- `ClassicLib-rs/ui-applications/classic-tui/tests/event_tests.rs`
+- `ClassicLib-rs/ui-applications/classic-tui/tests/render_tests.rs`
+
+## Rust Test Structure
+
+**Suite organization in integration tests** — group by workflow using nested `mod` blocks with section comments:
+
 ```rust
+//! Integration tests for classic-config-core
+
+use classic_config_core::{ConfigError, YamlDataCore};
+use tempfile::tempdir;
+
 // ============================================================================
 // Test Data Fixtures
 // ============================================================================
 
+fn minimal_main_yaml() -> &'static str {
+    r#"CLASSIC_Info:
+  version: "7.31.0""#
+}
+
 // ============================================================================
 // Complete Configuration Loading Workflow Tests
 // ============================================================================
-```
 
-### Async Testing
+mod config_loading_workflows {
+    use super::*;
 
-Use `#[tokio::test]` for async test functions. The Tokio runtime is created per test:
-```rust
-#[tokio::test]
-async fn test_complete_config_load_workflow() {
-    let temp_dir = tempdir().expect("Failed to create temp dir");
-    let config = YamlDataCore::load_from_yaml_files(yaml_dirs, ...)
-        .await
-        .expect("Config load should succeed");
-    assert_eq!(config.classic_version, "7.31.0");
+    #[tokio::test]
+    async fn test_complete_config_load_workflow() {
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        // ... setup ...
+        let config = YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await
+            .expect("Config load should succeed");
+        assert_eq!(config.classic_version, "7.31.0");
+    }
+}
+
+mod error_handling_workflows {
+    use super::*;
+
+    #[test]
+    fn test_invalid_yaml_error() {
+        let result = YamlDataCore::from_yaml_content("{ invalid: }}}",  ...);
+        assert!(result.is_err());
+        match result {
+            Err(ConfigError::ParseError { context, .. }) => {
+                assert!(context.contains("main"));
+            }
+            Err(e) => panic!("Expected ParseError, got {:?}", e),
+            Ok(_) => panic!("Should fail with invalid YAML"),
+        }
+    }
 }
 ```
 
-**Concurrent test isolation:** The `serial_test` crate is used (`#[serial]`) when tests modify global state such as metrics:
-```rust
-use serial_test::serial;
+**Patterns:**
+- Setup: use `tempfile::tempdir()` or `tempfile::NamedTempFile` for all file-based tests
+- Teardown: tempfile handles automatic cleanup on drop
+- Assertions: `assert_eq!`, `assert!`, `assert!(result.is_err())`, pattern matching on error variants
+- In tests, `.expect("descriptive message")` is preferred over `.unwrap()` for clarity
 
-#[test]
-#[serial]
-fn test_rolling_stats_basic() {
-    let metrics = get_global_metrics();
-    metrics.clear();
-    // ...
-}
+## Rust Mocking
+
+**Framework:** No external mock framework. Tests use:
+- Real in-memory data or temp files instead of mocks
+- Dependency injection via function parameters accepting `impl Fn` closures
+- `#[cfg(test)]` to expose test-only constructors (e.g., `new_with_limits`)
+
+Example from `classic-config-core/src/config.rs`:
+```rust
+fn choose_settings_write_path_with_access(
+    existing_paths: &[PathBuf],
+    app_dir: Option<&Path>,
+    _user_dir: Option<&Path>,
+    can_update_existing: impl Fn(&Path) -> bool,  // injectable behavior
+    can_create_new: impl Fn(&Path) -> bool,
+) -> Result<Option<PathBuf>> { ... }
 ```
 
-### Fixtures and Factories
+**What to use real implementations for:**
+- File I/O (use `tempfile::TempDir`)
+- SQLite databases (use `tempfile::NamedTempFile` with `.db` suffix)
+- YAML parsing (use inline string literals)
 
-**Inline fixture functions** that return `&'static str` YAML content are the primary pattern:
+**What NOT to mock:**
+- The Tokio runtime (use shared runtime from `classic-shared-core`)
+- The `#[cfg(test)]` block structure itself
+
+## Rust Test Data Fixtures
+
+**Pattern:** Static functions returning `&'static str` YAML literals
+
 ```rust
-// Found in: classic-config-core/tests/integration_tests.rs
 fn minimal_main_yaml() -> &'static str {
     r#"
 CLASSIC_Info:
@@ -138,289 +196,116 @@ CLASSIC_Info:
 "#
 }
 
-fn minimal_game_yaml() -> &'static str { ... }
-fn minimal_ignore_yaml() -> &'static str { ... }
-```
-
-**`tempfile` crate** for temporary directories and files:
-```rust
-use tempfile::{tempdir, NamedTempFile};
-
-let temp_dir = tempdir().expect("Failed to create temp dir");
-let databases_dir = temp_dir.path().join("databases");
-fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
-fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-    .expect("Failed to write main YAML");
-```
-
-**Database fixtures:** Helper function pattern for SQLite test databases:
-```rust
-// Found in: classic-database-core/tests/integration_tests.rs
-async fn create_test_database(
-    table_name: &str,
-    entries: &[(&str, &str, &str)],
-) -> Result<(NamedTempFile, PathBuf), DatabaseError> { ... }
-```
-
-### Mocking
-
-**No mock framework used.** Rust tests rely on:
-- Real temporary files and directories via `tempfile`
-- Fixtures providing known-good YAML content strings
-- Behavior injection through constructor arguments (e.g., `BackupManager::new(game_root, None)`)
-- Global state cleared explicitly between tests (e.g., `clear_global_yaml_cache()`, `FileHasher::clear_cache()`)
-
-### Assertions
-
-**Standard `assert!` / `assert_eq!` / `assert_ne!`** with descriptive messages:
-```rust
-assert_eq!(config.classic_version, "7.31.0");
-assert!(
-    cache_size <= 10,
-    "Cache should not exceed max size: {} <= 10",
-    cache_size
-);
-```
-
-**Error variant matching** using `match` with panic fallthrough:
-```rust
-match result {
-    Err(ConfigError::IOError { context, .. }) => {
-        assert!(context.contains("not found") || context.contains("YAML file"));
-    }
-    Err(e) => panic!("Expected IOError, got {:?}", e),
-    Ok(_) => panic!("Should fail with missing files"),
+fn minimal_game_yaml() -> &'static str {
+    r#"
+Game_Info:
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+"#
 }
 ```
 
-### Coverage
+**Location:** Defined at module scope above test mod blocks in integration test files.
 
-**Tool:** `cargo-llvm-cov` via `ClassicLib-rs/coverage_report.ps1`
+**For async database tests:** Helper async functions (e.g., `create_test_database`) that set up SQLite in `tempfile::NamedTempFile`.
 
-**Reports generated:** HTML, JSON, and lcov formats
+## C++ Test Framework
 
-**Exclusions:** PyO3 binding crates excluded from test run (require Python DLL at runtime); generated code (Slint bindings) excluded from metrics
+**Runner:** Catch2 v3 (discovered via `catch_discover_tests` in CMake)
 
-**Commands:**
-```bash
-# Workspace-wide
-pwsh -ExecutionPolicy Bypass -File ClassicLib-rs/coverage_report.ps1
+**Config:** Built only when `find_package(Catch2 3 CONFIG QUIET)` succeeds; requires `catch2` in vcpkg.json
 
-# Per-crate
-pwsh -ExecutionPolicy Bypass -File ClassicLib-rs/coverage_report.ps1 -Package classic-config-core
-
-# Clean first
-pwsh -ExecutionPolicy Bypass -File ClassicLib-rs/coverage_report.ps1 -Clean
-```
-
-### Doc Tests
-
-**Extensively used** in Rust crates. Public functions have `# Examples` sections with runnable doc tests:
-```rust
-/// # Example
-/// ```rust,no_run
-/// use classic_file_io_core::hash::FileHasher;
-/// let hash = FileHasher::hash_file(Path::new("data.bin"))?;
-/// assert_eq!(hash.len(), 64);
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-```
-
-`no_run` is used when the example requires a real filesystem path. `rust,no_run` is the standard annotation. Plain `rust` blocks are runnable and verified by `cargo test`.
-
----
-
-## C++ CLI Tests (Catch2)
-
-### Test Runner
-
-**Framework:** Catch2 v3 (from vcpkg: `catch2`)
-**Config:** `classic-cli/CMakeLists.txt` — tests registered with `catch_discover_tests()`
-
-**Run Commands:**
-```bash
-# Run all CLI tests
+**Run via PowerShell wrapper (never raw ctest):**
+```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
-
-# Run specific test by name
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "CliArgs defaults"
-
-# Integration tests
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
 ```
 
-**Important:** Never invoke test binaries or raw `ctest` directly. Always use `build_cli.ps1 -Test`.
+**Location:** `classic-cli/tests/test_*.cpp`, `classic-gui/tests/test_*.cpp`
 
-### Test File Organization
-
-**Location:** `classic-cli/tests/`
-**Naming:** `test_<component>.cpp`: `test_cli_args.cpp`, `test_thread_pool.cpp`, `test_progress.cpp`
-
-**Scope:** Only components that do NOT depend on the Rust CXX bridge are covered. Bridge-dependent code is excluded by design (note in `CMakeLists.txt`).
-
-### Test Structure
-
+**Test structure:**
 ```cpp
-// test_cli_args.cpp pattern
+#include <catch2/catch_test_macros.hpp>
+#include "cli_args.h"
 
 TEST_CASE("CliArgs defaults", "[cli_args]") {
     ArgvBuilder ab({"classic-cli"});
     CliArgs args = parse_args(ab.argc(), ab.argv());
     REQUIRE(args.game == "Fallout4");
-    REQUIRE(args.max_concurrent == 0);
+    REQUIRE(args.fcx_mode == false);
 }
 
-TEST_CASE("CliArgs game selection", "[cli_args]") {
-    SECTION("Fallout4 (explicit)") {
-        ArgvBuilder ab({"classic-cli", "--game", "Fallout4"});
+TEST_CASE("CliArgs boolean flags", "[cli_args]") {
+    SECTION("--fcx-mode enables FCX") {
+        ArgvBuilder ab({"classic-cli", "--fcx-mode"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
-        REQUIRE(args.game == "Fallout4");
+        REQUIRE(args.fcx_mode == true);
     }
-
-    SECTION("Skyrim") {
-        ArgvBuilder ab({"classic-cli", "--game", "Skyrim"});
-        CliArgs args = parse_args(ab.argc(), ab.argv());
-        REQUIRE(args.game == "Skyrim");
+    SECTION("--show-fid-values enables FormID display") {
+        // ...
     }
 }
 ```
 
-**Tags:** `[cli_args]`, `[thread_pool]`, `[progress]` — match filename
+**Patterns:**
+- `TEST_CASE("description", "[tag]")` for top-level tests
+- `SECTION("...")` for sub-cases within a test
+- `REQUIRE(...)` for assertions (test fails immediately on false)
+- Helper structs (e.g., `ArgvBuilder`) defined in test files for repeated setup
+- Tests only cover bridge-free components; CXX bridge components are tested via PowerShell integration tests
 
-**SECTION blocks** used for related variations of the same `TEST_CASE`.
+## Node/Bun Test Framework
 
-**Assertions:** `REQUIRE` (terminates test on failure), not `CHECK`.
+**Runner (primary):** Bun test (`bun test`)
 
-### Fixtures and Helpers
+**Runner (secondary):** Node.js `node:test` module — `__test__/runtime.node.test.mjs` verifies the binding also works with vanilla Node
 
-**Helper structs** local to test files:
-```cpp
-struct ArgvBuilder {
-    std::vector<std::string> args;
-    std::vector<char*> ptrs;
-    explicit ArgvBuilder(std::initializer_list<std::string> list) : args(list) { ... }
-    int argc() const { return static_cast<int>(ptrs.size()); }
-    char** argv() { return ptrs.data(); }
-};
-```
-
-**Factory functions** in anonymous namespaces in GUI tests:
-```cpp
-namespace {
-classic::scanner::BatchProgressEvent makeEvent(
-    classic::scanner::BatchProgressEventKind eventKind,
-    classic::scanner::BatchProgressPhase phase,
-    std::uint32_t inputIndex,
-    ...) { ... }
-}
-```
-
----
-
-## C++ GUI Tests (Qt Test)
-
-### Test Runner
-
-**Framework:** Qt Test (`Qt6::Test`)
-**Config:** `classic-gui/tests/CMakeLists.txt`
+**Config:** `package.json` scripts
 
 **Run Commands:**
 ```bash
-pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
-pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName "test name"
+cd ClassicLib-rs/node-bindings/classic-node
+bun run test:bun         # Run all bun tests
+bun run test:node        # Run Node.js runtime test
+bun run test             # Alias for test:bun
 ```
 
-### Test File Organization
-
-**Location:** `classic-gui/tests/`
-**Naming:** `test_<component>.cpp`: `test_signalhub.cpp`, `test_scan_progress_model.cpp`, `test_mainwindow_geometry.cpp`
-
-**Files:**
-- `test_mainwindow_geometry.cpp`
-- `test_markdownviewer.cpp`
-- `test_reportlistwidget.cpp`
-- `test_reportmetadatawidget.cpp`
-- `test_resultscontroller.cpp`
-- `test_scanworker_cancellation.cpp`
-- `test_scan_progress_model.cpp`
-- `test_scan_settings_wiring.cpp`
-- `test_signalhub.cpp`
-- `test_threadmanager.cpp`
-
-### Test Structure
-
-Qt Test uses class-based test organization:
-```cpp
-class SignalHubTests : public QObject {
-    Q_OBJECT
-
-private slots:
-    void instance_returns_same_singleton_reference();
-    void scanStarted_signal_is_emitted();
-    void scanProgress_signal_carries_expected_payload();
-};
-
-void SignalHubTests::scanStarted_signal_is_emitted()
-{
-    SignalHub& hub = SignalHub::instance();
-    QSignalSpy spy(&hub, &SignalHub::scanStarted);
-    const bool invoked = QMetaObject::invokeMethod(&hub, "scanStarted", Qt::DirectConnection);
-    QVERIFY(invoked);
-    QCOMPARE(spy.count(), 1);
-}
-
-QTEST_GUILESS_MAIN(SignalHubTests)
-#include "test_signalhub.moc"
-```
-
-**Platform:** Tests run headless using `offscreen` QPA platform (`QT_QPA_PLATFORM=offscreen`).
-
-**Qt Test assertions:** `QCOMPARE`, `QVERIFY`, `QVERIFY2` (with message)
-
-**Signal testing:** `QSignalSpy` used to capture and verify Qt signals
-
----
-
-## Node/Bun Tests
-
-### Test Runner
-
-**Framework:** `bun:test`
-**Config:** `ClassicLib-rs/node-bindings/classic-node/package.json`
-
-**Run Commands:**
-```bash
-# From ClassicLib-rs/node-bindings/classic-node/
-bun install && bun run build
-bun run test:bun          # Bun test runner
-bun run test:node         # Node.js built-in test runner
-bun run parity:gate:local # API parity check + dts freshness
-```
-
-### Test File Organization
+## Node Test File Organization
 
 **Location:** `ClassicLib-rs/node-bindings/classic-node/__test__/`
-**Naming:** `<feature>.spec.ts`
 
-**Files:**
-- `cli.spec.ts`
-- `config.spec.ts`
-- `constants.spec.ts`
-- `database.spec.ts`
-- `fileio.spec.ts`
-- `message.spec.ts`
-- `parity_tier1.spec.ts`
-- `path.spec.ts`
-- `regression_drift.spec.ts`
-- `resource.spec.ts`
-- `runtime.node.test.mjs` (Node.js native test runner)
-- `scangame.spec.ts`
-- `scanlog.spec.ts`
+**Naming:** `<module>.spec.ts` (e.g., `config.spec.ts`, `scanlog.spec.ts`, `parity_tier1.spec.ts`)
 
-### Test Structure
+**Special files:**
+- `parity_tier1.spec.ts` — cross-module parity gate; verifies all binding surfaces match expected behavior
+- `regression_drift.spec.ts` — reads `index.d.ts` to verify type signature stability
+- `runtime.node.test.mjs` — vanilla Node.js compatibility test
+
+**Fixtures location:** `ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/`
+
+```
+__test__/
+├── config.spec.ts
+├── scanlog.spec.ts
+├── parity_tier1.spec.ts
+├── regression_drift.spec.ts
+├── runtime.node.test.mjs
+└── fixtures/
+    ├── cli.fixtures.ts
+    ├── runtime_coverage_registry.json
+    ├── runtime_coverage_registry.ts
+    ├── tier1_parity.fixtures.ts
+    └── tier1_regression.fixtures.ts
+```
+
+## Node Test Structure
 
 ```typescript
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach } from "bun:test";
+import { YamlData, createYamlDataFromContent, clearYamlCache } from "../index.js";
+import { PARITY_MAIN_YAML, PARITY_GAME_YAML, PARITY_IGNORE_YAML } from "./fixtures/tier1_parity.fixtures";
+
+const THIS_SUITE = "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts";
 
 describe("YamlData construction", () => {
   beforeEach(() => {
@@ -432,126 +317,250 @@ describe("YamlData construction", () => {
     expect(data).toBeDefined();
     expect(data.classicVersion).toBe("7.31.0");
   });
+
+  test("fromYamlContent throws on invalid YAML", () => {
+    expect(() =>
+      YamlData.fromYamlContent("{ invalid: yaml: }}}",  GAME_YAML, IGNORE_YAML, "Fallout4", "auto")
+    ).toThrow(/Failed to parse main YAML:/);
+  });
+
+  test("fromYamlContent classifies parse failures as InvalidArg", () => {
+    try {
+      YamlData.fromYamlContent("{ invalid }}}",  GAME_YAML, IGNORE_YAML, "Fallout4", "auto");
+      throw new Error("expected parse failure");
+    } catch (err) {
+      const error = err as Error & { code?: string };
+      expect(error.code).toBe("InvalidArg");
+    }
+  });
 });
 ```
 
-**Suite identifier:** `THIS_SUITE` constant at top of each file for error reporting:
-```typescript
-const THIS_SUITE = "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts";
-```
+**Patterns:**
+- `THIS_SUITE` constant at the top of each spec file (suite identifier for coverage registry)
+- `beforeEach(() => { clearYamlCache(); })` to isolate cache state between tests
+- Temp directories created with `mkdtempSync(join(tmpdir(), "prefix-"))` and cleaned with `rmSync(..., { recursive: true })`
+- Error testing: use both `expect(...).toThrow(/pattern/)` and try/catch for `error.code` inspection
 
-### Fixtures and Factories
+## Node Fixtures
 
-**SCREAMING_SNAKE_CASE string constants** for YAML content at file scope:
+**YAML content fixtures** — `tier1_parity.fixtures.ts`:
 ```typescript
-const MAIN_YAML = `
+export const PARITY_MAIN_YAML = `
 CLASSIC_Info:
-  version: "7.31.0"
-...`;
+  version: "9.0.0"
+`;
 
-const GAME_YAML = `...`;
-const IGNORE_YAML = `...`;
+export const scanlogConfigCases = [
+  { id: "fallout4-non-vr-defaults", game: "Fallout4", gameVersion: "auto",
+    expected: { crashgenName: "", xseAcronym: "", classicVersion: "CLASSIC" } },
+];
 ```
 
-**Temp directories** using Node.js `fs` primitives:
+**Runtime coverage registry** — `runtime_coverage_registry.json`:
+JSON file listing test coverage entries. The parity spec queries it to decide which test suites to activate. New test coverage entries should be added to this registry.
+
 ```typescript
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-
-let tmpDir: string;
-beforeEach(() => { tmpDir = mkdtempSync(join(tmpdir(), "classic-test-")); });
-afterEach(() => { rmSync(tmpDir, { recursive: true, force: true }); });
+import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
+const activeCoverageCases = new Set(
+  getRuntimeCoverageEntries(THIS_SUITE).map(e => e.testCaseId).filter(Boolean)
+);
 ```
 
-### Parity Testing
+## Python Test Framework
 
-**Tier-1 parity smoke tests** in `parity_tier1.spec.ts` verify that the Node binding exposes the same API surface as Python bindings. These import nearly every exported symbol and call each function/constructor at least once.
+**Runner:** pytest
 
-**Parity gate tool:** `bun run parity:gate:local` runs `tools/node_api_parity/check_parity_gate.py` and `tools/node_api_parity/check_dts_freshness.py` to verify `index.d.ts` freshness and API baseline match.
-
----
-
-## Python Tests
-
-### Test Runner
-
-**Framework:** pytest
-**Run Command:**
+**Run Commands:**
 ```bash
 uv run pytest ClassicLib-rs/python-bindings/tests -q
 ```
 
-**Parity gate:**
+**Parity check:**
 ```bash
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 ```
 
-### Test File Organization
+## Python Test File Organization
 
 **Location:** `ClassicLib-rs/python-bindings/tests/`
-**Files:**
-- `test_binding_coverage_tooling.py`
-- `test_parity_gate_tooling.py`
-- `test_python_parity_tooling.py`
-- `test_tier1_parity_smoke.py`
-- `fixtures/__init__.py`
-- `fixtures/runtime_coverage_registry.py`
-- `fixtures/tier1_parity_fixtures.py`
 
-### Test Structure
+**Naming:** `test_*.py`
+
+**Fixtures location:** `ClassicLib-rs/python-bindings/tests/fixtures/`
+
+```
+tests/
+├── __init__.py
+├── test_binding_coverage_tooling.py
+├── test_parity_gate_tooling.py
+├── test_python_parity_tooling.py
+├── test_tier1_parity_smoke.py
+└── fixtures/
+    ├── __init__.py
+    ├── runtime_coverage_registry.json
+    ├── runtime_coverage_registry.py
+    └── tier1_parity_fixtures.py
+```
+
+## Python Test Structure
 
 ```python
+"""Registry-driven runtime parity smoke tests for maintained Python bindings."""
+from __future__ import annotations
+import pytest
+from .fixtures.tier1_parity_fixtures import PARITY_MAIN_YAML, PARITY_GAME_YAML, PARITY_IGNORE_YAML
+
+THIS_SUITE = "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py"
+
 def test_imports_and_versions() -> None:
     import classic_config
-    import classic_scanlog
     assert isinstance(classic_config.__version__, str)
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("classic_pybridge")
+
+def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import classic_config
+    data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML, PARITY_GAME_YAML, PARITY_IGNORE_YAML, "Fallout4", "auto"
+    )
+    assert data.classic_version == "9.0.0"
+
+    with pytest.raises(classic_config.RustConfigParseError) as exc_info:
+        classic_config.YamlData.from_yaml_content("{ invalid }}}",  ...)
+    assert "Failed to parse main YAML:" in str(exc_info.value)
 ```
 
-**Fixtures module:** YAML string constants kept in `fixtures/tier1_parity_fixtures.py` and imported across test files:
+**Patterns:**
+- `THIS_SUITE` constant at top of each test file
+- `tmp_path: Path` pytest fixture for temp directories (no manual cleanup needed)
+- `monkeypatch` fixture for environment variable manipulation
+- `pytest.raises(ExceptionClass)` with `str(exc_info.value)` inspection
+- Helper functions prefixed with `_` to indicate they are not direct test functions
+
+## Python Fixtures
+
+**YAML content** — `tier1_parity_fixtures.py`:
 ```python
-from .fixtures.tier1_parity_fixtures import (
-    PARITY_GAME_YAML,
-    PARITY_IGNORE_YAML,
-    PARITY_MAIN_YAML,
-)
+PARITY_MAIN_YAML = """
+CLASSIC_Info:
+  version: "9.0.0"
+"""
+PARITY_GAME_YAML = """
+Game_Info:
+  XSE_Acronym: "F4SE"
+"""
 ```
 
-**pytest fixtures:** `tmp_path` (built-in), `monkeypatch` for environment/import state manipulation
+**Note:** Python and Node parity fixtures are maintained in sync to catch cross-binding divergence.
 
-**Error testing:**
-```python
-with pytest.raises(classic_config.RustConfigParseError) as exc_info:
-    classic_config.YamlData.from_yaml_content(invalid_yaml, ...)
-```
+## Coverage
 
----
+**Rust:**
+- Tool: `cargo-llvm-cov` (must be installed)
+- Target: 60% line coverage (enforced by `coverage_summary.ps1 -Threshold 60`)
+- PyO3 binding crates are excluded from the test run but their source is included in reports if any coverage data is available
 
-## Integration Test Patterns (Cross-Language)
+**Node:**
+- No enforced coverage gate currently; parity coverage is tracked via `runtime_coverage_registry.json`
 
-### Sample Log Fixtures
+**Python:**
+- Parity coverage tracked via `runtime_coverage_registry.json` (same structure as Node)
+- `test_binding_coverage_tooling.py` tests the coverage tooling itself
 
-Real crash log content is provided as inline string literals in each binding's test files. Example in `scanlog.spec.ts`:
-```typescript
-const SAMPLE_CRASH_LOG = `Fallout 4 v1.10.163
-Buffout 4 v1.28.6
-Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 ...`;
-```
+## Test Types
 
-The `sample_logs/FO4/` git submodule provides authoritative test fixtures for the full scan workflow.
+**Unit Tests (Rust inline):**
+- Scope: Single struct/function behavior in isolation
+- Location: `#[cfg(test)]` mod at end of source file
+- Use real data (temp files, inline strings), never mocks
 
-### TUI Tests
+**Integration Tests (Rust separate files):**
+- Scope: Cross-component workflows (e.g., loading config from YAML files in temp dirs)
+- Location: `tests/integration_tests.rs`
+- Use `tempdir()` for file system isolation
+- Group by workflow domain using nested `mod` blocks
 
-`ClassicLib-rs/ui-applications/classic-tui/tests/event_tests.rs` uses `ratatui::backend::TestBackend` for headless rendering:
+**Parity Tests (Node + Python):**
+- Scope: Verify binding surfaces match expected Rust core behavior
+- Location: `parity_tier1.spec.ts`, `test_tier1_parity_smoke.py`
+- Fixtures shared via `tier1_parity.fixtures.ts` / `tier1_parity_fixtures.py`
+- Coverage-registry-gated: tests only run when registered in `runtime_coverage_registry.json`
+
+**Regression / Drift Tests (Node):**
+- Scope: Verify type signature stability in `index.d.ts`
+- Location: `regression_drift.spec.ts`
+- Reads the actual `index.d.ts` file and asserts specific signature strings are present
+
+**C++ Unit Tests:**
+- Scope: Bridge-free C++ components (CliArgs, ProgressDisplay, ThreadPool)
+- Framework: Catch2 with `TEST_CASE` / `SECTION`
+- Components requiring Rust CXX bridge are covered by PowerShell integration tests only
+
+**Integration/E2E Tests (PowerShell):**
+- Run via `build_cli.ps1 -Test -IntegrationTestName "test name"`
+- Cover scenarios that cause `std::exit()` (e.g., mixed `--scan-path` + positional args)
+
+## Common Patterns
+
+**Async Testing (Rust):**
 ```rust
-let backend = TestBackend::new(120, 40);
-let mut terminal = Terminal::new(backend).expect("terminal");
-terminal.draw(|frame| app.render(frame)).expect("draw frame");
+#[tokio::test]
+async fn test_concurrent_config_loading() {
+    let mut handles = Vec::new();
+    for _ in 0..4 {
+        let dirs = base_dirs.clone();
+        handles.push(tokio::spawn(async move {
+            YamlDataCore::load_from_yaml_files(dirs, "Fallout4".to_string(), "auto".to_string()).await
+        }));
+    }
+    for handle in handles {
+        let result = handle.await.expect("Task should complete");
+        let config = result.expect("Config load should succeed");
+        assert_eq!(config.classic_version, "7.31.0");
+    }
+}
 ```
 
-`App::new_for_testing()` factory creates an app instance without network or filesystem side effects.
+**Error Testing (Rust):**
+```rust
+#[test]
+fn test_invalid_yaml_error() {
+    let result = YamlDataCore::from_yaml_content("{ invalid: yaml: }}}",  game, ignore, "Fallout4", "auto");
+    assert!(result.is_err());
+    match result {
+        Err(ConfigError::ParseError { context, .. }) => {
+            assert!(context.contains("main"), "Should mention main YAML");
+        }
+        Err(e) => panic!("Expected ParseError, got {:?}", e),
+        Ok(_) => panic!("Should fail with invalid YAML"),
+    }
+}
+```
+
+**Serial Tests (Rust — for global state):**
+```rust
+use serial_test::serial;
+
+#[serial]
+#[tokio::test]
+async fn test_that_modifies_global_registry() {
+    // ...
+}
+```
+
+**Error Testing (Node):**
+```typescript
+test("classifies parse failures as InvalidArg", () => {
+  try {
+    YamlData.fromYamlContent("{ invalid }}}",  GAME_YAML, IGNORE_YAML, "Fallout4", "auto");
+    throw new Error("expected parse failure");
+  } catch (err) {
+    const error = err as Error & { code?: string };
+    expect(error.code).toBe("InvalidArg");
+    expect(error.message).toContain("Failed to parse main YAML:");
+  }
+});
+```
 
 ---
 
-*Testing analysis: 2026-03-30*
+*Testing analysis: 2026-04-04*

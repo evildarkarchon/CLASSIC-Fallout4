@@ -6,18 +6,18 @@
 //! - Batch processing: Parallel FormID processing with linear scaling
 
 use dashmap::DashMap;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Precompiled FormID regex pattern matching Python's format
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})"
-static FORMID_EXTRACTION_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
+static FORMID_EXTRACTION_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
 
 /// Generic FormID parsing pattern (for parse_formid method)
-static FORMID_PARSE_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)^(?:0x)?([0-9a-f]{1,8})$").unwrap());
+static FORMID_PARSE_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)^(?:0x)?([0-9a-f]{1,8})$").unwrap());
 
 /// High-performance FormID analyzer
 ///

@@ -417,11 +417,41 @@ def _run_version_registry_tier2_smoke(
     assert base.semantic_distance(newer) > 0
 
 
+def _run_cache_helpers_tier2_smoke(
+    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import classic_file_io
+
+    hashed_file = tmp_path / "hash-cache.txt"
+    hashed_file.write_text("hash-cache", encoding="utf-8")
+
+    classic_file_io.FileHasher.clear_cache()
+    classic_file_io.FileHasher.reset_cache_stats()
+    first_hash = classic_file_io.FileHasher.hash_file(str(hashed_file))
+    second_hash = classic_file_io.FileHasher.hash_file(str(hashed_file))
+    assert first_hash == second_hash
+
+    hash_stats = classic_file_io.FileHasher.cache_stats()
+    assert hash_stats["misses"] == 1
+    assert hash_stats["hits"] == 1
+    assert hash_stats["capacity"] >= hash_stats["size"]
+
+    classic_file_io.FileHasher.reset_cache_stats()
+    reset_stats = classic_file_io.FileHasher.cache_stats()
+    assert reset_stats["hits"] == 0
+    assert reset_stats["misses"] == 0
+
+    classic_file_io.FileHasher.clear_cache()
+    cleared_stats = classic_file_io.FileHasher.cache_stats()
+    assert cleared_stats["size"] == 0
+
+
 CASE_RUNNERS = {
     "config-tier1-smoke": _run_config_tier1_smoke,
     "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
     "version-registry-tier1-smoke": _run_version_registry_tier1_smoke,
     "config-tier2-smoke": _run_config_tier2_smoke,
+    "cache-helpers-tier2-smoke": _run_cache_helpers_tier2_smoke,
     "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
     "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
 }
@@ -492,6 +522,87 @@ def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> N
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == str(script_dir / "CLASSIC Settings.yaml")
+
+
+def test_parse_segments_parallel_deprecation_warning() -> None:
+    """parse_segments_parallel matches parse_all_sections output."""
+    import classic_scanlog
+
+    parser = classic_scanlog.LogParser()
+    repo_root = Path(__file__).resolve().parents[3]
+    log_path = (
+        repo_root
+        / "ClassicLib-rs"
+        / "business-logic"
+        / "classic-scanlog-core"
+        / "benches"
+        / "fixtures"
+        / "crash-12624.log"
+    )
+    sample_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    expected = parser.parse_all_sections(sample_lines)
+
+    with pytest.warns(
+        DeprecationWarning, match="parse_segments_parallel is deprecated"
+    ):
+        result = parser.parse_segments_parallel(sample_lines)
+
+    assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
+    assert result == expected
+    assert result["plugins"][:3] == [
+        "\t[00]Fallout4.esm",
+        "\t[01]DLCRobot.esm",
+        "\t[02]DLCworkshop01.esm",
+    ]
+
+
+def test_generate_suspect_section_deprecation_warning() -> None:
+    """generate_suspect_section matches header plus footer outputs."""
+    import classic_scanlog
+
+    report_gen = classic_scanlog.ReportGenerator()
+    header_lines = report_gen.generate_suspect_section_header().to_list()
+    empty_footer_lines = report_gen.generate_suspect_found_footer(False).to_list()
+    found_footer_lines = report_gen.generate_suspect_found_footer(True).to_list()
+
+    with pytest.warns(
+        DeprecationWarning, match="generate_suspect_section is deprecated"
+    ):
+        empty_fragment = report_gen.generate_suspect_section([])
+
+    with pytest.warns(
+        DeprecationWarning, match="generate_suspect_section is deprecated"
+    ):
+        found_fragment = report_gen.generate_suspect_section(["SomeSuspect"])
+
+    assert empty_fragment.to_list() == header_lines + empty_footer_lines
+    assert found_fragment.to_list() == header_lines + found_footer_lines
+    assert empty_fragment.to_list() == [
+        "### Checking for Known Crash Messages, Errors and Suspects\n\n",
+        "* **NO SUSPECTS DETECTED** *\n\n",
+        "---\n\n",
+    ]
+    assert found_fragment.to_list() == [
+        "### Checking for Known Crash Messages, Errors and Suspects\n\n",
+        "* **ONE OR MORE SUSPECTS DETECTED! CHECK LOG ABOVE FOR MORE INFORMATION!** *\n\n",
+        "---\n\n",
+    ]
+
+
+def test_formid_analyzer_legacy_dict_deprecation_warning() -> None:
+    """PyFormIDAnalyzerCore.__init__ emits DeprecationWarning when mods_single is a dict."""
+    import classic_scanlog
+
+    legacy_mods_single = {"TestMod": "Install TestMod fix"}
+
+    with pytest.warns(DeprecationWarning, match="mods_single as dict.*is deprecated"):
+        analyzer = classic_scanlog.FormIDAnalyzerCore(
+            show_formid_values=False,
+            crashgen_name="Buffout 4",
+            mods_single=legacy_mods_single,
+        )
+
+    assert analyzer is not None
 
 
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))

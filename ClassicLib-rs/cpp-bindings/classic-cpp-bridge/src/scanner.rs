@@ -8,8 +8,8 @@ use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase,
-    build_analysis_config_from_yaml,
+    AnalysisConfig, AnalysisResult, FcxModeHandler, FcxResetError, LogParser, OrchestratorCore,
+    ScanProgressPhase, build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;
 use classic_yaml_core::YamlOperations;
@@ -17,8 +17,8 @@ use log::info;
 use std::collections::{HashSet, VecDeque};
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
 use std::time::Duration;
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
@@ -39,6 +39,9 @@ const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
 const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
 const SHORT_SCAN_CACHE_TTL_SECS: u64 = BATCH_CACHE_TTL_SECS;
 const DB_COUNTER_LOG_INTERVAL_DEFAULT: u64 = 25;
+
+static CRASH_PATTERN_PARSER: LazyLock<classic_scanlog_core::LogParser> =
+    LazyLock::new(|| LogParser::new(None).expect("default crash-pattern parser should initialize"));
 
 fn diagnostics_enabled() -> bool {
     std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some()
@@ -328,6 +331,47 @@ fn maybe_log_db_perf_counters(orch: &Orchestrator, scanned_path: &str) {
     );
 }
 
+fn fcx_reset_global_state() -> Result<(), String> {
+    match FcxModeHandler::reset_global_state() {
+        Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+fn batch_reset_failure_result(log_path: String, error_message: String) -> ffi::ScanResult {
+    ffi::ScanResult {
+        log_path,
+        success: false,
+        report_lines: Vec::new(),
+        error_message,
+        processing_time_ms: 0,
+        formid_count: 0,
+        plugin_count: 0,
+        suspect_count: 0,
+    }
+}
+
+fn batch_progress_reset_failure_result(
+    input_index: u32,
+    total: u32,
+    log_path: String,
+    error_message: String,
+) -> ffi::BatchScanResult {
+    ffi::BatchScanResult {
+        input_index,
+        completed: 0,
+        total,
+        log_path,
+        success: false,
+        report_lines: Vec::new(),
+        error_message,
+        processing_time_ms: 0,
+        formid_count: 0,
+        plugin_count: 0,
+        suspect_count: 0,
+    }
+}
+
 // ── Config construction ─────────────────────────────────────────────
 
 fn build_full_scan_config(
@@ -416,6 +460,8 @@ fn orchestrator_process_log(
     orch: &Orchestrator,
     log_path: &str,
 ) -> Result<ffi::ScanResult, String> {
+    fcx_reset_global_state()?;
+
     match get_runtime().block_on(orch.inner.process_log(log_path.to_string())) {
         Ok(result) => {
             maybe_log_db_perf_counters(orch, result.log_path.as_str());
@@ -433,6 +479,11 @@ fn orchestrator_process_logs_batch(
     log_paths: &[String],
     max_concurrent: u32,
 ) -> Vec<ffi::ScanResult> {
+    if let Err(error) = fcx_reset_global_state() {
+        let log_path = log_paths.first().cloned().unwrap_or_default();
+        return vec![batch_reset_failure_result(log_path, error)];
+    }
+
     let paths: Vec<String> = log_paths.to_vec();
     let max_parallel = if max_concurrent == 0 {
         None
@@ -473,6 +524,16 @@ fn orchestrator_process_logs_batch_with_progress(
 ) -> Vec<ffi::BatchScanResult> {
     use futures::stream::{self, StreamExt};
     use tokio::sync::mpsc;
+
+    if let Err(error) = fcx_reset_global_state() {
+        let log_path = log_paths.first().cloned().unwrap_or_default();
+        return vec![batch_progress_reset_failure_result(
+            0,
+            log_paths.len() as u32,
+            log_path,
+            error,
+        )];
+    }
 
     let total = log_paths.len();
     if total == 0 {
@@ -668,9 +729,8 @@ fn detect_vr_log(content: &str) -> bool {
 
 fn detect_crash_pattern(content: &str) -> String {
     // Parse the crash header to extract the main error/crash module
-    let parser = classic_scanlog_core::LogParser::new(None).unwrap();
     let lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
-    match parser.parse_crash_header(&lines) {
+    match CRASH_PATTERN_PARSER.parse_crash_header(&lines) {
         Ok(header) => header.get("main_error").cloned().unwrap_or_default(),
         Err(_) => String::new(),
     }
@@ -914,6 +974,7 @@ mod ffi {
             crashgen_name: &str,
             xse_acronym: &str,
         ) -> Result<Box<Orchestrator>>;
+        fn fcx_reset_global_state() -> Result<()>;
         fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
         fn orchestrator_process_logs_batch(
             orch: &Orchestrator,
@@ -945,14 +1006,87 @@ mod ffi {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use classic_scanlog_core::{ConfigIssue, GLOBAL_FCX_HANDLER};
     use std::io::Write;
     use tempfile::NamedTempFile;
     use tempfile::tempdir;
+
+    fn sample_issue() -> ConfigIssue {
+        ConfigIssue::new(
+            "test.ini".to_string(),
+            Some("General".to_string()),
+            "bExample".to_string(),
+            "0".to_string(),
+            "1".to_string(),
+            "Example issue".to_string(),
+            "warning".to_string(),
+        )
+    }
+
+    fn seed_dirty_fcx_state() {
+        let mut handler = GLOBAL_FCX_HANDLER.lock();
+        handler.fcx_mode = true;
+        handler.set_main_files_result("Main files OK\n".to_string());
+        handler.set_game_files_result("Game files OK\n".to_string());
+        handler.set_detected_issues(vec![sample_issue()]);
+        handler.checks_run = true;
+    }
+
+    fn assert_clean_fcx_state() {
+        let handler = GLOBAL_FCX_HANDLER.lock();
+        assert!(handler.main_files_check.is_none());
+        assert!(handler.game_files_check.is_none());
+        assert!(handler.detected_issues.is_empty());
+        assert!(!handler.checks_run);
+    }
 
     #[test]
     fn test_orchestrator_new_minimal() {
         let result = orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE");
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_fcx_reset_global_state_treats_unnecessary_as_success() {
+        {
+            let mut handler = GLOBAL_FCX_HANDLER.lock();
+            handler.reset();
+        }
+
+        assert!(fcx_reset_global_state().is_ok());
+        assert_clean_fcx_state();
+    }
+
+    #[test]
+    fn test_fcx_reset_global_state_clears_dirty_state() {
+        seed_dirty_fcx_state();
+
+        assert!(fcx_reset_global_state().is_ok());
+        assert_clean_fcx_state();
+    }
+
+    #[test]
+    fn test_orchestrator_process_log_resets_fcx_before_scan_start() {
+        let orchestrator =
+            orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
+        seed_dirty_fcx_state();
+
+        let result = orchestrator_process_log(&orchestrator, "missing.log");
+        assert!(result.is_err());
+        assert_clean_fcx_state();
+    }
+
+    #[test]
+    fn test_orchestrator_process_logs_batch_resets_fcx_before_scan_start() {
+        let orchestrator =
+            orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
+        seed_dirty_fcx_state();
+
+        let results =
+            orchestrator_process_logs_batch(&orchestrator, &["missing.log".to_string()], 1);
+        assert_eq!(results.len(), 1);
+        assert!(!results[0].success);
+        assert_clean_fcx_state();
     }
 
     #[test]
@@ -995,6 +1129,31 @@ mod tests {
         let result = detect_crash_pattern("");
         // Empty content should not match any crash pattern
         assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_crash_pattern_positive_fixture_excerpt() {
+        let result = detect_crash_pattern(include_str!(
+            "../../../business-logic/classic-scanlog-core/benches/fixtures/crash-2022-06-05-12-58-02.log"
+        ));
+
+        assert_eq!(
+            result,
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF6A1C08F6A Fallout4.exe+1AF8F6A"
+        );
+    }
+
+    #[test]
+    fn test_detect_crash_pattern_repeated_calls_keep_same_positive_result() {
+        let input = include_str!(
+            "../../../business-logic/classic-scanlog-core/benches/fixtures/crash-2022-06-05-12-58-02.log"
+        );
+
+        let first = detect_crash_pattern(input);
+        let second = detect_crash_pattern(input);
+
+        assert!(!first.is_empty());
+        assert_eq!(first, second);
     }
 
     #[test]

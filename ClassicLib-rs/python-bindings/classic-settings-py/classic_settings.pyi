@@ -32,9 +32,18 @@ Usage:
         cached = classic_settings.get_cached("config")
 """
 
-from typing import Any
+from typing import Any, TypedDict
 
 __version__: str
+
+class SettingsCacheStats(TypedDict):
+    """Canonical settings cache statistics contract."""
+
+    hits: int
+    misses: int
+    hit_rate: float
+    size: int
+    capacity: int
 
 def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings synchronously.
@@ -226,5 +235,33 @@ def cache_keys() -> list[str]:
         >>> keys = cache_keys()
         >>> len(keys)
         2
+
+    """
+
+def cache_stats() -> SettingsCacheStats:
+    """Get canonical cache statistics.
+
+    Returns:
+        Dictionary with cache statistics:
+            - 'hits': Number of cache hits.
+            - 'misses': Number of cache misses.
+            - 'hit_rate': Hit ratio as a float from 0.0 to 1.0.
+            - 'size': Current number of cached entries.
+            - 'capacity': Maximum retained cache entries.
+
+    Example:
+        >>> stats = cache_stats()
+        >>> print(stats["capacity"])
+        64
+
+    """
+
+def reset_cache_stats() -> None:
+    """Reset cache hit and miss counters.
+
+    Example:
+        >>> reset_cache_stats()
+        >>> cache_stats()["hits"]
+        0
 
     """

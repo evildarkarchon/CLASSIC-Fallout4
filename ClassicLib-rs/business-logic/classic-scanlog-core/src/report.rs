@@ -9,14 +9,13 @@
 // Error types not needed in pure Rust - using standard Result
 use crate::version::CrashgenVersionStatus;
 use dashmap::DashMap;
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rayon::prelude::*;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use string_cache::DefaultAtom;
 
 /// Global string pool for interning frequently used strings
-static STRING_POOL: Lazy<StringPool> = Lazy::new(StringPool::new);
+static STRING_POOL: LazyLock<StringPool> = LazyLock::new(StringPool::new);
 
 /// String pool for efficient memory usage through string interning
 #[derive(Clone, Debug)]
@@ -568,7 +567,7 @@ impl ReportGenerator {
     /// A `ReportFragment` containing the settings section header.
     pub fn generate_settings_section_header(&self) -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "### Checking for Settings-related Issues\n\n".to_string(),
+            "### Checking for Settings-related Issues\n\n".to_string()
         ])
     }
 
@@ -599,7 +598,7 @@ impl ReportGenerator {
     /// A `ReportFragment` containing the plugin suspect header.
     pub fn generate_plugin_suspect_header(&self) -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "### Checking for Plugin-related Errors\n\n".to_string(),
+            "### Checking for Plugin-related Errors\n\n".to_string()
         ])
     }
 

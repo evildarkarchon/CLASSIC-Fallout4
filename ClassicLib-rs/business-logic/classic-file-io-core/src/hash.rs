@@ -33,13 +33,14 @@
 //! ```
 
 use crate::error::FileIOError;
-use dashmap::DashMap;
+use quick_cache::sync::Cache;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::{debug, warn};
 
 /// Optimal chunk size for reading files during hashing (64KB).
@@ -47,9 +48,29 @@ use tracing::{debug, warn};
 const HASH_CHUNK_SIZE: usize = 64 * 1024;
 
 /// Global hash cache for repeated hash calculations.
-/// Uses LRU eviction to prevent unbounded growth.
-static HASH_CACHE: LazyLock<Arc<DashMap<PathBuf, String>>> =
-    LazyLock::new(|| Arc::new(DashMap::with_capacity(256)));
+/// Uses bounded `quick_cache` eviction to prevent unbounded growth.
+static HASH_CACHE: LazyLock<Cache<PathBuf, String>> = LazyLock::new(|| Cache::new(1024));
+
+/// Global counter for hash cache hits.
+static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
+
+/// Global counter for hash cache misses.
+static CACHE_MISSES: AtomicU64 = AtomicU64::new(0);
+
+/// Hash cache performance statistics.
+#[derive(Debug, Clone)]
+pub struct CacheStats {
+    /// Number of cache hits since the last reset.
+    pub hits: u64,
+    /// Number of cache misses since the last reset.
+    pub misses: u64,
+    /// Hit rate as a fraction from 0.0 to 1.0.
+    pub hit_rate: f64,
+    /// Current number of cached entries.
+    pub size: usize,
+    /// Maximum configured cache capacity.
+    pub capacity: usize,
+}
 
 /// File hashing utility for integrity verification.
 ///
@@ -85,9 +106,12 @@ impl FileHasher {
     pub fn hash_file(path: &Path) -> Result<String, FileIOError> {
         // Check cache first
         if let Some(cached_hash) = HASH_CACHE.get(path) {
+            CACHE_HITS.fetch_add(1, Ordering::Relaxed);
             debug!("Cache hit for hash: {}", path.display());
-            return Ok(cached_hash.clone());
+            return Ok(cached_hash);
         }
+
+        CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
 
         // Validate file exists
         if !path.exists() {
@@ -229,6 +253,8 @@ impl FileHasher {
     /// Clear the hash cache.
     ///
     /// Useful for testing or when files are known to have changed.
+    /// This clears cached hashes only; hit/miss counters remain available until
+    /// `reset_cache_stats()` is called.
     ///
     /// # Example
     /// ```rust
@@ -238,6 +264,34 @@ impl FileHasher {
     pub fn clear_cache() {
         HASH_CACHE.clear();
         debug!("Hash cache cleared");
+    }
+
+    /// Return canonical cache performance statistics.
+    pub fn cache_stats() -> CacheStats {
+        let hits = CACHE_HITS.load(Ordering::Relaxed);
+        let misses = CACHE_MISSES.load(Ordering::Relaxed);
+        let total = hits + misses;
+
+        CacheStats {
+            hits,
+            misses,
+            hit_rate: if total > 0 {
+                hits as f64 / total as f64
+            } else {
+                0.0
+            },
+            size: HASH_CACHE.len(),
+            capacity: HASH_CACHE.capacity() as usize,
+        }
+    }
+
+    /// Reset only cache performance counters.
+    ///
+    /// This preserves cached hash entries so callers can clear observability
+    /// independently from cache contents during tests and benchmarks.
+    pub fn reset_cache_stats() {
+        CACHE_HITS.store(0, Ordering::Relaxed);
+        CACHE_MISSES.store(0, Ordering::Relaxed);
     }
 
     /// Get the number of cached hashes.
@@ -252,7 +306,7 @@ impl FileHasher {
     /// println!("Cached hashes: {}", count);
     /// ```
     pub fn cache_size() -> usize {
-        HASH_CACHE.len()
+        Self::cache_stats().size
     }
 }
 
@@ -260,6 +314,7 @@ impl FileHasher {
 mod tests {
     use super::*;
     use serial_test::serial;
+    use std::collections::HashSet;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -288,6 +343,7 @@ mod tests {
     #[serial]
     fn test_hash_file_caching() -> Result<(), Box<dyn std::error::Error>> {
         FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
 
         let mut temp_file = NamedTempFile::new()?;
         temp_file.write_all(b"Test caching")?;
@@ -296,11 +352,21 @@ mod tests {
         // First call - should cache
         let hash1 = FileHasher::hash_file(temp_file.path())?;
         assert_eq!(FileHasher::cache_size(), 1);
+        let miss_stats = FileHasher::cache_stats();
+        assert_eq!(miss_stats.misses, 1);
+        assert_eq!(miss_stats.hits, 0);
+        assert_eq!(miss_stats.size, 1);
 
         // Second call - should hit cache
         let hash2 = FileHasher::hash_file(temp_file.path())?;
         assert_eq!(hash1, hash2);
         assert_eq!(FileHasher::cache_size(), 1);
+        let hit_stats = FileHasher::cache_stats();
+        assert_eq!(hit_stats.misses, 1);
+        assert_eq!(hit_stats.hits, 1);
+        assert_eq!(hit_stats.size, 1);
+        assert_eq!(hit_stats.capacity, 1024);
+        assert_eq!(hit_stats.hit_rate, 0.5);
 
         FileHasher::clear_cache();
         assert_eq!(FileHasher::cache_size(), 0);
@@ -377,6 +443,103 @@ mod tests {
 
         // Verify hash was calculated successfully
         assert_eq!(hash.len(), 64);
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn test_hash_cache_stats_reset_preserves_cache_entries()
+    -> Result<(), Box<dyn std::error::Error>> {
+        FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
+
+        let mut temp_file = NamedTempFile::new()?;
+        temp_file.write_all(b"stats reset")?;
+        temp_file.flush()?;
+
+        FileHasher::hash_file(temp_file.path())?;
+        assert_eq!(FileHasher::cache_size(), 1);
+
+        FileHasher::reset_cache_stats();
+        let stats = FileHasher::cache_stats();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+        assert_eq!(stats.size, 1);
+        assert_eq!(stats.capacity, 1024);
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn test_hash_clear_cache_empties_entries_without_resetting_stats()
+    -> Result<(), Box<dyn std::error::Error>> {
+        FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
+
+        let mut temp_file = NamedTempFile::new()?;
+        temp_file.write_all(b"clear cache")?;
+        temp_file.flush()?;
+
+        FileHasher::hash_file(temp_file.path())?;
+        let before_clear = FileHasher::cache_stats();
+        assert_eq!(before_clear.size, 1);
+        assert_eq!(before_clear.misses, 1);
+
+        FileHasher::clear_cache();
+        let after_clear = FileHasher::cache_stats();
+        assert_eq!(after_clear.size, 0);
+        assert_eq!(after_clear.capacity, 1024);
+        assert_eq!(after_clear.misses, 1);
+        assert_eq!(after_clear.hits, 0);
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn test_hash_cache_bounded_eviction() -> Result<(), Box<dyn std::error::Error>> {
+        FileHasher::clear_cache();
+        FileHasher::reset_cache_stats();
+
+        let mut temp_files = Vec::new();
+        let mut first_hash = None;
+
+        for index in 0..1025 {
+            let mut temp_file = NamedTempFile::new()?;
+            temp_file.write_all(format!("bounded-cache-{index}").as_bytes())?;
+            temp_file.flush()?;
+
+            let hash = FileHasher::hash_file(temp_file.path())?;
+            if index == 0 {
+                first_hash = Some((temp_file.path().to_path_buf(), hash));
+            }
+            temp_files.push(temp_file);
+        }
+
+        let stats = FileHasher::cache_stats();
+        assert_eq!(stats.capacity, 1024);
+        assert!(stats.size <= stats.capacity);
+        assert!(stats.size < 1025);
+        assert_eq!(stats.misses, 1025);
+        assert_eq!(stats.hits, 0);
+
+        let (first_path, original_hash) = first_hash.expect("first file should exist");
+        let rehashed = FileHasher::hash_file(&first_path)?;
+        assert_eq!(rehashed, original_hash);
+
+        let after_rehash = FileHasher::cache_stats();
+        assert!(after_rehash.size <= after_rehash.capacity);
+        assert_eq!(after_rehash.capacity, 1024);
+        assert!(after_rehash.hits + after_rehash.misses >= 1026);
+        assert!(after_rehash.misses >= 1025);
+
+        let distinct_hashes = temp_files
+            .iter()
+            .map(|file| FileHasher::hash_file(file.path()))
+            .collect::<Result<HashSet<_>, _>>()?;
+        assert_eq!(distinct_hashes.len(), 1025);
 
         Ok(())
     }

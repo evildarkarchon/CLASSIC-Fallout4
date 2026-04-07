@@ -8,17 +8,16 @@ use crate::mod_detector;
 use classic_config_core::{CoreModEntry, ModConflictEntry, ModSolutionEntry};
 use classic_database_core::DatabasePool;
 use indexmap::IndexMap;
-use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
 use rustc_hash::FxHashMap; // Optimization 1.2: Faster hasher for FormID counting
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 /// Precompiled FormID pattern - exact match to Python's pattern
 /// Pattern: r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})" with case-insensitive flag
-static FORMID_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
+static FORMID_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
 
 /// Default bounded batch size for FormID value lookups.
 const FORMID_BATCH_LOOKUP_SIZE: usize = 128;

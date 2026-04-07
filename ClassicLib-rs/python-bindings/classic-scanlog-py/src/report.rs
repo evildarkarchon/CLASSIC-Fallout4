@@ -2,6 +2,7 @@
 
 use classic_scanlog_core::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 use classic_shared::without_gil;
+use pyo3::exceptions::PyDeprecationWarning;
 use pyo3::prelude::*;
 
 /// Python wrapper for StringPool
@@ -304,10 +305,27 @@ impl PyReportGenerator {
     }
 
     /// Generate suspect section (legacy method for backward compatibility)
-    pub fn generate_suspect_section(&self, found_suspects: Vec<String>) -> PyReportFragment {
-        PyReportFragment {
-            inner: self.inner.generate_suspect_section(found_suspects),
-        }
+    ///
+    /// .. deprecated::
+    ///     Use :meth:`generate_suspect_section_header` and
+    ///     :meth:`generate_suspect_found_footer` instead.
+    pub fn generate_suspect_section(
+        &self,
+        py: Python<'_>,
+        found_suspects: Vec<String>,
+    ) -> PyResult<PyReportFragment> {
+        PyErr::warn(
+            py,
+            &py.get_type::<PyDeprecationWarning>(),
+            c"generate_suspect_section is deprecated. Use generate_suspect_section_header and generate_suspect_found_footer instead.",
+            1,
+        )?;
+        let header = self.inner.generate_suspect_section_header();
+        let found_suspect = !found_suspects.is_empty();
+        let footer = self.inner.generate_suspect_found_footer(found_suspect);
+        Ok(PyReportFragment {
+            inner: header.combine(&footer),
+        })
     }
 }
 

@@ -335,11 +335,18 @@ describe("Settings cache bindings", () => {
   describe("getSettingsCacheStats", () => {
     test("returns zeroed stats after reset", () => {
       const stats = getSettingsCacheStats();
+      expect(Object.keys(stats).sort()).toEqual([
+        "capacity",
+        "hit_rate",
+        "hits",
+        "misses",
+        "size",
+      ]);
       expect(stats.hits).toBe(0);
       expect(stats.misses).toBe(0);
-      expect(stats.hitRate).toBe(0);
+      expect(stats.hit_rate).toBe(0);
       expect(stats.size).toBe(0);
-      expect(stats.keys).toEqual([]);
+      expect(stats.capacity).toBeGreaterThan(0);
     });
 
     test("tracks cache hits", () => {
@@ -363,7 +370,7 @@ describe("Settings cache bindings", () => {
 
       const stats = getSettingsCacheStats();
       expect(stats.misses).toBe(2);
-      expect(stats.hitRate).toBe(0);
+      expect(stats.hit_rate).toBe(0);
     });
 
     test("calculates hit rate correctly", () => {
@@ -378,7 +385,8 @@ describe("Settings cache bindings", () => {
         const stats = getSettingsCacheStats();
         expect(stats.hits).toBe(3);
         expect(stats.misses).toBe(1);
-        expect(stats.hitRate).toBeCloseTo(0.75, 2);
+        expect(stats.hit_rate).toBeCloseTo(0.75, 2);
+        expect(stats.capacity).toBeGreaterThan(0);
       } finally {
         cleanupTemp(path);
       }

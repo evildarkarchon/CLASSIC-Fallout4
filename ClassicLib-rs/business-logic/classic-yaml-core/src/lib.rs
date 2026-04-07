@@ -7,28 +7,18 @@
 //! ## Architecture
 //! - Pure Rust - no PyO3, usable by CLI/TUI directly
 //! - Based on yaml-rust2 (YAML 1.2 compliant)
-//! - Thread-safe caching with DashMap
+//! - Thread-safe bounded caching with quick_cache
 //! - Atomic file writes for safety
 //!
 //! # Complete Usage Example
 //!
 //! ```rust,no_run
-//! use classic_yaml_core::{YamlOperations, YamlFormatConfig, YamlError};
+//! use classic_yaml_core::{YamlOperations, YamlError};
 //! use std::path::Path;
 //!
 //! fn main() -> Result<(), YamlError> {
-//!     // Create YAML operations handler with default settings
+//!     // Create YAML operations handler
 //!     let yaml_ops = YamlOperations::new();
-//!
-//!     // Or with custom formatting
-//!     let custom_config = YamlFormatConfig {
-//!         preserve_quotes: true,
-//!         width: 100,
-//!         indent_mapping: 2,
-//!         indent_sequence: 2,
-//!         indent_offset: 0,
-//!     };
-//!     let yaml_ops_custom = YamlOperations::with_config(custom_config);
 //!
 //!     // Parse YAML from string
 //!     let yaml_string = r#"
@@ -102,7 +92,7 @@
 //!
 //! # Thread Safety
 //!
-//! All operations are thread-safe. The cache uses `DashMap` for concurrent access:
+//! All operations are thread-safe. The cache uses `quick_cache` for concurrent access:
 //!
 //! ```rust,no_run
 //! use classic_yaml_core::YamlOperations;
@@ -134,16 +124,15 @@
 //!
 //! - **Caching**: 15-30x faster than repeated file reads
 //! - **Atomic Writes**: Uses temp file + rename for crash safety
-//! - **Parallel Access**: Lock-free concurrent reads with DashMap
+//! - **Parallel Access**: Lock-free concurrent reads with quick_cache
 
-use dashmap::DashMap;
 use indexmap::IndexMap;
-use once_cell::sync::Lazy;
+use quick_cache::sync::Cache;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
 use std::time::SystemTime;
 use thiserror::Error;
 use tracing::trace;
@@ -152,8 +141,8 @@ use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 /// Global YAML cache for frequently accessed files
 ///
 /// NOTE: This is lazily initialized on first use to avoid deadlocks during module import.
-/// The cache is thread-safe and uses DashMap for concurrent access.
-static YAML_CACHE: Lazy<DashMap<PathBuf, CachedYaml>> = Lazy::new(DashMap::new);
+/// The cache is thread-safe and uses `quick_cache` with a fixed 128-entry capacity.
+static YAML_CACHE: LazyLock<Cache<PathBuf, CachedYaml>> = LazyLock::new(|| Cache::new(128));
 
 /// Global counter for cache hits.
 static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
@@ -184,8 +173,15 @@ pub struct CacheStats {
     pub hit_rate: f64,
     /// Current number of entries in the cache.
     pub size: usize,
-    /// Total bytes of cached raw content.
-    pub total_bytes: usize,
+    /// Maximum number of entries the cache retains before evicting.
+    pub capacity: usize,
+}
+
+fn total_cached_bytes() -> usize {
+    YAML_CACHE
+        .iter()
+        .map(|(_, cached)| cached.raw_content.as_ref().map_or(0, String::len))
+        .sum()
 }
 
 /// Get current cache statistics.
@@ -206,11 +202,6 @@ pub fn cache_stats() -> CacheStats {
     let misses = CACHE_MISSES.load(Ordering::Relaxed);
     let total = hits + misses;
 
-    let total_bytes: usize = YAML_CACHE
-        .iter()
-        .filter_map(|entry| entry.raw_content.as_ref().map(|s| s.len()))
-        .sum();
-
     CacheStats {
         hits,
         misses,
@@ -220,7 +211,8 @@ pub fn cache_stats() -> CacheStats {
             0.0
         },
         size: YAML_CACHE.len(),
-        total_bytes,
+        capacity: usize::try_from(YAML_CACHE.capacity())
+            .expect("quick_cache capacity should fit in usize"),
     }
 }
 
@@ -335,96 +327,6 @@ pub enum YamlError {
     TypeConversionError(String),
 }
 
-/// `YamlFormatConfig` is a configuration structure that defines formatting preferences
-/// for YAML serialization and deserialization. This structure allows customization of
-/// YAML output by adjusting indentation, width, and optional preservation of quotes
-/// for better control over the generated YAML structure.
-/// # Fields
-///
-/// * `preserve_quotes` (bool):  
-///   - Determines whether to preserve quotes around scalar values, ensuring that values
-///     remain quoted in the output regardless of YAML formatting rules.
-///   - If `true`, quotes are retained.  
-///   - If `false`, quotes may be removed for plain scalar styles.
-///
-/// * `width` (usize):  
-///   - Specifies the maximum line width for wrapped text.   
-///   - Lines exceeding this width will be automatically wrapped for better readability.
-///
-/// * `indent_mapping` (usize):  
-///   - Defines the number of spaces used for indenting YAML mappings (key-value pairs).  
-///   - Higher values increase indentation for nested mappings.
-///
-/// * `indent_sequence` (usize):  
-///   - Specifies the number of spaces used for indenting YAML sequences (lists).  
-///   - Useful for controlling the visual alignment of sequence elements.
-///
-/// * `indent_offset` (usize):  
-///   - Determines the additional offset applied to nested structures beyond the
-///     `indent_mapping` or `indent_sequence` values.
-///   - Can be used to fine-tune the overall indentation appearance.
-///
-/// # Usage
-///
-/// To create a custom YAML format configuration:
-/// ```rust
-/// use classic_yaml_core::YamlFormatConfig;
-///
-/// let config = YamlFormatConfig {
-///     preserve_quotes: true,
-///     width: 80,
-///     indent_mapping: 2,
-///     indent_sequence: 2,
-///     indent_offset: 0,
-/// };
-/// println!("{:?}", config);
-/// ```
-#[derive(Debug, Clone)]
-pub struct YamlFormatConfig {
-    /// Preserve quotes around scalar values
-    pub preserve_quotes: bool,
-    /// Maximum line width for wrapped text
-    pub width: usize,
-    /// Number of spaces for indenting mappings (key-value pairs)
-    pub indent_mapping: usize,
-    /// Number of spaces for indenting sequences (lists)
-    pub indent_sequence: usize,
-    /// Additional offset for nested structures
-    pub indent_offset: usize,
-}
-
-impl Default for YamlFormatConfig {
-    /// Provides the default implementation for a configuration struct.
-    /// # Returns
-    /// A new instance of the struct with the following default values:
-    /// - `preserve_quotes`: `true` - Indicates whether or not quotes should be preserved.
-    /// - `width`: `120` - Sets the default width, likely representing maximum line width.
-    /// - `indent_mapping`: `2` - Specifies the indentation level for mappings, such as key-value pairs.
-    /// - `indent_sequence`: `4` - Specifies the indentation spaces for sequences or lists.
-    /// - `indent_offset`: `2` - Defines additional offset indentation for certain scenarios.
-    ///
-    /// # Example
-    /// ```rust
-    /// use classic_yaml_core::YamlFormatConfig;
-    ///
-    /// let config = YamlFormatConfig::default();
-    /// assert_eq!(config.preserve_quotes, true);
-    /// assert_eq!(config.width, 120);
-    /// assert_eq!(config.indent_mapping, 2);
-    /// assert_eq!(config.indent_sequence, 4);
-    /// assert_eq!(config.indent_offset, 2);
-    /// ```
-    fn default() -> Self {
-        Self {
-            preserve_quotes: true,
-            width: 120,
-            indent_mapping: 2,
-            indent_sequence: 4,
-            indent_offset: 2,
-        }
-    }
-}
-
 /// A structure representing a cached YAML configuration or data.
 ///
 /// The `CachedYaml` struct is designed to encapsulate YAML data along with metadata
@@ -482,19 +384,11 @@ struct CachedYaml {
 /// and optional caching to optimize performance in repeated operations.
 /// # Fields
 ///
-/// * `format_config` - (Reserved for future use) This field will be utilized in
-///   future versions to store YAML format preservation configurations, allowing
-///   fine-grained control over YAML serialization and deserialization.
-///   For now, this field is unused and deliberately marked with `#[allow(dead_code)]`.
-///
 /// * `cache_enabled` - A boolean field that enables or disables caching functionality.
 ///   When set to `true`, caching can be used to avoid redundant processing, improving
 ///   performance in scenarios involving multiple reads or writes.
 ///
 /// # Usage
-///
-/// While the `format_config` field is currently not in use, the `cache_enabled`
-/// field can be utilized to configure whether caching is enabled for YAML operations.
 ///
 /// Example:
 /// ```rust
@@ -504,8 +398,6 @@ struct CachedYaml {
 /// assert!(yaml_ops.is_cache_enabled());
 /// ```
 pub struct YamlOperations {
-    #[allow(dead_code)] // Reserved for future format preservation features
-    format_config: YamlFormatConfig,
     cache_enabled: bool,
 }
 
@@ -513,7 +405,6 @@ impl YamlOperations {
     /// Creates a new instance of the struct with default configuration.
     /// # Returns
     /// A new instance where:
-    /// - `format_config` is initialized with the default settings provided by `YamlFormatConfig::default()`.
     /// - `cache_enabled` is set to `true`.
     ///
     /// # Example
@@ -525,30 +416,6 @@ impl YamlOperations {
     /// ```
     pub fn new() -> Self {
         Self {
-            format_config: YamlFormatConfig::default(),
-            cache_enabled: true,
-        }
-    }
-
-    /// Creates a new instance of the struct with the specified YAML format configuration.
-    /// # Parameters
-    /// - `format_config`: A `YamlFormatConfig` instance that specifies the configuration
-    ///   settings to be used for YAML formatting.
-    ///
-    /// # Returns
-    /// - Returns a new instance of the struct with the given configuration and
-    ///   `cache_enabled` set to `true` by default.
-    ///
-    /// # Example
-    /// ```rust
-    /// use classic_yaml_core::{YamlOperations, YamlFormatConfig};
-    ///
-    /// let config = YamlFormatConfig::default();
-    /// let instance = YamlOperations::with_config(config);
-    /// ```
-    pub fn with_config(format_config: YamlFormatConfig) -> Self {
-        Self {
-            format_config,
             cache_enabled: true,
         }
     }
@@ -687,6 +554,8 @@ impl YamlOperations {
                             trace!(cache = "yaml", path = %file_path.display(), "cache hit");
                             return Ok((*cached.data).clone());
                         }
+
+                        let _ = YAML_CACHE.remove(&file_path);
                     }
                 }
             }
@@ -918,8 +787,8 @@ impl YamlOperations {
     /// - `"cached_files"`: The number of entries currently stored in the YAML cache.
     /// - `"total_bytes"`: The total size in bytes of the raw content of all cached entries.
     ///
-    /// The function iterates over the `YAML_CACHE`, counting the number of entries
-    /// and calculating the total size of all entries' raw content if available.
+    /// The helper adapts the canonical cache stats contract and supplements it with
+    /// YAML-specific raw byte totals for legacy callers.
     /// # Returns
     /// A `HashMap<String, usize>` containing the cache statistics.
     ///
@@ -937,15 +806,11 @@ impl YamlOperations {
     /// This function assumes that `YAML_CACHE` is a globally accessible data structure
     /// that holds cached entries, where each entry may contain an optional `raw_content`.
     pub fn get_cache_stats(&self) -> HashMap<String, usize> {
+        let canonical = cache_stats();
         let mut stats = HashMap::new();
-        stats.insert("cached_files".to_string(), YAML_CACHE.len());
-
-        let total_size: usize = YAML_CACHE
-            .iter()
-            .filter_map(|entry| entry.raw_content.as_ref().map(|s| s.len()))
-            .sum();
-
-        stats.insert("total_bytes".to_string(), total_size);
+        stats.insert("cached_files".to_string(), canonical.size);
+        stats.insert("capacity".to_string(), canonical.capacity);
+        stats.insert("total_bytes".to_string(), total_cached_bytes());
         stats
     }
 
@@ -1503,7 +1368,7 @@ mod tests {
     use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
-    use tempfile::NamedTempFile;
+    use tempfile::{NamedTempFile, tempdir};
 
     // ============================================================================
     // Basic Parse/Dump Tests (existing)
@@ -1802,24 +1667,26 @@ nested:
 
     #[test]
     fn test_cache_hit_on_second_load() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "cached: true").expect("Write failed");
         let file_path = temp_file.path().to_path_buf();
 
         let ops = YamlOperations::new();
 
-        // First load - should populate cache
-        let _ = ops.load_yaml_file(&file_path).expect("Load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("First load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("Second load should succeed");
 
-        // Verify this specific file IS in the cache
-        assert!(
-            YAML_CACHE.contains_key(&file_path),
-            "File should be in cache after first load"
-        );
-
-        // Second load should use cache (file unchanged)
-        let result = ops.load_yaml_file(&file_path);
-        assert!(result.is_ok());
+        let stats = cache_stats();
+        assert_eq!(stats.misses, 1, "First unchanged load should miss once");
+        assert_eq!(stats.hits, 1, "Second unchanged load should hit once");
+        assert_eq!(stats.size, 1, "Exactly one file should be cached");
     }
 
     #[test]
@@ -1861,6 +1728,9 @@ nested:
 
     #[test]
     fn test_cache_disabled_always_reads() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "cached: false").expect("Write failed");
         let file_path = temp_file.path().to_path_buf();
@@ -1868,16 +1738,20 @@ nested:
         let mut ops = YamlOperations::new();
         ops.set_cache_enabled(false);
 
-        // Load file with caching disabled
-        let _ = ops.load_yaml_file(&file_path).expect("Load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("First load should succeed");
+        let _ = ops
+            .load_yaml_file(&file_path)
+            .expect("Second load should succeed");
 
-        // Verify this specific file is NOT in the cache
-        // (We can't check total count due to parallel tests)
-        let is_cached = YAML_CACHE.contains_key(&file_path);
-        assert!(
-            !is_cached,
-            "File should not be cached when caching is disabled"
+        let stats = cache_stats();
+        assert_eq!(stats.hits, 0, "Disabled caching should not record hits");
+        assert_eq!(
+            stats.misses, 2,
+            "Disabled caching should re-read on every load"
         );
+        assert_eq!(stats.size, 0, "Disabled caching should not retain entries");
     }
 
     #[test]
@@ -1893,10 +1767,10 @@ nested:
 
     #[test]
     fn test_cache_stats_after_load() {
-        // Get baseline cache stats (may have entries from parallel tests)
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let ops = YamlOperations::new();
-        let baseline_files = *ops.get_cache_stats().get("cached_files").unwrap();
-        let baseline_bytes = *ops.get_cache_stats().get("total_bytes").unwrap();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         let content = "stats_test: true\nvalue: 123";
@@ -1907,17 +1781,10 @@ nested:
             .expect("Load should succeed");
 
         let stats = ops.get_cache_stats();
-        let current_files = *stats.get("cached_files").unwrap();
-        let current_bytes = *stats.get("total_bytes").unwrap();
-
-        // Cache should have increased by at least one file
+        assert_eq!(stats.get("cached_files"), Some(&1));
+        assert_eq!(stats.get("capacity"), Some(&128));
         assert!(
-            current_files > baseline_files,
-            "Cache file count should increase after load"
-        );
-        // Cache bytes should have increased
-        assert!(
-            current_bytes > baseline_bytes,
+            stats.get("total_bytes").copied().unwrap_or_default() > 0,
             "Cache byte count should increase after load"
         );
     }
@@ -2392,36 +2259,11 @@ outer:
     // ============================================================================
 
     #[test]
-    fn test_yaml_format_config_default() {
-        let config = YamlFormatConfig::default();
-
-        assert!(config.preserve_quotes);
-        assert_eq!(config.width, 120);
-        assert_eq!(config.indent_mapping, 2);
-        assert_eq!(config.indent_sequence, 4);
-        assert_eq!(config.indent_offset, 2);
-    }
-
-    #[test]
     fn test_yaml_operations_default_trait() {
         let ops1 = YamlOperations::new();
         let ops2 = YamlOperations::default();
 
         assert_eq!(ops1.is_cache_enabled(), ops2.is_cache_enabled());
-    }
-
-    #[test]
-    fn test_yaml_operations_with_custom_config() {
-        let custom_config = YamlFormatConfig {
-            preserve_quotes: false,
-            width: 80,
-            indent_mapping: 4,
-            indent_sequence: 4,
-            indent_offset: 0,
-        };
-
-        let ops = YamlOperations::with_config(custom_config);
-        assert!(ops.is_cache_enabled()); // Cache should still be enabled by default
     }
 
     #[test]
@@ -2879,7 +2721,19 @@ list:
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
         assert_eq!(stats.size, 0);
-        assert_eq!(stats.total_bytes, 0);
+
+        let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
+        let object = serialized
+            .as_object()
+            .expect("Serialized cache stats should be an object");
+
+        assert_eq!(object.len(), 5, "Cache stats should expose five fields");
+        assert!(object.contains_key("hits"));
+        assert!(object.contains_key("misses"));
+        assert!(object.contains_key("hit_rate"));
+        assert!(object.contains_key("size"));
+        assert!(object.contains_key("capacity"));
+        assert!(!object.contains_key("total_bytes"));
     }
 
     #[test]
@@ -2892,25 +2746,24 @@ list:
 
         let ops = YamlOperations::new();
 
-        // Load file to ensure at least one cache entry exists
         let _ = ops
             .load_yaml_file(temp_file.path())
-            .expect("Load should succeed");
+            .expect("First load should succeed");
+        let _ = ops
+            .load_yaml_file(temp_file.path())
+            .expect("Second load should succeed");
 
         let stats = cache_stats();
-        // Cache should have at least one entry (our file)
-        assert!(stats.size >= 1, "Cache should have at least one entry");
-        assert!(stats.total_bytes > 0, "Cache should have content bytes");
-        // Total requests should be non-zero
-        assert!(
-            stats.hits + stats.misses > 0,
-            "Should have at least one hit or miss"
+        assert_eq!(stats.misses, 1, "Initial read should miss once");
+        assert_eq!(stats.hits, 1, "Second unchanged read should hit once");
+        assert_eq!(stats.size, 1, "One file should remain cached");
+        assert_eq!(
+            stats.hit_rate, 0.5,
+            "Hit rate should reflect one hit in two reads"
         );
-        // Hit rate should be a valid fraction
-        assert!(
-            stats.hit_rate >= 0.0 && stats.hit_rate <= 1.0,
-            "Hit rate should be between 0.0 and 1.0"
-        );
+
+        let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
+        assert_eq!(serialized["capacity"].as_u64(), Some(128));
     }
 
     #[test]
@@ -2936,7 +2789,34 @@ list:
         assert_eq!(stats.hits, 0);
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
-        // size and total_bytes depend on cache content, not stats counters
+        assert_eq!(
+            stats.size, 1,
+            "Resetting counters should not clear cache entries"
+        );
+    }
+
+    #[test]
+    fn test_cache_size_is_bounded_without_assuming_evicted_key() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let ops = YamlOperations::new();
+
+        for index in 0..129 {
+            let path = temp_dir.path().join(format!("cache-{index}.yaml"));
+            fs::write(&path, format!("index: {index}\n")).expect("Failed to write test YAML");
+            let _ = ops.load_yaml_file(&path).expect("Load should succeed");
+        }
+
+        let stats = cache_stats();
+        let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
+
+        assert_eq!(serialized["capacity"].as_u64(), Some(128));
+        assert!(
+            stats.size <= 128,
+            "Bounded cache should never report more entries than capacity"
+        );
     }
 
     // ============================================================================
@@ -3075,6 +2955,7 @@ root:
     #[test]
     fn test_load_yaml_file_with_cache_disabled_no_cache_entry() {
         clear_global_yaml_cache();
+        reset_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "no_cache: true").expect("Write failed");
@@ -3089,7 +2970,12 @@ root:
             Some(Yaml::Boolean(true))
         );
 
-        // Should NOT be in cache
-        assert!(!YAML_CACHE.contains_key(&file_path));
+        let stats = cache_stats();
+        assert_eq!(
+            stats.size, 0,
+            "Disabled cache reads should not retain entries"
+        );
+        assert_eq!(stats.hits, 0, "Disabled cache reads should not count hits");
+        assert_eq!(stats.misses, 1, "Disabled cache reads should count a miss");
     }
 }

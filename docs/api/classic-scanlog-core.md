@@ -72,9 +72,15 @@ Analysis helpers used by the orchestrator and usable independently.
 
 - `PluginAnalyzer` - plugin extraction, plugin-limit checks, plugin suspect matching
 - `FormIDAnalyzerCore` - async FormID correlation and optional DB-backed value lookup
-- `RecordScanner` - named-record detection
+- `RecordScanner` - named-record detection with per-instance `OnceLock<AhoCorasick>` matcher caches built on first use
 - `SuspectScanner` - known error/stack suspect matching
 - `detect_mods_single()`, `detect_mods_double()`, `detect_mods_important()` - standalone mod checks
+
+`mod_detector` contributor note:
+
+- `detect_mods_single()`, `detect_mods_double()`, and `detect_mods_batch()` now reuse process-wide bounded `LazyLock<quick_cache::sync::Cache<...>>` matcher caches keyed by normalized content hashes of the relevant mod-list inputs.
+- Those caches intentionally cover only input-derived alternation regexes in the hot paths. They are not a repo-wide "make every regex static" sweep; truly constant regex helpers should still compile once through dedicated `LazyLock` statics.
+- Cache validation should assert reuse and bounded capacity/stat behavior, not a specific eviction victim.
 
 ### `report`
 
@@ -208,9 +214,9 @@ Named section guarantees from `parse_all_sections_arc()` and `parse_all_sections
 Deprecated parser APIs still present:
 
 - `parse_segments()`
-- `parse_segments_parallel()`
+- `parse_segments_parallel()` -- Python binding now returns `dict[str, list[str]]` (was `list[list[str]]`) and emits `DeprecationWarning`
 
-These are compatibility shims over `parse_all_sections_arc()` and are marked deprecated in source.
+These are compatibility shims over `parse_all_sections_arc()` and are marked deprecated in source. The Python binding's `parse_segments_parallel` was migrated to delegate to `parse_all_sections_arc` with a dict return type matching `parse_all_sections`.
 
 ## `CrashgenRegistry`, `CrashgenEntry`, and `CheckId`
 
@@ -307,9 +313,24 @@ The report module is designed around Python-parity text output, not a stable int
 - `version`: `CrashgenVersion`, `CrashgenVersionStatus`, `crashgen_version_gen()`, `check_crashgen_version_status()`
 - `gpu_detector`: `GpuVendor`, `GpuInfo`, `GpuDetector`
 - `papyrus`: `PapyrusAnalyzer`, `PapyrusStats`, `PapyrusError`
-- `fcx_handler`: `FcxModeHandler`, `ConfigIssue`, `GLOBAL_FCX_HANDLER`
+- `fcx_handler`: `FcxModeHandler`, `FcxResetError`, `ConfigIssue`, `GLOBAL_FCX_HANDLER`
 - `formid`: `RustFormIDAnalyzer`, `FormIDAnalyzer` legacy wrapper
 - `detect_vr_log(content)` - simple Fallout 4 VR log detection helper
+
+### FCX global state reset contract
+
+`FcxModeHandler::reset_global_state()` is the contributor-facing reset hook for the process-wide FCX singleton.
+
+- Signature: `Result<(), FcxResetError>`
+- Locking behavior: it uses a blocking mutex lock, so reset requests wait for in-flight FCX work instead of silently skipping under contention
+- Success path: `Ok(())` means stale cached FCX results were cleared for a new scan session
+- No-op path: `Err(FcxResetError::Unnecessary)` means the singleton was already clean; bindings should treat this as benign and continue
+
+Binding expectation:
+
+- binding entrypoints should auto-call the reset hook at scan start so each scan session begins from clean FCX state
+- bindings may expose explicit reset entrypoints for callers that want to clear the singleton between sessions
+- bindings should not treat `Unnecessary` as a scan-start failure
 
 ---
 
@@ -470,7 +491,7 @@ If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool`
 ## Contributor Notes And Known Limits
 
 - `classic-scanlog-core` is downstream of [`classic-config-core`](../../docs/api/classic-config-core.md); update both docs if the YAML-to-analysis contract changes.
-- `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated.
+- `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated. The Python binding `parse_segments_parallel` now returns `dict[str, list[str]]` instead of `list[list[str]]`.
 - The source contains performance claims in comments and docs, but this page does not treat them as compatibility guarantees.
 - `process_logs_batch()` does not preserve input ordering.
 - `SettingsValidator::scan_addictol_settings_scaffold()` is intentionally a scaffold, not a complete Addictol rules implementation.

@@ -10,8 +10,9 @@
 //! for manual fixes.
 
 use crate::report::ReportFragment;
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
+use std::sync::LazyLock;
+use thiserror::Error;
 
 /// Global FCX mode handler for shared state across scan sessions
 ///
@@ -20,8 +21,20 @@ use parking_lot::Mutex;
 ///
 /// Call `FcxModeHandler::reset_global_state()` at the start of each scan session
 /// to clear cached results.
-pub static GLOBAL_FCX_HANDLER: Lazy<Mutex<FcxModeHandler>> =
-    Lazy::new(|| Mutex::new(FcxModeHandler::new(false)));
+pub static GLOBAL_FCX_HANDLER: LazyLock<Mutex<FcxModeHandler>> =
+    LazyLock::new(|| Mutex::new(FcxModeHandler::new(false)));
+
+/// Typed outcome for resetting the global FCX handler state.
+#[derive(Clone, Debug, Error, Eq, PartialEq)]
+pub enum FcxResetError {
+    /// The global handler was already clean, so no reset work was needed.
+    #[error("FCX global state reset was unnecessary")]
+    Unnecessary,
+
+    /// Reserved binding-visible failure path for future reset precondition errors.
+    #[error("FCX global state reset failed: {0}")]
+    Failed(&'static str),
+}
 
 /// Configuration issue detected by FCX mode
 #[derive(Clone, Debug)]
@@ -265,6 +278,13 @@ impl FcxModeHandler {
                 .is_some_and(|s| !s.is_empty())
     }
 
+    fn needs_reset(&self) -> bool {
+        self.main_files_check.is_some()
+            || self.game_files_check.is_some()
+            || !self.detected_issues.is_empty()
+            || self.checks_run
+    }
+
     /// Reset all FCX check results (for new scan session)
     pub fn reset(&mut self) {
         self.main_files_check = None;
@@ -285,17 +305,22 @@ impl FcxModeHandler {
     /// use classic_scanlog_core::FcxModeHandler;
     ///
     /// // Reset global state before starting a new scan
-    /// FcxModeHandler::reset_global_state();
+    /// let _ = FcxModeHandler::reset_global_state();
     /// ```
     ///
     /// # Thread Safety
     ///
     /// This method is thread-safe and can be called from multiple threads
     /// without risk of data races. It uses a mutex-protected global state.
-    pub fn reset_global_state() {
-        if let Some(mut handler) = GLOBAL_FCX_HANDLER.try_lock() {
-            handler.reset();
+    pub fn reset_global_state() -> Result<(), FcxResetError> {
+        let mut handler = GLOBAL_FCX_HANDLER.lock();
+
+        if !handler.needs_reset() {
+            return Err(FcxResetError::Unnecessary);
         }
+
+        handler.reset();
+        Ok(())
     }
 
     /// Create a disabled FCX handler (convenience constructor)
@@ -324,6 +349,44 @@ impl FcxModeHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{
+        sync::Arc,
+        sync::{
+            atomic::{AtomicBool, Ordering},
+            mpsc, LazyLock, Mutex as StdMutex,
+        },
+        thread,
+        time::Duration,
+    };
+
+    static TEST_LOCK: LazyLock<StdMutex<()>> = LazyLock::new(|| StdMutex::new(()));
+
+    fn sample_issue() -> ConfigIssue {
+        ConfigIssue::new(
+            "test.ini".to_string(),
+            Some("General".to_string()),
+            "bExample".to_string(),
+            "0".to_string(),
+            "1".to_string(),
+            "Example issue".to_string(),
+            "warning".to_string(),
+        )
+    }
+
+    fn seed_dirty_global_state() {
+        let mut handler = GLOBAL_FCX_HANDLER.lock();
+        handler.fcx_mode = true;
+        handler.set_main_files_result("Main files OK\n".to_string());
+        handler.set_game_files_result("Game files OK\n".to_string());
+        handler.set_detected_issues(vec![sample_issue()]);
+        handler.checks_run = true;
+    }
+
+    fn seed_clean_global_state() {
+        let mut handler = GLOBAL_FCX_HANDLER.lock();
+        handler.fcx_mode = false;
+        handler.reset();
+    }
 
     #[test]
     fn test_fcx_disabled_messages() {
@@ -387,5 +450,74 @@ mod tests {
 
         let disabled = FcxModeHandler::disabled();
         assert!(!disabled.fcx_mode);
+    }
+
+    #[test]
+    fn fcx_reset_dirty_global_state_returns_success_and_clears_cached_state() {
+        let _test_guard = TEST_LOCK.lock().expect("test lock poisoned");
+        seed_dirty_global_state();
+
+        assert_eq!(FcxModeHandler::reset_global_state(), Ok(()));
+
+        let handler = GLOBAL_FCX_HANDLER.lock();
+        assert!(handler.main_files_check.is_none());
+        assert!(handler.game_files_check.is_none());
+        assert!(handler.detected_issues.is_empty());
+        assert!(!handler.checks_run);
+    }
+
+    #[test]
+    fn fcx_reset_clean_global_state_returns_unnecessary() {
+        let _test_guard = TEST_LOCK.lock().expect("test lock poisoned");
+        seed_clean_global_state();
+
+        assert_eq!(
+            FcxModeHandler::reset_global_state(),
+            Err(FcxResetError::Unnecessary)
+        );
+    }
+
+    #[test]
+    fn fcx_reset_waits_for_contention_and_clears_state_after_lock_release() {
+        let _test_guard = TEST_LOCK.lock().expect("test lock poisoned");
+        seed_dirty_global_state();
+
+        let (lock_ready_tx, lock_ready_rx) = mpsc::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        let reset_finished = Arc::new(AtomicBool::new(false));
+        let reset_finished_ref = Arc::clone(&reset_finished);
+
+        let lock_holder = thread::spawn(move || {
+            let _handler = GLOBAL_FCX_HANDLER.lock();
+            lock_ready_tx.send(()).expect("lock ready signal failed");
+            release_rx.recv().expect("release signal failed");
+        });
+
+        lock_ready_rx
+            .recv()
+            .expect("lock holder never acquired mutex");
+
+        let reset_thread = thread::spawn(move || {
+            let result = FcxModeHandler::reset_global_state();
+            reset_finished_ref.store(true, Ordering::SeqCst);
+            result
+        });
+
+        thread::sleep(Duration::from_millis(50));
+        assert!(
+            !reset_finished.load(Ordering::SeqCst),
+            "reset should block while another thread holds the mutex"
+        );
+
+        release_tx.send(()).expect("failed to release lock holder");
+        lock_holder.join().expect("lock holder thread panicked");
+
+        assert_eq!(reset_thread.join().expect("reset thread panicked"), Ok(()));
+
+        let handler = GLOBAL_FCX_HANDLER.lock();
+        assert!(handler.main_files_check.is_none());
+        assert!(handler.game_files_check.is_none());
+        assert!(handler.detected_issues.is_empty());
+        assert!(!handler.checks_run);
     }
 }

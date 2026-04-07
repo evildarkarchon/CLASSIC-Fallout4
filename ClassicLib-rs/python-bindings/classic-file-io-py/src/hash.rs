@@ -158,4 +158,23 @@ impl PyFileHasher {
     fn cache_size() -> usize {
         FileHasher::cache_size()
     }
+
+    /// Get canonical hash-cache statistics.
+    #[staticmethod]
+    fn cache_stats(py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let stats = FileHasher::cache_stats();
+        let dict = PyDict::new(py);
+        dict.set_item("hits", stats.hits)?;
+        dict.set_item("misses", stats.misses)?;
+        dict.set_item("hit_rate", stats.hit_rate)?;
+        dict.set_item("size", stats.size)?;
+        dict.set_item("capacity", stats.capacity)?;
+        Ok(dict.unbind().into())
+    }
+
+    /// Reset hash-cache hit and miss counters.
+    #[staticmethod]
+    fn reset_cache_stats() {
+        FileHasher::reset_cache_stats();
+    }
 }

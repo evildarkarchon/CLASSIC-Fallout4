@@ -5,7 +5,7 @@
 use dashmap::DashMap;
 use std::any::Any;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use crate::Keys;
 
@@ -19,8 +19,7 @@ type RegistryValue = Arc<dyn Any + Send + Sync>;
 ///
 /// Uses `DashMap` for lock-free concurrent access with minimal contention.
 /// The registry is lazily initialized on first access.
-static REGISTRY: once_cell::sync::Lazy<DashMap<String, RegistryValue>> =
-    once_cell::sync::Lazy::new(DashMap::new);
+static REGISTRY: LazyLock<DashMap<String, RegistryValue>> = LazyLock::new(DashMap::new);
 
 /// Register a value in the global registry.
 ///
@@ -469,6 +468,11 @@ pub fn get_game_version_string() -> String {
 mod tests {
     use super::*;
     use serial_test::serial;
+
+    #[test]
+    fn test_registry_uses_std_lazy_lock() {
+        assert!(std::any::type_name_of_val(&REGISTRY).contains("LazyLock"));
+    }
 
     #[test]
     #[serial]
