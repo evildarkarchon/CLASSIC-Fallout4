@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-current_plan: Not started
-status: verifying
-stopped_at: Completed 01-cxx-parity-gate-tooling/01-03-PLAN.md — Phase 1 CXX parity gate tooling complete (3/3 plans)
-last_updated: "2026-04-07T08:06:07.691Z"
+current_plan: 1
+status: executing
+stopped_at: Completed 02-cxx-bridge-surface-expansion/02-01-path-promotion-and-widening-PLAN.md
+last_updated: "2026-04-07T23:36:44.556Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 11
+  completed_plans: 4
   percent: 0
 ---
 
@@ -22,14 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python — no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
-**Current focus:** Phase 01 — cxx-parity-gate-tooling
+**Current focus:** Phase 02 — cxx-bridge-surface-expansion
 
 ## Current Position
 
-Phase: 2
-Plan: 3 of 3
-Current Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 02 (cxx-bridge-surface-expansion) — EXECUTING
+Plan: 2 of 8
+Current Plan: 1
+Status: Ready to execute
 Last activity: 2026-04-07
 
 Progress: [          ] 0%
@@ -87,6 +87,7 @@ Progress: [          ] 0%
 | Phase 01-cxx-parity-gate-tooling P01 | 6min | 2 tasks | 11 files |
 | Phase 01-cxx-parity-gate-tooling P02 | 8min | 2 tasks | 8 files |
 | Phase 01-cxx-parity-gate-tooling P03 | 4min | 2 tasks | 5 files |
+| Phase 02-cxx-bridge-surface-expansion P01 | 27min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -184,6 +185,9 @@ Recent decisions affecting current work:
 - [Phase 01-cxx-parity-gate-tooling]: CXX parity gate contributor doc (docs/api/cxx-parity-gate.md) follows a 7-section structure: Overview, Local Run, Refresh Workflow, Bootstrap From Scratch, Contract Row Schema, build.rs Relationship, Ephemeral vs Committed Artifacts, CI Integration
 - [Phase 01-cxx-parity-gate-tooling]: Bridge crate .gitignore hides parity-artifacts/ with a trailing-slash directory pattern and an inline comment referencing D-08 and the regeneration command so future contributors find the rationale in-source
 - [Phase 01-cxx-parity-gate-tooling]: VALIDATION.md task IDs use pytest ClassName::test_method form (e.g., TestParseExternRust::test_parse_extern_rust_functions) to match Plan 01's actual test layout so every automated command is runnable as-is
+- [Phase 02-cxx-bridge-surface-expansion]: Adapted bridge wrappers to REAL classic-path-core API signatures (Path-taking functions, instance-based BackupManager, GamePathFinder method instead of free fn for find_game_path)
+- [Phase 02-cxx-bridge-surface-expansion]: GUI D-10 clean build uses system-fallback Qt from main repo vcpkg_installed -- worktree lacks pre-built Qt, main repo has it at J:/CLASSIC-Fallout4/classic-gui/build/vcpkg_installed
+- [Phase 02-cxx-bridge-surface-expansion]: parity_contract.json requires generate_baseline.py --write-baseline (not just --update-baseline) to refresh the contract entries; --update-baseline only syncs diff/gate reports
 
 ### Pending Todos
 
@@ -205,7 +209,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T07:57:10.025Z
-Stopped at: Completed 01-cxx-parity-gate-tooling/01-03-PLAN.md — Phase 1 CXX parity gate tooling complete (3/3 plans)
+Last session: 2026-04-07T23:36:44.552Z
+Stopped at: Completed 02-cxx-bridge-surface-expansion/02-01-path-promotion-and-widening-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
