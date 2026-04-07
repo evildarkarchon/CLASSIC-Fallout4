@@ -1,9 +1,9 @@
 ---
 phase: 1
 slug: cxx-parity-gate-tooling
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: planned
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-06
 ---
 
@@ -41,26 +41,26 @@ created: 2026-04-06
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| TBD | 01 | 0 | CXXG-01 | scaffolding | `test -d tools/cxx_api_parity/tests/fixtures` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_rust_functions -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_shared_structs -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_enums -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_opaque_types -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_extern_cpp -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_parse_build_rs -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_build_rs_missing_bridges -x` | ❌ W0 | ⬜ pending |
-| TBD | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::test_deterministic_output -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-02 | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_file_exists -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-02 | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_baseline_covers_14_modules -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | smoke | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_passes_on_unchanged_source -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_added_function -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_removed_function -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_struct_field_rename -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-03 | stale-artifact | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_gate_fails_on_stale_artifact -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-04 | CLI surface | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::test_no_deferred_registry_arg -x` | ❌ W0 | ⬜ pending |
-| TBD | 02 | 2 | CXXG-04 | smoke | `python tools/cxx_api_parity/check_parity_gate.py --help` exits 0 | ❌ W0 | ⬜ pending |
-| TBD | 03 | 3 | CXXG-02 | end-to-end | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 against committed baseline | ❌ W0 | ⬜ pending |
-| TBD | 03 | 3 | CXXG-05 | doc presence | `test -f docs/api/cxx-parity-gate.md && grep -q "## Local Run" docs/api/cxx-parity-gate.md` | ❌ W0 | ⬜ pending |
+| 01-01-T1 | 01 | 1 | CXXG-01 | scaffolding | `test -d tools/cxx_api_parity/tests/fixtures` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseExternRust::test_parse_extern_rust_functions -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseSharedStructs::test_parse_shared_structs -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseEnums::test_parse_enums -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseOpaqueTypes::test_parse_opaque_types -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseExternCpp::test_parse_extern_cpp -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseBuildRs::test_parse_build_rs -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestParseBuildRs::test_build_rs_missing_bridges -x` | ✅ created | ⬜ pending |
+| 01-01-T2 | 01 | 1 | CXXG-01 | unit | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_parser.py::TestDeterminism::test_deterministic_output -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-02 | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestBaselineExists::test_baseline_file_exists -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-02 | integration | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestBaselineExists::test_baseline_covers_14_modules -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-03 | smoke | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestGateSmoke::test_gate_passes_on_unchanged_source -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestDriftDetection::test_gate_fails_on_added_function -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestDriftDetection::test_gate_fails_on_removed_function -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-03 | drift | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestDriftDetection::test_gate_fails_on_struct_field_rename -x` | ✅ created | ⬜ pending |
+| 01-02-T2 | 02 | 2 | CXXG-03 | stale-artifact | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestStaleArtifact::test_gate_fails_on_stale_artifact -x` | ✅ created | ⬜ pending |
+| 01-02-T1 | 02 | 2 | CXXG-04 | CLI surface | `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/test_gate.py::TestNoDeferredRegistry::test_no_deferred_registry_arg -x` | ✅ created | ⬜ pending |
+| 01-02-T1 | 02 | 2 | CXXG-04 | smoke | `python tools/cxx_api_parity/check_parity_gate.py --help` exits 0 | ✅ created | ⬜ pending |
+| 01-03-T1 | 03 | 3 | CXXG-02 | end-to-end | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 against committed baseline | ✅ created | ⬜ pending |
+| 01-03-T1 | 03 | 3 | CXXG-05 | doc presence | `test -f docs/api/cxx-parity-gate.md && grep -q '## Local Run' docs/api/cxx-parity-gate.md` | ✅ created | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -106,4 +106,4 @@ Test infrastructure must be created before any parser/gate code is written:
 - [ ] Feedback latency < 15s
 - [ ] `nyquist_compliant: true` set in frontmatter (after planner fills Task IDs and Wave 0 is verified)
 
-**Approval:** pending — gsd-planner fills concrete task IDs in Step 1; gsd-plan-checker verifies before VERIFICATION PASSED
+**Approval:** task IDs filled 2026-04-07 by gsd-planner; gsd-plan-checker verifies before VERIFICATION PASSED
