@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.1.0-bindings
-milestone_name: Full Bindings Parity
-current_plan: null
-status: defining_requirements
-stopped_at: Roadmap created for v9.1.0-bindings; ready for /gsd:plan-phase 1
-last_updated: "2026-04-06T00:00:00Z"
-last_activity: 2026-04-06 — Roadmap created for v9.1.0-bindings (6 phases, 45 requirements)
+milestone: v9.1.0
+milestone_name: milestone
+current_plan: 1
+status: executing
+stopped_at: Completed 01-cxx-parity-gate-tooling/01-01-PLAN.md
+last_updated: "2026-04-07T07:40:04.581Z"
+last_activity: 2026-04-07
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -22,15 +22,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python — no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
-**Current focus:** v9.1.0-bindings — Full Bindings Parity (roadmap defined, ready to plan Phase 1)
+**Current focus:** Phase 01 — cxx-parity-gate-tooling
 
 ## Current Position
 
-Phase: Not started (roadmap created)
-Plan: —
-Current Plan: —
-Status: Roadmap defined; ready for /gsd:plan-phase 1
-Last activity: 2026-04-06 — Roadmap created for v9.1.0-bindings
+Phase: 01 (cxx-parity-gate-tooling) — EXECUTING
+Plan: 2 of 3
+Current Plan: 1
+Status: Ready to execute
+Last activity: 2026-04-07
 
 Progress: [          ] 0%
 
@@ -84,6 +84,7 @@ Progress: [          ] 0%
 | Phase 09-deprecated-api-verification-closure P01 | 3min | 2 tasks | 2 files |
 | Phase quick-260406-syy-resolve-the-newly-uncovered-python-parit P01 | 8min | 2 tasks | 6 files |
 | Phase 11-workspace-infra-verification-completion P01 | 5min | 2 tasks | 2 files |
+| Phase 01-cxx-parity-gate-tooling P01 | 6min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -170,6 +171,10 @@ Recent decisions affecting current work:
 - [Roadmap v9.1.0-bindings]: HARM-01/02 (PE-version) bundled with Node collapse Phase 4; HARM-03/04 (classic_shared) bundled with Python collapse Phase 3; HARM-05 (error-contract doc) in Phase 6
 - [Roadmap v9.1.0-bindings]: CI enforcement (Phase 5) depends on all three gate phases (1, 3, 4) being complete before branch protection is wired
 - [Roadmap v9.1.0-bindings]: Documentation reset (Phase 6) is last — governance file deletion MUST follow gate green status and CI enforcement
+- [Phase 01-cxx-parity-gate-tooling]: Use regex+balanced-brace counter hybrid for CXX bridge parser; pure regex cannot handle nested struct/extern blocks.
+- [Phase 01-cxx-parity-gate-tooling]: Skip struct/enum names that fall inside extern blocks via pre-computed extern spans to avoid cross-attribution between cxx shared types and extern items.
+- [Phase 01-cxx-parity-gate-tooling]: Sort entries by (bridgeModule, kind, rustSymbol) and use sha256[:16] of f'{rustSymbol}:{kind}:{bridgeModule}' for deterministic id field.
+- [Phase 01-cxx-parity-gate-tooling]: When fixture filename and intended bridgeModule differ in synthetic test layouts, install the fixture file at src/<bridgeModule>.rs so the documented filename-stem rule keeps holding.
 
 ### Pending Todos
 
@@ -191,7 +196,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06 (roadmap creation)
-Stopped at: Roadmap created for v9.1.0-bindings — 6 phases, 45 requirements mapped
+Last session: 2026-04-07T07:40:04.577Z
+Stopped at: Completed 01-cxx-parity-gate-tooling/01-01-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
