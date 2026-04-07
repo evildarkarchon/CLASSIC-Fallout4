@@ -6,6 +6,8 @@
 
 The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
 
+**v9.1.0-bindings progress:** Phase 1 (CXX Parity Gate Tooling) complete — `tools/cxx_api_parity/` parser, gate, and 202-entry born-green baseline are live; CI wiring still pending.
+
 ## Current Milestone: v9.1.0-bindings Full Bindings Parity
 
 **Goal:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python -- no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
@@ -139,4 +141,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after v9.1.0-bindings milestone start*
+*Last updated: 2026-04-07 after Phase 1 (CXX Parity Gate Tooling) completion*
