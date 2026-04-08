@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-08T22:36:05.744542+00:00`
-- Tier-1 contract rows: **190**
-- Tier-1 matched: **190**
+- Generated: `2026-04-08T23:02:12.162420+00:00`
+- Tier-1 contract rows: **240**
+- Tier-1 matched: **240**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **1080**
+- Total gaps (Tier-1 + Tier-2): **1026**
 
 ## Tier-1 Contract Evaluation
 
@@ -47,6 +47,12 @@
 | `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `classic_scanlog.parse_crashgen_version` | `matched` |
 | `scanlog-pattern-matcher-class` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher` | `matched` |
 | `scanlog-pattern-matcher-find-first` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.find_first` | `matched` |
+| `scanlog.crashgen_registry.CheckId@rust` | `scanlog` | `CheckId` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.error.ScanLogError@rust` | `scanlog` | `ScanLogError` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.error.error@rust` | `scanlog` | `error` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue.__init__` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.__init__` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue.format_report` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.format_report` | `matched` |
@@ -112,6 +118,44 @@
 | `scanlog.mod_detector.detect_mods_single` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
 | `scanlog.mod_detector.detect_mods_single@rust` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
 | `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector` | `classic_scanlog.detect_mods_single` | `matched` |
+| `scanlog.orchestrator.AnalysisConfig.__init__` | `scanlog` | `AnalysisConfig` | `classic_scanlog.AnalysisConfig.__init__` | `matched` |
+| `scanlog.orchestrator.AnalysisResult` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult` | `matched` |
+| `scanlog.orchestrator.AnalysisResult.__init__` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult.__init__` | `matched` |
+| `scanlog.orchestrator.AnalysisResult.get_report_text` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult.get_report_text` | `matched` |
+| `scanlog.orchestrator.AnalysisResult.to_dict` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult.to_dict` | `matched` |
+| `scanlog.orchestrator.AnalysisResult@rust` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult` | `matched` |
+| `scanlog.orchestrator.CancellationToken` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken` | `matched` |
+| `scanlog.orchestrator.CancellationToken.__init__` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.__init__` | `matched` |
+| `scanlog.orchestrator.CancellationToken.cancel` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.cancel` | `matched` |
+| `scanlog.orchestrator.CancellationToken.is_cancelled` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.is_cancelled` | `matched` |
+| `scanlog.orchestrator.CancellationToken.reset` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.reset` | `matched` |
+| `scanlog.orchestrator.Orchestrator.__init__` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.__init__` | `matched` |
+| `scanlog.orchestrator.Orchestrator.attach_database` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.attach_database` | `matched` |
+| `scanlog.orchestrator.Orchestrator.check_loadorder_exists` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.check_loadorder_exists` | `matched` |
+| `scanlog.orchestrator.Orchestrator.has_database_pool` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.has_database_pool` | `matched` |
+| `scanlog.orchestrator.Orchestrator.is_feature_complete` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.is_feature_complete` | `matched` |
+| `scanlog.orchestrator.Orchestrator.is_initialized` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.is_initialized` | `matched` |
+| `scanlog.orchestrator.Orchestrator.load_loadorder` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.load_loadorder` | `matched` |
+| `scanlog.orchestrator.Orchestrator.process_logs_parallel` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.process_logs_parallel` | `matched` |
+| `scanlog.orchestrator.Orchestrator.write_reports_batch` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.write_reports_batch` | `matched` |
+| `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `ScanProgressPhase` | `classic_scanlog.AnalysisResult` | `matched` |
+| `scanlog.orchestrator.orchestrator@rust` | `scanlog` | `orchestrator` | `classic_scanlog.Orchestrator` | `matched` |
+| `scanlog.orchestrator.resolve_batch_concurrency@rust` | `scanlog` | `resolve_batch_concurrency` | `classic_scanlog.Orchestrator` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.log_exists` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.log_exists` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.log_path` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.log_path` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.reset` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.reset` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.start_monitoring` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.start_monitoring` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer.stats` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.stats` | `matched` |
+| `scanlog.papyrus.PapyrusError@rust` | `scanlog` | `PapyrusError` | `classic_scanlog.PapyrusError` | `matched` |
+| `scanlog.papyrus.PapyrusStats` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats` | `matched` |
+| `scanlog.papyrus.PapyrusStats.__init__` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats.__init__` | `matched` |
+| `scanlog.papyrus.PapyrusStats.dumps_to_stacks_ratio` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats.dumps_to_stacks_ratio` | `matched` |
+| `scanlog.papyrus.PapyrusStats@rust` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats` | `matched` |
+| `scanlog.papyrus.papyrus@rust` | `scanlog` | `papyrus` | `classic_scanlog.PapyrusAnalyzer` | `matched` |
+| `scanlog.papyrus.papyrus_logging` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.papyrus_logging` | `matched` |
 | `scanlog.parser.LogParser.__init__` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.__init__` | `matched` |
 | `scanlog.parser.LogParser.add_pattern` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.add_pattern` | `matched` |
 | `scanlog.parser.LogParser.benchmark` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.benchmark` | `matched` |
@@ -160,6 +204,7 @@
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.scan_records_batch` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
+| `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.settings_validator.SettingsValidator` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.__init__` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.__init__` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.check_disabled_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.check_disabled_settings` | `matched` |
@@ -178,6 +223,11 @@
 | `scanlog.suspect_scanner.SuspectScanner.suspect_scan_stack` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.suspect_scan_stack` | `matched` |
 | `scanlog.suspect_scanner.SuspectScanner@rust` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner` | `matched` |
 | `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner` | `classic_scanlog.SuspectScanner` | `matched` |
+| `scanlog.version.CrashgenVersion.__eq__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__eq__` | `matched` |
+| `scanlog.version.CrashgenVersion.__hash__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__hash__` | `matched` |
+| `scanlog.version.CrashgenVersion.__init__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__init__` | `matched` |
+| `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `crashgen_version_gen` | `classic_scanlog.parse_crashgen_version` | `matched` |
+| `scanlog.version.version@rust` | `scanlog` | `version` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `version-registry-class` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry` | `matched` |
 | `version-registry-game-version-class` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion` | `matched` |
 | `version-registry-get-address-library-filename` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry.get_address_library_filename` | `matched` |
@@ -207,13 +257,13 @@
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `scanlog` | 0 | 101 |
+| `scanlog` | 0 | 51 |
 | `config` | 0 | 28 |
 | `version_registry` | 0 | 35 |
 | `yaml` | 0 | 37 |
 | `database` | 0 | 46 |
-| `file_io` | 0 | 106 |
-| `scangame` | 0 | 217 |
+| `file_io` | 0 | 105 |
+| `scangame` | 0 | 215 |
 | `registry` | 0 | 39 |
 | `perf` | 0 | 16 |
 | `settings` | 0 | 39 |
@@ -224,7 +274,7 @@
 | `resource` | 0 | 40 |
 | `xse` | 0 | 40 |
 | `web` | 0 | 29 |
-| `update` | 0 | 16 |
+| `update` | 0 | 15 |
 | `shared` | 0 | 66 |
 | `aux` | 0 | 0 |
 

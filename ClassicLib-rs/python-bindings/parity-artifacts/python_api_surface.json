@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T22:36:05.743387+00:00",
+  "generated_at_utc": "2026-04-08T23:02:16.783025+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -4927,7 +4927,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, game: str, game_version: str = \"auto\") -> None:"
     },
@@ -4949,7 +4949,7 @@
       "export_path": "AnalysisResult",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class AnalysisResult:"
     },
@@ -4961,7 +4961,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, log_path: str) -> None:"
     },
@@ -4973,7 +4973,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def get_report_text(self) -> str:"
     },
@@ -4985,7 +4985,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def to_dict(self) -> dict[str, Any]:"
     },
@@ -4995,7 +4995,7 @@
       "export_path": "CancellationToken",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class CancellationToken:"
     },
@@ -5007,7 +5007,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -5019,7 +5019,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def cancel(self) -> None:"
     },
@@ -5031,7 +5031,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def is_cancelled(self) -> bool:"
     },
@@ -5043,7 +5043,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def reset(self) -> None:"
     },
@@ -5099,7 +5099,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __eq__(self, other: object) -> bool: ..."
     },
@@ -5111,7 +5111,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __hash__(self) -> int: ..."
     },
@@ -5123,7 +5123,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, version_str: str) -> None:"
     },
@@ -5883,7 +5883,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, config: AnalysisConfig) -> None:"
     },
@@ -5895,7 +5895,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def attach_database( self, db_paths: list[str], game_table: str | None = None ) -> None:"
     },
@@ -5907,7 +5907,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def check_loadorder_exists(dir_path: str) -> bool:"
     },
@@ -5919,7 +5919,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def has_database_pool(self) -> bool:"
     },
@@ -5931,7 +5931,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def is_feature_complete(self) -> bool:"
     },
@@ -5943,7 +5943,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def is_initialized(self) -> bool:"
     },
@@ -5955,7 +5955,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def load_loadorder(self, loadorder_path: str) -> tuple[dict[str, str], list[str]]:"
     },
@@ -5991,7 +5991,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def process_logs_parallel( self, log_paths: list[str], max_concurrent: int = 10, progress_callback: Callable[[str], None] | None = None, ) -> list[AnalysisResult]:"
     },
@@ -6003,7 +6003,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def write_reports_batch( self, reports: list[tuple[str, list[str], bool]] ) -> list[str]:"
     },
@@ -6025,7 +6025,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, log_path: str) -> None:"
     },
@@ -6049,7 +6049,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def analyze_to_string(self) -> str:"
     },
@@ -6061,7 +6061,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def check_for_updates(self) -> tuple[list[str], PapyrusStats] | None:"
     },
@@ -6073,7 +6073,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def log_exists(self) -> bool:"
     },
@@ -6085,7 +6085,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def log_path(self) -> str:"
     },
@@ -6097,7 +6097,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def reset(self) -> None:"
     },
@@ -6109,7 +6109,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def start_monitoring(self) -> None:"
     },
@@ -6121,9 +6121,19 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def stats(self) -> PapyrusStats:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "PapyrusError",
+      "export_path": "PapyrusError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class PapyrusError(Exception):"
     },
     {
       "module": "classic_scanlog",
@@ -6131,7 +6141,7 @@
       "export_path": "PapyrusStats",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class PapyrusStats:"
     },
@@ -6143,7 +6153,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -6155,7 +6165,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def dumps_to_stacks_ratio(self) -> float:"
     },
@@ -7154,7 +7164,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def papyrus_logging(log_path: str) -> tuple[str, int]:"
     },

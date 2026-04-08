@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T22:35:48.112519+00:00",
+  "generated_at_utc": "2026-04-08T23:02:08.459972+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -1016,7 +1016,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod error;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "game_files",
@@ -2769,7 +2769,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod error;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "game_report",
@@ -2843,7 +2843,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod orchestrator;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "resolve_effective_game_version",
@@ -2928,7 +2928,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CheckId",
@@ -2938,7 +2938,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};",
       "source_expr": "crashgen_registry::CheckId",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigIssue",
@@ -2958,7 +2958,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};",
       "source_expr": "crashgen_registry::CrashgenEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenRegistry",
@@ -2968,7 +2968,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};",
       "source_expr": "crashgen_registry::CrashgenRegistry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenVersion",
@@ -3108,7 +3108,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};",
       "source_expr": "papyrus::PapyrusError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PapyrusStats",
@@ -3118,7 +3118,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};",
       "source_expr": "papyrus::PapyrusStats",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PatternMatcher",
@@ -3198,7 +3198,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use error::ScanLogError;",
       "source_expr": "error::ScanLogError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ScanProgressPhase",
@@ -3208,7 +3208,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::ScanProgressPhase",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SettingsValidator",
@@ -3307,7 +3307,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod crashgen_registry;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "crashgen_version_gen",
@@ -3317,7 +3317,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen, };",
       "source_expr": "version::crashgen_version_gen",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_mods_batch",
@@ -3386,7 +3386,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod error;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "extract_formids_batch",
@@ -3460,7 +3460,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod orchestrator;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "papyrus",
@@ -3469,7 +3469,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod papyrus;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parser",
@@ -3524,7 +3524,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::resolve_batch_concurrency",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "scan_records_batch",
@@ -3543,7 +3543,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod segment_key;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "settings_validator",
@@ -3580,7 +3580,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod version;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CacheStats",
@@ -4139,7 +4139,7 @@
       "owner_module": "update",
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub mod error;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "github",

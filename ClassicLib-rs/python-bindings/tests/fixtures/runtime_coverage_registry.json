@@ -31,8 +31,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 151,
-      "contractIdsHash": "e0471bad89bda230b60efe211c8b52e850cfdc4e716a2eb014efcf12be33d588",
+      "contractCount": 201,
+      "contractIdsHash": "00a63f32b9ef554042a0de2e20a4ae4c025a7cacf76f92c6942d2ff8cf866a8a",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -41,7 +41,7 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ],
-      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added 57 Wave 2 rows (mod_detector/suspect_scanner/settings_validator/fcx_handler/gpu_detector) per R9 with GLOBAL_FCX_HANDLER excluded. Supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py and test_promoted_scanlog_wave2_smoke.py."
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added 57 Wave 2 rows (mod_detector/suspect_scanner/settings_validator/fcx_handler/gpu_detector) per R9 with GLOBAL_FCX_HANDLER excluded; Plan 04 added 50 Wave 3a rows (orchestrator/papyrus/version/crashgen_registry/segment_key/error; report sub-module deferred to Plan 05). Supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py, test_promoted_scanlog_wave2_smoke.py, and test_promoted_scanlog_wave3a_smoke.py."
     },
     {
       "coverageId": "python-tier1-scanlog-wave1-promoted",
@@ -120,6 +120,49 @@
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
       "testCaseId": "scanlog-wave2-promoted-smoke",
       "notes": "Per-class smoke tests for the 7 Wave 2 #[pyclass] wrappers + grouped mod_detector free functions + typed FcxResetError exception class added in Phase 3 Plan 03. Constructor signatures from 03-03-CONSTRUCTOR-INVENTORY.md. GLOBAL_FCX_HANDLER excluded per R9. FCX global state reset between tests via the autouse conftest.py fixture."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave3a-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.AnalysisConfig",
+        "classic_scanlog.AnalysisConfig.__init__",
+        "classic_scanlog.AnalysisResult",
+        "classic_scanlog.CancellationToken",
+        "classic_scanlog.CancellationToken.__init__",
+        "classic_scanlog.CancellationToken.cancel",
+        "classic_scanlog.CancellationToken.is_cancelled",
+        "classic_scanlog.CancellationToken.reset",
+        "classic_scanlog.Orchestrator",
+        "classic_scanlog.Orchestrator.__init__",
+        "classic_scanlog.Orchestrator.check_loadorder_exists",
+        "classic_scanlog.Orchestrator.has_database_pool",
+        "classic_scanlog.Orchestrator.is_feature_complete",
+        "classic_scanlog.PapyrusStats",
+        "classic_scanlog.PapyrusStats.__init__",
+        "classic_scanlog.PapyrusStats.dumps_to_stacks_ratio",
+        "classic_scanlog.PapyrusAnalyzer",
+        "classic_scanlog.PapyrusAnalyzer.__init__",
+        "classic_scanlog.PapyrusAnalyzer.log_exists",
+        "classic_scanlog.PapyrusAnalyzer.log_path",
+        "classic_scanlog.PapyrusAnalyzer.stats",
+        "classic_scanlog.PapyrusAnalyzer.reset",
+        "classic_scanlog.papyrus_logging",
+        "classic_scanlog.CrashgenVersion",
+        "classic_scanlog.CrashgenVersion.__init__",
+        "classic_scanlog.CrashgenVersion.to_tuple",
+        "classic_scanlog.CrashgenVersion.__eq__",
+        "classic_scanlog.CrashgenVersion.__hash__",
+        "classic_scanlog.CrashgenVersionStatus",
+        "classic_scanlog.parse_crashgen_version",
+        "classic_scanlog.check_crashgen_version_status"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
+      "testCaseId": "scanlog-wave3a-promoted-smoke",
+      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04. Covers orchestrator/papyrus/version sub-modules (the only sub-modules with PyO3 wrappers); crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. Report sub-module is deferred to Plan 05."
     },
     {
       "coverageId": "python-tier1-version-registry",
