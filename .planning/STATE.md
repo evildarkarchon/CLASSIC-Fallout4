@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 02-cxx-bridge-surface-expansion/02-01-path-promotion-and-widening-PLAN.md
-last_updated: "2026-04-07T23:36:44.556Z"
-last_activity: 2026-04-07
+stopped_at: Completed 02-cxx-bridge-surface-expansion/02-02-constants-bridge-PLAN.md
+last_updated: "2026-04-08T00:09:03.556Z"
+last_activity: 2026-04-08
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 11
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 02 (cxx-bridge-surface-expansion) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Current Plan: 1
 Status: Ready to execute
-Last activity: 2026-04-07
+Last activity: 2026-04-08
 
 Progress: [          ] 0%
 
@@ -88,6 +88,7 @@ Progress: [          ] 0%
 | Phase 01-cxx-parity-gate-tooling P02 | 8min | 2 tasks | 8 files |
 | Phase 01-cxx-parity-gate-tooling P03 | 4min | 2 tasks | 5 files |
 | Phase 02-cxx-bridge-surface-expansion P01 | 27min | 2 tasks | 9 files |
+| Phase 02-cxx-bridge-surface-expansion P02 | 27min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -188,6 +189,7 @@ Recent decisions affecting current work:
 - [Phase 02-cxx-bridge-surface-expansion]: Adapted bridge wrappers to REAL classic-path-core API signatures (Path-taking functions, instance-based BackupManager, GamePathFinder method instead of free fn for find_game_path)
 - [Phase 02-cxx-bridge-surface-expansion]: GUI D-10 clean build uses system-fallback Qt from main repo vcpkg_installed -- worktree lacks pre-built Qt, main repo has it at J:/CLASSIC-Fallout4/classic-gui/build/vcpkg_installed
 - [Phase 02-cxx-bridge-surface-expansion]: parity_contract.json requires generate_baseline.py --write-baseline (not just --update-baseline) to refresh the contract entries; --update-baseline only syncs diff/gate reports
+- [Phase 02-cxx-bridge-surface-expansion]: Added constants.rs to corrosion_add_cxxbridge FILES lists in both CMakeLists.txt — Corrosion requires explicit enumeration to generate cxxbridge headers, same pattern as path.rs in 02-01
 
 ### Pending Todos
 
@@ -209,7 +211,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T23:36:44.552Z
-Stopped at: Completed 02-cxx-bridge-surface-expansion/02-01-path-promotion-and-widening-PLAN.md
+Last session: 2026-04-08T00:09:03.552Z
+Stopped at: Completed 02-cxx-bridge-surface-expansion/02-02-constants-bridge-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
