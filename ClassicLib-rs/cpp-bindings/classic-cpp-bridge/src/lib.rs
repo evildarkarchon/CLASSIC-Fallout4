@@ -76,7 +76,11 @@ pub mod types;
 #[cfg(windows)]
 pub mod update;
 #[cfg(windows)]
+pub mod version_registry;
+#[cfg(windows)]
 pub mod web;
+#[cfg(windows)]
+pub mod xse;
 #[cfg(windows)]
 pub mod yaml;
 
