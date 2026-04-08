@@ -31,9 +31,9 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 
 ### Python Tier Collapse (PYT)
 
-- [ ] **PYT-01**: `tools/python_api_parity/generate_baseline.py` `RUST_TARGET_CRATES` and `PYTHON_TARGET_MODULES` are expanded from 3 to all 19 business-logic crate / Python binding pairs
+- [x] **PYT-01**: `tools/python_api_parity/generate_baseline.py` `RUST_TARGET_CRATES` and `PYTHON_TARGET_MODULES` are expanded from 3 to all 19 business-logic crate / Python binding pairs
 - [ ] **PYT-02**: All 289 currently-deferred Python parity entries (228 scanlog, 34 version_registry, 26 config, 1 aux) are promoted to enforced contract rows with concurrent `pub use` re-exports added to each binding crate's `lib.rs` so the baseline generator finds them
-- [ ] **PYT-03**: `tools/python_api_parity/check_parity_gate.py` Tier-2 skip logic is removed; the script enforces every contract row as Tier-1
+- [x] **PYT-03**: `tools/python_api_parity/check_parity_gate.py` Tier-2 skip logic is removed; the script enforces every contract row as Tier-1
 - [ ] **PYT-04**: `.pyi` stubs for every promoted entry exist and match the runtime surface (`mypy --strict` clean against the bindings test suite)
 - [ ] **PYT-05**: `uv run pytest ClassicLib-rs/python-bindings/tests -q` passes with the expanded surface, including smoke tests for at least one method per promoted module
 - [ ] **PYT-06**: `tools/python_api_parity/check_parity_gate.py` exits zero with the expanded contract; deferred-entry count drops to 0 in `runtime_coverage_summary.md`
@@ -122,9 +122,9 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | CXXS-08 | Phase 2 | Complete |
 | CXXS-09 | Phase 2 | Complete |
 | CXXS-10 | Phase 2 | Complete |
-| PYT-01 | Phase 3 | Pending |
+| PYT-01 | Phase 3 | Complete |
 | PYT-02 | Phase 3 | Pending |
-| PYT-03 | Phase 3 | Pending |
+| PYT-03 | Phase 3 | Complete |
 | PYT-04 | Phase 3 | Pending |
 | PYT-05 | Phase 3 | Pending |
 | PYT-06 | Phase 3 | Pending |

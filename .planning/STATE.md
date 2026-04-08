@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-current_plan: Not started
-status: verifying
-stopped_at: Phase 3 context gathered
-last_updated: "2026-04-08T04:29:34.220Z"
+current_plan: 1
+status: executing
+stopped_at: Completed 03-01-tooling-expansion-PLAN.md
+last_updated: "2026-04-08T11:13:21.392Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 21
+  completed_plans: 12
   percent: 0
 ---
 
@@ -22,14 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python — no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
-**Current focus:** Phase 02 — cxx-bridge-surface-expansion
+**Current focus:** Phase 03 — python-tier-collapse
 
 ## Current Position
 
-Phase: 3
-Plan: 8 of 8
-Current Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 03 (python-tier-collapse) — EXECUTING
+Plan: 2 of 10
+Current Plan: 1
+Status: Ready to execute
 Last activity: 2026-04-08
 
 Progress: [          ] 0%
@@ -95,6 +95,7 @@ Progress: [          ] 0%
 | Phase 02 P06 | 9 | 2 tasks | 8 files |
 | Phase 02 P07 | 562 | 3 tasks | 7 files |
 | Phase 02 P08 | 1860 | 3 tasks | 7 files |
+| Phase 03-python-tier-collapse P01 | 13min | 5 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -210,6 +211,11 @@ Recent decisions affecting current work:
 - [Phase 02]: Pre-existing FCX global-state tests annotated with serial_test::serial to fix test isolation race (Rule 2 auto-fix)
 - [Phase 02]: GUI D-10 final verification used system-fallback Qt preset because worktree vcpkg lacks pre-built Qt
 - [Phase 02]: FINAL Phase 2 parity baseline at 316 entries (314+2 for FcxIssueDto+get_fcx_config_issues); CXXS-01..CXXS-10 all satisfied
+- [Phase 03-python-tier-collapse]: Pitfall 4 audit walks pub mod reachability graph and classifies orphan files as Known Exclusions (dead code), not blocking failures
+- [Phase 03-python-tier-collapse]: _OWNER_RENDER_ORDER derives from RUST_OWNER_BY_CRATE.values() + ('aux',) so new crates propagate automatically to rendered gap tables
+- [Phase 03-python-tier-collapse]: Pitfall 2 guard runs between parse_rust_surface and generate_diff_report in check_parity_gate.py::main(); prints actionable remediation to stderr and exits 1
+- [Phase 03-python-tier-collapse]: Expanded generate_wave_manifest.py WAVE_BY_OWNER to 20 owners and added SQUAD_BY_OWNER dict replacing the hard-coded Squad A/Squad B ternary
+- [Phase 03-python-tier-collapse]: Deferred backlog expanded from 285 to 1202 entries via generate_wave_manifest.py regeneration; gate now green with 1212 total tier-2 gaps tracked across 19 owners
 
 ### Pending Todos
 
@@ -222,6 +228,7 @@ None yet.
 - [Phase 3]: The 289 deferred Python entries include many sub-module symbols not re-exported at `lib.rs` — each promotion requires a `pub use` addition before the parity parser can see it (Pitfall 2)
 - [Phase 4]: All 109 Node contract rows must use camelCase `nodeExport` values — validate against `index.d.ts` TypeScript identifiers, not Rust snake_case names (Pitfall 3)
 - [Phase 6]: Gate scripts must be made deferred-registry-tolerant BEFORE governance files are deleted (Pitfall 1); DOC-01 must land in the same commit as file deletions
+- Phase 3 Plan 09a residual cleanup needs re-planning: Plan 01 A10 sizing reveals ~913 tier-2 gaps across 13 owners (scangame=218, path=85, constants=59, message=53, database=46, resource=40, xse=40, registry=39, settings=39, yaml=37, web=29, version=28, perf=16, update=16) that the current plan sequence does not explicitly budget. Plan 08 shared scope needs to grow from estimated 11 rows to 66 actual rows.
 
 ### Quick Tasks Completed
 
@@ -233,7 +240,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T04:29:34.216Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-python-tier-collapse/03-CONTEXT.md
+Last session: 2026-04-08T11:13:21.388Z
+Stopped at: Completed 03-01-tooling-expansion-PLAN.md
+Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
