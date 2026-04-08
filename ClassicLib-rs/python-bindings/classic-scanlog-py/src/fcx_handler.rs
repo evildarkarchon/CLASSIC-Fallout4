@@ -1,5 +1,6 @@
 //! Python bindings for FcxModeHandler - Thin wrapper over classic-scanlog-core
 
+use crate::FcxResetError as PyFcxResetError;
 use classic_config_core::ClassicConfig;
 use classic_constants_core::GameId;
 use classic_scangame_core::integrity::IntegrityConfig;
@@ -354,7 +355,7 @@ impl PyFcxModeHandler {
     fn reset_fcx_checks(_cls: &Bound<'_, PyType>) -> PyResult<()> {
         match FcxModeHandler::reset_global_state() {
             Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
-            Err(error) => Err(PyRuntimeError::new_err(format!(
+            Err(error) => Err(PyFcxResetError::new_err(format!(
                 "failed to reset FCX global state: {error}"
             ))),
         }

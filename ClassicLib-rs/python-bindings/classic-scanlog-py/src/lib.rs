@@ -91,6 +91,18 @@ define_exceptions!(
     parse: RustConfigError    // Actually used for configuration errors
 );
 
+// Phase 3 Plan 03: Typed Python exception mirroring
+// classic_scanlog_core::fcx_handler::FcxResetError. Raised by
+// FcxModeHandler.reset_fcx_checks() when the global reset cannot proceed
+// (e.g. a Failed variant). The Unnecessary variant is still treated as
+// success and does not surface as this exception.
+#[allow(missing_docs)]
+mod fcx_reset_exception {
+    use pyo3::exceptions::PyException;
+    pyo3::create_exception!(classic_scanlog, FcxResetError, PyException);
+}
+pub use fcx_reset_exception::FcxResetError;
+
 // Import all wrapper modules
 /// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
 pub mod core_mod_convert;
@@ -237,6 +249,11 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustScanLogError, RustParseError, RustConfigError);
 
+    // Phase 3 Plan 03: Register the typed FcxResetError exception so
+    // FcxModeHandler.reset_fcx_checks() can raise a specific class that
+    // consumers can catch with `except classic_scanlog.FcxResetError:`.
+    m.add("FcxResetError", m.py().get_type::<FcxResetError>())?;
+
     Ok(())
 }
 
@@ -300,6 +317,10 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Papyrus log analysis
     papyrus::register(m)?;
+
+    // Phase 3 Plan 03: Expose FcxResetError through the facade module as
+    // well so classic_core.scanlog.FcxResetError resolves.
+    m.add("FcxResetError", m.py().get_type::<FcxResetError>())?;
 
     Ok(())
 }
