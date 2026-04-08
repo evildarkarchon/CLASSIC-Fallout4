@@ -544,7 +544,7 @@ Version_Registry:
       display_name: Fallout 4 Anniversary Edition
       short_name: AE
       description: Anniversary Edition version (active development branch)
-      exe_hash: # Placeholder - hash not yet available for AE version
+      exe_hash: 81694b37816c8045855905a52c5fb13583c5803121fabb5024760892014e9bc6n
       crashgen_versions:
         - version: "1.7.1"
           name: "Buffout 4"
