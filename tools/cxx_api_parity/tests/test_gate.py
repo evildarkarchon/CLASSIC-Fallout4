@@ -17,6 +17,27 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 GATE_SCRIPT = REPO_ROOT / "tools" / "cxx_api_parity" / "check_parity_gate.py"
 BOOTSTRAP_SCRIPT = REPO_ROOT / "tools" / "cxx_api_parity" / "generate_baseline.py"
 BASELINE_DIR = REPO_ROOT / "docs" / "implementation" / "cxx_api_parity" / "baseline"
+BRIDGE_BUILD_RS = (
+    REPO_ROOT / "ClassicLib-rs" / "cpp-bindings" / "classic-cpp-bridge" / "build.rs"
+)
+
+# Make the parser importable so we can derive the expected module set from build.rs
+# at test time instead of hardcoding it (D-07: build.rs is the single source of truth).
+sys.path.insert(0, str(REPO_ROOT / "tools" / "cxx_api_parity"))
+from generate_baseline import parse_build_rs_file_list  # noqa: E402
+
+
+def _expected_modules_from_build_rs() -> set[str]:
+    """Derive the expected bridge-module set from build.rs.
+
+    The baseline must enumerate exactly the modules listed in
+    `cxx_build::bridges([...])`. Phase 2 added several new modules; rather than
+    bump a hardcoded count each time, derive it from the same source the
+    parser uses.
+    """
+    files = parse_build_rs_file_list(BRIDGE_BUILD_RS.read_text(encoding="utf-8"))
+    # Files look like "src/scanner.rs"; strip the "src/" prefix and ".rs" suffix.
+    return {Path(f).stem for f in files}
 
 
 # ----- Committed-baseline assertions (CXXG-02) -----
@@ -27,20 +48,24 @@ class TestBaselineExists:
         """CXXG-02: committed baseline exists at the D-05 path."""
         assert (BASELINE_DIR / "parity_contract.json").exists()
 
-    def test_baseline_covers_14_modules(self):
-        """CXXG-02: committed baseline enumerates all 14 bridge modules."""
+    def test_baseline_covers_all_build_rs_modules(self):
+        """CXXG-02: committed baseline enumerates exactly the modules build.rs declares.
+
+        Phase 1 hardcoded a 14-module set; Phase 2 added new bridge modules
+        (constants, path, version_registry, web, xse) per CXXS-01..09. Rather
+        than bumping a constant each time, derive the expected module set from
+        build.rs (the same source the parser uses — D-07).
+        """
         data = json.loads(
             (BASELINE_DIR / "parity_contract.json").read_text(encoding="utf-8")
         )
-        modules = sorted({entry["bridgeModule"] for entry in data["entries"]})
-        assert len(modules) == 14, f"expected 14 modules, got {len(modules)}: {modules}"
-        # Exact module names from build.rs
-        expected = {
-            "types", "runtime", "registry", "yaml", "config", "scanner",
-            "database", "files", "scangame", "game", "update", "message",
-            "perf", "markdown",
-        }
-        assert set(modules) == expected
+        modules = {entry["bridgeModule"] for entry in data["entries"]}
+        expected = _expected_modules_from_build_rs()
+        assert modules == expected, (
+            f"baseline modules drift from build.rs:\n"
+            f"  in baseline only: {sorted(modules - expected)}\n"
+            f"  in build.rs only: {sorted(expected - modules)}"
+        )
 
     def test_baseline_schema_shape(self):
         """D-03/D-04: contract uses flat `entries` list, NO tier1Mappings, NO tier2*."""
