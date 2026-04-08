@@ -76,6 +76,8 @@ pub mod types;
 #[cfg(windows)]
 pub mod update;
 #[cfg(windows)]
+pub mod web;
+#[cfg(windows)]
 pub mod yaml;
 
 #[cfg(not(windows))]

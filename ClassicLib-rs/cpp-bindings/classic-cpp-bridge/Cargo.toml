@@ -52,6 +52,7 @@ classic-xse-core = { path = "../../business-logic/classic-xse-core" }
 classic-constants-core = { path = "../../business-logic/classic-constants-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }
 classic-update-core = { path = "../../business-logic/classic-update-core" }
+classic-web-core = { path = "../../business-logic/classic-web-core" }
 
 [dev-dependencies]
 tempfile = { workspace = true }
