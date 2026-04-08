@@ -12,17 +12,81 @@ from typing import Any
 
 
 WAVE_BY_OWNER = {
-    "scanlog": "wave1",
-    "config": "wave2",
+    # Existing (pre-Phase-3) waves preserved for historical compatibility.
+    "scanlog":          "wave1",
+    "config":           "wave2",
     "version_registry": "wave3",
-    "aux": "wave4",
+    "aux":              "wave4",
+    # Phase 3 additions -- one wave label per new owner. The wave label is
+    # used only for reporting; the actual promotion schedule is governed by
+    # the downstream Phase 3 plan sequence (Plans 02-09b) in the
+    # .planning/phases/03-python-tier-collapse/ directory.
+    "yaml":             "wave5",
+    "database":         "wave6",
+    "file_io":          "wave7",
+    "scangame":         "wave8",
+    "registry":         "wave9",
+    "perf":             "wave10",
+    "settings":         "wave11",
+    "message":          "wave12",
+    "path":             "wave13",
+    "constants":        "wave14",
+    "version":          "wave15",
+    "resource":         "wave16",
+    "xse":              "wave17",
+    "web":              "wave18",
+    "update":           "wave19",
+    "shared":           "wave20",
 }
 
 WAVE_LABELS = {
-    "wave1": "scanlog deferred runtime backlog",
-    "wave2": "config deferred runtime backlog",
-    "wave3": "version_registry deferred runtime backlog",
-    "wave4": "aux deferred runtime backlog",
+    "wave1":  "scanlog deferred runtime backlog",
+    "wave2":  "config deferred runtime backlog",
+    "wave3":  "version_registry deferred runtime backlog",
+    "wave4":  "aux deferred runtime backlog",
+    "wave5":  "yaml deferred runtime backlog",
+    "wave6":  "database deferred runtime backlog",
+    "wave7":  "file_io deferred runtime backlog",
+    "wave8":  "scangame deferred runtime backlog",
+    "wave9":  "registry deferred runtime backlog",
+    "wave10": "perf deferred runtime backlog",
+    "wave11": "settings deferred runtime backlog",
+    "wave12": "message deferred runtime backlog",
+    "wave13": "path deferred runtime backlog",
+    "wave14": "constants deferred runtime backlog",
+    "wave15": "version deferred runtime backlog",
+    "wave16": "resource deferred runtime backlog",
+    "wave17": "xse deferred runtime backlog",
+    "wave18": "web deferred runtime backlog",
+    "wave19": "update deferred runtime backlog",
+    "wave20": "shared (foundation/classic-shared-py) deferred runtime backlog",
+}
+
+# Squad assignment for deferred backlog entries. Aligns with
+# tools/python_api_parity/generate_baseline.py::SQUAD_BY_OWNER (Phase 3
+# Plan 01 Task 2). Kept local to this tool to avoid a module-level import
+# between the two baseline scripts.
+SQUAD_BY_OWNER: dict[str, str] = {
+    "scanlog":          "Squad A",
+    "config":           "Squad A",
+    "version_registry": "Squad B",
+    "aux":              "Squad B",
+    "yaml":             "Squad C",
+    "database":         "Squad D",
+    "file_io":          "Squad D",
+    "scangame":         "Squad E",
+    "registry":         "Squad C",
+    "perf":             "Squad F",
+    "settings":         "Squad C",
+    "message":          "Squad F",
+    "path":             "Squad F",
+    "constants":        "Squad F",
+    "version":          "Squad F",
+    "resource":         "Squad D",
+    "xse":              "Squad E",
+    "web":              "Squad F",
+    "update":           "Squad F",
+    "shared":           "Squad G",
 }
 
 
@@ -110,9 +174,7 @@ def main() -> int:
                 "ownerModule": owner_module,
                 "tier": "tier2",
                 "wave": wave,
-                "owner": "Squad A"
-                if owner_module in {"scanlog", "config"}
-                else "Squad B",
+                "owner": SQUAD_BY_OWNER.get(owner_module, "Squad B"),
                 "deferReason": gap.get("reason"),
                 "bindingIdentifiers": [binding_identifier]
                 if binding_identifier

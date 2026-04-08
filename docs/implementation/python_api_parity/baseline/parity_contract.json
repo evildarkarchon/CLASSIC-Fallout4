@@ -18,6 +18,54 @@
     },
     "aux": {
       "description": "Auxiliary modules outside core phase-1 workflow APIs."
+    },
+    "yaml": {
+      "description": "classic_yaml binding (classic-yaml-py wrapping classic-yaml-core)"
+    },
+    "database": {
+      "description": "classic_database binding (classic-database-py wrapping classic-database-core)"
+    },
+    "file_io": {
+      "description": "classic_file_io binding (classic-file-io-py wrapping classic-file-io-core)"
+    },
+    "scangame": {
+      "description": "classic_scangame binding (classic-scangame-py wrapping classic-scangame-core)"
+    },
+    "registry": {
+      "description": "classic_registry binding (classic-registry-py wrapping classic-registry-core)"
+    },
+    "perf": {
+      "description": "classic_perf binding (classic-perf-py wrapping classic-perf-core)"
+    },
+    "settings": {
+      "description": "classic_settings binding (classic-settings-py wrapping classic-settings-core)"
+    },
+    "message": {
+      "description": "classic_message binding (classic-message-py wrapping classic-message-core)"
+    },
+    "path": {
+      "description": "classic_path binding (classic-path-py wrapping classic-path-core)"
+    },
+    "constants": {
+      "description": "classic_constants binding (classic-constants-py wrapping classic-constants-core)"
+    },
+    "version": {
+      "description": "classic_version binding (classic-version-py wrapping classic-version-core)"
+    },
+    "resource": {
+      "description": "classic_resource binding (classic-resource-py wrapping classic-resource-core)"
+    },
+    "xse": {
+      "description": "classic_xse binding (classic-xse-py wrapping classic-xse-core)"
+    },
+    "web": {
+      "description": "classic_web binding (classic-web-py wrapping classic-web-core)"
+    },
+    "update": {
+      "description": "classic_update binding (classic-update-py wrapping classic-update-core)"
+    },
+    "shared": {
+      "description": "classic_shared foundation binding (classic-shared-py under foundation/)"
     }
   },
   "tier1Mappings": [

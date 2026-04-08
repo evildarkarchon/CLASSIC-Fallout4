@@ -1,0 +1,27 @@
+{
+  "per_owner_tier2_gap_total": {
+    "config": 28,
+    "constants": 59,
+    "database": 46,
+    "file_io": 106,
+    "message": 53,
+    "path": 85,
+    "perf": 16,
+    "registry": 39,
+    "resource": 40,
+    "scangame": 218,
+    "scanlog": 232,
+    "settings": 39,
+    "shared": 66,
+    "update": 16,
+    "version": 28,
+    "version_registry": 35,
+    "web": 29,
+    "xse": 40,
+    "yaml": 37
+  },
+  "total_tier2_gap_total": 1212,
+  "per_owner_tier1_gap_total": {},
+  "total_tier1_gap_total": 0,
+  "total_owners_tracked": 19
+}

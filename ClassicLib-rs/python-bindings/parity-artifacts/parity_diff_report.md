@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-08T03:26:59.219707+00:00`
+- Generated: `2026-04-08T11:06:01.015228+00:00`
 - Tier-1 contract rows: **59**
 - Tier-1 matched: **59**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **295**
+- Total gaps (Tier-1 + Tier-2): **1212**
 
 ## Tier-1 Contract Evaluation
 
@@ -79,6 +79,22 @@
 | `scanlog` | 0 | 232 |
 | `config` | 0 | 28 |
 | `version_registry` | 0 | 35 |
+| `yaml` | 0 | 37 |
+| `database` | 0 | 46 |
+| `file_io` | 0 | 106 |
+| `scangame` | 0 | 218 |
+| `registry` | 0 | 39 |
+| `perf` | 0 | 16 |
+| `settings` | 0 | 39 |
+| `message` | 0 | 53 |
+| `path` | 0 | 85 |
+| `constants` | 0 | 59 |
+| `version` | 0 | 28 |
+| `resource` | 0 | 40 |
+| `xse` | 0 | 40 |
+| `web` | 0 | 29 |
+| `update` | 0 | 16 |
+| `shared` | 0 | 66 |
 | `aux` | 0 | 0 |
 
 Detailed per-gap diagnostics are in `parity_diff_report.json`.
