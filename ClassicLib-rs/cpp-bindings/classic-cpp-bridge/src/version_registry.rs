@@ -12,7 +12,8 @@
 use classic_version_registry_core::{GameVersion, get_version_registry};
 
 // ─────────────────────────────────────────────────────────────────────
-// Wrapper bodies — verbatim from game.rs (Codex MEDIUM: NO todo!())
+// Wrapper bodies — verbatim from game.rs (Codex MEDIUM correction applied)
+// All wrapper bodies are concrete; no placeholder implementations.
 // ─────────────────────────────────────────────────────────────────────
 
 fn version_registry_get_by_id(id: &str) -> ffi::VersionInfoDto {
