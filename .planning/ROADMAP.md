@@ -30,7 +30,7 @@
 
 - [x] **Phase 1: CXX Parity Gate Tooling** (3/3 plans) — completed 2026-04-07 — first-class C++ bridge parity gate operational; born-green 202-entry baseline; 22 passing tests; contributor doc at docs/api/cxx-parity-gate.md
 - [x] **Phase 2: CXX Bridge Surface Expansion** — Close all narrowing gaps and add first-time C++ surfaces for constants, web, and FCX inspection (completed 2026-04-08)
-- [ ] **Phase 3: Python Tier Collapse** — Promote all 289 deferred Python entries to one enforced tier; wire classic_shared module
+- [ ] **Phase 3: Python Tier Collapse** — Promote all 285 deferred Python entries (plus 12 Tier-2 migrations and 6 classic_shared rows + A10 residuals) to one enforced tier; wire classic_shared module
 - [ ] **Phase 4: Node Tier Collapse** — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction
 - [ ] **Phase 5: CI Enforcement** — Wire all three parity gates into CI with branch-protection blocking on every PR
 - [ ] **Phase 6: Documentation Reset** — Rewrite harmony reference, delete Tier-2 governance files, add parity policy doc
@@ -76,16 +76,26 @@ Plans:
 - [ ] 02-cxx-bridge-surface-expansion/02-08-fcx-getter-and-final-verification-PLAN.md — scanner.rs FCX issue getter (CXXS-03) + final clean-build pair + Phase 2 baseline closeout (CXXS-10)
 
 ### Phase 3: Python Tier Collapse
-**Goal**: All 289 currently-deferred Python parity entries are promoted to the single enforced contract tier; the Python parity gate exits zero with no deferred entries; classic_shared is wired as a gate-enrolled build target
+**Goal**: All 285 deferred Python parity entries (plus 12 Tier-2 runtime-verified migrations, 6 classic_shared module rows, and ~50-150 A10 residual rows from newly-tracked crates) are promoted to the single enforced contract tier; the Python parity gate exits zero with deferred_total == 0; classic_shared is wired as a gate-enrolled build target
 **Depends on**: Nothing (independent of CXX work and Node collapse; can run in parallel with Phase 4)
 **Requirements**: PYT-01, PYT-02, PYT-03, PYT-04, PYT-05, PYT-06, HARM-03, HARM-04
 **Success Criteria** (what must be TRUE):
-  1. `python tools/python_api_parity/check_parity_gate.py --repo-root .` exits zero; the gate report shows 0 deferred entries and 0 Tier-1 drift across all 19 business-logic crate pairs
+  1. `python tools/python_api_parity/check_parity_gate.py --repo-root .` exits zero; the gate report shows 0 deferred entries and 0 Tier-1 drift across all 19 binding crate pairs (18 business-logic + classic-shared-py)
   2. `uv run pytest ClassicLib-rs/python-bindings/tests -q` passes with smoke tests for at least one promoted method per newly-covered module (no AttributeError or ImportError on any promoted symbol)
-  3. `mypy --strict` passes against the updated `.pyi` stubs for every binding crate that gained promoted APIs
+  3. `mypy --strict` passes against the updated `.pyi` stubs for every binding crate that gained promoted APIs (all 19 stubs)
   4. Python code can `import classic_shared` and call `classic_shared.get_runtime_stats()` and `classic_shared.is_runtime_healthy()` — the module is importable from the build output and the parity gate enforces it as Tier-1
-  5. The `runtime_coverage_summary.md` reports deferred-entry count of 0; `classic_shared` appears in the module map with at least 3 enforced contract rows
-**Plans**: TBD
+  5. The `runtime_coverage_summary.md` reports `deferred_total == 0`; `classic_shared` appears in the module map with exactly 6 enforced contract rows
+**Plans**: 9 plans (sequential waves 1-9 by default to avoid baseline-file merge conflicts)
+Plans:
+- [ ] 03-python-tier-collapse/03-01-tooling-expansion-PLAN.md — Wave 1: RUST_TARGET_CRATES + PYTHON_TARGET_MODULES expansion 3->19, Pitfall 2 guard, Wave 0 tooling test files, baseline refresh, A10 sizing report (PYT-01, PYT-03)
+- [ ] 03-python-tier-collapse/03-02-scanlog-wave1-parsing-primitives-PLAN.md — Wave 2: scanlog parser + formid + formid_analyzer + record_scanner + plugin_analyzer + patterns (74 rows; PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-03-scanlog-wave2-detection-and-analysis-PLAN.md — Wave 3: scanlog mod_detector + suspect_scanner + settings_validator + fcx_handler + gpu_detector (58 rows; PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-04-scanlog-wave3a-orchestration-core-PLAN.md — Wave 4: scanlog orchestrator + papyrus + version + crashgen_registry + segment_key + error (~50 rows; PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-05-scanlog-wave3b-report-standalone-PLAN.md — Wave 5: scanlog report sub-module standalone, 5 PyO3 wrapper classes (46 rows; PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-06-config-promotion-PLAN.md — Wave 6: classic-config-py promotion (26 rows = 22 deferred + 4 Tier-2 migrations; PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-07-version-registry-promotion-PLAN.md — Wave 7: classic-version-registry-py promotion (35 rows = 34 deferred + 1 Tier-2 migration; PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-08-classic-shared-and-file-io-aux-PLAN.md — Wave 8: classic_shared 6-row enrollment (HARM-03, HARM-04) + classic-file-io-py FileHasher cache helpers 5-row aux migration (PYT-02, PYT-04, PYT-05)
+- [ ] 03-python-tier-collapse/03-09-tier2-cleanup-and-final-sweep-PLAN.md — Wave 9: A10 residual promotions, generate_baseline.py Tier-2 branch removal (A9), tierDefinitions.tier2 deletion, final mypy --strict sweep across all 19 stubs, deferred_total = 0 verification (PYT-02, PYT-06, HARM-03, HARM-04)
 
 ### Phase 4: Node Tier Collapse
 **Goal**: All 109 currently-deferred Node parity entries are promoted to the single enforced contract tier; the Node parity gate exits zero with no deferred entries; Node gains PE-version extraction
@@ -131,7 +141,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
 | 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
-| 3. Python Tier Collapse | 0/TBD | Not started | - |
+| 3. Python Tier Collapse | 0/9 | Planned | - |
 | 4. Node Tier Collapse | 0/TBD | Not started | - |
 | 5. CI Enforcement | 0/TBD | Not started | - |
 | 6. Documentation Reset | 0/TBD | Not started | - |

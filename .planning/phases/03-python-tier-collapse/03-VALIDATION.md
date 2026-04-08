@@ -2,9 +2,10 @@
 phase: 3
 slug: python-tier-collapse
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-04-07
+populated: 2026-04-07
 ---
 
 # Phase 3 — Validation Strategy
@@ -41,26 +42,61 @@ created: 2026-04-07
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists |
 |--------|----------|-----------|-------------------|-------------|
-| PYT-01 | `RUST_TARGET_CRATES` / `PYTHON_TARGET_MODULES` enumerate all 19 binding pairs (18 business-logic + classic-shared-py); `parse_rust_surface()` returns non-empty symbol lists for every entry | unit + integration | `python tools/python_api_parity/generate_baseline.py --repo-root .` then assert `len(rust_api_surface.json::scope.target_crates) == 19` and every crate's symbols list is non-empty | ❌ Wave 0 |
-| PYT-02 | Every previously-deferred symbol resolves through the gate as a Tier-1 contract row; `parity_diff_report.json::summary.tier2_gap_total == 0` | integration | `python tools/python_api_parity/check_parity_gate.py --repo-root .` (exit 0) + `jq .summary.tier2_gap_total docs/implementation/python_api_parity/baseline/parity_diff_report.json` (= 0) | ✅ existing |
-| PYT-03 | Removing Tier-2 gap-row branches from `generate_diff_report()` does not silently drop coverage — `tier1_contract_total` after Plan 9 == previous + 285 + 12 | integration | snapshot test in `tools/python_api_parity/tests/test_check_parity_gate.py` | ❌ Wave 0 |
-| PYT-04 | Every promoted entry's `.pyi` stub passes `mypy --strict` AND `validate_stubs.py --fail-on-warnings` | static | `validate_stubs.py` + `mypy --strict` per crate (per-plan close) | ✅ existing |
-| PYT-05 | Each promoted `#[pyclass]` is constructed and one method called at runtime; each promoted free-function group has one call exercising the real codepath | unit smoke | `pytest ClassicLib-rs/python-bindings/tests/test_promoted_<crate>_smoke.py -x` (one file per Plan 2–8) | ❌ Wave 0 (6 new files) |
-| PYT-06 | `runtime_coverage_summary.json::summary.deferred_total == 0` after Plan 9 lands | integration | `jq .summary.deferred_total docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json` | ✅ existing |
-| HARM-03 | `import classic_shared; classic_shared.get_runtime_stats().worker_threads > 0` | smoke | `pytest ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py::test_runtime_stats_smoke -x` | ❌ Wave 0 (Plan 8) |
-| HARM-04 | `classic_shared` enrolled in `parity_contract.json::tier1Mappings` with ≥6 rows; `mypy --strict classic_shared.pyi` exits 0 | static + integration | `check_parity_gate.py --repo-root .` + `mypy --strict ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi` | ✅ tooling exists |
+| PYT-01 | `RUST_TARGET_CRATES` / `PYTHON_TARGET_MODULES` enumerate all 19 binding pairs (18 business-logic + classic-shared-py); `parse_rust_surface()` returns non-empty symbol lists for every entry | unit + integration | `python tools/python_api_parity/generate_baseline.py --repo-root .` then assert `len(rust_api_surface.json::scope.target_crates) == 19` and every crate's symbols list is non-empty | Wave 0 (Plan 01) |
+| PYT-02 | Every previously-deferred symbol resolves through the gate as a Tier-1 contract row; `parity_diff_report.json::summary.tier2_gap_total == 0` (eventually removed entirely in Plan 09) | integration | `python tools/python_api_parity/check_parity_gate.py --repo-root .` (exit 0) | existing |
+| PYT-03 | Removing Tier-2 gap-row branches from `generate_diff_report()` does not silently drop coverage — `tier1_contract_total` after Plan 9 == previous + 285 + 12 | integration | snapshot test in `tools/python_api_parity/tests/test_check_parity_gate.py` | Wave 0 (Plan 01) |
+| PYT-04 | Every promoted entry's `.pyi` stub passes `mypy --strict` AND `validate_stubs.py --fail-on-warnings` | static | `validate_stubs.py` + `mypy --strict` per crate (per-plan close) | existing |
+| PYT-05 | Each promoted `#[pyclass]` is constructed and one method called at runtime; each promoted free-function group has one call exercising the real codepath | unit smoke | `pytest ClassicLib-rs/python-bindings/tests/test_promoted_<crate>_smoke.py -x` (one file per Plan 2–8) | Wave 0 (8 new files) |
+| PYT-06 | `runtime_coverage_summary.json::summary.deferred_total == 0` after Plan 9 lands | integration | `jq .summary.deferred_total docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json` | existing |
+| HARM-03 | `import classic_shared; classic_shared.get_runtime_stats().worker_threads > 0` | smoke | `pytest ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py::test_get_runtime_stats_returns_healthy_struct -x` | Wave 0 (Plan 08) |
+| HARM-04 | `classic_shared` enrolled in `parity_contract.json::tier1Mappings` with exactly 6 rows; `mypy --strict classic_shared.pyi` exits 0 | static + integration | `check_parity_gate.py --repo-root .` + `mypy --strict ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi` | tooling exists |
 
 ---
 
 ## Per-Task Verification Map
 
-*Populated by gsd-planner during PLAN.md creation. The planner fills one row per task with the appropriate `{N}-{plan}-{task}` ID.*
+*Populated by gsd-planner during PLAN.md creation (2026-04-07).*
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| — | — | — | — | — | *planner populates* | — | ⬜ pending |
+| 03-01-01 | 01 | 1 | PYT-01, PYT-03 | unit | `pytest tools/python_api_parity/tests -q --collect-only` (TDD RED expected) | Wave 0 (this task creates) | pending |
+| 03-01-02 | 01 | 1 | PYT-01 | static | `python -c "from tools.python_api_parity.generate_baseline import RUST_TARGET_CRATES; assert len(RUST_TARGET_CRATES) == 19"` | existing | pending |
+| 03-01-03 | 01 | 1 | PYT-03 | unit | `pytest tools/python_api_parity/tests/test_pitfall2_guard.py -v` | Wave 0 from 03-01-01 | pending |
+| 03-01-04 | 01 | 1 | PYT-01, PYT-03 | integration | `python tools/python_api_parity/check_parity_gate.py --repo-root .` (gate exits 0 with 59 Tier-1 rows + Pitfall 2 guard) | existing | pending |
+| 03-02-01 | 02 | 2 | PYT-02 | static | `python -c "import json; c=json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); assert len(c['tier1Mappings']) >= 133"` | existing | pending |
+| 03-02-02 | 02 | 2 | PYT-04 | static | `mypy --strict ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi` | existing | pending |
+| 03-02-03 | 02 | 2 | PYT-05 | smoke | `pytest ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave1_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-02-04 | 02 | 2 | PYT-02, PYT-04, PYT-05 | integration | 5-step verification chain (gate, validate_stubs, rebuild_rust, pytest, mypy) | existing | pending |
+| 03-03-01 | 03 | 3 | PYT-02 | static | `python -c "import json; c=json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); assert len(c['tier1Mappings']) >= 191"` | existing | pending |
+| 03-03-02 | 03 | 3 | PYT-04 | static | `mypy --strict classic_scanlog.pyi` | existing | pending |
+| 03-03-03 | 03 | 3 | PYT-05 | smoke | `pytest test_promoted_scanlog_wave2_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-03-04 | 03 | 3 | PYT-02, PYT-04, PYT-05 | integration | 5-step verification chain | existing | pending |
+| 03-04-01 | 04 | 4 | PYT-02 | static | `python -c "import json; c=json.loads(...); assert len(c['tier1Mappings']) >= 241"` | existing | pending |
+| 03-04-02 | 04 | 4 | PYT-04 | static | `mypy --strict classic_scanlog.pyi` | existing | pending |
+| 03-04-03 | 04 | 4 | PYT-05 | smoke | `pytest test_promoted_scanlog_wave3a_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-04-04 | 04 | 4 | PYT-02, PYT-04, PYT-05 | integration | 5-step verification chain | existing | pending |
+| 03-05-01 | 05 | 5 | PYT-02 | static | `python -c "import json; c=json.loads(...); assert len(c['tier1Mappings']) >= 287"` | existing | pending |
+| 03-05-02 | 05 | 5 | PYT-04 | static | `mypy --strict classic_scanlog.pyi` | existing | pending |
+| 03-05-03 | 05 | 5 | PYT-05 | smoke | `pytest test_promoted_scanlog_report_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-05-04 | 05 | 5 | PYT-02, PYT-04, PYT-05 | integration | 5-step verification chain | existing | pending |
+| 03-06-01 | 06 | 6 | PYT-02 | static | `python -c "import json; c=json.loads(...); assert len(c['tier1Mappings']) >= 313"` | existing | pending |
+| 03-06-02 | 06 | 6 | PYT-04 | static | `mypy --strict classic_config.pyi` | existing | pending |
+| 03-06-03 | 06 | 6 | PYT-05 | smoke | `pytest test_promoted_config_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-06-04 | 06 | 6 | PYT-02, PYT-04, PYT-05 | integration | 5-step verification chain | existing | pending |
+| 03-07-01 | 07 | 7 | PYT-02 | static | `python -c "import json; c=json.loads(...); assert len(c['tier1Mappings']) >= 348"` | existing | pending |
+| 03-07-02 | 07 | 7 | PYT-04 | static | `mypy --strict classic_version_registry.pyi` | existing | pending |
+| 03-07-03 | 07 | 7 | PYT-05 | smoke | `pytest test_promoted_version_registry_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-07-04 | 07 | 7 | PYT-02, PYT-04, PYT-05 | integration | 5-step verification chain | existing | pending |
+| 03-08-01 | 08 | 8 | HARM-03, HARM-04 | static | `python -c "import json; c=json.loads(...); shared=[m for m in c['tier1Mappings'] if m.get('ownerModule')=='shared']; assert len(shared)==6"` | existing | pending |
+| 03-08-02 | 08 | 8 | HARM-04, PYT-04 | static | `mypy --strict classic_shared.pyi classic_file_io.pyi` | existing | pending |
+| 03-08-03 | 08 | 8 | HARM-03, PYT-05 | smoke | `pytest test_classic_shared_smoke.py test_promoted_file_io_aux_smoke.py -q` | Wave 0 (this task creates) | pending |
+| 03-08-04 | 08 | 8 | HARM-03, HARM-04, PYT-02 | integration | D-10 4-step wiring chain + 5-step verification chain | existing | pending |
+| 03-09-01 | 09 | 9 | PYT-02 | static | A10 residual sizing read from 03-01-SUMMARY.md + tier1Mappings count check | existing | pending |
+| 03-09-02 | 09 | 9 | PYT-03 | unit | `pytest tools/python_api_parity/tests/test_check_parity_gate.py -v` (xfail flips to passing) | existing (Plan 1 created) | pending |
+| 03-09-03 | 09 | 9 | PYT-04 | static | mypy --strict sweep over all 19 .pyi files | existing | pending |
+| 03-09-04 | 09 | 9 | PYT-06 | integration | `jq .summary.deferred_total docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json` == 0 | existing | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status legend: pending / green / red / flaky*
 
 ---
 
@@ -76,9 +112,11 @@ Files that must be created before promotion work begins (Plan 1 absorbs the tool
 - [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave2_smoke.py` **[Plan 3 — Wave 2: 58 rows]**
 - [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py` **[Plan 4 — Wave 3a orchestration: ~50 rows]**
 - [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_report_smoke.py` **[Plan 5 — Wave 3b report: ~46 rows]**
-- [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_config_smoke.py` **[Plan 6 — 22 rows]**
-- [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_version_registry_smoke.py` **[Plan 7 — 34 rows]**
-- [ ] `ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py` **[Plan 8 — classic_shared 6 rows + file_io aux 5 rows]**
+- [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_config_smoke.py` **[Plan 6 — 26 rows (22 deferred + 4 Tier-2 migrations)]**
+- [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_version_registry_smoke.py` **[Plan 7 — 35 rows (34 deferred + 1 Tier-2 migration)]**
+- [ ] `ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py` **[Plan 8 — classic_shared 6 rows]**
+- [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_file_io_aux_smoke.py` **[Plan 8 — file_io aux + cache helpers, 5 rows]**
+- [ ] `ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py` **[Plan 9 — A10 residuals from 14+ untracked crates]**
 
 **Existing infrastructure (reusable):**
 - `ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py` (already runtime-verified)
@@ -91,8 +129,8 @@ Files that must be created before promotion work begins (Plan 1 absorbs the tool
 
 1. **`mypy --strict`** — fails if a promoted method's stub argument shape doesn't match the actual `#[pymethods]` signature
 2. **`validate_stubs.py`** — fails if a `#[pyclass]` exists in `-py/src/*.rs` but is missing from the corresponding `.pyi` (and vice versa); also walks `tier1Mappings` to confirm discovered crates have a stub file
-3. **`parity_contract.json` row-count invariant** — Plan 1 establishes `tier1Mappings.length == 59` (current). Plan 9 must end with `tier1Mappings.length == 59 + 285 + 12 + 6 = 362` (current Tier-1 + deferred backlog promotions + Tier-2 runtime-verified migrations + classic_shared). Off-by-N drift is detectable by snapshot test.
-4. **`runtime_coverage_registry.json` row-count invariant** — currently 8 entries. After Phase 3: ≈14–18 rows depending on D-08 grouping. The strict invariant: every contract row must have a matching registry row (D-08); the gate's `tier1_missing_runtime_total` check enforces this.
+3. **`parity_contract.json` row-count invariant** — Plan 1 establishes `tier1Mappings.length == 59` (current). Plan 9 must end with `tier1Mappings.length == 59 + 285 + 12 + 6 + A10 residuals = ~410-510` (current Tier-1 + deferred backlog promotions + Tier-2 runtime-verified migrations + classic_shared + newly-surfaced symbols from 14 untracked crates). Off-by-N drift is detectable by snapshot test.
+4. **`runtime_coverage_registry.json` row-count invariant** — currently 8 entries. After Phase 3: ~14-18 selector rows depending on D-08 grouping. The strict invariant: every contract row must have a matching registry row (D-08); the gate's `tier1_missing_runtime_total` check enforces this.
 5. **`tier1_contract_total`** in `runtime_coverage_summary.json::summary` — must equal `parity_contract.json::tier1Mappings.length` after every plan. Off-by-one detection is automatic.
 
 ---
@@ -109,7 +147,7 @@ Files that must be created before promotion work begins (Plan 1 absorbs the tool
 | `pytest AttributeError on import classic_*` | A `#[pyclass]` is in the `.pyi` but not registered in the `#[pymodule]` function | Add `m.add_class::<PyXxx>()?;` to `-py/src/lib.rs::classic_xxx` (Pitfall 4) |
 | `pytest ImportError: classic_shared` | wheel not built or not installed into `.venv` | `pwsh rebuild_rust.ps1 -Target python classic_shared` |
 | `validate_stubs.py: Class 'X' missing methods` | `#[pymethods]` defines a method the `.pyi` lacks | Add the def to the stub OR annotate so `validate_stubs.py::extract_rust_methods` skips it |
-| `mypy --strict: incompatible types` | Stub return type doesn't match Rust shape | Fix the stub annotation; PyO3 0.27 maps `Vec<X>` → `list[X]`, `(A, B)` → `tuple[A, B]` |
+| `mypy --strict: incompatible types` | Stub return type doesn't match Rust shape | Fix the stub annotation; PyO3 0.27 maps `Vec<X>` -> `list[X]`, `(A, B)` -> `tuple[A, B]` |
 
 ---
 
@@ -144,11 +182,11 @@ The gate's existing `tier1_missing_runtime_total` count is the same data via a d
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies (planner fills during PLAN.md)
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references (10 files listed above)
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies (per-task verification map populated 2026-04-07)
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (11 files listed above)
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** populated, pending execution
