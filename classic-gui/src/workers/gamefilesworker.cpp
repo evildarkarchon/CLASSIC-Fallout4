@@ -81,11 +81,38 @@ void GameFilesWorker::doScan(const QString& gameExePath,
                              + enbSummary
                              + crashgenLine;
 
+        // Compute combined-truth has_errors / total_checks across the three scan
+        // sources stitched into combinedText. SetupCheckResults only counts
+        // integrity + xse + docs (see classic-scangame-core/src/setup.rs::total_checks),
+        // so forwarding result.has_errors / result.total_checks alone makes the banner
+        // lie when ENB or Crashgen turn up issues.
+        bool     combinedHasErrors   = result.has_errors;
+        uint32_t combinedTotalChecks = result.total_checks;
+
+        // ENB contributes 2 checks: binaries + config.
+        combinedTotalChecks += 2;
+        // Locked severity model: only Partial binaries OR Unreadable config escalate
+        // to error. NotInstalled / NotFound / Present / Valid do NOT escalate
+        // (the user has opted out of ENB or it is healthy).
+        if (enb.binaries == classic::scangame::EnbResult::Partial) {
+            combinedHasErrors = true;
+        }
+        if (enb.config == classic::scangame::EnbConfigResult::Unreadable) {
+            combinedHasErrors = true;
+        }
+
+        // Crashgen contributes 1 check (the config audit). Any reported issue
+        // is treated as an error.
+        combinedTotalChecks += 1;
+        if (crashgen.issue_count > 0) {
+            combinedHasErrors = true;
+        }
+
         emit progress(100.0f, QStringLiteral("Complete"));
         emit finished(
             combinedText,
-            result.has_errors,
-            result.total_checks
+            combinedHasErrors,
+            combinedTotalChecks
         );
 
     } catch (const rust::Error& e) {
