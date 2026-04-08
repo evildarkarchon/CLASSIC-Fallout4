@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 03-03-scanlog-wave2-detection-and-analysis-PLAN.md
-last_updated: "2026-04-08T22:43:59.121Z"
+stopped_at: Completed 03-04-scanlog-wave3a-orchestration-core-PLAN.md
+last_updated: "2026-04-08T23:13:43.842Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 14
+  completed_plans: 15
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-08
@@ -98,6 +98,7 @@ Progress: [          ] 0%
 | Phase 03-python-tier-collapse P01 | 13min | 5 tasks | 20 files |
 | Phase 03-python-tier-collapse P02 | 11min | 4 tasks | 19 files |
 | Phase 03-python-tier-collapse P03 | 12min | 5 tasks | 18 files |
+| Phase 03-python-tier-collapse P04 | 13min | 5 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -225,6 +226,11 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Promoted FcxResetError as a real Python exception via pyo3::create_exception! instead of a proxy row, closing the quick-260406-syy deferred gap
 - [Phase 03-python-tier-collapse]: R9 exclusion: GLOBAL_FCX_HANDLER LazyLock static is not tier1-promotable; Wave 2 lands 57 rows not 58
 - [Phase 03-python-tier-collapse]: Wrapped create_exception! in #[allow(missing_docs)] sub-module to scope the lint allowance to exactly one macro-generated struct
+- [Phase 03-python-tier-collapse]: Wave 3a ID scheme extends Waves 1/2: dotted scanlog.<submodule>.<symbol> for Python rows, @rust suffix for rust-only proxy rows
+- [Phase 03-python-tier-collapse]: Renamed Python wrappers without matching -core symbols (Orchestrator wraps OrchestratorCore; CancellationToken is pure -py Arc<AtomicBool>) pair with the nearest -core class via explicit py_class_to_core_symbol map; matches legacy scanlog-orchestrator-class row precedent
+- [Phase 03-python-tier-collapse]: Pure-Rust sub-modules (crashgen_registry, segment_key, error) route their rust-only rows via @rust-suffix proxy rows pairing with CrashgenVersion as fallback anchor; avoids inventing new Python wrappers outside Wave 3a scope
+- [Phase 03-python-tier-collapse]: ScanProgressPhase has NO PyO3 wrapper — it is a pure Rust enum with variants Setup/Parse/Analyze/Finalize (NOT QUEUED/SCANNING/COMPLETED as plan scaffold guessed); promoted as @rust proxy pairing with AnalysisResult
+- [Phase 03-python-tier-collapse]: python-tier2-scanlog-runtime entry PRESERVED (not deleted as plan instructed) because direct inspection showed none of its 4 bindings are actually enrolled in tier1Mappings yet; deleting would orphan runtime-verified coverage
 
 ### Pending Todos
 
@@ -249,7 +255,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T22:43:31.385Z
-Stopped at: Completed 03-03-scanlog-wave2-detection-and-analysis-PLAN.md
+Last session: 2026-04-08T23:13:43.838Z
+Stopped at: Completed 03-04-scanlog-wave3a-orchestration-core-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
