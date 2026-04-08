@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 03-02-scanlog-wave1-parsing-primitives-PLAN.md
-last_updated: "2026-04-08T11:40:18.717Z"
+stopped_at: Completed 03-03-scanlog-wave2-detection-and-analysis-PLAN.md
+last_updated: "2026-04-08T22:43:59.121Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 13
+  completed_plans: 14
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 3 of 10
+Plan: 4 of 10
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-08
@@ -97,6 +97,7 @@ Progress: [          ] 0%
 | Phase 02 P08 | 1860 | 3 tasks | 7 files |
 | Phase 03-python-tier-collapse P01 | 13min | 5 tasks | 20 files |
 | Phase 03-python-tier-collapse P02 | 11min | 4 tasks | 19 files |
+| Phase 03-python-tier-collapse P03 | 12min | 5 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -221,6 +222,9 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Rust-only deferred symbols (Streaming*, module markers, unwrapped FormIDAnalyzer/FormIDAnalyzerCore/PluginAnalyzer/RecordScanner) routed via @rust-suffixed proxy-paired contract rows; eliminates rust-side gap without requiring new PyO3 wrappers
 - [Phase 03-python-tier-collapse]: Plan R8 fix: single python-tier1-scanlog selector entry bumped count 20->94 + new hash; new python-tier1-scanlog-wave1-promoted aux entry uses bindingIdentifiers (not selector) since selector matching only honors ownerModule+tier
 - [Phase 03-python-tier-collapse]: Python FormIDAnalyzer wraps RustFormIDAnalyzer (NOT the parallel unwrapped formid::FormIDAnalyzer); contract rows pair pythonExportPath=FormIDAnalyzer with rustSymbol=RustFormIDAnalyzer
+- [Phase 03-python-tier-collapse]: Promoted FcxResetError as a real Python exception via pyo3::create_exception! instead of a proxy row, closing the quick-260406-syy deferred gap
+- [Phase 03-python-tier-collapse]: R9 exclusion: GLOBAL_FCX_HANDLER LazyLock static is not tier1-promotable; Wave 2 lands 57 rows not 58
+- [Phase 03-python-tier-collapse]: Wrapped create_exception! in #[allow(missing_docs)] sub-module to scope the lint allowance to exactly one macro-generated struct
 
 ### Pending Todos
 
@@ -245,7 +249,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T11:40:02.539Z
-Stopped at: Completed 03-02-scanlog-wave1-parsing-primitives-PLAN.md
+Last session: 2026-04-08T22:43:31.385Z
+Stopped at: Completed 03-03-scanlog-wave2-detection-and-analysis-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling

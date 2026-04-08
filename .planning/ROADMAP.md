@@ -88,8 +88,8 @@ Plans:
 **Plans**: 9 plans (sequential waves 1-9 by default to avoid baseline-file merge conflicts)
 Plans:
 - [x] 03-python-tier-collapse/03-01-tooling-expansion-PLAN.md — Wave 1: RUST_TARGET_CRATES + PYTHON_TARGET_MODULES expansion 3->19, Pitfall 2 guard, Wave 0 tooling test files, baseline refresh, A10 sizing report (PYT-01, PYT-03)
-- [ ] 03-python-tier-collapse/03-02-scanlog-wave1-parsing-primitives-PLAN.md — Wave 2: scanlog parser + formid + formid_analyzer + record_scanner + plugin_analyzer + patterns (74 rows; PYT-02, PYT-04, PYT-05)
-- [ ] 03-python-tier-collapse/03-03-scanlog-wave2-detection-and-analysis-PLAN.md — Wave 3: scanlog mod_detector + suspect_scanner + settings_validator + fcx_handler + gpu_detector (58 rows; PYT-02, PYT-04, PYT-05)
+- [x] 03-python-tier-collapse/03-02-scanlog-wave1-parsing-primitives-PLAN.md — Wave 2: scanlog parser + formid + formid_analyzer + record_scanner + plugin_analyzer + patterns (74 rows; PYT-02, PYT-04, PYT-05)
+- [x] 03-python-tier-collapse/03-03-scanlog-wave2-detection-and-analysis-PLAN.md — Wave 3: scanlog mod_detector + suspect_scanner + settings_validator + fcx_handler + gpu_detector (57 rows per R9 GLOBAL_FCX_HANDLER exclusion; PYT-02, PYT-04, PYT-05)
 - [ ] 03-python-tier-collapse/03-04-scanlog-wave3a-orchestration-core-PLAN.md — Wave 4: scanlog orchestrator + papyrus + version + crashgen_registry + segment_key + error (~50 rows; PYT-02, PYT-04, PYT-05)
 - [ ] 03-python-tier-collapse/03-05-scanlog-wave3b-report-standalone-PLAN.md — Wave 5: scanlog report sub-module standalone, 5 PyO3 wrapper classes (46 rows; PYT-02, PYT-04, PYT-05)
 - [ ] 03-python-tier-collapse/03-06-config-promotion-PLAN.md — Wave 6: classic-config-py promotion (26 rows = 22 deferred + 4 Tier-2 migrations; PYT-02, PYT-04, PYT-05)
@@ -141,7 +141,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
 | 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
-| 3. Python Tier Collapse | 1/10 | In Progress | - |
+| 3. Python Tier Collapse | 3/10 | In Progress | - |
 | 4. Node Tier Collapse | 0/TBD | Not started | - |
 | 5. CI Enforcement | 0/TBD | Not started | - |
 | 6. Documentation Reset | 0/TBD | Not started | - |
