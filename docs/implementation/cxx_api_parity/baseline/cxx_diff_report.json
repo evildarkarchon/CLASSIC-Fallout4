@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 274,
-    "current_total": 274,
-    "matched": 274,
+    "contract_total": 288,
+    "current_total": 288,
+    "matched": 288,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1393,6 +1393,94 @@
       "reason": "-"
     },
     {
+      "id": "d085560129c0184c",
+      "rustSymbol": "EnbConfigResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "730a860079a4d20b",
+      "rustSymbol": "EnbResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d0636e436245da31",
+      "rustSymbol": "IssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c2d88f97e660941f",
+      "rustSymbol": "ba2_get_snd_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "69804ddb991c9894",
+      "rustSymbol": "ba2_get_tex_dims_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "063d86c932c21210",
+      "rustSymbol": "ba2_get_tex_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d0ad6e52f88a788d",
+      "rustSymbol": "ba2_get_xse_files_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6f8055797c607b03",
+      "rustSymbol": "ba2_scan_archive_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3579592d25c9540d",
+      "rustSymbol": "enb_checker_validate",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "67d52d0e3e5715b7",
+      "rustSymbol": "ini_validator_detect_all_issues_for_root",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dad771a5ac5d7783",
+      "rustSymbol": "ini_validator_validate_inis",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "faed7cbf67f0de2e",
       "rustSymbol": "needs_path_detection",
       "kind": "function",
@@ -1404,6 +1492,30 @@
       "id": "28fe75685302909f",
       "rustSymbol": "run_setup_checks",
       "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ba593c60f4921ab7",
+      "rustSymbol": "Ba2IssuesSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bf1aa3d058515301",
+      "rustSymbol": "EnbValidationResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8fd138371890a42d",
+      "rustSymbol": "IniConfigIssueDto",
+      "kind": "struct",
       "bridgeModule": "scangame",
       "status": "matched",
       "reason": "-"

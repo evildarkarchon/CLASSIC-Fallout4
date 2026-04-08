@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T00:54:56Z",
+  "generated_at_utc": "2026-04-08T01:10:17Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
@@ -3219,6 +3219,189 @@
       }
     },
     {
+      "id": "d085560129c0184c",
+      "rustSymbol": "EnbConfigResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Valid",
+        "NotFound",
+        "Unreadable"
+      ]
+    },
+    {
+      "id": "730a860079a4d20b",
+      "rustSymbol": "EnbResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Present",
+        "Partial",
+        "NotInstalled"
+      ]
+    },
+    {
+      "id": "d0636e436245da31",
+      "rustSymbol": "IssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Error",
+        "Warning",
+        "Info"
+      ]
+    },
+    {
+      "id": "c2d88f97e660941f",
+      "rustSymbol": "ba2_get_snd_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "archive_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "69804ddb991c9894",
+      "rustSymbol": "ba2_get_tex_dims_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "archive_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "063d86c932c21210",
+      "rustSymbol": "ba2_get_tex_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "archive_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "d0ad6e52f88a788d",
+      "rustSymbol": "ba2_get_xse_files_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "archive_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "6f8055797c607b03",
+      "rustSymbol": "ba2_scan_archive_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "archive_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Ba2IssuesSummaryDto"
+      }
+    },
+    {
+      "id": "3579592d25c9540d",
+      "rustSymbol": "enb_checker_validate",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "EnbValidationResultDto"
+      }
+    },
+    {
+      "id": "67d52d0e3e5715b7",
+      "rustSymbol": "ini_validator_detect_all_issues_for_root",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_name",
+            "type": "&str"
+          },
+          {
+            "name": "game_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<IniConfigIssueDto>"
+      }
+    },
+    {
+      "id": "dad771a5ac5d7783",
+      "rustSymbol": "ini_validator_validate_inis",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_name",
+            "type": "&str"
+          },
+          {
+            "name": "game_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
+    },
+    {
       "id": "faed7cbf67f0de2e",
       "rustSymbol": "needs_path_detection",
       "kind": "function",
@@ -3267,6 +3450,96 @@
         ],
         "returnType": "SetupCheckResult"
       }
+    },
+    {
+      "id": "ba593c60f4921ab7",
+      "rustSymbol": "Ba2IssuesSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "tex_dim_count",
+          "type": "u32"
+        },
+        {
+          "name": "tex_fmt_count",
+          "type": "u32"
+        },
+        {
+          "name": "snd_fmt_count",
+          "type": "u32"
+        },
+        {
+          "name": "xse_file_count",
+          "type": "u32"
+        },
+        {
+          "name": "total",
+          "type": "u32"
+        },
+        {
+          "name": "has_issues",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "bf1aa3d058515301",
+      "rustSymbol": "EnbValidationResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "binaries",
+          "type": "EnbResult"
+        },
+        {
+          "name": "config",
+          "type": "EnbConfigResult"
+        }
+      ]
+    },
+    {
+      "id": "8fd138371890a42d",
+      "rustSymbol": "IniConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "file_path",
+          "type": "String"
+        },
+        {
+          "name": "section",
+          "type": "String"
+        },
+        {
+          "name": "setting",
+          "type": "String"
+        },
+        {
+          "name": "current_value",
+          "type": "String"
+        },
+        {
+          "name": "recommended_value",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "severity",
+          "type": "IssueSeverity"
+        }
+      ]
     },
     {
       "id": "9affeedbb97074de",
