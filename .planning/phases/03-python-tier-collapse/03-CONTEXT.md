@@ -6,7 +6,9 @@
 <domain>
 ## Phase Boundary
 
-Collapse the Python parity gate's Tier-1/Tier-2 split into a single enforced contract. Promote all 289 currently-deferred Python parity entries (228 scanlog + 34 version_registry + 26 config + 1 aux) from the Tier-2 backlog to enforced Tier-1 rows in `docs/implementation/python_api_parity/baseline/parity_contract.json`. Expand `tools/python_api_parity/generate_baseline.py::RUST_TARGET_CRATES` and `PYTHON_TARGET_MODULES` from the current 3 entries to all 19 business-logic crate / Python binding pairs. Add the required `pub use` re-exports to each `-py` crate's `lib.rs` so the regex parser can see promoted symbols (Pitfall 2). Wire `classic_shared` as a gate-enrolled Python binding with at least 6 contract rows and full wiring verification (HARM-03, HARM-04). Remove the Tier-2 skip logic from `check_parity_gate.py`. Keep runtime coverage registry entries in lockstep with promoted contract rows (Pitfall 4).
+Collapse the Python parity gate's Tier-1/Tier-2 split into a single enforced contract. Promote all currently-deferred Python parity entries from the Tier-2 backlog to enforced Tier-1 rows in `docs/implementation/python_api_parity/baseline/parity_contract.json`. Expand `tools/python_api_parity/generate_baseline.py::RUST_TARGET_CRATES` and `PYTHON_TARGET_MODULES` from the current 3 entries to cover 18 business-logic `-core` crates plus `classic-shared-py` under `foundation/` (19 total). Add any `pub use` re-exports needed at the `-core/lib.rs` surface so the regex parser can see promoted symbols (Pitfall 2) — verified during research to be ~zero additions for the existing 285 deferred entries, since their symbols are already exposed at the `-core` surface. Wire `classic_shared` as a gate-enrolled Python binding with at least 6 contract rows and full wiring verification (HARM-03, HARM-04). Remove legacy Tier-2 gap classification and `tier2` schema from `generate_baseline.py` / `parity_contract.json`. Keep runtime coverage registry entries in lockstep with promoted contract rows (Pitfall 4).
+
+> **⚠ Amended 2026-04-07** — concrete counts moved to the `## Research Amendments` section below. Paragraph above uses qualitative language because the precise count depends on which counting source is authoritative (see A4). Live numbers: **285 backlog entries + 12 runtime-verified migrations + 6 classic_shared = 303 net contract row additions**. Final `tier1Mappings.length`: 362 (from current 59).
 
 **In scope:**
 - `tools/python_api_parity/generate_baseline.py` — expand `RUST_TARGET_CRATES` and `PYTHON_TARGET_MODULES` to 19 entries each
@@ -35,6 +37,168 @@ Collapse the Python parity gate's Tier-1/Tier-2 split into a single enforced con
 - `classic-shared-py` crate source changes beyond adding `.pyi` coverage if gaps surface — the `#[pymodule]` surface is already implemented
 
 </domain>
+
+## Research Amendments (2026-04-07)
+
+*Applied after `/gsd:plan-phase 3 --research` surfaced drift between CONTEXT's locked decisions and the live source. Each amendment cites the authoritative file/section in `03-RESEARCH.md` and supersedes the original decision wording where they conflict. Plans 1–9 MUST honor these amendments; if a plan contradicts an amendment, the plan is wrong.*
+
+### A1 — D-04: `pub use` target is `-core/lib.rs`, NOT `-py/lib.rs`
+
+**Supersedes:** D-04 wording that places narrow `pub use` additions in `-py` crate `lib.rs`.
+
+**Correction:** `tools/python_api_parity/generate_baseline.py::parse_rust_surface()` (line 164) reads `RUST_TARGET_CRATES`, which points at **`-core/lib.rs`** files, not `-py/lib.rs`. The 59 existing Tier-1 contract rows all use core symbol names (`LogParser`, `OrchestratorCore`, `YamlDataCore`, `ClassicConfig`, etc.). The re-export block at `classic-scanlog-py/src/lib.rs` lines 115–141 exists for PyO3 `m.add_class::<>()` visibility **inside** `#[pymodule] fn classic_scanlog` — it is unrelated to the parity gate parser.
+
+**Rewritten D-04:** Each `-core` crate's `lib.rs` gets narrow `pub use` additions — exactly 1:1 with promoted contract rows whose `rustSymbol` is not yet visible at the crate root. No wildcards, no speculative re-exports.
+
+**Impact on plans:** Plan 2–7 `pub use` plumbing scope is significantly reduced (see A3 — most symbols are already `pub use`d).
+
+**Source:** `03-RESEARCH.md` §Assumption Corrections A1 (lines 877–888).
+
+### A2 — D-09: the "1 aux" entry belongs to `classic-file-io-py`, NOT `classic_shared`
+
+**Supersedes:** D-09 sentence "The `aux` owner-module entry (1 entry at phase start) folds into this row set if it resolves to a `classic_shared` surface symbol."
+
+**Correction:** The single aux entry (`python-deferred-aux-297`) is `classic_file_io.FileHasher.cache_size`. Its owner crate is `classic-file-io-py` wrapping `classic-file-io-core::FileHasher::cache_size`. It has no relationship to `classic_shared`.
+
+**Rewritten D-09 (scope clause):** `classic_shared`'s parity contract captures the full `#[pymodule] fn classic_shared` root surface — **exactly 6 contract rows**, unchanged. The 6 rows use the `#[pyclass(name = "...")]` renamed names: `PathHandler`, `StringProcessor`, `RustPerformanceMonitor`, `RuntimeStats`, `get_runtime_stats`, `is_runtime_healthy` (NOT `PyPathHandler` etc.).
+
+**Aux entry disposition:** The aux entry plus the 4 Tier-2 runtime-verified `FileHasher` cache helpers (`cache_stats`, `reset_cache_stats`, `clear_cache`, and the existing `cache_size` runtime row) fold into Plan 7 as an adjacent `classic-file-io-py` enrollment sub-scope. If the planner prefers, they can become a dedicated sub-plan, but they must land alongside `classic_shared` to keep the aux slice clean.
+
+**Source:** `03-RESEARCH.md` §Assumption Corrections A2 (lines 889–900).
+
+### A3 — D-04 / D-05: the Pitfall 2 guard fires on ~zero rows during Phase 3
+
+**Supersedes:** D-04's premise that narrow `pub use` additions are the dominant work and D-05's framing of the Pitfall 2 guard as blocking.
+
+**Correction:** Spot-checks against three representative crates show **every deferred symbol is already `pub use`d at the `-core` lib.rs surface**:
+- `classic-config-core/src/lib.rs` lines 17–21: all 13 deferred config symbols already re-exported
+- `classic-scanlog-core/src/lib.rs` lines 46–71: all deferred scanlog symbols already re-exported
+- `classic-version-registry-core/src/lib.rs` lines 55–60: all 13 deferred version_registry symbols already re-exported
+
+**Rewritten D-05 (sizing clause):** The Pitfall 2 guard assertion (`validate_contract_rust_symbols()`) still lands in Plan 1 as the long-term invariant enforcement mechanism, but it will fire on zero rows during Phase 3 promotion itself. Plans 2–7's dominant work is **contract row authoring + `.pyi` stub additions + runtime coverage registry rows + per-class smoke tests**, NOT `pub use` plumbing.
+
+**Impact on plans:** Plan 2–7 task lists should front-load contract row authoring, stub editing, and smoke test creation. `pub use` tasks exist only when Plan 1's expanded `parse_rust_surface()` output shows a missing symbol — and based on spot-checks, that count is near zero for existing deferred entries.
+
+**Source:** `03-RESEARCH.md` §Assumption Corrections A3 (lines 902–911).
+
+### A4 — "289 deferred entries" is imprecise; the real number is 285 + 12 + 6 = 303
+
+**Supersedes:** The concrete "289 = 228 + 34 + 26 + 1" split in the original `<domain>` paragraph and the earlier `<specifics>` phrasing of "289 deferred entries."
+
+**Correction:** Live counts from primary artifacts:
+
+| Source | scanlog | config | version_registry | aux | total |
+|---|---:|---:|---:|---:|---:|
+| `deferred_runtime_backlog.json` (raw) | 228 | **22** | 34 | 1 | **285** |
+| `parity_diff_report.json::tier2_gap_total` | 232 | 28 | 35 | 0 | **295** |
+| `runtime_coverage_summary.json::deferred_total` | 228 | **26** | 34 | 1 | **289** |
+| CONTEXT.md (original) | 228 | **26** | 34 | 1 | **289** |
+
+**The authoritative number for "rows that must be promoted":** **285** (from `deferred_runtime_backlog.json::entries.length`).
+
+**Net contract row additions:**
+- 285 deferred backlog entries → Tier-1 contract rows
+- +12 runtime-verified binding identifiers in `runtime_coverage_registry.json` that need migration to matching contract rows (currently `runtime_verified` status, binding-identifier path)
+- +6 `classic_shared` rows
+- **= 303 net contract row additions**
+- **Final `tier1Mappings.length`: 362** (from current 59)
+
+**Rewritten success-criterion #1 target:** `runtime_coverage_summary.json::summary.deferred_total` drops to **0** after Phase 3. This is the gate-relevant number, not the raw backlog length — once all 285 backlog entries are promoted to `tier1Mappings`, they no longer match `_lookup_maps(deferred_entries)` and become `tier1_matched` contract_results, collapsing the `deferred_total` to 0.
+
+**Impact on plans:** Plan 1 deliverables include sizing the actual `tier2_gap_total` after `RUST_TARGET_CRATES` expansion (see A7 below about newly-discoverable symbols).
+
+**Source:** `03-RESEARCH.md` §Assumption Corrections A4 (lines 913–936).
+
+### A5 — `classic-crashgen-settings-core` has no `-py` adapter; excluded from `RUST_TARGET_CRATES`
+
+**Supersedes:** `<canonical_refs>` sentence "All 19 business-logic `-core` crates — Plan 1 must add each crate's `lib.rs` path to `generate_baseline.py::RUST_TARGET_CRATES`."
+
+**Correction:** Only 18 of 19 business-logic crates have a corresponding `*-py` adapter under `python-bindings/`. `classic-crashgen-settings-core` has no `-py` crate — its types (`SuspectErrorRule`, `SuspectStackRule`, `ModConflictEntry`, etc.) surface through `classic-config-py` / `classic-scanlog-py` / `classic-scangame-py`, which depend on `classic-crashgen-settings-core` directly.
+
+**Rewritten:** Plan 1's `RUST_TARGET_CRATES` expansion is **18 business-logic `-core` crates + 1 foundation crate (`classic-shared-py`)** = 19 total, explicitly excluding `classic-crashgen-settings-core`. Adding it would cause `parse_rust_surface()` to surface symbols with no matching `pythonModule`, producing `tier1_missing_python` errors.
+
+**Source:** `03-RESEARCH.md` §Assumption Corrections A5 (lines 938–946).
+
+### A6 — D-01 Wave 3 sub-module list is wrong
+
+**Supersedes:** D-01's Wave 3 list `orchestrator, report, papyrus, version, crashgen_rules, core_mod_convert`.
+
+**Correction:** `classic-scanlog-core/src/lib.rs` declares 18 sub-modules: `crashgen_registry, error, fcx_handler, formid, formid_analyzer, gpu_detector, mod_detector, orchestrator, papyrus, parser, patterns, plugin_analyzer, record_scanner, report, segment_key, settings_validator, suspect_scanner, version`. **There is no `crashgen_rules` or `core_mod_convert` sub-module in `-core`.** Those two names are `-py`-only wrapper sub-modules (`classic-scanlog-py/src/lib.rs` lines 96–98) with no deferred entries.
+
+**Rewritten D-01 Wave 3 sub-module list:** `orchestrator, report, papyrus, version, crashgen_registry, segment_key, error` (7 sub-modules; Wave 3 subtotal: **96** rows — see A7 below for the 9-plan split that breaks Wave 3 apart).
+
+**Source:** `03-RESEARCH.md` §Assumption Corrections A6 (lines 948–956) and §Question 2.
+
+### A7 — D-01 scanlog wave split is 74/58/96, not 76/76/76; phase adopts 9-plan structure
+
+**Supersedes:** D-01's "8-plan skeleton ... roughly 76 of 228 scanlog entries" per wave.
+
+**Correction:** Actual deferred-entry distribution across the three scanlog waves:
+
+| Wave | Sub-modules | Row count |
+|---|---|---:|
+| **Wave 1** (parsing primitives) | parser, formid, formid_analyzer, record_scanner, plugin_analyzer, patterns | **74** |
+| **Wave 2** (detection & analysis) | mod_detector, suspect_scanner, settings_validator, fcx_handler, gpu_detector | **58** |
+| **Wave 3** (orchestration & output) | orchestrator, report, papyrus, version, crashgen_registry, segment_key, error | **96** |
+| **Total** | | **228** |
+
+Wave 3 is 65% larger than Wave 2. The single biggest contributor is `report` at 46 rows (5 distinct PyO3 wrapper classes: `PyReportComposer`, `PyReportFragment`, `PyReportGenerator`, `PyParallelReportProcessor`, `PyStringPool`).
+
+**Rewritten D-01 plan structure (9 plans):**
+1. **Plan 1** — Tooling expansion (`RUST_TARGET_CRATES` to 19, Pitfall 2 guard assertion, baseline refresh)
+2. **Plan 2** — scanlog Wave 1: parser, formid, formid_analyzer, record_scanner, plugin_analyzer, patterns (~74 rows)
+3. **Plan 3** — scanlog Wave 2: mod_detector, suspect_scanner, settings_validator, fcx_handler, gpu_detector (~58 rows)
+4. **Plan 4** — scanlog Wave 3a (orchestration core): orchestrator, papyrus, version, crashgen_registry, segment_key, error (~50 rows)
+5. **Plan 5** — scanlog Wave 3b (report module standalone): report (~46 rows, 5 PyO3 wrapper classes)
+6. **Plan 6** — config module promotion (22 rows)
+7. **Plan 7** — version_registry module promotion (34 rows)
+8. **Plan 8** — `classic_shared` wiring (6 rows) + aux FileHasher enrollment (5 rows: the aux entry + 4 runtime-verified helpers)
+9. **Plan 9** — Tier-2 cleanup (see A9), final mypy --strict sweep across all 19 stubs, final parity gate + pytest verification
+
+**Rationale for splitting Wave 3:** Per-class smoke tests for 5 report classes are heavier than the 1–3 classes in other Wave 3 sub-modules, and bisect granularity improves (a Wave 3 failure points at "report" specifically rather than "anything in orchestration/output"). D-01's original text explicitly allowed 8–10 plans — the 9-plan structure honors that provision.
+
+**Source:** `03-RESEARCH.md` §Question 2 (lines 237–280).
+
+### A8 — `classic_shared` wiring prerequisites are already satisfied
+
+**Supersedes:** D-10's 4-step verification chain framed as "discovered gaps are fixed inside Plan 7."
+
+**Correction (all verified against source):**
+- `Get-PythonRustModules` in `rebuild_rust.ps1` (lines 215–272) **already** searches `ClassicLib-rs/foundation/`, so `classic-shared-py` auto-discovers without script changes.
+- `classic_shared.pyi` (455 lines) **already** covers all 6 module symbols (`PathHandler`, `StringProcessor`, `RustPerformanceMonitor`, `RuntimeStats`, `get_runtime_stats`, `is_runtime_healthy`).
+- `parse_rust_surface()` needs no special handling for `foundation/` — `RUST_TARGET_CRATES` just stores a relative path.
+- **Important:** `RuntimeStats` has no `#[new]` in `lib.rs` line 252, so it cannot be constructed directly from Python. The smoke test MUST call `classic_shared.get_runtime_stats()`, NOT `RuntimeStats()`.
+
+**Impact on Plan 8 (was Plan 7 in original skeleton):** The wiring verification chain becomes pure verification — no script edits expected. If a verification step fails, the researcher marks that as a Plan 8 fix (the original D-10 text is preserved as policy), but the expected outcome is clean pass.
+
+**Source:** `03-RESEARCH.md` §Question 5 and §Assumption Corrections A7 (lines 958–962).
+
+### A9 — Plan 9 "Tier-2 skip logic removal" is actually classification cleanup in a different file
+
+**Supersedes:** D-01 Plan 8 description "Tier-2 skip logic removal" and the implication that `check_parity_gate.py` contains a skip flag.
+
+**Correction:** `check_parity_gate.py` does not contain a "Tier-2 skip" flag. The script's 276 lines iterate `tier1Mappings` only and exit-code semantics already match the single-tier model. The cleanup actually lands in three places:
+1. `generate_baseline.py::generate_diff_report()` lines 574–610 — delete the `gap_type=rust_unmapped` / `gap_type=python_unmapped` branches that produce `tier=tier2` gap rows. After all symbols are promoted these branches produce zero rows, so the deletion is cosmetic but removes the dormant code path.
+2. `parity_contract.json::tierDefinitions` — delete the `tier2` key, leaving only `tier1`.
+3. Inline comments in both Python scripts referring to "Tier-2" — cosmetic sweep.
+
+**Out of scope for Plan 9 (owned by Phase 6):**
+- `--deferred-registry` default handling (DOC-01)
+- Governance file deletion (`tier2_backlog_and_governance.md`, `deferred_runtime_backlog.json`, `tier2_wave_manifest.json`) (DOC-02 / DOC-04)
+
+**Source:** `03-RESEARCH.md` §"Where 'Tier-2 skip logic' actually lives" (lines 975–989).
+
+### A10 — Plan 1 must also size newly-discoverable symbols from the 16 currently-untracked crates
+
+**New consideration** raised by research (no CONTEXT decision contradicted, but planner-blocking).
+
+When `RUST_TARGET_CRATES` expands from 3 to 19 in Plan 1, `parse_rust_surface()` will surface public symbols from the 16 currently-untracked crates (`classic-shared-core`, `classic-file-io-core`, `classic-database-core`, `classic-xse-core`, `classic-path-core`, `classic-scangame-core`, etc.). Each of these symbols without a matching `tier1Mappings` row shows up as `tier2_gap_total` and would block PYT-06 (the "0 deferred" criterion).
+
+Research spot-check estimate of 4–5 small crates suggests **~50–150 additional rows** on top of the 303 already planned. Plan 1's deliverable must include running `python tools/python_api_parity/generate_baseline.py --repo-root .` against the expanded `RUST_TARGET_CRATES` and reporting `tier2_gap_total` per owner module so the planner can size Plans 6/7/8 task budgets before they execute.
+
+**Source:** `03-RESEARCH.md` §Open Questions item 2 (lines 967–971).
+
+---
 
 <decisions>
 ## Implementation Decisions
