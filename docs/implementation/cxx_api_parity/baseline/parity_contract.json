@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T01:10:17Z",
+  "generated_at_utc": "2026-04-08T01:24:49Z",
   "schema_version": 1,
   "entries": [
     {
@@ -3220,6 +3220,18 @@
       }
     },
     {
+      "id": "7fcf8be2f8d9060d",
+      "rustSymbol": "CheckType",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "ExecutableVersion",
+        "InstallationLocation"
+      ]
+    },
+    {
       "id": "d085560129c0184c",
       "rustSymbol": "EnbConfigResult",
       "kind": "enum",
@@ -3256,6 +3268,32 @@
         "Error",
         "Warning",
         "Info"
+      ]
+    },
+    {
+      "id": "8ebe0b5d73b2d5a5",
+      "rustSymbol": "TomlIssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Info",
+        "Warning",
+        "Error"
+      ]
+    },
+    {
+      "id": "8cec4e60e88b3126",
+      "rustSymbol": "WryeSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Info",
+        "Warning",
+        "Error"
       ]
     },
     {
@@ -3344,6 +3382,111 @@
       }
     },
     {
+      "id": "5fdd2c76ec1d62d2",
+      "rustSymbol": "crashgen_checker_check",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plugins_path",
+            "type": "&str"
+          },
+          {
+            "name": "crashgen_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "CrashgenCheckResultDto"
+      }
+    },
+    {
+      "id": "74f4720eb2c3d9d1",
+      "rustSymbol": "crashgen_checker_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plugins_path",
+            "type": "&str"
+          },
+          {
+            "name": "crashgen_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<TomlConfigIssueDto>"
+      }
+    },
+    {
+      "id": "a0b7b74ca9eb8e4a",
+      "rustSymbol": "crashgen_orchestrator_check_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plugins_path",
+            "type": "&str"
+          },
+          {
+            "name": "crashgen_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "CrashgenReportSummaryDto"
+      }
+    },
+    {
+      "id": "f79d6ed4a4843260",
+      "rustSymbol": "crashgen_orchestrator_get_installed_plugins",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plugins_path",
+            "type": "&str"
+          },
+          {
+            "name": "crashgen_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "eec34db48beaf639",
+      "rustSymbol": "crashgen_orchestrator_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plugins_path",
+            "type": "&str"
+          },
+          {
+            "name": "crashgen_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<TomlConfigIssueDto>"
+      }
+    },
+    {
       "id": "3579592d25c9540d",
       "rustSymbol": "enb_checker_validate",
       "kind": "function",
@@ -3403,6 +3546,31 @@
       }
     },
     {
+      "id": "164f9907a9bad5e6",
+      "rustSymbol": "integrity_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_exe_path",
+            "type": "&str"
+          },
+          {
+            "name": "valid_hashes",
+            "type": "&[String]"
+          },
+          {
+            "name": "root_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<IntegrityCheckResultDto>"
+      }
+    },
+    {
       "id": "faed7cbf67f0de2e",
       "rustSymbol": "needs_path_detection",
       "kind": "function",
@@ -3453,6 +3621,64 @@
       }
     },
     {
+      "id": "ee8ced5b5e4028bb",
+      "rustSymbol": "scangame_run_setup_structured",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_exe_path",
+            "type": "&str"
+          },
+          {
+            "name": "valid_hashes",
+            "type": "&[String]"
+          },
+          {
+            "name": "root_name",
+            "type": "&str"
+          },
+          {
+            "name": "game_name",
+            "type": "&str"
+          },
+          {
+            "name": "docs_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "ScanGameSetupDto"
+      }
+    },
+    {
+      "id": "ce2b902774c4ab1d",
+      "rustSymbol": "wrye_parse_html_rows",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "html_content",
+            "type": "&str"
+          },
+          {
+            "name": "warnings_keys",
+            "type": "&[String]"
+          },
+          {
+            "name": "warnings_values",
+            "type": "&[String]"
+          }
+        ],
+        "returnType": "Vec<WryeIssueRowDto>"
+      }
+    },
+    {
       "id": "ba593c60f4921ab7",
       "rustSymbol": "Ba2IssuesSummaryDto",
       "kind": "struct",
@@ -3483,6 +3709,58 @@
         {
           "name": "has_issues",
           "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "f99d4f29385dda09",
+      "rustSymbol": "CrashgenCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "report_text",
+          "type": "String"
+        },
+        {
+          "name": "issue_count",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "1403d85def1ae0ef",
+      "rustSymbol": "CrashgenReportSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "crashgen_name",
+          "type": "String"
+        },
+        {
+          "name": "config_path_or_empty",
+          "type": "String"
+        },
+        {
+          "name": "has_config_path",
+          "type": "bool"
+        },
+        {
+          "name": "issue_count",
+          "type": "u32"
+        },
+        {
+          "name": "installed_plugin_count",
+          "type": "u32"
         }
       ]
     },
@@ -3543,6 +3821,28 @@
       ]
     },
     {
+      "id": "ec3568d08ff543ed",
+      "rustSymbol": "IntegrityCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "is_valid",
+          "type": "bool"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "check_type",
+          "type": "CheckType"
+        }
+      ]
+    },
+    {
       "id": "9affeedbb97074de",
       "rustSymbol": "PathDetectionNeeds",
       "kind": "struct",
@@ -3556,6 +3856,28 @@
         },
         {
           "name": "needs_docs_path",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "93d509b3d522de30",
+      "rustSymbol": "ScanGameSetupDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "check_count",
+          "type": "u32"
+        },
+        {
+          "name": "error_count",
+          "type": "u32"
+        },
+        {
+          "name": "has_errors",
           "type": "bool"
         }
       ]
@@ -3579,6 +3901,78 @@
         {
           "name": "total_checks",
           "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "61815dc13da0e187",
+      "rustSymbol": "TomlConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "file_path",
+          "type": "String"
+        },
+        {
+          "name": "section",
+          "type": "String"
+        },
+        {
+          "name": "setting",
+          "type": "String"
+        },
+        {
+          "name": "current_value",
+          "type": "String"
+        },
+        {
+          "name": "recommended_value",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "severity",
+          "type": "TomlIssueSeverity"
+        }
+      ]
+    },
+    {
+      "id": "45d754712dfa50dc",
+      "rustSymbol": "WryeIssueRowDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "issue_index",
+          "type": "u32"
+        },
+        {
+          "name": "section_title",
+          "type": "String"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "warning_message_or_empty",
+          "type": "String"
+        },
+        {
+          "name": "has_warning_message",
+          "type": "bool"
+        },
+        {
+          "name": "severity",
+          "type": "WryeSeverity"
         }
       ]
     },

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 288,
-    "current_total": 288,
-    "matched": 288,
+    "contract_total": 305,
+    "current_total": 305,
+    "matched": 305,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1393,6 +1393,14 @@
       "reason": "-"
     },
     {
+      "id": "7fcf8be2f8d9060d",
+      "rustSymbol": "CheckType",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "d085560129c0184c",
       "rustSymbol": "EnbConfigResult",
       "kind": "enum",
@@ -1411,6 +1419,22 @@
     {
       "id": "d0636e436245da31",
       "rustSymbol": "IssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8ebe0b5d73b2d5a5",
+      "rustSymbol": "TomlIssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8cec4e60e88b3126",
+      "rustSymbol": "WryeSeverity",
       "kind": "enum",
       "bridgeModule": "scangame",
       "status": "matched",
@@ -1457,6 +1481,46 @@
       "reason": "-"
     },
     {
+      "id": "5fdd2c76ec1d62d2",
+      "rustSymbol": "crashgen_checker_check",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "74f4720eb2c3d9d1",
+      "rustSymbol": "crashgen_checker_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a0b7b74ca9eb8e4a",
+      "rustSymbol": "crashgen_orchestrator_check_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f79d6ed4a4843260",
+      "rustSymbol": "crashgen_orchestrator_get_installed_plugins",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "eec34db48beaf639",
+      "rustSymbol": "crashgen_orchestrator_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "3579592d25c9540d",
       "rustSymbol": "enb_checker_validate",
       "kind": "function",
@@ -1481,6 +1545,14 @@
       "reason": "-"
     },
     {
+      "id": "164f9907a9bad5e6",
+      "rustSymbol": "integrity_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "faed7cbf67f0de2e",
       "rustSymbol": "needs_path_detection",
       "kind": "function",
@@ -1497,8 +1569,40 @@
       "reason": "-"
     },
     {
+      "id": "ee8ced5b5e4028bb",
+      "rustSymbol": "scangame_run_setup_structured",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ce2b902774c4ab1d",
+      "rustSymbol": "wrye_parse_html_rows",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "ba593c60f4921ab7",
       "rustSymbol": "Ba2IssuesSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f99d4f29385dda09",
+      "rustSymbol": "CrashgenCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1403d85def1ae0ef",
+      "rustSymbol": "CrashgenReportSummaryDto",
       "kind": "struct",
       "bridgeModule": "scangame",
       "status": "matched",
@@ -1521,6 +1625,14 @@
       "reason": "-"
     },
     {
+      "id": "ec3568d08ff543ed",
+      "rustSymbol": "IntegrityCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9affeedbb97074de",
       "rustSymbol": "PathDetectionNeeds",
       "kind": "struct",
@@ -1529,8 +1641,32 @@
       "reason": "-"
     },
     {
+      "id": "93d509b3d522de30",
+      "rustSymbol": "ScanGameSetupDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "cf8a6ea758229521",
       "rustSymbol": "SetupCheckResult",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "61815dc13da0e187",
+      "rustSymbol": "TomlConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "45d754712dfa50dc",
+      "rustSymbol": "WryeIssueRowDto",
       "kind": "struct",
       "bridgeModule": "scangame",
       "status": "matched",

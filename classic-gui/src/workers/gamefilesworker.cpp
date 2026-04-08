@@ -4,6 +4,8 @@
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/scangame.h"
 
+#include <QDir>
+
 GameFilesWorker::GameFilesWorker(QObject* parent)
     : QObject(parent) {}
 
@@ -24,11 +26,8 @@ void GameFilesWorker::doScan(const QString& gameExePath,
             classic::toRustString(gameName)
         );
 
-        // D-11 / CXXS-04 consumer migration (Codex MEDIUM correction):
-        // Exercise the new ENB structured DTO bridge as part of the existing
-        // scan flow.  The result is appended to the combined output so users
-        // see it in the same Results view. enb_checker_validate is now called
-        // on every actual game-files scan — not a dormant helper method.
+        // D-11 / CXXS-04 consumer migration from plan 02-05:
+        // Exercise the ENB structured DTO bridge on every actual game-files scan.
         auto enb = classic::scangame::enb_checker_validate(
             classic::toRustString(gameRoot)
         );
@@ -63,7 +62,24 @@ void GameFilesWorker::doScan(const QString& gameExePath,
                 break;
         }
 
-        QString combinedText = classic::toQString(result.combined_output) + enbSummary;
+        // D-11 / CXXS-04 in-flow consumer #2 (plan 02-06 — Codex MEDIUM correction):
+        // Exercise the new CrashgenOrchestrator bridge API on every actual scan.
+        // Buffout 4 plugins live at {gameRoot}/Data/F4SE/Plugins for Fallout 4.
+        QString pluginsPath = QDir(gameRoot).filePath(
+            QStringLiteral("Data/F4SE/Plugins")
+        );
+        auto crashgen = classic::scangame::crashgen_orchestrator_check_summary(
+            classic::toRustString(pluginsPath),
+            ::rust::Str("Buffout4", 8)
+        );
+        QString crashgenLine = QStringLiteral(
+            "\n[Crashgen] Buffout4 plugins detected: %1, config issues: %2"
+        ).arg(crashgen.installed_plugin_count)
+         .arg(crashgen.issue_count);
+
+        QString combinedText = classic::toQString(result.combined_output)
+                             + enbSummary
+                             + crashgenLine;
 
         emit progress(100.0f, QStringLiteral("Complete"));
         emit finished(
