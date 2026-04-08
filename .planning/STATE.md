@@ -229,10 +229,11 @@ None yet.
 |---|-------------|------|--------|--------|-----------|
 | 260406-syy | Resolve the newly uncovered Python parity surface for FcxResetError so the Python parity gate no longer reports uncovered runtime metadata. | 2026-04-07 | 8f4a9324 | Verified | [260406-syy-resolve-the-newly-uncovered-python-parit](./quick/260406-syy-resolve-the-newly-uncovered-python-parit/) |
 | 260407-rg3 | Fix lying Game Files scan banner in Qt GUI — GameFilesWorker now computes combinedHasErrors/combinedTotalChecks from orchestrator + ENB + Crashgen instead of forwarding raw result fields that excluded ENB and Crashgen. | 2026-04-07 | 5fa8345e | Verified | [260407-rg3-fix-lying-game-files-scan-banner-in-qt-g](./quick/260407-rg3-fix-lying-game-files-scan-banner-in-qt-g/) |
+| 260407-rvj | Make DocsPathFinder Steam App ID opt-in for Linux Proton lookup — removed hard-coded 377160 constant, added with_steam_app_id consuming builder; CXX bridge and TUI opt in via Fallout4Version; Python/Node bindings get set_steam_app_id setter. | 2026-04-08 | 7363ff55 | Verified | [260407-rvj-docspathfinder-steam-id-opt-in-for-linux](./quick/260407-rvj-docspathfinder-steam-id-opt-in-for-linux/) |
 
 ## Session Continuity
 
-Last session: 2026-04-07T20:01:48Z
-Stopped at: Completed quick-260407-rg3 (fix lying Game Files scan banner in Qt GUI)
+Last session: 2026-04-08T03:33:10Z
+Stopped at: Completed quick-260407-rvj (DocsPathFinder Steam App ID opt-in for Linux Proton lookup)
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
