@@ -7,7 +7,11 @@
 //! IndexMap fields are exposed as paired key/value vectors since CXX bridges
 //! are isolated and can't share opaque types across modules.
 
-use classic_config_core::{ClassicConfig, ModSolutionCriteria, YamlDataCore};
+use classic_config_core::{
+    ClassicConfig, ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
+    SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
+    YamlDataCore,
+};
 use classic_settings_core::{
     cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
     reset_cache_stats as reset_settings_core_cache_stats,
@@ -329,6 +333,90 @@ fn reset_settings_cache_stats() {
     reset_settings_core_cache_stats();
 }
 
+// ── Suspect rule typed accessors (CXXS-07) ─────────────────────────
+// Additive per D-08 — existing yaml_data_suspects_error_keys/values and
+// yaml_data_suspects_stack_keys fns above remain unchanged.
+
+/// Returns the full set of error-type suspect rules as typed DTOs.
+///
+/// Each `SuspectErrorRuleDto` carries the rule's stable `id`, display `name`,
+/// `severity`, and the `main_error_contains_any` pattern list.
+///
+/// Bridge contract: this is the typed complement to the existing
+/// `yaml_data_suspects_error_keys` / `yaml_data_suspects_error_values` pair.
+/// Both coexist per D-08 (additive, not replacing).
+fn yaml_data_suspects_error_rules(data: &YamlData) -> Vec<ffi::SuspectErrorRuleDto> {
+    data.inner
+        .suspect_error_rules
+        .iter()
+        .map(|r: &CoreSuspectErrorRule| ffi::SuspectErrorRuleDto {
+            id: r.id.clone(),
+            name: r.name.clone(),
+            severity: r.severity,
+            main_error_contains_any: r.main_error_contains_any.clone(),
+        })
+        .collect()
+}
+
+/// Returns the flattened metadata for all stack-type suspect rules.
+///
+/// Each `SuspectStackRuleMetadataDto` carries the rule's `id`, `name`,
+/// `severity`, and the four `Vec<String>` pattern fields — but does NOT
+/// include the nested `stack_contains_at_least` count rules. Those are
+/// exposed separately via `yaml_data_suspects_stack_count_rules_for_id`.
+///
+/// Pitfall 6 fix (Codex HIGH correction): a previous design returned
+/// `Vec<SuspectStackRuleDto>` where the inner DTO contained a
+/// `Vec<SuspectStackCountRuleDto>` field. That is a `Vec<StructWithVec>`
+/// shape that CXX cannot safely bridge. The flattened metadata DTO +
+/// separate per-rule count getter eliminates this constraint entirely.
+fn yaml_data_suspects_stack_rules_metadata(data: &YamlData) -> Vec<ffi::SuspectStackRuleMetadataDto> {
+    data.inner
+        .suspect_stack_rules
+        .iter()
+        .map(|r: &CoreSuspectStackRule| ffi::SuspectStackRuleMetadataDto {
+            id: r.id.clone(),
+            name: r.name.clone(),
+            severity: r.severity,
+            main_error_required_any: r.main_error_required_any.clone(),
+            main_error_optional_any: r.main_error_optional_any.clone(),
+            stack_contains_any: r.stack_contains_any.clone(),
+            exclude_if_stack_contains_any: r.exclude_if_stack_contains_any.clone(),
+            // Note: stack_contains_at_least is NOT included here — use
+            // yaml_data_suspects_stack_count_rules_for_id to retrieve count rules.
+        })
+        .collect()
+}
+
+/// Returns the count rules for a single stack-type suspect rule, keyed by rule id.
+///
+/// C++ callers iterate the metadata list first via
+/// `yaml_data_suspects_stack_rules_metadata`, then call this getter for each
+/// rule that needs its count rules. Returns an empty Vec when the id is not
+/// found (unknown id, no count rules configured).
+///
+/// Each `SuspectStackCountRuleDto` has a `substring` (the stack pattern) and
+/// a `count` (minimum required occurrences, cast from `usize` to `u32`).
+fn yaml_data_suspects_stack_count_rules_for_id(
+    data: &YamlData,
+    rule_id: &str,
+) -> Vec<ffi::SuspectStackCountRuleDto> {
+    data.inner
+        .suspect_stack_rules
+        .iter()
+        .find(|r| r.id == rule_id)
+        .map(|r| {
+            r.stack_contains_at_least
+                .iter()
+                .map(|c: &CoreSuspectStackCountRule| ffi::SuspectStackCountRuleDto {
+                    substring: c.substring.clone(),
+                    count: c.count as u32,
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
     struct CacheStats {
@@ -350,6 +438,38 @@ mod ffi {
         exceptions: Vec<String>,
         name: String,
         description: String,
+    }
+
+    // CXXS-07: Typed suspect-rule DTOs (additive per D-08)
+
+    /// Typed DTO for a single error-type suspect rule (Crashlog_Error_Check).
+    struct SuspectErrorRuleDto {
+        id: String,
+        name: String,
+        severity: i32,
+        main_error_contains_any: Vec<String>,
+    }
+
+    /// Flattened metadata DTO for a single stack-type suspect rule (Crashlog_Stack_Check).
+    ///
+    /// Does NOT contain the nested count rules — use
+    /// `yaml_data_suspects_stack_count_rules_for_id` to retrieve those separately.
+    /// This flattening satisfies Pitfall 6 (no Vec<StructWithVec>).
+    struct SuspectStackRuleMetadataDto {
+        id: String,
+        name: String,
+        severity: i32,
+        main_error_required_any: Vec<String>,
+        main_error_optional_any: Vec<String>,
+        stack_contains_any: Vec<String>,
+        exclude_if_stack_contains_any: Vec<String>,
+    }
+
+    /// DTO for a single count-based stack-match requirement within a stack rule.
+    /// Returned by `yaml_data_suspects_stack_count_rules_for_id` keyed by rule id.
+    struct SuspectStackCountRuleDto {
+        substring: String,
+        count: u32,
     }
 
     extern "Rust" {
@@ -418,6 +538,16 @@ mod ffi {
         fn settings_cache_size() -> usize;
         fn settings_cache_stats() -> CacheStats;
         fn reset_settings_cache_stats();
+
+        // CXXS-07: Typed suspect-rule accessors (additive per D-08)
+        fn yaml_data_suspects_error_rules(data: &YamlData) -> Vec<SuspectErrorRuleDto>;
+        fn yaml_data_suspects_stack_rules_metadata(
+            data: &YamlData,
+        ) -> Vec<SuspectStackRuleMetadataDto>;
+        fn yaml_data_suspects_stack_count_rules_for_id(
+            data: &YamlData,
+            rule_id: &str,
+        ) -> Vec<SuspectStackCountRuleDto>;
     }
 }
 
@@ -554,6 +684,171 @@ CLASSIC_Ignore_Fallout4: []
             yaml["Game_Info"]["Root_Folder_Docs"].as_str(),
             Some("C:/Users/Test/Documents/My Games/Fallout4")
         );
+    }
+
+    // ── CXXS-07 typed suspect-rule tests ───────────────────────────────
+
+    /// Builds a minimal YamlData with suspect error rules for testing.
+    fn make_yaml_data_with_suspect_rules() -> Option<Box<YamlData>> {
+        let temp = tempdir().expect("failed to create temp dir");
+        let data_dir = temp.path().join("CLASSIC Data");
+        let db_dir = data_dir.join("databases");
+        std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
+
+        let main_yaml = r#"
+CLASSIC_Info:
+  version: "7.31.0"
+  version_date: "2024-01-15"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Autoscan Fallout 4"
+"#;
+
+        let game_yaml = r#"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+Crashgen_Registry:
+  "Buffout 4":
+    ignore_keys: []
+    checks: []
+  default:
+    ignore_keys: []
+    checks: []
+Crashlog_Error_Check:
+  - id: "err_test_rule"
+    name: "Test Error Rule"
+    severity: 3
+    main_error_contains_any:
+      - "AccessViolation"
+      - "NullPointer"
+Crashlog_Stack_Check:
+  - id: "stack_test_rule"
+    name: "Test Stack Rule"
+    severity: 2
+    main_error_required_any:
+      - "RequiredPattern"
+    main_error_optional_any:
+      - "OptionalPattern"
+    stack_contains_any:
+      - "StackPattern1"
+      - "StackPattern2"
+    exclude_if_stack_contains_any:
+      - "ExcludePattern"
+    stack_contains_at_least:
+      - substring: "RepeatedFunc"
+        count: 2
+"#;
+
+        let ignore_yaml = r#"
+CLASSIC_Ignore_Fallout4: []
+"#;
+
+        std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).ok()?;
+        std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).ok()?;
+        std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml).ok()?;
+
+        let root_dir = temp.path().to_string_lossy().to_string();
+        let data_dir_str = data_dir.to_string_lossy().to_string();
+
+        // Keep temp alive by leaking — test fixture only
+        std::mem::forget(temp);
+
+        yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto").ok()
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_error_rules_empty() {
+        let temp = tempdir().expect("failed to create temp dir");
+        let data_dir = temp.path().join("CLASSIC Data");
+        let db_dir = data_dir.join("databases");
+        std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
+
+        let main_yaml = "CLASSIC_Info:\n  version: \"7.0.0\"\n  version_date: \"2024-01-01\"\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Autoscan\"\n";
+        let game_yaml = "Game_Info:\n  Main_Root_Name: \"Fallout 4\"\nCrashgen_Registry:\n  default:\n    ignore_keys: []\n    checks: []\n";
+        let ignore_yaml = "CLASSIC_Ignore_Fallout4: []\n";
+
+        std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).expect("write main yaml");
+        std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).expect("write game yaml");
+        std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml)
+            .expect("write ignore yaml");
+
+        let root_dir = temp.path().to_string_lossy().to_string();
+        let data_dir_str = data_dir.to_string_lossy().to_string();
+
+        if let Ok(data) = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto") {
+            assert!(yaml_data_suspects_error_rules(&data).is_empty());
+        }
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_error_rules_populated() {
+        if let Some(data) = make_yaml_data_with_suspect_rules() {
+            let rules = yaml_data_suspects_error_rules(&data);
+            assert!(!rules.is_empty(), "expected at least one error rule");
+            let rule = &rules[0];
+            assert_eq!(rule.id, "err_test_rule");
+            assert_eq!(rule.name, "Test Error Rule");
+            assert_eq!(rule.severity, 3);
+            assert!(
+                rule.main_error_contains_any.contains(&"AccessViolation".to_string()),
+                "expected AccessViolation in main_error_contains_any"
+            );
+        }
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_stack_rules_metadata_no_count_rules_field() {
+        if let Some(data) = make_yaml_data_with_suspect_rules() {
+            let metadata = yaml_data_suspects_stack_rules_metadata(&data);
+            assert!(!metadata.is_empty(), "expected at least one stack rule");
+            let rule = &metadata[0];
+            assert_eq!(rule.id, "stack_test_rule");
+            assert_eq!(rule.name, "Test Stack Rule");
+            assert_eq!(rule.severity, 2);
+            // Verify all flat Vec<String> fields are accessible (no nested Vec<Struct>)
+            assert!(rule.main_error_required_any.contains(&"RequiredPattern".to_string()));
+            assert!(rule.main_error_optional_any.contains(&"OptionalPattern".to_string()));
+            assert!(rule.stack_contains_any.contains(&"StackPattern1".to_string()));
+            assert!(rule.exclude_if_stack_contains_any.contains(&"ExcludePattern".to_string()));
+            // Pitfall 6 compile-time proof: no stack_contains_at_least field on the DTO
+        }
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_stack_count_rules_unknown_id_returns_empty() {
+        if let Some(data) = make_yaml_data_with_suspect_rules() {
+            let count_rules =
+                yaml_data_suspects_stack_count_rules_for_id(&data, "definitely_not_a_real_id_xyz");
+            assert!(count_rules.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_stack_count_rules_known_id_returns_populated() {
+        if let Some(data) = make_yaml_data_with_suspect_rules() {
+            let count_rules =
+                yaml_data_suspects_stack_count_rules_for_id(&data, "stack_test_rule");
+            assert!(!count_rules.is_empty(), "expected count rules for stack_test_rule");
+            assert_eq!(count_rules[0].substring, "RepeatedFunc");
+            assert_eq!(count_rules[0].count, 2);
+        }
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_error_keys_still_works_d08_regression() {
+        // D-08 regression: existing fn must remain unchanged
+        if let Some(data) = make_yaml_data_with_suspect_rules() {
+            let keys = yaml_data_suspects_error_keys(&data);
+            assert!(!keys.is_empty(), "yaml_data_suspects_error_keys must still work (D-08)");
+        }
+    }
+
+    #[test]
+    fn test_yaml_data_suspects_stack_keys_still_works_d08_regression() {
+        // D-08 regression: existing fn must remain unchanged
+        if let Some(data) = make_yaml_data_with_suspect_rules() {
+            let keys = yaml_data_suspects_stack_keys(&data);
+            assert!(!keys.is_empty(), "yaml_data_suspects_stack_keys must still work (D-08)");
+        }
     }
 
     #[test]
