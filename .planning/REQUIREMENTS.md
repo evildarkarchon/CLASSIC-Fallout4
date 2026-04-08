@@ -23,10 +23,10 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 - [ ] **CXXS-03**: `classic-cpp-bridge` exposes the FCX issue getter alongside the existing `fcx_reset_global_state()` so C++ frontends can read FCX issues without going through the scan pipeline
 - [ ] **CXXS-04**: `classic-cpp-bridge::scangame` is widened from its current 2-entry-point narrowing to expose every `classic-scangame-core` orchestration entry point used by Python/Node bindings (DTO design reviewed against CXX shared-struct rules)
 - [ ] **CXXS-05**: `classic-cpp-bridge::database` exposes the typed result API of `classic-database-core` currently narrowed away from C++ frontends (FormID lookup typed results, batch query results)
-- [ ] **CXXS-06**: `classic-cpp-bridge::registry` exposes the full `classic-version-registry-core` selection metadata (OG/NG/AE/VR variants and crashgen-rule resolution)
+- [x] **CXXS-06**: `classic-cpp-bridge::registry` exposes the full `classic-version-registry-core` selection metadata (OG/NG/AE/VR variants and crashgen-rule resolution)
 - [ ] **CXXS-07**: `classic-cpp-bridge::config` exposes the suspect-rule subset of `classic-config-core` currently absent from C++ (suspect error rules, suspect stack rules)
 - [x] **CXXS-08**: `classic-cpp-bridge::path` exposes every `classic-path-core` validation/backup helper currently narrowed away from C++ frontends
-- [ ] **CXXS-09**: `classic-cpp-bridge::xse` exposes every `classic-xse-core` detection helper currently narrowed away from C++ frontends
+- [x] **CXXS-09**: `classic-cpp-bridge::xse` exposes every `classic-xse-core` detection helper currently narrowed away from C++ frontends
 - [x] **CXXS-10**: All existing C++ frontend code (`classic-cli/`, `classic-gui/`) builds clean against the widened bridge with no API breakage in `classic-cli/build_cli.ps1 -Test` or `classic-gui/build_gui.ps1 -Test`
 
 ### Python Tier Collapse (PYT)
@@ -117,10 +117,10 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | CXXS-03 | Phase 2 | Pending |
 | CXXS-04 | Phase 2 | Pending |
 | CXXS-05 | Phase 2 | Pending |
-| CXXS-06 | Phase 2 | Pending |
+| CXXS-06 | Phase 2 | Complete |
 | CXXS-07 | Phase 2 | Pending |
 | CXXS-08 | Phase 2 | Complete |
-| CXXS-09 | Phase 2 | Pending |
+| CXXS-09 | Phase 2 | Complete |
 | CXXS-10 | Phase 2 | Complete |
 | PYT-01 | Phase 3 | Pending |
 | PYT-02 | Phase 3 | Pending |
