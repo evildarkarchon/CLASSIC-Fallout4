@@ -8,9 +8,11 @@ files_modified:
   - tools/python_api_parity/generate_baseline.py
   - tools/python_api_parity/check_parity_gate.py
   - tools/python_api_parity/tests/__init__.py
+  - tools/python_api_parity/tests/conftest.py
   - tools/python_api_parity/tests/test_generate_baseline_targets.py
   - tools/python_api_parity/tests/test_check_parity_gate.py
   - tools/python_api_parity/tests/test_pitfall2_guard.py
+  - tools/python_api_parity/tests/test_owner_render_drift.py
   - docs/implementation/python_api_parity/baseline/parity_contract.json
   - docs/implementation/python_api_parity/baseline/parity_contract.md
   - docs/implementation/python_api_parity/baseline/parity_diff_report.json
@@ -20,6 +22,7 @@ files_modified:
   - docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json
   - docs/implementation/python_api_parity/baseline/runtime_coverage_summary.md
   - docs/implementation/python_api_parity/baseline/tier1_gate_report.md
+  - .planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md
 autonomous: true
 requirements: [PYT-01, PYT-03]
 must_haves:
@@ -28,10 +31,19 @@ must_haves:
     - "PYTHON_TARGET_MODULES contains exactly 19 entries mirroring the Rust crate list"
     - "Pitfall 2 guard fires non-zero on a synthetic missing-rustSymbol contract row with the canonical diagnostic text"
     - "Existing 59 Tier-1 contract rows still pass the gate after adding the guard (gate exits 0 on the unchanged contract)"
+    - "Pre-Phase Pitfall 4 audit (Task 0) confirms every #[pyclass] in every -py crate has a matching m.add_class::<>()?; in its #[pymodule] function, OR the audit produces an actionable blocker list that is fixed before Tasks 1-4 proceed"
+    - "Test files use a central conftest.py for sys.path bootstrap (no per-file sys.path.insert calls) — test collection is hermetic and does not pollute global sys.path"
+    - "test_tier1_contract_total_baseline_floor asserts == 59 exactly for the Plan 01 snapshot (per-plan progression tests enforce downstream increments)"
+    - "test_tier2_definition_removed_after_plan_9 uses strict=True on xfail so a premature tier2 removal is detected as a passing xfail failure"
+    - "Owner-rendering drift guard test exists: render_diff_markdown() iterates a single-source-of-truth _OWNER_RENDER_ORDER derived from RUST_OWNER_BY_CRATE keys (not a hard-coded tuple)"
     - "Sizing report (tier2_gap_total per owner) for newly-surfaced symbols from the 16 currently-untracked crates is captured in the plan SUMMARY for downstream Plans 6/7/8 budgets"
   artifacts:
+    - path: ".planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md"
+      provides: "Pre-phase Pitfall 4 audit report: every #[pyclass] -> m.add_class::<>() registration enumerated with PASS/FAIL markers per -py crate"
+    - path: "tools/python_api_parity/tests/conftest.py"
+      provides: "Central sys.path bootstrap for tooling tests; replaces per-file sys.path.insert calls"
     - path: "tools/python_api_parity/generate_baseline.py"
-      provides: "Expanded RUST_TARGET_CRATES (19 entries), PYTHON_TARGET_MODULES (19 entries), RUST_OWNER_BY_CRATE (19 entries), PYTHON_OWNER_BY_MODULE (19 entries), SQUAD_BY_OWNER (covering 17 new owner labels + aux)"
+      provides: "Expanded RUST_TARGET_CRATES (19 entries), PYTHON_TARGET_MODULES (19 entries), RUST_OWNER_BY_CRATE (19 entries), PYTHON_OWNER_BY_MODULE (19 entries), SQUAD_BY_OWNER (covering 17 new owner labels + aux); module-level _OWNER_RENDER_ORDER constant derived from RUST_OWNER_BY_CRATE keys; render_diff_markdown() iterates _OWNER_RENDER_ORDER, not a hard-coded tuple"
       contains: "classic-shared-py.*foundation/classic-shared-py/src/lib.rs"
     - path: "tools/python_api_parity/check_parity_gate.py"
       provides: "validate_contract_rust_symbols() Pitfall 2 guard helper called from main() before generate_diff_report()"
@@ -39,11 +51,13 @@ must_haves:
     - path: "tools/python_api_parity/tests/test_generate_baseline_targets.py"
       provides: "PYT-01 unit guard: every RUST_TARGET_CRATES entry parses to a non-empty symbol list"
     - path: "tools/python_api_parity/tests/test_check_parity_gate.py"
-      provides: "PYT-03 snapshot guard: tier1_contract_total invariant test for Plan 9 cleanup"
+      provides: "PYT-03 snapshot guard: tier1_contract_total invariant test for Plan 9 cleanup; strict=True xfail on tier2 removal assertion"
     - path: "tools/python_api_parity/tests/test_pitfall2_guard.py"
       provides: "D-05 unit test for validate_contract_rust_symbols() with synthetic contract"
+    - path: "tools/python_api_parity/tests/test_owner_render_drift.py"
+      provides: "Drift guard: asserts _OWNER_RENDER_ORDER is derived from RUST_OWNER_BY_CRATE.values() (no divergence allowed)"
     - path: "docs/implementation/python_api_parity/baseline/parity_contract.json"
-      provides: "Refreshed baseline (still 59 Tier-1 rows; ownerModules enum extended to 20 entries: scanlog, config, version_registry, aux, yaml, database, file_io, scangame, registry, perf, settings, message, path, constants, version, resource, xse, web, update, shared)"
+      provides: "Refreshed baseline (still 59 Tier-1 rows; ownerModules dict extended to 20 entries: scanlog, config, version_registry, aux, yaml, database, file_io, scangame, registry, perf, settings, message, path, constants, version, resource, xse, web, update, shared)"
     - path: "docs/implementation/python_api_parity/baseline/rust_api_surface.json"
       provides: "Refreshed surface from 19 crates; len(scope.target_crates) == 19"
   key_links:
@@ -55,17 +69,23 @@ must_haves:
       to: "validate_contract_rust_symbols()"
       via: "called between parse_rust_surface() and generate_diff_report()"
       pattern: "validate_contract_rust_symbols\\(contract, rust_manifest\\)"
+    - from: "tools/python_api_parity/generate_baseline.py::render_diff_markdown()"
+      to: "_OWNER_RENDER_ORDER (module-level constant)"
+      via: "for owner in _OWNER_RENDER_ORDER loop"
+      pattern: "_OWNER_RENDER_ORDER"
 ---
 
 <objective>
 Expand the Python parity tooling to enumerate all 19 binding pairs (18 business-logic `-core` crates + 1 foundation `classic-shared-py`) and add the mechanical Pitfall 2 guard assertion to `check_parity_gate.py`. This is the keystone plan: every downstream Phase 3 plan depends on the expanded `RUST_TARGET_CRATES` / `PYTHON_TARGET_MODULES` to discover symbols and gate them. Without this plan landing first, none of the promotion plans can verify their work.
 
-Purpose: Establish the gate enforcement scaffolding for Phase 3 promotions. Land the long-term Pitfall 2 invariant before any contract row is touched.
+Purpose: Establish the gate enforcement scaffolding for Phase 3 promotions. Land the long-term Pitfall 2 invariant before any contract row is touched. ALSO: run a pre-phase Pitfall 4 audit (every `#[pyclass]` must have a matching `m.add_class::<>()?;` in its `#[pymodule]`) before any promotion plan proceeds.
 
 Output:
-- Expanded `tools/python_api_parity/generate_baseline.py` (5 dicts grow from 3 → 19/20 entries)
+- Pre-phase Pitfall 4 audit report at `.planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md`
+- `tools/python_api_parity/tests/conftest.py` for central sys.path handling (replaces per-file sys.path.insert pollution)
+- Expanded `tools/python_api_parity/generate_baseline.py` (5 dicts grow from 3 → 19/20 entries; `_OWNER_RENDER_ORDER` derived from `RUST_OWNER_BY_CRATE` keys)
 - New `validate_contract_rust_symbols()` helper in `tools/python_api_parity/check_parity_gate.py` wired into `main()`
-- 4 new Wave 0 test files under `tools/python_api_parity/tests/` proving the expansion and guard
+- 5 new Wave 0 test files under `tools/python_api_parity/tests/` (baseline targets, gate snapshots, Pitfall 2 guard, owner drift guard)
 - Refreshed parity baseline (existing 59 Tier-1 rows still pass; tier2_gap_total surfaces newly-discoverable symbols for downstream sizing)
 - Sizing report in plan SUMMARY: per-owner tier2_gap_total counts after expansion (informs Plan 6/7/8 task budgets per A10)
 </objective>
@@ -130,18 +150,151 @@ From tools/python_api_parity/generate_baseline.py::render_diff_markdown() (line 
 ```python
 for owner in ("scanlog", "config", "version_registry", "aux"):
 ```
+
+From docs/implementation/python_api_parity/baseline/parity_contract.json (VERIFIED — ownerModules is a dict, NOT an array; generate_baseline.py does NOT touch this key and it is hand-maintained):
+```json
+"ownerModules": {
+  "scanlog": { "description": "..." },
+  "config": { "description": "..." },
+  "version_registry": { "description": "..." },
+  "aux": { "description": "..." }
+}
+```
+Note: --write-baseline does NOT regenerate `ownerModules`. Hand-edit is safe; re-read the file post-refresh to confirm entries remain.
 </interfaces>
 </context>
 
 <tasks>
 
+<task type="auto">
+  <name>Task 0: Pre-Phase Pitfall 4 audit — verify every #[pyclass] has matching m.add_class::<>()?;</name>
+  <files>
+    .planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md
+  </files>
+  <read_first>
+    - Every ClassicLib-rs/python-bindings/*-py/src/lib.rs file (find the #[pymodule] fn and enumerate m.add_class::<>() calls)
+    - Every ClassicLib-rs/python-bindings/*-py/src/**/*.rs file (find #[pyclass] declarations)
+    - ClassicLib-rs/foundation/classic-shared-py/src/lib.rs (also in scope)
+  </read_first>
+  <action>
+    Pre-Phase audit: every `#[pyclass]` in every `-py` crate MUST have a matching `m.add_class::<TypeName>()?;` in its `#[pymodule]` function. If any class is declared but not registered, every downstream Phase 3 smoke test for that class will fail with `AttributeError`, producing misleading Pitfall 4 symptoms. Fix now, before promotion work.
+
+    Step 1: Enumerate every `#[pyclass]` declaration with PowerShell:
+    ```powershell
+    $results = @()
+    $pyCrates = Get-ChildItem -Path ClassicLib-rs/python-bindings -Directory -Filter "classic-*-py"
+    $pyCrates += Get-Item ClassicLib-rs/foundation/classic-shared-py
+    foreach ($crate in $pyCrates) {
+        $crateName = $crate.Name
+        $srcDir = Join-Path $crate.FullName "src"
+        if (-not (Test-Path $srcDir)) { continue }
+
+        # Find all #[pyclass] declarations
+        $pyclasses = Select-String -Path (Join-Path $srcDir "*.rs") -Pattern '#\[pyclass' -Recurse
+        $classNames = @()
+        foreach ($match in $pyclasses) {
+            # Parse the struct/enum name on the next non-attribute line
+            $file = $match.Path
+            $lineNum = $match.LineNumber
+            $allLines = Get-Content $file
+            for ($i = $lineNum; $i -lt [Math]::Min($lineNum + 5, $allLines.Count); $i++) {
+                if ($allLines[$i] -match '^\s*(?:pub\s+)?(?:struct|enum)\s+(\w+)') {
+                    $classNames += @{ File = $file; Line = $lineNum; Name = $Matches[1] }
+                    break
+                }
+            }
+        }
+
+        # Find m.add_class<>() calls in lib.rs
+        $libRs = Join-Path $srcDir "lib.rs"
+        $addClassCalls = @()
+        if (Test-Path $libRs) {
+            $addClassMatches = Select-String -Path $libRs -Pattern 'm\.add_class::<(\w+)>'
+            $addClassCalls = $addClassMatches | ForEach-Object { $_.Matches.Groups[1].Value }
+        }
+
+        # Compute diff
+        foreach ($cls in $classNames) {
+            $registered = $addClassCalls -contains $cls.Name
+            $results += [PSCustomObject]@{
+                Crate = $crateName
+                File = (Split-Path $cls.File -Leaf)
+                Line = $cls.Line
+                PyClass = $cls.Name
+                Registered = $registered
+            }
+        }
+    }
+
+    # Emit audit report markdown
+    $missing = $results | Where-Object { -not $_.Registered }
+    $report = @()
+    $report += "# Phase 3 Plan 01 — Pitfall 4 Audit Report"
+    $report += ""
+    $report += "Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    $report += ""
+    if ($missing.Count -eq 0) {
+        $report += "## STATUS: PASS"
+        $report += ""
+        $report += "All $($results.Count) #[pyclass] declarations across $(($results.Crate | Select-Object -Unique).Count) -py crates have matching m.add_class::<>() registrations in their #[pymodule] function."
+    } else {
+        $report += "## STATUS: FAIL"
+        $report += ""
+        $report += "The following #[pyclass] declarations are NOT registered via m.add_class::<>()?; — Phase 3 smoke tests WILL fail with AttributeError for these classes until fixed:"
+        $report += ""
+        $report += "| Crate | File | Line | #[pyclass] |"
+        $report += "|-------|------|------|------------|"
+        foreach ($m in $missing) {
+            $report += "| $($m.Crate) | $($m.File) | $($m.Line) | $($m.PyClass) |"
+        }
+        $report += ""
+        $report += "### Remediation"
+        $report += ""
+        $report += "For each missing registration: add `m.add_class::<PyClassName>()?;` to the `#[pymodule]` function in the crate's `src/lib.rs`. Commit the fix BEFORE proceeding to Task 1."
+    }
+    $report += ""
+    $report += "## Full Audit Table"
+    $report += ""
+    $report += "| Crate | File | Line | #[pyclass] | Registered |"
+    $report += "|-------|------|------|------------|:----------:|"
+    foreach ($r in $results | Sort-Object Crate, File, Line) {
+        $flag = if ($r.Registered) { "PASS" } else { "FAIL" }
+        $report += "| $($r.Crate) | $($r.File) | $($r.Line) | $($r.PyClass) | $flag |"
+    }
+    $report | Set-Content .planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md
+    Write-Host "Audit complete: $($results.Count) classes audited, $($missing.Count) missing registrations"
+    if ($missing.Count -gt 0) { exit 1 }
+    ```
+
+    Step 2: Write the audit output to `.planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md`.
+
+    Step 3: If the audit shows FAIL, STOP Plan 01 and fix the missing registrations. The fixes land as part of Plan 01 (same atomic commit as Tasks 1-4) — they are a prerequisite, not a separate plan. For each missing registration, add `m.add_class::<PyXxx>()?;` to the appropriate `#[pymodule]` function. Re-run Step 1; the second audit MUST show PASS before Task 1 begins.
+
+    Step 4: If PASS, commit the audit file and proceed to Task 1.
+
+    NOTE: If the audit finds a structural issue (e.g., a `#[pyclass]` that legitimately should NOT be exported because it's an internal helper), document the exclusion inline in the audit report under a "Known Exclusions" heading with a rationale.
+  </action>
+  <verify>
+    <automated>pwsh -ExecutionPolicy Bypass -Command "if (-not (Test-Path '.planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md')) { Write-Error 'Audit file missing'; exit 1 }; $content = Get-Content '.planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md' -Raw; if ($content -match 'STATUS: FAIL' -and $content -notmatch 'Known Exclusions') { Write-Error 'Audit FAIL — fix missing m.add_class::<>() registrations before proceeding'; exit 1 }; Write-Host 'Pitfall 4 audit PASS'"</automated>
+  </verify>
+  <acceptance_criteria>
+    - File `.planning/phases/03-python-tier-collapse/03-01-PITFALL4-AUDIT.md` exists
+    - File contains either "STATUS: PASS" OR (a FAIL with explicit "Known Exclusions" section documenting each intentional exclusion)
+    - Every `#[pyclass]` across all `*-py/src/**/*.rs` files has a documented registration status
+    - If audit was FAIL initially, missing registrations are fixed in source files before Task 1 starts (re-run audit MUST show PASS)
+  </acceptance_criteria>
+  <done>Pre-phase Pitfall 4 audit report committed; all #[pyclass] registrations verified or remediated.</done>
+</task>
+
 <task type="auto" tdd="true">
-  <name>Task 1: Wave 0 — Create tooling test scaffolding (PYT-01, PYT-03, D-05 unit guards)</name>
+  <name>Task 1: Wave 0 — Create tooling test scaffolding with central conftest.py (PYT-01, PYT-03, D-05 unit guards)</name>
   <files>
     tools/python_api_parity/tests/__init__.py
+    tools/python_api_parity/tests/conftest.py
     tools/python_api_parity/tests/test_generate_baseline_targets.py
     tools/python_api_parity/tests/test_check_parity_gate.py
     tools/python_api_parity/tests/test_pitfall2_guard.py
+    tools/python_api_parity/tests/test_owner_render_drift.py
   </files>
   <read_first>
     - .planning/phases/03-python-tier-collapse/03-CONTEXT.md (full file)
@@ -151,13 +304,14 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
     - tools/python_api_parity/check_parity_gate.py (full file — understand main() flow, sys.path append, where guard call lands)
   </read_first>
   <behavior>
+    R6 change: Use a central `conftest.py` for sys.path handling. Individual test files do NOT contain `sys.path.insert(...)` calls. `conftest.py` handles the path bootstrap once; test files use `from generate_baseline import ...` and `from check_parity_gate import ...` directly.
+
     Test 1 (test_generate_baseline_targets.py — `test_every_rust_target_parses_to_nonempty_symbols`):
-      - Imports `RUST_TARGET_CRATES`, `parse_rust_surface` from `tools.python_api_parity.generate_baseline`
+      - Imports `RUST_TARGET_CRATES`, `parse_rust_surface` from `generate_baseline` (via conftest.py sys.path bootstrap)
       - Iterates every (crate_name, rel_path) entry; for each calls `parse_rust_surface(repo_root, set())` and asserts the returned manifest has at least one entry whose `crate == crate_name`
       - Asserts `len(RUST_TARGET_CRATES) == 19`
       - Asserts `'classic-shared-py' in RUST_TARGET_CRATES`
       - Asserts `'classic-crashgen-settings-core' not in RUST_TARGET_CRATES` (per A5)
-      - Repo root is `Path(__file__).resolve().parents[3]` (climbs up from tools/python_api_parity/tests to repo root)
     Test 2 (test_generate_baseline_targets.py — `test_every_python_target_pyi_file_exists`):
       - Asserts every `.pyi` path in `PYTHON_TARGET_MODULES.values()` resolves to an existing file under repo_root
       - Asserts `len(PYTHON_TARGET_MODULES) == 19`
@@ -167,16 +321,18 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
       - Asserts `set(PYTHON_OWNER_BY_MODULE.keys()) == set(PYTHON_TARGET_MODULES.keys())`
       - Asserts every owner value in both owner dicts is a key in `SQUAD_BY_OWNER`
       - Asserts `'aux' in SQUAD_BY_OWNER` (file_io aux entry needs a squad label)
-    Test 4 (test_check_parity_gate.py — `test_tier1_contract_total_snapshot_baseline`):
+    Test 4 (test_check_parity_gate.py — `test_tier1_contract_total_baseline_floor`):
       - Loads `docs/implementation/python_api_parity/baseline/parity_contract.json`
-      - Asserts `len(contract['tier1Mappings']) >= 59` (the Plan 1 baseline; later plans add rows; this is a regression floor)
-      - Asserts `'tier2' not in contract.get('tierDefinitions', {}) or True` (this assertion is rewritten in Plan 9; for Plan 1 it's a placeholder that documents the eventual invariant via a `xfail` marker on the strict path)
-      - Use `pytest.mark.xfail(reason='tier2 removal lands in Plan 9 (PYT-03)')` decorator on a separate `test_tier2_definition_removed_after_plan_9` function so the snapshot is in place but does not block Plan 1.
-    Test 5 (test_pitfall2_guard.py — `test_validate_contract_rust_symbols_passes_when_all_present`):
+      - Asserts `len(contract['tier1Mappings']) == 59` (EXACT count per R7 — Plan 01 only refreshes baseline, does not add rows; Plans 02-08 bump this per progression).
+    Test 5 (test_check_parity_gate.py — `test_tier2_definition_removed_after_plan_9` with strict=True xfail per R7):
+      - `@pytest.mark.xfail(strict=True, reason='tier2 definition removal lands in Plan 9 (PYT-03); asserts the eventual invariant')`
+      - Asserts `'tier2' not in contract['tierDefinitions']`
+      - With strict=True, this test MUST continue to xfail until Plan 9 lands the deletion; if tier2 is removed prematurely by Plans 02-08, the xfail becomes a passing failure (strict catches it).
+    Test 6 (test_pitfall2_guard.py — `test_validate_contract_rust_symbols_passes_when_all_present`):
       - Constructs a synthetic `contract = {'tier1Mappings': [{'id': 'test.foo', 'rustSymbol': 'FooStruct', 'rustCrate': 'classic-test-core'}]}`
       - Constructs a synthetic `rust_manifest = {'symbols': [{'symbol': 'FooStruct'}]}`
       - Asserts `validate_contract_rust_symbols(contract, rust_manifest) == []`
-    Test 6 (test_pitfall2_guard.py — `test_validate_contract_rust_symbols_fails_when_symbol_missing`):
+    Test 7 (test_pitfall2_guard.py — `test_validate_contract_rust_symbols_fails_when_symbol_missing`):
       - Constructs `contract = {'tier1Mappings': [{'id': 'test.foo', 'rustSymbol': 'MissingStruct', 'rustCrate': 'classic-test-core'}]}`
       - Constructs `rust_manifest = {'symbols': [{'symbol': 'OtherStruct'}]}`
       - Calls `diagnostics = validate_contract_rust_symbols(contract, rust_manifest)`
@@ -185,27 +341,50 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
       - Asserts `"test.foo" in diagnostics[0]`
       - Asserts `"MissingStruct" in diagnostics[0]`
       - Asserts `"classic-test-core" in diagnostics[0]`
-    Test 7 (test_pitfall2_guard.py — `test_validate_contract_rust_symbols_fails_when_rustSymbol_missing_from_row`):
+    Test 8 (test_pitfall2_guard.py — `test_validate_contract_rust_symbols_fails_when_rustSymbol_missing_from_row`):
       - Constructs `contract = {'tier1Mappings': [{'id': 'test.foo', 'rustCrate': 'classic-test-core'}]}` (no rustSymbol field)
       - Constructs `rust_manifest = {'symbols': []}`
       - Asserts `len(validate_contract_rust_symbols(contract, rust_manifest)) == 1`
       - Asserts `"missing 'rustSymbol'" in diagnostics[0]`
+    Test 9 (test_owner_render_drift.py — `test_owner_render_order_matches_rust_owner_by_crate`):
+      - Imports `_OWNER_RENDER_ORDER`, `RUST_OWNER_BY_CRATE` from generate_baseline
+      - Asserts `set(_OWNER_RENDER_ORDER) == set(RUST_OWNER_BY_CRATE.values()) | {"aux"}` (single source of truth — owners derived from RUST_OWNER_BY_CRATE plus the aux label)
+      - Asserts the rendering function iterates this constant (grep the source file for `for owner in _OWNER_RENDER_ORDER:`)
   </behavior>
   <action>
-    Create the 4 test files. Use `from __future__ import annotations` at the top of each `*.py` file. The `__init__.py` is empty.
+    Create the 6 test files. Use `from __future__ import annotations` at the top of each `*.py` file. The `__init__.py` is empty.
 
-    For `test_generate_baseline_targets.py`:
+    For `conftest.py` (R6 — centralizes sys.path handling; individual test files do NOT use sys.path.insert):
     ```python
-    """PYT-01 unit guard: every RUST_TARGET_CRATES / PYTHON_TARGET_MODULES entry parses cleanly."""
+    """Central pytest fixture/conftest for tools/python_api_parity/tests.
+
+    Sets sys.path once so test files can use clean imports:
+        from generate_baseline import RUST_TARGET_CRATES
+        from check_parity_gate import validate_contract_rust_symbols
+
+    This replaces per-file sys.path.insert pollution that would conflict
+    with package-style imports elsewhere in the repo.
+    """
     from __future__ import annotations
 
     import sys
     from pathlib import Path
 
     REPO_ROOT = Path(__file__).resolve().parents[3]
-    sys.path.insert(0, str(REPO_ROOT / "tools" / "python_api_parity"))
-    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    TOOLS_DIR = REPO_ROOT / "tools" / "python_api_parity"
 
+    if str(TOOLS_DIR) not in sys.path:
+        sys.path.insert(0, str(TOOLS_DIR))
+    ```
+
+    For `test_generate_baseline_targets.py`:
+    ```python
+    """PYT-01 unit guard: every RUST_TARGET_CRATES / PYTHON_TARGET_MODULES entry parses cleanly."""
+    from __future__ import annotations
+
+    from pathlib import Path
+
+    # sys.path bootstrap handled by conftest.py
     from generate_baseline import (  # noqa: E402
         PYTHON_OWNER_BY_MODULE,
         PYTHON_TARGET_MODULES,
@@ -214,6 +393,8 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
         SQUAD_BY_OWNER,
         parse_rust_surface,
     )
+
+    REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
     def test_rust_target_crates_count_is_19() -> None:
@@ -285,7 +466,7 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
         )
     ```
 
-    For `test_check_parity_gate.py`:
+    For `test_check_parity_gate.py` (R7: exact 59 floor, strict=True xfail):
     ```python
     """PYT-03 snapshot guard: tier1_contract_total invariant for Plan 9 cleanup."""
     from __future__ import annotations
@@ -300,21 +481,36 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
 
 
     def test_tier1_contract_total_baseline_floor() -> None:
-        """Plan 1 baseline: at least 59 Tier-1 rows. Plans 2-8 will add rows;
-        Plan 9 final state should be 362 (= 59 + 285 + 12 + 6) per RESEARCH A4."""
+        """Plan 1 baseline: exactly 59 Tier-1 rows.
+
+        Plan 01 only refreshes the baseline; it does NOT add rows. Subsequent
+        plans bump this number per per-plan progression:
+          - Plan 02: 59 -> 133 (+74 scanlog Wave 1)
+          - Plan 03: 133 -> 190 (+57 scanlog Wave 2, per R9 GLOBAL_FCX_HANDLER exclusion)
+          - Plan 04: 190 -> 240 (+50 scanlog Wave 3a)
+          - Plan 05: 240 -> 286 (+46 scanlog Wave 3b report)
+          - Plan 06: 286 -> 312 (+26 config)
+          - Plan 07: 312 -> 347 (+35 version_registry)
+          - Plan 08: 347 -> 358 (+11 classic_shared + file_io initial; Plan 08 also claims any residual classic_file_io rows found post-refresh)
+          - Plan 09a: 358 -> 358 + residual A10 count
+        The exact equality below is the Plan 01 snapshot; later plans supersede
+        it with their own snapshot assertions.
+        """
         contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
-        assert len(contract["tier1Mappings"]) >= 59
+        assert len(contract["tier1Mappings"]) == 59, (
+            f"Plan 01 baseline expects exactly 59 Tier-1 rows, got {len(contract['tier1Mappings'])}"
+        )
 
 
     @pytest.mark.xfail(
-        reason="tier2 definition removal lands in Plan 9 (PYT-03); test asserts the eventual invariant",
-        strict=False,
+        strict=True,
+        reason="tier2 definition removal lands in Plan 9b (PYT-03); this test asserts the eventual invariant. strict=True catches premature deletion by Plans 02-08 as a passing xfail failure.",
     )
     def test_tier2_definition_removed_after_plan_9() -> None:
         contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
         tier_definitions = contract.get("tierDefinitions", {})
         assert "tier2" not in tier_definitions, (
-            "Plan 9 must delete tierDefinitions.tier2 from parity_contract.json"
+            "Plan 9b must delete tierDefinitions.tier2 from parity_contract.json"
         )
     ```
 
@@ -323,13 +519,7 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
     """D-05 unit test for validate_contract_rust_symbols (Pitfall 2 guard)."""
     from __future__ import annotations
 
-    import sys
-    from pathlib import Path
-
-    REPO_ROOT = Path(__file__).resolve().parents[3]
-    sys.path.insert(0, str(REPO_ROOT / "tools" / "python_api_parity"))
-    sys.path.insert(0, str(REPO_ROOT / "tools"))
-
+    # sys.path bootstrap handled by conftest.py
     from check_parity_gate import validate_contract_rust_symbols  # noqa: E402
 
 
@@ -371,24 +561,57 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
         assert "missing 'rustSymbol'" in diagnostics[0]
     ```
 
+    For `test_owner_render_drift.py` (LOW — drift guard for rendering order):
+    ```python
+    """LOW drift guard: _OWNER_RENDER_ORDER must derive from RUST_OWNER_BY_CRATE + aux, not a hard-coded tuple."""
+    from __future__ import annotations
+
+    # sys.path bootstrap handled by conftest.py
+    from generate_baseline import (  # noqa: E402
+        RUST_OWNER_BY_CRATE,
+        _OWNER_RENDER_ORDER,
+    )
+
+
+    def test_owner_render_order_matches_rust_owner_by_crate_values() -> None:
+        """The rendering order must be a superset of owners derived from RUST_OWNER_BY_CRATE.
+
+        Hard-coding the tuple (as at line 682 originally) invites drift when
+        RUST_OWNER_BY_CRATE grows. This test enforces: every key in
+        RUST_OWNER_BY_CRATE.values() must appear in _OWNER_RENDER_ORDER, plus
+        the special 'aux' label for the file_io aux entry.
+        """
+        expected_owners = set(RUST_OWNER_BY_CRATE.values()) | {"aux"}
+        actual_owners = set(_OWNER_RENDER_ORDER)
+        missing = expected_owners - actual_owners
+        extra = actual_owners - expected_owners
+        assert not missing, f"_OWNER_RENDER_ORDER is missing owners: {missing}"
+        # Extras are allowed if intentional, but flag them for review:
+        assert not extra, (
+            f"_OWNER_RENDER_ORDER has extra owners not in RUST_OWNER_BY_CRATE: {extra}"
+        )
+    ```
+
     NOTE: tests will FAIL until Tasks 2 + 3 land — this is intentional TDD RED. Commit the failing tests in this task; Task 4 turns them GREEN.
   </action>
   <verify>
-    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest tools/python_api_parity/tests -q --no-header 2>&1 | tail -20</automated>
+    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest tools/python_api_parity/tests -q --no-header --collect-only 2>&1 | tail -20</automated>
   </verify>
   <acceptance_criteria>
     - File `tools/python_api_parity/tests/__init__.py` exists (empty)
-    - File `tools/python_api_parity/tests/test_generate_baseline_targets.py` exists with 8 test functions
-    - File `tools/python_api_parity/tests/test_check_parity_gate.py` exists with 1 normal + 1 xfail test
-    - File `tools/python_api_parity/tests/test_pitfall2_guard.py` exists with 3 test functions
-    - Tests fail with `ImportError` or assertion failure for the 19-count tests (TDD RED state — Task 4 fixes)
-    - `pytest tools/python_api_parity/tests -q --collect-only` collects all 12 test functions without import errors at collection time (the imports themselves work because they reference symbols that exist or will exist after Task 2)
+    - File `tools/python_api_parity/tests/conftest.py` exists with central sys.path bootstrap
+    - File `tools/python_api_parity/tests/test_generate_baseline_targets.py` exists with 9 test functions and NO `sys.path.insert(...)` calls
+    - File `tools/python_api_parity/tests/test_check_parity_gate.py` exists with `== 59` assertion and `strict=True` xfail marker
+    - File `tools/python_api_parity/tests/test_pitfall2_guard.py` exists with 3 test functions and NO `sys.path.insert(...)` calls
+    - File `tools/python_api_parity/tests/test_owner_render_drift.py` exists with the drift guard test
+    - `pytest --collect-only` returns 14 test items without collection errors (imports work because conftest.py bootstraps sys.path)
+    - Tests fail with assertion failures (TDD RED state — Tasks 2-4 fix)
   </acceptance_criteria>
-  <done>The 4 Wave 0 test files exist on disk; pytest can collect them; failures match the TDD RED state expected before Tasks 2-4 land the implementation.</done>
+  <done>The 6 Wave 0 test files exist on disk; pytest can collect them via conftest.py bootstrap; failures match the TDD RED state expected before Tasks 2-4 land the implementation.</done>
 </task>
 
 <task type="auto">
-  <name>Task 2: Expand RUST_TARGET_CRATES, PYTHON_TARGET_MODULES, and owner/squad dicts in generate_baseline.py</name>
+  <name>Task 2: Expand RUST_TARGET_CRATES, PYTHON_TARGET_MODULES, and owner/squad dicts in generate_baseline.py; introduce _OWNER_RENDER_ORDER derived from RUST_OWNER_BY_CRATE</name>
   <files>
     tools/python_api_parity/generate_baseline.py
   </files>
@@ -465,92 +688,18 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
         "classic_settings":         "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
         "classic_message":          "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
         "classic_path":             "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
-        "classic_constants":        "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
-        "classic_version":          "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
-        "classic_resource":         "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
-        "classic_xse":              "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
-        "classic_web":              "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
-        "classic_update":           "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
-        "classic_shared":           "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
-    }
-
-    PYTHON_OWNER_BY_MODULE: dict[str, str] = {
-        "classic_scanlog":          "scanlog",
-        "classic_config":           "config",
-        "classic_version_registry": "version_registry",
-        "classic_yaml":             "yaml",
-        "classic_database":         "database",
-        "classic_file_io":          "file_io",
-        "classic_scangame":         "scangame",
-        "classic_registry":         "registry",
-        "classic_perf":             "perf",
-        "classic_settings":         "settings",
-        "classic_message":          "message",
-        "classic_path":             "path",
-        "classic_constants":        "constants",
-        "classic_version":          "version",
-        "classic_resource":         "resource",
-        "classic_xse":              "xse",
-        "classic_web":              "web",
-        "classic_update":           "update",
-        "classic_shared":           "shared",
-    }
-
-    SQUAD_BY_OWNER: dict[str, str] = {
-        # Existing
-        "scanlog":          "Squad A (scanlog/config)",
-        "config":           "Squad A (scanlog/config)",
-        "version_registry": "Squad B (version-registry)",
-        # New owners (collapse onto existing two squads to minimize churn — see RESEARCH Q3 recommendation)
-        "yaml":      "Squad A (scanlog/config)",
-        "database":  "Squad B (version-registry)",
-        "file_io":   "Squad A (scanlog/config)",
-        "scangame":  "Squad B (version-registry)",
-        "registry":  "Squad B (version-registry)",
-        "perf":      "Squad B (version-registry)",
-        "settings":  "Squad A (scanlog/config)",
-        "message":   "Squad B (version-registry)",
-        "path":      "Squad B (version-registry)",
-        "constants": "Squad B (version-registry)",
-        "version":   "Squad B (version-registry)",
-        "resource":  "Squad B (version-registry)",
-        "xse":       "Squad B (version-registry)",
-        "web":       "Squad B (version-registry)",
-        "update":    "Squad B (version-registry)",
-        "shared":    "Squad B (version-registry)",
-        "aux":       "Squad B (version-registry)",  # for the file-io aux entry (Plan 8)
-    }
-    ```
-
-    Then update `render_diff_markdown()` line 682 (the hard-coded owner tuple). Find the line:
-    ```python
-    for owner in ("scanlog", "config", "version_registry", "aux"):
-    ```
-    Replace with:
-    ```python
-    # Iterate all known owners (Phase 3 D-01 expansion); fall back to known order for stable output.
-    _OWNER_RENDER_ORDER = (
-        "scanlog", "config", "version_registry", "yaml", "database", "file_io",
-        "scangame", "registry", "perf", "settings", "message", "path", "constants",
-        "version", "resource", "xse", "web", "update", "shared", "aux",
-    )
-    for owner in _OWNER_RENDER_ORDER:
-    ```
-    (Define `_OWNER_RENDER_ORDER` at module top-level near line 53, just below `SQUAD_BY_OWNER`. Then `render_diff_markdown()` references it.)
-  </action>
-  <verify>
-    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "from tools.python_api_parity.generate_baseline import RUST_TARGET_CRATES, PYTHON_TARGET_MODULES, SQUAD_BY_OWNER; assert len(RUST_TARGET_CRATES) == 19; assert len(PYTHON_TARGET_MODULES) == 19; assert 'classic-shared-py' in RUST_TARGET_CRATES; assert 'classic_shared' in PYTHON_TARGET_MODULES; assert 'aux' in SQUAD_BY_OWNER; print('OK')"</automated>
+</automated>
   </verify>
   <acceptance_criteria>
-    - `tools/python_api_parity/generate_baseline.py` lines 24-52 contain the 19-entry expansion (run `grep -c "classic-" tools/python_api_parity/generate_baseline.py | head -5` shows ~38+ matches)
+    - `tools/python_api_parity/generate_baseline.py` lines 24-52 contain the 19-entry expansion
     - `RUST_TARGET_CRATES` has 19 entries with `'classic-shared-py'` mapping to `'ClassicLib-rs/foundation/classic-shared-py/src/lib.rs'`
     - `RUST_TARGET_CRATES` does NOT contain `'classic-crashgen-settings-core'`
     - `PYTHON_TARGET_MODULES` has 19 entries with `'classic_shared'` mapping to `'ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi'`
     - `SQUAD_BY_OWNER` contains the `'aux'` key
-    - `_OWNER_RENDER_ORDER` constant defined at module level and `render_diff_markdown()` iterates it
-    - `python -c "from tools.python_api_parity.generate_baseline import ...; assert len(...) == 19"` exits 0
+    - `_OWNER_RENDER_ORDER` constant exists at module level, derived from RUST_OWNER_BY_CRATE + 'aux' label
+    - `render_diff_markdown()` iterates `_OWNER_RENDER_ORDER`, NOT a hard-coded tuple
   </acceptance_criteria>
-  <done>Module-level dicts grown to 19 entries each; sorted owner render order constant defined and consumed; smoke import succeeds.</done>
+  <done>Module-level dicts grown to 19 entries each; sorted owner render order constant derived from RUST_OWNER_BY_CRATE; smoke import succeeds; drift guard test passes.</done>
 </task>
 
 <task type="auto" tdd="true">
@@ -560,22 +709,19 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
   </files>
   <read_first>
     - tools/python_api_parity/check_parity_gate.py (full file)
-    - .planning/phases/03-python-tier-collapse/03-RESEARCH.md §"Question 4" (lines 466-545) — paste-ready function body and call site
-    - .planning/phases/03-python-tier-collapse/03-CONTEXT.md §"D-05" + §"Research Amendment A3"
-    - tools/python_api_parity/tests/test_pitfall2_guard.py (the test file from Task 1 — the function must satisfy these tests)
+    - .planning/phases/03-python-tier-collapse/03-RESEARCH.md Question 4 (lines 466-545)
+    - .planning/phases/03-python-tier-collapse/03-CONTEXT.md D-05 + Research Amendment A3
+    - tools/python_api_parity/tests/test_pitfall2_guard.py (the test file from Task 1)
   </read_first>
   <behavior>
-    The Task 1 test cases (`test_validate_passes_when_all_symbols_present`, `test_validate_fails_when_symbol_missing`, `test_validate_fails_when_rustSymbol_field_missing`) define the contract.
-
-    Function signature:
+    The Task 1 test cases define the contract. Function signature:
     ```python
     def validate_contract_rust_symbols(
         contract: dict[str, Any],
         rust_manifest: dict[str, Any],
     ) -> list[str]:
     ```
-
-    Pure function (no I/O); returns empty list on success; populated list with error strings on failure. Caller decides what to do with the list.
+    Pure function (no I/O); returns empty list on success; populated list with error strings on failure.
   </behavior>
   <action>
     Add the helper function and wire it into `main()`. Place the function between the existing imports (around line 28-29) and `render_tier1_gate_markdown()` at line 31.
@@ -587,14 +733,13 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
         contract: dict[str, Any],
         rust_manifest: dict[str, Any],
     ) -> list[str]:
-        """Pitfall 2 guard: every Tier-1 contract row's `rustSymbol` must appear
+        """Pitfall 2 guard: every Tier-1 contract row's rustSymbol must appear
         in the parsed Rust surface.
 
         Returns a list of human-readable diagnostic strings; empty list means
-        success. Failing fast here keeps downstream `tier1_missing_rust` noise
-        out of the diff report when the root cause is a missing `pub use` at
-        the `-core/lib.rs` surface (per Phase 3 D-05; see RESEARCH A1: the
-        `pub use` belongs in `-core/lib.rs`, NOT `-py/lib.rs`).
+        success. Failing fast here keeps downstream tier1_missing_rust noise
+        out of the diff report when the root cause is a missing pub use at
+        the -core/lib.rs surface (per Phase 3 D-05; see RESEARCH A1).
         """
         rust_symbols: set[str] = {
             item["symbol"] for item in rust_manifest.get("symbols", [])
@@ -622,31 +767,23 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
         return diagnostics
     ```
 
-    Then wire it into `main()`. After line 169 (`rust_manifest = parse_rust_surface(...)`) and before line 171 (`diff_report = generate_diff_report(...)`), insert:
+    Then wire it into `main()`. After `rust_manifest = parse_rust_surface(...)` and before `diff_report = generate_diff_report(...)`, insert:
 
     ```python
-        rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
-        python_manifest = parse_python_surface(repo_root, tier1_python_exports)
-
         # Pitfall 2 guard (Phase 3 D-05) — fail FAST before downstream diff generation.
-        # Catches contract rows whose rustSymbol is not visible at the -core/lib.rs surface,
-        # which would otherwise surface as noisy tier1_missing_rust gap rows.
         pitfall2_diagnostics = validate_contract_rust_symbols(contract, rust_manifest)
         if pitfall2_diagnostics:
             print("\n".join(pitfall2_diagnostics), file=sys.stderr)
             return 1
-
-        diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
     ```
 
-    Also ensure `import sys` and `from typing import Any` are present at the top of the file (read line 1-15 of check_parity_gate.py — `sys` and `Any` are already imported per the existing imports; verify before submitting).
+    Also ensure `import sys` and `from typing import Any` are present at the top of the file.
   </action>
   <verify>
     <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest tools/python_api_parity/tests/test_pitfall2_guard.py -v 2>&1 | tail -15</automated>
   </verify>
   <acceptance_criteria>
     - `tools/python_api_parity/check_parity_gate.py` contains `def validate_contract_rust_symbols(`
-    - `tools/python_api_parity/check_parity_gate.py` contains `pitfall2_diagnostics = validate_contract_rust_symbols(contract, rust_manifest)` inside `main()`
     - The call site is BEFORE `generate_diff_report(...)` in `main()`
     - All 3 tests in `test_pitfall2_guard.py` pass (TDD GREEN)
     - `python -m pytest tools/python_api_parity/tests/test_pitfall2_guard.py -v` exits 0
@@ -655,7 +792,7 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
 </task>
 
 <task type="auto">
-  <name>Task 4: Update parity_contract.json::ownerModules enum, refresh baseline, and capture A10 sizing report</name>
+  <name>Task 4: Update parity_contract.json::ownerModules dict, refresh baseline, capture A10 sizing report</name>
   <files>
     docs/implementation/python_api_parity/baseline/parity_contract.json
     docs/implementation/python_api_parity/baseline/parity_contract.md
@@ -668,114 +805,113 @@ for owner in ("scanlog", "config", "version_registry", "aux"):
     docs/implementation/python_api_parity/baseline/tier1_gate_report.md
   </files>
   <read_first>
-    - docs/implementation/python_api_parity/baseline/parity_contract.json (full file — current state, 59 tier1Mappings, 4 ownerModules)
-    - tools/python_api_parity/generate_baseline.py (post-Task-2 — verify the dicts grew)
-    - tools/python_api_parity/check_parity_gate.py (post-Task-3 — verify the guard is wired)
-    - .planning/phases/03-python-tier-collapse/03-RESEARCH.md §"Question 3" §"RUST_OWNER_BY_CRATE discrepancy" (lines 446-462) — ownerModules enum update
-    - .planning/phases/03-python-tier-collapse/03-RESEARCH.md §"Open Questions" item 2 (lines 967-971) — A10 sizing requirement
-    - .planning/phases/03-python-tier-collapse/03-CONTEXT.md §"Research Amendment A10"
+    - docs/implementation/python_api_parity/baseline/parity_contract.json (full file)
+    - tools/python_api_parity/generate_baseline.py (post-Task-2 — run `grep -n 'ownerModules' tools/python_api_parity/generate_baseline.py`; expected ZERO matches confirming the key is hand-maintained and --write-baseline does NOT regenerate it)
+    - tools/python_api_parity/check_parity_gate.py (post-Task-3)
+    - .planning/phases/03-python-tier-collapse/03-RESEARCH.md Question 3 and Open Questions item 2
+    - .planning/phases/03-python-tier-collapse/03-CONTEXT.md Research Amendment A10
   </read_first>
   <action>
-    Step 1: Edit `docs/implementation/python_api_parity/baseline/parity_contract.json`. Find the `ownerModules` array (or object) and extend it to include 16 new owner descriptions in addition to the existing 4. The current shape (read it first) determines whether to add an array element or an object key. Likely shape:
-    ```json
-    "ownerModules": [
-      {"id": "scanlog", "description": "..."},
-      {"id": "config", "description": "..."},
-      {"id": "version_registry", "description": "..."},
-      {"id": "aux", "description": "Auxiliary surfaces with deferred runtime verification"}
-    ]
+    R6 Pre-step: Verify ownerModules handling BEFORE editing. Run:
+    ```powershell
+    Select-String -Path tools/python_api_parity/generate_baseline.py -Pattern 'ownerModules'
     ```
-    Add these 16 new entries (use this exact text):
-    ```json
-    {"id": "yaml", "description": "classic_yaml binding (classic-yaml-py wrapping classic-yaml-core)"},
-    {"id": "database", "description": "classic_database binding (classic-database-py wrapping classic-database-core)"},
-    {"id": "file_io", "description": "classic_file_io binding (classic-file-io-py wrapping classic-file-io-core)"},
-    {"id": "scangame", "description": "classic_scangame binding (classic-scangame-py wrapping classic-scangame-core)"},
-    {"id": "registry", "description": "classic_registry binding (classic-registry-py wrapping classic-registry-core)"},
-    {"id": "perf", "description": "classic_perf binding (classic-perf-py wrapping classic-perf-core)"},
-    {"id": "settings", "description": "classic_settings binding (classic-settings-py wrapping classic-settings-core)"},
-    {"id": "message", "description": "classic_message binding (classic-message-py wrapping classic-message-core)"},
-    {"id": "path", "description": "classic_path binding (classic-path-py wrapping classic-path-core)"},
-    {"id": "constants", "description": "classic_constants binding (classic-constants-py wrapping classic-constants-core)"},
-    {"id": "version", "description": "classic_version binding (classic-version-py wrapping classic-version-core)"},
-    {"id": "resource", "description": "classic_resource binding (classic-resource-py wrapping classic-resource-core)"},
-    {"id": "xse", "description": "classic_xse binding (classic-xse-py wrapping classic-xse-core)"},
-    {"id": "web", "description": "classic_web binding (classic-web-py wrapping classic-web-core)"},
-    {"id": "update", "description": "classic_update binding (classic-update-py wrapping classic-update-core)"},
-    {"id": "shared", "description": "classic_shared foundation binding (classic-shared-py under foundation/)"}
-    ```
-    (Adapt the JSON shape if `ownerModules` is an object rather than an array.)
+    Expected: ZERO matches (the key is hand-maintained in parity_contract.json, NOT regenerated by --write-baseline). If any matches exist, the hand-edit below MAY be overwritten — in that case, the executor must add the expansion to generate_parity_contract() in the Python source instead of hand-editing the JSON. The current code does NOT emit ownerModules, so Step 1 below is safe.
 
-    Step 2: Run the baseline generator to refresh all 9 artifacts in lockstep (D-03 cadence):
+    Step 1: Edit parity_contract.json. The ownerModules key is a DICT (verified live: see line 9 of parity_contract.json). Current shape:
+    ```json
+    "ownerModules": {
+      "scanlog": { "description": "Crash log orchestration, parsing, and analysis APIs." },
+      "config": { "description": "YAML data and runtime configuration APIs." },
+      "version_registry": { "description": "Game version lookup and compatibility APIs." },
+      "aux": { "description": "Auxiliary modules outside core phase-1 workflow APIs." }
+    }
+    ```
+    Add 16 new dict entries (preserve the existing 4):
+    ```json
+    "yaml": { "description": "classic_yaml binding (classic-yaml-py wrapping classic-yaml-core)" },
+    "database": { "description": "classic_database binding (classic-database-py wrapping classic-database-core)" },
+    "file_io": { "description": "classic_file_io binding (classic-file-io-py wrapping classic-file-io-core)" },
+    "scangame": { "description": "classic_scangame binding (classic-scangame-py wrapping classic-scangame-core)" },
+    "registry": { "description": "classic_registry binding (classic-registry-py wrapping classic-registry-core)" },
+    "perf": { "description": "classic_perf binding (classic-perf-py wrapping classic-perf-core)" },
+    "settings": { "description": "classic_settings binding (classic-settings-py wrapping classic-settings-core)" },
+    "message": { "description": "classic_message binding (classic-message-py wrapping classic-message-core)" },
+    "path": { "description": "classic_path binding (classic-path-py wrapping classic-path-core)" },
+    "constants": { "description": "classic_constants binding (classic-constants-py wrapping classic-constants-core)" },
+    "version": { "description": "classic_version binding (classic-version-py wrapping classic-version-core)" },
+    "resource": { "description": "classic_resource binding (classic-resource-py wrapping classic-resource-core)" },
+    "xse": { "description": "classic_xse binding (classic-xse-py wrapping classic-xse-core)" },
+    "web": { "description": "classic_web binding (classic-web-py wrapping classic-web-core)" },
+    "update": { "description": "classic_update binding (classic-update-py wrapping classic-update-core)" },
+    "shared": { "description": "classic_shared foundation binding (classic-shared-py under foundation/)" }
+    ```
+    Final ownerModules has 20 entries.
+
+    Step 2: Refresh baseline (D-03 cadence):
     ```powershell
     pwsh -ExecutionPolicy Bypass -Command "python tools/python_api_parity/generate_baseline.py --repo-root . --write-baseline"
     ```
-    This regenerates `parity_contract.json` (ID hashes recomputed), `parity_contract.md`, `rust_api_surface.json`, `python_api_surface.json`, `parity_diff_report.json`, `parity_diff_report.md`, `runtime_coverage_summary.json`, `runtime_coverage_summary.md`, and `tier1_gate_report.md`.
+    IMPORTANT: After this runs, re-read parity_contract.json and verify the 20 ownerModules entries are still present. If they were erased, the pre-step verification was incorrect — revert and add the expansion to the Python source instead.
 
-    Step 3: Run the gate to verify it still exits 0 with the existing 59 Tier-1 rows AND the new Pitfall 2 guard:
+    Step 3: Run the gate to verify exit 0:
     ```powershell
     pwsh -ExecutionPolicy Bypass -Command "python tools/python_api_parity/check_parity_gate.py --repo-root . --update-baseline"
     ```
-    Expected: exit code 0, output contains "Tier-1 parity gate passed."
 
-    Step 4: Capture the A10 sizing report. After the gate run, read `docs/implementation/python_api_parity/baseline/parity_diff_report.json` and extract `gap_counts_by_owner_tier` (or equivalent). Use this PowerShell snippet:
+    Step 4: Capture A10 sizing report as machine-readable JSON (not PowerShell inline):
     ```powershell
-    $diff = Get-Content 'docs/implementation/python_api_parity/baseline/parity_diff_report.json' -Raw | ConvertFrom-Json
-    Write-Host "tier2_gap_total per owner (newly-surfaced symbols from 16 untracked crates):"
-    foreach ($owner in $diff.gap_counts_by_owner_tier.PSObject.Properties.Name | Sort-Object) {
-        $tier2 = $diff.gap_counts_by_owner_tier.$owner.tier2
-        if ($tier2 -gt 0) { Write-Host "  $owner : $tier2 newly-surfaced rows" }
-    }
-    Write-Host "Total tier2_gap_total: $($diff.summary.tier2_gap_total)"
+    uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import json, pathlib; diff = json.loads(pathlib.Path('docs/implementation/python_api_parity/baseline/parity_diff_report.json').read_text(encoding='utf-8')); per_owner = diff.get('gap_counts_by_owner_tier', {}); sizing = {o: c.get('tier2', 0) for o, c in per_owner.items() if c.get('tier2', 0) > 0}; out = {'per_owner_tier2_gap_total': sizing, 'total_tier2_gap_total': sum(sizing.values())}; pathlib.Path('.planning/phases/03-python-tier-collapse/03-01-A10-sizing.json').write_text(json.dumps(out, indent=2), encoding='utf-8'); print(json.dumps(out, indent=2))"
     ```
-    Capture the output and include it in the plan SUMMARY for downstream Plans 6/7/8 to size their task budgets.
 
-    Step 5: Run the new tooling tests — they should all pass now (TDD GREEN):
+    Step 5: Run new tooling tests (TDD GREEN):
     ```powershell
     uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest tools/python_api_parity/tests -v
     ```
-    Expected: 11 passing + 1 xfail (the `test_tier2_definition_removed_after_plan_9` is expected to xfail until Plan 9).
+    Expected: 13 passing + 1 strict=True xfail.
   </action>
   <verify>
     <automated>pwsh -ExecutionPolicy Bypass -Command "python tools/python_api_parity/check_parity_gate.py --repo-root . ; if ($LASTEXITCODE -ne 0) { exit 1 }; python -m pytest tools/python_api_parity/tests -q"</automated>
   </verify>
   <acceptance_criteria>
-    - `docs/implementation/python_api_parity/baseline/parity_contract.json` contains 20 ownerModules entries (4 original + 16 new)
-    - `docs/implementation/python_api_parity/baseline/rust_api_surface.json` `scope.target_crates` has length 19
-    - `docs/implementation/python_api_parity/baseline/python_api_surface.json` reflects the 19 Python modules
-    - `python tools/python_api_parity/check_parity_gate.py --repo-root .` exits 0 (existing 59 Tier-1 rows still pass with Pitfall 2 guard active)
-    - `pytest tools/python_api_parity/tests -q` reports 11 passing, 1 xfailed
-    - Plan SUMMARY includes a "tier2_gap_total per owner" report (the A10 sizing data) — this is captured in the SUMMARY artifact, not in code
-    - All 9 baseline files in `docs/implementation/python_api_parity/baseline/` have refreshed `generated_at_utc` timestamps
+    - `parity_contract.json` contains 20 ownerModules dict entries (4 original + 16 new) AFTER `--write-baseline` runs
+    - `rust_api_surface.json` `scope.target_crates` has length 19
+    - `check_parity_gate.py --repo-root .` exits 0 (59 Tier-1 rows still pass with Pitfall 2 guard active)
+    - `pytest tools/python_api_parity/tests -q` reports 13 passing, 1 strict=True xfail
+    - `.planning/phases/03-python-tier-collapse/03-01-A10-sizing.json` exists with machine-readable per-owner sizing data
+    - All 9 baseline files have refreshed timestamps
   </acceptance_criteria>
-  <done>Baseline refreshed via D-03 cadence; gate exits 0 with 59 Tier-1 rows + Pitfall 2 guard active; A10 sizing report captured in SUMMARY for downstream plan budgets.</done>
+  <done>Baseline refreshed via D-03 cadence; gate exits 0 with 59 Tier-1 rows + Pitfall 2 guard active; A10 sizing report captured in machine-readable form + SUMMARY.</done>
 </task>
 
 </tasks>
 
 <verification>
-After all 4 tasks land, run the 5-step verification chain:
-1. `python tools/python_api_parity/check_parity_gate.py --repo-root .` — exit 0 (existing 59 rows still pass with Pitfall 2 guard)
+After all 5 tasks land, run the 5-step verification chain:
+1. `python tools/python_api_parity/check_parity_gate.py --repo-root .` — exit 0
 2. `python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --fail-on-warnings` — exit 0
-3. `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python` (no module rebuild needed in Plan 1, but verify discovery works) — informational only
-4. `uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest tools/python_api_parity/tests ClassicLib-rs/python-bindings/tests -q` — exit 0
-5. `mypy --strict` — no .pyi changes in Plan 1, skip
+3. `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python` — informational only (no module rebuild needed in Plan 1)
+4. `uv run python -m pytest tools/python_api_parity/tests ClassicLib-rs/python-bindings/tests -q` — exit 0
+5. `mypy --strict` — no .pyi changes in Plan 1, skip (full sweep is Plan 09b Task 4)
 </verification>
 
 <success_criteria>
-- `RUST_TARGET_CRATES.length == 19`, `PYTHON_TARGET_MODULES.length == 19`, `'classic-shared-py' in RUST_TARGET_CRATES`, `'classic-crashgen-settings-core' not in RUST_TARGET_CRATES`
-- `validate_contract_rust_symbols()` exists in `check_parity_gate.py`, called from `main()` before `generate_diff_report()`
-- Existing 59 Tier-1 contract rows still pass the gate (no regression)
-- All 4 Wave 0 test files exist; 11 tests pass + 1 xfail
-- Baseline artifacts refreshed in lockstep (D-03 cadence)
-- A10 sizing report captured in SUMMARY: per-owner `tier2_gap_total` counts from newly-surfaced symbols across the 16 untracked crates
-- Atomic single commit per D-06: all 9 baseline files + 4 source/test files + plan SUMMARY in one commit
+- Pre-phase Pitfall 4 audit completed; all #[pyclass] registrations verified or fixed (Task 0)
+- Central conftest.py handles sys.path bootstrap; no per-file sys.path.insert pollution
+- `RUST_TARGET_CRATES.length == 19`, `PYTHON_TARGET_MODULES.length == 19`
+- `_OWNER_RENDER_ORDER` derived from RUST_OWNER_BY_CRATE + 'aux' label (LOW drift guard)
+- `validate_contract_rust_symbols()` wired into check_parity_gate.py main() before generate_diff_report()
+- Existing 59 Tier-1 rows still pass (no regression)
+- All Wave 0 test files exist; 13 tests pass + 1 strict=True xfail
+- A10 sizing captured as machine-readable JSON AND in SUMMARY
+- Atomic single commit per D-06
 </success_criteria>
 
 <output>
 After completion, create `.planning/phases/03-python-tier-collapse/03-01-SUMMARY.md` containing:
 - Files modified summary
-- The A10 sizing table (tier2_gap_total per owner) — REQUIRED for downstream plans
+- Pitfall 4 audit outcome (PASS or fixed-then-PASS with list of remediated registrations)
+- The A10 sizing table — REQUIRED for downstream plans
 - Confirmation that gate exits 0 with 59 Tier-1 rows + Pitfall 2 guard active
 - Note any unexpected newly-surfaced symbols requiring follow-up plan budget adjustments
 </output>

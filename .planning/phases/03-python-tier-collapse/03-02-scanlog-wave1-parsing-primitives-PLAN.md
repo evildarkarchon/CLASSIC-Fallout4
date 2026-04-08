@@ -9,6 +9,7 @@ files_modified:
   - ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi
   - ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave1_smoke.py
   - ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json
+  - .planning/phases/03-python-tier-collapse/03-02-CONSTRUCTOR-INVENTORY.md
   - docs/implementation/python_api_parity/baseline/parity_contract.json
   - docs/implementation/python_api_parity/baseline/parity_contract.md
   - docs/implementation/python_api_parity/baseline/parity_diff_report.json
@@ -137,6 +138,50 @@ Existing contract row shape (from parity_contract.json) for reference:
 
 <tasks>
 
+
+<task type="auto">
+  <name>Task 0: Verify wrapper constructor signatures BEFORE authoring tests — record in 03-02-CONSTRUCTOR-INVENTORY.md</name>
+  <files>
+    .planning/phases/03-python-tier-collapse/03-02-CONSTRUCTOR-INVENTORY.md
+  </files>
+  <read_first>
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/parser.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/formid.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/formid_analyzer.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/record_scanner.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/plugin_analyzer.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/patterns.rs
+  </read_first>
+  <action>
+    For each Wave 1 #[pyclass] wrapper struct this plan promotes, read the `#[pymethods] fn new` signature (and any `#[pyo3(signature = ...)]` attributes) from its -py source file. Record the inventory to `.planning/phases/03-python-tier-collapse/03-02-CONSTRUCTOR-INVENTORY.md` as a table:
+
+    | PyO3 name | Rust wrapper | Source file | fn new signature | Notes |
+    |-----------|--------------|-------------|------------------|-------|
+    | LogParser | PyLogParser | parser.rs | `fn new() -> Self` | parameterless |
+    | ScanOutput | (factory only) | parser.rs | no `#[new]` | constructed via LogParser.scan() |
+    | StreamingLogParser | PyStreamingLogParser | parser.rs | verify actual signature | likely takes file path |
+    | StreamingIteratorParser | PyStreamingIteratorParser | parser.rs | verify | |
+    | RustFormIDAnalyzer | PyRustFormIDAnalyzer | formid.rs | verify | likely takes config |
+    | FormIDAnalyzerCore | PyFormIDAnalyzerCore | formid_analyzer.rs | verify | |
+    | RecordScanner | PyRecordScanner | record_scanner.rs | verify | |
+    | PluginAnalyzer | PyPluginAnalyzer | plugin_analyzer.rs | verify | |
+    | PatternMatcher | PyPatternMatcher | patterns.rs | verify | |
+
+    All subsequent test scaffolding in Tasks 2-4 MUST use exactly these signatures — no `Class({})` or `Class(positional)` guessing. If a constructor takes specific keyword args, document them here and use them in tests.
+
+    If a class has no `#[new]` (factory-only), document the factory path (e.g., "Constructed via LogParser.parse_all_sections() → returns ScanOutput"). Tests for factory-only classes go through the factory chain.
+  </action>
+  <verify>
+    <automated>pwsh -ExecutionPolicy Bypass -Command "if (-not (Test-Path '.planning/phases/03-python-tier-collapse/03-02-CONSTRUCTOR-INVENTORY.md')) { Write-Error 'Constructor inventory missing'; exit 1 }; $c = Get-Content '.planning/phases/03-python-tier-collapse/03-02-CONSTRUCTOR-INVENTORY.md' -Raw; if ($c -notmatch 'PyLogParser' -or $c -notmatch 'PyRustFormIDAnalyzer') { Write-Error 'Inventory missing Wave 1 entries'; exit 1 }; Write-Host 'Constructor inventory verified'"</automated>
+  </verify>
+  <acceptance_criteria>
+    - `.planning/phases/03-python-tier-collapse/03-02-CONSTRUCTOR-INVENTORY.md` exists
+    - Contains at least one row per promoted `#[pyclass]` (LogParser, ScanOutput factory, StreamingLogParser, StreamingIteratorParser, RustFormIDAnalyzer, FormIDAnalyzerCore, RecordScanner, PluginAnalyzer, PatternMatcher)
+    - Each row records the exact `fn new` signature from source (verified by reading, not guessing)
+    - Factory-only classes document the factory path
+  </acceptance_criteria>
+  <done>Constructor inventory written; all Wave 1 wrapper signatures verified from source; Tasks 1-4 can author tests with confidence.</done>
+</task>
 <task type="auto">
   <name>Task 1: Read source, enumerate all 74 Wave 1 symbols, verify `-core/lib.rs` coverage, and author contract rows</name>
   <files>
@@ -185,6 +230,8 @@ Existing contract row shape (from parity_contract.json) for reference:
     ```
 
     Source the `rustSymbol` from the `-core` sub-module declaration; source the `pythonExportPath` from the `-py` wrapper's `#[pyclass(name = "...")]` or `#[pymethods]` or `#[pyfunction(name = "...")]` attribute.
+
+    LOW row ID scheme verification: Before authoring rows, read the existing scanlog Tier-1 rows in `parity_contract.json::tier1Mappings` (filter `ownerModule == 'scanlog'`). Check the ID scheme — is it `scanlog.parser.LogParser` (with sub_module prefix) or `scanlog.LogParser` (flat)? Match the existing scheme to reduce gate failures.
 
     Specifically, author rows for:
     - **parser sub-module (20 rows):** `LogParser` class + all its `#[pymethods]` (e.g., `parse_all_sections`, `parse_main_error`, etc.); `ScanOutput` class + its getters; `StreamingLogParser`, `StreamingIteratorParser` classes
@@ -543,11 +590,24 @@ Existing contract row shape (from parity_contract.json) for reference:
     ```
     Bump the `contractCount` to reflect the new total scanlog Tier-1 rows (20 existing + 74 Wave 1 = 94). The hash will be recomputed by `generate_baseline.py --write-baseline` in Step 2.
 
-    Update the `testSuite` field to reference both the existing file AND the new Wave 1 smoke file:
+    R8 CORRECTION: The `testSuite` field is a SCALAR string (verified: runtime_coverage_registry.json schema has no multi-file/array support). Do NOT comma-join. Instead, keep the existing `python-tier1-scanlog` entry pointing at `test_tier1_parity_smoke.py` (unchanged), and ADD a NEW selector entry `python-tier1-scanlog-promoted`:
     ```json
-    "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py,ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave1_smoke.py"
+    {
+      "coverageId": "python-tier1-scanlog-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "contractSelector": { "ownerModule": "scanlog", "tier": "tier1", "idPrefix": "scanlog.parser." },
+      "contractCount": 74,
+      "contractIdsHash": "<computed by generate_baseline.py --write-baseline, or compute manually via sha256(','.join(sorted(ids)).encode()).hexdigest()[:16]>",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave1_smoke.py",
+      "testCaseId": "scanlog-wave1-promoted-smoke"
+    }
     ```
-    (Or whatever multi-file separator the existing schema uses; check other entries for precedent.)
+    Note: if the registry schema doesn't support `idPrefix` in contractSelector, either (a) use explicit `contractIds` array listing the 74 promoted row IDs, or (b) ADD `idPrefix` support as a trivial schema extension in this task.
+
+    The original `python-tier1-scanlog` entry keeps its original `contractCount` (20) and original `testSuite`. The new entry covers the 74 promoted Wave 1 rows.
 
     Step 2: Refresh the baseline in lockstep (D-03 cadence):
     ```powershell
@@ -635,3 +695,4 @@ After completion, create `.planning/phases/03-python-tier-collapse/03-02-SUMMARY
 - Verification chain results (all 5 steps)
 - Any symbols that required `pub use` additions (expected: 0 per A3)
 </output>
+

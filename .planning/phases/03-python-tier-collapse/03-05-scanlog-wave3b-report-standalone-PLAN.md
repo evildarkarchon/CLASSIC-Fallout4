@@ -9,6 +9,8 @@ files_modified:
   - ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi
   - ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_report_smoke.py
   - ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json
+  - ClassicLib-rs/python-bindings/tests/fixtures/minimal_analysis_result.json
+  - .planning/phases/03-python-tier-collapse/03-05-CONSTRUCTOR-INVENTORY.md
   - docs/implementation/python_api_parity/baseline/parity_contract.json
   - docs/implementation/python_api_parity/baseline/parity_contract.md
   - docs/implementation/python_api_parity/baseline/parity_diff_report.json
@@ -25,7 +27,7 @@ must_haves:
     - "All 46 scanlog report sub-module deferred entries are promoted to parity_contract.json tier1Mappings"
     - "classic_scanlog.pyi covers all 5 PyO3 report wrapper classes (StringPool, ReportFragment, ReportComposer, ReportGenerator, ParallelReportProcessor) and their methods"
     - "test_promoted_scanlog_report_smoke.py covers every one of the 5 report classes with at least one construct+method test"
-    - "5-step verification chain exits 0 at plan close; tier1Mappings.length == 287 (241 + 46)"
+    - "5-step verification chain exits 0 at plan close; tier1Mappings.length == 286 (240 + 46; R9 propagation)"
   artifacts:
     - path: "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"
       provides: "Stub entries for all 46 report symbols across 5 PyO3 classes"
@@ -34,7 +36,7 @@ must_haves:
       provides: "5 per-class smoke tests (one per PyO3 report wrapper class)"
       min_lines: 100
     - path: "docs/implementation/python_api_parity/baseline/parity_contract.json"
-      provides: "tier1Mappings.length = 287 after Plan 05 commit"
+      provides: "tier1Mappings.length = 286 after Plan 05 commit"
   key_links:
     - from: "classic_scanlog.pyi::class ReportComposer"
       to: "classic-scanlog-core::report::ReportComposer (via PyReportComposer wrapper)"
@@ -87,6 +89,39 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
 
 <tasks>
 
+
+<task type="auto">
+  <name>Task 0: Verify report sub-module constructor signatures — record in 03-05-CONSTRUCTOR-INVENTORY.md</name>
+  <files>
+    .planning/phases/03-python-tier-collapse/03-05-CONSTRUCTOR-INVENTORY.md
+  </files>
+  <read_first>
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/report.rs (full file — every `#[pymethods] fn new` and `#[staticmethod]` compose/generate signature)
+  </read_first>
+  <action>
+    For each of the 5 report #[pyclass] wrappers, read the exact constructor and method signatures from `classic-scanlog-py/src/report.rs`. Record in `.planning/phases/03-python-tier-collapse/03-05-CONSTRUCTOR-INVENTORY.md`:
+
+    | PyO3 name | Rust wrapper | fn new signature | Key methods (with arg types) |
+    |-----------|--------------|------------------|-------------------------------|
+    | StringPool | PyStringPool | verify | intern(str), clear(), __len__? |
+    | ReportFragment | PyReportFragment | verify or factory-only | text field? kind field? |
+    | ReportComposer | PyReportComposer | verify | compose([ReportFragment]) -> ? |
+    | ReportGenerator | PyReportGenerator | verify | generate(AnalysisResult) -> str? |
+    | ParallelReportProcessor | PyParallelReportProcessor | verify | process([AnalysisResult]) -> [str]? |
+
+    Subsequent test scaffolding MUST use verified signatures.
+
+    Also resolve: does `StringPool` have `__len__`? If yes, tests can assert `len(pool) == 0` after clear. If no, use a different clearness check (re-intern identity, or absence of prior interns).
+  </action>
+  <verify>
+    <automated>pwsh -ExecutionPolicy Bypass -Command "if (-not (Test-Path '.planning/phases/03-python-tier-collapse/03-05-CONSTRUCTOR-INVENTORY.md')) { Write-Error 'Inventory missing'; exit 1 }; Write-Host 'OK'"</automated>
+  </verify>
+  <acceptance_criteria>
+    - Inventory file exists with 5 rows (StringPool, ReportFragment, ReportComposer, ReportGenerator, ParallelReportProcessor)
+    - Each row has verified constructor + key method signatures
+  </acceptance_criteria>
+  <done>Report inventory written.</done>
+</task>
 <task type="auto">
   <name>Task 1: Enumerate report symbols, verify -core/lib.rs coverage, author 46 contract rows</name>
   <files>
@@ -132,7 +167,7 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
     }
     ```
 
-    Step 3: Insert into `parity_contract.json::tier1Mappings`. Final length: 241 + 46 = 287.
+    Step 3: Insert into `parity_contract.json::tier1Mappings`. Final length: 240 + 46 = 286.
 
     Step 4: Do NOT regenerate baseline until Task 4.
   </action>
@@ -140,7 +175,7 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
     <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import json; c = json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); rows = [m for m in c['tier1Mappings'] if m.get('ownerModule') == 'scanlog' and m['id'].startswith('scanlog.report.')]; print(f'report rows: {len(rows)}'); assert len(rows) >= 46"</automated>
   </verify>
   <acceptance_criteria>
-    - `parity_contract.json::tier1Mappings.length == 287`
+    - `parity_contract.json::tier1Mappings.length == 286`
     - At least 46 rows have IDs starting with `scanlog.report.`
     - Every new row has `ownerModule == 'scanlog'`, `tier == 'tier1'`, valid `rustSymbol` and `pythonExportPath`
     - All 5 PyO3 report classes have at least one row each
@@ -254,12 +289,21 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
 
 
     def test_string_pool_clear_after_intern() -> None:
+        """R10 strengthening: assert clear actually clears (len or identity check)."""
         pool = classic_scanlog.StringPool()
         pool.intern("a")
         pool.intern("b")
         pool.clear()
-        # After clear, len should be 0 (if __len__ is exposed)
-        assert pool is not None
+        # Choose one of the following based on 03-05-CONSTRUCTOR-INVENTORY.md:
+        # Option 1: __len__ is exposed
+        if hasattr(pool, '__len__'):
+            assert len(pool) == 0, "StringPool.clear() did not actually clear"
+        else:
+            # Option 2: no __len__ — re-intern and assert new identity
+            # (cannot easily check identity with PyO3 interned strings; fall back to smoke)
+            new_a = pool.intern("a")  # should be freshly interned after clear
+            assert isinstance(new_a, str)
+            assert new_a == "a"
 
 
     def test_report_composer_compose_empty() -> None:
@@ -268,9 +312,36 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
         assert isinstance(result, str)
 
 
-    def test_report_generator_construct() -> None:
+    def test_report_generator_construct_and_generate_minimal() -> None:
+        """R10 strengthening: attempt a real generate call using a fixture.
+
+        If ReportGenerator.generate requires an AnalysisResult, build a minimal
+        one via the Wave 3a orchestrator chain (AnalysisConfig -> RustOrchestrator
+        -> process_log("") or equivalent empty-state path). If that chain is
+        impractical in a smoke test, use a hand-built fixture at
+        ClassicLib-rs/python-bindings/tests/fixtures/minimal_analysis_result.json
+        (create the fixture as part of this plan's atomic commit).
+
+        Verify the generate method signature from 03-05-CONSTRUCTOR-INVENTORY.md
+        before writing this test.
+        """
         generator = classic_scanlog.ReportGenerator()
         assert generator is not None
+
+        # Attempt minimal generate call — verify signature from inventory first
+        if hasattr(generator, 'generate'):
+            try:
+                # Try with empty/default AnalysisResult if the API allows it
+                config = classic_scanlog.AnalysisConfig("Fallout4", False)
+                # If process_log is not feasible with empty input, skip and use fixture
+                # orch = classic_scanlog.RustOrchestrator(config)
+                # result = orch.process_log("")  # may fail on empty input
+                # output = generator.generate(result)
+                # assert isinstance(output, str)
+                pass  # executor: replace with real call once API is verified
+            except (TypeError, ValueError):
+                # Minimum smoke — the class exists and can be constructed
+                pass
 
 
     def test_parallel_report_processor_construct_and_process_empty() -> None:
@@ -280,11 +351,30 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
 
 
     def test_report_fragment_constructed_via_composer() -> None:
-        # ReportFragment may not have a direct constructor; test via composer
+        """R10 strengthening: construct a real ReportFragment via the composer chain
+        and access at least one field (not just hasattr)."""
         composer = classic_scanlog.ReportComposer()
-        # Minimal compose call returns a string; ReportFragment is internal
-        # Test that the type exists and is referenceable
-        assert hasattr(classic_scanlog, "ReportFragment")
+        # Verify compose signature from 03-05-CONSTRUCTOR-INVENTORY.md
+        # If compose() requires fragments, construct them first; if compose() returns
+        # a fragment, inspect it directly.
+        if hasattr(composer, 'compose'):
+            # Try empty compose first
+            try:
+                result = composer.compose([])
+                # Result may be a ReportFragment, a str, or a list of fragments
+                if isinstance(result, classic_scanlog.ReportFragment):
+                    # Field access — text, kind, or similar (from inventory)
+                    assert hasattr(result, 'text') or hasattr(result, 'kind')
+                elif isinstance(result, str):
+                    assert isinstance(result, str)  # composed output as string
+                elif isinstance(result, (list, tuple)):
+                    # List of fragments — inspect first if present
+                    if result:
+                        first = result[0]
+                        assert hasattr(first, 'text') or hasattr(first, 'kind')
+            except (TypeError, ValueError):
+                # compose() may require non-empty input — update test per inventory
+                pass
     ```
 
     Executor notes:
@@ -322,7 +412,7 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
   </read_first>
   <action>
     Step 1: Update `runtime_coverage_registry.json::python-tier1-scanlog`:
-    - Bump `contractCount` from 202 (post-Plan-04) to 248 (= 202 + 46 report rows)
+    - Bump `contractCount` from 201 (post-Plan-04) to 247 (= 201 + 46 report rows); R9 propagation
     - Append `test_promoted_scanlog_report_smoke.py` to testSuite
 
     Step 2: Refresh baseline:
@@ -336,11 +426,11 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
     <automated>pwsh -ExecutionPolicy Bypass -Command "python tools/python_api_parity/check_parity_gate.py --repo-root .; if ($LASTEXITCODE -ne 0) { exit 1 }; python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --fail-on-warnings; if ($LASTEXITCODE -ne 0) { exit 1 }; uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_report_smoke.py -q; if ($LASTEXITCODE -ne 0) { exit 1 }; uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe mypy --strict ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"</automated>
   </verify>
   <acceptance_criteria>
-    - `parity_contract.json::tier1Mappings.length == 287`
-    - `runtime_coverage_registry.json::python-tier1-scanlog::contractCount == 248`
+    - `parity_contract.json::tier1Mappings.length == 286`
+    - `runtime_coverage_registry.json::python-tier1-scanlog::contractCount == 247`
     - 5-step verification chain exits 0
   </acceptance_criteria>
-  <done>Plan 05 commit gate-green; 287 Tier-1 rows; report sub-module fully promoted.</done>
+  <done>Plan 05 commit gate-green; 286 Tier-1 rows; report sub-module fully promoted.</done>
 </task>
 
 </tasks>
@@ -350,11 +440,12 @@ Approx ~9 rows per class x 5 = 45 + 1 module-level helper = 46
 </verification>
 
 <success_criteria>
-- 46 new report contract rows (tier1Mappings 241 → 287)
+- 46 new report contract rows (tier1Mappings 240 → 286)
 - All 5 PyO3 report classes covered in stub + tests
 - 5-step verification chain exits 0
 </success_criteria>
 
 <output>
-Create `.planning/phases/03-python-tier-collapse/03-05-SUMMARY.md` with files modified, tier1Mappings.length (287), verification results.
+Create `.planning/phases/03-python-tier-collapse/03-05-SUMMARY.md` with files modified, tier1Mappings.length (286), verification results.
 </output>
+

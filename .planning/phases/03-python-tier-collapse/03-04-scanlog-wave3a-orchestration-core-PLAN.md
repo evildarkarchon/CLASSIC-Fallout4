@@ -9,6 +9,7 @@ files_modified:
   - ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi
   - ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py
   - ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json
+  - .planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md
   - docs/implementation/python_api_parity/baseline/parity_contract.json
   - docs/implementation/python_api_parity/baseline/parity_contract.md
   - docs/implementation/python_api_parity/baseline/parity_diff_report.json
@@ -25,7 +26,7 @@ must_haves:
     - "All ~50 scanlog Wave 3a deferred entries (orchestrator + papyrus + version + crashgen_registry + segment_key + error sub-modules) are promoted to parity_contract.json tier1Mappings"
     - "classic_scanlog.pyi covers every Wave 3a pythonExportPath (AnalysisConfig, AnalysisResult, CancellationToken, Orchestrator, PapyrusAnalyzer, PapyrusStats, CrashgenVersion, CrashgenVersionStatus, CrashgenRegistry, CheckId, CrashgenEntry, SegmentKey, ScanLogError, PapyrusError)"
     - "test_promoted_scanlog_wave3a_smoke.py covers every promoted #[pyclass] (orchestrator + papyrus + version + crashgen_registry + segment_key) + grouped free-fn tests for parse_crashgen_version/check_crashgen_version_status"
-    - "5-step verification chain exits 0 at plan close; tier1Mappings.length == 241 (191 + 50)"
+    - "5-step verification chain exits 0 at plan close; tier1Mappings.length == 240 (190 + 50; R9 Plan 03 excluded GLOBAL_FCX_HANDLER)"
   artifacts:
     - path: "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"
       provides: "Stub entries for ~50 Wave 3a promoted symbols (orchestration core, not report)"
@@ -34,7 +35,7 @@ must_haves:
       provides: "Per-class + grouped smoke tests for orchestration & output symbols (excluding report)"
       min_lines: 130
     - path: "docs/implementation/python_api_parity/baseline/parity_contract.json"
-      provides: "tier1Mappings.length = 241 after Plan 04 commit"
+      provides: "tier1Mappings.length = 240 after Plan 04 commit"
   key_links:
     - from: "classic_scanlog.pyi::class RustOrchestrator"
       to: "classic-scanlog-core::orchestrator::Orchestrator (via PyRustOrchestrator wrapper)"
@@ -109,6 +110,57 @@ Free function groups:
 
 <tasks>
 
+
+<task type="auto">
+  <name>Task 0: Verify Wave 3a constructor signatures — record in 03-04-CONSTRUCTOR-INVENTORY.md</name>
+  <files>
+    .planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md
+  </files>
+  <read_first>
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/orchestrator.rs (especially PyAnalysisConfig::new — verify exact argument types and defaults)
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/papyrus.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/version.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/crashgen_registry.rs (or wherever CrashgenRegistry lives — if in -core only, wrap location)
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/segment_key.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/error.rs
+  </read_first>
+  <action>
+    For each Wave 3a #[pyclass] wrapper this plan promotes, read the `#[pymethods] fn new` signature from its -py source file. Record to `.planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md`:
+
+    | PyO3 name | Rust wrapper | Source file | fn new signature | Notes |
+    |-----------|--------------|-------------|------------------|-------|
+    | AnalysisConfig | PyAnalysisConfig | orchestrator.rs | verify exact game-arg type: str vs enum | first-class constructor |
+    | AnalysisResult | PyAnalysisResult | orchestrator.rs | factory only | via RustOrchestrator.process_log |
+    | CancellationToken | PyCancellationToken | orchestrator.rs | verify | likely parameterless |
+    | RustOrchestrator | PyRustOrchestrator | orchestrator.rs | takes AnalysisConfig | |
+    | ScanProgressPhase | PyScanProgressPhase | orchestrator.rs | enum — no constructor | verify variant names (QUEUED, SCANNING, REPORT_BUILD, COMPLETED, etc.) |
+    | PapyrusAnalyzer | PyPapyrusAnalyzer | papyrus.rs | verify | |
+    | PapyrusStats | PyPapyrusStats | papyrus.rs | factory only | via analyzer.analyze() |
+    | PapyrusError | PyPapyrusError | papyrus.rs | exception class | issubclass(Exception) check |
+    | CrashgenVersion | PyCrashgenVersion | version.rs | verify has `#[new]` or only factory via parse_crashgen_version | |
+    | CrashgenVersionStatus | PyCrashgenVersionStatus | version.rs | enum | verify variant names |
+    | CrashgenRegistry | PyCrashgenRegistry | crashgen_registry.rs or core equivalent | verify exact constructor + method names (len, is_empty, list_crashgens?) |
+    | CrashgenEntry | PyCrashgenEntry | crashgen_registry.rs | factory only | |
+    | CheckId | PyCheckId | crashgen_registry.rs | factory only | |
+    | SegmentKey | PySegmentKey | segment_key.rs | verify | |
+    | ScanLogError | PyScanLogError | error.rs | exception class | |
+
+    All subsequent tests MUST use verified signatures.
+
+    CRITICAL: Resolve the `ScanProgressPhase` variant names specifically. The Plan 04 tests use `dir()` discovery, which is replaced by direct variant access per R10. Record the EXACT variant names in the inventory (e.g., `QUEUED`, `SCANNING`, `REPORT_BUILD`, `COMPLETED`, or whatever the enum actually has).
+
+    Also verify the `CrashgenRegistry` method surface — `len()`, `is_empty()`, `list_crashgens()`, `get()`, etc. At least one concrete method must exist for R10 testing.
+  </action>
+  <verify>
+    <automated>pwsh -ExecutionPolicy Bypass -Command "if (-not (Test-Path '.planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md')) { Write-Error 'Inventory missing'; exit 1 }; Write-Host 'Constructor inventory present'"</automated>
+  </verify>
+  <acceptance_criteria>
+    - Inventory file exists with one row per Wave 3a #[pyclass]
+    - ScanProgressPhase variant names verified from source
+    - CrashgenRegistry method surface verified from source
+  </acceptance_criteria>
+  <done>Wave 3a constructor inventory written; all wrapper signatures verified.</done>
+</task>
 <task type="auto">
   <name>Task 1: Enumerate Wave 3a symbols, verify -core/lib.rs coverage, author ~50 contract rows</name>
   <files>
@@ -145,15 +197,15 @@ Free function groups:
 
     Use the same row shape as Plans 02/03. IDs: `scanlog.orchestrator.AnalysisConfig`, `scanlog.papyrus.PapyrusAnalyzer`, etc.
 
-    Step 3: Insert into `parity_contract.json::tier1Mappings`. Final length: 191 + 50 = 241.
+    Step 3: Insert into `parity_contract.json::tier1Mappings`. Final length: 190 + 50 = 240.
 
     Step 4: Do NOT regenerate baseline until Task 4.
   </action>
   <verify>
-    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import json; c = json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); rows = [m for m in c['tier1Mappings'] if m.get('ownerModule') == 'scanlog' and m['id'].startswith(('scanlog.orchestrator.', 'scanlog.papyrus.', 'scanlog.version.', 'scanlog.crashgen_registry.', 'scanlog.segment_key.', 'scanlog.error.'))]; print(f'Wave 3a rows: {len(rows)}'); assert len(rows) >= 50"</automated>
+    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import json; c = json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); rows = [m for m in c['tier1Mappings'] if m.get('ownerModule') == 'scanlog' and m['id'].startswith(('scanlog.orchestrator.', 'scanlog.papyrus.', 'scanlog.version.', 'scanlog.crashgen_registry.', 'scanlog.segment_key.', 'scanlog.error.'))]; print(f'Wave 3a rows: {len(rows)}'); assert len(rows) >= 50  # Wave 3a still 50; the R9 offset only affected Wave 2"</automated>
   </verify>
   <acceptance_criteria>
-    - `parity_contract.json::tier1Mappings.length == 241`
+    - `parity_contract.json::tier1Mappings.length == 240`
     - At least 50 rows have IDs starting with one of `scanlog.orchestrator.`, `scanlog.papyrus.`, `scanlog.version.`, `scanlog.crashgen_registry.`, `scanlog.segment_key.`, `scanlog.error.`
     - No `scanlog.crashgen_rules.` or `scanlog.core_mod_convert.` IDs are authored (per A6 — those sub-modules don't exist in `-core`)
     - `classic-scanlog-core/src/lib.rs` grep shows `pub use` coverage
@@ -347,16 +399,34 @@ Free function groups:
 
 
     def test_rust_orchestrator_construct_and_cancel() -> None:
-        config = classic_scanlog.AnalysisConfig("Fallout4", False)
+        """R10 strengthening: construct + cancel + inspect token/state beyond mere non-None."""
+        config = classic_scanlog.AnalysisConfig("Fallout4", False)  # verify arg type from inventory
         orch = classic_scanlog.RustOrchestrator(config)
-        orch.cancel()  # cheap; no full process_log
-        assert orch is not None
+        # Inspect state before cancel
+        if hasattr(orch, 'is_cancelled'):
+            assert orch.is_cancelled() is False
+        orch.cancel()
+        if hasattr(orch, 'is_cancelled'):
+            assert orch.is_cancelled() is True
+        elif hasattr(orch, 'cancel_token'):
+            token = orch.cancel_token()
+            assert token is not None
 
 
     def test_scan_progress_phase_enum_constants() -> None:
-        # Verify enum variants exist; exact names come from #[pyclass] impl in orchestrator.rs
-        phase_attrs = [name for name in dir(classic_scanlog.ScanProgressPhase) if not name.startswith("_")]
-        assert len(phase_attrs) > 0
+        """R10 strengthening: access specific variants by name (not dir() length).
+
+        Variant names verified from 03-04-CONSTRUCTOR-INVENTORY.md (read from
+        classic-scanlog-py/src/orchestrator.rs before this test was authored).
+        Executor: replace the placeholder names below with the REAL variant names
+        extracted from the inventory.
+        """
+        # Example expected variants (VERIFY from source — update per inventory):
+        # QUEUED, SCANNING, REPORT_BUILD, COMPLETED
+        assert classic_scanlog.ScanProgressPhase.QUEUED is not None
+        assert classic_scanlog.ScanProgressPhase.SCANNING is not None
+        assert classic_scanlog.ScanProgressPhase.COMPLETED is not None
+        # Add any other variants from the inventory
 
 
     def test_resolve_batch_concurrency_smoke() -> None:
@@ -409,9 +479,23 @@ Free function groups:
 
 
     # crashgen_registry
-    def test_crashgen_registry_construct() -> None:
+    def test_crashgen_registry_construct_and_query() -> None:
+        """R10 strengthening: construct AND call at least one method (len/is_empty/list_crashgens)."""
         registry = classic_scanlog.CrashgenRegistry()
-        assert registry is not None
+        # Verify method surface from 03-04-CONSTRUCTOR-INVENTORY.md
+        # At least one of these should exist on an empty registry:
+        if hasattr(registry, '__len__'):
+            assert len(registry) == 0
+        elif hasattr(registry, 'is_empty'):
+            assert registry.is_empty() is True
+        elif hasattr(registry, 'list_crashgens'):
+            result = registry.list_crashgens()
+            assert isinstance(result, (list, tuple))
+        else:
+            raise AssertionError(
+                "CrashgenRegistry needs at least one inspection method (len/is_empty/list_crashgens). "
+                "Verify from classic-scanlog-py/src/crashgen_registry.rs and update test."
+            )
 
 
     # error
@@ -453,9 +537,10 @@ Free function groups:
     - ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json
   </read_first>
   <action>
-    Step 1: Update `runtime_coverage_registry.json::python-tier1-scanlog`:
-    - Bump `contractCount` from 152 (post-Plan-03) to 202 (= 152 + 50 Wave 3a)
-    - Append `test_promoted_scanlog_wave3a_smoke.py` to testSuite
+    Step 1: Update `runtime_coverage_registry.json`:
+    - Bump `python-tier1-scanlog::contractCount` from 151 (post-Plan-03) to 201 (= 151 + 50 Wave 3a)
+    - ADD a new selector entry `python-tier1-scanlog-wave3a-promoted` (scalar testSuite per R8 pattern) pointing at `test_promoted_scanlog_wave3a_smoke.py`
+    - DELETE `python-tier2-scanlog-runtime` (coverageId) — VERIFIED entry contains 4 bindings: `classic_scanlog.CrashgenVersion.to_tuple` (Wave 3a — promoted by THIS plan), `classic_scanlog.LogParser.find_errors` (Wave 1 — Plan 02), `classic_scanlog.PatternMatcher.find_all` (Wave 1 — Plan 02), `classic_scanlog.PatternMatcher.has_match` (Wave 1 — Plan 02). All 4 bindings are now enrolled in tier1Mappings after Plan 04 commits, so the Tier-2 explicit entry is safe to delete here.
 
     Step 2: Refresh baseline:
     ```powershell
@@ -468,11 +553,11 @@ Free function groups:
     <automated>pwsh -ExecutionPolicy Bypass -Command "python tools/python_api_parity/check_parity_gate.py --repo-root .; if ($LASTEXITCODE -ne 0) { exit 1 }; python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --fail-on-warnings; if ($LASTEXITCODE -ne 0) { exit 1 }; uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py -q; if ($LASTEXITCODE -ne 0) { exit 1 }; uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe mypy --strict ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"</automated>
   </verify>
   <acceptance_criteria>
-    - `parity_contract.json::tier1Mappings.length == 241`
+    - `parity_contract.json::tier1Mappings.length == 240`
     - `runtime_coverage_registry.json::python-tier1-scanlog::contractCount == 202`
     - 5-step verification chain exits 0
   </acceptance_criteria>
-  <done>Plan 04 commit gate-green; 241 Tier-1 rows.</done>
+  <done>Plan 04 commit gate-green; 240 Tier-1 rows.</done>
 </task>
 
 </tasks>
@@ -482,12 +567,13 @@ Free function groups:
 </verification>
 
 <success_criteria>
-- 50 new Wave 3a contract rows (tier1Mappings 191 → 241)
+- 50 new Wave 3a contract rows (tier1Mappings 190 → 240)
 - No `crashgen_rules` or `core_mod_convert` sub-module references (per A6)
 - Wave 3a smoke test file with ~12-14 tests passing
 - 5-step verification chain exits 0
 </success_criteria>
 
 <output>
-Create `.planning/phases/03-python-tier-collapse/03-04-SUMMARY.md` with files modified, tier1Mappings.length (241), verification results.
+Create `.planning/phases/03-python-tier-collapse/03-04-SUMMARY.md` with files modified, tier1Mappings.length (240), verification results.
 </output>
+

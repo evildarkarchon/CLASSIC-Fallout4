@@ -8,7 +8,9 @@ files_modified:
   - ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs
   - ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi
   - ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave2_smoke.py
+  - ClassicLib-rs/python-bindings/tests/conftest.py
   - ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json
+  - .planning/phases/03-python-tier-collapse/03-03-CONSTRUCTOR-INVENTORY.md
   - docs/implementation/python_api_parity/baseline/parity_contract.json
   - docs/implementation/python_api_parity/baseline/parity_contract.md
   - docs/implementation/python_api_parity/baseline/parity_diff_report.json
@@ -22,10 +24,12 @@ autonomous: true
 requirements: [PYT-02, PYT-04, PYT-05]
 must_haves:
   truths:
-    - "All 58 scanlog Wave 2 deferred entries (mod_detector + suspect_scanner + settings_validator + fcx_handler + gpu_detector) are promoted to parity_contract.json tier1Mappings"
+    - "All 57 scanlog Wave 2 deferred entries (mod_detector + suspect_scanner + settings_validator + fcx_handler + gpu_detector) are promoted — down from 58 because GLOBAL_FCX_HANDLER is excluded per R9 (LazyLock statics are not first-class Python module attributes)"
+    - "GLOBAL_FCX_HANDLER is explicitly excluded from tier1Mappings; any public API must flow through a factory function"
+    - "FCX global state is reset before each test via autouse conftest.py fixture (see Task 0 Step 2)"
     - "classic_scanlog.pyi covers every Wave 2 pythonExportPath (FcxResetError from quick-260406-syy lands here)"
     - "test_promoted_scanlog_wave2_smoke.py contains per-class tests for PySuspectScanner, PySettingsValidator, PyFcxModeHandler, PyGpuDetector, PyGpuInfo, PyConfigIssue + grouped test for detect_mods_* free functions"
-    - "5-step verification chain exits 0 at plan close; tier1Mappings.length == 191 (133 + 58)"
+    - "5-step verification chain exits 0 at plan close; tier1Mappings.length == 190 (133 + 57; 58 minus GLOBAL_FCX_HANDLER exclusion per R9)"
   artifacts:
     - path: "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"
       provides: "Stub entries for all 58 Wave 2 promoted symbols"
@@ -34,7 +38,7 @@ must_haves:
       provides: "Per-class + grouped smoke tests"
       min_lines: 100
     - path: "docs/implementation/python_api_parity/baseline/parity_contract.json"
-      provides: "tier1Mappings.length = 191 after Plan 03 commit"
+      provides: "tier1Mappings.length = 190 after Plan 03 commit (57 Wave 2 rows per R9 GLOBAL_FCX_HANDLER exclusion)"
   key_links:
     - from: "classic_scanlog.pyi::class FcxModeHandler"
       to: "classic-scanlog-core::fcx_handler::FcxModeHandler (via PyFcxModeHandler wrapper)"
@@ -102,6 +106,77 @@ Free function group in mod_detector (one grouped test):
 
 <tasks>
 
+
+<task type="auto">
+  <name>Task 0: Verify Wave 2 constructor signatures + create FCX state reset conftest fixture</name>
+  <files>
+    .planning/phases/03-python-tier-collapse/03-03-CONSTRUCTOR-INVENTORY.md
+    ClassicLib-rs/python-bindings/tests/conftest.py
+  </files>
+  <read_first>
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/mod_detector.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/suspect_scanner.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/settings_validator.rs
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs (verify exact PyFcxModeHandler::new signature; verify reset_global_state or equivalent helper exists)
+    - ClassicLib-rs/python-bindings/classic-scanlog-py/src/gpu_detector.rs
+  </read_first>
+  <action>
+    Step 1 (R5 — constructor inventory): For each Wave 2 #[pyclass] wrapper, read the `#[pymethods] fn new` signature from its -py source file. Record the inventory to `.planning/phases/03-python-tier-collapse/03-03-CONSTRUCTOR-INVENTORY.md`:
+
+    | PyO3 name | Rust wrapper | Source file | fn new signature | Notes |
+    |-----------|--------------|-------------|------------------|-------|
+    | SuspectScanner | PySuspectScanner | suspect_scanner.rs | verify | |
+    | SettingsValidator | PySettingsValidator | settings_validator.rs | verify | |
+    | FcxModeHandler | PyFcxModeHandler | fcx_handler.rs | verify exact kw args (ignore_missing?) | needs state reset |
+    | ConfigIssue | PyConfigIssue | fcx_handler.rs | factory via FcxModeHandler | no direct constructor |
+    | GpuDetector | PyGpuDetector | gpu_detector.rs | verify | |
+    | GpuInfo | PyGpuInfo | gpu_detector.rs | factory via GpuDetector | |
+    | GpuVendor | PyGpuVendor | gpu_detector.rs | enum, no constructor | test variant access directly |
+
+    All subsequent test scaffolding MUST use exactly these signatures — no `Class({})` guessing.
+
+    Step 2 (R9 — FCX state reset fixture): Create or extend `ClassicLib-rs/python-bindings/tests/conftest.py` with an auto-use fixture that resets FCX global state before each fcx_handler test:
+    ```python
+    """Shared pytest fixtures for classic_scanlog Python binding tests."""
+    from __future__ import annotations
+
+    import pytest
+
+
+    @pytest.fixture(autouse=True)
+    def reset_fcx_global_state():
+        """Reset FCX global state (GLOBAL_FCX_HANDLER) before each test.
+
+        Prevents cross-test pollution when FcxModeHandler tests run in the
+        same session. Uses the reset helper if available; otherwise no-op.
+        """
+        try:
+            import classic_scanlog
+            # Verify exact reset API name by reading classic-scanlog-py/src/fcx_handler.rs
+            # Likely candidates: reset_global_state(), FcxModeHandler.reset_global_state()
+            if hasattr(classic_scanlog, 'reset_fcx_global_state'):
+                classic_scanlog.reset_fcx_global_state()
+            elif hasattr(classic_scanlog, 'FcxModeHandler') and hasattr(classic_scanlog.FcxModeHandler, 'reset_global_state'):
+                classic_scanlog.FcxModeHandler.reset_global_state()
+        except ImportError:
+            # classic_scanlog not built yet — fixture is no-op
+            pass
+        yield
+    ```
+    VERIFY the exact reset API name from `classic-scanlog-py/src/fcx_handler.rs` before committing. If no reset API exists, add one via a minimal `#[pyfunction]` that clears GLOBAL_FCX_HANDLER state, and document the addition in this task.
+
+    Step 3: Commit the constructor inventory and conftest.py in the same atomic batch with the rest of Plan 03's work.
+  </action>
+  <verify>
+    <automated>pwsh -ExecutionPolicy Bypass -Command "if (-not (Test-Path '.planning/phases/03-python-tier-collapse/03-03-CONSTRUCTOR-INVENTORY.md')) { Write-Error 'Inventory missing'; exit 1 }; if (-not (Test-Path 'ClassicLib-rs/python-bindings/tests/conftest.py')) { Write-Error 'conftest.py missing'; exit 1 }; Write-Host 'Task 0 artifacts present'"</automated>
+  </verify>
+  <acceptance_criteria>
+    - `03-03-CONSTRUCTOR-INVENTORY.md` exists with one row per Wave 2 #[pyclass]
+    - `ClassicLib-rs/python-bindings/tests/conftest.py` exists with `reset_fcx_global_state` autouse fixture
+    - Reset API name verified from `classic-scanlog-py/src/fcx_handler.rs`
+  </acceptance_criteria>
+  <done>Wave 2 constructor signatures verified; FCX state reset fixture in place.</done>
+</task>
 <task type="auto">
   <name>Task 1: Enumerate Wave 2 symbols, verify -core/lib.rs coverage, author 58 contract rows</name>
   <files>
@@ -149,18 +224,18 @@ Free function group in mod_detector (one grouped test):
     - **mod_detector (9 rows):** 4 free functions (`detect_mods_single`, `detect_mods_double`, `detect_mods_important`, `detect_mods_batch`) + 5 supporting types/helpers
     - **suspect_scanner (8 rows):** `SuspectScanner` class + its `#[pymethods]`
     - **settings_validator (10 rows):** `SettingsValidator` class + its `#[pymethods]`
-    - **fcx_handler (21 rows):** `FcxModeHandler` class + methods, `ConfigIssue` class + getters, `GLOBAL_FCX_HANDLER` static, `FcxResetError` exception
+    - **fcx_handler (20 rows — R9 CHANGE: 21 → 20):** `FcxModeHandler` class + methods, `ConfigIssue` class + getters, `FcxResetError` exception. **R9 EXCLUSION: `GLOBAL_FCX_HANDLER` is NOT promoted.** It is a `pub static LazyLock<...>` — `LazyLock` statics are not first-class Python module attributes. Any public API should flow through a factory function (`get_fcx_handler()` or equivalent). Document this exclusion in the plan SUMMARY.
     - **gpu_detector (10 rows):** `GpuDetector` class + methods, `GpuInfo` class + getters, `GpuVendor` enum + variants
 
-    Step 3: Insert all 58 rows into `parity_contract.json::tier1Mappings` (sort alphabetically by ID). Final length: 133 + 58 = 191.
+    Step 3: Insert all 58 rows into `parity_contract.json::tier1Mappings` (sort alphabetically by ID). Final length: 133 + 57 = 190 (R9: GLOBAL_FCX_HANDLER excluded).
 
     Step 4: Do NOT regenerate the baseline yet — Task 4 handles atomic refresh.
   </action>
   <verify>
-    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import json; c = json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); rows = [m for m in c['tier1Mappings'] if m.get('ownerModule') == 'scanlog' and m['id'].startswith(('scanlog.mod_detector.', 'scanlog.suspect_scanner.', 'scanlog.settings_validator.', 'scanlog.fcx_handler.', 'scanlog.gpu_detector.'))]; print(f'Wave 2 rows: {len(rows)}'); assert len(rows) >= 58"</automated>
+    <automated>uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import json; c = json.loads(open('docs/implementation/python_api_parity/baseline/parity_contract.json').read()); rows = [m for m in c['tier1Mappings'] if m.get('ownerModule') == 'scanlog' and m['id'].startswith(('scanlog.mod_detector.', 'scanlog.suspect_scanner.', 'scanlog.settings_validator.', 'scanlog.fcx_handler.', 'scanlog.gpu_detector.'))]; print(f'Wave 2 rows: {len(rows)}'); assert len(rows) >= 57"</automated>
   </verify>
   <acceptance_criteria>
-    - `parity_contract.json::tier1Mappings.length == 191` (= 133 from post-Plan-02 + 58 Wave 2)
+    - `parity_contract.json::tier1Mappings.length == 190` (= 133 from post-Plan-02 + 58 Wave 2)
     - At least 58 rows have IDs starting with `scanlog.mod_detector.`, `scanlog.suspect_scanner.`, `scanlog.settings_validator.`, `scanlog.fcx_handler.`, or `scanlog.gpu_detector.`
     - Every new row has `ownerModule == 'scanlog'`, `tier == 'tier1'`, non-empty `rustSymbol` and `pythonExportPath`
     - FcxResetError has a contract row (from quick-260406-syy resolution)
@@ -446,7 +521,7 @@ Free function group in mod_detector (one grouped test):
   </read_first>
   <action>
     Step 1: Update `runtime_coverage_registry.json::python-tier1-scanlog`:
-    - Bump `contractCount` from Plan 02 value (94) to 152 (= 94 + 58 Wave 2)
+    - Bump `contractCount` from Plan 02 value (94) to 151 (= 94 + 57 per R9) (= 94 + 58 Wave 2)
     - Append `test_promoted_scanlog_wave2_smoke.py` to the `testSuite` field
 
     Step 2: Refresh baseline per D-03:
@@ -469,13 +544,13 @@ Free function group in mod_detector (one grouped test):
     <automated>pwsh -ExecutionPolicy Bypass -Command "python tools/python_api_parity/check_parity_gate.py --repo-root .; if ($LASTEXITCODE -ne 0) { exit 1 }; python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --fail-on-warnings; if ($LASTEXITCODE -ne 0) { exit 1 }; uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave2_smoke.py -q; if ($LASTEXITCODE -ne 0) { exit 1 }; uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe mypy --strict ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"</automated>
   </verify>
   <acceptance_criteria>
-    - `runtime_coverage_registry.json::python-tier1-scanlog::contractCount == 152`
-    - `parity_contract.json::tier1Mappings.length == 191`
+    - `runtime_coverage_registry.json::python-tier1-scanlog::contractCount == 151`
+    - `parity_contract.json::tier1Mappings.length == 190`
     - All 5 verification steps exit 0
     - `parity_diff_report.json::summary.tier1_missing_rust == 0`, `tier1_missing_python == 0`
     - `runtime_coverage_summary.json::summary.tier1_missing_runtime_total == 0`
   </acceptance_criteria>
-  <done>Plan 03 commit gate-green; 191 Tier-1 rows; 5-step chain exits 0.</done>
+  <done>Plan 03 commit gate-green; 190 Tier-1 rows; 5-step chain exits 0.</done>
 </task>
 
 </tasks>
@@ -485,7 +560,7 @@ Plan-close 5-step verification chain (non-negotiable, same as Plan 02).
 </verification>
 
 <success_criteria>
-- 58 new Wave 2 contract rows (tier1Mappings grew from 133 to 191)
+- 57 new Wave 2 contract rows (tier1Mappings grew from 133 to 190 — R9: GLOBAL_FCX_HANDLER excluded)
 - FcxResetError promoted (quick-260406-syy resolution integrated)
 - Wave 2 smoke test file with ~9-13 tests passing
 - 5-step verification chain exits 0
@@ -493,5 +568,6 @@ Plan-close 5-step verification chain (non-negotiable, same as Plan 02).
 </success_criteria>
 
 <output>
-Create `.planning/phases/03-python-tier-collapse/03-03-SUMMARY.md` with files modified, final tier1Mappings.length (191), smoke test count, verification results.
+Create `.planning/phases/03-python-tier-collapse/03-03-SUMMARY.md` with files modified, final tier1Mappings.length (190), smoke test count, verification results.
 </output>
+
