@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-08T11:34:24.074831+00:00`
-- Tier-1 contract rows: **133**
-- Tier-1 matched: **133**
+- Generated: `2026-04-08T22:36:05.744542+00:00`
+- Tier-1 contract rows: **190**
+- Tier-1 matched: **190**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **1138**
+- Total gaps (Tier-1 + Tier-2): **1080**
 
 ## Tier-1 Contract Evaluation
 
@@ -47,6 +47,26 @@
 | `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `classic_scanlog.parse_crashgen_version` | `matched` |
 | `scanlog-pattern-matcher-class` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher` | `matched` |
 | `scanlog-pattern-matcher-find-first` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.find_first` | `matched` |
+| `scanlog.fcx_handler.ConfigIssue` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
+| `scanlog.fcx_handler.ConfigIssue.__init__` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.__init__` | `matched` |
+| `scanlog.fcx_handler.ConfigIssue.format_report` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.format_report` | `matched` |
+| `scanlog.fcx_handler.ConfigIssue@rust` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.__init__` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.__init__` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.add_issue` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.add_issue` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.check_fcx_mode` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.check_fcx_mode` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.get_detected_issues` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.get_detected_issues` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.get_fcx_messages` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.get_fcx_messages` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.get_fcx_status_message` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.get_fcx_status_message` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.has_results` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.has_results` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.reset` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.reset` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.reset_fcx_checks` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.reset_fcx_checks` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.set_detected_issues` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.set_detected_issues` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.set_game_files_result` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.set_game_files_result` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler.set_main_files_result` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.set_main_files_result` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler@rust` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler` | `matched` |
+| `scanlog.fcx_handler.FcxResetError@rust` | `scanlog` | `FcxResetError` | `classic_scanlog.FcxResetError` | `matched` |
+| `scanlog.fcx_handler.fcx_handler@rust` | `scanlog` | `fcx_handler` | `classic_scanlog.FcxModeHandler` | `matched` |
 | `scanlog.formid.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid.formid@rust` | `scanlog` | `formid` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
@@ -73,6 +93,25 @@
 | `scanlog.formid_analyzer.is_valid_formid@rust` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch` | `scanlog` | `validate_formids_batch` | `classic_scanlog.validate_formids_batch` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch` | `classic_scanlog.validate_formids_batch` | `matched` |
+| `scanlog.gpu_detector.GpuDetector.__init__` | `scanlog` | `GpuDetector` | `classic_scanlog.GpuDetector.__init__` | `matched` |
+| `scanlog.gpu_detector.GpuDetector.extract_gpu_info_batch` | `scanlog` | `GpuDetector` | `classic_scanlog.GpuDetector.extract_gpu_info_batch` | `matched` |
+| `scanlog.gpu_detector.GpuInfo` | `scanlog` | `GpuInfo` | `classic_scanlog.GpuInfo` | `matched` |
+| `scanlog.gpu_detector.GpuInfo.__init__` | `scanlog` | `GpuInfo` | `classic_scanlog.GpuInfo.__init__` | `matched` |
+| `scanlog.gpu_detector.GpuInfo.to_dict` | `scanlog` | `GpuInfo` | `classic_scanlog.GpuInfo.to_dict` | `matched` |
+| `scanlog.gpu_detector.GpuInfo@rust` | `scanlog` | `GpuInfo` | `classic_scanlog.GpuInfo` | `matched` |
+| `scanlog.gpu_detector.GpuVendor` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor` | `matched` |
+| `scanlog.gpu_detector.GpuVendor.__init__` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor.__init__` | `matched` |
+| `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor` | `matched` |
+| `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector` | `classic_scanlog.GpuDetector` | `matched` |
+| `scanlog.mod_detector.detect_mods_batch` | `scanlog` | `detect_mods_batch` | `classic_scanlog.detect_mods_batch` | `matched` |
+| `scanlog.mod_detector.detect_mods_batch@rust` | `scanlog` | `detect_mods_batch` | `classic_scanlog.detect_mods_batch` | `matched` |
+| `scanlog.mod_detector.detect_mods_double` | `scanlog` | `detect_mods_double` | `classic_scanlog.detect_mods_double` | `matched` |
+| `scanlog.mod_detector.detect_mods_double@rust` | `scanlog` | `detect_mods_double` | `classic_scanlog.detect_mods_double` | `matched` |
+| `scanlog.mod_detector.detect_mods_important` | `scanlog` | `detect_mods_important` | `classic_scanlog.detect_mods_important` | `matched` |
+| `scanlog.mod_detector.detect_mods_important@rust` | `scanlog` | `detect_mods_important` | `classic_scanlog.detect_mods_important` | `matched` |
+| `scanlog.mod_detector.detect_mods_single` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
+| `scanlog.mod_detector.detect_mods_single@rust` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
+| `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector` | `classic_scanlog.detect_mods_single` | `matched` |
 | `scanlog.parser.LogParser.__init__` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.__init__` | `matched` |
 | `scanlog.parser.LogParser.add_pattern` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.add_pattern` | `matched` |
 | `scanlog.parser.LogParser.benchmark` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.benchmark` | `matched` |
@@ -121,6 +160,24 @@
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.scan_records_batch` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
+| `scanlog.settings_validator.SettingsValidator` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.__init__` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.__init__` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.check_disabled_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.check_disabled_settings` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.scan_all_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_all_settings` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.scan_archivelimit_setting` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_archivelimit_setting` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.scan_buffout_achievements_setting` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_buffout_achievements_setting` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.scan_buffout_looksmenu_setting` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_buffout_looksmenu_setting` | `matched` |
+| `scanlog.settings_validator.SettingsValidator.scan_buffout_memorymanagement_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_buffout_memorymanagement_settings` | `matched` |
+| `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
+| `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator` | `classic_scanlog.SettingsValidator` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner.__init__` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.__init__` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner.check_dll_crash` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.check_dll_crash` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner.scan_suspects_batch` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.scan_suspects_batch` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner.suspect_scan_mainerror` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.suspect_scan_mainerror` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner.suspect_scan_stack` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.suspect_scan_stack` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner@rust` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner` | `matched` |
+| `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner` | `classic_scanlog.SuspectScanner` | `matched` |
 | `version-registry-class` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry` | `matched` |
 | `version-registry-game-version-class` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion` | `matched` |
 | `version-registry-get-address-library-filename` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry.get_address_library_filename` | `matched` |
@@ -150,13 +207,13 @@
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `scanlog` | 0 | 158 |
+| `scanlog` | 0 | 101 |
 | `config` | 0 | 28 |
 | `version_registry` | 0 | 35 |
 | `yaml` | 0 | 37 |
 | `database` | 0 | 46 |
 | `file_io` | 0 | 106 |
-| `scangame` | 0 | 218 |
+| `scangame` | 0 | 217 |
 | `registry` | 0 | 39 |
 | `perf` | 0 | 16 |
 | `settings` | 0 | 39 |

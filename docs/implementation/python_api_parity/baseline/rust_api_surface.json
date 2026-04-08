@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T11:31:41.085010+00:00",
+  "generated_at_utc": "2026-04-08T22:35:48.112519+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -2196,7 +2196,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};",
       "source_expr": "ini::ConfigIssue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenCheckOrchestrator",
@@ -2948,7 +2948,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::ConfigIssue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenEntry",
@@ -2998,7 +2998,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::FcxModeHandler",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FcxResetError",
@@ -3008,7 +3008,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::FcxResetError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FormIDAnalyzer",
@@ -3058,7 +3058,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};",
       "source_expr": "gpu_detector::GpuInfo",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GpuVendor",
@@ -3068,7 +3068,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};",
       "source_expr": "gpu_detector::GpuVendor",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "LogParser",
@@ -3218,7 +3218,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use settings_validator::SettingsValidator;",
       "source_expr": "settings_validator::SettingsValidator",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "StreamingIteratorParser",
@@ -3258,7 +3258,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use suspect_scanner::SuspectScanner;",
       "source_expr": "suspect_scanner::SuspectScanner",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "build_analysis_config_from_yaml",
@@ -3327,7 +3327,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_batch",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_mods_double",
@@ -3337,7 +3337,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_double",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_mods_important",
@@ -3347,7 +3347,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_important",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_mods_single",
@@ -3357,7 +3357,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_single",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_plugins_batch",
@@ -3405,7 +3405,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod fcx_handler;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "formid",
@@ -3432,7 +3432,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod gpu_detector;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_valid_formid",
@@ -3451,7 +3451,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod mod_detector;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "orchestrator",
@@ -3552,7 +3552,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod settings_validator;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "suspect_scanner",
@@ -3561,7 +3561,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod suspect_scanner;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_formids_batch",
