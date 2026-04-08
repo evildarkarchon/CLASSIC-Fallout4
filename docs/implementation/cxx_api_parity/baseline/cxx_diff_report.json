@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 238,
-    "current_total": 238,
-    "matched": 238,
+    "contract_total": 250,
+    "current_total": 250,
+    "matched": 250,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1757,6 +1757,102 @@
       "rustSymbol": "UpdateCheckResult",
       "kind": "struct",
       "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "56c2a9c53f62ef8b",
+      "rustSymbol": "ModSite",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7aefe345782399f3",
+      "rustSymbol": "WebGameId",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b9ec3ba45bfbad24",
+      "rustSymbol": "extract_domain_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0950f5414356da6a",
+      "rustSymbol": "is_valid_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7d9536f46f7a602a",
+      "rustSymbol": "mod_site_base_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0474e9d9d4c830e0",
+      "rustSymbol": "mod_site_game_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1c07ae6197b62a4e",
+      "rustSymbol": "mod_site_name",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "18ea0cfdb5e17d7f",
+      "rustSymbol": "validate_url_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e2dce70adc9aba7a",
+      "rustSymbol": "web_build_url_with_query",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "746d496c15af12af",
+      "rustSymbol": "web_get_user_agent",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5920a39e7197ac87",
+      "rustSymbol": "web_get_user_agent_with_suffix",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3f5f11c3df34c621",
+      "rustSymbol": "web_join_url",
+      "kind": "function",
+      "bridgeModule": "web",
       "status": "matched",
       "reason": "-"
     },

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T00:06:37Z",
+  "generated_at_utc": "2026-04-08T00:24:12Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4159,6 +4159,214 @@
           "type": "String"
         }
       ]
+    },
+    {
+      "id": "56c2a9c53f62ef8b",
+      "rustSymbol": "ModSite",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "NexusMods",
+        "BethesdaNet",
+        "ModDB"
+      ]
+    },
+    {
+      "id": "7aefe345782399f3",
+      "rustSymbol": "WebGameId",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Fallout4",
+        "Fallout4VR",
+        "Skyrim",
+        "Starfield"
+      ]
+    },
+    {
+      "id": "b9ec3ba45bfbad24",
+      "rustSymbol": "extract_domain_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "url_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
+    },
+    {
+      "id": "0950f5414356da6a",
+      "rustSymbol": "is_valid_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "url_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "7d9536f46f7a602a",
+      "rustSymbol": "mod_site_base_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "site",
+            "type": "ModSite"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "0474e9d9d4c830e0",
+      "rustSymbol": "mod_site_game_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "site",
+            "type": "ModSite"
+          },
+          {
+            "name": "game",
+            "type": "WebGameId"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "1c07ae6197b62a4e",
+      "rustSymbol": "mod_site_name",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "site",
+            "type": "ModSite"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "18ea0cfdb5e17d7f",
+      "rustSymbol": "validate_url_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "url_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
+    },
+    {
+      "id": "e2dce70adc9aba7a",
+      "rustSymbol": "web_build_url_with_query",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "base",
+            "type": "&str"
+          },
+          {
+            "name": "keys",
+            "type": "&[String]"
+          },
+          {
+            "name": "values",
+            "type": "&[String]"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
+    },
+    {
+      "id": "746d496c15af12af",
+      "rustSymbol": "web_get_user_agent",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "5920a39e7197ac87",
+      "rustSymbol": "web_get_user_agent_with_suffix",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "suffix",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "3f5f11c3df34c621",
+      "rustSymbol": "web_join_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "base",
+            "type": "&str"
+          },
+          {
+            "name": "path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<String>"
+      }
     },
     {
       "id": "981bdd021e6e927f",
