@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T11:07:18.856659+00:00",
+  "generated_at_utc": "2026-04-08T11:34:24.058863+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3018,7 +3018,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};",
       "source_expr": "formid::FormIDAnalyzer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FormIDAnalyzerCore",
@@ -3028,7 +3028,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
       "source_expr": "formid_analyzer::FormIDAnalyzerCore",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GLOBAL_FCX_HANDLER",
@@ -3138,7 +3138,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};",
       "source_expr": "plugin_analyzer::PluginAnalyzer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RecordScanner",
@@ -3148,7 +3148,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
       "source_expr": "record_scanner::RecordScanner",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ReportComposer",
@@ -3188,7 +3188,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};",
       "source_expr": "formid::RustFormIDAnalyzer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ScanLogError",
@@ -3228,7 +3228,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};",
       "source_expr": "parser::StreamingIteratorParser",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "StreamingLogParser",
@@ -3238,7 +3238,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};",
       "source_expr": "parser::StreamingLogParser",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "StringPool",
@@ -3288,7 +3288,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};",
       "source_expr": "plugin_analyzer::contains_plugin",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "contains_record",
@@ -3298,7 +3298,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
       "source_expr": "record_scanner::contains_record",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "crashgen_registry",
@@ -3367,7 +3367,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};",
       "source_expr": "plugin_analyzer::detect_plugins_batch",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_vr_log",
@@ -3414,7 +3414,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod formid;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "formid_analyzer",
@@ -3423,7 +3423,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod formid_analyzer;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "gpu_detector",
@@ -3442,7 +3442,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
       "source_expr": "formid_analyzer::is_valid_formid",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "mod_detector",
@@ -3478,7 +3478,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod parser;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "patterns",
@@ -3487,7 +3487,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod patterns;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "plugin_analyzer",
@@ -3496,7 +3496,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod plugin_analyzer;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "record_scanner",
@@ -3505,7 +3505,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod record_scanner;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "report",
@@ -3534,7 +3534,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
       "source_expr": "record_scanner::scan_records_batch",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "segment_key",
@@ -3571,7 +3571,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
       "source_expr": "formid_analyzer::validate_formids_batch",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "version",

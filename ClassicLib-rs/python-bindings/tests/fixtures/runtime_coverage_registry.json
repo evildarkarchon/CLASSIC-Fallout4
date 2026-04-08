@@ -31,8 +31,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 20,
-      "contractIdsHash": "105cad21350d2ba23ea21970c430a2e9e6b845740ea02edac967fb02cc31bc24",
+      "contractCount": 94,
+      "contractIdsHash": "24ba23f86dfa4dc6bb7aa34f640521e6a2a3ad450569371d4be75d0dd13164ee",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -40,7 +40,38 @@
         "PARITY_MAIN_YAML",
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
-      ]
+      ],
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns sub-modules); supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py (see python-tier1-scanlog-wave1-promoted entry)."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave1-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.LogParser.parse_all_sections",
+        "classic_scanlog.LogParser.parse_complete",
+        "classic_scanlog.LogParser.get_stats",
+        "classic_scanlog.LogParser.add_pattern",
+        "classic_scanlog.LogParser.clear_caches",
+        "classic_scanlog.ScanOutput",
+        "classic_scanlog.FormIDAnalyzer",
+        "classic_scanlog.FormIDAnalyzerCore",
+        "classic_scanlog.RecordScanner",
+        "classic_scanlog.PluginAnalyzer",
+        "classic_scanlog.PatternMatcher",
+        "classic_scanlog.extract_formids_batch",
+        "classic_scanlog.is_valid_formid",
+        "classic_scanlog.validate_formids_batch",
+        "classic_scanlog.scan_records_batch",
+        "classic_scanlog.contains_record",
+        "classic_scanlog.detect_plugins_batch",
+        "classic_scanlog.contains_plugin"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave1_smoke.py",
+      "testCaseId": "scanlog-wave1-promoted-smoke",
+      "notes": "Per-class smoke tests for the 7 promoted #[pyclass] wrappers + grouped free functions added in Phase 3 Plan 02. Constructor signatures from 03-02-CONSTRUCTOR-INVENTORY.md."
     },
     {
       "coverageId": "python-tier1-version-registry",

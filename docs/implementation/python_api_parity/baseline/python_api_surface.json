@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T11:02:58.706232+00:00",
+  "generated_at_utc": "2026-04-08T11:31:41.099453+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -5309,7 +5309,7 @@
       "export_path": "FormIDAnalyzer",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class FormIDAnalyzer:"
     },
@@ -5321,7 +5321,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -5333,7 +5333,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def analyze_batch( self, formids: list[str], plugins: dict[str, str] ) -> list[tuple[str, str | None]]:"
     },
@@ -5345,7 +5345,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def cache_stats(self) -> tuple[int, int]:"
     },
@@ -5357,7 +5357,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def clear_cache(self) -> None:"
     },
@@ -5369,7 +5369,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_formids(self, segment_callstack: list[str]) -> list[str]:"
     },
@@ -5381,7 +5381,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_formid(self, formid: str) -> int | None:"
     },
@@ -5391,7 +5391,7 @@
       "export_path": "FormIDAnalyzerCore",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class FormIDAnalyzerCore:"
     },
@@ -5403,7 +5403,7 @@
       "kind": "method",
       "arity": 5,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__( self, show_formid_values: bool, crashgen_name: str, important_mods: dict[str, str], mods_single: dict[str, str], mods_double: list[dict[str, str | None]], ) -> None:"
     },
@@ -5415,7 +5415,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def cache_plugins(self, cache_key: str, plugins: dict[str, str]) -> None:"
     },
@@ -5427,7 +5427,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_formids(self, segment_callstack: list[str]) -> list[str]:"
     },
@@ -5439,7 +5439,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_formids_nocopy(self, segment_callstack: list[str]) -> list[str]:"
     },
@@ -5451,7 +5451,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_plugin_index(self, formid: str) -> int | None:"
     },
@@ -5463,7 +5463,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def formid_match(self, formids: list[str], plugins: dict[str, str]) -> list[str]:"
     },
@@ -5475,7 +5475,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def is_valid_formid(self, formid: str) -> bool:"
     },
@@ -5487,7 +5487,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_formid(self, formid: str) -> int | None:"
     },
@@ -5499,7 +5499,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def process_formids_cached(self, formids: list[str], cache_key: str) -> list[str]:"
     },
@@ -5623,7 +5623,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, custom_boundaries: list[tuple[str, str]] | None = None) -> None:"
     },
@@ -5635,7 +5635,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def add_pattern(self, name: str, pattern: str) -> None:"
     },
@@ -5647,7 +5647,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def benchmark(self, lines: list[str], iterations: int) -> dict[str, float]:"
     },
@@ -5659,7 +5659,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def clear_caches(self) -> None:"
     },
@@ -5683,7 +5683,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_addresses(self, lines: list[str]) -> list[str]:"
     },
@@ -5719,7 +5719,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_section( self, lines: list[str], start_marker: str, end_marker: str ) -> list[str] | None:"
     },
@@ -5731,7 +5731,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_sections_batch( self, lines: list[str], markers: list[tuple[str, str]] ) -> list[list[str] | None]:"
     },
@@ -5755,7 +5755,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def find_patterns(self, lines: list[str]) -> list[tuple[int, str, str]]:"
     },
@@ -5767,7 +5767,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def find_patterns_chunked( self, lines: list[str], chunk_size: int | None = None ) -> list[tuple[int, str, str]]:"
     },
@@ -5779,7 +5779,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def get_section(self, lines: list[str], section_name: str) -> list[str] | None:"
     },
@@ -5791,7 +5791,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def get_segment_sizes(self, lines: list[str]) -> dict[str, int]:"
     },
@@ -5803,7 +5803,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def get_stats(self) -> dict[str, int]:"
     },
@@ -5815,7 +5815,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_all_sections(self, lines: list[str]) -> dict[str, list[str]]:"
     },
@@ -5827,7 +5827,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_complete( self, lines: list[str], ) -> ScanOutput:"
     },
@@ -5839,7 +5839,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_crash_header(self, lines: list[str]) -> dict[str, str]:"
     },
@@ -5851,7 +5851,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_segments_parallel( self, lines: list[str], chunk_size: int | None = None ) -> dict[str, list[str]]:"
     },
@@ -6201,7 +6201,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, patterns: list[str]) -> None:"
     },
@@ -6213,7 +6213,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def clear_cache(self) -> None:"
     },
@@ -6249,7 +6249,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def get_stats(self) -> tuple[int, int]:"
     },
@@ -6273,7 +6273,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def replace_all(self, text: str, replacement: str) -> str:"
     },
@@ -6283,7 +6283,7 @@
       "export_path": "PluginAnalyzer",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class PluginAnalyzer:"
     },
@@ -6295,7 +6295,7 @@
       "kind": "method",
       "arity": 5,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__( self, game_ignore_plugins: list[str], ignore_list: list[str], crashgen_name: str, game_version: str = \"\", game_version_vr: str = \"\", ) -> None:"
     },
@@ -6307,7 +6307,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def check_plugin_limit( self, segment_plugins: list[str], game_version: str, version_current: str ) -> tuple[bool, bool]:"
     },
@@ -6319,7 +6319,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def filter_ignored_plugins(self, plugins: dict[str, str]) -> dict[str, str]:"
     },
@@ -6331,7 +6331,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def loadorder_scan_log( self, segment_plugins: list[str], game_version: str | None = None, version_current: str | None = None, ) -> tuple[dict[str, str], bool, bool]:"
     },
@@ -6343,7 +6343,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def plugin_match( self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str] ) -> list[str]:"
     },
@@ -6353,7 +6353,7 @@
       "export_path": "RecordScanner",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class RecordScanner:"
     },
@@ -6365,7 +6365,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__( self, target_records: list[str], ignore_records: list[str], crashgen_name: str ) -> None:"
     },
@@ -6377,7 +6377,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def clear_cache(self) -> None:"
     },
@@ -6389,7 +6389,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_records(self, segment_callstack: list[str]) -> list[str]:"
     },
@@ -6401,7 +6401,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_named_records( self, segment_callstack: list[str] ) -> tuple[list[str], list[str]]:"
     },
@@ -6789,7 +6789,7 @@
       "export_path": "ScanOutput",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanOutput:"
     },
@@ -7045,7 +7045,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def contains_plugin(text: str, plugin: str) -> bool:"
     },
@@ -7056,7 +7056,7 @@
       "kind": "function",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def contains_record( text: str, target_records: list[str], ignore_records: list[str] ) -> bool:"
     },
@@ -7111,7 +7111,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def detect_plugins_batch(texts: list[str], plugin_list: list[str]) -> list[list[str]]:"
     },
@@ -7133,7 +7133,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def is_valid_formid(formid: str) -> bool:"
     },
@@ -7166,7 +7166,7 @@
       "kind": "function",
       "arity": 3,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_records_batch( texts: list[list[str]], record_list: list[str], ignore_records: list[str] ) -> list[list[str]]:"
     },
@@ -7177,7 +7177,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def validate_formids_batch(formids: list[str]) -> list[bool]:"
     },
