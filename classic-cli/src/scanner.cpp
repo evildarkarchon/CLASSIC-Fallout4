@@ -253,6 +253,36 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
         }
     }
 
+    // D-11 / CXXS-03 consumer migration (Codex HIGH correction):
+    // After the scan completes, surface any FCX configuration issues that the
+    // analysis pipeline detected. This call exercises the new bridge fn from
+    // every CLI scan run, satisfying ROADMAP.md Phase 2 success criterion 2.
+    try {
+        auto fcx_issues = classic::scanner::get_fcx_config_issues();
+        if (!fcx_issues.empty()) {
+            fmt::print("\nFCX Configuration Issues Detected ({}):\n", fcx_issues.size());
+            for (const auto& issue : fcx_issues) {
+                std::string file_path(issue.file_path.data(), issue.file_path.size());
+                std::string setting(issue.setting.data(), issue.setting.size());
+                std::string current(issue.current_value.data(), issue.current_value.size());
+                std::string recommended(issue.recommended_value.data(), issue.recommended_value.size());
+                std::string description(issue.description.data(), issue.description.size());
+                std::string severity(issue.severity.data(), issue.severity.size());
+                if (issue.has_section) {
+                    std::string section(issue.section_or_empty.data(), issue.section_or_empty.size());
+                    fmt::print("  [{}] {}/[{}] {}: {} (current: {}, recommended: {})\n", severity,
+                               file_path, section, setting, description, current, recommended);
+                } else {
+                    fmt::print("  [{}] {} {}: {} (current: {}, recommended: {})\n", severity,
+                               file_path, setting, description, current, recommended);
+                }
+            }
+        }
+    } catch (const rust::Error& e) {
+        // Fail-soft: FCX surface is non-critical for the CLI exit code
+        fmt::print(stderr, "Warning: failed to read FCX issues: {}\n", std::string(e.what()));
+    }
+
     // Print summary
     auto total_end = std::chrono::steady_clock::now();
     double duration = std::chrono::duration<double>(total_end - total_start).count();
