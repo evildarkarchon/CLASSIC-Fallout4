@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T01:24:49Z",
+  "generated_at_utc": "2026-04-08T01:38:00Z",
   "schema_version": 1,
   "entries": [
     {
@@ -649,6 +649,23 @@
       }
     },
     {
+      "id": "97cec77a8d2e2e96",
+      "rustSymbol": "yaml_data_suspects_error_rules",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "data",
+            "type": "&YamlData"
+          }
+        ],
+        "returnType": "Vec<SuspectErrorRuleDto>"
+      }
+    },
+    {
       "id": "2a710d36e6fa02c3",
       "rustSymbol": "yaml_data_suspects_error_values",
       "kind": "function",
@@ -666,6 +683,27 @@
       }
     },
     {
+      "id": "f24e4f874c362e59",
+      "rustSymbol": "yaml_data_suspects_stack_count_rules_for_id",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "data",
+            "type": "&YamlData"
+          },
+          {
+            "name": "rule_id",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<SuspectStackCountRuleDto>"
+      }
+    },
+    {
       "id": "c91ae72d650f0c51",
       "rustSymbol": "yaml_data_suspects_stack_keys",
       "kind": "function",
@@ -680,6 +718,23 @@
           }
         ],
         "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "0c519624cdf61bab",
+      "rustSymbol": "yaml_data_suspects_stack_rules_metadata",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "data",
+            "type": "&YamlData"
+          }
+        ],
+        "returnType": "Vec<SuspectStackRuleMetadataDto>"
       }
     },
     {
@@ -768,6 +823,88 @@
         {
           "name": "capacity",
           "type": "usize"
+        }
+      ]
+    },
+    {
+      "id": "326a5464aeff0639",
+      "rustSymbol": "SuspectErrorRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "severity",
+          "type": "i32"
+        },
+        {
+          "name": "main_error_contains_any",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "2462f4275406f47c",
+      "rustSymbol": "SuspectStackCountRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "substring",
+          "type": "String"
+        },
+        {
+          "name": "count",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "ed8cd7216e09c113",
+      "rustSymbol": "SuspectStackRuleMetadataDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "severity",
+          "type": "i32"
+        },
+        {
+          "name": "main_error_required_any",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "main_error_optional_any",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "stack_contains_any",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "exclude_if_stack_contains_any",
+          "type": "Vec<String>"
         }
       ]
     },
@@ -1191,6 +1328,31 @@
       }
     },
     {
+      "id": "830b80633d19d947",
+      "rustSymbol": "db_pool_get_entries_batch_typed",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "pool",
+            "type": "&DbPool"
+          },
+          {
+            "name": "formids",
+            "type": "&[String]"
+          },
+          {
+            "name": "plugins",
+            "type": "&[String]"
+          }
+        ],
+        "returnType": "Vec<FormIdEntryDto>"
+      }
+    },
+    {
       "id": "9429287d2a83b2c4",
       "rustSymbol": "db_pool_get_entry",
       "kind": "function",
@@ -1213,6 +1375,31 @@
           }
         ],
         "returnType": "String"
+      }
+    },
+    {
+      "id": "d9af7a7e92f0b398",
+      "rustSymbol": "db_pool_get_entry_typed",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "pool",
+            "type": "&DbPool"
+          },
+          {
+            "name": "formid",
+            "type": "&str"
+          },
+          {
+            "name": "plugin",
+            "type": "&str"
+          }
+        ],
+        "returnType": "FormIdEntryDto"
       }
     },
     {
@@ -1285,6 +1472,32 @@
       "bridgeModule": "database",
       "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust"
+    },
+    {
+      "id": "866877a98c3624dc",
+      "rustSymbol": "FormIdEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "formid",
+          "type": "String"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "type": "String"
+        },
+        {
+          "name": "found",
+          "type": "bool"
+        }
+      ]
     },
     {
       "id": "572c98266d404834",

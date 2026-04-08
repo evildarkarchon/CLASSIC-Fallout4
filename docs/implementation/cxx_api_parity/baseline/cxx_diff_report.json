@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 305,
-    "current_total": 305,
-    "matched": 305,
+    "contract_total": 314,
+    "current_total": 314,
+    "matched": 314,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -313,6 +313,14 @@
       "reason": "-"
     },
     {
+      "id": "97cec77a8d2e2e96",
+      "rustSymbol": "yaml_data_suspects_error_rules",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "2a710d36e6fa02c3",
       "rustSymbol": "yaml_data_suspects_error_values",
       "kind": "function",
@@ -321,8 +329,24 @@
       "reason": "-"
     },
     {
+      "id": "f24e4f874c362e59",
+      "rustSymbol": "yaml_data_suspects_stack_count_rules_for_id",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "c91ae72d650f0c51",
       "rustSymbol": "yaml_data_suspects_stack_keys",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0c519624cdf61bab",
+      "rustSymbol": "yaml_data_suspects_stack_rules_metadata",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -363,6 +387,30 @@
     {
       "id": "5be115198cf789f5",
       "rustSymbol": "CacheStats",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "326a5464aeff0639",
+      "rustSymbol": "SuspectErrorRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2462f4275406f47c",
+      "rustSymbol": "SuspectStackCountRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ed8cd7216e09c113",
+      "rustSymbol": "SuspectStackRuleMetadataDto",
       "kind": "struct",
       "bridgeModule": "config",
       "status": "matched",
@@ -553,8 +601,24 @@
       "reason": "-"
     },
     {
+      "id": "830b80633d19d947",
+      "rustSymbol": "db_pool_get_entries_batch_typed",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9429287d2a83b2c4",
       "rustSymbol": "db_pool_get_entry",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d9af7a7e92f0b398",
+      "rustSymbol": "db_pool_get_entry_typed",
       "kind": "function",
       "bridgeModule": "database",
       "status": "matched",
@@ -588,6 +652,14 @@
       "id": "dddc8330ff698837",
       "rustSymbol": "DbPool",
       "kind": "opaque",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "866877a98c3624dc",
+      "rustSymbol": "FormIdEntryDto",
+      "kind": "struct",
       "bridgeModule": "database",
       "status": "matched",
       "reason": "-"
