@@ -1,11 +1,12 @@
 //! Game file scanning bridge for CXX FFI.
 //!
 //! Bridges `classic_scangame_core` for setup checks, path detection,
-//! and the BA2 / INI / ENB sub-domain checkers.
+//! and the BA2 / INI / ENB / TOML / Wrye / Integrity / Setup / Crashgen sub-domain checkers.
 
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::setup::{
-    SetupCheckConfig, needs_path_detection as core_needs_path_detection, run_combined_checks,
+    SetupCheckConfig, SetupCheckResults, needs_path_detection as core_needs_path_detection,
+    run_combined_checks,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -20,6 +21,20 @@ use classic_scangame_core::{
 };
 use classic_scangame_core::ini::ConfigIssue as CoreIniConfigIssue;
 use classic_scangame_core::enb::EnbValidationResult as CoreEnbValidationResult;
+use classic_scangame_core::toml::{
+    CrashgenChecker, TomlConfigIssue as CoreTomlConfigIssue,
+    TomlIssueSeverity as CoreTomlIssueSeverity,
+};
+use classic_scangame_core::wrye::{
+    WryeBashParser, WryeIssue as CoreWryeIssue, WryeSeverity as CoreWryeSeverity,
+};
+use classic_scangame_core::integrity::{
+    GameIntegrityChecker, IntegrityCheckResult as CoreIntegrityCheckResult,
+    CheckType as CoreCheckType,
+};
+use classic_scangame_core::crashgen_orchestrator::{
+    CrashgenCheckOrchestrator, CrashgenReport as CoreCrashgenReport,
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EXISTING entry points (D-08 — UNCHANGED)
@@ -253,6 +268,312 @@ fn enb_checker_validate(game_path: &str) -> ffi::EnbValidationResultDto {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TOML sub-domain — REAL CrashgenChecker API (Codex HIGH correction)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn map_toml_severity(s: CoreTomlIssueSeverity) -> ffi::TomlIssueSeverity {
+    match s {
+        CoreTomlIssueSeverity::Info => ffi::TomlIssueSeverity::Info,
+        CoreTomlIssueSeverity::Warning => ffi::TomlIssueSeverity::Warning,
+        CoreTomlIssueSeverity::Error => ffi::TomlIssueSeverity::Error,
+    }
+}
+
+fn convert_toml_issue(i: CoreTomlConfigIssue) -> ffi::TomlConfigIssueDto {
+    // REAL field set per classic-scangame-core/src/toml.rs:61-82
+    ffi::TomlConfigIssueDto {
+        file_path: i.file_path.to_string_lossy().into_owned(),
+        section: i.section,
+        setting: i.setting,
+        current_value: i.current_value,
+        recommended_value: i.recommended_value,
+        description: i.description,
+        severity: map_toml_severity(i.severity),
+    }
+}
+
+fn run_crashgen_checker(
+    plugins_path: &str,
+    crashgen_name: &str,
+) -> Option<(String, Vec<CoreTomlConfigIssue>)> {
+    if plugins_path.is_empty() {
+        return None;
+    }
+    let mut checker = CrashgenChecker::new(Path::new(plugins_path), crashgen_name);
+    checker.check().ok()
+}
+
+/// Run CrashgenChecker and return a summary DTO (report_text + issue_count).
+///
+/// Returns empty DTO on empty plugins_path or check error (fail-soft).
+fn crashgen_checker_check(plugins_path: &str, crashgen_name: &str) -> ffi::CrashgenCheckResultDto {
+    match run_crashgen_checker(plugins_path, crashgen_name) {
+        Some((text, issues)) => ffi::CrashgenCheckResultDto {
+            report_text: text,
+            issue_count: issues.len() as u32,
+        },
+        None => ffi::CrashgenCheckResultDto {
+            report_text: String::new(),
+            issue_count: 0,
+        },
+    }
+}
+
+/// Return structured TOML issues from CrashgenChecker (empty Vec on error).
+fn crashgen_checker_get_issues(
+    plugins_path: &str,
+    crashgen_name: &str,
+) -> Vec<ffi::TomlConfigIssueDto> {
+    run_crashgen_checker(plugins_path, crashgen_name)
+        .map(|(_, issues)| issues.into_iter().map(convert_toml_issue).collect())
+        .unwrap_or_default()
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wrye sub-domain — REAL WryeBashParser API + ROW-oriented flattening
+// (Codex HIGH correction + Pitfall 6 Vec<StructWithVec> elimination)
+// REAL WryeSeverity has 3 variants: Info, Warning, Error (no Note)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn map_wrye_severity(s: CoreWryeSeverity) -> ffi::WryeSeverity {
+    // REAL variants per classic-scangame-core/src/wrye.rs:42-49
+    match s {
+        CoreWryeSeverity::Error => ffi::WryeSeverity::Error,
+        CoreWryeSeverity::Warning => ffi::WryeSeverity::Warning,
+        CoreWryeSeverity::Info => ffi::WryeSeverity::Info,
+    }
+}
+
+/// Parse a Wrye Bash ModChecker HTML report and return ROW-oriented results.
+///
+/// Each `(WryeIssue, plugin)` pair becomes one `WryeIssueRowDto` row.
+/// This flattens the embedded `plugins: Vec<String>` field (Pitfall 6 fix).
+/// Issues with zero plugins emit a single row with an empty plugin string.
+///
+/// # Arguments
+/// * `html_content` — raw HTML string from ModChecker.html
+/// * `warnings_keys` / `warnings_values` — parallel slices forming the wrye_warnings map
+///   (must be same length; returns empty Vec on mismatch)
+fn wrye_parse_html_rows(
+    html_content: &str,
+    warnings_keys: &[String],
+    warnings_values: &[String],
+) -> Vec<ffi::WryeIssueRowDto> {
+    // Build the HashMap input from parallel string slices.
+    if warnings_keys.len() != warnings_values.len() {
+        return Vec::new();
+    }
+    let warnings: HashMap<String, String> = warnings_keys
+        .iter()
+        .cloned()
+        .zip(warnings_values.iter().cloned())
+        .collect();
+
+    let parser = WryeBashParser::new(warnings);
+    let issues: Vec<CoreWryeIssue> = parser.parse(html_content);
+
+    // Pitfall 6 elimination: flatten each (issue, plugin) into a row.
+    // The row carries a stable issue_index so C++ callers can group rows
+    // back into issues if needed.
+    let mut rows = Vec::new();
+    for (issue_index, issue) in issues.into_iter().enumerate() {
+        let row_index_u32 = issue_index as u32;
+        let warning_text = issue.warning_message.clone().unwrap_or_default();
+        let has_warning = issue.warning_message.is_some();
+        let severity = map_wrye_severity(issue.severity);
+        if issue.plugins.is_empty() {
+            // Issue with no plugins — emit a single row with empty plugin string
+            rows.push(ffi::WryeIssueRowDto {
+                issue_index: row_index_u32,
+                section_title: issue.section_title.clone(),
+                plugin: String::new(),
+                warning_message_or_empty: warning_text,
+                has_warning_message: has_warning,
+                severity,
+            });
+        } else {
+            for plugin in &issue.plugins {
+                rows.push(ffi::WryeIssueRowDto {
+                    issue_index: row_index_u32,
+                    section_title: issue.section_title.clone(),
+                    plugin: plugin.clone(),
+                    warning_message_or_empty: warning_text.clone(),
+                    has_warning_message: has_warning,
+                    severity,
+                });
+            }
+        }
+    }
+    rows
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Integrity sub-domain — REAL GameIntegrityChecker API + REAL CheckType
+// (Codex HIGH correction: is_valid NOT passed; 2 variants not 5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn map_check_type(c: CoreCheckType) -> ffi::CheckType {
+    // REAL: only 2 variants (Codex HIGH correction)
+    match c {
+        CoreCheckType::ExecutableVersion => ffi::CheckType::ExecutableVersion,
+        CoreCheckType::InstallationLocation => ffi::CheckType::InstallationLocation,
+    }
+}
+
+/// Run all integrity checks and return a flat Vec of result DTOs.
+///
+/// Constructs IntegrityConfig internally with no steam_ini_path or root_warn.
+/// Returns empty Vec on empty game_exe_path or root_name.
+fn integrity_run_all_checks(
+    game_exe_path: &str,
+    valid_hashes: &[String],
+    root_name: &str,
+) -> Vec<ffi::IntegrityCheckResultDto> {
+    if game_exe_path.is_empty() || root_name.is_empty() {
+        return Vec::new();
+    }
+    let config = IntegrityConfig::new(
+        PathBuf::from(game_exe_path),
+        valid_hashes.to_vec(),
+        root_name.to_string(),
+    );
+    let checker = GameIntegrityChecker::new(config);
+    checker
+        .run_all_checks()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|r: CoreIntegrityCheckResult| ffi::IntegrityCheckResultDto {
+            is_valid: r.is_valid, // REAL field name (NOT `passed`) — Codex HIGH correction
+            message: r.message,
+            check_type: map_check_type(r.check_type),
+        })
+        .collect()
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Setup orchestrator structured DTO — REAL run_combined_checks (Codex HIGH)
+// Additive alongside existing run_setup_checks (D-08)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Run combined setup checks and return a structured DTO with counts.
+///
+/// The counts come from REAL `SetupCheckResults` vector lengths (Codex HIGH correction).
+/// Returns error DTO if game_exe_path or game_name is empty.
+fn scangame_run_setup_structured(
+    game_exe_path: &str,
+    valid_hashes: &[String],
+    root_name: &str,
+    game_name: &str,
+    docs_path: &str,
+) -> ffi::ScanGameSetupDto {
+    if game_exe_path.is_empty() || game_name.is_empty() {
+        return ffi::ScanGameSetupDto {
+            check_count: 0,
+            error_count: 1,
+            has_errors: true,
+        };
+    }
+    let integrity = IntegrityConfig::new(
+        PathBuf::from(game_exe_path),
+        valid_hashes.to_vec(),
+        root_name.to_string(),
+    );
+    let docs = if docs_path.is_empty() {
+        None
+    } else {
+        Some(docs_path.to_string())
+    };
+    let config = SetupCheckConfig {
+        integrity,
+        game_name: game_name.to_string(),
+        docs_path: docs,
+        xse_hashes: Vec::new(),
+    };
+    let results: SetupCheckResults = run_combined_checks(&config);
+    // Counts from REAL Vec field lengths (Codex HIGH correction)
+    let total_checks = results.total_checks() as u32;
+    let error_count = results.errors.len() as u32;
+    let has_errors = results.has_errors();
+    ffi::ScanGameSetupDto {
+        check_count: total_checks,
+        error_count,
+        has_errors,
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CrashgenOrchestrator — REAL CrashgenCheckOrchestrator + REAL CrashgenReport
+// Two Vec fields (issues, installed_plugins) exposed via separate getters
+// (Pitfall 6 — no nested Vec in the summary DTO)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn run_crashgen_orchestrator(
+    plugins_path: &str,
+    crashgen_name: &str,
+) -> Option<CoreCrashgenReport> {
+    if plugins_path.is_empty() {
+        return None;
+    }
+    CrashgenCheckOrchestrator::check(Path::new(plugins_path), crashgen_name).ok()
+}
+
+/// Run the CrashgenCheckOrchestrator and return a flat summary DTO.
+///
+/// The two Vec fields (issues, installed_plugins) are accessible via separate
+/// getter fns to avoid Pitfall 6 (nested Vec in CXX struct).
+fn crashgen_orchestrator_check_summary(
+    plugins_path: &str,
+    crashgen_name: &str,
+) -> ffi::CrashgenReportSummaryDto {
+    match run_crashgen_orchestrator(plugins_path, crashgen_name) {
+        Some(report) => {
+            let config_path_str = report
+                .config_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let has_config_path = report.config_path.is_some();
+            ffi::CrashgenReportSummaryDto {
+                message: report.message,
+                crashgen_name: report.crashgen_name,
+                config_path_or_empty: config_path_str,
+                has_config_path,
+                issue_count: report.issues.len() as u32,
+                installed_plugin_count: report.installed_plugins.len() as u32,
+            }
+        }
+        None => ffi::CrashgenReportSummaryDto {
+            message: String::new(),
+            crashgen_name: crashgen_name.to_string(),
+            config_path_or_empty: String::new(),
+            has_config_path: false,
+            issue_count: 0,
+            installed_plugin_count: 0,
+        },
+    }
+}
+
+/// Return structured TOML issues from the CrashgenCheckOrchestrator (empty Vec on error).
+fn crashgen_orchestrator_get_issues(
+    plugins_path: &str,
+    crashgen_name: &str,
+) -> Vec<ffi::TomlConfigIssueDto> {
+    run_crashgen_orchestrator(plugins_path, crashgen_name)
+        .map(|r| r.issues.into_iter().map(convert_toml_issue).collect())
+        .unwrap_or_default()
+}
+
+/// Return installed plugin names from the CrashgenCheckOrchestrator (empty Vec on error).
+fn crashgen_orchestrator_get_installed_plugins(
+    plugins_path: &str,
+    crashgen_name: &str,
+) -> Vec<String> {
+    run_crashgen_orchestrator(plugins_path, crashgen_name)
+        .map(|r| r.installed_plugins)
+        .unwrap_or_default()
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CXX bridge — namespace classic::scangame
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -330,6 +651,94 @@ mod ffi {
         config: EnbConfigResult,
     }
 
+    // ── New shared enums for plan 02-06 (D-04/D-07 — repr(u8)) ─────────────
+
+    /// TOML configuration issue severity (mirrors classic_scangame_core::toml::TomlIssueSeverity).
+    #[repr(u8)]
+    enum TomlIssueSeverity {
+        Info = 0,
+        Warning = 1,
+        Error = 2,
+    }
+
+    /// Wrye Bash issue severity (mirrors classic_scangame_core::wrye::WryeSeverity).
+    /// REAL: 3 variants only — Info, Warning, Error (no Note).
+    #[repr(u8)]
+    enum WryeSeverity {
+        Info = 0,
+        Warning = 1,
+        Error = 2,
+    }
+
+    /// Game integrity check type (mirrors classic_scangame_core::integrity::CheckType).
+    /// REAL: only 2 variants — ExecutableVersion + InstallationLocation (Codex HIGH correction).
+    #[repr(u8)]
+    enum CheckType {
+        ExecutableVersion = 0,
+        InstallationLocation = 1,
+    }
+
+    // ── New flat DTOs for plan 02-06 (all Pitfall 6 CLEAR — no Vec<StructWithVec>) ──
+
+    /// TOML config issue with REAL TomlConfigIssue field set
+    /// (file_path, section, setting, current_value, recommended_value, description, severity —
+    ///  Codex HIGH correction).
+    struct TomlConfigIssueDto {
+        file_path: String,
+        section: String,
+        setting: String,
+        current_value: String,
+        recommended_value: String,
+        description: String,
+        severity: TomlIssueSeverity,
+    }
+
+    /// Wrye Bash row-oriented DTO (Pitfall 6 fix — flattens plugins: Vec<String>).
+    /// Each (issue, plugin) pair becomes one row; issue_index lets C++ callers
+    /// group rows back into issues if needed.
+    struct WryeIssueRowDto {
+        issue_index: u32,
+        section_title: String,
+        plugin: String,
+        warning_message_or_empty: String,
+        has_warning_message: bool,
+        severity: WryeSeverity,
+    }
+
+    /// Integrity check result with REAL field set (Codex HIGH correction).
+    /// NOTE: `is_valid: bool` (NOT `passed: bool`).
+    struct IntegrityCheckResultDto {
+        is_valid: bool,
+        message: String,
+        check_type: CheckType,
+    }
+
+    /// Setup orchestrator DTO — counts computed from REAL SetupCheckResults vec lengths.
+    struct ScanGameSetupDto {
+        check_count: u32,
+        error_count: u32,
+        has_errors: bool,
+    }
+
+    /// CrashgenChecker.check() summary — (report_text, issue_count).
+    /// Full issue list accessible via crashgen_checker_get_issues (Pitfall 6 separation).
+    struct CrashgenCheckResultDto {
+        report_text: String,
+        issue_count: u32,
+    }
+
+    /// CrashgenReport summary DTO — REAL CrashgenReport field set.
+    /// The two Vec fields (issues, installed_plugins) are exposed via separate getters
+    /// to avoid Pitfall 6 (no nested Vec in this struct).
+    struct CrashgenReportSummaryDto {
+        message: String,
+        crashgen_name: String,
+        config_path_or_empty: String,
+        has_config_path: bool,
+        issue_count: u32,
+        installed_plugin_count: u32,
+    }
+
     extern "Rust" {
         // ── Existing fns (D-08 — UNCHANGED) ─────────────────────────────────
         fn run_setup_checks(
@@ -357,6 +766,53 @@ mod ffi {
 
         // ── ENB sub-domain (REAL EnbChecker behind the scenes) ───────────────
         fn enb_checker_validate(game_path: &str) -> EnbValidationResultDto;
+
+        // ── TOML sub-domain (REAL CrashgenChecker — Codex HIGH correction) ───
+        fn crashgen_checker_check(
+            plugins_path: &str,
+            crashgen_name: &str,
+        ) -> CrashgenCheckResultDto;
+        fn crashgen_checker_get_issues(
+            plugins_path: &str,
+            crashgen_name: &str,
+        ) -> Vec<TomlConfigIssueDto>;
+
+        // ── Wrye sub-domain (REAL WryeBashParser — row-oriented Pitfall 6 fix) ─
+        fn wrye_parse_html_rows(
+            html_content: &str,
+            warnings_keys: &[String],
+            warnings_values: &[String],
+        ) -> Vec<WryeIssueRowDto>;
+
+        // ── Integrity sub-domain (REAL GameIntegrityChecker) ─────────────────
+        fn integrity_run_all_checks(
+            game_exe_path: &str,
+            valid_hashes: &[String],
+            root_name: &str,
+        ) -> Vec<IntegrityCheckResultDto>;
+
+        // ── Setup orchestrator structured DTO (alongside existing run_setup_checks) ─
+        fn scangame_run_setup_structured(
+            game_exe_path: &str,
+            valid_hashes: &[String],
+            root_name: &str,
+            game_name: &str,
+            docs_path: &str,
+        ) -> ScanGameSetupDto;
+
+        // ── CrashgenOrchestrator (REAL CrashgenCheckOrchestrator) ─────────────
+        fn crashgen_orchestrator_check_summary(
+            plugins_path: &str,
+            crashgen_name: &str,
+        ) -> CrashgenReportSummaryDto;
+        fn crashgen_orchestrator_get_issues(
+            plugins_path: &str,
+            crashgen_name: &str,
+        ) -> Vec<TomlConfigIssueDto>;
+        fn crashgen_orchestrator_get_installed_plugins(
+            plugins_path: &str,
+            crashgen_name: &str,
+        ) -> Vec<String>;
     }
 }
 
@@ -505,5 +961,133 @@ mod tests {
         let r = enb_checker_validate(&temp_dir.path().to_string_lossy());
         assert!(matches!(r.binaries, ffi::EnbResult::Present));
         assert!(matches!(r.config, ffi::EnbConfigResult::NotFound));
+    }
+
+    // ── TOML sub-domain tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_crashgen_checker_check_nonexistent_returns_zero_issues() {
+        let r = crashgen_checker_check("nonexistent\\plugins", "Buffout4");
+        // Nonexistent path — checker returns Ok("not installed" message) or Err
+        // Either way issue_count must be 0
+        assert_eq!(r.issue_count, 0);
+    }
+
+    #[test]
+    fn test_crashgen_checker_get_issues_nonexistent_returns_empty() {
+        assert!(crashgen_checker_get_issues("nonexistent\\plugins", "Buffout4").is_empty());
+    }
+
+    #[test]
+    fn test_crashgen_checker_check_empty_path_returns_empty_dto() {
+        let r = crashgen_checker_check("", "Buffout4");
+        assert_eq!(r.issue_count, 0);
+        assert!(r.report_text.is_empty());
+    }
+
+    // ── Wrye sub-domain tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_wrye_parse_html_rows_empty_html_returns_empty() {
+        assert!(wrye_parse_html_rows("", &[], &[]).is_empty());
+    }
+
+    #[test]
+    fn test_wrye_parse_html_rows_warnings_length_mismatch_returns_empty() {
+        assert!(wrye_parse_html_rows("<html/>", &["a".to_string()], &[]).is_empty());
+    }
+
+    #[test]
+    fn test_wrye_parse_html_rows_simple_html_no_h3_returns_empty() {
+        assert!(wrye_parse_html_rows("<html><body><p>no issues</p></body></html>", &[], &[]).is_empty());
+    }
+
+    #[test]
+    fn test_wrye_parse_html_rows_one_issue_two_plugins_produces_two_rows() {
+        // Synthetic HTML with one h3 section and two plugin <p> entries
+        let html = r#"<html><body>
+            <h3>Missing Masters</h3>
+            <p>• Plugin1.esp</p>
+            <p>• Plugin2.esp</p>
+        </body></html>"#;
+        let rows = wrye_parse_html_rows(html, &[], &[]);
+        // Should produce 2 rows for the same issue (one per plugin)
+        assert_eq!(rows.len(), 2);
+        // Both rows have the same issue_index (same h3 section)
+        assert_eq!(rows[0].issue_index, rows[1].issue_index);
+        assert_eq!(rows[0].section_title, rows[1].section_title);
+        // Different plugin names
+        assert_ne!(rows[0].plugin, rows[1].plugin);
+    }
+
+    // ── Integrity sub-domain tests ────────────────────────────────────────────
+
+    #[test]
+    fn test_integrity_run_all_checks_nonexistent_exe_real_field_names() {
+        let r = integrity_run_all_checks("nonexistent.exe", &[], "Fallout4");
+        // For nonexistent exe, run_all_checks returns at least one entry with is_valid=false
+        assert!(r.iter().any(|e| !e.is_valid));
+        // REAL CheckType variants — Codex HIGH correction (ExecutableVersion, not Existence)
+        assert!(r.iter().any(|e| matches!(e.check_type, ffi::CheckType::ExecutableVersion)));
+    }
+
+    #[test]
+    fn test_integrity_run_all_checks_no_is_valid_field_is_bool() {
+        // Compile-time proof: accessing `is_valid` compiles, `passed` would not
+        let r = integrity_run_all_checks("nonexistent.exe", &[], "Fallout4");
+        // is_valid is the REAL field name (NOT `passed`)
+        let _ = r.iter().map(|e| e.is_valid).collect::<Vec<_>>();
+    }
+
+    #[test]
+    fn test_integrity_run_all_checks_empty_path_returns_empty() {
+        let r = integrity_run_all_checks("", &[], "Fallout4");
+        assert!(r.is_empty());
+    }
+
+    // ── Setup orchestrator structured DTO tests ───────────────────────────────
+
+    #[test]
+    fn test_scangame_run_setup_structured_empty_exe_returns_error_dto() {
+        let r = scangame_run_setup_structured("", &[], "", "", "");
+        assert!(r.has_errors);
+        assert!(r.error_count > 0);
+    }
+
+    #[test]
+    fn test_scangame_run_setup_structured_empty_game_name_returns_error_dto() {
+        let r = scangame_run_setup_structured("nonexistent.exe", &[], "", "", "");
+        assert!(r.has_errors);
+        assert!(r.error_count > 0);
+    }
+
+    // ── CrashgenOrchestrator tests ────────────────────────────────────────────
+
+    #[test]
+    fn test_crashgen_orchestrator_check_summary_nonexistent_real_fields() {
+        let r = crashgen_orchestrator_check_summary("nonexistent\\plugins", "Buffout4");
+        // REAL CrashgenReport field set: message, crashgen_name, config_path, issues, installed_plugins
+        // For nonexistent path, issues = 0, installed_plugins = 0
+        assert_eq!(r.issue_count, 0);
+        assert_eq!(r.installed_plugin_count, 0);
+        assert!(!r.has_config_path);
+    }
+
+    #[test]
+    fn test_crashgen_orchestrator_check_summary_empty_path_returns_empty_dto() {
+        let r = crashgen_orchestrator_check_summary("", "Buffout4");
+        assert_eq!(r.issue_count, 0);
+        assert_eq!(r.installed_plugin_count, 0);
+        assert!(!r.has_config_path);
+    }
+
+    #[test]
+    fn test_crashgen_orchestrator_get_issues_nonexistent_returns_empty() {
+        assert!(crashgen_orchestrator_get_issues("nonexistent\\plugins", "Buffout4").is_empty());
+    }
+
+    #[test]
+    fn test_crashgen_orchestrator_get_installed_plugins_nonexistent_returns_empty() {
+        assert!(crashgen_orchestrator_get_installed_plugins("nonexistent\\plugins", "Buffout4").is_empty());
     }
 }

@@ -141,7 +141,7 @@ fn must_not_be_none_key(key: &str) -> bool {
 }
 
 fn settings_ignore_none_contains(key: &str) -> bool {
-    SETTINGS_IGNORE_NONE.iter().any(|k| *k == key)
+    SETTINGS_IGNORE_NONE.contains(&key)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
