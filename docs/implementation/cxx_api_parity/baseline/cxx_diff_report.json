@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 314,
-    "current_total": 314,
-    "matched": 314,
+    "contract_total": 316,
+    "current_total": 316,
+    "matched": 316,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1793,6 +1793,14 @@
       "reason": "-"
     },
     {
+      "id": "d7282dc5d5df26ac",
+      "rustSymbol": "get_fcx_config_issues",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "f5c880d46c65220e",
       "rustSymbol": "on_batch_progress",
       "kind": "function",
@@ -1931,6 +1939,14 @@
     {
       "id": "34b978100efd3fba",
       "rustSymbol": "BatchScanResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0ea85cd7a4b6a5fb",
+      "rustSymbol": "FcxIssueDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

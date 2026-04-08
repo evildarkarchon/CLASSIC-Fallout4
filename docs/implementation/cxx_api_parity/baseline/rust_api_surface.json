@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T01:38:05Z",
+  "generated_at_utc": "2026-04-08T02:11:02Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
@@ -4305,6 +4305,18 @@
       }
     },
     {
+      "id": "d7282dc5d5df26ac",
+      "rustSymbol": "get_fcx_config_issues",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "Vec<FcxIssueDto>"
+      }
+    },
+    {
       "id": "f5c880d46c65220e",
       "rustSymbol": "on_batch_progress",
       "kind": "function",
@@ -4669,6 +4681,48 @@
         {
           "name": "suspect_count",
           "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "0ea85cd7a4b6a5fb",
+      "rustSymbol": "FcxIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "file_path",
+          "type": "String"
+        },
+        {
+          "name": "section_or_empty",
+          "type": "String"
+        },
+        {
+          "name": "has_section",
+          "type": "bool"
+        },
+        {
+          "name": "setting",
+          "type": "String"
+        },
+        {
+          "name": "current_value",
+          "type": "String"
+        },
+        {
+          "name": "recommended_value",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "severity",
+          "type": "String"
         }
       ]
     },
