@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 03-01-tooling-expansion-PLAN.md
-last_updated: "2026-04-08T11:13:21.392Z"
+stopped_at: Completed 03-02-scanlog-wave1-parsing-primitives-PLAN.md
+last_updated: "2026-04-08T11:40:18.717Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 12
+  completed_plans: 13
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-08
@@ -96,6 +96,7 @@ Progress: [          ] 0%
 | Phase 02 P07 | 562 | 3 tasks | 7 files |
 | Phase 02 P08 | 1860 | 3 tasks | 7 files |
 | Phase 03-python-tier-collapse P01 | 13min | 5 tasks | 20 files |
+| Phase 03-python-tier-collapse P02 | 11min | 4 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -216,6 +217,10 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Pitfall 2 guard runs between parse_rust_surface and generate_diff_report in check_parity_gate.py::main(); prints actionable remediation to stderr and exits 1
 - [Phase 03-python-tier-collapse]: Expanded generate_wave_manifest.py WAVE_BY_OWNER to 20 owners and added SQUAD_BY_OWNER dict replacing the hard-coded Squad A/Squad B ternary
 - [Phase 03-python-tier-collapse]: Deferred backlog expanded from 285 to 1202 entries via generate_wave_manifest.py regeneration; gate now green with 1212 total tier-2 gaps tracked across 19 owners
+- [Phase 03-python-tier-collapse]: Wave 1 ID scheme: dotted scanlog.<sub_module>.<symbol> for Wave 1 promoted rows; legacy kebab-case preserved for original 20 scanlog rows
+- [Phase 03-python-tier-collapse]: Rust-only deferred symbols (Streaming*, module markers, unwrapped FormIDAnalyzer/FormIDAnalyzerCore/PluginAnalyzer/RecordScanner) routed via @rust-suffixed proxy-paired contract rows; eliminates rust-side gap without requiring new PyO3 wrappers
+- [Phase 03-python-tier-collapse]: Plan R8 fix: single python-tier1-scanlog selector entry bumped count 20->94 + new hash; new python-tier1-scanlog-wave1-promoted aux entry uses bindingIdentifiers (not selector) since selector matching only honors ownerModule+tier
+- [Phase 03-python-tier-collapse]: Python FormIDAnalyzer wraps RustFormIDAnalyzer (NOT the parallel unwrapped formid::FormIDAnalyzer); contract rows pair pythonExportPath=FormIDAnalyzer with rustSymbol=RustFormIDAnalyzer
 
 ### Pending Todos
 
@@ -240,7 +245,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T11:13:21.388Z
-Stopped at: Completed 03-01-tooling-expansion-PLAN.md
+Last session: 2026-04-08T11:40:02.539Z
+Stopped at: Completed 03-02-scanlog-wave1-parsing-primitives-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
