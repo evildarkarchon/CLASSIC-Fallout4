@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T23:31:42.540574+00:00",
+  "generated_at_utc": "2026-04-08T23:54:54.753351+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -63,7 +63,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -75,7 +75,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __repr__(self) -> str: ..."
     },
@@ -169,7 +169,7 @@
       "kind": "method",
       "arity": 5,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __init__( self, ini_folder: str | None = None, scan_custom: str | None = None, mods_folder: str | None = None, game_root: str = \"\", docs_root: str | None = None, ) -> None:"
     },
@@ -181,7 +181,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __repr__(self) -> str: ..."
     },
@@ -203,7 +203,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __init__( self, yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> None:"
     },
@@ -215,7 +215,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __repr__(self) -> str:"
     },
@@ -249,7 +249,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __eq__(self, other: object) -> bool: ..."
     },
@@ -261,7 +261,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __hash__(self) -> int: ..."
     },
@@ -273,7 +273,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __repr__(self) -> str: ..."
     },
@@ -285,7 +285,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def __str__(self) -> str: ..."
     },
@@ -343,7 +343,7 @@
       "kind": "function",
       "arity": 3,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def create_yamldata( yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> YamlData:"
     },
@@ -354,7 +354,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def get_application_dir() -> str | None:"
     },
@@ -365,7 +365,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "config",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def set_application_dir(path: str | Path) -> None:"
     },
@@ -2934,7 +2934,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_application_dir() -> str | None:"
     },
@@ -3077,7 +3077,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def set_application_dir(path: str) -> None:"
     },

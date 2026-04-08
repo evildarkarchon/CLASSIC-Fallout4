@@ -11,8 +11,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 15,
-      "contractIdsHash": "c8f5838bec8d88468628ca83f678e00117a32dd8f8beec8e23785ea6da5571a4",
+      "contractCount": 43,
+      "contractIdsHash": "90a8f039181858fd8aeb5af9e0ab2d9f1b1a2256fcfe31800a2bf6f5ed04eee0",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "config-tier1-smoke",
@@ -21,6 +21,31 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ]
+    },
+    {
+      "coverageId": "python-tier1-config-plan06-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_config.ClassicConfig.__init__",
+        "classic_config.ClassicConfig.__repr__",
+        "classic_config.PathConfig.__init__",
+        "classic_config.PathConfig.__repr__",
+        "classic_config.YamlData.__init__",
+        "classic_config.YamlData.__repr__",
+        "classic_config.YamlSource.__eq__",
+        "classic_config.YamlSource.__hash__",
+        "classic_config.YamlSource.__repr__",
+        "classic_config.YamlSource.__str__",
+        "classic_config.create_yamldata",
+        "classic_config.get_application_dir",
+        "classic_config.set_application_dir"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_config_smoke.py",
+      "testCaseId": "config-plan06-promoted-smoke",
+      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
     },
     {
       "coverageId": "python-tier1-scanlog",
@@ -259,19 +284,6 @@
       "verificationMode": "direct_call",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "cache-helpers-tier2-smoke"
-    },
-    {
-      "coverageId": "python-tier2-config-application-dir-runtime",
-      "classification": "runtime_verified",
-      "ownerModule": "config",
-      "tier": "tier2",
-      "bindingIdentifiers": [
-        "classic_config.get_application_dir",
-        "classic_config.set_application_dir"
-      ],
-      "verificationMode": "direct_call",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "application-dir-override"
     },
     {
       "coverageId": "python-tier2-scanlog-runtime",

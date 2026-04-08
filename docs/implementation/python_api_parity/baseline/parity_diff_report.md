@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-08T23:31:42.541801+00:00`
-- Tier-1 contract rows: **286**
-- Tier-1 matched: **286**
+- Generated: `2026-04-08T23:54:50.770794+00:00`
+- Tier-1 contract rows: **314**
+- Tier-1 matched: **314**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **980**
+- Total gaps (Tier-1 + Tier-2): **947**
 
 ## Tier-1 Contract Evaluation
 
@@ -27,6 +27,34 @@
 | `config-yaml-source-path` | `config` | `YamlSource` | `classic_config.YamlSource.path` | `matched` |
 | `config-yamldata-class` | `config` | `YamlDataCore` | `classic_config.YamlData` | `matched` |
 | `config-yamldata-from-content` | `config` | `YamlDataCore` | `classic_config.YamlData.from_yaml_content` | `matched` |
+| `config.config.ClassicConfig.__init__` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.__init__` | `matched` |
+| `config.config.ClassicConfig.__repr__` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.__repr__` | `matched` |
+| `config.config.PathConfig.__init__` | `config` | `PathConfig` | `classic_config.PathConfig.__init__` | `matched` |
+| `config.config.PathConfig.__repr__` | `config` | `PathConfig` | `classic_config.PathConfig.__repr__` | `matched` |
+| `config.config.YamlSource.__eq__` | `config` | `YamlSource` | `classic_config.YamlSource.__eq__` | `matched` |
+| `config.config.YamlSource.__hash__` | `config` | `YamlSource` | `classic_config.YamlSource.__hash__` | `matched` |
+| `config.config.YamlSource.__repr__` | `config` | `YamlSource` | `classic_config.YamlSource.__repr__` | `matched` |
+| `config.config.YamlSource.__str__` | `config` | `YamlSource` | `classic_config.YamlSource.__str__` | `matched` |
+| `config.config.config@rust` | `config` | `config` | `classic_config.ClassicConfig` | `matched` |
+| `config.shared.get_application_dir` | `config` | `get_application_dir` | `classic_config.get_application_dir` | `matched` |
+| `config.shared.get_runtime@rust` | `config` | `get_runtime` | `classic_config.clear_yaml_cache` | `matched` |
+| `config.shared.set_application_dir` | `config` | `set_application_dir` | `classic_config.set_application_dir` | `matched` |
+| `config.yamldata.ConfigError@rust` | `config` | `ConfigError` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.CoreModEntry@rust` | `config` | `CoreModEntry` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.CoreModExclude@rust` | `config` | `CoreModExclude` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.CrashgenEntryRaw@rust` | `config` | `CrashgenEntryRaw` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.ModConflictEntry@rust` | `config` | `ModConflictEntry` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.ModSolutionCriteria@rust` | `config` | `ModSolutionCriteria` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.ModSolutionEntry@rust` | `config` | `ModSolutionEntry` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.SuspectErrorRule@rust` | `config` | `SuspectErrorRule` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.SuspectStackCountRule@rust` | `config` | `SuspectStackCountRule` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.SuspectStackRule@rust` | `config` | `SuspectStackRule` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.YamlData.__init__` | `config` | `YamlDataCore` | `classic_config.YamlData.__init__` | `matched` |
+| `config.yamldata.YamlData.__repr__` | `config` | `YamlDataCore` | `classic_config.YamlData.__repr__` | `matched` |
+| `config.yamldata.create_yamldata` | `config` | `YamlDataCore` | `classic_config.create_yamldata` | `matched` |
+| `config.yamldata.format_registry_game_version@rust` | `config` | `format_registry_game_version` | `classic_config.create_yamldata` | `matched` |
+| `config.yamldata.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info` | `classic_config.create_yamldata` | `matched` |
+| `config.yamldata.yamldata@rust` | `config` | `yamldata` | `classic_config.YamlData` | `matched` |
 | `scanlog-analysis-config-class` | `scanlog` | `AnalysisConfig` | `classic_scanlog.AnalysisConfig` | `matched` |
 | `scanlog-analysis-config-from-yamldata` | `scanlog` | `build_analysis_config_from_yaml` | `classic_scanlog.AnalysisConfig.from_yamldata` | `matched` |
 | `scanlog-crashgen-version-class` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion` | `matched` |
@@ -304,13 +332,13 @@
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
 | `scanlog` | 0 | 5 |
-| `config` | 0 | 28 |
+| `config` | 0 | 0 |
 | `version_registry` | 0 | 35 |
 | `yaml` | 0 | 37 |
 | `database` | 0 | 46 |
 | `file_io` | 0 | 105 |
-| `scangame` | 0 | 215 |
-| `registry` | 0 | 39 |
+| `scangame` | 0 | 213 |
+| `registry` | 0 | 37 |
 | `perf` | 0 | 16 |
 | `settings` | 0 | 39 |
 | `message` | 0 | 53 |
@@ -321,7 +349,7 @@
 | `xse` | 0 | 40 |
 | `web` | 0 | 29 |
 | `update` | 0 | 15 |
-| `shared` | 0 | 66 |
+| `shared` | 0 | 65 |
 | `aux` | 0 | 0 |
 
 Detailed per-gap diagnostics are in `parity_diff_report.json`.

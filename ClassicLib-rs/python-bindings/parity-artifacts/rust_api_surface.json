@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T23:31:42.525024+00:00",
+  "generated_at_utc": "2026-04-08T23:54:54.739349+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -63,7 +63,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ConfigError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CoreModEntry",
@@ -73,7 +73,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::CoreModEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CoreModExclude",
@@ -83,7 +83,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::CoreModExclude",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenEntryRaw",
@@ -93,7 +93,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::CrashgenEntryRaw",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModConflictEntry",
@@ -103,7 +103,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ModConflictEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModSolutionCriteria",
@@ -113,7 +113,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ModSolutionCriteria",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModSolutionEntry",
@@ -123,7 +123,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ModSolutionEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PathConfig",
@@ -143,7 +143,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::SuspectErrorRule",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SuspectStackCountRule",
@@ -153,7 +153,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::SuspectStackCountRule",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SuspectStackRule",
@@ -163,7 +163,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::SuspectStackRule",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "YamlDataCore",
@@ -202,7 +202,7 @@
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod config;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "format_registry_game_version",
@@ -212,7 +212,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::format_registry_game_version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_runtime",
@@ -222,7 +222,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use classic_shared_core::get_runtime;",
       "source_expr": "classic_shared_core::get_runtime",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "resolve_registry_version_info",
@@ -232,7 +232,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::resolve_registry_version_info",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "yamldata",
@@ -241,7 +241,7 @@
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod yamldata;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Fallout4Version",
@@ -1780,7 +1780,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_application_dir, set_application_dir};",
       "source_expr": "registry::get_application_dir",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_game",
@@ -1920,7 +1920,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_application_dir, set_application_dir};",
       "source_expr": "registry::set_application_dir",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "set_game",
@@ -2176,7 +2176,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use config::{ConfigDuplicateDetector, ConfigError, DuplicateGroup};",
       "source_expr": "config::ConfigError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigFileCache",
@@ -2723,7 +2723,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod config;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "config_cache",
@@ -3956,7 +3956,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};",
       "source_expr": "classic_shared_core::get_runtime",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "indexmap_utils",

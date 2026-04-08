@@ -1,10 +1,10 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-04-08T23:31:42.555328+00:00`
-- Tracked surfaces: **1507**
-- Runtime verified: **423**
+- Generated: `2026-04-08T23:54:50.784172+00:00`
+- Tracked surfaces: **1532**
+- Runtime verified: **462**
 - Contract mapped only: **0**
-- Deferred: **1084**
+- Deferred: **1070**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -12,7 +12,7 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|
-| `config` | 19 | 0 | 26 | 0 | 45 |
+| `config` | 58 | 0 | 15 | 0 | 73 |
 | `constants` | 0 | 0 | 59 | 0 | 59 |
 | `database` | 0 | 0 | 46 | 0 | 46 |
 | `file_io` | 3 | 0 | 103 | 0 | 106 |
@@ -21,10 +21,10 @@
 | `perf` | 0 | 0 | 16 | 0 | 16 |
 | `registry` | 0 | 0 | 39 | 0 | 39 |
 | `resource` | 0 | 0 | 40 | 0 | 40 |
-| `scangame` | 0 | 0 | 217 | 0 | 217 |
+| `scangame` | 0 | 0 | 215 | 0 | 215 |
 | `scanlog` | 376 | 0 | 112 | 0 | 488 |
 | `settings` | 0 | 0 | 39 | 0 | 39 |
-| `shared` | 0 | 0 | 66 | 0 | 66 |
+| `shared` | 0 | 0 | 65 | 0 | 65 |
 | `update` | 0 | 0 | 15 | 0 | 15 |
 | `version` | 0 | 0 | 28 | 0 | 28 |
 | `version_registry` | 25 | 0 | 34 | 0 | 59 |
