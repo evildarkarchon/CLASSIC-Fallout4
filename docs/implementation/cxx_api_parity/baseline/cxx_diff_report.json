@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 222,
-    "current_total": 222,
-    "matched": 222,
+    "contract_total": 238,
+    "current_total": 238,
+    "matched": 238,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -381,6 +381,134 @@
       "rustSymbol": "YamlDataModSolutionEntry",
       "kind": "struct",
       "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "34c12ce38207ea55",
+      "rustSymbol": "Fallout4Version",
+      "kind": "enum",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e57edc6804040626",
+      "rustSymbol": "GameId",
+      "kind": "enum",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "29ccc98356730344",
+      "rustSymbol": "YamlFile",
+      "kind": "enum",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "97680732e84fed04",
+      "rustSymbol": "fallout4_version_as_str",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4c1f47afcc612eeb",
+      "rustSymbol": "fallout4_version_docs_folder_name",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ab732a2b178f849a",
+      "rustSymbol": "fallout4_version_exe_name",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dc878d270db4e4ef",
+      "rustSymbol": "fallout4_version_is_standard",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "46b581bb01d5ad93",
+      "rustSymbol": "fallout4_version_is_vr",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "88aa433b4a6d4373",
+      "rustSymbol": "fallout4_version_registry_id",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ad01cb5bcb70b3dc",
+      "rustSymbol": "fallout4_version_steam_app_id",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ed2578875288dfa3",
+      "rustSymbol": "game_id_as_str",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "892c2c7212b5fbdd",
+      "rustSymbol": "is_null_version",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3d122d7f08046c7c",
+      "rustSymbol": "must_not_be_none_key",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8562275d3ba8927d",
+      "rustSymbol": "settings_ignore_none_contains",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "193fdb772e41ab05",
+      "rustSymbol": "yaml_file_as_str",
+      "kind": "function",
+      "bridgeModule": "constants",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "946a63e28d352de9",
+      "rustSymbol": "yaml_file_description",
+      "kind": "function",
+      "bridgeModule": "constants",
       "status": "matched",
       "reason": "-"
     },

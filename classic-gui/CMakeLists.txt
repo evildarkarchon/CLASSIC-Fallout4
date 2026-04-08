@@ -43,6 +43,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
     CRATE classic_cpp_bridge
     FILES
         types.rs
+        constants.rs
         runtime.rs
         registry.rs
         yaml.rs

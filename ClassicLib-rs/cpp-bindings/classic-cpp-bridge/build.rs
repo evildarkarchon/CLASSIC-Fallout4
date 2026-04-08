@@ -2,6 +2,7 @@
 fn main() {
     cxx_build::bridges([
         "src/types.rs",
+        "src/constants.rs",
         "src/runtime.rs",
         "src/registry.rs",
         "src/yaml.rs",

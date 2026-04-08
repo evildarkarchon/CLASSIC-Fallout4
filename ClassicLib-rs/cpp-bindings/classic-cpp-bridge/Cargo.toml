@@ -49,6 +49,7 @@ classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
 classic-version-core = { path = "../../business-logic/classic-version-core" }
 classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
 classic-xse-core = { path = "../../business-logic/classic-xse-core" }
+classic-constants-core = { path = "../../business-logic/classic-constants-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }
 classic-update-core = { path = "../../business-logic/classic-update-core" }
 

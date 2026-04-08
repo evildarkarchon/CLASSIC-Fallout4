@@ -41,6 +41,7 @@
 #include "workers/updateworker.h"
 
 #include "classic_cxx_bridge/config.h"
+#include "classic_cxx_bridge/constants.h"
 #include "classic_cxx_bridge/files.h"
 #include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/path.h"
@@ -1581,7 +1582,13 @@ void MainWindow::onScanGameFiles()
     QString gameExePath;
     QString gameRoot;
     QString docsPath;
-    QString gameName = QStringLiteral("Fallout4");
+    // D-11 / CXXS-01 consumer migration: use the bridged GameId helper instead
+    // of hardcoding the literal "Fallout4". This proves classic::constants is
+    // callable from production C++ code.
+    auto gameIdRustStr =
+        classic::constants::game_id_as_str(classic::constants::GameId::Fallout4);
+    QString gameName =
+        QString::fromUtf8(gameIdRustStr.data(), static_cast<int>(gameIdRustStr.size()));
 
     const QString settingsPath = settingsFilePath(m_dataRoot);
     if (!loadValidatedGameAndDocsPaths(&gameRoot, &docsPath)) {

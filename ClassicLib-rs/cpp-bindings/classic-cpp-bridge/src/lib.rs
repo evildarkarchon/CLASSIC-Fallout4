@@ -48,6 +48,8 @@
 #[cfg(windows)]
 pub mod config;
 #[cfg(windows)]
+pub mod constants;
+#[cfg(windows)]
 pub mod database;
 #[cfg(windows)]
 pub mod files;
