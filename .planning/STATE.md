@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 03-04-scanlog-wave3a-orchestration-core-PLAN.md
-last_updated: "2026-04-08T23:13:43.842Z"
+stopped_at: Completed 03-05-scanlog-wave3b-report-standalone-PLAN.md
+last_updated: "2026-04-08T23:40:31.171Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 15
+  completed_plans: 16
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 5 of 10
+Plan: 6 of 10
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-08
@@ -99,6 +99,7 @@ Progress: [          ] 0%
 | Phase 03-python-tier-collapse P02 | 11min | 4 tasks | 19 files |
 | Phase 03-python-tier-collapse P03 | 12min | 5 tasks | 18 files |
 | Phase 03-python-tier-collapse P04 | 13min | 5 tasks | 16 files |
+| Phase 03-python-tier-collapse P05 | 15min | 5 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -231,6 +232,10 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Pure-Rust sub-modules (crashgen_registry, segment_key, error) route their rust-only rows via @rust-suffix proxy rows pairing with CrashgenVersion as fallback anchor; avoids inventing new Python wrappers outside Wave 3a scope
 - [Phase 03-python-tier-collapse]: ScanProgressPhase has NO PyO3 wrapper — it is a pure Rust enum with variants Setup/Parse/Analyze/Finalize (NOT QUEUED/SCANNING/COMPLETED as plan scaffold guessed); promoted as @rust proxy pairing with AnalysisResult
 - [Phase 03-python-tier-collapse]: python-tier2-scanlog-runtime entry PRESERVED (not deleted as plan instructed) because direct inspection showed none of its 4 bindings are actually enrolled in tier1Mappings yet; deleting would orphan runtime-verified coverage
+- [Phase 03-python-tier-collapse]: Plan 05 Wave 3b: Inventory-first discipline caught 8 plan-scaffold divergences before any test code was written; test_promoted_scanlog_report_smoke.py passed 35/35 on first run with zero fix iterations (contrast Wave 3a which needed 2 post-hoc test fixes)
+- [Phase 03-python-tier-collapse]: Plan 05: ParallelReportProcessor is a pure -py convenience class (empty unit struct) paired with ReportComposer -core proxy per Wave 3a precedent for CancellationToken; eliminates Pitfall 2 gap without speculative -core re-exports
+- [Phase 03-python-tier-collapse]: Plan 05: classic_scanlog.pyi Task 2 was a verified no-op (all 5 report classes + methods already declared lines 983-1334 from prior phase work); no .pyi commit created per no-empty-commits protocol, verified via mypy --strict + validate_stubs.py both green
+- [Phase 03-python-tier-collapse]: Plan 05: Scanlog promotion track COMPLETE — 227 tier-1 scanlog rows enrolled across Waves 1-3b (74+57+50+46); python-tier1-scanlog runtime selector at final Phase 3 size of 247 rows; deferred backlog dropped 1125 -> 1084
 
 ### Pending Todos
 
@@ -255,7 +260,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T23:13:43.838Z
-Stopped at: Completed 03-04-scanlog-wave3a-orchestration-core-PLAN.md
+Last session: 2026-04-08T23:40:31.167Z
+Stopped at: Completed 03-05-scanlog-wave3b-report-standalone-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
