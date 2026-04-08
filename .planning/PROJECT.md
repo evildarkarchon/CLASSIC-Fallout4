@@ -6,7 +6,7 @@
 
 The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
 
-**v9.1.0-bindings progress:** Phase 1 (CXX Parity Gate Tooling) complete — `tools/cxx_api_parity/` parser, gate, and 202-entry born-green baseline are live; CI wiring still pending.
+**v9.1.0-bindings progress:** Phase 1 (CXX Parity Gate Tooling) and Phase 2 (CXX Bridge Surface Expansion) complete — `tools/cxx_api_parity/` parser, gate, and baseline are live; the CXX bridge surface grew from 202 to 316 entries across 19 modules with first-time exposure of `classic-constants-core`, `classic-web-core`, and the FCX issue getter; gate exits 0 at 0 drift; CI wiring still pending.
 
 ## Current Milestone: v9.1.0-bindings Full Bindings Parity
 
@@ -69,7 +69,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - [ ] Python Tier-1/Tier-2 collapsed: all 285 deferred entries promoted to one enforced contract
 - [ ] Node Tier-1/Tier-2 collapsed: all 101 deferred entries promoted to one enforced contract
 - [ ] First-class C++ bridge parity gate exists with baseline + diff + CI enforcement
-- [ ] C++ bridge exposes the full surface of every shared Rust crate it currently narrows (scangame, database, version-registry, config suspect rules, path, xse) plus first-time C++ surfaces for `classic-constants-core`, `classic-web-core`, and the FCX issue getter
+- [x] C++ bridge exposes the full surface of every shared Rust crate it currently narrows (scangame, database, version-registry, config suspect rules, path, xse) plus first-time C++ surfaces for `classic-constants-core`, `classic-web-core`, and the FCX issue getter — Validated in Phase 2: CXX Bridge Surface Expansion
 - [ ] Node binding gains PE-version extraction parity with C++/Python
 - [ ] Python binding gains explicit `classic_shared` runtime helpers
 - [ ] Per-binding error-contract conventions documented (string sentinel vs null vs exception)
@@ -141,4 +141,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after Phase 1 (CXX Parity Gate Tooling) completion*
+*Last updated: 2026-04-08 after Phase 2 (CXX Bridge Surface Expansion) completion*
