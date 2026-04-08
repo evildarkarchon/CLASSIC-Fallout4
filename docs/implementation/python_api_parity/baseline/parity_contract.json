@@ -443,6 +443,66 @@
       "pythonArity": 1
     },
     {
+      "id": "scanlog.crashgen_registry.CheckId@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CheckId",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_registry.CrashgenEntry@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_registry.CrashgenRegistry@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenRegistry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_registry.crashgen_registry@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crashgen_registry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.error.ScanLogError@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ScanLogError",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.error.error@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "error",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
       "id": "scanlog.fcx_handler.ConfigIssue",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -1140,6 +1200,414 @@
       "pythonArity": 2
     },
     {
+      "id": "scanlog.orchestrator.AnalysisConfig.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisConfig",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisConfig.__init__",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.orchestrator.AnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.orchestrator.AnalysisResult.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisResult.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.orchestrator.AnalysisResult.get_report_text",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisResult.get_report_text",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.AnalysisResult.to_dict",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisResult.to_dict",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.AnalysisResult@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.orchestrator.CancellationToken",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CancellationToken",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.orchestrator.CancellationToken.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CancellationToken.__init__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.CancellationToken.cancel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CancellationToken.cancel",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.CancellationToken.is_cancelled",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CancellationToken.is_cancelled",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.CancellationToken.reset",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CancellationToken.reset",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.attach_database",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.attach_database",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.check_loadorder_exists",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.check_loadorder_exists",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.has_database_pool",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.has_database_pool",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.is_feature_complete",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.is_feature_complete",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.is_initialized",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.is_initialized",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.load_loadorder",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.load_loadorder",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.process_logs_parallel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.process_logs_parallel",
+      "pythonKind": "method",
+      "pythonArity": 3
+    },
+    {
+      "id": "scanlog.orchestrator.Orchestrator.write_reports_batch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "OrchestratorCore",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator.write_reports_batch",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.orchestrator.ScanProgressPhase@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ScanProgressPhase",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.orchestrator.orchestrator@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "orchestrator",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.orchestrator.resolve_batch_concurrency@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "resolve_batch_concurrency",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "Orchestrator",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.analyze_to_string",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.analyze_to_string",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.check_for_updates",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.check_for_updates",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.log_exists",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.log_exists",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.log_path",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.log_path",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.reset",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.reset",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.start_monitoring",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.start_monitoring",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer.stats",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer.stats",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusError@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusError",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusStats",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusStats",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusStats",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusStats.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusStats",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusStats.__init__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusStats.dumps_to_stacks_ratio",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusStats",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusStats.dumps_to_stacks_ratio",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusStats@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusStats",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusStats",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.papyrus.papyrus@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "papyrus",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PapyrusAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.papyrus.papyrus_logging",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "papyrus_logging",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
       "id": "scanlog.parser.LogParser.__init__",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -1657,6 +2125,16 @@
       "pythonArity": 3
     },
     {
+      "id": "scanlog.segment_key.segment_key@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "segment_key",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
+      "pythonKind": "class"
+    },
+    {
       "id": "scanlog.settings_validator.SettingsValidator",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -1846,6 +2324,60 @@
       "rustSymbol": "suspect_scanner",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "SuspectScanner",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.version.CrashgenVersion.__eq__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenVersion",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion.__eq__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.version.CrashgenVersion.__hash__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenVersion",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion.__hash__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.version.CrashgenVersion.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenVersion",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.version.crashgen_version_gen@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crashgen_version_gen",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "parse_crashgen_version",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.version.version@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "version",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenVersion",
       "pythonKind": "class"
     },
     {
