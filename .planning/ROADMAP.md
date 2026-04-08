@@ -29,7 +29,7 @@
 ### v9.1.0-bindings Full Bindings Parity (Active Milestone — Phase numbering reset to 1)
 
 - [x] **Phase 1: CXX Parity Gate Tooling** (3/3 plans) — completed 2026-04-07 — first-class C++ bridge parity gate operational; born-green 202-entry baseline; 22 passing tests; contributor doc at docs/api/cxx-parity-gate.md
-- [ ] **Phase 2: CXX Bridge Surface Expansion** — Close all narrowing gaps and add first-time C++ surfaces for constants, web, and FCX inspection
+- [x] **Phase 2: CXX Bridge Surface Expansion** — Close all narrowing gaps and add first-time C++ surfaces for constants, web, and FCX inspection (completed 2026-04-08)
 - [ ] **Phase 3: Python Tier Collapse** — Promote all 289 deferred Python entries to one enforced tier; wire classic_shared module
 - [ ] **Phase 4: Node Tier Collapse** — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction
 - [ ] **Phase 5: CI Enforcement** — Wire all three parity gates into CI with branch-protection blocking on every PR
@@ -130,7 +130,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
-| 2. CXX Bridge Surface Expansion | 7/8 | In Progress|  |
+| 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
 | 3. Python Tier Collapse | 0/TBD | Not started | - |
 | 4. Node Tier Collapse | 0/TBD | Not started | - |
 | 5. CI Enforcement | 0/TBD | Not started | - |
