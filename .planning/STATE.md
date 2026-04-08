@@ -228,10 +228,11 @@ None yet.
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 260406-syy | Resolve the newly uncovered Python parity surface for FcxResetError so the Python parity gate no longer reports uncovered runtime metadata. | 2026-04-07 | 8f4a9324 | Verified | [260406-syy-resolve-the-newly-uncovered-python-parit](./quick/260406-syy-resolve-the-newly-uncovered-python-parit/) |
+| 260407-rg3 | Fix lying Game Files scan banner in Qt GUI — GameFilesWorker now computes combinedHasErrors/combinedTotalChecks from orchestrator + ENB + Crashgen instead of forwarding raw result fields that excluded ENB and Crashgen. | 2026-04-07 | 5fa8345e | Verified | [260407-rg3-fix-lying-game-files-scan-banner-in-qt-g](./quick/260407-rg3-fix-lying-game-files-scan-banner-in-qt-g/) |
 
 ## Session Continuity
 
-Last session: 2026-04-08T02:13:26.906Z
-Stopped at: Completed 02-cxx-bridge-surface-expansion/02-08-fcx-getter-and-final-verification-PLAN.md
+Last session: 2026-04-07T20:01:48Z
+Stopped at: Completed quick-260407-rg3 (fix lying Game Files scan banner in Qt GUI)
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
