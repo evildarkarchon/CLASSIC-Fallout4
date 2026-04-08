@@ -8,8 +8,9 @@ use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, FcxModeHandler, FcxResetError, LogParser, OrchestratorCore,
-    ScanProgressPhase, build_analysis_config_from_yaml,
+    AnalysisConfig, AnalysisResult, ConfigIssue as CoreFcxConfigIssue, FcxModeHandler,
+    FcxResetError, LogParser, OrchestratorCore, ScanProgressPhase, GLOBAL_FCX_HANDLER,
+    build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;
 use classic_yaml_core::YamlOperations;
@@ -336,6 +337,42 @@ fn fcx_reset_global_state() -> Result<(), String> {
         Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
         Err(error) => Err(error.to_string()),
     }
+}
+
+/// Return a snapshot of all FCX configuration issues currently held in the global handler.
+///
+/// # Empty-state contract
+///
+/// - Fresh process (no scan run): lazy-init handler has no issues → returns empty Vec.
+/// - After `fcx_reset_global_state()`: detected_issues cleared → returns empty Vec.
+/// - After scan with no FCX issues: returns empty Vec.
+/// - After scan with issues: returns one `FcxIssueDto` per `ConfigIssue`, order preserved.
+///
+/// # No-throw guarantee
+///
+/// The function is infallible. It uses `parking_lot::Mutex::lock()` which blocks until
+/// acquired and never returns an error. Callers on the C++ side wrap it in `try` as a
+/// belt-and-suspenders convention, but the fn itself cannot panic under normal operation.
+fn get_fcx_config_issues() -> Vec<ffi::FcxIssueDto> {
+    // parking_lot::Mutex::lock() returns the guard directly — no Result unwrap needed.
+    let handler = GLOBAL_FCX_HANDLER.lock();
+    handler
+        .get_detected_issues()
+        .iter()
+        .map(|i: &CoreFcxConfigIssue| {
+            let has_section = i.section.is_some();
+            ffi::FcxIssueDto {
+                file_path: i.file_path.clone(),
+                section_or_empty: i.section.clone().unwrap_or_default(),
+                has_section,
+                setting: i.setting.clone(),
+                current_value: i.current_value.clone(),
+                recommended_value: i.recommended_value.clone(),
+                description: i.description.clone(),
+                severity: i.severity.clone(),
+            }
+        })
+        .collect()
 }
 
 fn batch_reset_failure_result(log_path: String, error_message: String) -> ffi::ScanResult {
@@ -945,6 +982,33 @@ mod ffi {
         dumps_stacks_ratio: f64,
     }
 
+    /// Mirrors `classic_scanlog_core::fcx_handler::ConfigIssue` field-for-field (CXXS-03).
+    ///
+    /// The single `Option<String>` field (`section`) is flattened following the
+    /// Bridge String/Path Contract from plan 02-01:
+    ///   - `section_or_empty`: the section name, or `""` when `section` was `None`
+    ///   - `has_section`: `true` when `section` was `Some(…)`, `false` when `None`
+    ///
+    /// All other fields are plain `String` copies — no `Option` wrappers (Pitfall 6 CLEAR).
+    struct FcxIssueDto {
+        /// Path to the configuration file (e.g., "Fallout4.ini")
+        file_path: String,
+        /// INI section name, or `""` when the source `section` field was `None`
+        section_or_empty: String,
+        /// `true` when `section` was `Some(…)`, `false` when it was `None`
+        has_section: bool,
+        /// Setting/key name (e.g., "iNumThreads")
+        setting: String,
+        /// Current value found in the file
+        current_value: String,
+        /// Recommended replacement value
+        recommended_value: String,
+        /// Human-readable description of the issue
+        description: String,
+        /// Severity level: "error", "warning", or "info"
+        severity: String,
+    }
+
     unsafe extern "C++" {
         include!("classic_cxx_bridge/scan_progress_callback.h");
         type ScanBatchProgressCallback;
@@ -975,6 +1039,9 @@ mod ffi {
             xse_acronym: &str,
         ) -> Result<Box<Orchestrator>>;
         fn fcx_reset_global_state() -> Result<()>;
+        /// Return a snapshot of all FCX configuration issues from the global handler (CXXS-03).
+        /// Empty Vec when no scan has run, after a reset, or when no issues were detected.
+        fn get_fcx_config_issues() -> Vec<FcxIssueDto>;
         fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
         fn orchestrator_process_logs_batch(
             orch: &Orchestrator,
@@ -1047,6 +1114,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_fcx_reset_global_state_treats_unnecessary_as_success() {
         {
             let mut handler = GLOBAL_FCX_HANDLER.lock();
@@ -1058,6 +1126,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_fcx_reset_global_state_clears_dirty_state() {
         seed_dirty_fcx_state();
 
@@ -1066,6 +1135,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_orchestrator_process_log_resets_fcx_before_scan_start() {
         let orchestrator =
             orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
@@ -1077,6 +1147,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_orchestrator_process_logs_batch_resets_fcx_before_scan_start() {
         let orchestrator =
             orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
@@ -1926,5 +1997,192 @@ mod tests {
         assert_eq!(dto.stacks, 2);
         assert_eq!(dto.errors, 10);
         assert_eq!(dto.dumps_stacks_ratio, 2.5);
+    }
+
+    // ── FCX getter tests (CXXS-03) ────────────────────────────────────
+
+    /// Empty-state contract: after reset, get_fcx_config_issues() returns empty Vec.
+    #[test]
+    #[serial_test::serial]
+    fn test_get_fcx_config_issues_after_reset_returns_empty() {
+        let _ = fcx_reset_global_state();
+        let issues = get_fcx_config_issues();
+        assert!(
+            issues.is_empty(),
+            "Expected empty Vec after reset, got {} issues",
+            issues.len()
+        );
+    }
+
+    /// Fresh-state contract: before any scan, handler lazy-inits with empty detected_issues.
+    #[test]
+    #[serial_test::serial]
+    fn test_get_fcx_config_issues_fresh_state_returns_empty() {
+        // Reset to known-clean state first
+        let _ = fcx_reset_global_state();
+        let issues = get_fcx_config_issues();
+        assert!(
+            issues.is_empty(),
+            "Expected empty Vec on fresh state, got {} issues",
+            issues.len()
+        );
+    }
+
+    /// Idempotence: calling get_fcx_config_issues() twice without state change returns same length.
+    #[test]
+    #[serial_test::serial]
+    fn test_get_fcx_config_issues_idempotent() {
+        let _ = fcx_reset_global_state();
+        let issues1 = get_fcx_config_issues();
+        let issues2 = get_fcx_config_issues();
+        assert_eq!(
+            issues1.len(),
+            issues2.len(),
+            "get_fcx_config_issues() must be read-only; repeated calls should return same length"
+        );
+    }
+
+    /// Round-trip: section None maps to section_or_empty="" + has_section=false;
+    /// section Some("Display") maps to section_or_empty="Display" + has_section=true.
+    /// Also verifies all other fields are correctly mapped.
+    #[test]
+    #[serial_test::serial]
+    fn test_get_fcx_config_issues_round_trips_section_none_and_some() {
+        let _ = fcx_reset_global_state();
+
+        // Inject two issues: one with section: None, one with section: Some("Display")
+        {
+            let mut handler = GLOBAL_FCX_HANDLER.lock();
+            handler.set_detected_issues(vec![
+                ConfigIssue::new(
+                    "Fallout4.ini".to_string(),
+                    None,
+                    "iNumThreads".to_string(),
+                    "4".to_string(),
+                    "8".to_string(),
+                    "thread count too low".to_string(),
+                    "warning".to_string(),
+                ),
+                ConfigIssue::new(
+                    "Fallout4Prefs.ini".to_string(),
+                    Some("Display".to_string()),
+                    "iSize W".to_string(),
+                    "640".to_string(),
+                    "1920".to_string(),
+                    "resolution too low".to_string(),
+                    "info".to_string(),
+                ),
+            ]);
+        }
+
+        let issues = get_fcx_config_issues();
+        assert_eq!(issues.len(), 2, "Expected exactly 2 issues after injection");
+
+        // First issue: section None → section_or_empty="" + has_section=false
+        assert_eq!(issues[0].file_path, "Fallout4.ini");
+        assert_eq!(
+            issues[0].section_or_empty, "",
+            "section: None must produce section_or_empty = \"\""
+        );
+        assert!(
+            !issues[0].has_section,
+            "section: None must produce has_section = false"
+        );
+        assert_eq!(issues[0].setting, "iNumThreads");
+        assert_eq!(issues[0].current_value, "4");
+        assert_eq!(issues[0].recommended_value, "8");
+        assert_eq!(issues[0].description, "thread count too low");
+        assert_eq!(issues[0].severity, "warning");
+
+        // Second issue: section Some("Display") → section_or_empty="Display" + has_section=true
+        assert_eq!(issues[1].file_path, "Fallout4Prefs.ini");
+        assert_eq!(
+            issues[1].section_or_empty, "Display",
+            "section: Some(\"Display\") must produce section_or_empty = \"Display\""
+        );
+        assert!(
+            issues[1].has_section,
+            "section: Some(\"Display\") must produce has_section = true"
+        );
+        assert_eq!(issues[1].setting, "iSize W");
+        assert_eq!(issues[1].current_value, "640");
+        assert_eq!(issues[1].recommended_value, "1920");
+        assert_eq!(issues[1].description, "resolution too low");
+        assert_eq!(issues[1].severity, "info");
+
+        // Cleanup
+        let _ = fcx_reset_global_state();
+    }
+
+    /// Regression: fcx_reset_global_state() still works correctly (D-08 preserved).
+    #[test]
+    #[serial_test::serial]
+    fn test_fcx_reset_clears_issues_visible_to_getter() {
+        // Seed some issues
+        {
+            let mut handler = GLOBAL_FCX_HANDLER.lock();
+            handler.set_detected_issues(vec![ConfigIssue::new(
+                "file.ini".to_string(),
+                None,
+                "key".to_string(),
+                "old".to_string(),
+                "new".to_string(),
+                "desc".to_string(),
+                "info".to_string(),
+            )]);
+        }
+
+        // Verify issues are present
+        let before_reset = get_fcx_config_issues();
+        assert_eq!(before_reset.len(), 1, "Expected 1 issue before reset");
+
+        // Reset clears everything
+        let _ = fcx_reset_global_state();
+
+        // Getter must now return empty Vec
+        let after_reset = get_fcx_config_issues();
+        assert!(
+            after_reset.is_empty(),
+            "Expected empty Vec after reset, got {} issues",
+            after_reset.len()
+        );
+    }
+
+    /// Order preservation: Vec returned by getter matches injection order.
+    #[test]
+    #[serial_test::serial]
+    fn test_get_fcx_config_issues_preserves_order() {
+        let _ = fcx_reset_global_state();
+
+        {
+            let mut handler = GLOBAL_FCX_HANDLER.lock();
+            handler.set_detected_issues(vec![
+                ConfigIssue::new(
+                    "first.ini".to_string(),
+                    None,
+                    "alpha".to_string(),
+                    "a".to_string(),
+                    "b".to_string(),
+                    "first issue".to_string(),
+                    "error".to_string(),
+                ),
+                ConfigIssue::new(
+                    "second.ini".to_string(),
+                    None,
+                    "beta".to_string(),
+                    "c".to_string(),
+                    "d".to_string(),
+                    "second issue".to_string(),
+                    "warning".to_string(),
+                ),
+            ]);
+        }
+
+        let issues = get_fcx_config_issues();
+        assert_eq!(issues.len(), 2);
+        assert_eq!(issues[0].file_path, "first.ini");
+        assert_eq!(issues[1].file_path, "second.ini");
+
+        let _ = fcx_reset_global_state();
     }
 }
