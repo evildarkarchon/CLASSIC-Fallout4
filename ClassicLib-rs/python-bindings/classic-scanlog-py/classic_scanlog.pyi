@@ -1938,12 +1938,28 @@ class FcxModeHandler:
         Python implementation where FCXModeHandler.reset_fcx_checks()
         is called as a class method.
 
+        Raises:
+            FcxResetError: If the global reset cannot proceed because of a
+                non-``Unnecessary`` failure variant. The ``Unnecessary``
+                variant (the handler was already clean) is treated as
+                success and does not raise.
+
         Example:
             >>> from classic_scanlog import FcxModeHandler
             >>> # Reset global FCX state before starting a new scan
             >>> FcxModeHandler.reset_fcx_checks()
 
         """
+
+class FcxResetError(Exception):
+    """Raised when FCX global state reset cannot proceed.
+
+    Mirrors :class:`classic_scanlog_core::fcx_handler::FcxResetError` and
+    is raised by :meth:`FcxModeHandler.reset_fcx_checks` whenever the
+    global reset fails with a non-``Unnecessary`` variant. The
+    ``Unnecessary`` variant (handler was already clean) is treated as
+    success and does not surface as this exception.
+    """
 
 # =============================================================================
 # Test Classes
