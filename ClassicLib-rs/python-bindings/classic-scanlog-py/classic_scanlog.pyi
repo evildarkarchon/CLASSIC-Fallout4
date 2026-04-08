@@ -1969,6 +1969,21 @@ class FcxResetError(Exception):
 # Papyrus Log Analysis
 # =============================================================================
 
+class PapyrusError(Exception):
+    """Raised on Papyrus log analysis failures.
+
+    Phase 3 Plan 04 (Wave 3a): stub mirrors the Rust
+    ``classic_scanlog_core::papyrus::PapyrusError`` enum so the parity
+    contract row can resolve ``classic_scanlog.PapyrusError`` through
+    ``classic_scanlog.pyi``. At runtime, current Papyrus error paths in
+    :class:`PapyrusAnalyzer` still raise the standard Python
+    ``FileNotFoundError`` / ``IOError`` / ``RuntimeError`` variants that
+    the PyO3 wrapper converts from the underlying Rust enum. Callers that
+    want a typed catch class can still ``except classic_scanlog.PapyrusError``
+    once a future phase wires the create_exception! macro for it.
+    """
+
+
 class PapyrusStats:
     """Statistics from Papyrus log analysis.
 
