@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T00:24:12Z",
+  "generated_at_utc": "2026-04-08T00:54:50Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4161,6 +4161,331 @@
       ]
     },
     {
+      "id": "9d82340dd1a34d6b",
+      "rustSymbol": "parse_game_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "version_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "GameVersionDto"
+      }
+    },
+    {
+      "id": "c982b74740f8ee3d",
+      "rustSymbol": "version_registry_get_all_count",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "usize"
+      }
+    },
+    {
+      "id": "3837aef1f9dcf5d3",
+      "rustSymbol": "version_registry_get_all_for_game",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "is_vr",
+            "type": "bool"
+          }
+        ],
+        "returnType": "Vec<VersionInfoDto>"
+      }
+    },
+    {
+      "id": "adebe347a211dda5",
+      "rustSymbol": "version_registry_get_all_ids",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "Vec<String>"
+      }
+    },
+    {
+      "id": "931c3651f7130049",
+      "rustSymbol": "version_registry_get_by_id",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "id",
+            "type": "&str"
+          }
+        ],
+        "returnType": "VersionInfoDto"
+      }
+    },
+    {
+      "id": "a2cca2c61a1dfd3a",
+      "rustSymbol": "version_registry_get_crashgen_config",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "id",
+            "type": "&str"
+          },
+          {
+            "name": "crashgen_version",
+            "type": "&str"
+          }
+        ],
+        "returnType": "CrashgenConfigDto"
+      }
+    },
+    {
+      "id": "768bf40c78fc5667",
+      "rustSymbol": "version_registry_get_crashgen_configs",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "id",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Vec<CrashgenConfigDto>"
+      }
+    },
+    {
+      "id": "c9980a87fd7f20d4",
+      "rustSymbol": "version_registry_get_xse_config",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "id",
+            "type": "&str"
+          }
+        ],
+        "returnType": "XseConfigDto"
+      }
+    },
+    {
+      "id": "647471140dada0d8",
+      "rustSymbol": "version_registry_match_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "version_str",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "is_vr",
+            "type": "bool"
+          }
+        ],
+        "returnType": "MatchResultDto"
+      }
+    },
+    {
+      "id": "a3896f08d956320e",
+      "rustSymbol": "CrashgenConfigDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "version",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "acronym",
+          "type": "String"
+        },
+        {
+          "name": "dll_file",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "download_url",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "69f123ef2717bdbe",
+      "rustSymbol": "GameVersionDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "major",
+          "type": "u32"
+        },
+        {
+          "name": "minor",
+          "type": "u32"
+        },
+        {
+          "name": "patch",
+          "type": "u32"
+        },
+        {
+          "name": "build",
+          "type": "u32"
+        },
+        {
+          "name": "valid",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "008b083968da62f2",
+      "rustSymbol": "MatchResultDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "matched_id",
+          "type": "String"
+        },
+        {
+          "name": "confidence",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "is_match",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "aa5ac3996d1f24e9",
+      "rustSymbol": "VersionInfoDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "version_string",
+          "type": "String"
+        },
+        {
+          "name": "short_name",
+          "type": "String"
+        },
+        {
+          "name": "game",
+          "type": "String"
+        },
+        {
+          "name": "docs_name",
+          "type": "String"
+        },
+        {
+          "name": "steam_id",
+          "type": "u32"
+        },
+        {
+          "name": "is_vr",
+          "type": "bool"
+        },
+        {
+          "name": "found",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "6e53840a0f9ef5b7",
+      "rustSymbol": "XseConfigDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "acronym",
+          "type": "String"
+        },
+        {
+          "name": "full_name",
+          "type": "String"
+        },
+        {
+          "name": "compatible_version",
+          "type": "String"
+        },
+        {
+          "name": "loader",
+          "type": "String"
+        },
+        {
+          "name": "file_count",
+          "type": "u32"
+        },
+        {
+          "name": "found",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "id": "56c2a9c53f62ef8b",
       "rustSymbol": "ModSite",
       "kind": "enum",
@@ -4367,6 +4692,204 @@
         ],
         "returnType": "Result<String>"
       }
+    },
+    {
+      "id": "7c4723bac8969140",
+      "rustSymbol": "XseType",
+      "kind": "enum",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "F4SE",
+        "F4SEVR",
+        "SKSE",
+        "SKSE64",
+        "SKSEVR",
+        "SFSE"
+      ]
+    },
+    {
+      "id": "2396a15798a0b0b7",
+      "rustSymbol": "detect_xse_version",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "exe_path",
+            "type": "&str"
+          },
+          {
+            "name": "t",
+            "type": "XseType"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "ecd913c0bf62192f",
+      "rustSymbol": "detect_xse_version_string",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "exe_path",
+            "type": "&str"
+          },
+          {
+            "name": "xse_type_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "622499dfe357e2f2",
+      "rustSymbol": "is_xse_installed",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_root",
+            "type": "&str"
+          },
+          {
+            "name": "t",
+            "type": "XseType"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "866ec46b5dbb24ca",
+      "rustSymbol": "is_xse_installed_check",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_root",
+            "type": "&str"
+          },
+          {
+            "name": "xse_type_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "fed1f3c1692a2596",
+      "rustSymbol": "xse_get_dll_prefix",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "t",
+            "type": "XseType"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "d7059d6d8a7ad764",
+      "rustSymbol": "xse_get_info",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_path",
+            "type": "&str"
+          },
+          {
+            "name": "t",
+            "type": "XseType"
+          }
+        ],
+        "returnType": "XseInfoDto"
+      }
+    },
+    {
+      "id": "fc1c537a29272570",
+      "rustSymbol": "xse_get_loader_name",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "t",
+            "type": "XseType"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "faedc73b20514c24",
+      "rustSymbol": "xse_get_type_from_game_id",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "game_id_str",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "3fea903f299b7e61",
+      "rustSymbol": "XseInfoDto",
+      "kind": "struct",
+      "bridgeModule": "xse",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "xse_type",
+          "type": "String"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        },
+        {
+          "name": "version",
+          "type": "String"
+        },
+        {
+          "name": "installed",
+          "type": "bool"
+        }
+      ]
     },
     {
       "id": "981bdd021e6e927f",

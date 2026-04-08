@@ -48,6 +48,8 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         files.rs
         scangame.rs
         game.rs
+        xse.rs
+        version_registry.rs
         web.rs
         update.rs
         message.rs

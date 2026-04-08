@@ -10,6 +10,7 @@
 
 #include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/path.h"
+#include "classic_cxx_bridge/xse.h"
 
 ManualPathDialog::ManualPathDialog(bool needsGamePath,
                                    bool needsDocsPath,
@@ -38,6 +39,20 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
         auto* label = new QLabel(QStringLiteral("Game Folder Path:"));
         label->setProperty("class", QStringLiteral("fieldLabel"));
         mainLayout->addWidget(label);
+
+        // D-11 / CXXS-09 consumer migration — display the expected XSE loader
+        // filename using the new typed classic::xse namespace.
+        try {
+            auto loader_rust = classic::xse::xse_get_loader_name(classic::xse::XseType::F4SE);
+            QString loader_name = QString::fromUtf8(loader_rust.data(),
+                                                    static_cast<int>(loader_rust.size()));
+            auto* xseHint = new QLabel(
+                QStringLiteral("The game folder should contain: %1").arg(loader_name));
+            xseHint->setProperty("class", QStringLiteral("hintLabel"));
+            mainLayout->addWidget(xseHint);
+        } catch (...) {
+            // Non-fatal: XSE hint is informational only.
+        }
 
         auto* rowLayout = new QHBoxLayout();
         m_editGamePath = new QLineEdit();
