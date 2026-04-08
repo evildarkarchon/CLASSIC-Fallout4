@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T23:02:08.459972+00:00",
+  "generated_at_utc": "2026-04-08T23:31:29.858151+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3158,7 +3158,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
       "source_expr": "report::ReportComposer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ReportFragment",
@@ -3168,7 +3168,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
       "source_expr": "report::ReportFragment",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ReportGenerator",
@@ -3178,7 +3178,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
       "source_expr": "report::ReportGenerator",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RustFormIDAnalyzer",
@@ -3248,7 +3248,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
       "source_expr": "report::StringPool",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SuspectScanner",
@@ -3514,7 +3514,7 @@
       "owner_module": "scanlog",
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod report;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "resolve_batch_concurrency",

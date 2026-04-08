@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-08T23:02:16.784250+00:00`
-- Tier-1 contract rows: **240**
-- Tier-1 matched: **240**
+- Generated: `2026-04-08T23:31:42.541801+00:00`
+- Tier-1 contract rows: **286**
+- Tier-1 matched: **286**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **1026**
+- Total gaps (Tier-1 + Tier-2): **980**
 
 ## Tier-1 Contract Evaluation
 
@@ -204,6 +204,52 @@
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.scan_records_batch` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
+| `scanlog.report.ParallelReportProcessor` | `scanlog` | `ReportComposer` | `classic_scanlog.ParallelReportProcessor` | `matched` |
+| `scanlog.report.ParallelReportProcessor.__init__` | `scanlog` | `ReportComposer` | `classic_scanlog.ParallelReportProcessor.__init__` | `matched` |
+| `scanlog.report.ParallelReportProcessor.combine_fragments` | `scanlog` | `ReportComposer` | `classic_scanlog.ParallelReportProcessor.combine_fragments` | `matched` |
+| `scanlog.report.ReportComposer` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer` | `matched` |
+| `scanlog.report.ReportComposer.__init__` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.__init__` | `matched` |
+| `scanlog.report.ReportComposer.add` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.add` | `matched` |
+| `scanlog.report.ReportComposer.add_many` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.add_many` | `matched` |
+| `scanlog.report.ReportComposer.build_string` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.build_string` | `matched` |
+| `scanlog.report.ReportComposer.compose` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.compose` | `matched` |
+| `scanlog.report.ReportComposer.compose_optimized` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.compose_optimized` | `matched` |
+| `scanlog.report.ReportComposer.fragment_count` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.fragment_count` | `matched` |
+| `scanlog.report.ReportComposer.pool_stats` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.pool_stats` | `matched` |
+| `scanlog.report.ReportComposer@rust` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer` | `matched` |
+| `scanlog.report.ReportFragment` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment` | `matched` |
+| `scanlog.report.ReportFragment.__init__` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.__init__` | `matched` |
+| `scanlog.report.ReportFragment.combine` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.combine` | `matched` |
+| `scanlog.report.ReportFragment.empty` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.empty` | `matched` |
+| `scanlog.report.ReportFragment.from_lines` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.from_lines` | `matched` |
+| `scanlog.report.ReportFragment.is_empty` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.is_empty` | `matched` |
+| `scanlog.report.ReportFragment.len` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.len` | `matched` |
+| `scanlog.report.ReportFragment.to_list` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.to_list` | `matched` |
+| `scanlog.report.ReportFragment.with_header` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.with_header` | `matched` |
+| `scanlog.report.ReportFragment@rust` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment` | `matched` |
+| `scanlog.report.ReportGenerator` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator` | `matched` |
+| `scanlog.report.ReportGenerator.__init__` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.__init__` | `matched` |
+| `scanlog.report.ReportGenerator.generate_error_section` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_error_section` | `matched` |
+| `scanlog.report.ReportGenerator.generate_footer` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_footer` | `matched` |
+| `scanlog.report.ReportGenerator.generate_formid_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_formid_section_header` | `matched` |
+| `scanlog.report.ReportGenerator.generate_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_header` | `matched` |
+| `scanlog.report.ReportGenerator.generate_mod_check_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_mod_check_header` | `matched` |
+| `scanlog.report.ReportGenerator.generate_plugin_suspect_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_plugin_suspect_header` | `matched` |
+| `scanlog.report.ReportGenerator.generate_record_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_record_section_header` | `matched` |
+| `scanlog.report.ReportGenerator.generate_settings_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_settings_section_header` | `matched` |
+| `scanlog.report.ReportGenerator.generate_suspect_found_footer` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_suspect_found_footer` | `matched` |
+| `scanlog.report.ReportGenerator.generate_suspect_section` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_suspect_section` | `matched` |
+| `scanlog.report.ReportGenerator.generate_suspect_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_suspect_section_header` | `matched` |
+| `scanlog.report.ReportGenerator.with_config` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.with_config` | `matched` |
+| `scanlog.report.ReportGenerator@rust` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator` | `matched` |
+| `scanlog.report.StringPool` | `scanlog` | `StringPool` | `classic_scanlog.StringPool` | `matched` |
+| `scanlog.report.StringPool.__init__` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.__init__` | `matched` |
+| `scanlog.report.StringPool.clear` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.clear` | `matched` |
+| `scanlog.report.StringPool.get_stats` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.get_stats` | `matched` |
+| `scanlog.report.StringPool.intern` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.intern` | `matched` |
+| `scanlog.report.StringPool.intern_batch` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.intern_batch` | `matched` |
+| `scanlog.report.StringPool@rust` | `scanlog` | `StringPool` | `classic_scanlog.StringPool` | `matched` |
+| `scanlog.report.report@rust` | `scanlog` | `report` | `classic_scanlog.ReportComposer` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.settings_validator.SettingsValidator` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.__init__` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.__init__` | `matched` |
@@ -257,7 +303,7 @@
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `scanlog` | 0 | 51 |
+| `scanlog` | 0 | 5 |
 | `config` | 0 | 28 |
 | `version_registry` | 0 | 35 |
 | `yaml` | 0 | 37 |
