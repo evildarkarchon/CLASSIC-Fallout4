@@ -124,11 +124,7 @@ impl CrashgenVersion {
                 .get(3)
                 .and_then(|m| {
                     let s = m.as_str();
-                    if s.is_empty() {
-                        None
-                    } else {
-                        s.parse().ok()
-                    }
+                    if s.is_empty() { None } else { s.parse().ok() }
                 })
                 .unwrap_or(0);
 

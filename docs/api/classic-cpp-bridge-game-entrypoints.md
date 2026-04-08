@@ -110,6 +110,7 @@ Current bridge choices:
 
 - resolves the documents subfolder from version-registry metadata (`docs_name`)
 - accepts a cached string path and otherwise uses the crate's platform-specific discovery flow
+- chains `DocsPathFinder::with_steam_app_id(Fallout4Version::Original.steam_app_id())` so Linux Proton documents-path detection for Fallout 4 still works. This is the canonical call site for the 377160 literal — the bridge imports `classic_constants_core::Fallout4Version` rather than hard-coding the Steam ID.
 - does not expose `validate_ini_files()` or `DocumentsChecker`
 - returns `""` on failure instead of surfacing `DocsPathError`
 

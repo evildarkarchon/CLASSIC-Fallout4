@@ -128,8 +128,8 @@ Current strategy order in `find_docs_path()`:
 
 1. cached path, if provided and valid
 2. Windows documents registry lookup plus the game-relative suffix on Windows
-3. on non-Windows builds, a valid Fallout 4 Proton documents path resolved from Steam metadata
-4. `home/.local/share/<relative_path>` on non-Windows builds when Steam lookup fails or the Proton documents path is invalid
+3. on non-Windows builds, if the caller opted in via `DocsPathFinder::with_steam_app_id(app_id)`, a valid Steam/Proton documents path resolved from Steam metadata for that app ID
+4. `home/.local/share/<relative_path>` on non-Windows builds when no opt-in was made or when the Proton lookup fails or the Proton documents path is invalid
 5. `DocsPathError::NotFound` if all strategies fail
 
 After the folder is found, follow-up checks may use:
@@ -379,7 +379,7 @@ That is a valid current outcome.
 - `run_combined_checks()` currently ignores `SetupCheckConfig.xse_hashes`
 - `classic-path-core::GamePathFinder` has no built-in manual-prompt fallback; it returns `NotFound` when its automatic strategies fail
 - `classic-path-core::parse_xse_log()` assumes a fixed directory depth under `Data/.../Plugins`
-- `classic-path-core::DocsPathFinder` does not currently auto-build a Proton-specific documents path from Steam metadata
+- `classic-path-core::DocsPathFinder`'s Linux Proton documents path lookup is opt-in via `with_steam_app_id(app_id)`; the default finder skips it and goes straight to `~/.local/share/<relative_path>`
 - `classic-xse-core::detect_xse_version()` uses filename parsing only and returns the first parseable matching DLL it sees
 - `classic-xse-core::get_xse_info()` is fail-soft for version detection
 - `classic-scangame-core::XseChecker` treats OG, NG, and AE Address Library files as acceptable in non-VR mode, while VR mode expects the VR file only

@@ -567,7 +567,7 @@ impl ReportGenerator {
     /// A `ReportFragment` containing the settings section header.
     pub fn generate_settings_section_header(&self) -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "### Checking for Settings-related Issues\n\n".to_string()
+            "### Checking for Settings-related Issues\n\n".to_string(),
         ])
     }
 
@@ -598,7 +598,7 @@ impl ReportGenerator {
     /// A `ReportFragment` containing the plugin suspect header.
     pub fn generate_plugin_suspect_header(&self) -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "### Checking for Plugin-related Errors\n\n".to_string()
+            "### Checking for Plugin-related Errors\n\n".to_string(),
         ])
     }
 

@@ -8,13 +8,16 @@
 //! The module uses multiple strategies to find the documents path:
 //! 1. **Cached Path**: Use previously saved path from settings if valid
 //! 2. **Windows Registry**: Query "Personal" folder from Windows registry
-//! 3. **Home Directory**: Use standard home directory on Linux
+//! 3. **Linux**: Uses home directory + ".local/share"; if the caller has
+//!    opted in via `with_steam_app_id`, a Steam/Proton compatdata path
+//!    is tried first before that fallback.
 //! 4. **Manual Selection**: Prompt user to manually select the path (handled by caller)
 //!
 //! # Platform Support
 //!
 //! - **Windows**: Uses Windows registry to find "My Documents" folder
-//! - **Linux**: Uses home directory + ".local/share" for compatibility layers
+//! - **Linux**: Uses home directory + ".local/share"; Proton
+//!   compatdata lookup is opt-in via `DocsPathFinder::with_steam_app_id`
 //!
 //! # Examples
 //!
@@ -38,8 +41,6 @@ use crate::IniFile;
 use crate::error::{DocsPathError, DocsPathResult};
 use std::path::{Path, PathBuf};
 
-const FALLOUT_4_STEAM_APP_ID: u32 = 377160;
-
 /// Documents path finder with multi-strategy detection.
 ///
 /// This struct provides game-agnostic documents path detection using multiple
@@ -59,6 +60,13 @@ const FALLOUT_4_STEAM_APP_ID: u32 = 377160;
 pub struct DocsPathFinder {
     /// Relative path within documents folder (e.g., "My Games\\Fallout4")
     relative_path: String,
+    /// Optional Steam application ID. When Some(_), the Linux
+    /// documents-path lookup will try the Steam/Proton prefix for that
+    /// app ID before falling back to ~/.local/share. When None
+    /// (the default from `new`), the Proton lookup is skipped entirely
+    /// and the finder goes straight to ~/.local/share. Callers that
+    /// want Fallout 4 Proton behavior opt in via `with_steam_app_id`.
+    steam_app_id: Option<u32>,
 }
 
 impl DocsPathFinder {
@@ -86,7 +94,56 @@ impl DocsPathFinder {
     pub fn new(relative_path: impl Into<String>) -> Self {
         Self {
             relative_path: relative_path.into(),
+            steam_app_id: None,
         }
+    }
+
+    /// Opt in to a Steam-application-ID-aware Linux Proton documents
+    /// path lookup.
+    ///
+    /// When this is set, `find_docs_path` on Linux will first try the
+    /// Steam/Proton compatdata prefix for the given app ID before
+    /// falling back to `~/.local/share/<relative_path>`. When it is NOT
+    /// set (the `new` default), the Proton lookup is skipped entirely
+    /// and `find_docs_path` on Linux goes straight to
+    /// `~/.local/share/<relative_path>`.
+    ///
+    /// This is an opt-in because `DocsPathFinder` is a game-agnostic
+    /// helper — historically it hard-coded Fallout 4's Steam App ID
+    /// (377160) for its Linux Proton lookup, which meant a consumer of
+    /// the generic API for another game implicitly probed Fallout 4's
+    /// compatdata prefix.
+    ///
+    /// # Arguments
+    ///
+    /// * `app_id` - The Steam application ID for the game whose Proton
+    ///   documents prefix should be searched (for Fallout 4 this is
+    ///   `377160`; use
+    ///   `classic_constants_core::Fallout4Version::Original.steam_app_id()`
+    ///   in callers that already depend on `classic-constants-core` to
+    ///   avoid duplicating the literal).
+    ///
+    /// # Returns
+    ///
+    /// The finder with the new Steam app ID installed (consuming
+    /// builder).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use classic_path_core::DocsPathFinder;
+    ///
+    /// // Generic usage (no Proton lookup on Linux):
+    /// let finder = DocsPathFinder::new("My Games/Skyrim");
+    ///
+    /// // Fallout-4-specific usage (Linux Proton lookup enabled):
+    /// let fo4_finder = DocsPathFinder::new("My Games/Fallout4")
+    ///     .with_steam_app_id(377160);
+    /// ```
+    #[must_use]
+    pub fn with_steam_app_id(mut self, app_id: u32) -> Self {
+        self.steam_app_id = Some(app_id);
+        self
     }
 
     /// Find the documents folder path using multiple strategies.
@@ -94,7 +151,9 @@ impl DocsPathFinder {
     /// Attempts to find the documents path in this order:
     /// 1. Use cached path if provided and valid
     /// 2. Query Windows registry (Windows only)
-    /// 3. Use the shared Linux workflow (Proton first, then local share)
+    /// 3. On Linux: if the caller opted in via `with_steam_app_id`, tries a
+    ///    Steam/Proton documents path first; falls back to `~/.local/share`.
+    ///    If no Steam app ID is set, goes straight to `~/.local/share`.
     /// 4. Return error if all strategies fail
     ///
     /// # Arguments
@@ -175,10 +234,12 @@ impl DocsPathFinder {
         Ok(docs_path)
     }
 
-    /// Find documents path on Linux using Proton-first selection plus local-share fallback.
+    /// Find documents path on Linux using the home directory.
     ///
-    /// Uses the home directory to prefer a valid Proton documents path for Fallout 4,
-    /// then falls back to the legacy `.local/share` location.
+    /// Uses the home directory and, when the caller has opted in via
+    /// `with_steam_app_id`, prefers a valid Steam/Proton documents path for
+    /// that app ID before falling back to the legacy `.local/share` location.
+    /// When no app ID is set, goes straight to `~/.local/share/<relative_path>`.
     ///
     /// # Returns
     ///
@@ -193,7 +254,12 @@ impl DocsPathFinder {
 
         let home = get_home_directory()?;
 
-        self.find_docs_path_linux_with(&home, parse_steam_library_vdf(FALLOUT_4_STEAM_APP_ID))
+        let steam_library = match self.steam_app_id {
+            Some(app_id) => parse_steam_library_vdf(app_id),
+            None => Err(DocsPathError::NotFound),
+        };
+
+        self.find_docs_path_linux_with(&home, steam_library)
     }
 
     /// Resolve the Linux documents path from injected home and Steam-library inputs.
@@ -207,12 +273,11 @@ impl DocsPathFinder {
     ) -> DocsPathResult<PathBuf> {
         use crate::platform::linux::construct_proton_docs_path;
 
-        if let Ok(steam_library) = steam_library {
-            let proton_docs_path = construct_proton_docs_path(
-                &steam_library,
-                FALLOUT_4_STEAM_APP_ID,
-                &self.relative_path,
-            );
+        if let Some(app_id) = self.steam_app_id
+            && let Ok(steam_library) = steam_library
+        {
+            let proton_docs_path =
+                construct_proton_docs_path(&steam_library, app_id, &self.relative_path);
 
             if self.validate_docs_path(&proton_docs_path).is_ok() {
                 return Ok(proton_docs_path);

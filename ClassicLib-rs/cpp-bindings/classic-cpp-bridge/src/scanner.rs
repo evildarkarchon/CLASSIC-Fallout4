@@ -9,7 +9,7 @@ use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, ConfigIssue as CoreFcxConfigIssue, FcxModeHandler,
-    FcxResetError, LogParser, OrchestratorCore, ScanProgressPhase, GLOBAL_FCX_HANDLER,
+    FcxResetError, GLOBAL_FCX_HANDLER, LogParser, OrchestratorCore, ScanProgressPhase,
     build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;

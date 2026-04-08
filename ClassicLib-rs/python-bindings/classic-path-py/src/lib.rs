@@ -810,6 +810,40 @@ impl DocsPathFinder {
         }
     }
 
+    /// Opt in to a Steam-application-ID-aware Linux Proton documents
+    /// path lookup.
+    ///
+    /// When set, `find_docs_path` on Linux will first try the
+    /// Steam/Proton compatdata prefix for the given app ID before
+    /// falling back to `~/.local/share/<relative_path>`. When NOT
+    /// set (the default from the constructor), the Proton lookup is
+    /// skipped entirely and `find_docs_path` on Linux goes straight
+    /// to `~/.local/share/<relative_path>`.
+    ///
+    /// This is an opt-in because DocsPathFinder is a game-agnostic
+    /// helper. For example, a Fallout 4 caller should pass
+    /// `377160`, while a Skyrim caller should pass that game's
+    /// Steam app ID (or not call this method at all if Proton
+    /// fallback is unwanted).
+    ///
+    /// # Arguments
+    ///
+    /// * `app_id` - The Steam application ID for the game whose
+    ///   Proton documents prefix should be searched.
+    ///
+    /// # Python Examples
+    ///
+    /// ```python
+    /// from classic_path import DocsPathFinder
+    ///
+    /// finder = DocsPathFinder("My Games\\Fallout4")
+    /// finder.set_steam_app_id(377160)  # Fallout 4 Steam App ID
+    /// docs_path = finder.find_docs_path(cached_path=None)
+    /// ```
+    fn set_steam_app_id(&mut self, app_id: u32) {
+        self.inner = self.inner.clone().with_steam_app_id(app_id);
+    }
+
     /// Find the documents folder path using multiple strategies.
     ///
     /// Attempts to find the documents path in this order:

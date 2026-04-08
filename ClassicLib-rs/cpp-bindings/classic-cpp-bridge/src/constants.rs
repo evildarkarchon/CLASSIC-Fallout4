@@ -41,8 +41,8 @@
 //! ```
 
 use classic_constants_core::{
-    Fallout4Version as CoreFallout4Version, GameId as CoreGameId, YamlFile as CoreYamlFile,
-    must_not_be_none as core_must_not_be_none, SETTINGS_IGNORE_NONE,
+    Fallout4Version as CoreFallout4Version, GameId as CoreGameId, SETTINGS_IGNORE_NONE,
+    YamlFile as CoreYamlFile, must_not_be_none as core_must_not_be_none,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -339,7 +339,10 @@ mod tests {
     fn test_fallout4_version_steam_app_id_vr_differs_from_original() {
         let orig = fallout4_version_steam_app_id(ffi::Fallout4Version::Original);
         let vr = fallout4_version_steam_app_id(ffi::Fallout4Version::Vr);
-        assert_ne!(orig, vr, "VR and Original should have different Steam App IDs");
+        assert_ne!(
+            orig, vr,
+            "VR and Original should have different Steam App IDs"
+        );
         assert!(vr > 0, "VR Steam App ID should be non-zero");
     }
 
@@ -401,7 +404,9 @@ mod tests {
     #[test]
     fn test_must_not_be_none_key_false_for_unknown() {
         assert!(!must_not_be_none_key("definitely_not_a_real_key_xyz_789"));
-        assert!(!settings_ignore_none_contains("definitely_not_a_real_key_xyz_789"));
+        assert!(!settings_ignore_none_contains(
+            "definitely_not_a_real_key_xyz_789"
+        ));
     }
 
     #[test]

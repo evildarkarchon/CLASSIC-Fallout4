@@ -352,8 +352,9 @@ mod tests {
     use std::{
         sync::Arc,
         sync::{
+            LazyLock, Mutex as StdMutex,
             atomic::{AtomicBool, Ordering},
-            mpsc, LazyLock, Mutex as StdMutex,
+            mpsc,
         },
         thread,
         time::Duration,

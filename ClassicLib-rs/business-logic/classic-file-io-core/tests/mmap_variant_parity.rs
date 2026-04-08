@@ -57,7 +57,11 @@ fn map_shared(file: &File) -> Result<memmap2::Mmap, String> {
 
 #[allow(unsafe_code)]
 fn map_copy(file: &File) -> Result<memmap2::MmapMut, String> {
-    unsafe { MmapOptions::new().map_copy(file).map_err(|err| err.to_string()) }
+    unsafe {
+        MmapOptions::new()
+            .map_copy(file)
+            .map_err(|err| err.to_string())
+    }
 }
 
 #[allow(unsafe_code)]

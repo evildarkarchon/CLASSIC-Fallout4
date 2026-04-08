@@ -284,7 +284,10 @@ mod tests {
     #[test]
     fn test_version_registry_get_all_for_game_fallout4_non_vr() {
         let entries = version_registry_get_all_for_game("Fallout4", false);
-        assert!(!entries.is_empty(), "Fallout4 should have at least one non-VR variant");
+        assert!(
+            !entries.is_empty(),
+            "Fallout4 should have at least one non-VR variant"
+        );
         for entry in &entries {
             assert!(!entry.is_vr);
             assert_eq!(entry.game, "Fallout4");

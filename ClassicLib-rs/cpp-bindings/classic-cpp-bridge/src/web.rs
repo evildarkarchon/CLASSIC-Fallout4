@@ -35,13 +35,10 @@
 
 use classic_constants_core::GameId as CoreGameId;
 use classic_web_core::{
-    ModSite as CoreModSite,
-    build_url_with_query as core_build_url_with_query,
-    extract_domain as core_extract_domain,
-    get_user_agent as core_get_user_agent,
+    ModSite as CoreModSite, build_url_with_query as core_build_url_with_query,
+    extract_domain as core_extract_domain, get_user_agent as core_get_user_agent,
     get_user_agent_with_suffix as core_get_user_agent_with_suffix,
-    is_valid_url as core_is_valid_url,
-    join_url as core_join_url,
+    is_valid_url as core_is_valid_url, join_url as core_join_url,
     validate_url as core_validate_url,
 };
 
@@ -278,7 +275,10 @@ mod tests {
     fn test_web_get_user_agent_nonempty() {
         let ua = web_get_user_agent();
         assert!(!ua.is_empty());
-        assert!(ua.starts_with("CLASSIC/"), "user agent should start with CLASSIC/, got: {ua}");
+        assert!(
+            ua.starts_with("CLASSIC/"),
+            "user agent should start with CLASSIC/, got: {ua}"
+        );
     }
 
     #[test]
@@ -358,10 +358,7 @@ mod tests {
         for site in sites {
             for game in games {
                 let url = mod_site_game_url(site, game);
-                assert!(
-                    !url.is_empty(),
-                    "mod_site_game_url returned empty string"
-                );
+                assert!(!url.is_empty(), "mod_site_game_url returned empty string");
             }
         }
     }

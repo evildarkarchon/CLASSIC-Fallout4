@@ -11,16 +11,15 @@ use classic_scangame_core::setup::{
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use classic_scangame_core::{
-    BA2Scanner,
-    EnbChecker,
-    EnbResult as CoreEnbResult,
-    EnbConfigResult as CoreEnbConfigResult,
-    IniValidator,
-    IssueSeverity as CoreIniIssueSeverity,
+use classic_scangame_core::crashgen_orchestrator::{
+    CrashgenCheckOrchestrator, CrashgenReport as CoreCrashgenReport,
 };
-use classic_scangame_core::ini::ConfigIssue as CoreIniConfigIssue;
 use classic_scangame_core::enb::EnbValidationResult as CoreEnbValidationResult;
+use classic_scangame_core::ini::ConfigIssue as CoreIniConfigIssue;
+use classic_scangame_core::integrity::{
+    CheckType as CoreCheckType, GameIntegrityChecker,
+    IntegrityCheckResult as CoreIntegrityCheckResult,
+};
 use classic_scangame_core::toml::{
     CrashgenChecker, TomlConfigIssue as CoreTomlConfigIssue,
     TomlIssueSeverity as CoreTomlIssueSeverity,
@@ -28,12 +27,9 @@ use classic_scangame_core::toml::{
 use classic_scangame_core::wrye::{
     WryeBashParser, WryeIssue as CoreWryeIssue, WryeSeverity as CoreWryeSeverity,
 };
-use classic_scangame_core::integrity::{
-    GameIntegrityChecker, IntegrityCheckResult as CoreIntegrityCheckResult,
-    CheckType as CoreCheckType,
-};
-use classic_scangame_core::crashgen_orchestrator::{
-    CrashgenCheckOrchestrator, CrashgenReport as CoreCrashgenReport,
+use classic_scangame_core::{
+    BA2Scanner, EnbChecker, EnbConfigResult as CoreEnbConfigResult, EnbResult as CoreEnbResult,
+    IniValidator, IssueSeverity as CoreIniIssueSeverity,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -253,11 +249,7 @@ fn map_enb_config_result(r: CoreEnbConfigResult) -> ffi::EnbConfigResult {
 ///
 /// Falls back to "." if game_path is empty (checker treats it as cwd).
 fn enb_checker_validate(game_path: &str) -> ffi::EnbValidationResultDto {
-    let path_arg = if game_path.is_empty() {
-        "."
-    } else {
-        game_path
-    };
+    let path_arg = if game_path.is_empty() { "." } else { game_path };
     let checker = EnbChecker::new(path_arg);
     let result: CoreEnbValidationResult = checker.validate();
     // REAL field set: binaries + config (NO errors Vec — Codex HIGH correction)
@@ -999,7 +991,9 @@ mod tests {
 
     #[test]
     fn test_wrye_parse_html_rows_simple_html_no_h3_returns_empty() {
-        assert!(wrye_parse_html_rows("<html><body><p>no issues</p></body></html>", &[], &[]).is_empty());
+        assert!(
+            wrye_parse_html_rows("<html><body><p>no issues</p></body></html>", &[], &[]).is_empty()
+        );
     }
 
     #[test]
@@ -1028,7 +1022,10 @@ mod tests {
         // For nonexistent exe, run_all_checks returns at least one entry with is_valid=false
         assert!(r.iter().any(|e| !e.is_valid));
         // REAL CheckType variants — Codex HIGH correction (ExecutableVersion, not Existence)
-        assert!(r.iter().any(|e| matches!(e.check_type, ffi::CheckType::ExecutableVersion)));
+        assert!(
+            r.iter()
+                .any(|e| matches!(e.check_type, ffi::CheckType::ExecutableVersion))
+        );
     }
 
     #[test]
@@ -1088,6 +1085,9 @@ mod tests {
 
     #[test]
     fn test_crashgen_orchestrator_get_installed_plugins_nonexistent_returns_empty() {
-        assert!(crashgen_orchestrator_get_installed_plugins("nonexistent\\plugins", "Buffout4").is_empty());
+        assert!(
+            crashgen_orchestrator_get_installed_plugins("nonexistent\\plugins", "Buffout4")
+                .is_empty()
+        );
     }
 }

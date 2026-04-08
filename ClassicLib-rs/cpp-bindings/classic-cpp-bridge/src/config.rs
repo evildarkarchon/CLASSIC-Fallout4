@@ -370,21 +370,25 @@ fn yaml_data_suspects_error_rules(data: &YamlData) -> Vec<ffi::SuspectErrorRuleD
 /// `Vec<SuspectStackCountRuleDto>` field. That is a `Vec<StructWithVec>`
 /// shape that CXX cannot safely bridge. The flattened metadata DTO +
 /// separate per-rule count getter eliminates this constraint entirely.
-fn yaml_data_suspects_stack_rules_metadata(data: &YamlData) -> Vec<ffi::SuspectStackRuleMetadataDto> {
+fn yaml_data_suspects_stack_rules_metadata(
+    data: &YamlData,
+) -> Vec<ffi::SuspectStackRuleMetadataDto> {
     data.inner
         .suspect_stack_rules
         .iter()
-        .map(|r: &CoreSuspectStackRule| ffi::SuspectStackRuleMetadataDto {
-            id: r.id.clone(),
-            name: r.name.clone(),
-            severity: r.severity,
-            main_error_required_any: r.main_error_required_any.clone(),
-            main_error_optional_any: r.main_error_optional_any.clone(),
-            stack_contains_any: r.stack_contains_any.clone(),
-            exclude_if_stack_contains_any: r.exclude_if_stack_contains_any.clone(),
-            // Note: stack_contains_at_least is NOT included here — use
-            // yaml_data_suspects_stack_count_rules_for_id to retrieve count rules.
-        })
+        .map(
+            |r: &CoreSuspectStackRule| ffi::SuspectStackRuleMetadataDto {
+                id: r.id.clone(),
+                name: r.name.clone(),
+                severity: r.severity,
+                main_error_required_any: r.main_error_required_any.clone(),
+                main_error_optional_any: r.main_error_optional_any.clone(),
+                stack_contains_any: r.stack_contains_any.clone(),
+                exclude_if_stack_contains_any: r.exclude_if_stack_contains_any.clone(),
+                // Note: stack_contains_at_least is NOT included here — use
+                // yaml_data_suspects_stack_count_rules_for_id to retrieve count rules.
+            },
+        )
         .collect()
 }
 
@@ -408,10 +412,12 @@ fn yaml_data_suspects_stack_count_rules_for_id(
         .map(|r| {
             r.stack_contains_at_least
                 .iter()
-                .map(|c: &CoreSuspectStackCountRule| ffi::SuspectStackCountRuleDto {
-                    substring: c.substring.clone(),
-                    count: c.count as u32,
-                })
+                .map(
+                    |c: &CoreSuspectStackCountRule| ffi::SuspectStackCountRuleDto {
+                        substring: c.substring.clone(),
+                        count: c.count as u32,
+                    },
+                )
                 .collect()
         })
         .unwrap_or_default()
@@ -789,7 +795,8 @@ CLASSIC_Ignore_Fallout4: []
             assert_eq!(rule.name, "Test Error Rule");
             assert_eq!(rule.severity, 3);
             assert!(
-                rule.main_error_contains_any.contains(&"AccessViolation".to_string()),
+                rule.main_error_contains_any
+                    .contains(&"AccessViolation".to_string()),
                 "expected AccessViolation in main_error_contains_any"
             );
         }
@@ -805,10 +812,22 @@ CLASSIC_Ignore_Fallout4: []
             assert_eq!(rule.name, "Test Stack Rule");
             assert_eq!(rule.severity, 2);
             // Verify all flat Vec<String> fields are accessible (no nested Vec<Struct>)
-            assert!(rule.main_error_required_any.contains(&"RequiredPattern".to_string()));
-            assert!(rule.main_error_optional_any.contains(&"OptionalPattern".to_string()));
-            assert!(rule.stack_contains_any.contains(&"StackPattern1".to_string()));
-            assert!(rule.exclude_if_stack_contains_any.contains(&"ExcludePattern".to_string()));
+            assert!(
+                rule.main_error_required_any
+                    .contains(&"RequiredPattern".to_string())
+            );
+            assert!(
+                rule.main_error_optional_any
+                    .contains(&"OptionalPattern".to_string())
+            );
+            assert!(
+                rule.stack_contains_any
+                    .contains(&"StackPattern1".to_string())
+            );
+            assert!(
+                rule.exclude_if_stack_contains_any
+                    .contains(&"ExcludePattern".to_string())
+            );
             // Pitfall 6 compile-time proof: no stack_contains_at_least field on the DTO
         }
     }
@@ -825,9 +844,11 @@ CLASSIC_Ignore_Fallout4: []
     #[test]
     fn test_yaml_data_suspects_stack_count_rules_known_id_returns_populated() {
         if let Some(data) = make_yaml_data_with_suspect_rules() {
-            let count_rules =
-                yaml_data_suspects_stack_count_rules_for_id(&data, "stack_test_rule");
-            assert!(!count_rules.is_empty(), "expected count rules for stack_test_rule");
+            let count_rules = yaml_data_suspects_stack_count_rules_for_id(&data, "stack_test_rule");
+            assert!(
+                !count_rules.is_empty(),
+                "expected count rules for stack_test_rule"
+            );
             assert_eq!(count_rules[0].substring, "RepeatedFunc");
             assert_eq!(count_rules[0].count, 2);
         }
@@ -838,7 +859,10 @@ CLASSIC_Ignore_Fallout4: []
         // D-08 regression: existing fn must remain unchanged
         if let Some(data) = make_yaml_data_with_suspect_rules() {
             let keys = yaml_data_suspects_error_keys(&data);
-            assert!(!keys.is_empty(), "yaml_data_suspects_error_keys must still work (D-08)");
+            assert!(
+                !keys.is_empty(),
+                "yaml_data_suspects_error_keys must still work (D-08)"
+            );
         }
     }
 
@@ -847,7 +871,10 @@ CLASSIC_Ignore_Fallout4: []
         // D-08 regression: existing fn must remain unchanged
         if let Some(data) = make_yaml_data_with_suspect_rules() {
             let keys = yaml_data_suspects_stack_keys(&data);
-            assert!(!keys.is_empty(), "yaml_data_suspects_stack_keys must still work (D-08)");
+            assert!(
+                !keys.is_empty(),
+                "yaml_data_suspects_stack_keys must still work (D-08)"
+            );
         }
     }
 

@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-07T04:11:50.484133+00:00`
+- Generated: `2026-04-08T03:26:59.219707+00:00`
 - Tier-1 contract rows: **59**
 - Tier-1 matched: **59**
 - Tier-1 missing Rust: **0**

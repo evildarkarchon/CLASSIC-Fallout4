@@ -11,9 +11,8 @@
 
 use classic_constants_core::GameId;
 use classic_xse_core::{
-    XseInfo as CoreXseInfo, XseType as CoreXseType,
-    detect_xse_version as core_detect_xse_version, get_xse_info as core_get_xse_info,
-    is_xse_installed as core_is_xse_installed,
+    XseInfo as CoreXseInfo, XseType as CoreXseType, detect_xse_version as core_detect_xse_version,
+    get_xse_info as core_get_xse_info, is_xse_installed as core_is_xse_installed,
 };
 use std::path::Path;
 

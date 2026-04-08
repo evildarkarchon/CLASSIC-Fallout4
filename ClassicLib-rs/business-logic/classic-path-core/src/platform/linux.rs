@@ -9,7 +9,7 @@
 
 use crate::error::{DocsPathError, DocsPathResult};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Get the user's home directory on Linux.
 ///
@@ -66,7 +66,7 @@ pub fn parse_steam_library_vdf(game_steam_id: u32) -> DocsPathResult<PathBuf> {
         return Err(DocsPathError::SteamLibraryNotFound(vdf_path));
     }
 
-    let content = fs::read_to_string(&vdf_path).map_err(|e| DocsPathError::IoError(e))?;
+    let content = fs::read_to_string(&vdf_path).map_err(DocsPathError::IoError)?;
 
     parse_vdf_content(&content, game_steam_id)
 }
@@ -172,7 +172,7 @@ fn extract_vdf_value(line: &str) -> Option<String> {
 /// ```
 #[allow(dead_code)]
 pub fn construct_proton_docs_path(
-    library_path: &PathBuf,
+    library_path: &Path,
     game_steam_id: u32,
     docs_name: &str,
 ) -> PathBuf {

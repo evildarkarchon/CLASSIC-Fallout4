@@ -902,7 +902,7 @@ mod tests {
     #[test]
     fn test_scan_records_batch_rsp_format() {
         let segments = vec![vec![
-            "[RSP+50] 0x12345678 0xABCD ActorBase_Player".to_string()
+            "[RSP+50] 0x12345678 0xABCD ActorBase_Player".to_string(),
         ]];
         let targets = vec!["ActorBase".to_string()];
         let ignores: Vec<String> = vec![];
