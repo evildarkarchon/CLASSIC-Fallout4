@@ -130,7 +130,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
-| 2. CXX Bridge Surface Expansion | 4/8 | In Progress|  |
+| 2. CXX Bridge Surface Expansion | 5/8 | In Progress|  |
 | 3. Python Tier Collapse | 0/TBD | Not started | - |
 | 4. Node Tier Collapse | 0/TBD | Not started | - |
 | 5. CI Enforcement | 0/TBD | Not started | - |

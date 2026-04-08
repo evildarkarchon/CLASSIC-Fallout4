@@ -21,7 +21,7 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 - [x] **CXXS-01**: `classic-cpp-bridge` exposes a new `constants` module covering `classic-constants-core` (game labels, YAML file identifiers, Fallout 4 mode enum)
 - [x] **CXXS-02**: `classic-cpp-bridge` exposes a new `web` module covering `classic-web-core` URL/user-agent/mod-site helpers
 - [ ] **CXXS-03**: `classic-cpp-bridge` exposes the FCX issue getter alongside the existing `fcx_reset_global_state()` so C++ frontends can read FCX issues without going through the scan pipeline
-- [ ] **CXXS-04**: `classic-cpp-bridge::scangame` is widened from its current 2-entry-point narrowing to expose every `classic-scangame-core` orchestration entry point used by Python/Node bindings (DTO design reviewed against CXX shared-struct rules)
+- [x] **CXXS-04**: `classic-cpp-bridge::scangame` is widened from its current 2-entry-point narrowing to expose every `classic-scangame-core` orchestration entry point used by Python/Node bindings (DTO design reviewed against CXX shared-struct rules)
 - [ ] **CXXS-05**: `classic-cpp-bridge::database` exposes the typed result API of `classic-database-core` currently narrowed away from C++ frontends (FormID lookup typed results, batch query results)
 - [x] **CXXS-06**: `classic-cpp-bridge::registry` exposes the full `classic-version-registry-core` selection metadata (OG/NG/AE/VR variants and crashgen-rule resolution)
 - [ ] **CXXS-07**: `classic-cpp-bridge::config` exposes the suspect-rule subset of `classic-config-core` currently absent from C++ (suspect error rules, suspect stack rules)
@@ -115,7 +115,7 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | CXXS-01 | Phase 2 | Complete |
 | CXXS-02 | Phase 2 | Complete |
 | CXXS-03 | Phase 2 | Pending |
-| CXXS-04 | Phase 2 | Pending |
+| CXXS-04 | Phase 2 | Complete |
 | CXXS-05 | Phase 2 | Pending |
 | CXXS-06 | Phase 2 | Complete |
 | CXXS-07 | Phase 2 | Pending |
