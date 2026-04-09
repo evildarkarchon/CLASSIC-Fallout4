@@ -4,8 +4,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_PATH = (
     REPO_ROOT
@@ -18,25 +16,28 @@ CONTRACT_PATH = (
 
 
 def test_tier1_contract_total_baseline_floor() -> None:
-    """Plan 1 baseline: exactly 59 Tier-1 rows.
+    """Phase 3 close-out floor: at least 1098 Tier-1 rows (Plan 09a + 09b snapshot).
 
-    Plan 01 only refreshes the baseline; it does NOT add rows. Subsequent
-    plans bump this number per per-plan progression:
-      - Plan 02: 59 -> 133 (+74 scanlog Wave 1)
-      - Plan 03: 133 -> 190 (+57 scanlog Wave 2, per R9 GLOBAL_FCX_HANDLER exclusion)
-      - Plan 04: 190 -> 240 (+50 scanlog Wave 3a)
-      - Plan 05: 240 -> 286 (+46 scanlog Wave 3b report)
-      - Plan 06: 286 -> 312 (+26 config)
-      - Plan 07: 312 -> 347 (+35 version_registry)
-      - Plan 08: 347 -> 358 (+11 classic_shared + file_io initial; Plan 08 also
-        claims any residual classic_file_io rows found post-refresh)
-      - Plan 09a: 358 -> 358 + residual A10 count
-    The exact equality below is the Plan 01 snapshot; later plans supersede
-    it with their own snapshot assertions.
+    Per-plan progression through Phase 3:
+      - Plan 01 baseline:               59
+      - Plan 02 (scanlog Wave 1):       59 -> 133 (+74)
+      - Plan 03 (scanlog Wave 2):       133 -> 190 (+57, R9 GLOBAL_FCX_HANDLER exclusion)
+      - Plan 04 (scanlog Wave 3a):      190 -> 240 (+50)
+      - Plan 05 (scanlog Wave 3b):      240 -> 286 (+46)
+      - Plan 06 (config):               286 -> 312 (+26)
+      - Plan 07 (version_registry):     312 -> 347 (+35)
+      - Plan 08 (classic_shared+file_io): 347 -> 505 (+158, two-owner enrollment)
+      - Plan 09a (A10 residual promotion): 505 -> 1098 (+593, 14 owners + scanlog residuals)
+      - Plan 09b (Tier-2 deletion):     1098 -> 1098 (no row changes; structural cleanup)
+
+    Plan 09b closed Phase 3; this floor locks in the Phase 3 endgame count.
+    Future milestones that grow the contract should raise this floor; future
+    milestones that legitimately shrink the contract must update the assertion
+    with a cross-AI-reviewed rationale.
     """
     contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
-    assert len(contract["tier1Mappings"]) == 59, (
-        f"Plan 01 baseline expects exactly 59 Tier-1 rows, "
+    assert len(contract["tier1Mappings"]) >= 1098, (
+        f"Phase 3 close-out floor expects at least 1098 Tier-1 rows, "
         f"got {len(contract['tier1Mappings'])}"
     )
 
