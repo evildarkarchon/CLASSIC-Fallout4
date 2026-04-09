@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 03-06-config-promotion-PLAN.md
-last_updated: "2026-04-09T00:03:56.871Z"
+stopped_at: Completed 03-07-version-registry-promotion-PLAN.md
+last_updated: "2026-04-09T00:27:08.571Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 17
+  completed_plans: 18
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 7 of 10
+Plan: 8 of 10
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-09
@@ -101,6 +101,7 @@ Progress: [          ] 0%
 | Phase 03-python-tier-collapse P04 | 13min | 5 tasks | 16 files |
 | Phase 03-python-tier-collapse P05 | 15min | 5 tasks | 17 files |
 | Phase 03-python-tier-collapse P06 | 8min | 4 tasks | 17 files |
+| Phase 03-python-tier-collapse P07 | 11 min | 4 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -240,6 +241,7 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Plan 06 config: applied Wave 1 @rust-suffix proxy pattern to crashgen_settings types (CrashgenEntryRaw/ModConflictEntry/SuspectErrorRule/etc.) which have NO PyO3 wrappers — they surface only through PyYamlData getter dict/list conversions
 - [Phase 03-python-tier-collapse]: Plan 06 config: preserved python-tier2-config-runtime (not deleted as plan instructed) because its 2 bindings are @property methods the Python surface parser skips per generate_baseline.py:378. Wave 3a tier-2 preservation precedent reapplied to prevent orphaning runtime coverage
 - [Phase 03-python-tier-collapse]: Plan 06 config: deferred backlog count corrected from plan's stale 22 to ground-truth 26 (Plan 01 regenerated backlog from 285 to 1202 entries); final tier1Mappings 314 not 312
+- [Phase 03-python-tier-collapse]: Plan 07 version_registry: 35 rows added (tier1Mappings 314->349); first outright Tier-2 registry deletion in Phase 3 (python-tier2-version-registry-runtime removed because GameVersion.semantic_distance was its only binding and is now tier1); the Wave 1 @rust-suffix pattern generalized to a second non-scanlog domain; 5 plan-scaffold corrections absorbed (UnknownVersionStrategy/UnknownVersionHandling split count, enum variants, no VersionMatcher class, no VersionRegistryError exception, factory-only class test strategy)
 
 ### Pending Todos
 
@@ -264,7 +266,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T00:03:56.866Z
-Stopped at: Completed 03-06-config-promotion-PLAN.md
+Last session: 2026-04-09T00:27:08.567Z
+Stopped at: Completed 03-07-version-registry-promotion-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
