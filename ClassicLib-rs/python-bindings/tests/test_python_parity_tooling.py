@@ -167,7 +167,10 @@ def test_generate_diff_report_flags_missing_contract_python_export_identifier() 
         "(`pythonExportPath` or legacy `pythonExport`)."
     )
     assert report["gaps"][0]["gap_type"] == "tier1_missing_python"
-    assert report["gaps"][1]["gap_type"] == "python_unmapped"
+    assert len(report["gaps"]) == 1, (
+        "Plan 9b removed rust_unmapped / python_unmapped gap branches; "
+        "only tier1_missing_python should remain for this synthetic contract"
+    )
 
 
 def test_expand_pub_use_statement_does_not_reannotate_alias_name() -> None:

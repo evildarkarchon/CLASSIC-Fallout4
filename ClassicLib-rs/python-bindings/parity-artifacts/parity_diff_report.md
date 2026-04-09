@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-09T04:41:10.704965+00:00`
+- Generated: `2026-04-09T05:05:14.358510+00:00`
 - Tier-1 contract rows: **1098**
 - Tier-1 matched: **1098**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **3**
+- Total gaps: **0**
 
 ## Tier-1 Contract Evaluation
 
@@ -1113,27 +1113,27 @@
 
 ## Gap Counts By Owner/Tier
 
-| Owner Module | Tier 1 Gaps | Tier 2 Gaps |
-|---|---:|---:|
-| `scanlog` | 0 | 1 |
-| `config` | 0 | 0 |
-| `version_registry` | 0 | 0 |
-| `yaml` | 0 | 0 |
-| `database` | 0 | 0 |
-| `file_io` | 0 | 0 |
-| `scangame` | 0 | 0 |
-| `registry` | 0 | 0 |
-| `perf` | 0 | 0 |
-| `settings` | 0 | 0 |
-| `message` | 0 | 0 |
-| `path` | 0 | 2 |
-| `constants` | 0 | 0 |
-| `version` | 0 | 0 |
-| `resource` | 0 | 0 |
-| `xse` | 0 | 0 |
-| `web` | 0 | 0 |
-| `update` | 0 | 0 |
-| `shared` | 0 | 0 |
-| `aux` | 0 | 0 |
+| Owner Module | Tier 1 Gaps |
+|---|---:|
+| `scanlog` | 0 |
+| `config` | 0 |
+| `version_registry` | 0 |
+| `yaml` | 0 |
+| `database` | 0 |
+| `file_io` | 0 |
+| `scangame` | 0 |
+| `registry` | 0 |
+| `perf` | 0 |
+| `settings` | 0 |
+| `message` | 0 |
+| `path` | 0 |
+| `constants` | 0 |
+| `version` | 0 |
+| `resource` | 0 |
+| `xse` | 0 |
+| `web` | 0 |
+| `update` | 0 |
+| `shared` | 0 |
+| `aux` | 0 |
 
 Detailed per-gap diagnostics are in `parity_diff_report.json`.

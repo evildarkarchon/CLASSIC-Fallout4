@@ -41,17 +41,31 @@ def test_tier1_contract_total_baseline_floor() -> None:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "tier2 definition removal lands in Plan 9b (PYT-03); this test asserts "
-        "the eventual invariant. strict=True catches premature deletion by "
-        "Plans 02-08 as a passing xfail failure."
-    ),
-)
 def test_tier2_definition_removed_after_plan_9() -> None:
     contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
     tier_definitions = contract.get("tierDefinitions", {})
     assert "tier2" not in tier_definitions, (
         "Plan 9b must delete tierDefinitions.tier2 from parity_contract.json"
+    )
+
+
+def test_tier2_gap_total_removed_from_summary() -> None:
+    """Plan 9b A9 cleanup: tier2_gap_total is no longer emitted by generate_baseline.
+
+    This test passes AFTER Task 2 Step 11 refreshes the baseline in the SAME commit.
+    M7 fix: combining Tasks 2+3 prevents a bisect-breaking intermediate where this
+    test reads a stale parity_diff_report.json with tier2_gap_total still present.
+    """
+    diff = json.loads(
+        (
+            REPO_ROOT
+            / "docs"
+            / "implementation"
+            / "python_api_parity"
+            / "baseline"
+            / "parity_diff_report.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert "tier2_gap_total" not in diff["summary"], (
+        "Plan 9b must remove tier2_gap_total from parity_diff_report.json::summary"
     )

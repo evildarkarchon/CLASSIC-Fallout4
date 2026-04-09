@@ -3,8 +3,7 @@
   "phase": "phase1",
   "description": "Tiered Python bindings parity contract for Rust core APIs, including callable member export paths.",
   "tierDefinitions": {
-    "tier1": "Must-have Python APIs required by maintained integration workflows.",
-    "tier2": "Deferred or lower-priority APIs outside initial gate scope."
+    "tier1": "Must-have Python APIs required by maintained integration workflows."
   },
   "ownerModules": {
     "scanlog": {

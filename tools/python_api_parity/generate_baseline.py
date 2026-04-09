@@ -669,43 +669,12 @@ def generate_diff_report(
                 }
             )
 
-    for rust_item in rust_symbols:
-        symbol = rust_item["symbol"]
-        if symbol in tier1_rust_symbols:
-            continue
-        gaps.append(
-            {
-                "gap_type": "rust_unmapped",
-                "tier": "tier2",
-                "owner_module": rust_item["owner_module"],
-                "squad": SQUAD_BY_OWNER[rust_item["owner_module"]],
-                "rust_symbol": symbol,
-                "python_module": None,
-                "python_export": None,
-                "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-                "crate": rust_item["crate"],
-                "kind": rust_item["kind"],
-            }
-        )
-
-    for py_item in python_exports:
-        pair = (py_item["module"], py_item.get("export_path", py_item["export"]))
-        if pair in tier1_python_pairs:
-            continue
-        gaps.append(
-            {
-                "gap_type": "python_unmapped",
-                "tier": "tier2",
-                "owner_module": py_item["owner_module"],
-                "squad": SQUAD_BY_OWNER[py_item["owner_module"]],
-                "rust_symbol": None,
-                "python_module": py_item["module"],
-                "python_export": py_item["export"],
-                "python_export_path": py_item.get("export_path", py_item["export"]),
-                "reason": "Python export is outside Tier-1 mapping scope (deferred).",
-                "kind": py_item["kind"],
-            }
-        )
+    # Plan 09b removed the Tier-2 gap emission branches (formerly iterated rust
+    # symbols and python exports outside the Tier-1 mapping). Phase 3 enrolled
+    # every in-scope Python binding as a Tier-1 contract row, so those deferral
+    # branches no longer contribute gate signal. See
+    # .planning/phases/03-python-tier-collapse/03-09b-TIER2-CASCADE-AUDIT.md for
+    # the full remediation trace and Plan 09b SUMMARY for the C3 endgame details.
 
     status_counts: dict[str, int] = defaultdict(int)
     for row in contract_results:
@@ -725,7 +694,6 @@ def generate_diff_report(
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
         "total_gaps": len(gaps),
         "tier1_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier1"),
-        "tier2_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier2"),
     }
 
     return {
@@ -754,7 +722,7 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Python: **{summary['tier1_missing_python']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
-            f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
+            f"- Total gaps: **{summary['total_gaps']}**",
             "",
             "## Tier-1 Contract Evaluation",
             "",
@@ -773,14 +741,14 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             "",
             "## Gap Counts By Owner/Tier",
             "",
-            "| Owner Module | Tier 1 Gaps | Tier 2 Gaps |",
-            "|---|---:|---:|",
+            "| Owner Module | Tier 1 Gaps |",
+            "|---|---:|",
         )
     )
     for owner in _OWNER_RENDER_ORDER:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
         lines.append(
-            f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |"
+            f"| `{owner}` | {tier_counts.get('tier1', 0)} |"
         )
 
     lines.extend(

@@ -1,14 +1,13 @@
 {
-  "generated_at_utc": "2026-04-09T04:41:10.704965+00:00",
+  "generated_at_utc": "2026-04-09T05:05:14.358510+00:00",
   "summary": {
     "tier1_contract_total": 1098,
     "tier1_matched": 1098,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 3,
-    "tier1_gap_total": 0,
-    "tier2_gap_total": 3
+    "total_gaps": 0,
+    "tier1_gap_total": 0
   },
   "contract_results": [
     {
@@ -16482,50 +16481,6 @@
       "actual_python_arity": null
     }
   ],
-  "gaps": [
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "path",
-      "squad": "Squad F (perf/message/path/constants/version/web/update)",
-      "rust_symbol": "// Boolean convenience wrappers drive_exists",
-      "python_module": null,
-      "python_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-path-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "path",
-      "squad": "Squad F (perf/message/path/constants/version/web/update)",
-      "rust_symbol": "// Permission and accessibility checks is_valid_executable_path",
-      "python_module": null,
-      "python_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-path-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "GLOBAL_FCX_HANDLER",
-      "python_module": null,
-      "python_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scanlog-core",
-      "kind": "reexport"
-    }
-  ],
-  "gap_counts_by_owner_tier": {
-    "path": {
-      "tier2": 2
-    },
-    "scanlog": {
-      "tier2": 1
-    }
-  }
+  "gaps": [],
+  "gap_counts_by_owner_tier": {}
 }
