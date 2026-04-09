@@ -44,15 +44,73 @@ However, the two reviewers **directly contradict each other on whether dropping 
 | **H2** | **Plan 03 count drift + crashgen crate ownership inconsistency** — Claude flagged the hard-coded crashgen_settings rust_crate set in Task 1 Step 3 helper as brittle. Codex flagged that Plan 03 still has stale "12 proxy / 23 normal / 35 total" text in the title, objective, Task 1 name, Step 1, and success_criteria despite the Iteration-1 Issue 4 fix that should have dropped it to 11 proxy / 23 normal / 34 total. Additionally, `must_haves.truths` bullet 8 says all new rows have `rustCrate: classic-config-core` while Task 1 Step 2/3 explicitly routes some proxy rows to `classic-crashgen-settings-core` — internal contradiction. | HIGH | Claude: Plan 3 Task 1 Step 3 helper script; Codex: Plan 3 title, objective, Task 1 name, Task 1 Step 1, `success_criteria`, plus `must_haves.truths` bullet 8 vs Task 1 Step 2/3 |
 | **H3** | **Plan 06 `files_modified` frontmatter drift** — Claude flagged that Step 11 `git add` example includes `parity-artifacts/parity_contract.{json,md}` but the frontmatter `files_modified` omits them. Codex additionally flagged that `files_modified` omits `.planning/STATE.md` and `.planning/ROADMAP.md` which Task 3 Steps 4-6 explicitly edit. Either the commit will fail on pathspec (if paths don't exist) OR the frontmatter is incomplete and pre-commit hooks / parity-artifacts detection may reject stray files. | HIGH | Claude: Plan 06 lines 19-25 frontmatter vs Task 2 Step 11 git add example; Codex: Plan 06 frontmatter vs Task 2 Step 10 + Task 3 Steps 4-6 |
 
-### Divergent View — BLOCKING
+### Divergent View — RESOLVED 2026-04-09
 
-| # | Concern | Claude's Position | Codex's Position |
-|---|---------|-------------------|------------------|
-| **D1 (BLOCKER)** | **Plan 04 Issue 9 `version-pe-shape` row drop** — Is dropping the `version-pe-shape` row with `rustSymbol: "PeVersionResult"` correct, or does it orphan `JsPeVersion` as a new Tier-2 gap? | **HIGH BLOCKER — restore the row.** `parse_rust_surface()` in `generate_baseline.py` parses `pub type` declarations (per RESEARCH.md §Reusable Assets). `classic-version-core/src/lib.rs` line 42 re-exports `PeVersionResult` via `pub use pe_version::{..., PeVersionResult, ...}`, so `version-pe-shape` with `rustSymbol: "PeVersionResult"` WOULD pass the bidirectional guard. More importantly, *without* this row, Plan 04 Task 2 Step 2's `bun run build` adds `JsPeVersion` to `index.d.ts` with no corresponding contract row → generates a new `gap_type=node_unmapped` row in `parity_diff_report.json` (the branch is still active pre-Plan 6), making `JsPeVersion` a freshly-minted Tier-2 gap mid-phase. Plan 06's cleanup cascade will silently absorb it, but Plan 04–05's plan-local deferred_total invariant is at risk. **Fix:** restore the row with `rustSymbol: "PeVersionResult"`, OR add `JsPeVersion` to the Task 2 Step 7 runtime_coverage_registry selector's `bindingIdentifiers` list explicitly, AND add an acceptance criterion `newly_uncovered_total == 0`. | **Technically correct — keep it dropped.** Plan 04 Strengths list: "Dropping `version-pe-shape` is technically correct; the `JsPeVersion` shape is already carried by `extractPeVersion(...): JsPeVersion` in `index.d.ts`." Codex's Suggestions explicitly state: "Keep the current `version-pe-shape` omission; that decision is sound." |
+| # | Concern | Claude's Position | Codex's Position | Resolution |
+|---|---------|-------------------|------------------|------------|
+| **D1 (BLOCKER → RESOLVED)** | **Plan 04 Issue 9 `version-pe-shape` row drop** — Is dropping the `version-pe-shape` row with `rustSymbol: "PeVersionResult"` correct, or does it orphan `JsPeVersion` as a new deferred backlog entry? | **HIGH BLOCKER — restore the row.** `parse_rust_surface()` parses `pub type` declarations; `classic-version-core/src/lib.rs` line 43 already re-exports `PeVersionResult`, so the bidirectional guard would accept the contract row. Without the row, `JsPeVersion` becomes an orphaned Node surface entry → new deferred entry → Plan 04's plan-local invariant fails. | **Technically correct — keep it dropped.** "The JsPeVersion shape is already carried by `extractPeVersion(...): JsPeVersion` in `index.d.ts`." | **✅ Claude is correct. `version-pe-shape` row MUST be restored.** Adjudicated via read-only empirical probe 2026-04-09. See §"D1 Adjudication" below for the empirical chain of evidence. |
 
-**Adjudication needed.** The reviewers disagree on a narrow, empirically-testable question: when `parse_node_surface()` parses `index.d.ts` and sees both `export declare function extractPeVersion(...): JsPeVersion` AND `export interface JsPeVersion { ... }`, does it emit ONE entry (function only; interface subsumed) or TWO entries (function + standalone interface)? If one, Codex is right. If two, Claude is right and the row must be restored.
+### D1 Adjudication (Empirical Probe — 2026-04-09)
 
-**Recommended resolution path:** before executing Plan 04, run a throwaway probe: add a single `JsPeVersion` interface to `index.d.ts` on a scratch branch, run `python tools/node_api_parity/generate_baseline.py --repo-root . --write-baseline`, and inspect `node_api_surface.json` for whether `JsPeVersion` appears as its own entry. If yes → Claude's analysis holds, restore the row. If no → Codex's analysis holds, keep dropped.
+Rather than mutating `index.d.ts` on a scratch branch and running `--write-baseline` (which would overwrite committed baseline files), the probe was conducted read-only by examining `parse_node_surface()` directly, cross-referencing existing interfaces in the committed baselines, and checking the deferred backlog for precedent.
+
+**Chain of evidence (all read-only, no files modified):**
+
+1. **`parse_node_surface()` emits standalone entries for every `export interface`**, independent of any function that returns them. Source: `tools/node_api_parity/generate_baseline.py` line 301 (`interface_re = re.compile(r"^export\s+interface\s+([A-Za-z0-9_]+)")`); every match is appended to `exports` with `kind: "interface"` and deduplicated by `(name, kind)` tuple.
+
+2. **The committed `node_api_surface.json` has 68 `kind: "interface"` entries** across 306 total exports. Interfaces routinely get their own slots in the surface.
+
+3. **`Fallout4VersionInfo` (an existing `export interface` at `index.d.ts:1686`) IS tracked as a tier1Mapping row** with the exact shape Claude said to use for `JsPeVersion`:
+   - `id: "version-registry-promote-fallout4-version-info"`
+   - `rustSymbol: "VersionInfo"` (a Rust struct)
+   - `nodeExport: "Fallout4VersionInfo"`
+   - `nodeKind: "interface"`
+
+4. **`node_api_surface.json` is 23 days stale** (mtime 2026-03-16 vs `index.d.ts` mtime 2026-04-09). 7 interfaces exist in the current `index.d.ts` but are absent from the baseline surface file: `HashCacheStats`, `JsFcxConfigIssue`, `JsModSolutionCriteria`, `JsModSolutionEntry`, `JsSuspectErrorRule`, `JsSuspectStackCountRule`, `JsSuspectStackRule`. Plan 04's `bun run parity:gate:local` will regenerate the surface and these will land.
+
+5. **`node-deferred-aux-108` exists in `deferred_runtime_backlog.json`** with the following shape:
+   ```
+   classification: "deferred"
+   tier: "tier2"
+   ownerModule: "aux"
+   deferReason: "Node export is outside Tier-1 mapping scope (deferred)."
+   bindingIdentifiers: [
+     "JsModSolutionCriteria",
+     "JsModSolutionEntry",
+     "JsSuspectErrorRule",
+     "JsSuspectStackCountRule",
+     "JsSuspectStackRule"
+   ]
+   rustSymbols: []
+   ```
+   **This empirically proves that interfaces without tier1Mappings rows ARE tracked as deferred backlog entries.** 5 of the 7 "missing from surface" interfaces are already bundled into this deferred entry, contributing to the `deferred_total` count that Phase 4 must drive to 0.
+
+6. **`classic-version-core/src/lib.rs:43` contains `pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version};`** — confirmed via direct grep. `PeVersionResult` IS on the Rust public surface. The contract row `version-pe-shape` with `rustSymbol: "PeVersionResult"` would be validated by `parse_rust_surface()` picking up the re-export.
+
+**Verdict:**
+
+When Plan 4 adds `export interface JsPeVersion { major, minor, patch, build }` to `index.d.ts` and runs `bun run parity:gate:local`:
+
+a. `parse_node_surface()` emits a standalone `{ export: "JsPeVersion", kind: "interface" }` entry (inevitable per findings 1–3).
+b. Without a corresponding `tier1Mappings` row, `JsPeVersion` is classified `tier=tier2`, `classification=deferred` (empirically proven by `node-deferred-aux-108` precedent in finding 5).
+c. `deferred_total` increases by 1 (JsPeVersion becomes a new deferred binding identifier).
+d. Plan 4's plan-local invariant fails — it was supposed to decrease `deferred_total` by the exact row count it adds, but instead adds N rows while creating 1 new deferred entry → net change is N−1, not N.
+
+**Codex's "implicit coverage via typed return" claim is mechanically wrong.** The tooling does NOT subsume interfaces into the functions that return them — each interface gets its own standalone entry, and each entry needs its own tier1 treatment.
+
+**Claude's chain of reasoning is empirically verified.** The `version-pe-shape` contract row MUST be restored with the normal tier1 mapping shape (following the `Fallout4VersionInfo` precedent):
+
+```json
+{
+  "id": "version-pe-shape",
+  "rustSymbol": "PeVersionResult",
+  "nodeExport": "JsPeVersion",
+  "nodeKind": "interface",
+  "rustCrate": "classic-version-core"
+}
+```
+
+**Plan 04 row count reverts from 6 → 7** (2 PE function rows + 1 PE shape row + 4 version_registry rows = 7). All 9 of the iteration-1 Issue 9 "7→6" edits in Plan 04 (lines 34, 38, 56, 82, 307, 311, 530, 567, 576, 610, 617) need to be REVERTED in the next revision pass. The iteration-1 plan-checker's reasoning for Issue 9 was mechanically wrong — it conflated `PeVersionResult` (a type alias that `parse_rust_surface()` DOES parse via the `pub type` regex) with "covered implicitly" (which the tooling doesn't do). Three internal passes agreed on a bug; only cross-AI review (specifically Claude's empirical chain of reasoning) caught it. This is exactly the class of bug the `feedback_review_before_execute_encoded_logic` memory was written for.
 
 ### Unique HIGH Concerns (flagged by one reviewer only)
 
