@@ -1,18 +1,18 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.1.0
+milestone: v9.1.0-bindings
 milestone_name: milestone
-current_plan: 1
-status: executing
-stopped_at: Completed 03-09a-a10-residual-promotion-PLAN.md
-last_updated: "2026-04-09T04:51:48.905Z"
+current_plan: 10
+status: complete
+stopped_at: Completed 03-09b-tier2-cleanup-and-final-sweep-PLAN.md (Phase 3 CLOSED)
+last_updated: "2026-04-09T05:30:03.732Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 21
-  completed_plans: 20
-  percent: 0
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 ## Current Position
 
-Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 2 of 10
-Current Plan: 1
-Status: Ready to execute
+Phase: 03 (python-tier-collapse) — COMPLETE
+Plan: 10 of 10
+Current Plan: 10 (09b)
+Status: Phase 3 CLOSED
 Last activity: 2026-04-09
 
-Progress: [          ] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -104,6 +104,7 @@ Progress: [          ] 0%
 | Phase 03-python-tier-collapse P07 | 11 min | 4 tasks | 17 files |
 | Phase 03-python-tier-collapse P08 | 18min | 5 tasks | 18 files |
 | Phase 03-python-tier-collapse P09a | 135 | 4 tasks | 15 files |
+| Phase 03-python-tier-collapse P09b | 79 min | 4 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -249,6 +250,9 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Plan 08 Rule 2 file_io stub holes: calculate_similarity and similarity_ratio were pre-existing stub gaps surfaced only when enrolling file_io as tier1; establishes the Rule 2 stub-audit expectation for future binding enrollment plans
 - [Phase 03-python-tier-collapse]: Plan 08 second outright Tier-2 deletion: python-tier2-aux-cache-runtime deleted because its 3 FileHasher cache-helper bindings are now all tier1 rows; matches Plan 07 version_registry precedent
 - [Phase 03-python-tier-collapse]: Plan 09a multi-owner enrollment: 593 net rows across 14 new owners + 4 scanlog method residuals; Plan 08 two-owner template generalized to N owners via _build_plan09a_rows.py with three-branch wrapper check (C1), imported _stable_id_hash (C2), submodule-anchor Pitfall 2 fallback, and Rule 2 inline fixup for stub-cascade surface discovery
+- [Phase 03-python-tier-collapse]: Plan 09b: M7 atomic commit for structural Tier-2 cleanup + C4 test assertion update + baseline refresh prevents bisect-breaking intermediate
+- [Phase 03-python-tier-collapse]: Plan 09b: C3 endgame empirically verified — emptying deferred_runtime_backlog.json::entries drove deferred_total from 1008 to 0 (build_coverage_summary registry_only fallback consumed backlog entries even after gap rows were removed)
+- [Phase 03-python-tier-collapse]: Plan 09b Rule 1 fix: test_tier1_contract_total_baseline_floor was stale Plan 01 snapshot (== 59) — updated to Phase 3 endgame floor (>= 1098); no subsequent plan had touched it through Plans 02-09a
 
 ### Pending Todos
 
@@ -273,7 +277,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T04:51:48.900Z
-Stopped at: Completed 03-09a-a10-residual-promotion-PLAN.md
+Last session: 2026-04-09T05:26:47.351Z
+Stopped at: Completed 03-09b-tier2-cleanup-and-final-sweep-PLAN.md (Phase 3 CLOSED)
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
