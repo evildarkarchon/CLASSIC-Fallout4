@@ -27,6 +27,155 @@ from generate_baseline import (
 )
 
 
+def validate_contract_surface(
+    contract: dict[str, Any],
+    rust_manifest: dict[str, Any],
+    node_manifest: dict[str, Any],
+) -> list[str]:
+    """Bidirectional contract ↔ surface guard with H1 fail-closed row rejection.
+
+    Walks every ``tier1Mappings`` row and asserts:
+
+    1. The row has a well-formed shape. Malformed rows are REJECTED with
+       explicit diagnostics (H1 hardening + Round 2 Fix 1.1):
+
+       - **Empty row** (neither ``rustSymbol`` nor ``nodeExport``) →
+         ``"Row '{id}' is empty ..."``.
+       - **Missing rustSymbol** (any ``nodeExport`` state) →
+         ``"Row '{id}' missing rustSymbol"``.
+       - **Non-string rustSymbol** (list / dict / int) →
+         ``"Row '{id}' has non-string rustSymbol ..."``.
+       - **Empty-string rustSymbol** (``""``) →
+         ``"Row '{id}' has empty rustSymbol ..."``.
+       - **Non-string nodeExport on a normal-shape row** →
+         ``"Row '{id}' has non-string nodeExport ..."``.
+       - **Empty-string nodeExport on a normal-shape row** →
+         ``"Row '{id}' has empty nodeExport ..."``.
+       - **Missing nodeExport on a normal-shape row** (rustSymbol does NOT
+         end in ``@rust``) → ``"Row '{id}' is normal-shape but missing
+         nodeExport ..."``.
+
+       Only rows whose ``rustSymbol`` ends in ``@rust`` may legitimately
+       omit ``nodeExport`` (Phase 3 A7 precedent for proxy rows that cover
+       Rust-only symbols without a direct Node binding).
+
+    2. The ``rustSymbol`` exists in the parsed Rust surface. For ``@rust``
+       proxy rows the suffix is stripped before lookup. Missing rows produce
+       a remediation hint that names the declared ``rustCrate`` (with
+       ``<unknown>`` fallback for legacy rows) and suggests the ``pub use``
+       statement to add to ``lib.rs``.
+
+    3. The ``nodeExport`` exists in the parsed Node surface. The Node-side
+       check is SKIPPED for ``@rust`` proxy rows (they have no Node binding
+       by design). Missing rows produce a remediation hint that references
+       ``bun run build`` + the ``index.d.ts`` regeneration cadence so the
+       most common root cause (stale index.d.ts after a Rust source change,
+       or a snake_case typo instead of NAPI's auto-converted camelCase) is
+       called out.
+
+    Returns a list of human-readable diagnostic strings. Empty list means
+    the contract is well-formed and both surfaces are in sync. A non-empty
+    list causes ``main()`` to exit non-zero with the diagnostics printed to
+    stderr.
+    """
+    rust_symbols: set[str] = {
+        item["symbol"] for item in rust_manifest.get("symbols", [])
+    }
+    node_exports: set[str] = {
+        item["export"] for item in node_manifest.get("exports", [])
+    }
+    diagnostics: list[str] = []
+
+    for mapping in contract.get("tier1Mappings", []):
+        row_id = mapping.get("id", "<unknown>")
+        rust_symbol = mapping.get("rustSymbol")
+        node_export = mapping.get("nodeExport")
+        rust_crate = mapping.get("rustCrate", "<unknown>")
+
+        # H1 fail-closed: empty row (neither field present).
+        if rust_symbol is None and node_export is None:
+            diagnostics.append(
+                f"Row '{row_id}' is empty (no rustSymbol and no nodeExport)."
+            )
+            continue
+
+        # H1 fail-closed: missing rustSymbol.
+        if rust_symbol is None:
+            diagnostics.append(f"Row '{row_id}' missing rustSymbol.")
+            continue
+
+        # Round 2 Fix 1.1: non-string rustSymbol (list, dict, int, ...).
+        if not isinstance(rust_symbol, str):
+            diagnostics.append(
+                f"Row '{row_id}' has non-string rustSymbol "
+                f"(got {type(rust_symbol).__name__}; expected string)."
+            )
+            continue
+
+        # Round 2 Fix 1.1: empty-string rustSymbol.
+        if rust_symbol == "":
+            diagnostics.append(
+                f"Row '{row_id}' has empty rustSymbol "
+                f"(empty string is not a valid symbol name)."
+            )
+            continue
+
+        is_proxy = rust_symbol.endswith("@rust")
+
+        # Round 2 Fix 1.1: non-string nodeExport on a normal-shape row.
+        if (
+            not is_proxy
+            and node_export is not None
+            and not isinstance(node_export, str)
+        ):
+            diagnostics.append(
+                f"Row '{row_id}' has non-string nodeExport "
+                f"(got {type(node_export).__name__}; expected string or None)."
+            )
+            continue
+
+        # Round 2 Fix 1.1: empty-string nodeExport on a normal-shape row.
+        if not is_proxy and node_export == "":
+            diagnostics.append(
+                f"Row '{row_id}' has empty nodeExport "
+                f"(empty string is not a valid export name)."
+            )
+            continue
+
+        # H1 fail-closed: normal-shape row with missing nodeExport.
+        # Only @rust proxy rows are allowed to omit nodeExport.
+        if not is_proxy and node_export is None:
+            diagnostics.append(
+                f"Row '{row_id}' is normal-shape but missing nodeExport "
+                f"(only @rust proxy rows may omit nodeExport)."
+            )
+            continue
+
+        effective_rust_symbol = (
+            rust_symbol[: -len("@rust")] if is_proxy else rust_symbol
+        )
+
+        # Positive: Rust-side lookup.
+        if effective_rust_symbol and effective_rust_symbol not in rust_symbols:
+            diagnostics.append(
+                f"Row '{row_id}' rustSymbol '{effective_rust_symbol}' not in "
+                f"rust surface. Add 'pub use <sub_module>::"
+                f"{effective_rust_symbol};' to {rust_crate}/lib.rs."
+            )
+
+        # Positive: Node-side lookup (skipped for @rust proxy rows).
+        if not is_proxy and node_export and node_export not in node_exports:
+            diagnostics.append(
+                f"Row '{row_id}' nodeExport '{node_export}' not in node "
+                f"surface (index.d.ts). Either the Rust function still uses "
+                f"snake_case (NAPI auto-converts to camelCase), or "
+                f"'{node_export}' is a typo. Run `bun run build` to refresh "
+                f"index.d.ts and confirm the export was generated."
+            )
+
+    return diagnostics
+
+
 def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     """Render a concise Tier-1 gate report for CI diagnostics."""
     summary = diff_report["summary"]
@@ -178,6 +327,26 @@ def main() -> int:
         tier1_owner_map=tier1_owner_map,
         index_dts_rel=args.index_dts,
     )
+
+    # Phase 4 Plan 1 Task 2: bidirectional guard with H1 fail-closed
+    # malformed-row rejection. Runs unconditionally before downstream diff
+    # generation so a missing `pub use`, a stale `index.d.ts`, or a
+    # malformed row shape is surfaced with an actionable remediation
+    # message instead of being buried as `missing_rust`/`missing_node`
+    # drift noise later. See docstring on `validate_contract_surface()`
+    # for the full list of rejected shapes.
+    guard_diagnostics = validate_contract_surface(
+        contract, rust_manifest, node_manifest
+    )
+    if guard_diagnostics:
+        print(
+            "validate_contract_surface() found contract<->surface drift:",
+            file=sys.stderr,
+        )
+        for message in guard_diagnostics:
+            print(f"  - {message}", file=sys.stderr)
+        return 2
+
     diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
     runtime_registry = load_json_file(repo_root / args.runtime_registry)
     deferred_registry = load_json_file(repo_root / args.deferred_registry)
