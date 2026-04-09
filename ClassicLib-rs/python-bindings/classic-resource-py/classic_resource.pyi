@@ -95,6 +95,12 @@ class ResourceType:
     def __eq__(self, other: object) -> bool:
         """Compare resource types for equality."""
 
+    def __str__(self) -> str:
+        """Return the short variant name (e.g. ``"TEXTURE"``)."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
+
 class ResourceInfo:
     """Resource file information.
 
@@ -113,6 +119,12 @@ class ResourceInfo:
 
     def size(self) -> int:
         """Get the file size in bytes."""
+
+    def __str__(self) -> str:
+        """Return a human-readable description of the resource."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
 
 def detect_resource_type(path: str) -> ResourceType:
     """Detect the resource type from a file path.

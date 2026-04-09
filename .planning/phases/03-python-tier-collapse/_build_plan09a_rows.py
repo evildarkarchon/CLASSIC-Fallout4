@@ -291,12 +291,489 @@ def main_task0() -> int:
 
 
 # ============================================================================
-# TASK 1 DRIVER (stub — implemented in Task 1 step)
+# TASK 1 — PY CLASS / FUNCTION INDEX BUILDERS
+# ============================================================================
+
+# Regex helpers
+PYCLASS_ATTR_RE = re.compile(r'#\[pyclass(?:\s*\([^)]*\))?\]')
+NAME_ATTR_RE = re.compile(r'name\s*=\s*"([^"]+)"')
+STRUCT_OR_ENUM_RE = re.compile(r'pub\s+(struct|enum)\s+(\w+)')
+PYFUNCTION_ATTR_RE = re.compile(r'#\[pyfunction[^\]]*\]\s*(?:pub\s+)?fn\s+(\w+)')
+
+
+def build_py_class_index(owner: str) -> dict[str, tuple[str, str, str]]:
+    """Walk classic-<owner>-py/src/*.rs for #[pyclass] declarations.
+
+    Returns {py_class_name: (submodule, rust_struct_name, rel_file)}.
+    submodule = source file stem (e.g. "ba2" for ba2.rs, "lib" for lib.rs).
+    """
+    owner_dir = REPO_ROOT / f"ClassicLib-rs/python-bindings/classic-{owner.replace('_', '-')}-py/src"
+    if not owner_dir.exists():
+        return {}
+    idx: dict[str, tuple[str, str, str]] = {}
+    for rs_file in sorted(owner_dir.rglob("*.rs")):
+        text = rs_file.read_text(encoding="utf-8", errors="ignore")
+        # Find every #[pyclass(...)] attribute followed (after some attrs) by a struct/enum
+        # Scan line-by-line, accumulating attribute span then the next struct/enum.
+        lines = text.splitlines()
+        i = 0
+        while i < len(lines):
+            if "#[pyclass" in lines[i]:
+                attr_block = []
+                j = i
+                while j < len(lines):
+                    attr_block.append(lines[j])
+                    # Capture continuation: keep reading until we hit the struct/enum
+                    if STRUCT_OR_ENUM_RE.search(lines[j]):
+                        break
+                    j += 1
+                    # Safety bound
+                    if j - i > 20:
+                        break
+                attr_text = "\n".join(attr_block)
+                name_m = NAME_ATTR_RE.search(attr_text)
+                struct_m = STRUCT_OR_ENUM_RE.search(attr_text)
+                if struct_m:
+                    rust_struct_name = struct_m.group(2)
+                    py_name = name_m.group(1) if name_m else rust_struct_name
+                    submodule = rs_file.stem
+                    rel_file = str(rs_file.relative_to(REPO_ROOT)).replace("\\", "/")
+                    if py_name not in idx:
+                        idx[py_name] = (submodule, rust_struct_name, rel_file)
+                i = j + 1
+            else:
+                i += 1
+    return idx
+
+
+def build_py_function_index(owner: str) -> dict[str, tuple[str, str, str]]:
+    """Walk classic-<owner>-py/src/*.rs for #[pyfunction] declarations.
+
+    Returns {py_function_name: (submodule, rust_function_name, rel_file)}.
+    The "rust_function_name" is the `fn <name>` identifier; PyO3 may rename via
+    #[pyo3(name = "…")] attr but for simplicity we assume the bare fn name is
+    also the Python name (matches repo convention except in a few renamed cases
+    like database's py_get_default_cache_ttl -> get_default_cache_ttl).
+    """
+    owner_dir = REPO_ROOT / f"ClassicLib-rs/python-bindings/classic-{owner.replace('_', '-')}-py/src"
+    if not owner_dir.exists():
+        return {}
+    idx: dict[str, tuple[str, str, str]] = {}
+    for rs_file in sorted(owner_dir.rglob("*.rs")):
+        text = rs_file.read_text(encoding="utf-8", errors="ignore")
+        for m in re.finditer(r'#\[pyfunction[^\]]*\](?:\s*#\[[^\]]*\])*\s*(?:pub\s+)?fn\s+(\w+)', text):
+            fn_name = m.group(1)
+            # If there is an inline pyo3 rename, use it
+            attr_start = text.rfind("#[pyfunction", 0, m.start() + 1)
+            attr_slice = text[attr_start:m.start() + 20]
+            rename = re.search(r'#\[pyo3\(name\s*=\s*"([^"]+)"\)\]', attr_slice)
+            py_name = rename.group(1) if rename else fn_name
+            submodule = rs_file.stem
+            rel_file = str(rs_file.relative_to(REPO_ROOT)).replace("\\", "/")
+            if py_name not in idx:
+                idx[py_name] = (submodule, fn_name, rel_file)
+    return idx
+
+
+def build_rust_symbol_set(owner: str) -> set[str]:
+    """Return the set of real Rust symbols declared in the owner's core crate."""
+    rust_surface = json.loads(RUST_SURFACE_PATH.read_text(encoding="utf-8"))
+    return {
+        s["symbol"]
+        for s in rust_surface["symbols"]
+        if s.get("owner_module") == owner
+        and s["symbol"] not in PARSER_GARBAGE_RUST_SYMBOLS
+    }
+
+
+# ============================================================================
+# TASK 1 — ROW BUILDERS
+# ============================================================================
+
+def _make_row(
+    owner: str,
+    row_id: str,
+    rust_symbol: str,
+    py_module: str,
+    py_export_path: str | None,
+    rust_crate: str,
+    py_kind: str,
+) -> dict:
+    return {
+        "id": row_id,
+        "tier": "tier1",
+        "ownerModule": owner,
+        "rustCrate": rust_crate,
+        "rustSymbol": rust_symbol,
+        "pythonModule": py_module,
+        "pythonExportPath": py_export_path,
+        "pythonKind": py_kind,
+    }
+
+
+def build_owner_rows(
+    owner: str,
+    inventory: list[dict],
+    py_surface_by_mod: dict[tuple[str, str], dict],
+    already_covered_rust_symbols: set[str],
+) -> tuple[list[dict], int]:
+    """Build all tier1 rows for an owner given its residual inventory.
+
+    Returns (rows, dedup_savings).
+    """
+    py_module = OWNER_TO_PY_MODULE[owner]
+    rust_crate = OWNER_TO_RUST_CRATE[owner]
+    class_idx = build_py_class_index(owner)
+    function_idx = build_py_function_index(owner)
+    rust_symbol_set = build_rust_symbol_set(owner)
+
+    # Build submodule -> primary-class-anchor index from the PyClass discovery.
+    # Used for Pitfall 2 fallback: free functions whose core equivalent isn't
+    # exported from the -core crate anchor on the nearest Python class in the
+    # same -py source file.
+    submodule_to_anchor: dict[str, str] = {}
+    for py_class_name, (sub, rust_struct, _rel) in class_idx.items():
+        if sub in submodule_to_anchor:
+            continue
+        # Prefer a rust-surface-present anchor
+        if py_class_name in rust_symbol_set:
+            submodule_to_anchor[sub] = py_class_name
+        elif rust_struct in rust_symbol_set:
+            submodule_to_anchor[sub] = rust_struct
+        else:
+            # Use the Py* name even if not in core (last resort; most callers
+            # will have a core-surface class elsewhere for this submodule).
+            submodule_to_anchor[sub] = py_class_name
+
+    def fallback_anchor_for_sub(sub: str) -> str | None:
+        """Return a Rust-surface-present anchor for the given submodule or None."""
+        if sub in submodule_to_anchor:
+            cand = submodule_to_anchor[sub]
+            if cand in rust_symbol_set:
+                return cand
+        # Scan the submodule's py source file for rust_symbols that DO exist in core
+        owner_dir = REPO_ROOT / f"ClassicLib-rs/python-bindings/classic-{owner.replace('_', '-')}-py/src"
+        rs_file = owner_dir / f"{sub}.rs"
+        if not rs_file.exists():
+            return None
+        text = rs_file.read_text(encoding="utf-8", errors="ignore")
+        # Find "use classic_<owner>_core::..." lines and pick the first symbol
+        # present in rust_symbol_set.
+        for m in re.finditer(r'use\s+classic_\w+_core\w*::(\w+(?:::\w+)*)', text):
+            path = m.group(1)
+            leaf = path.split("::")[-1]
+            if leaf in rust_symbol_set:
+                return leaf
+        return None
+
+    # Partition inventory
+    py_classes: list[dict] = []
+    py_methods: list[dict] = []
+    py_functions: list[dict] = []
+    rust_only: list[dict] = []
+    for r in inventory:
+        if r["gap_type"] == "rust_unmapped":
+            rust_only.append(r)
+            continue
+        pep = r.get("python_export_path") or ""
+        if "." in pep:
+            py_methods.append(r)
+            continue
+        # Top-level python_unmapped: distinguish class vs function by surface kind
+        kind = r.get("kind") or "?"
+        # Surface kind is the authoritative classifier
+        surface_info = py_surface_by_mod.get((py_module, pep))
+        surface_kind = surface_info.get("kind") if surface_info else kind
+        if surface_kind == "class":
+            py_classes.append(r)
+        elif surface_kind == "function":
+            py_functions.append(r)
+        else:
+            # Unknown — treat as function by default
+            py_functions.append(r)
+
+    rows: list[dict] = []
+
+    def emit(row: dict, covered_symbol: str) -> None:
+        rows.append(row)
+        already_covered_rust_symbols.add(covered_symbol)
+
+    # Helper for finding the rust anchor for a py class
+    def find_rust_anchor_for_class(py_class_name: str) -> tuple[str, str]:
+        """Return (submodule, rust_symbol) for a Python class residual.
+
+        Pitfall 2 rule: rustSymbol MUST resolve inside the -core crate's
+        rust_api_surface. When the Python class has no same-name core symbol,
+        fall back to the nearest submodule anchor.
+        """
+        # Prefer same-name rust symbol (e.g. BackupManager in classic-path-core)
+        if py_class_name in rust_symbol_set:
+            if py_class_name in class_idx:
+                return (class_idx[py_class_name][0], py_class_name)
+            return ("lib", py_class_name)
+        # Query class_idx for submodule info
+        sub_hint = "lib"
+        if py_class_name in class_idx:
+            sub_hint = class_idx[py_class_name][0]
+        # Fallback: nearest anchor in the same submodule that exists in core
+        fb = fallback_anchor_for_sub(sub_hint)
+        if fb is not None:
+            return (sub_hint, fb)
+        # Last fallback: iterate all submodule anchors and pick the first core-visible one
+        for sub, cand in submodule_to_anchor.items():
+            if cand in rust_symbol_set:
+                return (sub, cand)
+        # Absolute last fallback: use the class name as-is (will hit Pitfall 2)
+        return (sub_hint, py_class_name)
+
+    # ----- Python class rows -----
+    py_class_to_route: dict[str, tuple[str, str]] = {}  # py_class -> (sub, rust_symbol)
+    for r in py_classes:
+        py_class = r.get("python_export_path") or ""
+        sub, rust_sym = find_rust_anchor_for_class(py_class)
+        py_class_to_route[py_class] = (sub, rust_sym)
+        row_id = f"{owner}.{sub}.{py_class}"
+        py_kind = "class"
+        row = _make_row(owner, row_id, rust_sym, py_module, py_class, rust_crate, py_kind)
+        emit(row, rust_sym)
+
+    # Also populate py_class_to_route for classes whose methods are residuals
+    # but whose class row is already tier1 (not in inventory top-level).
+    for r in py_methods:
+        pep = r.get("python_export_path") or ""
+        py_class = pep.split(".")[0]
+        if py_class not in py_class_to_route:
+            sub, rust_sym = find_rust_anchor_for_class(py_class)
+            py_class_to_route[py_class] = (sub, rust_sym)
+
+    # ----- Python method rows -----
+    for r in py_methods:
+        pep = r.get("python_export_path") or ""
+        py_class = pep.split(".")[0]
+        sub, rust_sym = py_class_to_route[py_class]
+        row_id = f"{owner}.{sub}.{pep}"
+        py_kind = r.get("kind") or "method"
+        row = _make_row(owner, row_id, rust_sym, py_module, pep, rust_crate, py_kind)
+        rows.append(row)
+        # Methods inherit the class's rust symbol; don't mark additional dedup
+
+    # ----- Python function rows -----
+    for r in py_functions:
+        py_fn = r.get("python_export_path") or ""
+        # Discover the py source file (submodule) hosting this wrapper function
+        if py_fn in function_idx:
+            sub, rust_fn_name, _ = function_idx[py_fn]
+        else:
+            # Handle database-style rename (py_get_default_cache_ttl -> get_default_cache_ttl)
+            py_renamed = f"py_{py_fn}"
+            if py_renamed in function_idx:
+                sub, rust_fn_name, _ = function_idx[py_renamed]
+            else:
+                sub, rust_fn_name = "lib", py_fn
+
+        # Pitfall 2 check: if the rust symbol isn't in the -core surface, fall
+        # back to a submodule anchor class that IS in the surface.
+        if rust_fn_name not in rust_symbol_set:
+            anchor = fallback_anchor_for_sub(sub)
+            if anchor is not None:
+                rust_fn_name = anchor
+            # else leave as-is; caller reports Pitfall 2 and plan stops.
+
+        row_id = f"{owner}.{sub}.{py_fn}"
+        py_kind = r.get("kind") or "function"
+        row = _make_row(owner, row_id, rust_fn_name, py_module, py_fn, rust_crate, py_kind)
+        emit(row, rust_fn_name)
+
+    # ----- Rust-only proxy rows (with same-row-dedup) -----
+    dedup_savings = 0
+    # Build a list of py function rows we just emitted (for fallback anchoring
+    # in owners like version/registry that have no classes).
+    py_function_row_exports = [r["pythonExportPath"] for r in rows if r["pythonKind"] == "function"]
+    # Also build an index of ALL python surface exports for this owner (as a
+    # last resort when neither classes nor functions exist yet).
+    all_surface_exports = [
+        e for e in py_surface_by_mod.values() if e["module"] == py_module
+    ]
+
+    for r in rust_only:
+        rs = r.get("rust_symbol") or ""
+        if not rs or rs in EXCLUDED_RUST_SYMBOLS or rs in PARSER_GARBAGE_RUST_SYMBOLS:
+            continue
+        if rs in already_covered_rust_symbols:
+            dedup_savings += 1
+            continue
+        # Find anchor for pairing
+        anchor_kind = "class"
+        anchor_export = None
+        sub = "lib"
+
+        # Preference 1: a Python class with the same name (e.g. DocsPathFinder)
+        if rs in py_class_to_route:
+            sub, _ = py_class_to_route[rs]
+            anchor_export = rs
+        # Preference 2: A class whose rust anchor is the bare symbol
+        elif any(r2 == rs for _, r2 in py_class_to_route.values()):
+            match = next(cl for cl, (_, r2) in py_class_to_route.items() if r2 == rs)
+            sub, _ = py_class_to_route[match]
+            anchor_export = match
+        # Preference 3: The first Python class of this owner
+        elif py_class_to_route:
+            first_class = next(iter(py_class_to_route))
+            anchor_export = first_class
+            sub = py_class_to_route[first_class][0]
+        # Preference 4: The first Python function emitted in this plan
+        elif py_function_row_exports:
+            anchor_export = py_function_row_exports[0]
+            anchor_kind = "function"
+            sub = "lib"
+        # Preference 5: The first Python export from the surface (covers owners
+        # that have no residuals but do have pre-existing surface entries).
+        elif all_surface_exports:
+            fallback = all_surface_exports[0]
+            anchor_export = fallback["export_path"]
+            anchor_kind = fallback.get("kind") or "class"
+            sub = "lib"
+        else:
+            # Absolute last resort: use rs as the anchor (will hit parity gate error)
+            anchor_export = rs
+            sub = "lib"
+
+        row_id = f"{owner}.{sub}.{rs}@rust"
+        row = _make_row(
+            owner,
+            row_id,
+            rs,
+            py_module,
+            anchor_export,
+            rust_crate,
+            anchor_kind,
+        )
+        emit(row, rs)
+
+    return rows, dedup_savings
+
+
+SCANLOG_METHOD_RESIDUALS = [
+    # (parent_class, method_name, submodule, parent_rust_symbol)
+    ("CrashgenVersion", "to_tuple", "version", "CrashgenVersion"),
+    ("LogParser", "find_errors", "parser", "LogParser"),
+    ("PatternMatcher", "find_all", "parser", "PatternMatcher"),
+    ("PatternMatcher", "has_match", "parser", "PatternMatcher"),
+]
+
+
+def build_scanlog_method_rows(contract: dict, py_surface_by_mod: dict[tuple[str, str], dict]) -> list[dict]:
+    """Build tier1 rows for the 4 scanlog method residuals.
+
+    Uses the existing scanlog parent class rows' rustSymbol/rustCrate as anchors.
+    """
+    rows = []
+    existing_ids = {m["id"] for m in contract["tier1Mappings"]}
+    for parent, method, submodule, parent_rust in SCANLOG_METHOD_RESIDUALS:
+        row_id = f"scanlog.{submodule}.{parent}.{method}"
+        if row_id in existing_ids:
+            continue
+        py_export = f"{parent}.{method}"
+        row = {
+            "id": row_id,
+            "tier": "tier1",
+            "ownerModule": "scanlog",
+            "rustCrate": "classic-scanlog-core",
+            "rustSymbol": parent_rust,
+            "pythonModule": "classic_scanlog",
+            "pythonExportPath": py_export,
+            "pythonKind": "method",
+        }
+        rows.append(row)
+    return rows
+
+
+# ============================================================================
+# TASK 1 DRIVER
 # ============================================================================
 
 def main_task1() -> int:
-    print("Task 1 driver not yet implemented in this scaffold; see Task 1 step.")
-    return 1
+    contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    py_surface = json.loads(PY_SURFACE_PATH.read_text(encoding="utf-8"))
+    py_surface_by_mod: dict[tuple[str, str], dict] = {
+        (e["module"], e["export_path"]): e for e in py_surface["exports"]
+    }
+
+    # Compute inventory fresh from live gaps (don't re-read markdown)
+    residuals = load_residuals()
+    inventory, blockers = classify_residuals(residuals)
+    if blockers:
+        print(f"BLOCKED: {len(blockers)} residuals cannot be routed. Re-run Task 0 to see BLOCKERS.md.", file=sys.stderr)
+        return 1
+
+    existing_ids = {m["id"] for m in contract["tier1Mappings"]}
+    existing_by_owner_count = defaultdict(int)
+    for m in contract["tier1Mappings"]:
+        existing_by_owner_count[m.get("ownerModule", "?")] += 1
+
+    already_covered_rust_symbols: set[str] = set()
+    # Seed with existing file_io and shared rust symbols so we don't duplicate
+    # Plan 08 entries when Plan 09a routing spans owners.
+    for m in contract["tier1Mappings"]:
+        already_covered_rust_symbols.add(m.get("rustSymbol", ""))
+
+    new_rows: list[dict] = []
+    per_owner_count: dict[str, int] = {}
+    total_dedup = 0
+
+    for owner in OWNER_ORDER:
+        owner_inv = inventory.get(owner, [])
+        # Important: only consider rust symbols covered BY THIS PLAN for dedup
+        # (pre-existing rows are handled by ID-collision check at commit time).
+        # But we still need to track cross-owner dedup within Plan 09a.
+        rows, dedup = build_owner_rows(
+            owner=owner,
+            inventory=owner_inv,
+            py_surface_by_mod=py_surface_by_mod,
+            already_covered_rust_symbols=already_covered_rust_symbols,
+        )
+        per_owner_count[owner] = len(rows)
+        total_dedup += dedup
+        new_rows.extend(rows)
+
+    # 4 scanlog method residuals
+    scanlog_rows = build_scanlog_method_rows(contract, py_surface_by_mod)
+    new_rows.extend(scanlog_rows)
+    per_owner_count["scanlog_methods"] = len(scanlog_rows)
+
+    # Validations
+    new_ids = [r["id"] for r in new_rows]
+    if len(set(new_ids)) != len(new_ids):
+        from collections import Counter as C
+        dupes = [k for k, v in C(new_ids).items() if v > 1]
+        raise RuntimeError(f"Duplicate IDs inside new_rows: {dupes[:10]}")
+    collisions = [i for i in new_ids if i in existing_ids]
+    if collisions:
+        raise RuntimeError(f"ID collisions with existing contract ({len(collisions)}): {collisions[:10]}")
+
+    # Sort new rows by ID and splice in
+    new_rows.sort(key=lambda r: r["id"])
+    contract["tier1Mappings"].extend(new_rows)
+    contract["tier1Mappings"].sort(key=lambda r: r["id"])
+
+    CONTRACT_PATH.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+
+    print(f"Added {len(new_rows)} new tier1 rows; cross-owner dedup saved {total_dedup} rows")
+    print("Per-owner counts:")
+    for owner in OWNER_ORDER:
+        print(f"  {owner}: +{per_owner_count.get(owner, 0)} (was {existing_by_owner_count.get(owner, 0)})")
+    print(f"  scanlog_methods: +{per_owner_count.get('scanlog_methods', 0)}")
+    print(f"Total tier1Mappings: {len(contract['tier1Mappings'])}")
+
+    # Invariant checks
+    file_io_count = sum(1 for m in contract["tier1Mappings"] if m.get("ownerModule") == "file_io")
+    shared_count = sum(1 for m in contract["tier1Mappings"] if m.get("ownerModule") == "shared")
+    assert file_io_count == 95, f"file_io count drift: expected 95, got {file_io_count}"
+    assert shared_count == 61, f"shared count drift: expected 61, got {shared_count}"
+    fcx_count = sum(1 for m in contract["tier1Mappings"] if m.get("rustSymbol") == "GLOBAL_FCX_HANDLER")
+    assert fcx_count == 0, f"GLOBAL_FCX_HANDLER must NOT be in tier1Mappings (R9); got {fcx_count}"
+    print("Invariants verified: file_io=95, shared=61, GLOBAL_FCX_HANDLER=0.")
+    return 0
 
 
 # ============================================================================

@@ -85,6 +85,12 @@ class ModSite:
     def __eq__(self, other: object) -> bool:
         """Compare mod sites for equality."""
 
+    def __str__(self) -> str:
+        """Return the short variant name (e.g. ``"NexusMods"``)."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
+
 def get_user_agent() -> str:
     """Get the default user agent string for CLASSIC.
 

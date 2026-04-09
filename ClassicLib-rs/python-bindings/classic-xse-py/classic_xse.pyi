@@ -93,6 +93,12 @@ class XseType:
     def __eq__(self, other: object) -> bool:
         """Compare XSE types for equality."""
 
+    def __str__(self) -> str:
+        """Return the short variant name (e.g. ``"F4SE"``)."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
+
 class XseInfo:
     """XSE installation information for Python.
 
@@ -135,6 +141,12 @@ class XseInfo:
 
     def loader_path(self) -> str:
         """Get the full path to the loader executable."""
+
+    def __str__(self) -> str:
+        """Return a human-readable description of the XSE installation."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
 
 def parse_xse_type(type_name: str) -> XseType:
     """Parse an XSE type from a string.

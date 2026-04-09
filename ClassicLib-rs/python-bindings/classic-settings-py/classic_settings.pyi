@@ -265,3 +265,91 @@ def reset_cache_stats() -> None:
         0
 
     """
+
+def validate_settings_structure(yaml_content: str) -> list[dict[str, Any]]:
+    """Validate the structural shape of a serialized CLASSIC settings YAML document.
+
+    Parses the YAML string, walks the top-level ``CLASSIC_Settings`` mapping, and
+    returns a list of structured issue dictionaries (each containing at minimum
+    ``severity``, ``path``, and ``message`` keys).  An empty list means the
+    structure is valid.
+
+    Args:
+        yaml_content: Raw YAML text.  May be an empty string, in which case the
+            function reports a single "missing document" issue.
+
+    Returns:
+        A list of issue dictionaries.  The caller is responsible for rendering
+        these into user-facing errors.
+
+    Raises:
+        ValueError: If the YAML text cannot be parsed at all.
+
+    Example:
+        >>> import classic_settings
+        >>> issues = classic_settings.validate_settings_structure(
+        ...     "CLASSIC_Settings:\\n  key: value"
+        ... )
+        >>> len(issues)
+        0
+
+    """
+
+def validate_setting_value(value: str, expected_type: str) -> bool:
+    """Check whether a string value can be interpreted as the expected setting type.
+
+    Args:
+        value: The raw string value (e.g. from a YAML scalar).
+        expected_type: One of ``'int'``, ``'bool'``, ``'float'``, ``'path'``,
+            or ``'string'``.
+
+    Returns:
+        ``True`` if the value matches or can be coerced to the expected type,
+        otherwise ``False``.
+
+    Raises:
+        ValueError: If ``expected_type`` is not a recognized type name.
+
+    Example:
+        >>> import classic_settings
+        >>> classic_settings.validate_setting_value("42", "int")
+        True
+        >>> classic_settings.validate_setting_value("yes", "bool")
+        True
+        >>> classic_settings.validate_setting_value("hello", "int")
+        False
+
+    """
+
+def coerce_setting_value(value: str, target_type: str) -> Any:
+    """Coerce a string value to the target setting type.
+
+    Supports the same type names as :func:`validate_setting_value`:
+
+    * ``'int'``: parses as integer
+    * ``'bool'``: accepts true/false, yes/no, 1/0, on/off (case-insensitive)
+    * ``'float'``: parses as floating-point
+    * ``'path'``: any non-empty string
+    * ``'string'``: identity conversion
+
+    Args:
+        value: The raw string value to coerce.
+        target_type: One of the type names listed above.
+
+    Returns:
+        The coerced Python value.  The concrete runtime type depends on
+        ``target_type``: ``int``, ``bool``, ``float``, or ``str``.
+
+    Raises:
+        ValueError: If coercion fails or ``target_type`` is not recognized.
+
+    Example:
+        >>> import classic_settings
+        >>> classic_settings.coerce_setting_value("42", "int")
+        42
+        >>> classic_settings.coerce_setting_value("yes", "bool")
+        True
+        >>> classic_settings.coerce_setting_value("3.14", "float")
+        3.14
+
+    """

@@ -135,6 +135,12 @@ class YamlFile:
 
         """
 
+    def __str__(self) -> str:
+        """Return the short variant name (e.g. ``"Main"``)."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
+
 class GameId:
     """Game identifiers for supported Bethesda games.
 
@@ -226,6 +232,12 @@ class GameId:
             Hash value suitable for use in sets and dicts.
 
         """
+
+    def __str__(self) -> str:
+        """Return the short variant name (e.g. ``"Fallout4"``)."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
 
 class Fallout4Version:
     """Fallout 4 version variants enumeration.
@@ -519,6 +531,12 @@ class Fallout4Version:
             Hash value suitable for use in sets and dicts.
 
         """
+
+    def __str__(self) -> str:
+        """Return the short variant name (e.g. ``"NextGen"``)."""
+
+    def __repr__(self) -> str:
+        """Return a debug representation suitable for logs and REPL output."""
 
 def must_not_be_none(key: str) -> bool:
     """Check if a settings key should not allow None values.
