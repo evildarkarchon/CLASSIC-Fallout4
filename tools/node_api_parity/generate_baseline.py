@@ -22,6 +22,7 @@ from binding_parity_runtime_coverage import (
 )
 
 RUST_TARGET_CRATES: dict[str, str] = {
+    # Phase 1 original 10 crates (verified pre-state 2026-04-08).
     "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
     "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
     "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
@@ -32,42 +33,78 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
     "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
     "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+    # Phase 4 Plan 1 expansion (+9 crates) — matches Phase 3's set PLUS
+    # classic-crashgen-settings-core per research amendment A1 (Node has a
+    # direct classic-node/src/crashgen_rules.rs binding that IS the
+    # classic-crashgen-settings-core Node surface).
+    "classic-yaml-core": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
+    "classic-version-core": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
+    "classic-web-core": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
+    "classic-crashgen-settings-core": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
+    "classic-update-core": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
+    "classic-xse-core": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
+    "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
+    "classic-scangame-core": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
+    "classic-constants-core": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
 }
 
+# Phase 4 Plan 1 A5: distinct owner labels matching Phase 3 — do NOT collapse
+# shared/perf/registry to ``aux``. Crashgen settings gets an explicit
+# ``crashgen_settings`` label so it is never silently bucketed.
+# MEDIUM concern fix: every crate MUST have an explicit entry here — the
+# sizing pipeline fails loud if one is missing rather than defaulting to aux.
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-config-core": "config",
     "classic-version-registry-core": "version_registry",
-    "classic-file-io-core": "aux",
-    "classic-path-core": "aux",
-    "classic-settings-core": "aux",
-    "classic-message-core": "aux",
-    "classic-perf-core": "aux",
-    "classic-registry-core": "aux",
-    "classic-shared-core": "aux",
+    # Foundation/aux crates kept as distinct owners per Phase 3 A5.
+    "classic-file-io-core": "file_io",
+    "classic-path-core": "path",
+    "classic-settings-core": "settings",
+    "classic-message-core": "message",
+    "classic-perf-core": "perf",
+    "classic-registry-core": "registry",
+    "classic-shared-core": "shared",
+    # Phase 4 expansion — each new crate gets its own distinct owner label.
+    "classic-yaml-core": "yaml",
+    "classic-version-core": "version",
+    "classic-web-core": "web",
+    "classic-crashgen-settings-core": "crashgen_settings",
+    "classic-update-core": "update",
+    "classic-xse-core": "xse",
+    "classic-database-core": "database",
+    "classic-scangame-core": "scangame",
+    "classic-constants-core": "constants",
 }
 
-RUST_FULL_INVENTORY_CRATES: set[str] = {
-    "classic-scanlog-core",
-    "classic-config-core",
-    "classic-version-registry-core",
-}
-
+# Squad assignments mirror Phase 3's two-squad shape. The squad label is not
+# load-bearing for the gate's exit code — it only controls handoff markdown
+# grouping — but every owner referenced in RUST_OWNER_BY_CRATE MUST have a
+# squad entry to avoid KeyError in render_handoff_markdown().
 SQUAD_BY_OWNER: dict[str, str] = {
     "scanlog": "Squad A (scanlog/config)",
     "config": "Squad A (scanlog/config)",
     "version_registry": "Squad B (version-registry/aux)",
     "aux": "Squad B (version-registry/aux)",
+    # Foundation/aux owners (Phase 3 A5 distinct labels).
+    "file_io": "Squad B (version-registry/aux)",
+    "path": "Squad B (version-registry/aux)",
+    "settings": "Squad B (version-registry/aux)",
+    "message": "Squad B (version-registry/aux)",
+    "perf": "Squad B (version-registry/aux)",
+    "registry": "Squad B (version-registry/aux)",
+    "shared": "Squad B (version-registry/aux)",
+    # Phase 4 Plan 1 expansion owners.
+    "yaml": "Squad B (version-registry/aux)",
+    "version": "Squad B (version-registry/aux)",
+    "web": "Squad B (version-registry/aux)",
+    "crashgen_settings": "Squad B (version-registry/aux)",
+    "update": "Squad B (version-registry/aux)",
+    "xse": "Squad B (version-registry/aux)",
+    "database": "Squad B (version-registry/aux)",
+    "scangame": "Squad B (version-registry/aux)",
+    "constants": "Squad B (version-registry/aux)",
 }
-
-
-def include_rust_symbol(
-    crate_name: str,
-    symbol: str,
-    tier1_rust_symbols: set[str],
-) -> bool:
-    """Whether a Rust symbol should be included in parity inventory output."""
-    return crate_name in RUST_FULL_INVENTORY_CRATES or symbol in tier1_rust_symbols
 
 
 def snake_to_camel(name: str) -> str:
@@ -177,8 +214,9 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
 
         for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
             symbol = match.group(1)
-            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                continue
+            # Phase 4 Plan 1: include every public symbol for every tracked
+            # crate unconditionally. The RUST_FULL_INVENTORY_CRATES filter
+            # was deleted along with include_rust_symbol().
             entries.append(
                 {
                     "symbol": symbol,
@@ -195,8 +233,6 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
             r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
         ):
             symbol = match.group(1)
-            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                continue
             arity = count_top_level_params(match.group(2))
             entries.append(
                 {
@@ -217,8 +253,6 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
         ):
             kind = match.group(1)
             symbol = match.group(2)
-            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                continue
             entries.append(
                 {
                     "symbol": symbol,
@@ -236,8 +270,6 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
         ):
             use_body = match.group(1)
             for symbol, source_expr in expand_pub_use_statement(use_body):
-                if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                    continue
                 entries.append(
                     {
                         "symbol": symbol,
@@ -559,7 +591,13 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             "|---|---:|---:|",
         )
     )
-    for owner in ("scanlog", "config", "version_registry", "aux"):
+    # Phase 4 Plan 1: iterate every owner that appears in the diff report
+    # rather than hard-coding a short tuple. With the RUST_TARGET_CRATES
+    # expansion from 10 to 19 crates there are now 19+ distinct owner
+    # labels, and any new one would silently drop rows under the old
+    # hard-coded tuple.
+    _owner_render_order = sorted(diff_report.get("gap_counts_by_owner_tier", {}))
+    for owner in _owner_render_order:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
         lines.append(
             f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |"

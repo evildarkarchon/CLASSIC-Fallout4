@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-16T08:27:40.380803+00:00",
+  "generated_at_utc": "2026-04-09T23:04:18.236756+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -123,6 +123,14 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare class GithubClient {"
+    },
+    {
+      "export": "HashCacheStats",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface HashCacheStats {"
     },
     {
       "export": "JsAddressLibInfo",
@@ -421,6 +429,14 @@
       "signature": "export declare const enum JsFallout4Version {"
     },
     {
+      "export": "JsFcxConfigIssue",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFcxConfigIssue {"
+    },
+    {
       "export": "JsFileGenerator",
       "kind": "class",
       "owner_module": "aux",
@@ -669,6 +685,22 @@
       "signature": "export declare const enum JsModSite {"
     },
     {
+      "export": "JsModSolutionCriteria",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModSolutionCriteria {"
+    },
+    {
+      "export": "JsModSolutionEntry",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModSolutionEntry {"
+    },
+    {
       "export": "JsPapyrusStats",
       "kind": "interface",
       "owner_module": "scanlog",
@@ -731,6 +763,30 @@
       "tier": "tier2",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsRuleTarget {"
+    },
+    {
+      "export": "JsSuspectErrorRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsSuspectErrorRule {"
+    },
+    {
+      "export": "JsSuspectStackCountRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsSuspectStackCountRule {"
+    },
+    {
+      "export": "JsSuspectStackRule",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsSuspectStackRule {"
     },
     {
       "export": "JsTomlConfigIssue",
@@ -1109,6 +1165,15 @@
       "arity": 0
     },
     {
+      "export": "clearHashCache",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function clearHashCache(): void",
+      "arity": 0
+    },
+    {
       "export": "clearSettingsCache",
       "kind": "function",
       "owner_module": "config",
@@ -1469,6 +1534,15 @@
       "arity": 0
     },
     {
+      "export": "getApplicationDir",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getApplicationDir(): string | null",
+      "arity": 0
+    },
+    {
       "export": "getBatchCacheTtl",
       "kind": "function",
       "owner_module": "config",
@@ -1577,6 +1651,15 @@
       "arity": 1
     },
     {
+      "export": "getFcxConfigIssues",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getFcxConfigIssues(): Array<JsFcxConfigIssue>",
+      "arity": 0
+    },
+    {
       "export": "getGameName",
       "kind": "function",
       "owner_module": "aux",
@@ -1584,6 +1667,15 @@
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getGameName(id: JsGameId): string",
       "arity": 1
+    },
+    {
+      "export": "getHashCacheStats",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function getHashCacheStats(): HashCacheStats",
+      "arity": 0
     },
     {
       "export": "getLatestRelease",
@@ -2027,12 +2119,12 @@
       "arity": 3
     },
     {
-      "export": "migrateVrSetting",
+      "export": "migrateGameVersionSetting",
       "kind": "function",
-      "owner_module": "scanlog",
+      "owner_module": "version_registry",
       "tier": "tier2",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function migrateVrSetting(gameVersion?: string | undefined | null): string | null",
+      "signature": "export declare function migrateGameVersionSetting(gameVersion?: string | undefined | null): string | null",
       "arity": 1
     },
     {
@@ -2243,15 +2335,6 @@
       "arity": 0
     },
     {
-      "export": "registryIsVrVersion",
-      "kind": "function",
-      "owner_module": "version_registry",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function registryIsVrVersion(): boolean",
-      "arity": 0
-    },
-    {
       "export": "registryRemove",
       "kind": "function",
       "owner_module": "aux",
@@ -2286,6 +2369,24 @@
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function removeReadonly(filePath: string): void",
       "arity": 1
+    },
+    {
+      "export": "resetFcxGlobalState",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resetFcxGlobalState(): void",
+      "arity": 0
+    },
+    {
+      "export": "resetHashCacheStats",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resetHashCacheStats(): void",
+      "arity": 0
     },
     {
       "export": "resetSettingsCacheStats",
@@ -2349,6 +2450,15 @@
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanUnpackedFiles(rootPath: string, xseScriptfiles: Array<string>): JsUnpackedIssues",
       "arity": 2
+    },
+    {
+      "export": "setApplicationDir",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier2",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function setApplicationDir(path: string): void",
+      "arity": 1
     },
     {
       "export": "settingsCacheKeys",
@@ -2518,7 +2628,7 @@
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function yamlGetCacheStats(): any",
+      "signature": "export declare function yamlGetCacheStats(): { hits: number; misses: number; hit_rate: number; size: number; capacity: number }",
       "arity": 0
     },
     {
