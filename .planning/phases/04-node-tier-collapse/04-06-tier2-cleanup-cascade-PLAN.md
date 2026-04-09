@@ -8,8 +8,13 @@ wave: 5
 depends_on: [04-02, 04-03, 04-04, 04-05]
 files_modified:
   - .planning/phases/04-node-tier-collapse/04-06-TIER2-CASCADE-AUDIT.md
+  - .planning/phases/04-node-tier-collapse/04-06-tier2-cleanup-cascade-SUMMARY.md
   - .planning/STATE.md
   - .planning/ROADMAP.md
+# Note (Fix 6.4, Round 2): SUMMARY.md is created by Task 3 Step 2 after Task 2's atomic
+# cascade commit. It's staged in Task 3 Step 3's docs commit, NOT in Task 2's M7 commit.
+# Listed here for frontmatter honesty — the git status --porcelain integrity probe at
+# Task 2 Step 9 must NOT include SUMMARY.md (it doesn't exist yet at that point).
   - tools/node_api_parity/generate_baseline.py
   - tools/node_api_parity/tests/test_check_parity_gate.py
   - docs/implementation/node_api_parity/baseline/parity_contract.json
@@ -248,7 +253,7 @@ def test_tier1_contract_total_baseline_floor():
   </verify>
   <acceptance_criteria>
     - `Test-Path .planning/phases/04-node-tier-collapse/04-06-TIER2-CASCADE-AUDIT.md` returns `True` (PowerShell-native per user rule)
-    - `(Get-Content .planning/phases/04-node-tier-collapse/04-06-TIER2-CASCADE-AUDIT.md).Count -ge 50` returns `True` (at least 50 lines)
+    - `(Get-Content .planning/phases/04-node-tier-collapse/04-06-TIER2-CASCADE-AUDIT.md).Count -ge 50` returns `True` (at least 50 lines; `-ge` is the PowerShell greater-than-or-equal operator, not bash)
     - Audit file contains the literal ripgrep command used (for reproducibility)
     - Audit file classifies every hit into one of the 8 categories
     - Audit file contains a "Task 2 Action Plan" section naming the exact files to edit
@@ -298,10 +303,13 @@ def test_tier1_contract_total_baseline_floor():
 
     **Phase 2a: ALL SOURCE EDITS (no script invocations yet)**
 
-    Step 2 — Edit `tools/node_api_parity/generate_baseline.py`:
-    - Delete the `for rust_item in rust_symbols:` loop that emits `gap_type=rust_unmapped` gaps (lines 463-475 region — re-verify with Select-String).
-    - Delete the `for node_item in node_exports:` loop that emits `gap_type=node_unmapped` gaps (lines 476-489 region).
-    - Delete the `"tier2_gap_total": ...` key from the `summary` dict literal (around line 511).
+    Step 2 — Edit `tools/node_api_parity/generate_baseline.py`. Round 2 LOW sweep: use grep-anchored semantic targets as the PRIMARY locator (not hardcoded line numbers — those are provided only as hints and may have drifted since RESEARCH.md). Before each deletion, run the corresponding Select-String to locate the exact current line:
+    - Delete the `for rust_item in rust_symbols:` loop that emits `gap_type=rust_unmapped` gaps.
+      Locator: `Select-String -Path tools/node_api_parity/generate_baseline.py -Pattern 'gap_type\s*=\s*.rust_unmapped.' -Context 3,12` — the match highlights the line inside the loop; the enclosing `for rust_item in rust_symbols:` starts a few lines above. Delete the entire loop body including any `gaps.append(...)` calls within it. (Historical line range hint: ~463-475; re-verify before editing.)
+    - Delete the `for node_item in node_exports:` loop that emits `gap_type=node_unmapped` gaps.
+      Locator: `Select-String -Path tools/node_api_parity/generate_baseline.py -Pattern 'gap_type\s*=\s*.node_unmapped.' -Context 3,12` — same pattern; delete the enclosing loop. (Historical line range hint: ~476-489.)
+    - Delete the `"tier2_gap_total": ...` key from the `summary` dict literal.
+      Locator: `Select-String -Path tools/node_api_parity/generate_baseline.py -Pattern '.tier2_gap_total.\s*:' -Context 0,2` — the match is the dict key line; delete it. (Historical line hint: ~511.)
     - **MEDIUM concern — Tier 2 Gaps column: delete BOTH locations atomically**. The markdown column has TWO edit locations that MUST be edited together:
       1. **Header line** (around line 558) — the `| Tier 2 Gaps |` column in the table header
       2. **Cell expression** (around line 583) — the cell value computation in the per-row iteration
@@ -325,7 +333,18 @@ def test_tier1_contract_total_baseline_floor():
 
     Step 5 — Edit `tools/node_api_parity/tests/test_check_parity_gate.py`:
     - Remove the `@pytest.mark.xfail(strict=True, ...)` decorator from `test_tier2_definition_removed_after_plan_6`. It now runs as a normal test.
-    - For `test_tier1_contract_total_baseline_floor`: set the assertion to use a PLACEHOLDER `<COMPUTED_FLOOR>` sentinel (e.g., a comment + a temporary value of `-1`). The actual value is resolved by the Phase 2c.1 loop below.
+    - For `test_tier1_contract_total_baseline_floor`: replace the assertion body with a FAIL-LOUD placeholder (Round 2 Fix 6.3 — was previously `-1` which is trivially true). Use:
+      ```python
+      def test_tier1_contract_total_baseline_floor():
+          """Phase 4 close floor: tier1Mappings must not regress below the final post-promotion count."""
+          contract = json.loads(PARITY_CONTRACT.read_text(encoding="utf-8"))
+          tier1 = contract.get("tier1Mappings", [])
+          # Phase 2c.1 placeholder — MUST be replaced with the computed floor from parity_contract.json
+          # This assertion FAILS by design until Phase 2c.1 resolves it. If the placeholder remains,
+          # pytest will fail loudly rather than silently passing on `len(tier1) >= -1`.
+          assert False, "COMPUTED_FLOOR placeholder — Phase 2c.1 must replace this assertion with the actual floor value before the atomic pipeline completes"
+      ```
+    The placeholder STAYS until Phase 2c.1 computes the real floor and replaces both the comment and the `assert False` line with `assert len(tier1) >= <computed_floor>`. Because the placeholder fails instead of passes, the Phase 2c.1 loop cannot "silently succeed" with the placeholder still in place — pytest blocks on it.
 
     ---
 
@@ -337,9 +356,32 @@ def test_tier1_contract_total_baseline_floor():
     cd J:/CLASSIC-Fallout4/ClassicLib-rs/node-bindings/classic-node
     bun run parity:gate:local
     ```
-    **Retry discipline (MEDIUM concern fix)**: If the pipeline fails due to a TRANSIENT issue (e.g., a filesystem hiccup or a race with the parity-artifacts writer), allow EXACTLY ONE retry. If the second invocation also fails, ABORT the atomic pipeline — do not retry a third time. Fix within the same uncommitted working tree and restart Phase 2a (re-apply source edits if they were reverted during debugging, then re-enter Phase 2b from the top).
+    **Retry discipline (Round 2 Fix 6.2 — explicit classification decision tree)**:
 
-    If the failure is a genuine diagnostic (e.g., bidirectional guard firing on a row, `deferred_total != 0`), do NOT retry — fix the underlying cause first.
+    On ANY `bun run parity:gate:local` failure, FIRST read stderr/stdout and classify the failure BEFORE any retry. The executor MUST make the classification decision before running the gate a second time; do NOT auto-retry on first failure.
+
+    **Classification decision tree**:
+
+    1. **Transient failure signals** (eligible for ONE retry):
+       - Filesystem race (EBUSY, EACCES on parity-artifacts files)
+       - Process contention with another running bun/node process
+       - `node_modules` lock or partial install state
+       - Bun daemon restart / WebSocket reconnect noise
+       - Transient subprocess exit without a guard diagnostic
+       If classified transient: retry EXACTLY ONCE. If the second invocation also fails, ABORT the atomic pipeline and return `## CHECKPOINT REACHED` escalating to the user.
+
+    2. **Diagnostic failure signals** (NO retry — fix source and re-enter Phase 2a):
+       - Bidirectional guard fired on any row (Plan 1 validate_contract_surface output)
+       - `deferred_total != 0` in the refreshed runtime_coverage_summary.json
+       - Parse error or schema mismatch on a plan-authored row
+       - pytest failure inside `tools/node_api_parity/tests/`
+       - Any failure whose output references a specific row id, contract field, or test name
+       If classified diagnostic: do NOT retry. Fix the underlying cause within the uncommitted working tree, then re-enter Phase 2a (re-apply source edits that were reverted, re-verify all Phase 2a edits are still in place, then re-enter Phase 2b from Step 6).
+
+    3. **Ambiguous failure** (classification unclear):
+       Treat as diagnostic (fail-closed bias). Do NOT retry. Re-enter Phase 2a and look for missed edits or row corruption.
+
+    The retry budget is ONE, and it applies only to the transient path. The working tree stays UNCOMMITTED across any retry or re-entry.
 
     ---
 
@@ -365,10 +407,18 @@ def test_tier1_contract_total_baseline_floor():
     ```
     Record the printed count (e.g., 383).
 
-    Step 7.2 — Edit `tools/node_api_parity/tests/test_check_parity_gate.py`: replace the `<COMPUTED_FLOOR>` placeholder (from Step 5) with the actual count from Step 7.1. Example:
+    Step 7.2 — Edit `tools/node_api_parity/tests/test_check_parity_gate.py`: replace the Step 5 fail-loud placeholder with the resolved floor assertion (Round 2 Fix 6.3 — must REPLACE the `assert False, "COMPUTED_FLOOR placeholder..."` line, not just add another assert above it).
+    Before (from Step 5):
+    ```python
+    # Phase 2c.1 placeholder — MUST be replaced with the computed floor from parity_contract.json
+    # This assertion FAILS by design until Phase 2c.1 resolves it...
+    assert False, "COMPUTED_FLOOR placeholder — Phase 2c.1 must replace this assertion with the actual floor value before the atomic pipeline completes"
+    ```
+    After:
     ```python
     assert len(tier1) >= 383, f"tier1Mappings regressed below Phase 4 floor: {len(tier1)}"
     ```
+    The number 383 is an example — use the actual count printed in Step 7.1. Verify the `assert False` placeholder is GONE (Select-String -Path tools/node_api_parity/tests/test_check_parity_gate.py -Pattern 'COMPUTED_FLOOR placeholder' -Quiet returns False before committing).
 
     Step 7.3 — Re-run `bun run parity:gate:local` (Phase 2c.1 re-verification — confirms the new floor still passes the full pipeline):
     ```powershell
@@ -474,6 +524,8 @@ def test_tier1_contract_total_baseline_floor():
     - `cd ClassicLib-rs/node-bindings/classic-node && bun run test:node` exits 0
     - `cd ClassicLib-rs/node-bindings/classic-node && bun run dts:freshness:check` exits 0
     - `git log -1 --format="%s"` shows "Refactor: M7 atomic Tier-2 cleanup cascade (Phase 4 Plan 6 Task 2; NODE-02, NODE-03, NODE-06)" (the atomic commit)
+    - **Fix 6.2 retry discipline (Round 2)**: Step 6 explicitly classifies any `bun run parity:gate:local` failure as transient OR diagnostic BEFORE retrying. Ambiguous failures are treated as diagnostic (fail-closed bias). Only the transient path permits ONE retry; diagnostic failures force re-entry to Phase 2a with source fix.
+    - **Fix 6.3 placeholder fail-loud (Round 2)**: The `test_tier1_contract_total_baseline_floor` placeholder assertion FAILS by design (`assert False, "COMPUTED_FLOOR placeholder..."`) until Phase 2c.1 replaces it with the computed floor value. If the loop exits early or the placeholder is not resolved, pytest catches it loudly instead of silently passing.
   </acceptance_criteria>
   <done>
     M7 atomic cleanup cascade landed in one commit. `deferred_total == 0`. Tier-2 SEMANTICS removed from generate_baseline.py, parity_contract.json, and the test suite (per U4 rewording; `deferred_runtime_backlog.json` is preserved with empty entries). GLOBAL_FCX_HANDLER cleared. Gate green on all 5 verification surfaces (Python gate, bun gate, bun test, node test, dts freshness). Phase 4 CLOSED bar the final SUMMARY write.

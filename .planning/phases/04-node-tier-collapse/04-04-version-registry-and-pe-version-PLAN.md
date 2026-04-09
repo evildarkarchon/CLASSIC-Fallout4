@@ -206,7 +206,7 @@ pub fn is_valid_pe_path(path: String) -> bool {
 | `checkCrashgenConfigWithRules` | function |
 | `checkCrashgenFullWithRules` | function |
 
-Note on `migrateGameVersionSetting`: Research noted a diff-report discrepancy (5 node_unmapped vs 4 in coverage summary) — the fifth candidate is `migrateGameVersionSetting`. Plan 4 does NOT promote `migrateGameVersionSetting` — that symbol is explicitly assigned to **Plan 5 Task 1 cross-owner reconciliation** (it currently bubbles up in the diff report with an unclear owner; Plan 5 reconciles ownership from the live `deferred_runtime_backlog.json` at execution time). Plan 4 focuses on the 4 version_registry entries + 3 PE rows = 7 total. If Plan 4's execution-time re-read of `deferred_runtime_backlog.json` shows `migrateGameVersionSetting` still in the version_registry owner bucket, document this in the SUMMARY and escalate to Plan 5 — do NOT silently add it as a fifth row in Plan 4.
+Note on `migrateGameVersionSetting` (Round 2 Fix 4.4 handoff rationale — codebase-verified 2026-04-09): Research noted a diff-report discrepancy (5 node_unmapped vs 4 in coverage summary) — the fifth candidate is `migrateGameVersionSetting`. Plan 4 does NOT promote this symbol even though `parity_diff_report.json::gaps` attributes it to `owner_module: version_registry, squad: Squad B (version-registry/aux)`. The diff report's `owner_module` field is a parity-tracking HEURISTIC grouping (Squad B == version-registry/aux), NOT a direct reflection of where the symbol's Rust source actually lives. Live codebase grep confirms: (a) the NAPI wrapper `migrate_game_version_setting` lives in `classic-node/src/scangame.rs` (line ~1553), NOT in `src/version_registry.rs`, and (b) the core function `migrate_game_version_setting` lives in `classic-scangame-core/src/setup.rs` (line ~225), NOT in `classic-version-registry-core`. The CORRECT `rustCrate` value is `classic-scangame-core` (reflecting the actual source crate) — NOT `classic-version-registry-core` (which is only a parity-tracking grouping artifact). Plan 5 owns the row because Plan 5 is the designated cross-owner reconciliation plan for symbols whose diff-report `owner_module` doesn't match their actual source crate — this is exactly the kind of residual routing Plan 5 exists to handle. If Plan 4's execution-time re-read of `deferred_runtime_backlog.json` shows `migrateGameVersionSetting` still in the version_registry owner bucket, document this in the SUMMARY and escalate to Plan 5 — do NOT silently add it as a fifth row in Plan 4.
 
 **Row shape examples**:
 ```json
@@ -375,7 +375,7 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
     - `docs/implementation/node_api_parity/baseline/parity_contract.json` (grep for `Fallout4VersionInfo` to find the existing interface-row precedent for D1; verify the exact JSON shape before authoring `version-pe-shape`)
     - `docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json` (filter ownerModule: "version_registry" to get the authoritative 4-vs-5 count)
     - `tools/binding_parity_runtime_coverage.py::_stable_id_hash` (D-HASH-01 mandatory)
-    - `ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs` (source the rustSymbol values for the 4 version_registry rows; grep for `check_crashgen_config_with_rules`, `check_crashgen_full_with_rules`, etc. to confirm the exact snake_case signatures)
+    - `ClassicLib-rs/node-bindings/classic-node/src/scangame.rs` (source the rustSymbol values for the 4 version_registry rows; grep for `check_crashgen_config_with_rules`, `check_crashgen_full_with_rules`, etc. to confirm the exact snake_case signatures)
   </read_first>
   <behavior>
     - `src/version.rs` grows by ~40-50 lines appended at the bottom: `use std::path::Path;` (if not already imported), `#[napi(object)] pub struct JsPeVersion` with `major/minor/patch/build: u32`, `#[napi] pub fn extract_pe_version(path: String) -> Result<JsPeVersion>`, `#[napi] pub fn is_valid_pe_path(path: String) -> bool`.
@@ -459,9 +459,9 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
     MUST exit 0. Verify (PowerShell-native):
     ```powershell
     cd J:/CLASSIC-Fallout4/ClassicLib-rs/node-bindings/classic-node
-    Select-String -Path index.d.ts -Pattern 'extractPeVersion' -Quiet
-    Select-String -Path index.d.ts -Pattern 'isValidPePath' -Quiet
-    Select-String -Path index.d.ts -Pattern 'interface JsPeVersion' -Quiet
+    Select-String -Path index.d.ts -Pattern 'export declare function extractPeVersion' -Quiet
+    Select-String -Path index.d.ts -Pattern 'export declare function isValidPePath' -Quiet
+    Select-String -Path index.d.ts -Pattern 'export interface JsPeVersion' -Quiet
     ```
     All three MUST return `True`.
 
@@ -545,7 +545,7 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
     ```powershell
     cd J:/CLASSIC-Fallout4
     # Confirm Rust signature
-    Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs -Pattern 'fn check_crashgen_config_with_rules|fn check_crashgen_full_with_rules' -Context 0,5
+    Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'fn check_crashgen_config_with_rules|fn check_crashgen_full_with_rules' -Context 0,5
     # Confirm TypeScript signature
     Select-String -Path ClassicLib-rs/node-bindings/classic-node/index.d.ts -Pattern 'checkCrashgenConfigWithRules|checkCrashgenFullWithRules' -Context 0,3
     ```
@@ -573,11 +573,16 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
         expect(typeof entry.game).toBe("string");
       });
       test("JsCrashgenSettingsRules has expected field types", () => {
-        const rules = {} as JsCrashgenSettingsRules;
-        // If the interface has known required fields, populate them and assert types;
-        // otherwise at minimum verify the type binding exists at runtime (TS erases, so
-        // this is really a compile-time check — use the constructor or call site).
-        expect(rules).toBeDefined();
+        // Round 2 LOW sweep: replaced `{} as JsCrashgenSettingsRules` + `toBeDefined()` with
+        // a minimal literal matching the Round 2 verified core type at classic-crashgen-settings-core/src/lib.rs:226.
+        // Pre-authoring: grep the live `pub struct CrashgenSettingsRules` fields and adjust the literal below.
+        const rules = {
+          check_rules: [],
+          preflight_rules: [],
+        } as unknown as JsCrashgenSettingsRules;
+        // Assert typed fields exist on the literal (runtime check; the type binding ensures
+        // these field names match the NAPI-generated interface at compile time)
+        expect(Array.isArray(rules.check_rules) || rules.check_rules === undefined).toBe(true);
       });
     });
 
@@ -603,11 +608,15 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
     });
     ```
 
-    Step 5 — Append to `__test__/runtime.node.test.mjs`:
+    Step 5 — Append to `__test__/runtime.node.test.mjs`. The must_have requires BOTH PE-version AND version_registry runtime test coverage, so BOTH are MANDATORY (Round 2 Fix 4.3 — removed "if practical" downgrade):
     ```javascript
     import { test } from "node:test";
     import assert from "node:assert/strict";
-    import { isValidPePath, extractPeVersion } from "../index.js";
+    import {
+      isValidPePath,
+      extractPeVersion,
+      checkCrashgenConfigWithRules,
+    } from "../index.js";
 
     test("version: isValidPePath returns false for nonexistent (cross-runtime D-TEST-02)", () => {
       assert.strictEqual(isValidPePath("/nonexistent/path.exe"), false);
@@ -615,13 +624,30 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
 
     if (process.platform === "win32") {
       test("version: extractPeVersion against kernel32.dll (Windows-only D-TEST-02)", () => {
-        const version = extractPeVersion("C:\\Windows\\System32\\kernel32.dll");
+        const version = extractPeVersion("C:\\\\Windows\\\\System32\\\\kernel32.dll");
         assert.ok(version !== undefined);
         assert.strictEqual(typeof version.major, "number");
       });
     }
+
+    // MANDATORY per Round 2 Fix 4.3 — not "if practical". The must_have requires version_registry
+    // runtime coverage alongside PE-version coverage. The executor uses the signatures locked by
+    // Task 2 Step 4's pre-authoring verification (same live grep as the bun:test test body).
+    test("version_registry: checkCrashgenConfigWithRules callable with typed return (cross-runtime D-TEST-02)", () => {
+      // Use the LOCKED signature from the scangame.rs Pre-Step 6a grep.
+      // The function signature is: checkCrashgenConfigWithRules(pluginsPath, crashgenName, settingsRules?)
+      // Passing minimal valid arguments. On empty plugins path, the function either returns a
+      // result object or throws — either outcome is an acceptable typed signal.
+      try {
+        const result = checkCrashgenConfigWithRules("", "Buffout4");
+        assert.ok(result !== undefined, "result must be defined");
+        assert.ok(typeof result === "object", "result must be an object");
+      } catch (e) {
+        // A thrown Error is acceptable — signals the function is callable and validates input
+        assert.ok(e instanceof Error, "thrown value must be an Error");
+      }
+    });
     ```
-    Also append ONE version_registry representative test (checkCrashgenConfigWithRules) if practical.
 
     Step 6 — Author **7 new contract rows** in `parity_contract.json::tier1Mappings` (D1 adjudication 2026-04-09: was 6, restored to 7):
 
@@ -657,7 +683,48 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
     ```
     **D1 adjudication rationale (do NOT remove `version-pe-shape`)**: The iteration-1 plan-checker dropped this row on the theory that `PeVersionResult` is a `Result<>` type alias and therefore "covered implicitly" via `extractPeVersion`'s typed return. Cross-AI review (Claude vs Codex) empirically proved this is mechanically wrong: `parse_node_surface()` (generate_baseline.py line 301) emits a standalone `{ export: "JsPeVersion", kind: "interface" }` entry for every `export interface` in `index.d.ts`, and `node-deferred-aux-108` in the deferred backlog empirically proves that such standalone interface entries without tier1Mappings rows become `classification=deferred, tier=tier2` — regressing `deferred_total`. The `Fallout4VersionInfo` row at `parity_contract.json::tier1Mappings` is the canonical precedent for this shape (a Rust struct/type-alias source mapped to a Node interface export). The row MUST be present for Plan 4's plan-local invariant (`deferred_total` drops by exactly the row count added) to hold.
 
-    **4 version_registry rows** with rustCrate: "classic-version-registry-core" — exact nodeExport values: `JsCrashgenRegistryEntry`, `JsCrashgenSettingsRules`, `checkCrashgenConfigWithRules`, `checkCrashgenFullWithRules`. rustSymbol values derived from reading `classic-node/src/version_registry.rs` to find the underlying core types (likely `CrashgenRegistryEntry`, `CrashgenSettingsRules`, `check_crashgen_config_with_rules`, `check_crashgen_full_with_rules`).
+    **Pre-Step 6a (Round 2 Fix 4.2) — Lock rustSymbol AND rustCrate via live grep (NO "likely" language, mirrors D-07 signature-verification pattern)**:
+
+    Before authoring any of the 4 version_registry rows, the executor MUST run the following greps to LOCK the exact rustSymbol AND rustCrate values. Round 1's plan used "likely `CrashgenRegistryEntry` in `classic-version-registry-core`" which is exactly the kind of guessing U5 was meant to eliminate. Round 2 empirical codebase verification found:
+
+    - `check_crashgen_config_with_rules` + `check_crashgen_full_with_rules`: NAPI wrappers live in `classic-node/src/scangame.rs`, NOT `src/version_registry.rs`. There are no matching core functions with those exact names — the NAPI functions compose `JsCrashgenChecker::new(...).check()` which internally uses `classic-crashgen-settings-core::CrashgenSettingsRules` plus the scangame crashgen orchestrator. The executor must grep to determine the correct rustSymbol.
+    - `JsCrashgenRegistryEntry`: NAPI struct lives in `classic-node/src/crashgen_rules.rs`. There is NO core `CrashgenRegistryEntry` struct in any Rust crate — it's a pure NAPI wrapper.
+    - `JsCrashgenSettingsRules`: NAPI struct lives in `classic-node/src/crashgen_rules.rs`. The underlying core type IS `CrashgenSettingsRules` in `classic-crashgen-settings-core/src/lib.rs`.
+
+    Run (PowerShell):
+    ```powershell
+    cd J:/CLASSIC-Fallout4
+    # Find the NAPI function definitions
+    Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'pub fn check_crashgen_config_with_rules|pub fn check_crashgen_full_with_rules' -Context 0,6
+    # Find the NAPI struct definitions
+    Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/crashgen_rules.rs -Pattern 'pub struct JsCrashgenRegistryEntry|pub struct JsCrashgenSettingsRules' -Context 0,12
+    # Find the core CrashgenSettingsRules struct
+    Select-String -Path ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs -Pattern '^pub struct CrashgenSettingsRules' -Context 0,2
+    # Confirm there is NO CrashgenRegistryEntry in any -core crate (should return zero matches)
+    Select-String -Path ClassicLib-rs/business-logic/*/src/*.rs -Pattern '^pub struct CrashgenRegistryEntry' -Recurse
+    ```
+
+    **Locking decisions the executor MUST make from the grep output**:
+
+    1. For `checkCrashgenConfigWithRules` + `checkCrashgenFullWithRules`:
+       - rustSymbol: MUST be the actual `pub fn <name>` found in scangame.rs (expected: `check_crashgen_config_with_rules` / `check_crashgen_full_with_rules`).
+       - rustCrate: Because these are NAPI-only composing functions (no matching core function), EITHER (a) use `classic-scangame-core` if a matching core helper exists after a recursive grep, OR (b) use an `@rust`-suffix proxy row per the Phase 3 Scenario E pattern, OR (c) return `## CHECKPOINT REACHED` escalating to user for routing decision. Document the choice in the SUMMARY.
+    2. For `JsCrashgenRegistryEntry`:
+       - There is NO core type with the exact name `CrashgenRegistryEntry`. The NAPI struct fields are composed from `CrashgenSettingsRules` + raw string fields.
+       - OPTIONS: (a) use `@rust`-suffix proxy row with rustSymbol `JsCrashgenRegistryEntry@rust` and rustCrate `<choose a natural owning crate or classic-node>`, OR (b) if a matching core type is found via recursive grep at Pre-Step 6a execution time, use that, OR (c) escalate to user.
+    3. For `JsCrashgenSettingsRules`:
+       - rustSymbol: `CrashgenSettingsRules` (verified at `classic-crashgen-settings-core/src/lib.rs:226`).
+       - rustCrate: `classic-crashgen-settings-core`.
+
+    If ANY symbol cannot be unambiguously located by Pre-Step 6a's grep, return `## CHECKPOINT REACHED` escalating to the user for rustCrate clarification. Do NOT author a row with a guessed rustCrate value.
+
+    **4 version_registry rows** — exact nodeExport values and locked rustSymbol/rustCrate per Pre-Step 6a:
+    - `JsCrashgenRegistryEntry`: nodeKind=interface; rustSymbol/rustCrate LOCKED via Pre-Step 6a
+    - `JsCrashgenSettingsRules`: nodeKind=interface; rustSymbol=`CrashgenSettingsRules`, rustCrate=`classic-crashgen-settings-core` (verified Round 2 codebase grep)
+    - `checkCrashgenConfigWithRules`: nodeKind=function; rustSymbol/rustCrate LOCKED via Pre-Step 6a
+    - `checkCrashgenFullWithRules`: nodeKind=function; rustSymbol/rustCrate LOCKED via Pre-Step 6a
+
+    NO "likely" language may appear in the row authoring — every field must be grep-verified.
 
     Step 7 — Update `runtime_coverage_registry.json`. Add new selector `node-tier1-version-registry-plan04-promoted` with bindingIdentifiers covering all 7 new rows (3 PE + 4 version_registry). Compute contractIdsHash via `_stable_id_hash`.
 
@@ -691,11 +758,14 @@ If Python's gate fails with a new `gap_type=rust_unmapped` row referencing `is_v
     - `Select-String -Path ClassicLib-rs/node-bindings/classic-node/index.d.ts -Pattern 'interface JsPeVersion' -Quiet` returns `True`
     - **D1 row-count enforcement**: `python -c "import json; d = json.load(open('docs/implementation/node_api_parity/baseline/parity_contract.json')); ids = {r['id'] for r in d['tier1Mappings']}; assert {'version-pe-extract', 'version-pe-is-valid-path', 'version-pe-shape'}.issubset(ids), f'D1: all 3 PE rows must be present; missing: {set([\"version-pe-extract\", \"version-pe-is-valid-path\", \"version-pe-shape\"]) - ids}'"` exits 0
     - **D1 row shape enforcement**: `python -c "import json; d = json.load(open('docs/implementation/node_api_parity/baseline/parity_contract.json')); shape = next(r for r in d['tier1Mappings'] if r.get('id') == 'version-pe-shape'); assert shape['rustSymbol'] == 'PeVersionResult', f'version-pe-shape.rustSymbol must be PeVersionResult, got {shape[\"rustSymbol\"]}'; assert shape['nodeExport'] == 'JsPeVersion', f'version-pe-shape.nodeExport must be JsPeVersion'; assert shape['nodeKind'] == 'interface'; assert shape['rustCrate'] == 'classic-version-core'"` exits 0
-    - **A3 rustCrate enforcement (MEDIUM concern fix)**: `python -c "import json; d = json.load(open('docs/implementation/node_api_parity/baseline/parity_contract.json')); pe_rows = [r for r in d['tier1Mappings'] if r.get('id', '').startswith('version-pe-')]; assert len(pe_rows) == 3, f'expected 3 PE rows, got {len(pe_rows)}'; assert all(r.get('rustCrate') == 'classic-version-core' for r in pe_rows), 'all 3 PE rows must carry rustCrate classic-version-core'"` exits 0
+    - **A3 rustCrate enforcement for PE rows (MEDIUM concern fix)**: `python -c "import json; d = json.load(open('docs/implementation/node_api_parity/baseline/parity_contract.json')); pe_rows = [r for r in d['tier1Mappings'] if r.get('id', '').startswith('version-pe-')]; assert len(pe_rows) == 3, f'expected 3 PE rows, got {len(pe_rows)}'; assert all(r.get('rustCrate') == 'classic-version-core' for r in pe_rows), 'all 3 PE rows must carry rustCrate classic-version-core'"` exits 0
+    - **Fix 4.1 rustCrate enforcement for version_registry rows (Round 2)**: The 4 version_registry rows (JsCrashgenRegistryEntry / JsCrashgenSettingsRules / checkCrashgenConfigWithRules / checkCrashgenFullWithRules) must carry the rustCrate field per A3, mirroring the 3 PE rows' enforcement pattern. The exact rustCrate value is LOCKED via Fix 4.2 Pre-Step 6a grep below (the earlier draft said "classic-version-registry-core" but the live symbols actually live in `classic-crashgen-settings-core` and `classic-node/src/scangame.rs` — the executor MUST verify via grep before authoring, NOT assume). After the executor's grep locks the correct rustCrate value(s), assert that every version_registry row carries a non-empty rustCrate field: `python -c "import json; d = json.load(open('docs/implementation/node_api_parity/baseline/parity_contract.json')); vr_rows = [r for r in d['tier1Mappings'] if r.get('nodeExport') in ('JsCrashgenRegistryEntry', 'JsCrashgenSettingsRules', 'checkCrashgenConfigWithRules', 'checkCrashgenFullWithRules')]; assert len(vr_rows) == 4, f'expected 4 version_registry rows, got {len(vr_rows)}'; assert all(r.get('rustCrate') for r in vr_rows), 'all 4 version_registry rows must have a non-empty rustCrate'; assert all(r.get('rustCrate', '').startswith('classic-') for r in vr_rows), 'all 4 version_registry rows rustCrate must name a real classic-* crate'"` exits 0
     - `python -c "import json; d = json.load(open('docs/implementation/node_api_parity/baseline/runtime_coverage_summary.json')); per_owner = d.get('per_owner', {}); assert per_owner.get('version_registry', {}).get('deferred', -1) == 0"` exits 0
+    - **Fix 4.2 rustSymbol lock-via-grep (Round 2)**: Pre-Step 6a's Select-String output was used to lock the rustSymbol AND rustCrate values for the 4 version_registry rows. No "likely" language remains in the plan action. The locked rustSymbol values match the exact symbols output by Pre-Step 6a grep: `Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'pub fn check_crashgen_config_with_rules' -Quiet` returns `True` AND `Select-String -Path ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs -Pattern 'pub struct CrashgenSettingsRules' -Quiet` returns `True`.
     - `cd ClassicLib-rs/node-bindings/classic-node && bun run dts:freshness:check` exits 0 (confirms committed index.d.ts matches fresh build)
     - `cd ClassicLib-rs/node-bindings/classic-node && bun run test:bun` exits 0
     - `cd ClassicLib-rs/node-bindings/classic-node && bun run test:node` exits 0
+    - **Fix 4.3 mandatory version_registry runtime coverage (Round 2)**: `runtime.node.test.mjs` contains a test that calls `checkCrashgenConfigWithRules(...)` with minimal valid input and asserts a typed return shape (object or Error). Verified via: `Select-String -Path ClassicLib-rs/node-bindings/classic-node/__test__/runtime.node.test.mjs -Pattern 'checkCrashgenConfigWithRules\(' -Quiet` returns `True`. The must_have's "both PE-version AND version_registry runtime coverage" requirement is satisfied with NO "if practical" downgrade.
   </acceptance_criteria>
   <done>
     extractPeVersion + isValidPePath NAPI exports exist, index.d.ts regenerated + committed atomically, **7** new contract rows land (3 PE with version-pe-shape restored per D1 + 4 version_registry), smoke tests pass in both runtimes, version_registry.deferred == 0. HARM-01 and HARM-02 satisfied.

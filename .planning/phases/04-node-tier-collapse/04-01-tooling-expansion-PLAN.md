@@ -32,7 +32,7 @@ must_haves:
   truths:
     - "`tools/node_api_parity/generate_baseline.py::RUST_TARGET_CRATES` contains AT LEAST 19 entries (the original 10 plus 9 new; `>= 19` not `== 19` so Plan 5 can absorb a 20th crate without blocking Plan 1) — every entry points to a lib.rs that `parse_rust_surface()` parses to a non-empty symbol list"
     - "`RUST_FULL_INVENTORY_CRATES` set and `include_rust_symbol()` filter function are deleted from `generate_baseline.py`; `parse_rust_surface()` returns every public symbol for every tracked crate"
-    - "`tools/node_api_parity/check_parity_gate.py::validate_contract_surface()` exists as a bidirectional guard that FAILS-CLOSED on malformed row shapes: missing rustSymbol, missing nodeExport on non-@rust rows, empty rows (neither field present). Only `rustSymbol.endswith('@rust')` skips the Node-side check. Runs unconditionally on every gate invocation."
+    - "`tools/node_api_parity/check_parity_gate.py::validate_contract_surface()` exists as a bidirectional guard that FAILS-CLOSED on malformed row shapes: missing rustSymbol, missing nodeExport on non-@rust rows, empty rows (neither field present), empty-string rustSymbol/nodeExport, and non-string rustSymbol/nodeExport (Round 2 Fix 1.1). Only `rustSymbol.endswith('@rust')` skips the Node-side check. Runs unconditionally on every gate invocation."
     - "The guard's diagnostic output explicitly names the failing side AND the malformed shape: (a) `row {id} missing rustSymbol`, (b) `row {id} is normal-shape but missing nodeExport`, (c) `row {id} is empty (no rustSymbol and no nodeExport)`, (d) Rust-side miss says 'Add `pub use <sub_module>::<symbol>;` to `<rustCrate>/lib.rs`' (using `rustCrate` when present, `<unknown>` fallback), (e) Node-side miss says 'Rust function still uses snake_case or <name> is a typo. Run `bun run build` to refresh index.d.ts.'"
     - "Contract rows with `rustSymbol` ending in `@rust` are the ONLY rows that skip the Node-side check (A7 precedent from Phase 3 Scenario E). A row with no `nodeExport` AND no `@rust` suffix is MALFORMED and MUST fire the guard (H1 fail-closed hardening)."
     - "`bun run build` end-to-end smoke test succeeds: `napi build --release --platform --manifest-path ./Cargo.toml` produces the native `.node` file; `tsc -p tsconfig.json` produces `dist/cli/*.js`; `bun run dts:freshness:check` exits 0"
@@ -50,7 +50,7 @@ must_haves:
       provides: "Per-crate parse_rust_surface() non-empty assertion preventing path typos (Pitfall 5 guard)"
       min_lines: 30
     - path: "tools/node_api_parity/tests/test_validate_contract_surface.py"
-      provides: "Unit tests for bidirectional guard — synthetic contracts + surfaces + expected diagnostics; includes fail-closed fixtures for 3 malformed row shapes (H1)"
+      provides: "Unit tests for bidirectional guard — synthetic contracts + surfaces + expected diagnostics; includes fail-closed fixtures for 7 malformed row shapes (H1 + Round 2 Fix 1.1 exotic-value extensions)"
       min_lines: 120
     - path: "tools/node_api_parity/tests/test_check_parity_gate.py"
       provides: "test_tier1_contract_total_baseline_floor (Plan 1 snapshot) and test_tier2_definition_removed_after_plan_6 (xfail strict=true)"
@@ -138,12 +138,14 @@ Note: The Step 0 pre-state assertion must confirm the live count is 10 before St
 **Phase 3 reference for `validate_contract_surface()` shape** (Python Pitfall 2 guard at `tools/python_api_parity/check_parity_gate.py` lines 31-76):
 The Python version validates ONE direction (rustSymbol only). Phase 4 extends it to BOTH directions AND adds fail-closed handling of malformed rows per H1.
 
-**H1 fail-closed row shapes to reject**:
+**H1 fail-closed row shapes to reject (Round 2 Fix 1.1 extended to 5 shape categories)**:
 1. **Missing `rustSymbol`** (any shape, any nodeExport) → diagnostic `"row {id} missing rustSymbol"` — no row should be authored without a Rust-side anchor.
 2. **Missing `nodeExport` AND `rustSymbol` does not end in `@rust`** → diagnostic `"row {id} is normal-shape but missing nodeExport"` — only `@rust` proxy rows are allowed to lack a nodeExport field.
 3. **Empty row** (neither `rustSymbol` nor `nodeExport` present) → diagnostic `"row {id} is empty (no rustSymbol and no nodeExport)"` — an empty row is always a bug.
+4. **Empty string rustSymbol/nodeExport** (Round 2 Fix 1.1) — `rustSymbol == ""` or `nodeExport == ""` — diagnostic `"row {id} has empty rustSymbol/nodeExport"` — empty strings are not valid symbol/export names and must not slip past the None-check.
+5. **Wrong-type rustSymbol/nodeExport** (Round 2 Fix 1.1) — `rustSymbol` or `nodeExport` is not a string or None (e.g., list, dict) — diagnostic `"row {id} has non-string rustSymbol/nodeExport"` — the guard must not raise an uncaught exception on wrong types; it must produce a clean diagnostic.
 
-Only `rustSymbol.endswith("@rust")` allows the Node-side check to be skipped. All three malformed shapes MUST fire diagnostics; none may silently pass.
+Only `rustSymbol.endswith("@rust")` allows the Node-side check to be skipped. All five malformed shape categories MUST fire diagnostics; none may silently pass, raise an exception, or be accepted as valid.
 
 **Lines to delete in `generate_baseline.py`**:
 - `RUST_FULL_INVENTORY_CRATES` set (around line 50-54)
@@ -278,10 +280,14 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
   </read_first>
   <behavior>
     - `validate_contract_surface(contract, rust_manifest, node_manifest) -> list[str]` exists in `check_parity_gate.py` and is called unconditionally inside `main()` between `parse_node_surface()` and `generate_diff_report()`.
-    - **H1 fail-closed shapes (CRITICAL)**: The function iterates every `tier1Mappings` row and rejects ALL of the following malformed shapes with explicit diagnostics before performing surface lookups:
+    - **H1 fail-closed shapes (CRITICAL; Round 2 Fix 1.1 extended)**: The function iterates every `tier1Mappings` row and rejects ALL of the following malformed shapes with explicit diagnostics before performing surface lookups:
       1. **Empty row** — if both `rustSymbol` AND `nodeExport` are missing → diagnostic `"row {id} is empty (no rustSymbol and no nodeExport)"`
       2. **Missing rustSymbol** — if `rustSymbol` is missing (any `nodeExport` state) → diagnostic `"row {id} missing rustSymbol"`
       3. **Missing nodeExport on non-proxy row** — if `rustSymbol` is present AND does NOT end in `@rust` AND `nodeExport` is missing → diagnostic `"row {id} is normal-shape but missing nodeExport"`
+      4. **Non-string rustSymbol** (Round 2 Fix 1.1) — if `rustSymbol` is not None and not a string (e.g., list, dict) → diagnostic `"row {id} has non-string rustSymbol"`
+      5. **Empty-string rustSymbol** (Round 2 Fix 1.1) — if `rustSymbol == ""` → diagnostic `"row {id} has empty rustSymbol"`
+      6. **Non-string nodeExport on non-proxy row** (Round 2 Fix 1.1) — if `rustSymbol` is a non-proxy string AND `nodeExport` is not None and not a string → diagnostic `"row {id} has non-string nodeExport"`
+      7. **Empty-string nodeExport on non-proxy row** (Round 2 Fix 1.1) — if `rustSymbol` is a non-proxy string AND `nodeExport == ""` → diagnostic `"row {id} has empty nodeExport"`
     - After the H1 malformed-shape rejections, the function asserts two positive conditions:
       1. If `rustSymbol` is present AND (not a proxy OR stripped of `@rust`): `effective_rust_symbol ∈ rust_symbols`. Failing rows append a diagnostic with Rust-side remediation hint using `rustCrate` field when present, falling back to `<unknown>` for legacy rows.
       2. If `nodeExport` is present AND `rustSymbol` does NOT end in `@rust`: `nodeExport ∈ node_exports`. Failing rows append a diagnostic with Node-side remediation hint referencing `bun run build` + index.d.ts refresh.
@@ -359,6 +365,48 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
         diagnostics = gate.validate_contract_surface(contract, rust_manifest, node_manifest)
         assert diagnostics == []
 
+    # Round 2 Fix 1.1: extend H1 guard to reject empty strings and wrong types (not just None)
+
+    def test_h1_empty_string_rust_symbol_is_rejected(rust_manifest, node_manifest):
+        """Round 2 Fix 1.1: empty-string rustSymbol MUST fire a diagnostic (not pass as truthy)."""
+        import check_parity_gate as gate
+        contract = {"tier1Mappings": [
+            {"id": "empty-string-rust", "rustSymbol": "", "nodeExport": "parseVersion"}
+        ]}
+        diagnostics = gate.validate_contract_surface(contract, rust_manifest, node_manifest)
+        assert len(diagnostics) >= 1
+        assert any("empty-string-rust" in d and ("empty" in d.lower() or "rustSymbol" in d) for d in diagnostics)
+
+    def test_h1_empty_string_node_export_is_rejected(rust_manifest, node_manifest):
+        """Round 2 Fix 1.1: empty-string nodeExport on a normal-shape row MUST fire a diagnostic."""
+        import check_parity_gate as gate
+        contract = {"tier1Mappings": [
+            {"id": "empty-string-node", "rustSymbol": "parse_version", "nodeExport": ""}
+        ]}
+        diagnostics = gate.validate_contract_surface(contract, rust_manifest, node_manifest)
+        assert len(diagnostics) >= 1
+        assert any("empty-string-node" in d and ("empty" in d.lower() or "nodeExport" in d) for d in diagnostics)
+
+    def test_h1_wrong_type_rust_symbol_is_rejected(rust_manifest, node_manifest):
+        """Round 2 Fix 1.1: non-string rustSymbol (e.g., list) MUST fire a diagnostic (not raise an exception)."""
+        import check_parity_gate as gate
+        contract = {"tier1Mappings": [
+            {"id": "wrong-type-rust", "rustSymbol": ["PeVersionResult"], "nodeExport": "parseVersion"}
+        ]}
+        diagnostics = gate.validate_contract_surface(contract, rust_manifest, node_manifest)
+        assert len(diagnostics) >= 1
+        assert any("wrong-type-rust" in d and ("type" in d.lower() or "string" in d.lower() or "rustSymbol" in d) for d in diagnostics)
+
+    def test_h1_wrong_type_node_export_is_rejected(rust_manifest, node_manifest):
+        """Round 2 Fix 1.1: non-string nodeExport (e.g., dict) MUST fire a diagnostic (not raise)."""
+        import check_parity_gate as gate
+        contract = {"tier1Mappings": [
+            {"id": "wrong-type-node", "rustSymbol": "parse_version", "nodeExport": {"name": "parseVersion"}}
+        ]}
+        diagnostics = gate.validate_contract_surface(contract, rust_manifest, node_manifest)
+        assert len(diagnostics) >= 1
+        assert any("wrong-type-node" in d and ("type" in d.lower() or "string" in d.lower() or "nodeExport" in d) for d in diagnostics)
+
     # ============ POSITIVE SURFACE-MISS DIAGNOSTICS ============
 
     def test_missing_rust_symbol_diagnostic(rust_manifest, node_manifest):
@@ -401,7 +449,7 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
         assert len(diagnostics) >= 1
         assert any("<unknown>" in d for d in diagnostics)
     ```
-    Run the test — all 10 tests MUST fail (`validate_contract_surface` doesn't exist yet). This is RED.
+    Run the test — all 14 tests MUST fail (`validate_contract_surface` doesn't exist yet; Round 2 Fix 1.1 added 4 exotic-value test cases). This is RED.
 
     Step 2 — Edit `tools/node_api_parity/check_parity_gate.py`:
     - Add `validate_contract_surface(contract, rust_manifest, node_manifest)` at module level (before `main()`). The implementation implements H1 fail-closed behavior:
@@ -413,6 +461,8 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
           - Rows missing rustSymbol (any shape)
           - Rows missing nodeExport when rustSymbol does NOT end in @rust
           - Empty rows (neither field present)
+          - Empty-string rustSymbol or empty-string nodeExport (Round 2 Fix 1.1)
+          - Non-string rustSymbol or non-string nodeExport (Round 2 Fix 1.1)
 
           Accepts:
           - rustSymbol + nodeExport (normal rows) — checks both directions
@@ -441,7 +491,37 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
                   )
                   continue
 
-              is_proxy = isinstance(rust_symbol, str) and rust_symbol.endswith("@rust")
+              # Round 2 Fix 1.1: reject non-string rustSymbol (e.g., list, dict)
+              if not isinstance(rust_symbol, str):
+                  diagnostics.append(
+                      f"Row '{row_id}' has non-string rustSymbol "
+                      f"(got {type(rust_symbol).__name__}; expected string)."
+                  )
+                  continue
+
+              # Round 2 Fix 1.1: reject empty-string rustSymbol
+              if rust_symbol == "":
+                  diagnostics.append(
+                      f"Row '{row_id}' has empty rustSymbol (empty string is not a valid symbol)."
+                  )
+                  continue
+
+              is_proxy = rust_symbol.endswith("@rust")
+
+              # Round 2 Fix 1.1: reject non-string nodeExport (when present) on non-proxy rows
+              if not is_proxy and node_export is not None and not isinstance(node_export, str):
+                  diagnostics.append(
+                      f"Row '{row_id}' has non-string nodeExport "
+                      f"(got {type(node_export).__name__}; expected string or None)."
+                  )
+                  continue
+
+              # Round 2 Fix 1.1: reject empty-string nodeExport on normal-shape rows
+              if not is_proxy and node_export == "":
+                  diagnostics.append(
+                      f"Row '{row_id}' has empty nodeExport (empty string is not a valid export name)."
+                  )
+                  continue
 
               # H1 fail-closed: normal-shape row with missing nodeExport
               # Only @rust proxy rows are allowed to omit nodeExport.
@@ -483,7 +563,7 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
       ```
     - Read the current `main()` to find the exact insertion point. Use Grep for `parse_node_surface` to locate.
 
-    Step 3 — Re-run pytest. All 10 tests MUST pass (GREEN).
+    Step 3 — Re-run pytest. All 14 tests MUST pass (GREEN).
 
     Step 4 — Run the full gate against the live repo:
     ```powershell
@@ -497,13 +577,13 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
     <automated>python -m pytest tools/node_api_parity/tests/test_validate_contract_surface.py -q</automated>
   </verify>
   <acceptance_criteria>
-    - `python -m pytest tools/node_api_parity/tests/test_validate_contract_surface.py -q` exits 0 (all 10 tests pass including the 3 H1 fail-closed fixtures)
+    - `python -m pytest tools/node_api_parity/tests/test_validate_contract_surface.py -q` exits 0 (all 14 tests pass including the 3 original H1 fail-closed fixtures + 4 Round 2 Fix 1.1 exotic-value fixtures: empty-string rustSymbol, empty-string nodeExport, wrong-type rustSymbol, wrong-type nodeExport)
     - `python -c "import sys; sys.path.insert(0, 'tools/node_api_parity'); import check_parity_gate as g; assert callable(getattr(g, 'validate_contract_surface', None))"` exits 0
     - `python tools/node_api_parity/check_parity_gate.py --repo-root .` exits 0 (live gate against expanded surface still passes)
-    - **H1 fail-closed automation (MEDIUM concern fix — replaces manual 'inject bad row' step)**: the 3 H1 test cases (`test_h1_empty_row_is_rejected`, `test_h1_missing_rust_symbol_is_rejected`, `test_h1_normal_row_missing_node_export_is_rejected`) are part of the pytest run above — no manual injection step needed.
+    - **H1 fail-closed automation (MEDIUM concern fix — replaces manual 'inject bad row' step; Round 2 Fix 1.1 extended)**: the 7 H1 test cases are part of the pytest run above — no manual injection step needed. The 3 original fixtures (`test_h1_empty_row_is_rejected`, `test_h1_missing_rust_symbol_is_rejected`, `test_h1_normal_row_missing_node_export_is_rejected`) plus the 4 Round 2 additions (`test_h1_empty_string_rust_symbol_is_rejected`, `test_h1_empty_string_node_export_is_rejected`, `test_h1_wrong_type_rust_symbol_is_rejected`, `test_h1_wrong_type_node_export_is_rejected`) collectively cover None, empty-string, and wrong-type (list/dict) exotic values without the guard raising an uncaught exception.
   </acceptance_criteria>
   <done>
-    Bidirectional guard exists with H1 fail-closed rejection of 3 malformed row shapes, is called unconditionally, has 10 passing unit tests including automated malformed-row fixtures, live gate still exits 0. Plan 2-5 promotions will now be blocked at commit time if any row fails bidirectional validation OR any row has a malformed shape.
+    Bidirectional guard exists with H1 fail-closed rejection of 7 malformed row shapes (3 original None/empty-row + 4 Round 2 Fix 1.1 exotic-value cases: empty strings and wrong types), is called unconditionally, has 14 passing unit tests including automated malformed-row fixtures, live gate still exits 0. Plan 2-5 promotions will now be blocked at commit time if any row fails bidirectional validation OR any row has a malformed shape.
   </done>
 </task>
 
@@ -675,7 +755,7 @@ Each `gap` is ONE deferred row. Count `gaps[]` entries filtered by `ownerModule`
 
 <verification>
 Plan-level sanity check:
-1. `python -m pytest tools/node_api_parity/tests/ -q` — all 4 test files pass (test_generate_baseline_targets, test_validate_contract_surface including the 3 H1 fixtures, test_check_parity_gate — with expected xfail on tier2 test)
+1. `python -m pytest tools/node_api_parity/tests/ -q` — all 4 test files pass (test_generate_baseline_targets, test_validate_contract_surface including the 7 H1 fixtures — 3 original + 4 Round 2 Fix 1.1 exotic-value cases, test_check_parity_gate — with expected xfail on tier2 test)
 2. `python tools/node_api_parity/check_parity_gate.py --repo-root .` exits 0
 3. `cd ClassicLib-rs/node-bindings/classic-node && bun run parity:gate:local` exits 0
 4. A10 sizing JSON and MD both exist under `.planning/phases/04-node-tier-collapse/` with dual-source schema per U2
@@ -687,7 +767,7 @@ Plan-level sanity check:
 - Plans 2-5 have the bidirectional guard available to validate every row they author, AND the guard fails-closed on malformed shapes (H1)
 - Plans 2-5 have the A10 sizing report available to budget tasks — dual-source per U2 (primary: parity_diff_report.json::gaps)
 - No regression in the 261 existing tier1Mappings (gate still exits 0)
-- Wave 0 test scaffold in place for Plans 2-6 (floor + xfail tests + 3 H1 fail-closed fixtures)
+- Wave 0 test scaffold in place for Plans 2-6 (floor + xfail tests + 7 H1 fail-closed fixtures: 3 original + 4 Round 2 Fix 1.1 exotic-value cases)
 - Owner selection fails loud on unresolved crates (no silent default-to-aux fallback)
 </success_criteria>
 
@@ -698,5 +778,5 @@ After completion, create `.planning/phases/04-node-tier-collapse/04-01-tooling-e
 - The A10 sizing report's per-owner breakdown (table) showing BOTH primary (gaps) AND cross (coverage summary) counts, plus the reconciliation delta per U2
 - Any existing 261 rows that fired the new bidirectional guard and how they were handled
 - Confirmation that the xfail test is still xfailing (Plan 6 flips it)
-- Confirmation that the 3 H1 fail-closed tests pass automatically (no manual row injection required)
+- Confirmation that the 7 H1 fail-closed tests pass automatically (no manual row injection required; 3 original + 4 Round 2 Fix 1.1 exotic-value cases)
 </output>

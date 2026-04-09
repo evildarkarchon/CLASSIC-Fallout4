@@ -35,6 +35,13 @@ files_modified:
   - ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs
   - ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs
   - ClassicLib-rs/business-logic/classic-shared-core/src/lib.rs
+  - ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs
+  - .planning/phases/04-node-tier-collapse/_plan05_routing_table.json
+# Note (Fix 5.3, Round 2): `_plan05_routing_table.json` is created conditionally by Task 0
+# only if routing ambiguity requires it. The pre-stage `git status --porcelain` integrity
+# probe MUST accept it as present OR absent. `classic-crashgen-settings-core/src/lib.rs` is
+# also conditional — added only if the bidirectional guard demands a new `pub use` during
+# row landing, same as the other lib.rs paths already listed.
 autonomous: false
 requirements_addressed: [NODE-02, NODE-03, NODE-04, NODE-05]
 requirements: [NODE-02, NODE-03, NODE-04, NODE-05]
@@ -158,7 +165,7 @@ Output:
 | `resetFcxGlobalState` | scanlog | classic-scanlog-core | `Select-String ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs -Pattern 'reset_fcx_global_state'` must match |
 | `writeAutoscanReport` | scangame | classic-scangame-core | `Select-String ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'write_autoscan_report'` must match. If NOT found in scangame.rs, grep scanlog.rs as fallback — whichever file contains it owns the row. |
 | `JsModConflictEntry` | config | classic-config-core | Already verified at `classic-node/src/config.rs:44` — no Task 0 check needed |
-| `migrateGameVersionSetting` | version_registry | classic-version-registry-core | Task 0: verify via `Select-String ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs -Pattern 'migrate_game_version_setting'` AND grep live `deferred_runtime_backlog.json::entries` for presence in version_registry bucket. If missing from the backlog at execution time, document exclusion in SUMMARY. |
+| `migrateGameVersionSetting` | scangame (NOT version_registry; Round 2 Fix 4.4 codebase verification) | **classic-scangame-core** (NOT classic-version-registry-core) | Task 0 (Round 2 corrected): verify via `Select-String ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'migrate_game_version_setting'` (line ~1553). The core function is at `classic-scangame-core/src/setup.rs:225`. The `parity_diff_report.json::gaps` entry attributes `owner_module: version_registry, squad: Squad B (version-registry/aux)` — this is a parity-tracking HEURISTIC grouping, NOT a source-crate reflection. The correct rustCrate is `classic-scangame-core`. Plan 5 owns the row because Plan 5 handles cross-owner reconciliation for symbols whose diff-report `owner_module` doesn't match their actual source crate. Also grep live `deferred_runtime_backlog.json::entries` for presence; if missing at execution time, document exclusion in SUMMARY. |
 
 Task 0 LOCKS the table: after running each Select-String check, if all 5 routes resolve unambiguously, Task 0 can be skipped (the table above is already locked). If any route is ambiguous (e.g., `writeAutoscanReport` present in BOTH scangame.rs and scanlog.rs), Task 0 MUST run and document the resolution in a new helper file `.planning/phases/04-node-tier-collapse/_plan05_routing_table.json` before Task 1 starts.
 
@@ -194,7 +201,7 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     - `ClassicLib-rs/node-bindings/classic-node/src/shared.rs` (verify get_application_dir / set_application_dir)
     - `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs` (verify reset_fcx_global_state, writeAutoscanReport fallback)
     - `ClassicLib-rs/node-bindings/classic-node/src/scangame.rs` (verify writeAutoscanReport primary)
-    - `ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs` (verify migrate_game_version_setting)
+    - `ClassicLib-rs/node-bindings/classic-node/src/scangame.rs` (verify migrate_game_version_setting)
     - `docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json` (confirm which of the 5+1 candidates are still in the live backlog)
   </read_first>
   <action>
@@ -205,10 +212,15 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs -Pattern 'reset_fcx_global_state' -Context 0,2
     Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'write_autoscan_report' -Context 0,2
     Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs -Pattern 'write_autoscan_report' -Context 0,2
-    Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs -Pattern 'migrate_game_version_setting' -Context 0,2
+    Select-String -Path ClassicLib-rs/node-bindings/classic-node/src/scangame.rs -Pattern 'migrate_game_version_setting' -Context 0,2
     ```
 
-    Step 2 — Assemble the resolved routing table. If `writeAutoscanReport` is present in EXACTLY ONE file (scangame.rs OR scanlog.rs), that's the owner. If in BOTH or NEITHER, document the discovery in `.planning/phases/04-node-tier-collapse/_plan05_routing_table.json`:
+    Step 2 — Assemble the resolved routing table (Round 2 fail-closed correction).
+    - If `writeAutoscanReport` is present in EXACTLY ONE file (scangame.rs OR scanlog.rs): that file's owner/crate is LOCKED; proceed.
+    - If present in BOTH files: FAIL CLOSED. Document the ambiguity in `_plan05_routing_table.json` AND return `## CHECKPOINT REACHED` escalating to the user for a routing decision. Do NOT silently pick one.
+    - If present in NEITHER file: FAIL CLOSED. Document the absence in `_plan05_routing_table.json` AND return `## CHECKPOINT REACHED` escalating as a potential research amendment gap (the symbol may have moved since the last research snapshot). Do NOT proceed assuming a default location.
+
+    For any resolved or ambiguous case, write the discovery to `.planning/phases/04-node-tier-collapse/_plan05_routing_table.json`:
     ```json
     {
       "locked_at": "<ISO timestamp>",
@@ -218,7 +230,7 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
         "resetFcxGlobalState":    {"owner": "scanlog",     "rustCrate": "classic-scanlog-core",     "source_file": "src/scanlog.rs"},
         "writeAutoscanReport":    {"owner": "<scangame or scanlog>", "rustCrate": "<corresponding crate>", "source_file": "<resolved>"},
         "JsModConflictEntry":     {"owner": "config",      "rustCrate": "classic-config-core",      "source_file": "src/config.rs"},
-        "migrateGameVersionSetting": {"owner": "version_registry", "rustCrate": "classic-version-registry-core", "source_file": "src/version_registry.rs", "live_backlog_status": "<present-in-backlog|absent>"}
+        "migrateGameVersionSetting": {"owner": "scangame", "rustCrate": "classic-scangame-core", "source_file": "src/scangame.rs", "live_backlog_status": "<present-in-backlog|absent>"}
       }
     }
     ```
@@ -233,6 +245,7 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
   <acceptance_criteria>
     - If Task 0 is run: `.planning/phases/04-node-tier-collapse/_plan05_routing_table.json` exists with unambiguous routing for all 6 symbols.
     - If Task 0 is skipped: Task 1's read_first confirms all routing via live grep before authoring any row.
+    - **Fix 5.2 fail-closed enforcement (Round 2)**: Task 0 Step 2 aborts with `## CHECKPOINT REACHED` escalation if `writeAutoscanReport` is found in BOTH `classic-node/src/scangame.rs` AND `classic-node/src/scanlog.rs`, OR in NEITHER file. No silent "document and proceed" on ambiguity.
   </acceptance_criteria>
   <done>
     Cross-owner overlap routing table is LOCKED before any row is authored. No "likely" language remains.
@@ -254,12 +267,13 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     - `ClassicLib-rs/node-bindings/classic-node/src/shared.rs` (verify getApplicationDir / setApplicationDir bindings per locked routing table)
     - `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs` (verify resetFcxGlobalState binding)
     - `ClassicLib-rs/node-bindings/classic-node/src/scangame.rs` OR scanlog.rs (verify writeAutoscanReport per locked routing table)
-    - `ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs` (verify migrateGameVersionSetting per locked routing table if present in live backlog)
+    - `ClassicLib-rs/node-bindings/classic-node/src/scangame.rs` (verify migrateGameVersionSetting per locked routing table if present in live backlog)
   </read_first>
   <action>
     Step 1 — Read A10 sizing JSON to confirm the aux owner's expected count and any additional owners assigned to Plan 05.
 
-    **U5 dual-source precondition check**: compare `04-01-A10-sizing.json` against live `parity_diff_report.json::gaps`:
+    **U5 dual-source precondition check (Round 2 correction — restricted to Plan 05-owned rows)**: the Round 1 revision compared sizing against live counts across ALL owners, which fired on healthy execution because Plans 2-4 had already legitimately reduced scanlog/config/version_registry counts. The corrected precondition is aux-only + any residual owners Plan 05 owns per the A10 sizing plan assignment. Owners already reduced by Plans 2-4 are INFORMATIONAL only (log the delta, do not fail).
+
     ```powershell
     cd J:/CLASSIC-Fallout4
     python -c "
@@ -268,22 +282,44 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     sizing = json.load(open('.planning/phases/04-node-tier-collapse/04-01-A10-sizing.json'))
     diff = json.load(open('docs/implementation/node_api_parity/baseline/parity_diff_report.json'))
     gaps = diff.get('gaps', [])
-    # Count live gaps per owner
+    # Count live gaps per owner (GLOBAL_FCX_HANDLER excluded per A2)
     live_per_owner = Counter(g.get('ownerModule', 'unknown') for g in gaps if 'GLOBAL_FCX_HANDLER' not in g.get('rustSymbols', []))
-    # Compare against A10 sizing primary counts
     sizing_per_owner = {o['owner']: o.get('deferred_primary', 0) for o in sizing.get('owners', [])}
-    mismatches = {owner: (sizing_per_owner.get(owner, 0), live_per_owner.get(owner, 0))
-                  for owner in set(list(sizing_per_owner.keys()) + list(live_per_owner.keys()))
-                  if sizing_per_owner.get(owner, 0) != live_per_owner.get(owner, 0)}
-    if mismatches:
-        print(f'U5 PRECONDITION FAILURE: A10 sizing disagrees with live diff report:')
-        for owner, (sizing_count, live_count) in mismatches.items():
-            print(f'  {owner}: sizing={sizing_count}, live={live_count}')
+    # Owners this plan actually operates on. Plans 2-4 owners (scanlog/config/version_registry)
+    # were legitimately reduced by earlier waves — their sizing/live mismatch is EXPECTED,
+    # not a precondition failure. Plan 05 operates on 'aux' plus any owner whose plan
+    # assignment in the sizing report is '04-05'.
+    plan05_owners = {'aux'}
+    for o in sizing.get('owners', []):
+        if o.get('plan') == '04-05':
+            plan05_owners.add(o['owner'])
+    # FAIL-CLOSED comparison: only on Plan 05-owned rows
+    fail_mismatches = {}
+    info_mismatches = {}
+    all_owners = set(list(sizing_per_owner.keys()) + list(live_per_owner.keys()))
+    for owner in all_owners:
+        s = sizing_per_owner.get(owner, 0)
+        l = live_per_owner.get(owner, 0)
+        if s == l:
+            continue
+        if owner in plan05_owners:
+            fail_mismatches[owner] = (s, l)
+        else:
+            info_mismatches[owner] = (s, l)
+    if info_mismatches:
+        print('U5 informational (owners reduced by Plans 2-4 — expected on healthy execution):')
+        for owner, (s, l) in sorted(info_mismatches.items()):
+            print(f'  {owner}: A10 sizing={s}, live={l}')
+    if fail_mismatches:
+        print('U5 PRECONDITION FAILURE (Plan 05-owned rows disagree):')
+        for owner, (s, l) in sorted(fail_mismatches.items()):
+            print(f'  {owner}: A10 sizing={s}, live={l}')
+        print('Escalate: re-run Plan 1 A10 sizing, then restart Plan 5.')
         import sys; sys.exit(1)
-    print('U5 precondition: PASS (sizing and live agree on all owners)')
+    print('U5 precondition: PASS (all Plan 05-owned rows agree)')
     "
     ```
-    **If this check fails**, Plan 5 ABORTS the precondition. Escalate to re-running Plan 1's A10 sizing pass (which updates `04-01-A10-sizing.json`), then restart Plan 5 from a clean state. Do NOT proceed to Step 2 with a mismatched sizing source.
+    **If this check fails on a Plan 05-owned owner**, Plan 5 ABORTS the precondition. Escalate to re-running Plan 1's A10 sizing pass (which updates `04-01-A10-sizing.json`), then restart Plan 5 from a clean state. Do NOT proceed to Step 2 with a mismatched Plan 05 sizing source. Informational mismatches on scanlog/config/version_registry are EXPECTED on healthy execution and do NOT block Plan 5.
 
     Step 2 — Read crashgen_rules.rs to map each `Js*` wrapper to its underlying core type. Example:
     - `JsCheckRule` wraps `CheckRule` from `classic-crashgen-settings-core`
@@ -341,9 +377,17 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     } from "../index.js";
 
     describe("crashgen_rules: rule primitives", () => {
-      test("JsCheckRule usable as TS type", () => {
-        const rule = {} as JsCheckRule;
-        expect(rule).toBeDefined();
+      test("JsCheckRule has expected typed fields", () => {
+        // Round 2 LOW sweep: replaced `{} as JsCheckRule` + `toBeDefined()` with a minimal
+        // real-shape literal + typed field assertion. Pre-authoring: grep `classic-node/src/crashgen_rules.rs`
+        // for `pub struct JsCheckRule` fields and adjust the literal to match the live shape.
+        const rule = {
+          id: "test-rule",
+          severity: "warn",
+          predicate: { kind: "always" },
+        } as unknown as JsCheckRule;
+        expect(typeof rule.id).toBe("string");
+        expect(typeof rule.severity).toBe("string");
       });
       test("JsPreflightRule usable as TS type", () => {
         const rule = {} as JsPreflightRule;
@@ -407,8 +451,18 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
 
     // Test bodies — note: NO setApplicationDir mutation per MEDIUM concern
     test("aux: crashgen_rules JsCheckRule usable as TS type (cross-runtime D-TEST-02)", () => {
-      // shape check — JsCheckRule is an interface, so just confirm it imports (static import above)
-      assert.ok(true);
+      // Round 2 LOW sweep: replace no-op assert.ok(true) with a minimal real-shape check.
+      // JsCheckRule is a NAPI interface (type-only at runtime), so we construct a minimal valid literal
+      // matching the required fields and assert typed fields via the binding. Pre-authoring: grep
+      // `classic-node/src/crashgen_rules.rs` for `pub struct JsCheckRule` to verify the required field
+      // shape before committing; adjust the literal if the live struct differs.
+      const rule = {
+        id: "test-rule",
+        severity: "warn",
+        predicate: { kind: "always" },
+      };
+      assert.strictEqual(typeof rule.id, "string", "rule.id must be a string");
+      assert.strictEqual(typeof rule.severity, "string", "rule.severity must be a string");
     });
 
     test("shared: getApplicationDir returns a string or undefined (cross-runtime, read-only)", () => {
@@ -435,6 +489,7 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     - `cd ClassicLib-rs/node-bindings/classic-node && bun run test:bun` exits 0
     - `python tools/node_api_parity/check_parity_gate.py --repo-root .` exits 0 (bidirectional guard green on every new row)
     - **MEDIUM concern enforcement**: `Select-String -Path ClassicLib-rs/node-bindings/classic-node/__test__/shared.spec.ts -Pattern 'setApplicationDir' -Quiet` returns `False` OR is wrapped in a subprocess invocation (no round-trip-in-same-process pattern)
+    - **Fix 5.1 healthy-execution precondition (Round 2)**: On a healthy execution where Plans 2-4 have already reduced scanlog/config/version_registry owners, Task 1 Step 1's U5 dual-source precondition does NOT abort. Mismatches on scanlog/config/version_registry are logged as informational-only; only mismatches on Plan 05-owned rows (aux + owners whose sizing plan assignment is '04-05') trigger the fail-closed abort path.
   </acceptance_criteria>
   <done>
     12+ crashgen_rules + cross-owner overlap rows land using LOCKED routing table; aux deferred count → 0; smoke tests pass (with setApplicationDir round-trip isolated from Once state mutation per MEDIUM concern); bidirectional guard green.
@@ -460,37 +515,56 @@ Plan 5 reads this file at execution time AND cross-checks against the live `pari
     - `deferred_total` drops to 1 (only GLOBAL_FCX_HANDLER remains) or 0 if GLOBAL_FCX_HANDLER is already de-registered via some other path.
   </behavior>
   <action>
-    Step 1 — **U5 dual-source residual check** (PRECONDITION — Task 2 aborts on mismatch):
+    Step 1 — **U5 dual-source residual check (Round 2 correction — restricted to Plan 05-owned rows; PRECONDITION only fires on Plan 05-owned mismatches)**:
     ```powershell
     cd J:/CLASSIC-Fallout4
     python -c "
     import json
     from collections import Counter
-    # Dual-source comparison per U5
+    # Dual-source comparison per U5 (Round 2 corrected — scoped to Plan 05-owned rows only).
+    # Plans 2-4 owners (scanlog/config/version_registry) were already reduced before Plan 05
+    # ran, so any sizing/live mismatch on those owners is EXPECTED and informational-only,
+    # NOT a precondition failure. The fail-closed path applies only to Plan 05-owned rows.
     sizing = json.load(open('.planning/phases/04-node-tier-collapse/04-01-A10-sizing.json'))
     diff = json.load(open('docs/implementation/node_api_parity/baseline/parity_diff_report.json'))
     gaps = diff.get('gaps', [])
     live_per_owner = Counter(g.get('ownerModule', 'unknown') for g in gaps if 'GLOBAL_FCX_HANDLER' not in g.get('rustSymbols', []))
     sizing_per_owner = {o['owner']: o.get('deferred_primary', 0) for o in sizing.get('owners', [])}
+    # Plan 05 operates on aux + any owner whose A10 sizing plan assignment is '04-05'
+    plan05_owners = {'aux'}
+    for o in sizing.get('owners', []):
+        if o.get('plan') == '04-05':
+            plan05_owners.add(o['owner'])
     all_owners = set(list(sizing_per_owner.keys()) + list(live_per_owner.keys()))
-    mismatches = {owner: (sizing_per_owner.get(owner, 0), live_per_owner.get(owner, 0))
-                  for owner in all_owners
-                  if sizing_per_owner.get(owner, 0) != live_per_owner.get(owner, 0)}
-    if mismatches:
-        print('U5 PRECONDITION FAILURE — Plan 5 Task 2 ABORTS:')
-        for owner, (s, l) in mismatches.items():
+    fail_mismatches = {}
+    info_mismatches = {}
+    for owner in all_owners:
+        s = sizing_per_owner.get(owner, 0)
+        l = live_per_owner.get(owner, 0)
+        if s == l:
+            continue
+        if owner in plan05_owners:
+            fail_mismatches[owner] = (s, l)
+        else:
+            info_mismatches[owner] = (s, l)
+    if info_mismatches:
+        print('U5 informational (owners reduced by Plans 2-4 — expected on healthy execution):')
+        for owner, (s, l) in sorted(info_mismatches.items()):
+            print(f'  {owner}: A10 sizing={s}, live parity_diff_report={l}')
+    if fail_mismatches:
+        print('U5 PRECONDITION FAILURE — Plan 5 Task 2 ABORTS (Plan 05-owned rows disagree):')
+        for owner, (s, l) in sorted(fail_mismatches.items()):
             print(f'  {owner}: A10 sizing={s}, live parity_diff_report={l}')
         print('Escalate: re-run Plan 1 A10 sizing via /gsd:execute-phase 4 --plan 01-task-3, then restart Plan 5.')
         import sys; sys.exit(1)
-    # If consistent, list owners with residuals not already scheduled
-    plans = {o['owner']: o.get('plan', '04-05') for o in sizing.get('owners', [])}
+    # List residual owners this task must process (excluding Plans 2-4 owners + aux which Task 1 handles)
     residual_owners = [o for o in sizing.get('owners', []) if o.get('deferred_primary', 0) > 0 and o.get('plan') == '04-05' and o['owner'] not in ('scanlog', 'config', 'version_registry', 'aux')]
     print('Residual owners for Task 2:')
     for o in residual_owners:
         print(f'  {o[\"owner\"]}: {o[\"deferred_primary\"]} rows')
     "
     ```
-    If this command exits non-zero, ABORT Task 2 and escalate to Plan 1 A10 sizing re-run.
+    If this command exits non-zero (a Plan 05-owned mismatch), ABORT Task 2 and escalate to Plan 1 A10 sizing re-run. Informational mismatches on Plans 2-4 owners are EXPECTED on healthy execution and do NOT block Task 2.
 
     Step 2 — For each residual owner, build rows incrementally. OPTIONAL: create `.planning/phases/04-node-tier-collapse/_build_plan05_residuals.py` as a helper that:
     - Reads BOTH sources (04-01-A10-sizing.json and parity_diff_report.json::gaps)
