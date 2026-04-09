@@ -2224,6 +2224,462 @@
       "nodeExport": "getGameName",
       "nodeKind": "function",
       "nodeArity": 1
+    },
+    {
+      "id": "scanlog.orchestrator.AnalysisResult@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.settings_validator.CheckId@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CheckId@rust",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.settings_validator.ConfigIssue@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ConfigIssue@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_registry.CrashgenEntry@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenEntry@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_registry.CrashgenRegistry@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenRegistry@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.fcx_handler.FcxModeHandler@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FcxModeHandler@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.fcx_handler.FcxResetError@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FcxResetError@rust",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.formid_analyzer.FormIDAnalyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDAnalyzer@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDAnalyzerCore@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.gpu_detector.GpuDetector@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "GpuDetector@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.gpu_detector.GpuVendor@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "GpuVendor@rust",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusAnalyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusAnalyzer@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.papyrus.PapyrusError@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusError@rust",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.plugin_analyzer.PluginAnalyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginAnalyzer@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.record_scanner.RecordScanner@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "RecordScanner@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.report.ReportComposer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ReportComposer@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.report.ReportFragment@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ReportFragment@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.report.ReportGenerator@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ReportGenerator@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "RustFormIDAnalyzer@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.error.ScanLogError@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ScanLogError@rust",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.orchestrator.ScanProgressPhase@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ScanProgressPhase@rust",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.settings_validator.SettingsValidator@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "SettingsValidator@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.parser.StreamingIteratorParser@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StreamingIteratorParser@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.parser.StreamingLogParser@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StreamingLogParser@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.parser.StringPool@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StringPool@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.suspect_scanner.SuspectScanner@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "SuspectScanner@rust",
+      "rustKind": "class"
+    },
+    {
+      "id": "scanlog.plugin_analyzer.contains_plugin@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "contains_plugin@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.record_scanner.contains_record@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "contains_record@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.crashgen_registry.crashgen_registry@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crashgen_registry@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.version.crashgen_version_gen@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crashgen_version_gen@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.mod_detector.detect_mods_batch@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_mods_batch@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.mod_detector.detect_mods_double@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_mods_double@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.mod_detector.detect_mods_important@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_mods_important@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.mod_detector.detect_mods_single@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_mods_single@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.plugin_analyzer.detect_plugins_batch@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_plugins_batch@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.error.error@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "error@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.formid.extract_formids_batch@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "extract_formids_batch@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.fcx_handler.fcx_handler@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "fcx_handler@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.formid.formid@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "formid@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.formid_analyzer.formid_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "formid_analyzer@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.gpu_detector.gpu_detector@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "gpu_detector@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.formid.is_valid_formid@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "is_valid_formid@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.mod_detector.mod_detector@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "mod_detector@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.orchestrator.orchestrator@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "orchestrator@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.papyrus.papyrus@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "papyrus@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.parser.parser@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "parser@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.patterns.patterns@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "patterns@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.plugin_analyzer.plugin_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "plugin_analyzer@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.record_scanner.record_scanner@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "record_scanner@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.report.report@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "report@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.orchestrator.resolve_batch_concurrency@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "resolve_batch_concurrency@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.record_scanner.scan_records_batch@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "scan_records_batch@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.segment_key.segment_key@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "segment_key@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.settings_validator.settings_validator@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "settings_validator@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.suspect_scanner.suspect_scanner@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "suspect_scanner@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.formid_analyzer.validate_formids_batch@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "validate_formids_batch@rust",
+      "rustKind": "function"
+    },
+    {
+      "id": "scanlog.version.version@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "version@rust",
+      "rustKind": "module"
     }
   ]
 }

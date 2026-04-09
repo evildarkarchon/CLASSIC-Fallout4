@@ -19,6 +19,7 @@ from binding_parity_runtime_coverage import (
 )
 
 from generate_baseline import (
+    _effective_rust_symbol,
     generate_diff_report,
     parse_node_surface,
     parse_rust_surface,
@@ -314,10 +315,25 @@ def main() -> int:
 
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
-    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
+    # Phase 4 Plan 2 fix: @rust-suffix proxy rows intentionally omit
+    # `nodeExport` (they represent Rust-only symbols with no Node wrapper).
+    # Strip the @rust suffix for the tier1 rust-symbol set (so proxy rows
+    # mark their stripped symbol as tier1-mapped in parse_rust_surface()
+    # and in the rust_unmapped gap calculation) and skip proxy rows for
+    # node-side lookups. The bidirectional guard already validates proxy-row
+    # shape via validate_contract_surface().
+    tier1_rust_symbols = {
+        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
+    }
+    tier1_node_exports = {
+        mapping["nodeExport"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
+    }
     tier1_owner_map = {
-        mapping["nodeExport"]: mapping["ownerModule"] for mapping in tier1_mappings
+        mapping["nodeExport"]: mapping["ownerModule"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
     }
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)

@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-09T23:05:42.651931+00:00`
-- Tier-1 contract rows: **261**
-- Tier-1 matched: **261**
+- Generated: `2026-04-09T23:40:20.468910+00:00`
+- Tier-1 contract rows: **318**
+- Tier-1 matched: **318**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **473**
+- Total gaps (Tier-1 + Tier-2): **411**
 
 ## Tier-1 Contract Evaluation
 
@@ -273,6 +273,63 @@
 | `aux-phase4c-get-all-game-ids` | `aux` | `path_core` | `getAllGameIds` | `matched` |
 | `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `get_version_registry` | `getAllScriptHashes` | `matched` |
 | `aux-phase4c-get-game-name` | `aux` | `path_core` | `getGameName` | `matched` |
+| `scanlog.orchestrator.AnalysisResult@rust` | `scanlog` | `AnalysisResult@rust` | `None` | `matched` |
+| `scanlog.settings_validator.CheckId@rust` | `scanlog` | `CheckId@rust` | `None` | `matched` |
+| `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `ConfigIssue@rust` | `None` | `matched` |
+| `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
+| `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry@rust` | `None` | `matched` |
+| `scanlog.fcx_handler.FcxModeHandler@rust` | `scanlog` | `FcxModeHandler@rust` | `None` | `matched` |
+| `scanlog.fcx_handler.FcxResetError@rust` | `scanlog` | `FcxResetError@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.FormIDAnalyzerCore@rust` | `scanlog` | `FormIDAnalyzerCore@rust` | `None` | `matched` |
+| `scanlog.gpu_detector.GpuDetector@rust` | `scanlog` | `GpuDetector@rust` | `None` | `matched` |
+| `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor@rust` | `None` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer@rust` | `scanlog` | `PapyrusAnalyzer@rust` | `None` | `matched` |
+| `scanlog.papyrus.PapyrusError@rust` | `scanlog` | `PapyrusError@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.PluginAnalyzer@rust` | `scanlog` | `PluginAnalyzer@rust` | `None` | `matched` |
+| `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner@rust` | `None` | `matched` |
+| `scanlog.report.ReportComposer@rust` | `scanlog` | `ReportComposer@rust` | `None` | `matched` |
+| `scanlog.report.ReportFragment@rust` | `scanlog` | `ReportFragment@rust` | `None` | `matched` |
+| `scanlog.report.ReportGenerator@rust` | `scanlog` | `ReportGenerator@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer@rust` | `None` | `matched` |
+| `scanlog.error.ScanLogError@rust` | `scanlog` | `ScanLogError@rust` | `None` | `matched` |
+| `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `ScanProgressPhase@rust` | `None` | `matched` |
+| `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator@rust` | `None` | `matched` |
+| `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `StreamingIteratorParser@rust` | `None` | `matched` |
+| `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `StreamingLogParser@rust` | `None` | `matched` |
+| `scanlog.parser.StringPool@rust` | `scanlog` | `StringPool@rust` | `None` | `matched` |
+| `scanlog.suspect_scanner.SuspectScanner@rust` | `scanlog` | `SuspectScanner@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin@rust` | `None` | `matched` |
+| `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record@rust` | `None` | `matched` |
+| `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry@rust` | `None` | `matched` |
+| `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `crashgen_version_gen@rust` | `None` | `matched` |
+| `scanlog.mod_detector.detect_mods_batch@rust` | `scanlog` | `detect_mods_batch@rust` | `None` | `matched` |
+| `scanlog.mod_detector.detect_mods_double@rust` | `scanlog` | `detect_mods_double@rust` | `None` | `matched` |
+| `scanlog.mod_detector.detect_mods_important@rust` | `scanlog` | `detect_mods_important@rust` | `None` | `matched` |
+| `scanlog.mod_detector.detect_mods_single@rust` | `scanlog` | `detect_mods_single@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `detect_plugins_batch@rust` | `None` | `matched` |
+| `scanlog.error.error@rust` | `scanlog` | `error@rust` | `None` | `matched` |
+| `scanlog.formid.extract_formids_batch@rust` | `scanlog` | `extract_formids_batch@rust` | `None` | `matched` |
+| `scanlog.fcx_handler.fcx_handler@rust` | `scanlog` | `fcx_handler@rust` | `None` | `matched` |
+| `scanlog.formid.formid@rust` | `scanlog` | `formid@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer@rust` | `None` | `matched` |
+| `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector@rust` | `None` | `matched` |
+| `scanlog.formid.is_valid_formid@rust` | `scanlog` | `is_valid_formid@rust` | `None` | `matched` |
+| `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector@rust` | `None` | `matched` |
+| `scanlog.orchestrator.orchestrator@rust` | `scanlog` | `orchestrator@rust` | `None` | `matched` |
+| `scanlog.papyrus.papyrus@rust` | `scanlog` | `papyrus@rust` | `None` | `matched` |
+| `scanlog.parser.parser@rust` | `scanlog` | `parser@rust` | `None` | `matched` |
+| `scanlog.patterns.patterns@rust` | `scanlog` | `patterns@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `plugin_analyzer@rust` | `None` | `matched` |
+| `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner@rust` | `None` | `matched` |
+| `scanlog.report.report@rust` | `scanlog` | `report@rust` | `None` | `matched` |
+| `scanlog.orchestrator.resolve_batch_concurrency@rust` | `scanlog` | `resolve_batch_concurrency@rust` | `None` | `matched` |
+| `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
+| `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
+| `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator@rust` | `None` | `matched` |
+| `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
+| `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
@@ -283,16 +340,16 @@
 | `constants` | 0 | 30 |
 | `crashgen_settings` | 0 | 22 |
 | `database` | 0 | 17 |
-| `file_io` | 0 | 26 |
+| `file_io` | 0 | 25 |
 | `message` | 0 | 9 |
 | `path` | 0 | 26 |
 | `perf` | 0 | 2 |
 | `registry` | 0 | 14 |
-| `scangame` | 0 | 83 |
-| `scanlog` | 0 | 72 |
+| `scangame` | 0 | 80 |
+| `scanlog` | 0 | 15 |
 | `settings` | 0 | 23 |
 | `shared` | 0 | 15 |
-| `update` | 0 | 7 |
+| `update` | 0 | 6 |
 | `version` | 0 | 16 |
 | `version_registry` | 0 | 5 |
 | `web` | 0 | 15 |

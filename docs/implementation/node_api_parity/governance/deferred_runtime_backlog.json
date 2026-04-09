@@ -1281,12 +1281,12 @@
       "classification": "deferred",
       "ownerModule": "file_io",
       "tier": "tier2",
-      "wave": "wave1",
+      "wave": null,
       "owner": "Squad B",
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "error"
+        "game_files"
       ]
     },
     {
@@ -1299,7 +1299,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "game_files"
+        "generate_local_yaml"
       ]
     },
     {
@@ -1312,7 +1312,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "generate_local_yaml"
+        "generation"
       ]
     },
     {
@@ -1325,7 +1325,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "generation"
+        "hash"
       ]
     },
     {
@@ -1338,7 +1338,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "hash"
+        "log_collection"
       ]
     },
     {
@@ -1351,7 +1351,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "log_collection"
+        "resolve_targeted_inputs"
       ]
     },
     {
@@ -1364,7 +1364,7 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "resolve_targeted_inputs"
+        "similarity"
       ]
     },
     {
@@ -1377,24 +1377,11 @@
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [],
       "rustSymbols": [
-        "similarity"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-file_io-107",
-      "classification": "deferred",
-      "ownerModule": "file_io",
-      "tier": "tier2",
-      "wave": null,
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
         "similarity_ratio"
       ]
     },
     {
-      "coverageId": "node-deferred-message-108",
+      "coverageId": "node-deferred-message-107",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1407,7 +1394,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-109",
+      "coverageId": "node-deferred-message-108",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1420,7 +1407,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-110",
+      "coverageId": "node-deferred-message-109",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1433,7 +1420,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-111",
+      "coverageId": "node-deferred-message-110",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1446,7 +1433,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-112",
+      "coverageId": "node-deferred-message-111",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1459,7 +1446,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-113",
+      "coverageId": "node-deferred-message-112",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1472,7 +1459,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-114",
+      "coverageId": "node-deferred-message-113",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1485,7 +1472,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-115",
+      "coverageId": "node-deferred-message-114",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1498,7 +1485,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-message-116",
+      "coverageId": "node-deferred-message-115",
       "classification": "deferred",
       "ownerModule": "message",
       "tier": "tier2",
@@ -1511,7 +1498,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-117",
+      "coverageId": "node-deferred-path-116",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1524,7 +1511,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-118",
+      "coverageId": "node-deferred-path-117",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1537,7 +1524,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-119",
+      "coverageId": "node-deferred-path-118",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1550,7 +1537,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-120",
+      "coverageId": "node-deferred-path-119",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1563,7 +1550,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-121",
+      "coverageId": "node-deferred-path-120",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1576,7 +1563,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-122",
+      "coverageId": "node-deferred-path-121",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1589,7 +1576,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-123",
+      "coverageId": "node-deferred-path-122",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1602,7 +1589,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-124",
+      "coverageId": "node-deferred-path-123",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1615,7 +1602,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-125",
+      "coverageId": "node-deferred-path-124",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1628,7 +1615,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-126",
+      "coverageId": "node-deferred-path-125",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1641,7 +1628,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-127",
+      "coverageId": "node-deferred-path-126",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1654,7 +1641,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-128",
+      "coverageId": "node-deferred-path-127",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1667,7 +1654,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-129",
+      "coverageId": "node-deferred-path-128",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1680,7 +1667,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-130",
+      "coverageId": "node-deferred-path-129",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1693,7 +1680,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-131",
+      "coverageId": "node-deferred-path-130",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1706,7 +1693,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-132",
+      "coverageId": "node-deferred-path-131",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1719,7 +1706,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-133",
+      "coverageId": "node-deferred-path-132",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1732,7 +1719,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-134",
+      "coverageId": "node-deferred-path-133",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1745,7 +1732,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-135",
+      "coverageId": "node-deferred-path-134",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1758,7 +1745,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-136",
+      "coverageId": "node-deferred-path-135",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1771,7 +1758,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-137",
+      "coverageId": "node-deferred-path-136",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1784,7 +1771,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-138",
+      "coverageId": "node-deferred-path-137",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1797,7 +1784,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-139",
+      "coverageId": "node-deferred-path-138",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1810,7 +1797,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-140",
+      "coverageId": "node-deferred-path-139",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1823,7 +1810,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-141",
+      "coverageId": "node-deferred-path-140",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1836,7 +1823,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-path-142",
+      "coverageId": "node-deferred-path-141",
       "classification": "deferred",
       "ownerModule": "path",
       "tier": "tier2",
@@ -1849,7 +1836,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-perf-143",
+      "coverageId": "node-deferred-perf-142",
       "classification": "deferred",
       "ownerModule": "perf",
       "tier": "tier2",
@@ -1862,7 +1849,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-perf-144",
+      "coverageId": "node-deferred-perf-143",
       "classification": "deferred",
       "ownerModule": "perf",
       "tier": "tier2",
@@ -1875,7 +1862,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-145",
+      "coverageId": "node-deferred-registry-144",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1888,7 +1875,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-146",
+      "coverageId": "node-deferred-registry-145",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1901,7 +1888,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-147",
+      "coverageId": "node-deferred-registry-146",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1914,7 +1901,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-148",
+      "coverageId": "node-deferred-registry-147",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1927,7 +1914,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-149",
+      "coverageId": "node-deferred-registry-148",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1940,7 +1927,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-150",
+      "coverageId": "node-deferred-registry-149",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1953,7 +1940,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-151",
+      "coverageId": "node-deferred-registry-150",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1966,7 +1953,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-152",
+      "coverageId": "node-deferred-registry-151",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1979,7 +1966,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-153",
+      "coverageId": "node-deferred-registry-152",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -1992,7 +1979,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-154",
+      "coverageId": "node-deferred-registry-153",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -2005,7 +1992,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-155",
+      "coverageId": "node-deferred-registry-154",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -2018,7 +2005,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-156",
+      "coverageId": "node-deferred-registry-155",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -2031,7 +2018,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-157",
+      "coverageId": "node-deferred-registry-156",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -2044,7 +2031,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-registry-158",
+      "coverageId": "node-deferred-registry-157",
       "classification": "deferred",
       "ownerModule": "registry",
       "tier": "tier2",
@@ -2057,7 +2044,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-159",
+      "coverageId": "node-deferred-scangame-158",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2070,7 +2057,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-160",
+      "coverageId": "node-deferred-scangame-159",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2083,7 +2070,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-161",
+      "coverageId": "node-deferred-scangame-160",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2096,7 +2083,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-162",
+      "coverageId": "node-deferred-scangame-161",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2109,7 +2096,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-163",
+      "coverageId": "node-deferred-scangame-162",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2122,7 +2109,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-164",
+      "coverageId": "node-deferred-scangame-163",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2135,7 +2122,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-165",
+      "coverageId": "node-deferred-scangame-164",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2148,7 +2135,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-166",
+      "coverageId": "node-deferred-scangame-165",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2161,7 +2148,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-167",
+      "coverageId": "node-deferred-scangame-166",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2174,7 +2161,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-168",
+      "coverageId": "node-deferred-scangame-167",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2187,7 +2174,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-169",
+      "coverageId": "node-deferred-scangame-168",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2200,20 +2187,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-170",
-      "classification": "deferred",
-      "ownerModule": "scangame",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ConfigIssue"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scangame-171",
+      "coverageId": "node-deferred-scangame-169",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2226,7 +2200,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-172",
+      "coverageId": "node-deferred-scangame-170",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2239,7 +2213,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-173",
+      "coverageId": "node-deferred-scangame-171",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2252,7 +2226,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-174",
+      "coverageId": "node-deferred-scangame-172",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2265,7 +2239,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-175",
+      "coverageId": "node-deferred-scangame-173",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2278,7 +2252,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-176",
+      "coverageId": "node-deferred-scangame-174",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2291,7 +2265,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-177",
+      "coverageId": "node-deferred-scangame-175",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2304,7 +2278,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-178",
+      "coverageId": "node-deferred-scangame-176",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2317,7 +2291,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-179",
+      "coverageId": "node-deferred-scangame-177",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2330,7 +2304,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-180",
+      "coverageId": "node-deferred-scangame-178",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2343,7 +2317,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-181",
+      "coverageId": "node-deferred-scangame-179",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2356,7 +2330,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-182",
+      "coverageId": "node-deferred-scangame-180",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2369,7 +2343,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-183",
+      "coverageId": "node-deferred-scangame-181",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2382,7 +2356,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-184",
+      "coverageId": "node-deferred-scangame-182",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2395,7 +2369,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-185",
+      "coverageId": "node-deferred-scangame-183",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2408,7 +2382,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-186",
+      "coverageId": "node-deferred-scangame-184",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2421,7 +2395,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-187",
+      "coverageId": "node-deferred-scangame-185",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2434,7 +2408,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-188",
+      "coverageId": "node-deferred-scangame-186",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2447,7 +2421,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-189",
+      "coverageId": "node-deferred-scangame-187",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2460,7 +2434,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-190",
+      "coverageId": "node-deferred-scangame-188",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2473,7 +2447,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-191",
+      "coverageId": "node-deferred-scangame-189",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2486,7 +2460,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-192",
+      "coverageId": "node-deferred-scangame-190",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2499,7 +2473,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-193",
+      "coverageId": "node-deferred-scangame-191",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2512,7 +2486,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-194",
+      "coverageId": "node-deferred-scangame-192",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2525,7 +2499,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-195",
+      "coverageId": "node-deferred-scangame-193",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2538,7 +2512,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-196",
+      "coverageId": "node-deferred-scangame-194",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2551,7 +2525,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-197",
+      "coverageId": "node-deferred-scangame-195",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2564,7 +2538,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-198",
+      "coverageId": "node-deferred-scangame-196",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2577,7 +2551,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-199",
+      "coverageId": "node-deferred-scangame-197",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2590,7 +2564,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-200",
+      "coverageId": "node-deferred-scangame-198",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2603,7 +2577,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-201",
+      "coverageId": "node-deferred-scangame-199",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2616,7 +2590,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-202",
+      "coverageId": "node-deferred-scangame-200",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2629,7 +2603,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-203",
+      "coverageId": "node-deferred-scangame-201",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2642,7 +2616,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-204",
+      "coverageId": "node-deferred-scangame-202",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2655,7 +2629,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-205",
+      "coverageId": "node-deferred-scangame-203",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2668,7 +2642,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-206",
+      "coverageId": "node-deferred-scangame-204",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2681,7 +2655,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-207",
+      "coverageId": "node-deferred-scangame-205",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2694,7 +2668,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-208",
+      "coverageId": "node-deferred-scangame-206",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2707,7 +2681,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-209",
+      "coverageId": "node-deferred-scangame-207",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2720,7 +2694,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-210",
+      "coverageId": "node-deferred-scangame-208",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2733,7 +2707,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-211",
+      "coverageId": "node-deferred-scangame-209",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2746,7 +2720,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-212",
+      "coverageId": "node-deferred-scangame-210",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2759,7 +2733,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-213",
+      "coverageId": "node-deferred-scangame-211",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2772,7 +2746,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-214",
+      "coverageId": "node-deferred-scangame-212",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2785,7 +2759,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-215",
+      "coverageId": "node-deferred-scangame-213",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2798,7 +2772,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-216",
+      "coverageId": "node-deferred-scangame-214",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2811,7 +2785,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-217",
+      "coverageId": "node-deferred-scangame-215",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2824,7 +2798,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-218",
+      "coverageId": "node-deferred-scangame-216",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2837,7 +2811,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-219",
+      "coverageId": "node-deferred-scangame-217",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2850,7 +2824,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-220",
+      "coverageId": "node-deferred-scangame-218",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2863,7 +2837,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-221",
+      "coverageId": "node-deferred-scangame-219",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2876,7 +2850,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-222",
+      "coverageId": "node-deferred-scangame-220",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2889,7 +2863,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-223",
+      "coverageId": "node-deferred-scangame-221",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2902,7 +2876,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-224",
+      "coverageId": "node-deferred-scangame-222",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2915,7 +2889,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-225",
+      "coverageId": "node-deferred-scangame-223",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2928,20 +2902,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-226",
-      "classification": "deferred",
-      "ownerModule": "scangame",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "error"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scangame-227",
+      "coverageId": "node-deferred-scangame-224",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2954,7 +2915,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-228",
+      "coverageId": "node-deferred-scangame-225",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2967,7 +2928,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-229",
+      "coverageId": "node-deferred-scangame-226",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2980,7 +2941,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-230",
+      "coverageId": "node-deferred-scangame-227",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -2993,7 +2954,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-231",
+      "coverageId": "node-deferred-scangame-228",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3006,7 +2967,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-232",
+      "coverageId": "node-deferred-scangame-229",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3019,7 +2980,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-233",
+      "coverageId": "node-deferred-scangame-230",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3032,20 +2993,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-234",
-      "classification": "deferred",
-      "ownerModule": "scangame",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "orchestrator"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scangame-235",
+      "coverageId": "node-deferred-scangame-231",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3058,7 +3006,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-236",
+      "coverageId": "node-deferred-scangame-232",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3071,7 +3019,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-237",
+      "coverageId": "node-deferred-scangame-233",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3084,7 +3032,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-238",
+      "coverageId": "node-deferred-scangame-234",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3097,7 +3045,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-239",
+      "coverageId": "node-deferred-scangame-235",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3110,7 +3058,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-240",
+      "coverageId": "node-deferred-scangame-236",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3123,7 +3071,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scangame-241",
+      "coverageId": "node-deferred-scangame-237",
       "classification": "deferred",
       "ownerModule": "scangame",
       "tier": "tier2",
@@ -3136,124 +3084,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scanlog-242",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "AnalysisResult"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-243",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CheckId"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-244",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ConfigIssue"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-245",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CrashgenEntry"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-246",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CrashgenRegistry"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-247",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "FcxModeHandler"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-248",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": null,
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "FcxResetError"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-249",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "FormIDAnalyzer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-250",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "FormIDAnalyzerCore"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-251",
+      "coverageId": "node-deferred-scanlog-238",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -3266,631 +3097,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scanlog-252",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "GpuDetector"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-253",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "GpuVendor"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-254",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "PapyrusAnalyzer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-255",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "PapyrusError"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-256",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "PluginAnalyzer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-257",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "RecordScanner"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-258",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ReportComposer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-259",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ReportFragment"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-260",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ReportGenerator"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-261",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "RustFormIDAnalyzer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-262",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ScanLogError"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-263",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": null,
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "ScanProgressPhase"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-264",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "SettingsValidator"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-265",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "StreamingIteratorParser"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-266",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "StreamingLogParser"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-267",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "StringPool"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-268",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "SuspectScanner"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-269",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "contains_plugin"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-270",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "contains_record"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-271",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "crashgen_registry"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-272",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "crashgen_version_gen"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-273",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "detect_mods_batch"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-274",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "detect_mods_double"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-275",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "detect_mods_important"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-276",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "detect_mods_single"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-277",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "detect_plugins_batch"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-278",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "error"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-279",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "extract_formids_batch"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-280",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "fcx_handler"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-281",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "formid"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-282",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "formid_analyzer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-283",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "gpu_detector"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-284",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "is_valid_formid"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-285",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "mod_detector"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-286",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "orchestrator"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-287",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "papyrus"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-288",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "parser"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-289",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "patterns"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-290",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "plugin_analyzer"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-291",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "record_scanner"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-292",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "report"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-293",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": null,
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "resolve_batch_concurrency"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-294",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "scan_records_batch"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-295",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "segment_key"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-296",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "settings_validator"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-297",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "suspect_scanner"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-298",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "validate_formids_batch"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-299",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "version"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-settings-300",
+      "coverageId": "node-deferred-settings-239",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3903,7 +3110,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-301",
+      "coverageId": "node-deferred-settings-240",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3916,7 +3123,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-302",
+      "coverageId": "node-deferred-settings-241",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3929,7 +3136,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-303",
+      "coverageId": "node-deferred-settings-242",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3942,7 +3149,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-304",
+      "coverageId": "node-deferred-settings-243",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3955,7 +3162,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-305",
+      "coverageId": "node-deferred-settings-244",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3968,7 +3175,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-306",
+      "coverageId": "node-deferred-settings-245",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3981,7 +3188,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-307",
+      "coverageId": "node-deferred-settings-246",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -3994,7 +3201,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-308",
+      "coverageId": "node-deferred-settings-247",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4007,7 +3214,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-309",
+      "coverageId": "node-deferred-settings-248",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4020,7 +3227,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-310",
+      "coverageId": "node-deferred-settings-249",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4033,7 +3240,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-311",
+      "coverageId": "node-deferred-settings-250",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4046,7 +3253,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-312",
+      "coverageId": "node-deferred-settings-251",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4059,7 +3266,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-313",
+      "coverageId": "node-deferred-settings-252",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4072,7 +3279,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-314",
+      "coverageId": "node-deferred-settings-253",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4085,7 +3292,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-315",
+      "coverageId": "node-deferred-settings-254",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4098,7 +3305,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-316",
+      "coverageId": "node-deferred-settings-255",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4111,7 +3318,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-317",
+      "coverageId": "node-deferred-settings-256",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4124,7 +3331,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-318",
+      "coverageId": "node-deferred-settings-257",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4137,7 +3344,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-319",
+      "coverageId": "node-deferred-settings-258",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4150,7 +3357,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-320",
+      "coverageId": "node-deferred-settings-259",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4163,7 +3370,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-321",
+      "coverageId": "node-deferred-settings-260",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4176,7 +3383,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-settings-322",
+      "coverageId": "node-deferred-settings-261",
       "classification": "deferred",
       "ownerModule": "settings",
       "tier": "tier2",
@@ -4189,7 +3396,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-323",
+      "coverageId": "node-deferred-shared-262",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4202,7 +3409,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-324",
+      "coverageId": "node-deferred-shared-263",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4215,7 +3422,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-325",
+      "coverageId": "node-deferred-shared-264",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4228,7 +3435,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-326",
+      "coverageId": "node-deferred-shared-265",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4241,7 +3448,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-327",
+      "coverageId": "node-deferred-shared-266",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4254,7 +3461,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-328",
+      "coverageId": "node-deferred-shared-267",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4267,7 +3474,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-329",
+      "coverageId": "node-deferred-shared-268",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4280,7 +3487,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-330",
+      "coverageId": "node-deferred-shared-269",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4293,7 +3500,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-331",
+      "coverageId": "node-deferred-shared-270",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4306,7 +3513,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-332",
+      "coverageId": "node-deferred-shared-271",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4319,7 +3526,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-333",
+      "coverageId": "node-deferred-shared-272",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4332,7 +3539,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-334",
+      "coverageId": "node-deferred-shared-273",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4345,7 +3552,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-335",
+      "coverageId": "node-deferred-shared-274",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4358,7 +3565,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-336",
+      "coverageId": "node-deferred-shared-275",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4371,7 +3578,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-shared-337",
+      "coverageId": "node-deferred-shared-276",
       "classification": "deferred",
       "ownerModule": "shared",
       "tier": "tier2",
@@ -4384,7 +3591,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-update-338",
+      "coverageId": "node-deferred-update-277",
       "classification": "deferred",
       "ownerModule": "update",
       "tier": "tier2",
@@ -4397,7 +3604,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-update-339",
+      "coverageId": "node-deferred-update-278",
       "classification": "deferred",
       "ownerModule": "update",
       "tier": "tier2",
@@ -4410,7 +3617,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-update-340",
+      "coverageId": "node-deferred-update-279",
       "classification": "deferred",
       "ownerModule": "update",
       "tier": "tier2",
@@ -4423,7 +3630,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-update-341",
+      "coverageId": "node-deferred-update-280",
       "classification": "deferred",
       "ownerModule": "update",
       "tier": "tier2",
@@ -4436,7 +3643,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-update-342",
+      "coverageId": "node-deferred-update-281",
       "classification": "deferred",
       "ownerModule": "update",
       "tier": "tier2",
@@ -4449,20 +3656,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-update-343",
-      "classification": "deferred",
-      "ownerModule": "update",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad B",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "error"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-update-344",
+      "coverageId": "node-deferred-update-282",
       "classification": "deferred",
       "ownerModule": "update",
       "tier": "tier2",
@@ -4475,7 +3669,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-345",
+      "coverageId": "node-deferred-version-283",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4488,7 +3682,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-346",
+      "coverageId": "node-deferred-version-284",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4501,7 +3695,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-347",
+      "coverageId": "node-deferred-version-285",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4514,7 +3708,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-348",
+      "coverageId": "node-deferred-version-286",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4527,7 +3721,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-349",
+      "coverageId": "node-deferred-version-287",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4540,7 +3734,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-350",
+      "coverageId": "node-deferred-version-288",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4553,7 +3747,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-351",
+      "coverageId": "node-deferred-version-289",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4566,7 +3760,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-352",
+      "coverageId": "node-deferred-version-290",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4579,7 +3773,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-353",
+      "coverageId": "node-deferred-version-291",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4592,7 +3786,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-354",
+      "coverageId": "node-deferred-version-292",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4605,7 +3799,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-355",
+      "coverageId": "node-deferred-version-293",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4618,7 +3812,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-356",
+      "coverageId": "node-deferred-version-294",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4631,7 +3825,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-357",
+      "coverageId": "node-deferred-version-295",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4644,7 +3838,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-358",
+      "coverageId": "node-deferred-version-296",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4657,7 +3851,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-359",
+      "coverageId": "node-deferred-version-297",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4670,7 +3864,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-version-360",
+      "coverageId": "node-deferred-version-298",
       "classification": "deferred",
       "ownerModule": "version",
       "tier": "tier2",
@@ -4683,7 +3877,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-361",
+      "coverageId": "node-deferred-web-299",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4696,7 +3890,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-362",
+      "coverageId": "node-deferred-web-300",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4709,7 +3903,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-363",
+      "coverageId": "node-deferred-web-301",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4722,7 +3916,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-364",
+      "coverageId": "node-deferred-web-302",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4735,7 +3929,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-365",
+      "coverageId": "node-deferred-web-303",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4748,7 +3942,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-366",
+      "coverageId": "node-deferred-web-304",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4761,7 +3955,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-367",
+      "coverageId": "node-deferred-web-305",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4774,7 +3968,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-368",
+      "coverageId": "node-deferred-web-306",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4787,7 +3981,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-369",
+      "coverageId": "node-deferred-web-307",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4800,7 +3994,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-370",
+      "coverageId": "node-deferred-web-308",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4813,7 +4007,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-371",
+      "coverageId": "node-deferred-web-309",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4826,7 +4020,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-372",
+      "coverageId": "node-deferred-web-310",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4839,7 +4033,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-373",
+      "coverageId": "node-deferred-web-311",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4852,7 +4046,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-374",
+      "coverageId": "node-deferred-web-312",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4865,7 +4059,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-web-375",
+      "coverageId": "node-deferred-web-313",
       "classification": "deferred",
       "ownerModule": "web",
       "tier": "tier2",
@@ -4878,7 +4072,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-376",
+      "coverageId": "node-deferred-xse-314",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4891,7 +4085,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-377",
+      "coverageId": "node-deferred-xse-315",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4904,7 +4098,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-378",
+      "coverageId": "node-deferred-xse-316",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4917,7 +4111,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-379",
+      "coverageId": "node-deferred-xse-317",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4930,7 +4124,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-380",
+      "coverageId": "node-deferred-xse-318",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4943,7 +4137,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-381",
+      "coverageId": "node-deferred-xse-319",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4956,7 +4150,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-382",
+      "coverageId": "node-deferred-xse-320",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4969,7 +4163,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-383",
+      "coverageId": "node-deferred-xse-321",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4982,7 +4176,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-384",
+      "coverageId": "node-deferred-xse-322",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -4995,7 +4189,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-385",
+      "coverageId": "node-deferred-xse-323",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5008,7 +4202,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-386",
+      "coverageId": "node-deferred-xse-324",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5021,7 +4215,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-387",
+      "coverageId": "node-deferred-xse-325",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5034,7 +4228,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-388",
+      "coverageId": "node-deferred-xse-326",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5047,7 +4241,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-389",
+      "coverageId": "node-deferred-xse-327",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5060,7 +4254,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-390",
+      "coverageId": "node-deferred-xse-328",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5073,7 +4267,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-391",
+      "coverageId": "node-deferred-xse-329",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5086,7 +4280,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-xse-392",
+      "coverageId": "node-deferred-xse-330",
       "classification": "deferred",
       "ownerModule": "xse",
       "tier": "tier2",
@@ -5099,7 +4293,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-393",
+      "coverageId": "node-deferred-yaml-331",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5112,7 +4306,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-394",
+      "coverageId": "node-deferred-yaml-332",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5125,7 +4319,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-395",
+      "coverageId": "node-deferred-yaml-333",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5138,7 +4332,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-396",
+      "coverageId": "node-deferred-yaml-334",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5151,7 +4345,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-397",
+      "coverageId": "node-deferred-yaml-335",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5164,7 +4358,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-398",
+      "coverageId": "node-deferred-yaml-336",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5177,7 +4371,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-399",
+      "coverageId": "node-deferred-yaml-337",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5190,7 +4384,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-400",
+      "coverageId": "node-deferred-yaml-338",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5203,7 +4397,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-401",
+      "coverageId": "node-deferred-yaml-339",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5216,7 +4410,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-402",
+      "coverageId": "node-deferred-yaml-340",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5229,7 +4423,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-403",
+      "coverageId": "node-deferred-yaml-341",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5242,7 +4436,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-404",
+      "coverageId": "node-deferred-yaml-342",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5255,7 +4449,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-405",
+      "coverageId": "node-deferred-yaml-343",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5268,7 +4462,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-406",
+      "coverageId": "node-deferred-yaml-344",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5281,7 +4475,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-407",
+      "coverageId": "node-deferred-yaml-345",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5294,7 +4488,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-408",
+      "coverageId": "node-deferred-yaml-346",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5307,7 +4501,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-409",
+      "coverageId": "node-deferred-yaml-347",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5320,7 +4514,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-410",
+      "coverageId": "node-deferred-yaml-348",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5333,7 +4527,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-411",
+      "coverageId": "node-deferred-yaml-349",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5346,7 +4540,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-412",
+      "coverageId": "node-deferred-yaml-350",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5359,7 +4553,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-413",
+      "coverageId": "node-deferred-yaml-351",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5372,7 +4566,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-414",
+      "coverageId": "node-deferred-yaml-352",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5385,7 +4579,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-yaml-415",
+      "coverageId": "node-deferred-yaml-353",
       "classification": "deferred",
       "ownerModule": "yaml",
       "tier": "tier2",
@@ -5398,7 +4592,7 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scanlog-416",
+      "coverageId": "node-deferred-scanlog-354",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5411,7 +4605,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-417",
+      "coverageId": "node-deferred-config-355",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5424,7 +4618,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-418",
+      "coverageId": "node-deferred-config-356",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5437,7 +4631,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-419",
+      "coverageId": "node-deferred-config-357",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5450,7 +4644,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-421",
+      "coverageId": "node-deferred-scanlog-359",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5463,7 +4657,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-422",
+      "coverageId": "node-deferred-config-360",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5476,7 +4670,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-423",
+      "coverageId": "node-deferred-scanlog-361",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5489,7 +4683,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-424",
+      "coverageId": "node-deferred-aux-362",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5502,7 +4696,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-426",
+      "coverageId": "node-deferred-config-364",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5515,7 +4709,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-version_registry-427",
+      "coverageId": "node-deferred-version_registry-365",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -5528,7 +4722,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-version_registry-428",
+      "coverageId": "node-deferred-version_registry-366",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -5541,7 +4735,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-429",
+      "coverageId": "node-deferred-config-367",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5554,7 +4748,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-430",
+      "coverageId": "node-deferred-aux-368",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5567,7 +4761,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-432",
+      "coverageId": "node-deferred-config-370",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5580,7 +4774,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-433",
+      "coverageId": "node-deferred-scanlog-371",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5593,7 +4787,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-434",
+      "coverageId": "node-deferred-config-372",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5606,7 +4800,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-436",
+      "coverageId": "node-deferred-scanlog-374",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5619,7 +4813,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-438",
+      "coverageId": "node-deferred-scanlog-376",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5632,7 +4826,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-440",
+      "coverageId": "node-deferred-aux-378",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5645,7 +4839,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-441",
+      "coverageId": "node-deferred-aux-379",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5658,7 +4852,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-442",
+      "coverageId": "node-deferred-aux-380",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5671,7 +4865,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-443",
+      "coverageId": "node-deferred-scanlog-381",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5684,7 +4878,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-444",
+      "coverageId": "node-deferred-config-382",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5697,7 +4891,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-445",
+      "coverageId": "node-deferred-aux-383",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5710,7 +4904,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-446",
+      "coverageId": "node-deferred-aux-384",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5723,7 +4917,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-447",
+      "coverageId": "node-deferred-aux-385",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5736,7 +4930,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-448",
+      "coverageId": "node-deferred-aux-386",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5749,7 +4943,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-449",
+      "coverageId": "node-deferred-aux-387",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5762,7 +4956,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-450",
+      "coverageId": "node-deferred-aux-388",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5775,7 +4969,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-aux-451",
+      "coverageId": "node-deferred-aux-389",
       "classification": "deferred",
       "ownerModule": "aux",
       "tier": "tier2",
@@ -5788,7 +4982,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-452",
+      "coverageId": "node-deferred-config-390",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5801,7 +4995,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-453",
+      "coverageId": "node-deferred-config-391",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5814,7 +5008,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-version_registry-454",
+      "coverageId": "node-deferred-version_registry-392",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -5827,7 +5021,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-version_registry-455",
+      "coverageId": "node-deferred-version_registry-393",
       "classification": "deferred",
       "ownerModule": "version_registry",
       "tier": "tier2",
@@ -5840,7 +5034,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-456",
+      "coverageId": "node-deferred-scanlog-394",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",
@@ -5853,7 +5047,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-461",
+      "coverageId": "node-deferred-config-399",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5866,7 +5060,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-462",
+      "coverageId": "node-deferred-config-400",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5879,7 +5073,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-config-463",
+      "coverageId": "node-deferred-config-401",
       "classification": "deferred",
       "ownerModule": "config",
       "tier": "tier2",
@@ -5892,7 +5086,7 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "node-deferred-scanlog-468",
+      "coverageId": "node-deferred-scanlog-406",
       "classification": "deferred",
       "ownerModule": "scanlog",
       "tier": "tier2",

@@ -397,6 +397,22 @@ def parse_node_surface(
     }
 
 
+def _effective_rust_symbol(rust_symbol: Any) -> str:
+    """Strip the optional @rust proxy suffix from a contract rustSymbol.
+
+    Phase 4 Plan 2 introduces @rust-suffix proxy rows for Rust-only scanlog
+    symbols with no Node binding. The suffix is a marker consumed by the
+    bidirectional guard (validate_contract_surface) to skip the Node-side
+    lookup; everywhere else (diff report, rust_unmapped bucketing) the
+    effective symbol is the bare name before @rust.
+    """
+    if not isinstance(rust_symbol, str):
+        return ""
+    if rust_symbol.endswith("@rust"):
+        return rust_symbol[: -len("@rust")]
+    return rust_symbol
+
+
 def build_lookup(
     items: list[dict[str, Any]], key_field: str
 ) -> dict[str, dict[str, Any]]:
@@ -422,27 +438,42 @@ def generate_diff_report(
     rust_lookup = build_lookup(rust_symbols, "symbol")
     node_lookup = build_lookup(node_exports, "export")
 
-    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
+    # Phase 4 Plan 2: @rust-suffix proxy rows intentionally omit nodeExport.
+    # Strip the suffix to get the effective Rust symbol for tier1 tracking
+    # (so a proxy row for `FormIDAnalyzer@rust` marks `FormIDAnalyzer` as
+    # tier1-mapped for the rust_unmapped gap calculation below).
+    tier1_rust_symbols = {
+        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
+    }
+    tier1_node_exports = {
+        mapping["nodeExport"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
+    }
 
     contract_results: list[dict[str, Any]] = []
     gaps: list[dict[str, Any]] = []
 
     for mapping in tier1_mappings:
         rust_symbol = mapping["rustSymbol"]
-        node_export = mapping["nodeExport"]
+        node_export = mapping.get("nodeExport")
         expected_arity = mapping.get("nodeArity")
         expected_kind = mapping.get("nodeKind")
         owner_module = mapping["ownerModule"]
+        is_proxy = isinstance(rust_symbol, str) and rust_symbol.endswith("@rust")
+        effective_rust_symbol = _effective_rust_symbol(rust_symbol)
 
-        rust_item = rust_lookup.get(rust_symbol)
-        node_item = node_lookup.get(node_export)
+        rust_item = rust_lookup.get(effective_rust_symbol)
+        node_item = node_lookup.get(node_export) if node_export is not None else None
         status = "matched"
         reason = ""
 
         if rust_item is None:
             status = "missing_rust"
-            reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."
+            reason = f"Rust symbol '{effective_rust_symbol}' not found in target crate exports."
+        elif is_proxy:
+            # @rust-suffix proxy rows: Rust-side only, no Node surface check.
+            status = "matched"
         elif node_item is None:
             status = "missing_node"
             reason = f"Node export '{node_export}' not found in index.d.ts."
@@ -716,10 +747,21 @@ def main() -> int:
 
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
-    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
+    # Phase 4 Plan 2: @rust proxy rows only have Rust symbols; strip the
+    # suffix for tier1 rust-set tracking and skip proxy rows in the node-side
+    # lookup because they intentionally omit nodeExport.
+    tier1_rust_symbols = {
+        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
+    }
+    tier1_node_exports = {
+        mapping["nodeExport"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
+    }
     tier1_owner_map = {
-        mapping["nodeExport"]: mapping["ownerModule"] for mapping in tier1_mappings
+        mapping["nodeExport"]: mapping["ownerModule"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
     }
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
