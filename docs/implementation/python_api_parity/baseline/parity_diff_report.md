@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-09T00:20:14.827427+00:00`
-- Tier-1 contract rows: **349**
-- Tier-1 matched: **349**
+- Generated: `2026-04-09T00:51:12.349643+00:00`
+- Tier-1 contract rows: **505**
+- Tier-1 matched: **505**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **908**
+- Total gaps (Tier-1 + Tier-2): **736**
 
 ## Tier-1 Contract Evaluation
 
@@ -55,6 +55,101 @@
 | `config.yamldata.format_registry_game_version@rust` | `config` | `format_registry_game_version` | `classic_config.create_yamldata` | `matched` |
 | `config.yamldata.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info` | `classic_config.create_yamldata` | `matched` |
 | `config.yamldata.yamldata@rust` | `config` | `yamldata` | `classic_config.YamlData` | `matched` |
+| `file_io.core.BackupInfo@rust` | `file_io` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupManager@rust` | `file_io` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.BackupType@rust` | `file_io` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileIOCore` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileIOCore.__init__` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.__init__` | `matched` |
+| `file_io.core.FileIOCore.append_file` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.append_file` | `matched` |
+| `file_io.core.FileIOCore.clear_cache` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.clear_cache` | `matched` |
+| `file_io.core.FileIOCore.file_exists` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.file_exists` | `matched` |
+| `file_io.core.FileIOCore.get_file_info` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.get_file_info` | `matched` |
+| `file_io.core.FileIOCore.get_file_size` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.get_file_size` | `matched` |
+| `file_io.core.FileIOCore.py_read_multiple_files` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.py_read_multiple_files` | `matched` |
+| `file_io.core.FileIOCore.py_walk_directory` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.py_walk_directory` | `matched` |
+| `file_io.core.FileIOCore.py_write_multiple_files` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.py_write_multiple_files` | `matched` |
+| `file_io.core.FileIOCore.read_bytes` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_bytes` | `matched` |
+| `file_io.core.FileIOCore.read_dds_header` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_dds_header` | `matched` |
+| `file_io.core.FileIOCore.read_dds_headers_batch` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_dds_headers_batch` | `matched` |
+| `file_io.core.FileIOCore.read_file` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_file` | `matched` |
+| `file_io.core.FileIOCore.read_file_mmap` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_file_mmap` | `matched` |
+| `file_io.core.FileIOCore.read_file_with_encoding` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_file_with_encoding` | `matched` |
+| `file_io.core.FileIOCore.read_lines` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.read_lines` | `matched` |
+| `file_io.core.FileIOCore.stream_lines` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.stream_lines` | `matched` |
+| `file_io.core.FileIOCore.stream_lines_sync` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.stream_lines_sync` | `matched` |
+| `file_io.core.FileIOCore.write_bytes` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.write_bytes` | `matched` |
+| `file_io.core.FileIOCore.write_file` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.write_file` | `matched` |
+| `file_io.core.FileIOCore.write_lines` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore.write_lines` | `matched` |
+| `file_io.core.FileOperation@rust` | `file_io` | `FileOperation` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.FileOperationResult@rust` | `file_io` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameFilesManager@rust` | `file_io` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.GameTarget@rust` | `file_io` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.RejectedInput@rust` | `file_io` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.TargetedResolution@rust` | `file_io` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.backup@rust` | `file_io` | `backup` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.calculate_similarity` | `file_io` | `calculate_similarity` | `classic_file_io.calculate_similarity` | `matched` |
+| `file_io.core.core@rust` | `file_io` | `core` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.game_files@rust` | `file_io` | `game_files` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.similarity@rust` | `file_io` | `similarity` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.similarity_ratio` | `file_io` | `similarity_ratio` | `classic_file_io.similarity_ratio` | `matched` |
+| `file_io.dds.DDSAnalyzer@rust` | `file_io` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSHeader` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.DDSHeader.from_bytes` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.from_bytes` | `matched` |
+| `file_io.dds.DDSHeader.has_mipmaps` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.has_mipmaps` | `matched` |
+| `file_io.dds.DDSHeader.has_power_of_2_dimensions` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.has_power_of_2_dimensions` | `matched` |
+| `file_io.dds.DDSHeader.has_valid_bc_dimensions` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.has_valid_bc_dimensions` | `matched` |
+| `file_io.dds.DDSHeader.is_bc_compressed` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.is_bc_compressed` | `matched` |
+| `file_io.dds.DDSHeader.is_reasonable_size` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.is_reasonable_size` | `matched` |
+| `file_io.dds.DDSIssue@rust` | `file_io` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.dds@rust` | `file_io` | `dds` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.encoding.EncodingDetector` | `file_io` | `EncodingDetector` | `classic_file_io.EncodingDetector` | `matched` |
+| `file_io.encoding.EncodingDetector.__init__` | `file_io` | `EncodingDetector` | `classic_file_io.EncodingDetector.__init__` | `matched` |
+| `file_io.encoding.EncodingDetector.detect_encoding` | `file_io` | `EncodingDetector` | `classic_file_io.EncodingDetector.detect_encoding` | `matched` |
+| `file_io.encoding.encoding@rust` | `file_io` | `encoding` | `classic_file_io.EncodingDetector` | `matched` |
+| `file_io.error.RustFileIOError` | `file_io` | `FileIOError` | `classic_file_io.RustFileIOError` | `matched` |
+| `file_io.error.RustFileIOIOError` | `file_io` | `FileIOError` | `classic_file_io.RustFileIOIOError` | `matched` |
+| `file_io.error.RustFileIOParseError` | `file_io` | `FileIOError` | `classic_file_io.RustFileIOParseError` | `matched` |
+| `file_io.generation.FileGenerator` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.generation.FileGenerator.__init__` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.__init__` | `matched` |
+| `file_io.generation.FileGenerator.config` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.config` | `matched` |
+| `file_io.generation.FileGenerator.generate_all_files_async` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.generate_all_files_async` | `matched` |
+| `file_io.generation.FileGenerator.generate_ignore_file_async` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.generate_ignore_file_async` | `matched` |
+| `file_io.generation.FileGenerator.generate_local_yaml_async` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.generate_local_yaml_async` | `matched` |
+| `file_io.generation.FileGenerator.ignore_file_path` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.ignore_file_path` | `matched` |
+| `file_io.generation.FileGenerator.local_yaml_path` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator.local_yaml_path` | `matched` |
+| `file_io.generation.FileGeneratorConfig` | `file_io` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig` | `matched` |
+| `file_io.generation.FileGeneratorConfig.__init__` | `file_io` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig.__init__` | `matched` |
+| `file_io.generation.generate_ignore_file_async` | `file_io` | `generate_ignore_file` | `classic_file_io.generate_ignore_file_async` | `matched` |
+| `file_io.generation.generate_local_yaml_async` | `file_io` | `generate_local_yaml` | `classic_file_io.generate_local_yaml_async` | `matched` |
+| `file_io.generation.generation@rust` | `file_io` | `generation` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.hash.FileHasher` | `file_io` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
+| `file_io.hash.FileHasher.cache_size` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.cache_size` | `matched` |
+| `file_io.hash.FileHasher.cache_stats` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.cache_stats` | `matched` |
+| `file_io.hash.FileHasher.clear_cache` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.clear_cache` | `matched` |
+| `file_io.hash.FileHasher.hash_file` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.hash_file` | `matched` |
+| `file_io.hash.FileHasher.hash_files_parallel` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.hash_files_parallel` | `matched` |
+| `file_io.hash.FileHasher.hash_files_to_map` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.hash_files_to_map` | `matched` |
+| `file_io.hash.FileHasher.reset_cache_stats` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.reset_cache_stats` | `matched` |
+| `file_io.hash.FileHasherCacheStats` | `file_io` | `FileHasher` | `classic_file_io.FileHasherCacheStats` | `matched` |
+| `file_io.hash.hash@rust` | `file_io` | `hash` | `classic_file_io.FileHasher` | `matched` |
+| `file_io.log_collection.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `CRASH_AUTOSCAN_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.CRASH_LOG_PATTERN@rust` | `file_io` | `CRASH_LOG_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.PyLineStreamer` | `file_io` | `LogCollector` | `classic_file_io.PyLineStreamer` | `matched` |
+| `file_io.log_collection.PyLineStreamer.__aiter__` | `file_io` | `LogCollector` | `classic_file_io.PyLineStreamer.__aiter__` | `matched` |
+| `file_io.log_collection.PyLineStreamer.__anext__` | `file_io` | `LogCollector` | `classic_file_io.PyLineStreamer.__anext__` | `matched` |
+| `file_io.log_collection.PyLogCollector` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.PyLogCollector.__init__` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.__init__` | `matched` |
+| `file_io.log_collection.PyLogCollector.collect_all` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.collect_all` | `matched` |
+| `file_io.log_collection.PyLogCollector.collect_crash_logs` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.collect_crash_logs` | `matched` |
+| `file_io.log_collection.PyLogCollector.copy_from_xse_folder` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.copy_from_xse_folder` | `matched` |
+| `file_io.log_collection.PyLogCollector.crash_logs_dir` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.crash_logs_dir` | `matched` |
+| `file_io.log_collection.PyLogCollector.move_from_base_folder` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.move_from_base_folder` | `matched` |
+| `file_io.log_collection.PyLogCollector.pastebin_dir` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector.pastebin_dir` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer` | `file_io` | `LogCollector` | `classic_file_io.PySyncLineStreamer` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer.__iter__` | `file_io` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__iter__` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer.__next__` | `file_io` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__next__` | `matched` |
+| `file_io.log_collection.log_collection@rust` | `file_io` | `log_collection` | `classic_file_io.PyLogCollector` | `matched` |
 | `scanlog-analysis-config-class` | `scanlog` | `AnalysisConfig` | `classic_scanlog.AnalysisConfig` | `matched` |
 | `scanlog-analysis-config-from-yamldata` | `scanlog` | `build_analysis_config_from_yaml` | `classic_scanlog.AnalysisConfig.from_yamldata` | `matched` |
 | `scanlog-crashgen-version-class` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion` | `matched` |
@@ -302,6 +397,67 @@
 | `scanlog.version.CrashgenVersion.__init__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__init__` | `matched` |
 | `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `crashgen_version_gen` | `classic_scanlog.parse_crashgen_version` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `version` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `shared.path.PathHandler` | `shared` | `PyPathHandler` | `classic_shared.PathHandler` | `matched` |
+| `shared.path.PathHandler.__init__` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.__init__` | `matched` |
+| `shared.path.PathHandler.cache_metrics` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.cache_metrics` | `matched` |
+| `shared.path.PathHandler.cache_stats` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.cache_stats` | `matched` |
+| `shared.path.PathHandler.cleanup_cache` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.cleanup_cache` | `matched` |
+| `shared.path.PathHandler.clear_cache` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.clear_cache` | `matched` |
+| `shared.path.PathHandler.common_prefix` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.common_prefix` | `matched` |
+| `shared.path.PathHandler.get_extension` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.get_extension` | `matched` |
+| `shared.path.PathHandler.get_filename` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.get_filename` | `matched` |
+| `shared.path.PathHandler.get_parent` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.get_parent` | `matched` |
+| `shared.path.PathHandler.is_absolute` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.is_absolute` | `matched` |
+| `shared.path.PathHandler.join_paths` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.join_paths` | `matched` |
+| `shared.path.PathHandler.normalize_path` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.normalize_path` | `matched` |
+| `shared.path.PathHandler.split_path` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.split_path` | `matched` |
+| `shared.path.PathHandler.split_path_fast` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.split_path_fast` | `matched` |
+| `shared.path.PathHandler.to_absolute` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.to_absolute` | `matched` |
+| `shared.path.PathHandler.validate_paths_batch` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.validate_paths_batch` | `matched` |
+| `shared.path.PathHandler.validate_paths_batch_fast` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.validate_paths_batch_fast` | `matched` |
+| `shared.path.PathLike@rust` | `shared` | `PathLike` | `classic_shared.PathHandler` | `matched` |
+| `shared.path.path@rust` | `shared` | `path` | `classic_shared.PathHandler` | `matched` |
+| `shared.path.path_py@rust` | `shared` | `path_py` | `classic_shared.PathHandler` | `matched` |
+| `shared.performance.RustPerformanceMonitor` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor` | `matched` |
+| `shared.performance.RustPerformanceMonitor.__init__` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.__init__` | `matched` |
+| `shared.performance.RustPerformanceMonitor.clear_metrics` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.clear_metrics` | `matched` |
+| `shared.performance.RustPerformanceMonitor.get_all_stats` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.get_all_stats` | `matched` |
+| `shared.performance.RustPerformanceMonitor.get_operation_stats` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.get_operation_stats` | `matched` |
+| `shared.performance.RustPerformanceMonitor.record_metric` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.record_metric` | `matched` |
+| `shared.performance.RustPerformanceMonitor.start_timer` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.start_timer` | `matched` |
+| `shared.performance.RustPerformanceMonitor.stop_timer` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.stop_timer` | `matched` |
+| `shared.performance.performance_py@rust` | `shared` | `performance_py` | `classic_shared.RustPerformanceMonitor` | `matched` |
+| `shared.runtime.ClassicError@rust` | `shared` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ClassicResult@rust` | `shared` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ResultExt@rust` | `shared` | `ResultExt` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.RuntimeStats` | `shared` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.ToPyErr@rust` | `shared` | `ToPyErr` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.error_convert@rust` | `shared` | `error_convert` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.exceptions@rust` | `shared` | `exceptions` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.get_runtime_stats` | `shared` | `get_runtime_stats` | `classic_shared.get_runtime_stats` | `matched` |
+| `shared.runtime.indexmap_utils@rust` | `shared` | `indexmap_utils` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.is_runtime_healthy` | `shared` | `is_runtime_healthy` | `classic_shared.is_runtime_healthy` | `matched` |
+| `shared.runtime.pyany_to_indexmap_str@rust` | `shared` | `pyany_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.pyany_to_indexmap_vecstr@rust` | `shared` | `pyany_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.pydict_to_indexmap_str@rust` | `shared` | `pydict_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.pydict_to_indexmap_str_optional@rust` | `shared` | `pydict_to_indexmap_str_optional` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.pydict_to_indexmap_vecstr@rust` | `shared` | `pydict_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.resolve_python_entry_dir@rust` | `shared` | `resolve_python_entry_dir` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.to_py_err@rust` | `shared` | `to_py_err` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.strings.StringProcessor` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor` | `matched` |
+| `shared.strings.StringProcessor.__init__` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.__init__` | `matched` |
+| `shared.strings.StringProcessor.clear_pool` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.clear_pool` | `matched` |
+| `shared.strings.StringProcessor.common_prefix` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.common_prefix` | `matched` |
+| `shared.strings.StringProcessor.intern` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.intern` | `matched` |
+| `shared.strings.StringProcessor.intern_batch` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.intern_batch` | `matched` |
+| `shared.strings.StringProcessor.join_lines` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.join_lines` | `matched` |
+| `shared.strings.StringProcessor.normalize` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.normalize` | `matched` |
+| `shared.strings.StringProcessor.pool_stats` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.pool_stats` | `matched` |
+| `shared.strings.StringProcessor.process_batch` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.process_batch` | `matched` |
+| `shared.strings.StringProcessor.process_batch_fast` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.process_batch_fast` | `matched` |
+| `shared.strings.StringProcessor.split_lines` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.split_lines` | `matched` |
+| `shared.strings.StringProcessor.split_lines_fast` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.split_lines_fast` | `matched` |
+| `shared.strings.strings_py@rust` | `shared` | `strings_py` | `classic_shared.StringProcessor` | `matched` |
 | `version-registry-class` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry` | `matched` |
 | `version-registry-game-version-class` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion` | `matched` |
 | `version-registry-get-address-library-filename` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry.get_address_library_filename` | `matched` |
@@ -371,20 +527,20 @@
 | `version_registry` | 0 | 0 |
 | `yaml` | 0 | 37 |
 | `database` | 0 | 46 |
-| `file_io` | 0 | 105 |
+| `file_io` | 0 | 0 |
 | `scangame` | 0 | 213 |
 | `registry` | 0 | 37 |
 | `perf` | 0 | 16 |
 | `settings` | 0 | 38 |
 | `message` | 0 | 53 |
-| `path` | 0 | 85 |
+| `path` | 0 | 83 |
 | `constants` | 0 | 58 |
 | `version` | 0 | 27 |
 | `resource` | 0 | 40 |
 | `xse` | 0 | 40 |
 | `web` | 0 | 29 |
 | `update` | 0 | 14 |
-| `shared` | 0 | 65 |
+| `shared` | 0 | 0 |
 | `aux` | 0 | 0 |
 
 Detailed per-gap diagnostics are in `parity_diff_report.json`.

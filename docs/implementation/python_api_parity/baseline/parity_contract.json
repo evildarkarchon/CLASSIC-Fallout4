@@ -868,14 +868,15 @@
       "pythonKind": "class"
     },
     {
-      "id": "file_io.core.calculate_similarity@rust",
+      "id": "file_io.core.calculate_similarity",
       "tier": "tier1",
       "ownerModule": "file_io",
       "rustCrate": "classic-file-io-core",
       "rustSymbol": "calculate_similarity",
       "pythonModule": "classic_file_io",
-      "pythonExportPath": "FileIOCore",
-      "pythonKind": "class"
+      "pythonExportPath": "calculate_similarity",
+      "pythonKind": "function",
+      "pythonArity": 2
     },
     {
       "id": "file_io.core.core@rust",
@@ -918,14 +919,15 @@
       "pythonKind": "class"
     },
     {
-      "id": "file_io.core.similarity_ratio@rust",
+      "id": "file_io.core.similarity_ratio",
       "tier": "tier1",
       "ownerModule": "file_io",
       "rustCrate": "classic-file-io-core",
       "rustSymbol": "similarity_ratio",
       "pythonModule": "classic_file_io",
-      "pythonExportPath": "FileIOCore",
-      "pythonKind": "class"
+      "pythonExportPath": "similarity_ratio",
+      "pythonKind": "function",
+      "pythonArity": 2
     },
     {
       "id": "file_io.dds.DDSAnalyzer@rust",

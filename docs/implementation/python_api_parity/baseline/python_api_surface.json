@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-09T00:20:11.737271+00:00",
+  "generated_at_utc": "2026-04-09T00:51:12.348440+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -1044,7 +1044,7 @@
       "export_path": "DDSHeader",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class DDSHeader:"
     },
@@ -1056,7 +1056,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def from_bytes(data: bytes) -> DDSHeader | None:"
     },
@@ -1068,7 +1068,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def has_mipmaps(self) -> bool:"
     },
@@ -1080,7 +1080,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def has_power_of_2_dimensions(self) -> bool:"
     },
@@ -1092,7 +1092,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def has_valid_bc_dimensions(self) -> bool:"
     },
@@ -1104,7 +1104,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def is_bc_compressed(self) -> bool:"
     },
@@ -1116,7 +1116,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def is_reasonable_size(self) -> bool:"
     },
@@ -1126,7 +1126,7 @@
       "export_path": "EncodingDetector",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class EncodingDetector:"
     },
@@ -1138,7 +1138,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -1150,7 +1150,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def detect_encoding(self, data: bytes) -> str:"
     },
@@ -1160,7 +1160,7 @@
       "export_path": "FileGenerator",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class FileGenerator:"
     },
@@ -1172,7 +1172,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __init__(self, config: FileGeneratorConfig) -> None:"
     },
@@ -1184,7 +1184,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def config(self) -> FileGeneratorConfig:"
     },
@@ -1196,7 +1196,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def generate_all_files_async(self) -> Coroutine[Any, Any, tuple[bool, bool]]:"
     },
@@ -1208,7 +1208,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def generate_ignore_file_async(self) -> Coroutine[Any, Any, bool]:"
     },
@@ -1220,7 +1220,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def generate_local_yaml_async(self) -> Coroutine[Any, Any, bool]:"
     },
@@ -1232,7 +1232,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def ignore_file_path(self) -> str:"
     },
@@ -1244,7 +1244,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def local_yaml_path(self) -> str:"
     },
@@ -1254,7 +1254,7 @@
       "export_path": "FileGeneratorConfig",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class FileGeneratorConfig:"
     },
@@ -1266,7 +1266,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __init__( self, ignore_file_content: str, local_yaml_content: str, game_name: str ) -> None:"
     },
@@ -1276,7 +1276,7 @@
       "export_path": "FileHasher",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class FileHasher:"
     },
@@ -1288,7 +1288,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def cache_size() -> int:"
     },
@@ -1300,7 +1300,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def cache_stats() -> FileHasherCacheStats:"
     },
@@ -1312,7 +1312,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def clear_cache() -> None:"
     },
@@ -1324,7 +1324,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def hash_file(path: str) -> str:"
     },
@@ -1336,7 +1336,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def hash_files_parallel(paths: list[str]) -> dict[str, str | None]:"
     },
@@ -1348,7 +1348,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def hash_files_to_map(paths: list[str]) -> dict[str, str]:"
     },
@@ -1360,7 +1360,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def reset_cache_stats() -> None:"
     },
@@ -1370,7 +1370,7 @@
       "export_path": "FileHasherCacheStats",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class FileHasherCacheStats(TypedDict):"
     },
@@ -1380,7 +1380,7 @@
       "export_path": "FileIOCore",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class FileIOCore:"
     },
@@ -1392,7 +1392,7 @@
       "kind": "method",
       "arity": 4,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __init__( self, encoding: str = \"utf-8\", errors: str = \"ignore\", cache_size: int = 100, max_concurrent_io: int = 50, ) -> None:"
     },
@@ -1404,7 +1404,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def append_file(self, path: str, content: str) -> Coroutine[Any, Any, None]:"
     },
@@ -1416,7 +1416,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def clear_cache(self) -> None:"
     },
@@ -1428,7 +1428,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def file_exists(self, path: str) -> bool:"
     },
@@ -1440,7 +1440,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def get_file_info(self, path: str) -> dict[str, Any]:"
     },
@@ -1452,7 +1452,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def get_file_size(self, path: str) -> int:"
     },
@@ -1464,7 +1464,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def py_read_multiple_files( self, paths: list[str] ) -> Coroutine[Any, Any, dict[str, str]]:"
     },
@@ -1476,7 +1476,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def py_walk_directory( self, path: str, pattern: str | None = None, max_depth: int | None = None ) -> list[str]:"
     },
@@ -1488,7 +1488,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def py_write_multiple_files( self, files: dict[str, str] ) -> Coroutine[Any, Any, None]:"
     },
@@ -1500,7 +1500,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_bytes(self, path: str) -> Coroutine[Any, Any, bytes]:"
     },
@@ -1512,7 +1512,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_dds_header(self, path: str) -> tuple[int, int] | None:"
     },
@@ -1524,7 +1524,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_dds_headers_batch( self, paths: list[str] ) -> dict[str, tuple[int, int] | None]:"
     },
@@ -1536,7 +1536,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_file(self, path: str) -> Coroutine[Any, Any, str]:"
     },
@@ -1548,7 +1548,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_file_mmap(self, path: str) -> Coroutine[Any, Any, str]:"
     },
@@ -1560,7 +1560,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_file_with_encoding( self, path: str, encoding: str ) -> Coroutine[Any, Any, str]:"
     },
@@ -1572,7 +1572,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def read_lines(self, path: str) -> Coroutine[Any, Any, list[str]]:"
     },
@@ -1584,7 +1584,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def stream_lines(self, path: str) -> Coroutine[Any, Any, PyLineStreamer]:"
     },
@@ -1596,7 +1596,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def stream_lines_sync(self, path: str) -> PySyncLineStreamer:"
     },
@@ -1608,7 +1608,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def write_bytes(self, path: str, data: bytes) -> Coroutine[Any, Any, None]:"
     },
@@ -1620,7 +1620,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def write_file(self, path: str, content: str) -> Coroutine[Any, Any, None]:"
     },
@@ -1632,7 +1632,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def write_lines(self, path: str, lines: list[str]) -> Coroutine[Any, Any, None]:"
     },
@@ -1642,7 +1642,7 @@
       "export_path": "PyLineStreamer",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class PyLineStreamer:"
     },
@@ -1654,7 +1654,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __aiter__(self) -> PyLineStreamer: ..."
     },
@@ -1666,7 +1666,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __anext__(self) -> Coroutine[Any, Any, str]: ..."
     },
@@ -1676,7 +1676,7 @@
       "export_path": "PyLogCollector",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class PyLogCollector:"
     },
@@ -1688,7 +1688,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __init__( self, base_folder: str, xse_folder: str | None = None, custom_folder: str | None = None, ) -> None:"
     },
@@ -1700,7 +1700,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def collect_all(self) -> list[str]:"
     },
@@ -1712,7 +1712,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def collect_crash_logs(self) -> list[str]:"
     },
@@ -1724,7 +1724,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def copy_from_xse_folder(self) -> int:"
     },
@@ -1736,7 +1736,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def crash_logs_dir(self) -> str:"
     },
@@ -1748,7 +1748,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def move_from_base_folder(self) -> int:"
     },
@@ -1760,7 +1760,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def pastebin_dir(self) -> str:"
     },
@@ -1770,7 +1770,7 @@
       "export_path": "PySyncLineStreamer",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class PySyncLineStreamer:"
     },
@@ -1782,7 +1782,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __iter__(self) -> PySyncLineStreamer: ..."
     },
@@ -1794,7 +1794,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "def __next__(self) -> str: ..."
     },
@@ -1804,7 +1804,7 @@
       "export_path": "RustFileIOError",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class RustFileIOError(Exception):"
     },
@@ -1814,7 +1814,7 @@
       "export_path": "RustFileIOIOError",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class RustFileIOIOError(RustFileIOError):"
     },
@@ -1824,9 +1824,20 @@
       "export_path": "RustFileIOParseError",
       "kind": "class",
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "class RustFileIOParseError(RustFileIOError):"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "calculate_similarity",
+      "export_path": "calculate_similarity",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def calculate_similarity(path1: str, path2: str) -> float:"
     },
     {
       "module": "classic_file_io",
@@ -1835,7 +1846,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "async def generate_ignore_file_async(content: str) -> bool:"
     },
@@ -1846,9 +1857,20 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "file_io",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "signature": "async def generate_local_yaml_async(content: str, game_name: str) -> bool:"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "similarity_ratio",
+      "export_path": "similarity_ratio",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def similarity_ratio(text1: str, text2: str) -> float:"
     },
     {
       "module": "classic_message",
@@ -7349,7 +7371,7 @@
       "export_path": "PathHandler",
       "kind": "class",
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "class PathHandler:"
     },
@@ -7361,7 +7383,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def __init__(self, cache_ttl_seconds: int = 300) -> None:"
     },
@@ -7373,7 +7395,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def cache_metrics(self) -> tuple[int, int, float]:"
     },
@@ -7385,7 +7407,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def cache_stats(self) -> tuple[int, int]:"
     },
@@ -7397,7 +7419,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def cleanup_cache(self) -> None:"
     },
@@ -7409,7 +7431,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def clear_cache(self) -> None:"
     },
@@ -7421,7 +7443,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def common_prefix(self, paths: list[str]) -> str | None:"
     },
@@ -7433,7 +7455,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def get_extension(self, path: str) -> str | None:"
     },
@@ -7445,7 +7467,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def get_filename(self, path: str) -> str | None:"
     },
@@ -7457,7 +7479,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def get_parent(self, path: str) -> str | None:"
     },
@@ -7469,7 +7491,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def is_absolute(self, path: str) -> bool:"
     },
@@ -7481,7 +7503,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def join_paths(self, base: str, components: list[str]) -> str:"
     },
@@ -7493,7 +7515,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def normalize_path(self, path: str) -> str:"
     },
@@ -7505,7 +7527,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def split_path(self, path: str) -> list[str]:"
     },
@@ -7517,7 +7539,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def split_path_fast(self, path: str) -> list[str]:"
     },
@@ -7529,7 +7551,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def to_absolute(self, path: str, base: str | None = None) -> str:"
     },
@@ -7541,7 +7563,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def validate_paths_batch(self, paths: list[str]) -> list[tuple[str, bool, str]]:"
     },
@@ -7553,7 +7575,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def validate_paths_batch_fast( self, paths: list[str] ) -> list[tuple[str, bool, str]]:"
     },
@@ -7563,7 +7585,7 @@
       "export_path": "RuntimeStats",
       "kind": "class",
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "class RuntimeStats:"
     },
@@ -7573,7 +7595,7 @@
       "export_path": "RustPerformanceMonitor",
       "kind": "class",
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "class RustPerformanceMonitor:"
     },
@@ -7585,7 +7607,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -7597,7 +7619,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def clear_metrics(self) -> None:"
     },
@@ -7609,7 +7631,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def get_all_stats(self) -> dict[str, dict[str, object]]:"
     },
@@ -7621,7 +7643,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def get_operation_stats(self, operation: str) -> dict[str, object] | None:"
     },
@@ -7633,7 +7655,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def record_metric( self, operation: str, duration_ms: int, bytes_processed: int | None = None, ) -> None:"
     },
@@ -7645,7 +7667,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def start_timer(self, operation: str) -> dict[str, object]:"
     },
@@ -7657,7 +7679,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def stop_timer( self, timer_info: dict[str, object], bytes_processed: int | None = None ) -> None:"
     },
@@ -7667,7 +7689,7 @@
       "export_path": "StringProcessor",
       "kind": "class",
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "class StringProcessor:"
     },
@@ -7679,7 +7701,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -7691,7 +7713,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def clear_pool(self) -> None:"
     },
@@ -7703,7 +7725,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def common_prefix(self, strings: list[str]) -> str:"
     },
@@ -7715,7 +7737,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def intern(self, s: str) -> str:"
     },
@@ -7727,7 +7749,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def intern_batch(self, strings: list[str]) -> list[str]:"
     },
@@ -7739,7 +7761,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def join_lines(self, lines: list[str], separator: str) -> str:"
     },
@@ -7751,7 +7773,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def normalize(self, s: str) -> str:"
     },
@@ -7763,7 +7785,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def pool_stats(self) -> int:"
     },
@@ -7775,7 +7797,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def process_batch(self, strings: list[str], operation: str) -> list[str]:"
     },
@@ -7787,7 +7809,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def process_batch_fast(self, strings: list[str], operation: str) -> list[str]:"
     },
@@ -7799,7 +7821,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def split_lines(self, text: str) -> list[str]:"
     },
@@ -7811,7 +7833,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def split_lines_fast(self, text: str) -> list[str]:"
     },
@@ -7822,7 +7844,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def get_runtime_stats() -> RuntimeStats:"
     },
@@ -7833,7 +7855,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "shared",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
       "signature": "def is_runtime_healthy() -> bool:"
     },

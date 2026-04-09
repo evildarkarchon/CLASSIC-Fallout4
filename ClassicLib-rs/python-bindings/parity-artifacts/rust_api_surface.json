@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-09T00:20:14.812137+00:00",
+  "generated_at_utc": "2026-04-09T00:51:22.491863+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -761,7 +761,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
       "source_expr": "backup::BackupInfo",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupManager",
@@ -771,7 +771,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
       "source_expr": "backup::BackupManager",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupType",
@@ -781,7 +781,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
       "source_expr": "backup::BackupType",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CRASH_AUTOSCAN_PATTERN",
@@ -791,7 +791,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::CRASH_AUTOSCAN_PATTERN",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CRASH_LOG_PATTERN",
@@ -801,7 +801,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::CRASH_LOG_PATTERN",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DDSAnalyzer",
@@ -811,7 +811,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::DDSAnalyzer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DDSHeader",
@@ -821,7 +821,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::DDSHeader",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DDSIssue",
@@ -831,7 +831,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::DDSIssue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EncodingDetector",
@@ -841,7 +841,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use encoding::EncodingDetector;",
       "source_expr": "encoding::EncodingDetector",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileGenerator",
@@ -851,7 +851,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
       "source_expr": "generation::FileGenerator",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileGeneratorConfig",
@@ -861,7 +861,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
       "source_expr": "generation::FileGeneratorConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileHasher",
@@ -871,7 +871,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use hash::FileHasher;",
       "source_expr": "hash::FileHasher",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileIOCore",
@@ -881,7 +881,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use core::FileIOCore;",
       "source_expr": "core::FileIOCore",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileIOError",
@@ -891,7 +891,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use error::FileIOError;",
       "source_expr": "error::FileIOError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileOperation",
@@ -901,7 +901,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
       "source_expr": "game_files::FileOperation",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileOperationResult",
@@ -911,7 +911,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
       "source_expr": "game_files::FileOperationResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameFilesManager",
@@ -921,7 +921,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
       "source_expr": "game_files::GameFilesManager",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameTarget",
@@ -931,7 +931,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::GameTarget",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "LogCollector",
@@ -941,7 +941,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::LogCollector",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RejectedInput",
@@ -951,7 +951,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::RejectedInput",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "TargetedResolution",
@@ -961,7 +961,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::TargetedResolution",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "backup",
@@ -970,7 +970,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod backup;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "calculate_similarity",
@@ -980,7 +980,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use similarity::{calculate_similarity, similarity_ratio};",
       "source_expr": "similarity::calculate_similarity",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "core",
@@ -989,7 +989,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod core;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "dds",
@@ -998,7 +998,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod dds;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "encoding",
@@ -1007,7 +1007,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod encoding;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "error",
@@ -1025,7 +1025,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod game_files;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "generate_ignore_file",
@@ -1035,7 +1035,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
       "source_expr": "generation::generate_ignore_file",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "generate_local_yaml",
@@ -1045,7 +1045,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
       "source_expr": "generation::generate_local_yaml",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "generation",
@@ -1054,7 +1054,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod generation;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "hash",
@@ -1063,7 +1063,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod hash;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "log_collection",
@@ -1072,7 +1072,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod log_collection;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "resolve_targeted_inputs",
@@ -1082,7 +1082,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::resolve_targeted_inputs",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "similarity",
@@ -1091,7 +1091,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod similarity;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "similarity_ratio",
@@ -1101,7 +1101,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use similarity::{calculate_similarity, similarity_ratio};",
       "source_expr": "similarity::similarity_ratio",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ContractEvent",
@@ -1280,7 +1280,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use backup::{BackupManager, XseVersion};",
       "source_expr": "backup::BackupManager",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupManager",
@@ -1290,7 +1290,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use backup::BackupManager;",
       "source_expr": "backup::BackupManager",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupResult",
@@ -3849,7 +3849,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};",
       "source_expr": "classic_shared_core::ClassicError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ClassicResult",
@@ -3859,7 +3859,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};",
       "source_expr": "classic_shared_core::ClassicResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PathLike",
@@ -3869,7 +3869,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use path::PathLike;",
       "source_expr": "path::PathLike",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PyPathHandler",
@@ -3879,7 +3879,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use path_py::PyPathHandler;",
       "source_expr": "path_py::PyPathHandler",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PyRustPerformanceMonitor",
@@ -3889,7 +3889,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use performance_py::PyRustPerformanceMonitor;",
       "source_expr": "performance_py::PyRustPerformanceMonitor",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PyStringProcessor",
@@ -3899,7 +3899,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use strings_py::PyStringProcessor;",
       "source_expr": "strings_py::PyStringProcessor",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ResultExt",
@@ -3909,7 +3909,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use error_convert::{ResultExt, ToPyErr};",
       "source_expr": "error_convert::ResultExt",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RuntimeStats",
@@ -3918,7 +3918,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub struct RuntimeStats",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ToPyErr",
@@ -3928,7 +3928,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use error_convert::{ResultExt, ToPyErr};",
       "source_expr": "error_convert::ToPyErr",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "error_convert",
@@ -3937,7 +3937,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod error_convert;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "exceptions",
@@ -3946,7 +3946,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod exceptions;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_runtime",
@@ -3959,13 +3959,33 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_runtime_stats",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
+      "source_decl": "pub fn get_runtime_stats()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "indexmap_utils",
       "kind": "module",
       "crate": "classic-shared-py",
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod indexmap_utils;",
-      "tier": "tier2"
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_runtime_healthy",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
+      "source_decl": "pub fn is_runtime_healthy()",
+      "tier": "tier1"
     },
     {
       "symbol": "path",
@@ -3974,7 +3994,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod path;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "path_py",
@@ -3983,7 +4003,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod path_py;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "performance_py",
@@ -3992,7 +4012,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod performance_py;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "pyany_to_indexmap_str",
@@ -4002,7 +4022,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pyany_to_indexmap_str",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "pyany_to_indexmap_vecstr",
@@ -4012,7 +4032,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pyany_to_indexmap_vecstr",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "pydict_to_indexmap_str",
@@ -4022,7 +4042,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pydict_to_indexmap_str",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "pydict_to_indexmap_str_optional",
@@ -4032,7 +4052,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pydict_to_indexmap_str_optional",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "pydict_to_indexmap_vecstr",
@@ -4042,7 +4062,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pydict_to_indexmap_vecstr",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "resolve_python_entry_dir",
@@ -4052,7 +4072,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub fn resolve_python_entry_dir(py: Python<'_>)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "strings_py",
@@ -4061,7 +4081,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod strings_py;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "to_py_err",
@@ -4071,7 +4091,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub fn to_py_err(err: ClassicError)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GithubAsset",

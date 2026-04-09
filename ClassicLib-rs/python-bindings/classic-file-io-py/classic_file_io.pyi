@@ -1161,6 +1161,48 @@ class FileGenerator:
 
         """
 
+def calculate_similarity(path1: str, path2: str) -> float:
+    """Calculate Jaccard similarity between two file contents.
+
+    Compares the line-set similarity of two text files and returns a
+    ratio in [0.0, 1.0]. 1.0 means identical line sets; 0.0 means
+    completely disjoint.
+
+    Args:
+        path1: Path to the first text file
+        path2: Path to the second text file
+
+    Returns:
+        Similarity ratio between 0.0 and 1.0
+
+    Raises:
+        RuntimeError: If either file cannot be read
+
+    Example:
+        >>> ratio = classic_file_io.calculate_similarity("a.ini", "b.ini")
+        >>> print(f"{ratio:.3f}")
+
+    """
+
+def similarity_ratio(text1: str, text2: str) -> float:
+    """Calculate Jaccard similarity between two in-memory strings.
+
+    Compares the line-set similarity of two strings (split on newlines)
+    and returns a ratio in [0.0, 1.0].
+
+    Args:
+        text1: First string to compare
+        text2: Second string to compare
+
+    Returns:
+        Similarity ratio between 0.0 and 1.0
+
+    Example:
+        >>> ratio = classic_file_io.similarity_ratio("line1\\nline2", "line1\\nline3")
+        >>> print(f"{ratio:.3f}")
+
+    """
+
 async def generate_ignore_file_async(content: str) -> bool:
     r"""Generate CLASSIC Ignore.yaml if it doesn't exist (async).
 

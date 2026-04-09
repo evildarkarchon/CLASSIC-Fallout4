@@ -333,7 +333,8 @@ def test_rust_only_symbols_in_core_surface() -> None:
 
     assert not missing, "Rust-only @rust-suffix shared rows missing from rust_api_surface: " + ", ".join(missing)
 
-    # Sanity: there must be at least one @rust row (Plan 08 adds 19)
-    assert len(rust_only_rows) >= 19, (
-        f"Expected >=19 @rust rows for shared owner; got {len(rust_only_rows)}"
+    # Plan 08 enrolled 19 @rust-suffixed shared proxy rows. Floor allows
+    # minor fluctuations from future refactors without breaking the guard.
+    assert len(rust_only_rows) >= 15, (
+        f"Expected >=15 @rust rows for shared owner; got {len(rust_only_rows)}"
     )

@@ -272,20 +272,6 @@
       "testCaseId": "config-tier2-smoke"
     },
     {
-      "coverageId": "python-tier2-aux-cache-runtime",
-      "classification": "runtime_verified",
-      "ownerModule": "aux",
-      "tier": "tier2",
-      "bindingIdentifiers": [
-        "classic_file_io.FileHasher.cache_stats",
-        "classic_file_io.FileHasher.reset_cache_stats",
-        "classic_file_io.FileHasher.clear_cache"
-      ],
-      "verificationMode": "direct_call",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "cache-helpers-tier2-smoke"
-    },
-    {
       "coverageId": "python-tier2-scanlog-runtime",
       "classification": "runtime_verified",
       "ownerModule": "scanlog",
@@ -299,6 +285,38 @@
       "verificationMode": "direct_call",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier2-smoke"
+    },
+    {
+      "coverageId": "python-tier1-shared",
+      "classification": "runtime_verified",
+      "ownerModule": "shared",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "shared",
+        "tier": "tier1"
+      },
+      "contractCount": 61,
+      "contractIdsHash": "c535a162a400bd935c8255425cb44dae07b738cf781fccddac414123a041b24f",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py",
+      "testCaseId": "classic-shared-smoke-suite",
+      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 — tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
+    },
+    {
+      "coverageId": "python-tier1-file_io",
+      "classification": "runtime_verified",
+      "ownerModule": "file_io",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "file_io",
+        "tier": "tier1"
+      },
+      "contractCount": 95,
+      "contractIdsHash": "4bb08d07639ba26f99842fe935cbf20088bb72ad05ba2c954b6dc1296ead465d",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_file_io_aux_smoke.py",
+      "testCaseId": "classic-file-io-promoted-smoke",
+      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] — all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
     },
     {
       "coverageId": "python-tier1-version-registry-plan07-promoted",
