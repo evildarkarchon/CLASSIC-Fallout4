@@ -251,8 +251,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 24,
-      "contractIdsHash": "573bc2b98082a3567dd982ee6f54b6e7415097dea4412dedea56ba51edecd5ef",
+      "contractCount": 59,
+      "contractIdsHash": "e8a323336b6cc84fcce161284b5a0f984727a82970a10b7c8ac6f3195272a89d",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier1-smoke",
@@ -301,16 +301,41 @@
       "testCaseId": "scanlog-tier2-smoke"
     },
     {
-      "coverageId": "python-tier2-version-registry-runtime",
+      "coverageId": "python-tier1-version-registry-plan07-promoted",
       "classification": "runtime_verified",
       "ownerModule": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "bindingIdentifiers": [
-        "classic_version_registry.GameVersion.semantic_distance"
+        "classic_version_registry.VersionRegistry.__init__",
+        "classic_version_registry.GameVersion.__init__",
+        "classic_version_registry.GameVersion.__eq__",
+        "classic_version_registry.GameVersion.__hash__",
+        "classic_version_registry.GameVersion.__lt__",
+        "classic_version_registry.GameVersion.__le__",
+        "classic_version_registry.GameVersion.__gt__",
+        "classic_version_registry.GameVersion.__ge__",
+        "classic_version_registry.GameVersion.same_major",
+        "classic_version_registry.GameVersion.semantic_distance",
+        "classic_version_registry.VersionInfo.__eq__",
+        "classic_version_registry.VersionInfo.__hash__",
+        "classic_version_registry.VersionInfo.get_compatible_crashgens",
+        "classic_version_registry.VersionInfo.get_crashgen_for_version",
+        "classic_version_registry.VersionInfo.get_crashgen_version_strings",
+        "classic_version_registry.VersionInfo.is_compatible_with",
+        "classic_version_registry.AddressLibraryConfig",
+        "classic_version_registry.XseConfig",
+        "classic_version_registry.CrashgenConfig",
+        "classic_version_registry.CrashgenConfig.is_compatible_with",
+        "classic_version_registry.CompatibleRange",
+        "classic_version_registry.CompatibleRange.contains",
+        "classic_version_registry.MatchConfidence.__eq__",
+        "classic_version_registry.MatchConfidence.__hash__",
+        "classic_version_registry.MatchConfidence.is_high_confidence"
       ],
       "verificationMode": "direct_call",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "version-registry-tier2-smoke"
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_version_registry_smoke.py",
+      "testCaseId": "version-registry-plan07-promoted-smoke",
+      "fixtureRefs": []
     }
   ]
 }

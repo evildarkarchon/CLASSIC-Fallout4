@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T23:54:47.360930+00:00",
+  "generated_at_utc": "2026-04-09T00:20:11.737271+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8054,7 +8054,7 @@
       "export_path": "AddressLibraryConfig",
       "kind": "class",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "class AddressLibraryConfig:"
     },
@@ -8064,7 +8064,7 @@
       "export_path": "CompatibleRange",
       "kind": "class",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "class CompatibleRange:"
     },
@@ -8076,7 +8076,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def contains(self, version_str: str) -> bool:"
     },
@@ -8086,7 +8086,7 @@
       "export_path": "CrashgenConfig",
       "kind": "class",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "class CrashgenConfig:"
     },
@@ -8098,7 +8098,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def is_compatible_with(self, version_str: str) -> bool:"
     },
@@ -8120,7 +8120,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __eq__(self, other: object) -> bool: ..."
     },
@@ -8132,7 +8132,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __ge__(self, other: GameVersion) -> bool: ..."
     },
@@ -8144,7 +8144,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __gt__(self, other: GameVersion) -> bool: ..."
     },
@@ -8156,7 +8156,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __hash__(self) -> int: ..."
     },
@@ -8168,7 +8168,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __init__(self, version_str: str) -> None:"
     },
@@ -8180,7 +8180,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __le__(self, other: GameVersion) -> bool: ..."
     },
@@ -8192,7 +8192,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __lt__(self, other: GameVersion) -> bool: ..."
     },
@@ -8204,7 +8204,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def same_major(self, other: GameVersion) -> bool:"
     },
@@ -8216,7 +8216,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def semantic_distance(self, other: GameVersion) -> int:"
     },
@@ -8238,7 +8238,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __eq__(self, other: object) -> bool: ..."
     },
@@ -8250,7 +8250,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __hash__(self) -> int: ..."
     },
@@ -8262,7 +8262,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def is_high_confidence(self) -> bool:"
     },
@@ -8316,7 +8316,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __eq__(self, other: object) -> bool: ..."
     },
@@ -8328,7 +8328,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __hash__(self) -> int: ..."
     },
@@ -8340,7 +8340,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def get_compatible_crashgens( self, game_version_str: str | None = None ) -> list[CrashgenConfig]:"
     },
@@ -8352,7 +8352,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def get_crashgen_for_version(self, crashgen_version: str) -> CrashgenConfig | None:"
     },
@@ -8364,7 +8364,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def get_crashgen_version_strings(self) -> list[str]:"
     },
@@ -8376,7 +8376,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def is_compatible_with(self, version_str: str) -> bool:"
     },
@@ -8398,7 +8398,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -8588,7 +8588,7 @@
       "export_path": "XseConfig",
       "kind": "class",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "class XseConfig:"
     },

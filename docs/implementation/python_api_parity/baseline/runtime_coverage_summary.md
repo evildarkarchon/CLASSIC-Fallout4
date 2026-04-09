@@ -1,10 +1,10 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-04-08T23:54:50.784172+00:00`
-- Tracked surfaces: **1532**
-- Runtime verified: **462**
+- Generated: `2026-04-09T00:20:14.840841+00:00`
+- Tracked surfaces: **1563**
+- Runtime verified: **521**
 - Contract mapped only: **0**
-- Deferred: **1070**
+- Deferred: **1042**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -25,9 +25,9 @@
 | `scanlog` | 376 | 0 | 112 | 0 | 488 |
 | `settings` | 0 | 0 | 39 | 0 | 39 |
 | `shared` | 0 | 0 | 65 | 0 | 65 |
-| `update` | 0 | 0 | 15 | 0 | 15 |
-| `version` | 0 | 0 | 28 | 0 | 28 |
-| `version_registry` | 25 | 0 | 34 | 0 | 59 |
+| `update` | 0 | 0 | 14 | 0 | 14 |
+| `version` | 0 | 0 | 27 | 0 | 27 |
+| `version_registry` | 84 | 0 | 8 | 0 | 92 |
 | `web` | 0 | 0 | 29 | 0 | 29 |
 | `xse` | 0 | 0 | 40 | 0 | 40 |
 | `yaml` | 0 | 0 | 37 | 0 | 37 |

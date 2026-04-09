@@ -1,12 +1,12 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-08T23:54:54.754565+00:00`
-- Tier-1 contract rows: **314**
-- Tier-1 matched: **314**
+- Generated: `2026-04-09T00:20:14.827427+00:00`
+- Tier-1 contract rows: **349**
+- Tier-1 matched: **349**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **947**
+- Total gaps (Tier-1 + Tier-2): **908**
 
 ## Tier-1 Contract Evaluation
 
@@ -326,6 +326,41 @@
 | `version-registry-unknown-version-get-default` | `version_registry` | `UnknownVersionHandling` | `classic_version_registry.UnknownVersionHandling.get_default` | `matched` |
 | `version-registry-unknown-version-handling-class` | `version_registry` | `UnknownVersionHandling` | `classic_version_registry.UnknownVersionHandling` | `matched` |
 | `version-registry-version-info-class` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo` | `matched` |
+| `version_registry.error.VersionRegistryError@rust` | `version_registry` | `VersionRegistryError` | `classic_version_registry.VersionRegistry` | `matched` |
+| `version_registry.lib.Result@rust` | `version_registry` | `Result` | `classic_version_registry.VersionRegistry` | `matched` |
+| `version_registry.matching.MatchConfidence.__eq__` | `version_registry` | `MatchConfidence` | `classic_version_registry.MatchConfidence.__eq__` | `matched` |
+| `version_registry.matching.MatchConfidence.__hash__` | `version_registry` | `MatchConfidence` | `classic_version_registry.MatchConfidence.__hash__` | `matched` |
+| `version_registry.matching.MatchConfidence.is_high_confidence` | `version_registry` | `MatchConfidence` | `classic_version_registry.MatchConfidence.is_high_confidence` | `matched` |
+| `version_registry.matching.VersionMatcher@rust` | `version_registry` | `VersionMatcher` | `classic_version_registry.MatchResult` | `matched` |
+| `version_registry.models.AddressLibFormat@rust` | `version_registry` | `AddressLibFormat` | `classic_version_registry.AddressLibraryConfig` | `matched` |
+| `version_registry.models.AddressLibraryConfig` | `version_registry` | `AddressLibraryConfig` | `classic_version_registry.AddressLibraryConfig` | `matched` |
+| `version_registry.models.AddressLibraryConfig@rust` | `version_registry` | `AddressLibraryConfig` | `classic_version_registry.AddressLibraryConfig` | `matched` |
+| `version_registry.models.CompatibleRange` | `version_registry` | `CompatibleRange` | `classic_version_registry.CompatibleRange` | `matched` |
+| `version_registry.models.CompatibleRange.contains` | `version_registry` | `CompatibleRange` | `classic_version_registry.CompatibleRange.contains` | `matched` |
+| `version_registry.models.CompatibleRange@rust` | `version_registry` | `CompatibleRange` | `classic_version_registry.CompatibleRange` | `matched` |
+| `version_registry.models.CrashgenConfig` | `version_registry` | `CrashgenConfig` | `classic_version_registry.CrashgenConfig` | `matched` |
+| `version_registry.models.CrashgenConfig.is_compatible_with` | `version_registry` | `CrashgenConfig` | `classic_version_registry.CrashgenConfig.is_compatible_with` | `matched` |
+| `version_registry.models.CrashgenConfig@rust` | `version_registry` | `CrashgenConfig` | `classic_version_registry.CrashgenConfig` | `matched` |
+| `version_registry.models.LogLevel@rust` | `version_registry` | `LogLevel` | `classic_version_registry.UnknownVersionHandling` | `matched` |
+| `version_registry.models.UnknownVersionStrategy@rust` | `version_registry` | `UnknownVersionStrategy` | `classic_version_registry.UnknownVersionHandling` | `matched` |
+| `version_registry.models.VersionInfo.__eq__` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.__eq__` | `matched` |
+| `version_registry.models.VersionInfo.__hash__` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.__hash__` | `matched` |
+| `version_registry.models.VersionInfo.get_compatible_crashgens` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.get_compatible_crashgens` | `matched` |
+| `version_registry.models.VersionInfo.get_crashgen_for_version` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.get_crashgen_for_version` | `matched` |
+| `version_registry.models.VersionInfo.get_crashgen_version_strings` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.get_crashgen_version_strings` | `matched` |
+| `version_registry.models.VersionInfo.is_compatible_with` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.is_compatible_with` | `matched` |
+| `version_registry.models.XseConfig` | `version_registry` | `XseConfig` | `classic_version_registry.XseConfig` | `matched` |
+| `version_registry.models.XseConfig@rust` | `version_registry` | `XseConfig` | `classic_version_registry.XseConfig` | `matched` |
+| `version_registry.registry.VersionRegistry.__init__` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry.__init__` | `matched` |
+| `version_registry.version.GameVersion.__eq__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__eq__` | `matched` |
+| `version_registry.version.GameVersion.__ge__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__ge__` | `matched` |
+| `version_registry.version.GameVersion.__gt__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__gt__` | `matched` |
+| `version_registry.version.GameVersion.__hash__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__hash__` | `matched` |
+| `version_registry.version.GameVersion.__init__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__init__` | `matched` |
+| `version_registry.version.GameVersion.__le__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__le__` | `matched` |
+| `version_registry.version.GameVersion.__lt__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__lt__` | `matched` |
+| `version_registry.version.GameVersion.same_major` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.same_major` | `matched` |
+| `version_registry.version.GameVersion.semantic_distance` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.semantic_distance` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
@@ -333,22 +368,22 @@
 |---|---:|---:|
 | `scanlog` | 0 | 5 |
 | `config` | 0 | 0 |
-| `version_registry` | 0 | 35 |
+| `version_registry` | 0 | 0 |
 | `yaml` | 0 | 37 |
 | `database` | 0 | 46 |
 | `file_io` | 0 | 105 |
 | `scangame` | 0 | 213 |
 | `registry` | 0 | 37 |
 | `perf` | 0 | 16 |
-| `settings` | 0 | 39 |
+| `settings` | 0 | 38 |
 | `message` | 0 | 53 |
 | `path` | 0 | 85 |
-| `constants` | 0 | 59 |
-| `version` | 0 | 28 |
+| `constants` | 0 | 58 |
+| `version` | 0 | 27 |
 | `resource` | 0 | 40 |
 | `xse` | 0 | 40 |
 | `web` | 0 | 29 |
-| `update` | 0 | 15 |
+| `update` | 0 | 14 |
 | `shared` | 0 | 65 |
 | `aux` | 0 | 0 |
 

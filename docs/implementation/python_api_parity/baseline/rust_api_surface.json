@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-08T23:54:47.345599+00:00",
+  "generated_at_utc": "2026-04-09T00:20:11.723707+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -327,7 +327,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
       "source_expr": "classic_version_registry_core::VersionRegistryError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "YamlFile",
@@ -3600,7 +3600,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
       "source_expr": "error::Result",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SettingsError",
@@ -4111,7 +4111,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use error::{Result, UpdateError};",
       "source_expr": "error::Result",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "UpdateError",
@@ -4217,7 +4217,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use classic_constants_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
       "source_expr": "classic_constants_core::VersionRegistryError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionResult",
@@ -4355,7 +4355,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::AddressLibFormat",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "AddressLibraryConfig",
@@ -4365,7 +4365,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::AddressLibraryConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CompatibleRange",
@@ -4375,7 +4375,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::CompatibleRange",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenConfig",
@@ -4385,7 +4385,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::CrashgenConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameVersion",
@@ -4405,7 +4405,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::LogLevel",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MatchConfidence",
@@ -4434,7 +4434,7 @@
       "owner_module": "version_registry",
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub type Result",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "UnknownVersionHandling",
@@ -4454,7 +4454,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::UnknownVersionStrategy",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionInfo",
@@ -4474,7 +4474,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use matching::{MatchConfidence, MatchResult, VersionMatcher};",
       "source_expr": "matching::VersionMatcher",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionRegistry",
@@ -4494,7 +4494,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use error::VersionRegistryError;",
       "source_expr": "error::VersionRegistryError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseConfig",
@@ -4504,7 +4504,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
       "source_decl": "pub use models::{ AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig, };",
       "source_expr": "models::XseConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_version_registry",
