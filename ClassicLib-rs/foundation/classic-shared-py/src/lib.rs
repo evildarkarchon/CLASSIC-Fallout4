@@ -286,7 +286,7 @@ impl RuntimeStats {
 /// print(f"Healthy: {stats.is_healthy}")
 /// ```
 #[pyfunction]
-fn get_runtime_stats() -> RuntimeStats {
+pub fn get_runtime_stats() -> RuntimeStats {
     // Get the global runtime
     let runtime = get_runtime();
 
@@ -313,7 +313,7 @@ fn get_runtime_stats() -> RuntimeStats {
 ///     print("Warning: Runtime may have issues!")
 /// ```
 #[pyfunction]
-fn is_runtime_healthy() -> bool {
+pub fn is_runtime_healthy() -> bool {
     // Simple health check - runtime exists and can provide metrics
     let runtime = get_runtime();
     runtime.metrics().num_workers() > 0
