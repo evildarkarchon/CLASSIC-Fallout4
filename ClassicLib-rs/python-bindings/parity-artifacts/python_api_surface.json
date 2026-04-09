@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-09T04:10:32.062584+00:00",
+  "generated_at_utc": "2026-04-09T04:41:10.703317+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -375,7 +375,7 @@
       "export_path": "Fallout4Version",
       "kind": "class",
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "class Fallout4Version:"
     },
@@ -387,7 +387,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def __eq__(self, other: object) -> bool:"
     },
@@ -399,9 +399,33 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def __hash__(self) -> int:"
+    },
+    {
+      "module": "classic_constants",
+      "export": "__repr__",
+      "export_path": "Fallout4Version.__repr__",
+      "parent_class": "Fallout4Version",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "constants",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_constants",
+      "export": "__str__",
+      "export_path": "Fallout4Version.__str__",
+      "parent_class": "Fallout4Version",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "constants",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_constants",
@@ -411,7 +435,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def all() -> list[Fallout4Version]:"
     },
@@ -423,7 +447,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def as_str(self) -> str:"
     },
@@ -435,7 +459,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def display_name(self) -> str:"
     },
@@ -447,7 +471,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def docs_folder_name(self) -> str:"
     },
@@ -459,7 +483,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def exe_name(self) -> str:"
     },
@@ -471,7 +495,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def from_str(s: str) -> Fallout4Version:"
     },
@@ -483,7 +507,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def is_standard(self) -> bool:"
     },
@@ -495,7 +519,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def is_vr(self) -> bool:"
     },
@@ -507,7 +531,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def registry_id(self) -> str:"
     },
@@ -519,7 +543,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def short_name(self) -> str:"
     },
@@ -531,7 +555,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def steam_app_id(self) -> int:"
     },
@@ -543,7 +567,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def version(self) -> str:"
     },
@@ -555,7 +579,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def xse_acronym(self) -> str:"
     },
@@ -565,7 +589,7 @@
       "export_path": "GameId",
       "kind": "class",
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "class GameId:"
     },
@@ -577,7 +601,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def __eq__(self, other: object) -> bool:"
     },
@@ -589,9 +613,33 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def __hash__(self) -> int:"
+    },
+    {
+      "module": "classic_constants",
+      "export": "__repr__",
+      "export_path": "GameId.__repr__",
+      "parent_class": "GameId",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "constants",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_constants",
+      "export": "__str__",
+      "export_path": "GameId.__str__",
+      "parent_class": "GameId",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "constants",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_constants",
@@ -601,7 +649,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def as_str(self) -> str:"
     },
@@ -613,7 +661,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def exe_name(self) -> str:"
     },
@@ -625,7 +673,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def is_vr(self) -> bool:"
     },
@@ -635,7 +683,7 @@
       "export_path": "YamlFile",
       "kind": "class",
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "class YamlFile:"
     },
@@ -647,7 +695,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def __eq__(self, other: object) -> bool:"
     },
@@ -659,9 +707,33 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def __hash__(self) -> int:"
+    },
+    {
+      "module": "classic_constants",
+      "export": "__repr__",
+      "export_path": "YamlFile.__repr__",
+      "parent_class": "YamlFile",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "constants",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_constants",
+      "export": "__str__",
+      "export_path": "YamlFile.__str__",
+      "parent_class": "YamlFile",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "constants",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_constants",
@@ -671,7 +743,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def as_str(self) -> str:"
     },
@@ -683,7 +755,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def description(self) -> str:"
     },
@@ -694,7 +766,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "constants",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
       "signature": "def must_not_be_none(key: str) -> bool:"
     },
@@ -704,7 +776,7 @@
       "export_path": "DatabasePool",
       "kind": "class",
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "class DatabasePool:"
     },
@@ -716,7 +788,7 @@
       "kind": "method",
       "arity": 6,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def __init__( self, max_connections: int | None = None, cache_ttl_seconds: int | None = 300, game_table: str | None = None, cache_capacity: int | None = None, cleanup_threshold: int | None = None, cleanup_interval_seconds: int | None = None, ) -> None:"
     },
@@ -728,7 +800,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def clear_cache(self, expired_only: bool | None = None) -> int:"
     },
@@ -740,7 +812,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "async def close(self) -> None:"
     },
@@ -752,7 +824,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_cache_capacity(self) -> int:"
     },
@@ -764,7 +836,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_cache_cleanup_interval(self) -> int:"
     },
@@ -776,7 +848,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_cache_cleanup_threshold(self) -> int:"
     },
@@ -788,7 +860,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "async def get_entries_batch( self, formid_plugin_pairs: list[tuple[str, str]], table: str | None = None, batch_size: int | None = None, ) -> dict[str, dict[str, Any]]:"
     },
@@ -800,7 +872,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "async def get_entry( self, formid: str, plugin: str, table: str | None = None ) -> dict[str, Any] | None:"
     },
@@ -812,7 +884,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_game_table(self) -> str:"
     },
@@ -824,7 +896,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_max_connections(self) -> int | None:"
     },
@@ -836,7 +908,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_stats(self) -> dict[str, int]:"
     },
@@ -848,7 +920,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "async def initialize(self, db_paths: list[str]) -> None:"
     },
@@ -860,7 +932,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def is_available(self) -> bool:"
     },
@@ -872,7 +944,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "async def optimize(self) -> None:"
     },
@@ -884,7 +956,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "async def rebalance_connections(self) -> None:"
     },
@@ -896,7 +968,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def recalculate_max_connections(self) -> None:"
     },
@@ -908,7 +980,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_cache_capacity(self, capacity: int) -> None:"
     },
@@ -920,7 +992,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_cache_cleanup_interval(self, seconds: int) -> None:"
     },
@@ -932,7 +1004,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_cache_cleanup_threshold(self, threshold: int) -> None:"
     },
@@ -944,7 +1016,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_cache_ttl(self, seconds: int) -> None:"
     },
@@ -956,7 +1028,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_game_table(self, table: str) -> None:"
     },
@@ -968,7 +1040,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_max_connections(self, max_connections: int) -> None:"
     },
@@ -979,7 +1051,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_batch_cache_ttl() -> int: ..."
     },
@@ -990,7 +1062,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_default_cache_cleanup_interval() -> int: ..."
     },
@@ -1001,7 +1073,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_default_cache_cleanup_threshold() -> int: ..."
     },
@@ -1012,7 +1084,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_default_cache_ttl() -> int: ..."
     },
@@ -1023,7 +1095,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_default_query_cache_capacity() -> int: ..."
     },
@@ -1034,7 +1106,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "database",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_max_cache_ttl() -> int: ..."
     },
@@ -1878,7 +1950,7 @@
       "export_path": "Logger",
       "kind": "class",
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "class Logger:"
     },
@@ -1890,7 +1962,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -1902,7 +1974,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def debug(self, msg: str) -> None:"
     },
@@ -1914,7 +1986,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def error(self, msg: str) -> None:"
     },
@@ -1926,7 +1998,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def info(self, msg: str) -> None:"
     },
@@ -1938,7 +2010,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def is_debug_enabled(self) -> bool:"
     },
@@ -1950,7 +2022,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def is_enabled_for(self, level: str) -> bool:"
     },
@@ -1962,7 +2034,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def is_info_enabled(self) -> bool:"
     },
@@ -1974,7 +2046,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def is_trace_enabled(self) -> bool:"
     },
@@ -1986,7 +2058,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def log(self, level: str, msg: str) -> None:"
     },
@@ -1998,7 +2070,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def log_message(self, message: Message) -> None:"
     },
@@ -2010,7 +2082,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def name(self) -> str:"
     },
@@ -2022,7 +2094,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def trace(self, msg: str) -> None:"
     },
@@ -2034,7 +2106,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def warning(self, msg: str) -> None:"
     },
@@ -2044,7 +2116,7 @@
       "export_path": "Message",
       "kind": "class",
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "class Message:"
     },
@@ -2056,7 +2128,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def __init__(self, content: str, msg_type: MessageType) -> None:"
     },
@@ -2068,7 +2140,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def content(self) -> str:"
     },
@@ -2080,7 +2152,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def details(self) -> str | None:"
     },
@@ -2092,7 +2164,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def msg_type(self) -> MessageType:"
     },
@@ -2104,7 +2176,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def set_content(self, content: str) -> None:"
     },
@@ -2116,7 +2188,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def set_details(self, details: str | None) -> None:"
     },
@@ -2128,7 +2200,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def set_msg_type(self, msg_type: MessageType) -> None:"
     },
@@ -2140,7 +2212,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def set_target(self, target: MessageTarget) -> None:"
     },
@@ -2152,7 +2224,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def set_title(self, title: str | None) -> None:"
     },
@@ -2164,7 +2236,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def target(self) -> MessageTarget:"
     },
@@ -2176,7 +2248,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def title(self) -> str | None:"
     },
@@ -2188,7 +2260,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def with_details(self, details: str) -> Message:"
     },
@@ -2200,7 +2272,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def with_target( content: str, msg_type: MessageType, target: MessageTarget ) -> Message:"
     },
@@ -2212,7 +2284,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def with_title(self, title: str) -> Message:"
     },
@@ -2222,7 +2294,7 @@
       "export_path": "MessageTarget",
       "kind": "class",
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "class MessageTarget(IntEnum):"
     },
@@ -2234,7 +2306,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def should_display(self) -> bool:"
     },
@@ -2246,7 +2318,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def should_display_in_cli(self) -> bool:"
     },
@@ -2258,7 +2330,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def should_display_in_gui(self) -> bool:"
     },
@@ -2268,7 +2340,7 @@
       "export_path": "MessageType",
       "kind": "class",
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "class MessageType:"
     },
@@ -2280,7 +2352,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def __int__(self) -> int:"
     },
@@ -2292,7 +2364,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def name(self) -> str:"
     },
@@ -2303,7 +2375,7 @@
       "kind": "function",
       "arity": 5,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def format_contract_event( component: str, event: str, severity: str, outcome: str, context: dict[str, str] | None = ..., ) -> str:"
     },
@@ -2314,7 +2386,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def format_log_message(content: str, details: str | None) -> str:"
     },
@@ -2325,7 +2397,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "message",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def strip_emoji(text: str) -> str:"
     },
@@ -2335,7 +2407,7 @@
       "export_path": "BackupManager",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class BackupManager:"
     },
@@ -2347,7 +2419,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def __init__(self, backup_root: str) -> None:"
     },
@@ -2359,7 +2431,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def create_backup(self, source_file: str, version: XseVersion) -> str:"
     },
@@ -2371,7 +2443,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def extract_version_from_xse_log(self, xse_log_path: str) -> XseVersion:"
     },
@@ -2383,7 +2455,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def get_version_path(self, version: XseVersion) -> str:"
     },
@@ -2395,7 +2467,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def list_versions(self) -> list[str]:"
     },
@@ -2405,7 +2477,7 @@
       "export_path": "DocsPathFinder",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class DocsPathFinder:"
     },
@@ -2417,7 +2489,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def __init__(self, relative_path: str) -> None:"
     },
@@ -2429,7 +2501,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def find_docs_path(self, cached_path: str | None) -> str:"
     },
@@ -2441,7 +2513,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def set_steam_app_id(self, app_id: int) -> None:"
     },
@@ -2453,7 +2525,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_docs_path(self, path: str) -> None:"
     },
@@ -2465,7 +2537,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_ini_files(self, docs_path: str, required_inis: list[str]) -> None:"
     },
@@ -2475,7 +2547,7 @@
       "export_path": "DocumentsChecker",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class DocumentsChecker:"
     },
@@ -2487,7 +2559,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def __init__(self, game_name: str) -> None:"
     },
@@ -2499,7 +2571,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def check_onedrive_in_path(self, docs_path: str) -> str | None:"
     },
@@ -2511,7 +2583,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def run_all_checks(self, docs_path: str) -> list[str]:"
     },
@@ -2523,7 +2595,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_ini_file(self, docs_path: str, ini_name: str) -> IniCheckResult:"
     },
@@ -2533,7 +2605,7 @@
       "export_path": "GamePathFinder",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class GamePathFinder:"
     },
@@ -2545,7 +2617,7 @@
       "kind": "method",
       "arity": 4,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def __init__( self, game_exe: str, xse_loader: str | None, game_name: str, is_vr: bool ) -> None:"
     },
@@ -2557,7 +2629,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def find_game_path(self, cached_path: str | None, xse_log_path: str | None) -> str:"
     },
@@ -2569,7 +2641,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def parse_xse_log(log_path: str) -> str:"
     },
@@ -2581,7 +2653,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_game_path(self, path: str) -> None:"
     },
@@ -2591,7 +2663,7 @@
       "export_path": "IniCheckResult",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class IniCheckResult:"
     },
@@ -2603,7 +2675,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def has_issue(self) -> bool:"
     },
@@ -2613,7 +2685,7 @@
       "export_path": "PathValidator",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class PathValidator:"
     },
@@ -2625,7 +2697,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def check_drive_exists(path: str) -> None:"
     },
@@ -2637,7 +2709,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def check_read_permissions(path: str) -> None:"
     },
@@ -2649,7 +2721,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def check_write_permissions(path: str) -> None:"
     },
@@ -2661,7 +2733,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def is_restricted_path(path: str) -> bool:"
     },
@@ -2673,7 +2745,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def is_valid_executable_path(path: str) -> bool:"
     },
@@ -2685,7 +2757,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def is_valid_path(path: str) -> bool:"
     },
@@ -2697,7 +2769,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_custom_scan_path(path: str) -> None:"
     },
@@ -2709,7 +2781,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_path_with_permissions( path: str, check_read: bool = True, check_write: bool = False ) -> None:"
     },
@@ -2721,7 +2793,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_required_files(directory: str, required_files: list[str]) -> None:"
     },
@@ -2733,7 +2805,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_settings_path( path: str, setting_name: str, required_files: list[str] | None ) -> None:"
     },
@@ -2745,7 +2817,7 @@
       "kind": "method",
       "arity": 4,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def validate_settings_paths( game_path: str, docs_path: str, custom_scan_path: str | None, game_exe: str ) -> None:"
     },
@@ -2755,7 +2827,7 @@
       "export_path": "XseVersion",
       "kind": "class",
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "class XseVersion:"
     },
@@ -2767,7 +2839,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def __init__(self, version: str) -> None:"
     },
@@ -2779,7 +2851,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def full_version(self) -> str:"
     },
@@ -2791,7 +2863,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def sanitized(self) -> str:"
     },
@@ -2802,7 +2874,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "path",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
       "signature": "def remove_readonly(file_path: str) -> None:"
     },
@@ -2812,7 +2884,7 @@
       "export_path": "MetricsSummary",
       "kind": "class",
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "class MetricsSummary:"
     },
@@ -2822,7 +2894,7 @@
       "export_path": "Timer",
       "kind": "class",
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "class Timer:"
     },
@@ -2834,7 +2906,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def __init__(self, name: str) -> None:"
     },
@@ -2846,7 +2918,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def elapsed(self) -> float:"
     },
@@ -2858,7 +2930,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def finish(self) -> None:"
     },
@@ -2869,7 +2941,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def clear_metrics() -> None:"
     },
@@ -2880,7 +2952,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def get_summary() -> dict[str, MetricsSummary]:"
     },
@@ -2891,7 +2963,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def record_timing(name: str, duration_secs: float) -> None:"
     },
@@ -2902,7 +2974,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def reset_metrics() -> None:"
     },
@@ -2913,7 +2985,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "perf",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
       "signature": "def start_timer(name: str) -> Timer:"
     },
@@ -2923,7 +2995,7 @@
       "export_path": "Keys",
       "kind": "class",
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "class Keys:"
     },
@@ -2934,7 +3006,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def clear_all() -> None:"
     },
@@ -2945,7 +3017,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get(key: str) -> Any | None:"
     },
@@ -2967,7 +3039,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_game() -> str:"
     },
@@ -2978,7 +3050,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_game_path_gui() -> Any | None:"
     },
@@ -2989,7 +3061,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_game_version_string() -> str:"
     },
@@ -3000,7 +3072,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_local_dir() -> str:"
     },
@@ -3011,7 +3083,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_manual_docs_gui() -> Any | None:"
     },
@@ -3022,7 +3094,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def get_yaml_cache() -> Any | None:"
     },
@@ -3033,7 +3105,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def is_enb_present() -> bool:"
     },
@@ -3044,7 +3116,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def is_gui_mode() -> bool:"
     },
@@ -3055,7 +3127,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def is_registered(key: str) -> bool:"
     },
@@ -3066,7 +3138,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def is_version_auto_detected() -> bool:"
     },
@@ -3077,7 +3149,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def is_xse_valid() -> bool:"
     },
@@ -3088,7 +3160,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def register(key: str, value: Any) -> None:"
     },
@@ -3110,7 +3182,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def set_game(game_name: str) -> None:"
     },
@@ -3121,7 +3193,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "def unregister(key: str) -> bool:"
     },
@@ -3131,7 +3203,7 @@
       "export_path": "ResourceInfo",
       "kind": "class",
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "class ResourceInfo:"
     },
@@ -3143,9 +3215,33 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def __init__(self, path: str) -> None:"
+    },
+    {
+      "module": "classic_resource",
+      "export": "__repr__",
+      "export_path": "ResourceInfo.__repr__",
+      "parent_class": "ResourceInfo",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "resource",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_resource",
+      "export": "__str__",
+      "export_path": "ResourceInfo.__str__",
+      "parent_class": "ResourceInfo",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "resource",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_resource",
@@ -3155,7 +3251,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def path(self) -> str:"
     },
@@ -3167,7 +3263,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def resource_type(self) -> ResourceType:"
     },
@@ -3179,7 +3275,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def size(self) -> int:"
     },
@@ -3189,7 +3285,7 @@
       "export_path": "ResourceType",
       "kind": "class",
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "class ResourceType:"
     },
@@ -3201,9 +3297,33 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def __eq__(self, other: object) -> bool:"
+    },
+    {
+      "module": "classic_resource",
+      "export": "__repr__",
+      "export_path": "ResourceType.__repr__",
+      "parent_class": "ResourceType",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "resource",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_resource",
+      "export": "__str__",
+      "export_path": "ResourceType.__str__",
+      "parent_class": "ResourceType",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "resource",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_resource",
@@ -3213,7 +3333,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def animation() -> ResourceType:"
     },
@@ -3225,7 +3345,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def archive() -> ResourceType:"
     },
@@ -3237,7 +3357,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def as_str(self) -> str:"
     },
@@ -3249,7 +3369,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def config() -> ResourceType:"
     },
@@ -3261,7 +3381,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def extensions(self) -> list[str]:"
     },
@@ -3273,7 +3393,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def interface() -> ResourceType:"
     },
@@ -3285,7 +3405,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def mesh() -> ResourceType:"
     },
@@ -3297,7 +3417,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def other() -> ResourceType:"
     },
@@ -3309,7 +3429,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def plugin() -> ResourceType:"
     },
@@ -3321,7 +3441,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def script() -> ResourceType:"
     },
@@ -3333,7 +3453,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def sound() -> ResourceType:"
     },
@@ -3345,7 +3465,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def strings() -> ResourceType:"
     },
@@ -3357,7 +3477,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def texture() -> ResourceType:"
     },
@@ -3368,7 +3488,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def count_resources_by_type(root: str) -> list[tuple[ResourceType, int]]:"
     },
@@ -3379,7 +3499,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def detect_resource_type(path: str) -> ResourceType:"
     },
@@ -3390,7 +3510,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def enumerate_resources( root: str, filter_type: ResourceType | None = None ) -> list[ResourceInfo]:"
     },
@@ -3401,7 +3521,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def is_supported_resource(path: str) -> bool:"
     },
@@ -3412,7 +3532,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def parse_resource_type(type_name: str) -> ResourceType:"
     },
@@ -3423,7 +3543,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "resource",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def validate_resource(path: str) -> None:"
     },
@@ -3433,7 +3553,7 @@
       "export_path": "AddressLibInfo",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class AddressLibInfo:"
     },
@@ -3445,7 +3565,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def next_gen() -> AddressLibInfo:"
     },
@@ -3457,7 +3577,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def original() -> AddressLibInfo:"
     },
@@ -3469,7 +3589,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def vr() -> AddressLibInfo:"
     },
@@ -3479,7 +3599,7 @@
       "export_path": "BA2Issues",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class BA2Issues:"
     },
@@ -3491,7 +3611,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def has_issues(self) -> bool:"
     },
@@ -3503,7 +3623,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def total_count(self) -> int:"
     },
@@ -3513,7 +3633,7 @@
       "export_path": "BA2Scanner",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class BA2Scanner:"
     },
@@ -3525,7 +3645,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -3537,7 +3657,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def find_ba2_files(self, root_path: Path) -> list[Path]:"
     },
@@ -3549,7 +3669,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan_archive(self, archive_path: Path) -> BA2Issues:"
     },
@@ -3561,7 +3681,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan_archives_batch( self, archive_paths: list[Path] ) -> list[tuple[Path, BA2Issues]]:"
     },
@@ -3571,7 +3691,7 @@
       "export_path": "CheckResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class CheckResult:"
     },
@@ -3581,7 +3701,7 @@
       "export_path": "CheckType",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class CheckType:"
     },
@@ -3593,7 +3713,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def executable_version() -> CheckType:"
     },
@@ -3605,7 +3725,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def installation_location() -> CheckType:"
     },
@@ -3617,7 +3737,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def is_executable_version(self) -> bool:"
     },
@@ -3629,7 +3749,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def is_installation_location(self) -> bool:"
     },
@@ -3639,7 +3759,7 @@
       "export_path": "ConfigDuplicateDetector",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class ConfigDuplicateDetector:"
     },
@@ -3651,7 +3771,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -3663,7 +3783,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def detect_duplicates(self, root_path: Path) -> list[DuplicateGroup]:"
     },
@@ -3675,7 +3795,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_duplicate_map(self, root_path: Path) -> dict[str, list[Path]]:"
     },
@@ -3695,7 +3815,7 @@
       "export_path": "CrashgenCheckOrchestrator",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class CrashgenCheckOrchestrator:"
     },
@@ -3707,7 +3827,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -3719,7 +3839,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check( plugins_path: Path, crashgen_name: str, settings_rules: dict[str, object] | None = None, ) -> CrashgenReport:"
     },
@@ -3731,7 +3851,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def detect_plugins(plugins_path: Path) -> list[str]:"
     },
@@ -3743,7 +3863,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def resolve_config_path(plugins_path: Path) -> Path | None:"
     },
@@ -3753,7 +3873,7 @@
       "export_path": "CrashgenChecker",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class CrashgenChecker:"
     },
@@ -3765,7 +3885,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, plugins_path: Path, crashgen_name: str, settings_rules: dict[str, object] | None = None, ) -> None:"
     },
@@ -3777,7 +3897,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check(self) -> tuple[str, list[TomlConfigIssue]]:"
     },
@@ -3787,7 +3907,7 @@
       "export_path": "CrashgenReport",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class CrashgenReport:"
     },
@@ -3797,7 +3917,7 @@
       "export_path": "DuplicateEntry",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class DuplicateEntry:"
     },
@@ -3807,7 +3927,7 @@
       "export_path": "DuplicateGroup",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class DuplicateGroup:"
     },
@@ -3817,7 +3937,7 @@
       "export_path": "EnbChecker",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class EnbChecker:"
     },
@@ -3829,7 +3949,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self, game_path: str) -> None:"
     },
@@ -3841,7 +3961,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_binaries(self) -> EnbResult:"
     },
@@ -3853,7 +3973,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_config(self) -> EnbConfigResult:"
     },
@@ -3865,7 +3985,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def format_message(self, result: EnbValidationResult) -> str:"
     },
@@ -3877,7 +3997,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def validate(self) -> EnbValidationResult:"
     },
@@ -3887,7 +4007,7 @@
       "export_path": "EnbConfigResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class EnbConfigResult(Enum):"
     },
@@ -3897,7 +4017,7 @@
       "export_path": "EnbResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class EnbResult(Enum):"
     },
@@ -3907,7 +4027,7 @@
       "export_path": "EnbValidationResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class EnbValidationResult:"
     },
@@ -3919,7 +4039,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def is_fully_configured(self) -> bool:"
     },
@@ -3931,7 +4051,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def is_present(self) -> bool:"
     },
@@ -3941,7 +4061,7 @@
       "export_path": "GameIntegrityChecker",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class GameIntegrityChecker:"
     },
@@ -3953,7 +4073,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self, config: IntegrityConfig) -> None:"
     },
@@ -3965,7 +4085,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_executable_version(self) -> IntegrityCheckResult:"
     },
@@ -3977,7 +4097,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_installation_location(self) -> IntegrityCheckResult:"
     },
@@ -3989,7 +4109,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def run_all_checks(self) -> list[IntegrityCheckResult]:"
     },
@@ -4001,7 +4121,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def run_full_check(self) -> str:"
     },
@@ -4011,7 +4131,7 @@
       "export_path": "GameScanConfig",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class GameScanConfig:"
     },
@@ -4023,7 +4143,7 @@
       "kind": "method",
       "arity": 16,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, game_path: Path, xse_acronym: str, crashgen_name: str, game_name: str, docs_path: Path | None = ..., mods_path: Path | None = ..., xse_scriptfiles: dict[str, list[str]] | None = ..., plugins_path: Path | None = ..., is_vr: bool = False, game_version: GameVersion | None = ..., wrye_warnings: dict[str, str] | None = ..., log_catch_errors: list[str] | None = ..., log_exclude_files: list[str] | None = ..., log_exclude_errors: list[str] | None = ..., crashgen_settings_rules: dict[str, object] | None = ..., game_target: str | None = ..., ) -> None:"
     },
@@ -4033,7 +4153,7 @@
       "export_path": "GameScanOrchestrator",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class GameScanOrchestrator:"
     },
@@ -4045,7 +4165,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self, config: GameScanConfig) -> None:"
     },
@@ -4057,7 +4177,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def run_full_scan(self) -> tuple[GameScanResult, ModScanResult]:"
     },
@@ -4069,7 +4189,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def run_game_checks(self) -> GameScanResult:"
     },
@@ -4081,7 +4201,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def run_mod_scans(self) -> ModScanResult:"
     },
@@ -4091,7 +4211,7 @@
       "export_path": "GameScanResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class GameScanResult:"
     },
@@ -4111,7 +4231,7 @@
       "export_path": "IniValidator",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class IniValidator:"
     },
@@ -4123,7 +4243,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self, game_name: str) -> None:"
     },
@@ -4135,7 +4255,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def detect_all_issues(self, config_files: dict[str, Path]) -> list[ConfigIssue]:"
     },
@@ -4147,7 +4267,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def validate_inis(self, game_root: Path) -> str:"
     },
@@ -4157,7 +4277,7 @@
       "export_path": "IntegrityCheckResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class IntegrityCheckResult:"
     },
@@ -4167,7 +4287,7 @@
       "export_path": "IntegrityConfig",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class IntegrityConfig:"
     },
@@ -4179,7 +4299,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, executable_path: Path, valid_exe_hashes: list[str], game_name: str ) -> None:"
     },
@@ -4191,7 +4311,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def with_root_warn(self, root_warn: str) -> IntegrityConfig:"
     },
@@ -4203,7 +4323,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def with_steam_ini(self, ini_path: Path) -> IntegrityConfig:"
     },
@@ -4213,7 +4333,7 @@
       "export_path": "IssueSeverity",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class IssueSeverity(Enum):"
     },
@@ -4223,7 +4343,7 @@
       "export_path": "LogErrorEntry",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class LogErrorEntry:"
     },
@@ -4233,7 +4353,7 @@
       "export_path": "LogProcessor",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class LogProcessor:"
     },
@@ -4245,7 +4365,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str] ) -> None:"
     },
@@ -4257,7 +4377,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def process_logs(self, log_dir: Path) -> str:"
     },
@@ -4267,7 +4387,7 @@
       "export_path": "ModIniScanResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class ModIniScanResult:"
     },
@@ -4277,7 +4397,7 @@
       "export_path": "ModScanResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class ModScanResult:"
     },
@@ -4287,7 +4407,7 @@
       "export_path": "RustConfigFileCache",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class RustConfigFileCache:"
     },
@@ -4299,7 +4419,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, game_root: Path, duplicate_whitelist: list[str] | None = ... ) -> None:"
     },
@@ -4311,7 +4431,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def config_files(self) -> dict[str, Path]:"
     },
@@ -4323,7 +4443,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def contains(self, file_name_lower: str) -> bool:"
     },
@@ -4335,7 +4455,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_bool(self, file_name_lower: str, section: str, setting: str) -> bool | None:"
     },
@@ -4347,7 +4467,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_duplicates(self) -> dict[str, list[Path]]:"
     },
@@ -4359,7 +4479,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_float( self, file_name_lower: str, section: str, setting: str ) -> float | None:"
     },
@@ -4371,7 +4491,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_int(self, file_name_lower: str, section: str, setting: str) -> int | None:"
     },
@@ -4383,7 +4503,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_path(self, file_name_lower: str) -> Path | None:"
     },
@@ -4395,7 +4515,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_str(self, file_name_lower: str, section: str, setting: str) -> str | None:"
     },
@@ -4407,7 +4527,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def has_setting(self, file_name_lower: str, section: str, setting: str) -> bool:"
     },
@@ -4417,7 +4537,7 @@
       "export_path": "RustModIniScanner",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class RustModIniScanner:"
     },
@@ -4429,7 +4549,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -4441,7 +4561,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan(game_root: Path, game_name: str) -> ModIniScanResult:"
     },
@@ -4451,7 +4571,7 @@
       "export_path": "SetupCheckConfig",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class SetupCheckConfig:"
     },
@@ -4463,7 +4583,7 @@
       "kind": "method",
       "arity": 6,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, game_exe_path: Path, valid_exe_hashes: list[str], root_name: str, game_name: str, docs_path: str | None = ..., xse_hashes: list[tuple[str, str]] | None = ..., ) -> None:"
     },
@@ -4473,7 +4593,7 @@
       "export_path": "SetupCheckResults",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class SetupCheckResults:"
     },
@@ -4485,7 +4605,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def combined(self) -> str:"
     },
@@ -4497,7 +4617,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def has_errors(self) -> bool:"
     },
@@ -4509,7 +4629,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def total_checks(self) -> int:"
     },
@@ -4519,7 +4639,7 @@
       "export_path": "TomlConfigIssue",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class TomlConfigIssue:"
     },
@@ -4529,7 +4649,7 @@
       "export_path": "TomlIssueSeverity",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class TomlIssueSeverity(Enum):"
     },
@@ -4539,7 +4659,7 @@
       "export_path": "UnpackedIssues",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class UnpackedIssues:"
     },
@@ -4551,7 +4671,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def has_issues(self) -> bool:"
     },
@@ -4563,7 +4683,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def total_count(self) -> int:"
     },
@@ -4573,7 +4693,7 @@
       "export_path": "UnpackedScanner",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class UnpackedScanner:"
     },
@@ -4585,7 +4705,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -4597,7 +4717,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan_directory( self, root_path: Path, xse_scriptfiles: list[str] ) -> UnpackedIssues:"
     },
@@ -4607,7 +4727,7 @@
       "export_path": "ValidationResult",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class ValidationResult(Enum):"
     },
@@ -4617,7 +4737,7 @@
       "export_path": "VsyncEntry",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class VsyncEntry:"
     },
@@ -4627,7 +4747,7 @@
       "export_path": "WryeBashParser",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class WryeBashParser:"
     },
@@ -4639,7 +4759,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__(self, wrye_warnings: dict[str, str] | None = ...) -> None:"
     },
@@ -4651,7 +4771,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def format_report(issues: list[WryeIssue]) -> str:"
     },
@@ -4663,7 +4783,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def parse(self, html_content: str) -> list[WryeIssue]:"
     },
@@ -4673,7 +4793,7 @@
       "export_path": "WryeIssue",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class WryeIssue:"
     },
@@ -4683,7 +4803,7 @@
       "export_path": "WryeSeverity",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class WryeSeverity(Enum):"
     },
@@ -4693,7 +4813,7 @@
       "export_path": "XseChecker",
       "kind": "class",
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "class XseChecker:"
     },
@@ -4705,7 +4825,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def __init__( self, plugins_path: Path, game_version: GameVersion = ..., ) -> None:"
     },
@@ -4717,7 +4837,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check(self) -> ValidationResult:"
     },
@@ -4729,7 +4849,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def validate(self) -> str:"
     },
@@ -4740,7 +4860,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def build_archived_report( issue_lists: dict[str, list[str] | set[str] | tuple[str, ...]], xse_acronym: str, ) -> str:"
     },
@@ -4751,7 +4871,7 @@
       "kind": "function",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def build_combined_scan_report( unpacked_issues: dict[str, list[str] | set[str] | tuple[str, ...]], archived_issues: dict[str, list[str] | set[str] | tuple[str, ...]], xse_acronym: str, ) -> str:"
     },
@@ -4762,7 +4882,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def build_unpacked_report( issue_lists: dict[str, list[str] | set[str] | tuple[str, ...]], xse_acronym: str, ) -> str:"
     },
@@ -4773,7 +4893,7 @@
       "kind": "function",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_crashgen_config( plugins_path: Path, crashgen_name: str, settings_rules: dict[str, object] | None = None, ) -> tuple[str, list[TomlConfigIssue]]:"
     },
@@ -4784,7 +4904,7 @@
       "kind": "function",
       "arity": 3,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_crashgen_settings( plugins_path: Path, crashgen_name: str, settings_rules: dict[str, object] | None = None, ) -> tuple[str, list[TomlConfigIssue]]:"
     },
@@ -4795,7 +4915,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_enb(game_path: str) -> EnbValidationResult:"
     },
@@ -4806,7 +4926,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def check_xse_plugins(plugins_path: Path, game_version: GameVersion) -> str:"
     },
@@ -4817,7 +4937,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def detect_config_duplicates(root_path: Path) -> list[DuplicateGroup]:"
     },
@@ -4828,7 +4948,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def get_scan_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:"
     },
@@ -4839,7 +4959,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def migrate_game_version_setting(game_version: str | None = ...) -> str | None:"
     },
@@ -4850,7 +4970,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def needs_path_detection( game_path: str | None = ..., docs_path: str | None = ... ) -> tuple[bool, bool]:"
     },
@@ -4861,7 +4981,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def parse_wrye_report( html_content: str, wrye_warnings: dict[str, str] | None = ... ) -> str:"
     },
@@ -4872,7 +4992,7 @@
       "kind": "function",
       "arity": 4,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def process_logs( log_dir: Path, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str], ) -> str:"
     },
@@ -4883,7 +5003,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def resolve_effective_game_version(game_version: str | None = ...) -> str:"
     },
@@ -4894,7 +5014,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def run_setup_checks(config: SetupCheckConfig) -> SetupCheckResults:"
     },
@@ -4905,7 +5025,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan_all_ba2_archives(root_path: Path) -> list[tuple[Path, BA2Issues]]:"
     },
@@ -4916,7 +5036,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan_mod_inis(game_root: Path, game_name: str) -> str:"
     },
@@ -4927,7 +5047,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "scangame",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def scan_unpacked_files(root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:"
     },
@@ -5157,7 +5277,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def to_tuple(self) -> tuple[int, int, int]:"
     },
@@ -5775,7 +5895,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def find_errors(self, lines: list[str]) -> list[tuple[int, str]]:"
     },
@@ -6267,7 +6387,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def find_all(self, text: str) -> list[tuple[int, str]]:"
     },
@@ -6303,7 +6423,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def has_match(self, text: str) -> bool:"
     },
@@ -7229,7 +7349,7 @@
       "export_path": "SettingsCacheStats",
       "kind": "class",
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "class SettingsCacheStats(TypedDict):"
     },
@@ -7240,7 +7360,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def cache_keys() -> list[str]:"
     },
@@ -7251,7 +7371,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def cache_size() -> int:"
     },
@@ -7262,7 +7382,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def cache_stats() -> SettingsCacheStats:"
     },
@@ -7273,9 +7393,20 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def clear_cache() -> None:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "coerce_setting_value",
+      "export_path": "coerce_setting_value",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def coerce_setting_value(value: str, target_type: str) -> Any:"
     },
     {
       "module": "classic_settings",
@@ -7284,7 +7415,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def get_cached(key: str) -> list[dict[str, Any]] | None:"
     },
@@ -7295,7 +7426,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def invalidate(key: str) -> bool:"
     },
@@ -7306,7 +7437,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def is_cached(key: str) -> bool:"
     },
@@ -7317,7 +7448,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "async def load_batch_async(paths: list[str]) -> int:"
     },
@@ -7328,7 +7459,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def load_batch_sync(paths: list[str]) -> int:"
     },
@@ -7339,7 +7470,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "async def load_settings_async(key: str, path: str) -> list[dict[str, Any]]:"
     },
@@ -7350,7 +7481,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:"
     },
@@ -7361,9 +7492,31 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "settings",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def reset_cache_stats() -> None:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "validate_setting_value",
+      "export_path": "validate_setting_value",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def validate_setting_value(value: str, expected_type: str) -> bool:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "validate_settings_structure",
+      "export_path": "validate_settings_structure",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def validate_settings_structure(yaml_content: str) -> list[dict[str, Any]]:"
     },
     {
       "module": "classic_shared",
@@ -7865,7 +8018,7 @@
       "export_path": "GithubAsset",
       "kind": "class",
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "class GithubAsset:"
     },
@@ -7875,7 +8028,7 @@
       "export_path": "GithubClient",
       "kind": "class",
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "class GithubClient:"
     },
@@ -7887,7 +8040,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "def __init__(self, owner: str, repo: str, token: str | None = None) -> None:"
     },
@@ -7899,7 +8052,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "async def get_all_releases( self, include_prereleases: bool = False, include_drafts: bool = False ) -> list[GithubRelease]:"
     },
@@ -7911,7 +8064,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "async def get_latest_release(self) -> GithubRelease:"
     },
@@ -7923,7 +8076,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "def has_update(self, current_version: str, latest_version: str) -> bool:"
     },
@@ -7935,7 +8088,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "def repo_url(self) -> str:"
     },
@@ -7945,7 +8098,7 @@
       "export_path": "GithubRelease",
       "kind": "class",
       "owner_module": "update",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
       "signature": "class GithubRelease:"
     },
@@ -7956,7 +8109,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def compare_versions(v1: Version, v2: Version) -> int:"
     },
@@ -7967,7 +8120,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def extract_all_versions(content: str) -> list[Version]:"
     },
@@ -7978,7 +8131,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def extract_pe_version(path: str) -> PeVersion:"
     },
@@ -7989,7 +8142,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def extract_version_from_filename(filename: str) -> Version | None:"
     },
@@ -8000,7 +8153,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def extract_version_from_log(log_content: str) -> Version | None:"
     },
@@ -8011,7 +8164,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def format_version(version: Version, prefix: str | None = None) -> str:"
     },
@@ -8022,7 +8175,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def is_known_f4se_version(version: Version) -> bool:"
     },
@@ -8033,7 +8186,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def is_known_fallout4_version(version: Version) -> bool:"
     },
@@ -8044,7 +8197,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def is_valid_pe_path(path: str) -> bool:"
     },
@@ -8055,7 +8208,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def parse_version(version_str: str) -> Version:"
     },
@@ -8066,7 +8219,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "version",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
       "signature": "def try_parse_version(version_str: str) -> Version | None:"
     },
@@ -8642,7 +8795,7 @@
       "export_path": "ModSite",
       "kind": "class",
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "class ModSite:"
     },
@@ -8654,9 +8807,33 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def __eq__(self, other: object) -> bool:"
+    },
+    {
+      "module": "classic_web",
+      "export": "__repr__",
+      "export_path": "ModSite.__repr__",
+      "parent_class": "ModSite",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "web",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_web",
+      "export": "__str__",
+      "export_path": "ModSite.__str__",
+      "parent_class": "ModSite",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "web",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_web",
@@ -8666,7 +8843,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def base_url(self) -> str:"
     },
@@ -8678,7 +8855,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def bethesda_net() -> ModSite:"
     },
@@ -8690,7 +8867,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def mod_db() -> ModSite:"
     },
@@ -8702,7 +8879,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def name(self) -> str:"
     },
@@ -8714,7 +8891,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def nexus_mods() -> ModSite:"
     },
@@ -8725,7 +8902,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def build_url_with_query(base: str, params: list[tuple[str, str]]) -> str:"
     },
@@ -8736,7 +8913,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def extract_domain(url_str: str) -> str:"
     },
@@ -8747,7 +8924,7 @@
       "kind": "function",
       "arity": 0,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def get_user_agent() -> str:"
     },
@@ -8758,7 +8935,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def get_user_agent_with_suffix(suffix: str) -> str:"
     },
@@ -8769,7 +8946,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def is_valid_url(url_str: str) -> bool:"
     },
@@ -8780,7 +8957,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def join_url(base: str, path: str) -> str:"
     },
@@ -8791,7 +8968,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "web",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def validate_url(url_str: str) -> str:"
     },
@@ -8801,7 +8978,7 @@
       "export_path": "XseInfo",
       "kind": "class",
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "class XseInfo:"
     },
@@ -8813,9 +8990,33 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def __init__(self, xse_type: XseType, path: str) -> None:"
+    },
+    {
+      "module": "classic_xse",
+      "export": "__repr__",
+      "export_path": "XseInfo.__repr__",
+      "parent_class": "XseInfo",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "xse",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_xse",
+      "export": "__str__",
+      "export_path": "XseInfo.__str__",
+      "parent_class": "XseInfo",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "xse",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_xse",
@@ -8825,7 +9026,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def check_installed(self) -> bool:"
     },
@@ -8837,7 +9038,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def installed(self) -> bool:"
     },
@@ -8849,7 +9050,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def loader_path(self) -> str:"
     },
@@ -8861,7 +9062,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def path(self) -> str:"
     },
@@ -8873,7 +9074,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def version(self) -> Version | None:"
     },
@@ -8885,7 +9086,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def xse_type(self) -> XseType:"
     },
@@ -8895,7 +9096,7 @@
       "export_path": "XseType",
       "kind": "class",
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "class XseType:"
     },
@@ -8907,9 +9108,33 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def __eq__(self, other: object) -> bool:"
+    },
+    {
+      "module": "classic_xse",
+      "export": "__repr__",
+      "export_path": "XseType.__repr__",
+      "parent_class": "XseType",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "xse",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_xse",
+      "export": "__str__",
+      "export_path": "XseType.__str__",
+      "parent_class": "XseType",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "xse",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
+      "signature": "def __str__(self) -> str:"
     },
     {
       "module": "classic_xse",
@@ -8919,7 +9144,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def as_str(self) -> str:"
     },
@@ -8931,7 +9156,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def dll_prefix(self) -> str:"
     },
@@ -8943,7 +9168,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def f4se() -> XseType:"
     },
@@ -8955,7 +9180,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def f4sevr() -> XseType:"
     },
@@ -8967,7 +9192,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def loader_name(self) -> str:"
     },
@@ -8979,7 +9204,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def sfse() -> XseType:"
     },
@@ -8991,7 +9216,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def skse() -> XseType:"
     },
@@ -9003,7 +9228,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def skse64() -> XseType:"
     },
@@ -9015,7 +9240,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def sksevr() -> XseType:"
     },
@@ -9026,7 +9251,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:"
     },
@@ -9037,7 +9262,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:"
     },
@@ -9048,7 +9273,7 @@
       "kind": "function",
       "arity": 2,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def is_xse_installed(game_path: str, xse_type: XseType) -> bool:"
     },
@@ -9059,7 +9284,7 @@
       "kind": "function",
       "arity": 1,
       "owner_module": "xse",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def parse_xse_type(type_name: str) -> XseType:"
     },
@@ -9069,7 +9294,7 @@
       "export_path": "YamlCacheStats",
       "kind": "class",
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "class YamlCacheStats(TypedDict):"
     },
@@ -9079,7 +9304,7 @@
       "export_path": "YamlOperations",
       "kind": "class",
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "class YamlOperations:"
     },
@@ -9091,7 +9316,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def __init__(self) -> None:"
     },
@@ -9103,7 +9328,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def clear_cache(self) -> None:"
     },
@@ -9115,7 +9340,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def dump_yaml(self, data: Any) -> str:"
     },
@@ -9127,7 +9352,7 @@
       "kind": "method",
       "arity": 0,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def get_cache_stats(self) -> YamlCacheStats:"
     },
@@ -9139,7 +9364,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def get_hashmap_value(self, data: dict[str, Any], key_path: str) -> dict[str, str]:"
     },
@@ -9151,7 +9376,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def get_setting(self, data: dict[str, Any], key_path: str) -> Any | None:"
     },
@@ -9163,7 +9388,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def get_string_value( self, data: dict[str, Any], key_path: str, default: str ) -> str:"
     },
@@ -9175,7 +9400,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def get_vec_value(self, data: dict[str, Any], key_path: str) -> list[str]:"
     },
@@ -9187,7 +9412,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def load_yaml_file(self, path: str | Path) -> dict[str, Any]:"
     },
@@ -9199,7 +9424,7 @@
       "kind": "method",
       "arity": 1,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def parse_yaml(self, content: str) -> Any:"
     },
@@ -9211,7 +9436,7 @@
       "kind": "method",
       "arity": 2,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def save_yaml_file(self, path: str | Path, data: dict[str, Any]) -> None:"
     },
@@ -9223,7 +9448,7 @@
       "kind": "method",
       "arity": 3,
       "owner_module": "yaml",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "signature": "def set_setting( self, data: dict[str, Any], key_path: str, value: Any ) -> dict[str, Any]:"
     }
