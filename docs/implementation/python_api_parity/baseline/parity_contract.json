@@ -3429,6 +3429,377 @@
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "VersionInfo",
       "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.error.VersionRegistryError@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistryError",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.lib.Result@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "Result",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.matching.MatchConfidence.__eq__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "MatchConfidence",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "MatchConfidence.__eq__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.matching.MatchConfidence.__hash__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "MatchConfidence",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "MatchConfidence.__hash__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version_registry.matching.MatchConfidence.is_high_confidence",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "MatchConfidence",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "MatchConfidence.is_high_confidence",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version_registry.matching.VersionMatcher@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionMatcher",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "MatchResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.AddressLibFormat@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "AddressLibFormat",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "AddressLibraryConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.AddressLibraryConfig",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "AddressLibraryConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "AddressLibraryConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.AddressLibraryConfig@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "AddressLibraryConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "AddressLibraryConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.CompatibleRange",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CompatibleRange",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "CompatibleRange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.CompatibleRange.contains",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CompatibleRange",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "CompatibleRange.contains",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.models.CompatibleRange@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CompatibleRange",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "CompatibleRange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.CrashgenConfig",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CrashgenConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "CrashgenConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.CrashgenConfig.is_compatible_with",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CrashgenConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "CrashgenConfig.is_compatible_with",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.models.CrashgenConfig@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CrashgenConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "CrashgenConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.LogLevel@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "LogLevel",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "UnknownVersionHandling",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.UnknownVersionStrategy@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "UnknownVersionStrategy",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "UnknownVersionHandling",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.VersionInfo.__eq__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo.__eq__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.models.VersionInfo.__hash__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo.__hash__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version_registry.models.VersionInfo.get_compatible_crashgens",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo.get_compatible_crashgens",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.models.VersionInfo.get_crashgen_for_version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo.get_crashgen_for_version",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.models.VersionInfo.get_crashgen_version_strings",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo.get_crashgen_version_strings",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version_registry.models.VersionInfo.is_compatible_with",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionInfo",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionInfo.is_compatible_with",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.models.XseConfig",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "XseConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "XseConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.models.XseConfig@rust",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "XseConfig",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "XseConfig",
+      "pythonKind": "class"
+    },
+    {
+      "id": "version_registry.registry.VersionRegistry.__init__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "VersionRegistry",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "VersionRegistry.__init__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version_registry.version.GameVersion.__eq__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__eq__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.__ge__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__ge__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.__gt__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__gt__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.__hash__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__hash__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "version_registry.version.GameVersion.__init__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.__le__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__le__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.__lt__",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.__lt__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.same_major",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.same_major",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "version_registry.version.GameVersion.semantic_distance",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "GameVersion",
+      "pythonModule": "classic_version_registry",
+      "pythonExportPath": "GameVersion.semantic_distance",
+      "pythonKind": "method",
+      "pythonArity": 1
     }
   ]
 }
