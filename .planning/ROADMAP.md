@@ -150,7 +150,7 @@ Plans:
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
 | 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
 | 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
-| 4. Node Tier Collapse | 0/6 | Not started | - |
+| 4. Node Tier Collapse | 1/6 | In Progress|  |
 | 5. CI Enforcement | 0/TBD | Not started | - |
 | 6. Documentation Reset | 0/TBD | Not started | - |
 

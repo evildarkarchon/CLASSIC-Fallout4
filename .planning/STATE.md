@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-current_plan: Not started
-status: Phase 3 CLOSED
-stopped_at: Phase 4 context gathered
-last_updated: "2026-04-09T06:42:24.268Z"
+current_plan: 1
+status: executing
+stopped_at: Completed 04-01-tooling-expansion-PLAN.md
+last_updated: "2026-04-09T23:20:41.202Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 27
+  completed_plans: 22
   percent: 100
 ---
 
@@ -22,14 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python — no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
-**Current focus:** Phase 03 — python-tier-collapse
+**Current focus:** Phase 04 — node-tier-collapse
 
 ## Current Position
 
-Phase: 4
-Plan: 10 of 10
-Current Plan: Not started
-Status: Phase 3 CLOSED
+Phase: 04 (node-tier-collapse) — EXECUTING
+Plan: 2 of 6
+Current Plan: 1
+Status: Ready to execute
 Last activity: 2026-04-09
 
 Progress: [██████████] 100%
@@ -105,6 +105,7 @@ Progress: [██████████] 100%
 | Phase 03-python-tier-collapse P08 | 18min | 5 tasks | 18 files |
 | Phase 03-python-tier-collapse P09a | 135 | 4 tasks | 15 files |
 | Phase 03-python-tier-collapse P09b | 79 min | 4 tasks | 30 files |
+| Phase 04 P01 | 15min | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -253,6 +254,11 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Plan 09b: M7 atomic commit for structural Tier-2 cleanup + C4 test assertion update + baseline refresh prevents bisect-breaking intermediate
 - [Phase 03-python-tier-collapse]: Plan 09b: C3 endgame empirically verified — emptying deferred_runtime_backlog.json::entries drove deferred_total from 1008 to 0 (build_coverage_summary registry_only fallback consumed backlog entries even after gap rows were removed)
 - [Phase 03-python-tier-collapse]: Plan 09b Rule 1 fix: test_tier1_contract_total_baseline_floor was stale Plan 01 snapshot (== 59) — updated to Phase 3 endgame floor (>= 1098); no subsequent plan had touched it through Plans 02-09a
+- [Phase 04]: Plan 1 scaffold's scanlog['deferred_primary'] in (66, 67) assertion was stale; actual PRIMARY count is 71 (parity_diff_report.gaps, GLOBAL_FCX_HANDLER filtered). Cross source (runtime_coverage_summary.deferred=67) subtracts runtime-verified gap rows; primary source is load-bearing per U2.
+- [Phase 04]: Plan 1 Rule 3 auto-fix: regenerated deferred_runtime_backlog.json (109 -> 454 entries) mid-Task-1 because the 10->19 RUST_TARGET_CRATES expansion surfaced 339 new rust_unmapped rows and the gate's newly_uncovered_total > 0 check would have failed. Phase 4 analogue of Phase 3 Plan 01's wave-manifest regeneration.
+- [Phase 04]: Left tier2_wave_manifest.json stale (not regenerated) because generate_deferred_backlog.py tolerates missing wave info (falls back to wave=null). Plan 6 deletes the file entirely per DOC-02/03/04.
+- [Phase 04]: Plan 5 scope flag: A10 sizing reveals 374 rows across 16 owner labels destined for Plan 05 vs the original Plan 05 skeleton estimate of 7-12 aux rows. The Plan 5 author MUST re-scope before executing. scangame alone has 83 deferred rows, the largest single new owner.
+- [Phase 04]: Plan 1 Rule 2 auto-fix: replaced render_diff_markdown() hard-coded owner tuple ('scanlog','config','version_registry','aux') with dynamic iteration over diff_report.gap_counts_by_owner_tier keys. The old tuple would have silently dropped 15 new owners from the rendered per-owner gap table.
 
 ### Pending Todos
 
@@ -277,7 +283,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T06:42:24.264Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-node-tier-collapse/04-CONTEXT.md
+Last session: 2026-04-09T23:20:41.197Z
+Stopped at: Completed 04-01-tooling-expansion-PLAN.md
+Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
