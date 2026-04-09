@@ -777,12 +777,128 @@ def main_task1() -> int:
 
 
 # ============================================================================
-# TASK 3 DRIVER (stub — implemented in Task 3 step)
+# TASK 3 DRIVER
 # ============================================================================
 
 def main_task3() -> int:
-    print("Task 3 driver not yet implemented in this scaffold; see Task 3 step.")
-    return 1
+    """Update runtime_coverage_registry.json with 14 new tier1 selectors + wave10 + retire tier2 entry."""
+    contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+
+    # 14 new tier1 selectors (one per newly-enrolled owner)
+    NEW_OWNERS = [
+        "scangame", "path", "constants", "message", "database", "resource",
+        "xse", "settings", "yaml", "registry", "web", "version", "perf", "update",
+    ]
+
+    for owner in NEW_OWNERS:
+        ids = sorted(
+            m["id"] for m in contract["tier1Mappings"]
+            if m.get("ownerModule") == owner and m.get("tier") == "tier1"
+        )
+        if not ids:
+            raise RuntimeError(
+                f"Owner {owner} has no tier1Mappings after Task 1; check routing"
+            )
+        computed_hash = _stable_id_hash(ids)  # Full 64-char SHA-256 (C2 fix)
+        assert len(computed_hash) == 64, f"hash length must be 64, got {len(computed_hash)}"
+        entry = {
+            "coverageId": f"python-tier1-{owner}",
+            "classification": "runtime_verified",
+            "verificationMode": "direct_call",
+            "ownerModule": owner,
+            "tier": "tier1",
+            "contractSelector": {"ownerModule": owner, "tier": "tier1"},
+            "contractCount": len(ids),
+            "contractIdsHash": computed_hash,
+            "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+            "testCaseId": f"{owner}-residuals-smoke",
+        }
+        # Replace if exists, else append
+        registry["entries"] = [
+            e for e in registry["entries"] if e.get("coverageId") != entry["coverageId"]
+        ]
+        registry["entries"].append(entry)
+        print(f"  {entry['coverageId']}: count={len(ids)}, hash={computed_hash[:16]}...")
+
+    # L15 R8 precedent: separate selector for scanlog method residuals
+    # (do NOT mutate python-tier1-scanlog's testSuite)
+    scanlog_method_ids = sorted(
+        m["id"] for m in contract["tier1Mappings"]
+        if m.get("ownerModule") == "scanlog" and any(
+            m["id"].endswith(suffix)
+            for suffix in (".to_tuple", ".find_errors", ".find_all", ".has_match")
+        )
+    )
+    if scanlog_method_ids:
+        wave10_hash = _stable_id_hash(scanlog_method_ids)
+        wave10_entry = {
+            "coverageId": "python-tier1-scanlog-wave10-residuals",
+            "classification": "runtime_verified",
+            "verificationMode": "direct_call",
+            "ownerModule": "scanlog",
+            "tier": "tier1",
+            "contractSelector": None,  # explicit list, not selector-based
+            "contractCount": len(scanlog_method_ids),
+            "contractIdsHash": wave10_hash,
+            "contractIds": scanlog_method_ids,
+            "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+            "testCaseId": "scanlog-method-residuals",
+        }
+        registry["entries"] = [
+            e for e in registry["entries"]
+            if e.get("coverageId") != wave10_entry["coverageId"]
+        ]
+        registry["entries"].append(wave10_entry)
+        print(f"  python-tier1-scanlog-wave10-residuals: count={len(scanlog_method_ids)}, hash={wave10_hash[:16]}...")
+
+    # M12: Retire python-tier2-scanlog-runtime — all 4 methods are now tier1 via
+    # python-tier1-scanlog-wave10-residuals
+    before = len(registry["entries"])
+    registry["entries"] = [
+        e for e in registry["entries"]
+        if e.get("coverageId") != "python-tier2-scanlog-runtime"
+    ]
+    after = len(registry["entries"])
+    if before != after:
+        print("  retired: python-tier2-scanlog-runtime (M12)")
+
+    # Preserve Plan 08's python-tier1-shared and python-tier1-file_io UNCHANGED
+    shared_entry = next(
+        (e for e in registry["entries"] if e.get("coverageId") == "python-tier1-shared"),
+        None,
+    )
+    fileio_entry = next(
+        (e for e in registry["entries"] if e.get("coverageId") == "python-tier1-file_io"),
+        None,
+    )
+    assert shared_entry is not None and shared_entry.get("contractCount") == 61, \
+        "python-tier1-shared must remain count=61"
+    assert fileio_entry is not None and fileio_entry.get("contractCount") == 95, \
+        "python-tier1-file_io must remain count=95"
+    assert len(shared_entry["contractIdsHash"]) == 64, "Plan 08 shared hash length must remain 64"
+    assert len(fileio_entry["contractIdsHash"]) == 64, "Plan 08 file_io hash length must remain 64"
+    print(f"  Plan 08 integrity: shared={shared_entry['contractCount']}, file_io={fileio_entry['contractCount']}")
+
+    # python-tier1-scanlog needs its hash recomputed because the 4 method
+    # residuals join its tier1 ID pool via the contractSelector match.
+    scanlog_ids = sorted(
+        m["id"] for m in contract["tier1Mappings"]
+        if m.get("ownerModule") == "scanlog" and m.get("tier") == "tier1"
+    )
+    scanlog_entry = next(
+        (e for e in registry["entries"] if e.get("coverageId") == "python-tier1-scanlog"),
+        None,
+    )
+    if scanlog_entry is not None:
+        scanlog_entry["contractCount"] = len(scanlog_ids)
+        scanlog_entry["contractIdsHash"] = _stable_id_hash(scanlog_ids)
+        assert len(scanlog_entry["contractIdsHash"]) == 64
+        print(f"  python-tier1-scanlog (updated): count={len(scanlog_ids)}, hash={scanlog_entry['contractIdsHash'][:16]}...")
+
+    REGISTRY_PATH.write_text(json.dumps(registry, indent=2) + "\n", encoding="utf-8")
+    print(f"Updated runtime_coverage_registry.json with {len(NEW_OWNERS) + 1} new/updated selectors, retired tier2 stale entry")
+    return 0
 
 
 if __name__ == "__main__":

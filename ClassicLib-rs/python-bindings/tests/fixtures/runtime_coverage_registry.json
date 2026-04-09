@@ -56,8 +56,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 247,
-      "contractIdsHash": "b372a06398e05f66a310a5d761a4544d183ec697d92f46f8b678fcfb33034453",
+      "contractCount": 251,
+      "contractIdsHash": "8012b970e781c186ee9504799d989beed1095afe60032f2143ca601cbba8b62f",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -272,21 +272,6 @@
       "testCaseId": "config-tier2-smoke"
     },
     {
-      "coverageId": "python-tier2-scanlog-runtime",
-      "classification": "runtime_verified",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "bindingIdentifiers": [
-        "classic_scanlog.CrashgenVersion.to_tuple",
-        "classic_scanlog.LogParser.find_errors",
-        "classic_scanlog.PatternMatcher.find_all",
-        "classic_scanlog.PatternMatcher.has_match"
-      ],
-      "verificationMode": "direct_call",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "scanlog-tier2-smoke"
-    },
-    {
       "coverageId": "python-tier1-shared",
       "classification": "runtime_verified",
       "ownerModule": "shared",
@@ -300,7 +285,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py",
       "testCaseId": "classic-shared-smoke-suite",
-      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 — tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
+      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 \u2014 tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
     },
     {
       "coverageId": "python-tier1-file_io",
@@ -316,7 +301,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_file_io_aux_smoke.py",
       "testCaseId": "classic-file-io-promoted-smoke",
-      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] — all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
+      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] \u2014 all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
     },
     {
       "coverageId": "python-tier1-version-registry-plan07-promoted",
@@ -354,6 +339,234 @@
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_version_registry_smoke.py",
       "testCaseId": "version-registry-plan07-promoted-smoke",
       "fixtureRefs": []
+    },
+    {
+      "coverageId": "python-tier1-scangame",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scangame",
+        "tier": "tier1"
+      },
+      "contractCount": 172,
+      "contractIdsHash": "9a2359a3aba879bf6d113ea41e89f369b399dcaf6211ef1eaebf656513af031c",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scangame-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-path",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "path",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "path",
+        "tier": "tier1"
+      },
+      "contractCount": 72,
+      "contractIdsHash": "b38945a95f98447f1651736dfba82ab06b0d0eee8a22a6ac5a5413fdccd286fa",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "path-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-constants",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "constants",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "constants",
+        "tier": "tier1"
+      },
+      "contractCount": 46,
+      "contractIdsHash": "cfce5b356c3aaa7841cfd35b0f14352af336d83ad7dea0745ffa5d2920df8030",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "constants-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-message",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "message",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "message",
+        "tier": "tier1"
+      },
+      "contractCount": 46,
+      "contractIdsHash": "7697bca357a98b64d6ae5f3fde5471067033738c53b41ab6bc1ed6bed4da980a",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "message-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-database",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "database",
+        "tier": "tier1"
+      },
+      "contractCount": 44,
+      "contractIdsHash": "5cc9a223e7f0758a9295722d9e758829dd81b5f4178f6b43d528767184b314a5",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-resource",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "resource",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "resource",
+        "tier": "tier1"
+      },
+      "contractCount": 36,
+      "contractIdsHash": "35c75f90d701dafcbbc2bc7a144cd8d54a617f5f45cb9ecee94019df0ab4d39e",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "resource-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-xse",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "xse",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "xse",
+        "tier": "tier1"
+      },
+      "contractCount": 36,
+      "contractIdsHash": "140099c34d2148b8fe047e883d54731fdd27f6a97671190cc160cd0dd96b4d30",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "xse-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-settings",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "settings",
+        "tier": "tier1"
+      },
+      "contractCount": 28,
+      "contractIdsHash": "e3ebdf7fb76fe7099b94dec94676220cf1da874f4c95aa8422e1376dc189466e",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "settings-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-yaml",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "yaml",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "yaml",
+        "tier": "tier1"
+      },
+      "contractCount": 31,
+      "contractIdsHash": "8423af086b9308df3d7fb8f27b4a691963ce40b6b3601c5de80c899bf7785e1f",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "yaml-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-registry",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "registry",
+        "tier": "tier1"
+      },
+      "contractCount": 20,
+      "contractIdsHash": "ea1cd78a10bd6405d6c2588809898adf17873ad8bc7514a7ca5c55fe3c66068d",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "registry-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-web",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "web",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "web",
+        "tier": "tier1"
+      },
+      "contractCount": 23,
+      "contractIdsHash": "f0813870fa267200890c8532e34ef29eedb8611a4e18e1e7612912fc0698d2a5",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "web-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-version",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "version",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version",
+        "tier": "tier1"
+      },
+      "contractCount": 15,
+      "contractIdsHash": "81a3f22383497f2ee83857afff467d6c2ab07e7bf339ba30c19642c442922d51",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "version-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-perf",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "perf",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "perf",
+        "tier": "tier1"
+      },
+      "contractCount": 10,
+      "contractIdsHash": "787637e8ae3e680f66699f2f5f69e578a6c5646d61eb3c96cae25736c0ac7181",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "perf-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-update",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "update",
+        "tier": "tier1"
+      },
+      "contractCount": 10,
+      "contractIdsHash": "b22849974bb596d0bead117814580140d5d6b13f7cd0744baf7b87c432dbcfbc",
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "update-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave10-residuals",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "contractSelector": null,
+      "contractCount": 4,
+      "contractIdsHash": "42c5d63ff1695bd4f7978c406eacacd5c212546ee2ae1f06beee2d3b55b36f96",
+      "contractIds": [
+        "scanlog.parser.LogParser.find_errors",
+        "scanlog.parser.PatternMatcher.find_all",
+        "scanlog.parser.PatternMatcher.has_match",
+        "scanlog.version.CrashgenVersion.to_tuple"
+      ],
+      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scanlog-method-residuals"
     }
   ]
 }

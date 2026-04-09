@@ -557,6 +557,26 @@
       "pythonKind": "method"
     },
     {
+      "id": "constants.lib.Fallout4Version.__repr__",
+      "tier": "tier1",
+      "ownerModule": "constants",
+      "rustCrate": "classic-constants-core",
+      "rustSymbol": "Fallout4Version",
+      "pythonModule": "classic_constants",
+      "pythonExportPath": "Fallout4Version.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "constants.lib.Fallout4Version.__str__",
+      "tier": "tier1",
+      "ownerModule": "constants",
+      "rustCrate": "classic-constants-core",
+      "rustSymbol": "Fallout4Version",
+      "pythonModule": "classic_constants",
+      "pythonExportPath": "Fallout4Version.__str__",
+      "pythonKind": "method"
+    },
+    {
       "id": "constants.lib.Fallout4Version.all",
       "tier": "tier1",
       "ownerModule": "constants",
@@ -717,6 +737,26 @@
       "pythonKind": "method"
     },
     {
+      "id": "constants.lib.GameId.__repr__",
+      "tier": "tier1",
+      "ownerModule": "constants",
+      "rustCrate": "classic-constants-core",
+      "rustSymbol": "GameId",
+      "pythonModule": "classic_constants",
+      "pythonExportPath": "GameId.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "constants.lib.GameId.__str__",
+      "tier": "tier1",
+      "ownerModule": "constants",
+      "rustCrate": "classic-constants-core",
+      "rustSymbol": "GameId",
+      "pythonModule": "classic_constants",
+      "pythonExportPath": "GameId.__str__",
+      "pythonKind": "method"
+    },
+    {
       "id": "constants.lib.GameId.as_str",
       "tier": "tier1",
       "ownerModule": "constants",
@@ -794,6 +834,26 @@
       "rustSymbol": "YamlFile",
       "pythonModule": "classic_constants",
       "pythonExportPath": "YamlFile.__hash__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "constants.lib.YamlFile.__repr__",
+      "tier": "tier1",
+      "ownerModule": "constants",
+      "rustCrate": "classic-constants-core",
+      "rustSymbol": "YamlFile",
+      "pythonModule": "classic_constants",
+      "pythonExportPath": "YamlFile.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "constants.lib.YamlFile.__str__",
+      "tier": "tier1",
+      "ownerModule": "constants",
+      "rustCrate": "classic-constants-core",
+      "rustSymbol": "YamlFile",
+      "pythonModule": "classic_constants",
+      "pythonExportPath": "YamlFile.__str__",
       "pythonKind": "method"
     },
     {
@@ -3886,6 +3946,26 @@
       "pythonKind": "method"
     },
     {
+      "id": "resource.lib.ResourceInfo.__repr__",
+      "tier": "tier1",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "ResourceInfo",
+      "pythonModule": "classic_resource",
+      "pythonExportPath": "ResourceInfo.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "resource.lib.ResourceInfo.__str__",
+      "tier": "tier1",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "ResourceInfo",
+      "pythonModule": "classic_resource",
+      "pythonExportPath": "ResourceInfo.__str__",
+      "pythonKind": "method"
+    },
+    {
       "id": "resource.lib.ResourceInfo.path",
       "tier": "tier1",
       "ownerModule": "resource",
@@ -3943,6 +4023,26 @@
       "rustSymbol": "ResourceType",
       "pythonModule": "classic_resource",
       "pythonExportPath": "ResourceType.__eq__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "resource.lib.ResourceType.__repr__",
+      "tier": "tier1",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "ResourceType",
+      "pythonModule": "classic_resource",
+      "pythonExportPath": "ResourceType.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "resource.lib.ResourceType.__str__",
+      "tier": "tier1",
+      "ownerModule": "resource",
+      "rustCrate": "classic-resource-core",
+      "rustSymbol": "ResourceType",
+      "pythonModule": "classic_resource",
+      "pythonExportPath": "ResourceType.__str__",
       "pythonKind": "method"
     },
     {
@@ -8672,6 +8772,16 @@
       "pythonKind": "function"
     },
     {
+      "id": "settings.lib.coerce_setting_value",
+      "tier": "tier1",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "rustSymbol": "validators",
+      "pythonModule": "classic_settings",
+      "pythonExportPath": "coerce_setting_value",
+      "pythonKind": "function"
+    },
+    {
       "id": "settings.lib.get_cached",
       "tier": "tier1",
       "ownerModule": "settings",
@@ -8829,6 +8939,26 @@
       "rustSymbol": "reset_cache_stats",
       "pythonModule": "classic_settings",
       "pythonExportPath": "reset_cache_stats",
+      "pythonKind": "function"
+    },
+    {
+      "id": "settings.lib.validate_setting_value",
+      "tier": "tier1",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "rustSymbol": "validators",
+      "pythonModule": "classic_settings",
+      "pythonExportPath": "validate_setting_value",
+      "pythonKind": "function"
+    },
+    {
+      "id": "settings.lib.validate_settings_structure",
+      "tier": "tier1",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "rustSymbol": "validators",
+      "pythonModule": "classic_settings",
+      "pythonExportPath": "validate_settings_structure",
       "pythonKind": "function"
     },
     {
@@ -10389,6 +10519,26 @@
       "pythonKind": "method"
     },
     {
+      "id": "web.lib.ModSite.__repr__",
+      "tier": "tier1",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "rustSymbol": "ModSite",
+      "pythonModule": "classic_web",
+      "pythonExportPath": "ModSite.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "web.lib.ModSite.__str__",
+      "tier": "tier1",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "rustSymbol": "ModSite",
+      "pythonModule": "classic_web",
+      "pythonExportPath": "ModSite.__str__",
+      "pythonKind": "method"
+    },
+    {
       "id": "web.lib.ModSite.base_url",
       "tier": "tier1",
       "ownerModule": "web",
@@ -10589,6 +10739,26 @@
       "pythonKind": "method"
     },
     {
+      "id": "xse.lib.XseInfo.__repr__",
+      "tier": "tier1",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "rustSymbol": "XseInfo",
+      "pythonModule": "classic_xse",
+      "pythonExportPath": "XseInfo.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "xse.lib.XseInfo.__str__",
+      "tier": "tier1",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "rustSymbol": "XseInfo",
+      "pythonModule": "classic_xse",
+      "pythonExportPath": "XseInfo.__str__",
+      "pythonKind": "method"
+    },
+    {
       "id": "xse.lib.XseInfo.check_installed",
       "tier": "tier1",
       "ownerModule": "xse",
@@ -10676,6 +10846,26 @@
       "rustSymbol": "XseType",
       "pythonModule": "classic_xse",
       "pythonExportPath": "XseType.__eq__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "xse.lib.XseType.__repr__",
+      "tier": "tier1",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "rustSymbol": "XseType",
+      "pythonModule": "classic_xse",
+      "pythonExportPath": "XseType.__repr__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "xse.lib.XseType.__str__",
+      "tier": "tier1",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "rustSymbol": "XseType",
+      "pythonModule": "classic_xse",
+      "pythonExportPath": "XseType.__str__",
       "pythonKind": "method"
     },
     {
