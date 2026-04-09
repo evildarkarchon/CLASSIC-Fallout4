@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-09T23:40:20.468910+00:00`
-- Tier-1 contract rows: **318**
-- Tier-1 matched: **318**
+- Generated: `2026-04-09T23:44:58.171684+00:00`
+- Tier-1 contract rows: **327**
+- Tier-1 matched: **327**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **411**
+- Total gaps (Tier-1 + Tier-2): **398**
 
 ## Tier-1 Contract Evaluation
 
@@ -330,6 +330,15 @@
 | `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
+| `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
+| `scanlog.orchestrator.JsAnalysisBuildOptions` | `scanlog` | `build_analysis_config_from_yaml` | `JsAnalysisBuildOptions` | `matched` |
+| `scanlog.orchestrator.JsAnalysisResult` | `scanlog` | `AnalysisResult` | `JsAnalysisResult` | `matched` |
+| `scanlog.gpu_detector.JsGpuInfo` | `scanlog` | `GpuInfo` | `JsGpuInfo` | `matched` |
+| `scanlog.parser.JsLogErrorEntry` | `scanlog` | `LogErrorEntry` | `JsLogErrorEntry` | `matched` |
+| `scanlog.parser.JsLogSegments` | `scanlog` | `LogParser` | `JsLogSegments` | `matched` |
+| `scanlog.papyrus.JsPapyrusStats` | `scanlog` | `PapyrusStats` | `JsPapyrusStats` | `matched` |
+| `scanlog.settings_validator.checkXsePlugins` | `scanlog` | `XseChecker` | `checkXsePlugins` | `matched` |
+| `scanlog.parser.parseXseLog` | `scanlog` | `parse_xse_log` | `parseXseLog` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
@@ -340,13 +349,13 @@
 | `constants` | 0 | 30 |
 | `crashgen_settings` | 0 | 22 |
 | `database` | 0 | 17 |
-| `file_io` | 0 | 25 |
+| `file_io` | 0 | 24 |
 | `message` | 0 | 9 |
-| `path` | 0 | 26 |
+| `path` | 0 | 25 |
 | `perf` | 0 | 2 |
 | `registry` | 0 | 14 |
-| `scangame` | 0 | 80 |
-| `scanlog` | 0 | 15 |
+| `scangame` | 0 | 78 |
+| `scanlog` | 0 | 6 |
 | `settings` | 0 | 23 |
 | `shared` | 0 | 15 |
 | `update` | 0 | 6 |

@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-04-09T23:40:20.468910+00:00",
+  "generated_at_utc": "2026-04-09T23:44:58.171684+00:00",
   "summary": {
-    "tier1_contract_total": 318,
-    "tier1_matched": 318,
+    "tier1_contract_total": 327,
+    "tier1_matched": 327,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 411,
+    "total_gaps": 398,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 411
+    "tier2_gap_total": 398
   },
   "contract_results": [
     {
@@ -4144,6 +4144,123 @@
       "actual_node_kind": null,
       "expected_node_arity": null,
       "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.patterns.CRASH_LOG_PATTERN",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CRASH_LOG_PATTERN",
+      "node_export": "CRASH_LOG_PATTERN",
+      "status": "matched",
+      "expected_node_kind": "const",
+      "actual_node_kind": "const",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.orchestrator.JsAnalysisBuildOptions",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "build_analysis_config_from_yaml",
+      "node_export": "JsAnalysisBuildOptions",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.orchestrator.JsAnalysisResult",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "AnalysisResult",
+      "node_export": "JsAnalysisResult",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.gpu_detector.JsGpuInfo",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "GpuInfo",
+      "node_export": "JsGpuInfo",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.parser.JsLogErrorEntry",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LogErrorEntry",
+      "node_export": "JsLogErrorEntry",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.parser.JsLogSegments",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LogParser",
+      "node_export": "JsLogSegments",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.papyrus.JsPapyrusStats",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "PapyrusStats",
+      "node_export": "JsPapyrusStats",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "scanlog.settings_validator.checkXsePlugins",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "XseChecker",
+      "node_export": "checkXsePlugins",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 2
+    },
+    {
+      "id": "scanlog.parser.parseXseLog",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "parse_xse_log",
+      "node_export": "parseXseLog",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 1
     }
   ],
   "gaps": [
@@ -5065,17 +5182,6 @@
       "tier": "tier2",
       "owner_module": "file_io",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "CRASH_LOG_PATTERN",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-file-io-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "file_io",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "DDSAnalyzer",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -5616,17 +5722,6 @@
       "owner_module": "path",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "has_write_permission",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-path-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "path",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "parse_xse_log",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-path-core",
@@ -6242,17 +6337,6 @@
       "tier": "tier2",
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "LogErrorEntry",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "LogProcessor",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -6518,17 +6602,6 @@
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "WryeSeverity",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "XseChecker",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scangame-core",
@@ -8033,16 +8106,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "CRASH_LOG_PATTERN",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "const"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -8083,30 +8146,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsAnalysisBuildOptions",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
       "node_export": "JsAnalysisConfig",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsAnalysisResult",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "interface"
     },
@@ -8203,16 +8246,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsGpuInfo",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -8236,29 +8269,9 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
-      "node_export": "JsLogErrorEntry",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
       "node_export": "JsLogProcessor",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "class"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsLogSegments",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
     },
     {
       "gap_type": "node_unmapped",
@@ -8297,16 +8310,6 @@
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
       "node_export": "JsModSolutionEntry",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsPapyrusStats",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "interface"
     },
@@ -8433,16 +8436,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "checkXsePlugins",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -8556,16 +8549,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
-      "node_export": "parseXseLog",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
       "node_export": "processGameLogs",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
@@ -8625,13 +8608,13 @@
       "tier2": 17
     },
     "file_io": {
-      "tier2": 25
+      "tier2": 24
     },
     "message": {
       "tier2": 9
     },
     "path": {
-      "tier2": 26
+      "tier2": 25
     },
     "perf": {
       "tier2": 2
@@ -8640,10 +8623,10 @@
       "tier2": 14
     },
     "scangame": {
-      "tier2": 80
+      "tier2": 78
     },
     "scanlog": {
-      "tier2": 15
+      "tier2": 6
     },
     "settings": {
       "tier2": 23

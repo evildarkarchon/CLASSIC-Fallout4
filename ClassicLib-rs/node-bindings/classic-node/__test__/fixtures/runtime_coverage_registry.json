@@ -11,8 +11,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 73,
-      "contractIdsHash": "84baf6b1e797adfb63cc116c055f7668ad316d1d87d3f4c734be75fbd8a79681",
+      "contractCount": 82,
+      "contractIdsHash": "b95fa095b7eeb4eddc986edaae92ed06062b2f6c0c3aec4ab4c903e4cdeb9065",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "scanlog-tier1-parity",

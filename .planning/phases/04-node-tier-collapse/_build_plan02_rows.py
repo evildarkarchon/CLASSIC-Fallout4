@@ -307,7 +307,13 @@ def main() -> int:
     scanlog_entries = load_backlog()
     counts = reconcile_counts(scanlog_entries)
 
-    if args.inspect or not (args.emit or args.validate):
+    # Reconciliation check ONLY runs before proxy rows are applied (the
+    # rust_only count drops to 0 once Task 1 commits, because regenerating
+    # the deferred backlog removes already-promoted rows). Task 2 runs
+    # against the post-Task-1 state and must not fail loudly on the drop.
+    skip_reconcile_check = args.apply in ("normal",) or args.emit
+
+    if args.inspect or not (args.emit or args.validate or args.apply):
         print("=== Scanlog reconciliation (live data) ===")
         for k, v in counts.items():
             print(f"  {k}: {v}")
@@ -316,7 +322,7 @@ def main() -> int:
         print(f"Live figure: {counts['rust_only_symbols']}")
         print(f"Delta: {counts['rust_only_symbols'] - 58}")
         print("Acceptance window: (57, 58) per Plan 2 Issue 7 reconciliation.")
-        if counts["rust_only_symbols"] not in (57, 58):
+        if counts["rust_only_symbols"] not in (57, 58) and not skip_reconcile_check:
             print("ERROR: live count outside acceptance window", file=sys.stderr)
             return 2
 

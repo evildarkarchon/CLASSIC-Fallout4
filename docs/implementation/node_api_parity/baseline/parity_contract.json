@@ -2680,6 +2680,96 @@
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "version@rust",
       "rustKind": "module"
+    },
+    {
+      "id": "scanlog.patterns.CRASH_LOG_PATTERN",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CRASH_LOG_PATTERN",
+      "rustKind": "const",
+      "nodeExport": "CRASH_LOG_PATTERN",
+      "nodeKind": "const"
+    },
+    {
+      "id": "scanlog.orchestrator.JsAnalysisBuildOptions",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "build_analysis_config_from_yaml",
+      "rustKind": "function",
+      "nodeExport": "JsAnalysisBuildOptions",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.orchestrator.JsAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalysisResult",
+      "rustKind": "class",
+      "nodeExport": "JsAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.gpu_detector.JsGpuInfo",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "GpuInfo",
+      "rustKind": "class",
+      "nodeExport": "JsGpuInfo",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.parser.JsLogErrorEntry",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogErrorEntry",
+      "rustKind": "class",
+      "nodeExport": "JsLogErrorEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.parser.JsLogSegments",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogParser",
+      "rustKind": "class",
+      "nodeExport": "JsLogSegments",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.papyrus.JsPapyrusStats",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PapyrusStats",
+      "rustKind": "class",
+      "nodeExport": "JsPapyrusStats",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.settings_validator.checkXsePlugins",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "XseChecker",
+      "rustKind": "class",
+      "nodeExport": "checkXsePlugins",
+      "nodeKind": "function"
+    },
+    {
+      "id": "scanlog.parser.parseXseLog",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "parse_xse_log",
+      "rustKind": "function",
+      "nodeExport": "parseXseLog",
+      "nodeKind": "function"
     }
   ]
 }
