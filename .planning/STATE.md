@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 03-08-classic-shared-and-file-io-aux-PLAN.md
-last_updated: "2026-04-09T01:00:16.397Z"
+stopped_at: Completed 03-09a-a10-residual-promotion-PLAN.md
+last_updated: "2026-04-09T04:51:48.905Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (python-tier-collapse) — EXECUTING
-Plan: 9 of 10
+Plan: 2 of 10
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-09
@@ -103,6 +103,7 @@ Progress: [          ] 0%
 | Phase 03-python-tier-collapse P06 | 8min | 4 tasks | 17 files |
 | Phase 03-python-tier-collapse P07 | 11 min | 4 tasks | 17 files |
 | Phase 03-python-tier-collapse P08 | 18min | 5 tasks | 18 files |
+| Phase 03-python-tier-collapse P09a | 135 | 4 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -247,6 +248,7 @@ Recent decisions affecting current work:
 - [Phase 03-python-tier-collapse]: Plan 08 Rule 3 Pitfall 2 generalization: private #[pyfunction] items are invisible to the parity parser; enrolling bindings requires explicit pub fn visibility even when wrap_pyfunction! makes them visible at runtime
 - [Phase 03-python-tier-collapse]: Plan 08 Rule 2 file_io stub holes: calculate_similarity and similarity_ratio were pre-existing stub gaps surfaced only when enrolling file_io as tier1; establishes the Rule 2 stub-audit expectation for future binding enrollment plans
 - [Phase 03-python-tier-collapse]: Plan 08 second outright Tier-2 deletion: python-tier2-aux-cache-runtime deleted because its 3 FileHasher cache-helper bindings are now all tier1 rows; matches Plan 07 version_registry precedent
+- [Phase 03-python-tier-collapse]: Plan 09a multi-owner enrollment: 593 net rows across 14 new owners + 4 scanlog method residuals; Plan 08 two-owner template generalized to N owners via _build_plan09a_rows.py with three-branch wrapper check (C1), imported _stable_id_hash (C2), submodule-anchor Pitfall 2 fallback, and Rule 2 inline fixup for stub-cascade surface discovery
 
 ### Pending Todos
 
@@ -271,7 +273,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T00:59:58.905Z
-Stopped at: Completed 03-08-classic-shared-and-file-io-aux-PLAN.md
+Last session: 2026-04-09T04:51:48.900Z
+Stopped at: Completed 03-09a-a10-residual-promotion-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling

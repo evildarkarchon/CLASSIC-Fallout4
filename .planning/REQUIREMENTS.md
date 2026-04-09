@@ -36,7 +36,7 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 - [x] **PYT-03**: `tools/python_api_parity/check_parity_gate.py` Tier-2 skip logic is removed; the script enforces every contract row as Tier-1
 - [x] **PYT-04**: `.pyi` stubs for every promoted entry exist and match the runtime surface (`mypy --strict` clean against the bindings test suite)
 - [x] **PYT-05**: `uv run pytest ClassicLib-rs/python-bindings/tests -q` passes with the expanded surface, including smoke tests for at least one method per promoted module
-- [ ] **PYT-06**: `tools/python_api_parity/check_parity_gate.py` exits zero with the expanded contract; deferred-entry count drops to 0 in `runtime_coverage_summary.md`
+- [x] **PYT-06**: `tools/python_api_parity/check_parity_gate.py` exits zero with the expanded contract; deferred-entry count drops to 0 in `runtime_coverage_summary.md`
 
 ### Node Tier Collapse (NODE)
 
@@ -127,7 +127,7 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | PYT-03 | Phase 3 | Complete |
 | PYT-04 | Phase 3 | Complete |
 | PYT-05 | Phase 3 | Complete |
-| PYT-06 | Phase 3 | Pending |
+| PYT-06 | Phase 3 | Complete |
 | NODE-01 | Phase 4 | Pending |
 | NODE-02 | Phase 4 | Pending |
 | NODE-03 | Phase 4 | Pending |
