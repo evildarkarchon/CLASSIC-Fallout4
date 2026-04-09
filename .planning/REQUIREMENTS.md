@@ -51,8 +51,8 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 
 - [ ] **HARM-01**: `ClassicLib-rs/node-bindings/classic-node/src/version.rs` exposes `extractPeVersion(path)` and `isValidPePath(path)` NAPI functions that delegate to `classic-version-core::extract_pe_version` (no direct `pelite` dep added to the Node crate)
 - [ ] **HARM-02**: `extractPeVersion` returns a typed object `{ major, minor, patch, build }` (or null/throw per documented Node error contract); the return shape is added to `index.d.ts` and runtime-tested for parity against the existing Python/Rust API
-- [ ] **HARM-03**: `foundation/classic-shared-py` is wired as a maturin build target in `rebuild_rust.ps1 -Target python` and produces an importable `classic_shared` Python module exposing `RuntimeStats`, `get_runtime_stats()`, and `is_runtime_healthy()` (already implemented in `src/lib.rs`; this requirement is build-wiring and gate enrollment)
-- [ ] **HARM-04**: A `classic-shared.pyi` stub exists alongside the build output and the Python parity gate's module map includes `classic_shared` so the new module is gate-enforced from day one
+- [x] **HARM-03**: `foundation/classic-shared-py` is wired as a maturin build target in `rebuild_rust.ps1 -Target python` and produces an importable `classic_shared` Python module exposing `RuntimeStats`, `get_runtime_stats()`, and `is_runtime_healthy()` (already implemented in `src/lib.rs`; this requirement is build-wiring and gate enrollment)
+- [x] **HARM-04**: A `classic-shared.pyi` stub exists alongside the build output and the Python parity gate's module map includes `classic_shared` so the new module is gate-enforced from day one
 - [ ] **HARM-05**: `docs/api/error-contract.md` documents the per-binding error-shape conventions (Python exception classes, Node `error.code` strings or null, C++ `rust::Error` exceptions and fail-soft sentinels) for every `ClassicError` variant — explicitly documents the conventions, does not standardize them
 
 ### CI Enforcement (CI)
@@ -136,8 +136,8 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | NODE-06 | Phase 4 | Pending |
 | HARM-01 | Phase 4 | Pending |
 | HARM-02 | Phase 4 | Pending |
-| HARM-03 | Phase 3 | Pending |
-| HARM-04 | Phase 3 | Pending |
+| HARM-03 | Phase 3 | Complete |
+| HARM-04 | Phase 3 | Complete |
 | HARM-05 | Phase 6 | Pending |
 | CI-01 | Phase 5 | Pending |
 | CI-02 | Phase 5 | Pending |
