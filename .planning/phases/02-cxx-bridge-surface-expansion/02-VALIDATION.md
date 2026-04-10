@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: cxx-bridge-surface-expansion
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: passed
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-07
+audited: 2026-04-09
 ---
 
 # Phase 2 — Validation Strategy
@@ -39,14 +40,14 @@ created: 2026-04-07
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 2-01-01 | 01 (path.rs promotion) | 1 | CXXS-08 | unit + clean-build | `cargo test -p classic-cpp-bridge path::tests` + `build_cli.ps1 -Clean -Test` + `build_gui.ps1 -Clean -Test` + `check_parity_gate.py` | ❌ W0 | ⬜ pending |
-| 2-02-01 | 02 (constants.rs) | 1 | CXXS-01 | unit + clean-build | `cargo test -p classic-cpp-bridge constants::tests` + clean-build pair + parity gate | ❌ W0 | ⬜ pending |
-| 2-03-01 | 03 (web.rs) | 1 | CXXS-02 | unit + clean-build | `cargo test -p classic-cpp-bridge web::tests` + clean-build pair + parity gate | ❌ W0 | ⬜ pending |
-| 2-04-01 | 04 (xse.rs + version_registry.rs split) | 2 | CXXS-06, CXXS-09 | unit + clean-build | `cargo test -p classic-cpp-bridge xse::tests version_registry::tests` + clean-build pair + parity gate | ❌ W0 | ⬜ pending |
-| 2-05-01 | 05 (scangame widening — BA2/INI/ENB/TOML/Wrye) | 3 | CXXS-04 | unit + incremental build | `cargo test -p classic-cpp-bridge scangame::tests` + `build_cli.ps1 -Test` + parity gate | ❌ W0 | ⬜ pending |
-| 2-06-01 | 06 (scangame widening — integrity/setup/crashgen orchestrator) | 3 | CXXS-04 | unit + incremental build | `cargo test -p classic-cpp-bridge scangame::tests` + `build_cli.ps1 -Test` + `build_gui.ps1 -Test` + parity gate | ❌ W0 | ⬜ pending |
-| 2-07-01 | 07 (config suspect-rule + database typed results) | 3 | CXXS-05, CXXS-07 | unit + incremental build | `cargo test -p classic-cpp-bridge config::tests database::tests` + `build_cli.ps1 -Test` + parity gate | ❌ W0 | ⬜ pending |
-| 2-08-01 | 08 (scanner FCX issues + frontend call-site migration + final baseline) | 4 | CXXS-03, CXXS-10 | unit + clean-build + parity gate | `cargo test -p classic-cpp-bridge scanner::tests` + `build_cli.ps1 -Clean -Test` + `build_gui.ps1 -Clean -Test` + `check_parity_gate.py` at 0 drift | ❌ W0 | ⬜ pending |
+| 2-01-01 | 01 (path.rs promotion) | 1 | CXXS-08 | unit + clean-build | `cargo test -p classic-cpp-bridge path::tests` + `build_cli.ps1 -Clean -Test` + `build_gui.ps1 -Clean -Test` + `check_parity_gate.py` | ✓ (21 tests) | ✅ green |
+| 2-02-01 | 02 (constants.rs) | 1 | CXXS-01 | unit + clean-build | `cargo test -p classic-cpp-bridge constants::tests` + clean-build pair + parity gate | ✓ (15 tests) | ✅ green |
+| 2-03-01 | 03 (web.rs) | 1 | CXXS-02 | unit + clean-build | `cargo test -p classic-cpp-bridge web::tests` + clean-build pair + parity gate | ✓ (18 tests) | ✅ green |
+| 2-04-01 | 04 (xse.rs + version_registry.rs split) | 2 | CXXS-06, CXXS-09 | unit + clean-build | `cargo test -p classic-cpp-bridge xse::tests version_registry::tests` + clean-build pair + parity gate | ✓ (12+7 tests) | ✅ green |
+| 2-05-01 | 05 (scangame widening — BA2/INI/ENB) | 3 | CXXS-04 | unit + incremental build | `cargo test -p classic-cpp-bridge scangame::tests` + `build_cli.ps1 -Test` + parity gate | ✓ (29 tests) | ✅ green |
+| 2-06-01 | 06 (scangame widening — TOML/Wrye/integrity/setup/crashgen) | 3 | CXXS-04 | unit + incremental build | `cargo test -p classic-cpp-bridge scangame::tests` + `build_cli.ps1 -Test` + `build_gui.ps1 -Test` + parity gate | ✓ (29 tests) | ✅ green |
+| 2-07-01 | 07 (config suspect-rule + database typed results) | 3 | CXXS-05, CXXS-07 | unit + incremental build | `cargo test -p classic-cpp-bridge config::tests database::tests` + `build_cli.ps1 -Test` + parity gate | ✓ (13+10 tests) | ✅ green |
+| 2-08-01 | 08 (scanner FCX issues + frontend call-site migration + final baseline) | 4 | CXXS-03, CXXS-10 | unit + clean-build + parity gate | `cargo test -p classic-cpp-bridge scanner::tests` + `build_cli.ps1 -Clean -Test` + `build_gui.ps1 -Clean -Test` + `check_parity_gate.py` at 0 drift | ✓ (42 tests) | ✅ green |
 
 *Per-plan task rows will be expanded by the planner during plan file emission. Rows above capture the minimum one test-anchor per plan.*
 
@@ -56,16 +57,16 @@ created: 2026-04-07
 
 ## Wave 0 Requirements
 
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs` — add `#[cfg(test)] mod tests` block (file exists; tests absent until Plan 01)
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs` — NEW file, must be created with a `#[cfg(test)] mod tests` block
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` — NEW file, must be created with a `#[cfg(test)] mod tests` block
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` — NEW file, must be created with a `#[cfg(test)] mod tests` block using `serial_test::serial` where XSE detection touches global state
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` — NEW file, must be created with a `#[cfg(test)] mod tests` block
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs` — expand existing tests module with per-domain coverage (BA2, INI, ENB, TOML, Wrye, integrity, setup orchestrator, crashgen orchestrator)
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` — add typed-result test coverage
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` — add suspect-rule subset test coverage
-- [ ] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs` — add FCX issues getter test coverage
-- [ ] `docs/implementation/cxx_api_parity/baseline/parity_contract.json` — refreshed per plan via `check_parity_gate.py --update-baseline` (Phase 1 produced the initial baseline)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs` — 21 tests in `#[cfg(test)] mod tests` (Plan 01, commit 151c5e97)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs` — 15 tests in `#[cfg(test)] mod tests` (Plan 02, commit c3a2fef4)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs` — 18 tests in `#[cfg(test)] mod tests` (Plan 03, commit 92eeb76f)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs` — 12 tests with `serial_test::serial` (Plan 04, commit ebe3097e)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs` — 7 tests in `#[cfg(test)] mod tests` (Plan 04, commit 5ffe1c72)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs` — 29 tests covering BA2/INI/ENB/TOML/Wrye/integrity/setup/crashgen (Plans 05-06, commits bc4e0e94, da188cae)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs` — 10 tests including typed FormID coverage (Plan 07, commit bc6d8bed)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs` — 13 tests including suspect-rule subset (Plan 07, commit 805f01e8)
+- [x] `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs` — 42 tests including 6 serial FCX tests (Plan 08, commit c2d6c3cf)
+- [x] `docs/implementation/cxx_api_parity/baseline/parity_contract.json` — 316 entries, 0 drift (Plan 08, commit 20fa7c5e)
 
 *Framework install: none — `cargo test`, MSVC Catch2 toolchain, and `pytest` for `check_parity_gate.py` all already exist in the repo.*
 
@@ -84,11 +85,29 @@ created: 2026-04-07
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify (enforced because every plan commits with `cargo test` + `check_parity_gate.py`)
-- [ ] Wave 0 covers all MISSING references (new bridge files + widened test modules enumerated above)
-- [ ] No watch-mode flags (`-Test` wrappers run to completion, never watch mode)
-- [ ] Feedback latency < 30s for Rust loop; ≤15 min for the mandatory clean-build sample on qualifying plans
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify (enforced because every plan commits with `cargo test` + `check_parity_gate.py`)
+- [x] Wave 0 covers all MISSING references (new bridge files + widened test modules enumerated above)
+- [x] No watch-mode flags (`-Test` wrappers run to completion, never watch mode)
+- [x] Feedback latency < 30s for Rust loop; ≤15 min for the mandatory clean-build sample on qualifying plans
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved (2026-04-09, retroactive Nyquist audit)
+
+---
+
+## Validation Audit 2026-04-09
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+**Evidence gathered:**
+- `cargo test -p classic-cpp-bridge`: 291 passed, 0 failed, 1 ignored
+- `check_parity_gate.py --repo-root .`: gate passed, 0 drift
+- All 19 bridge modules have `#[cfg(test)] mod tests` blocks
+- All 10 CXXS requirements have corresponding test coverage
+- 292 `#[test]` annotations across 19 source files
+- VALIDATION.md updated from draft→passed with all Wave 0 requirements checked
