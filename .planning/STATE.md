@@ -4,7 +4,7 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 04-05-aux-promotion-PLAN.md
+stopped_at: Phase 4 CLOSED; Phase 5 planning pending
 last_updated: "2026-04-10T01:33:15.948Z"
 last_activity: 2026-04-10
 progress:
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 ## Current Position
 
-Phase: 04 (node-tier-collapse) — EXECUTING
-Plan: 6 of 6
-Current Plan: 1
-Status: Ready to execute
+Phase: 04 (node-tier-collapse) — Phase 4 CLOSED
+Plan: 6 of 6 (all complete)
+Current Plan: 6
+Status: Phase 4 CLOSED
 Last activity: 2026-04-10
 
 Progress: [█████████░] 85%
@@ -110,6 +110,7 @@ Progress: [█████████░] 85%
 | Phase 04-node-tier-collapse PP03 | 18min | 3 tasks | 10 files |
 | Phase 04-node-tier-collapse P04 | 39min | 3 tasks | 23 files |
 | Phase 04-node-tier-collapse P05 | 14min | 3 tasks | 24 files |
+| Phase 04-node-tier-collapse P06 | 7min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -276,6 +277,9 @@ Recent decisions affecting current work:
 - [Phase 04-05]: rustSymbol for resetFcxGlobalState: FcxModeHandler (exported type, not the non-exported method name)
 - [Phase 04-05]: rustSymbol for writeAutoscanReport: FileIOCore (core type used internally; write_autoscan_report is Node-only composition)
 - [Phase 04-05]: All 343 rows promoted in single task pass (Tasks 1+2 combined) since bulk row builder handled all data sources in one pass
+- [Phase 04-06]: M7 atomic cascade in ONE commit: all source edits + tierDefinitions.tier2 deletion + backlog clearing + xfail flip + floor update + baseline refresh (Phase 3 Plan 09b precedent)
+- [Phase 04-06]: Floor value 711 (not plan estimate ~383): actual tier1Mappings count from refreshed baseline; Plan 5 added 343 rows
+- [Phase 04-06]: Phase 4 CLOSED: all 8 requirements (NODE-01..06, HARM-01, HARM-02) satisfied; deferred_total == 0; Phase 5 + Phase 6 unblocked
 
 ### Pending Todos
 
@@ -300,7 +304,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10T01:33:15.943Z
-Stopped at: Completed 04-05-aux-promotion-PLAN.md
+Last session: 2026-04-10T01:42:00Z
+Stopped at: Phase 4 CLOSED; Phase 5 planning pending
 Resume file: None
-Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
+Next action: `/gsd:plan-phase 5` to plan Phase 5: CI Enforcement

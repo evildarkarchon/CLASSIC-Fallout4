@@ -194,7 +194,14 @@ None -- all deletions were structural cleanup (removing Tier-2 infrastructure). 
 
 Phase 4 CLOSED.
 
-## Self-Check: PENDING
+## Self-Check: PASSED
+
+Verification 2026-04-10T01:42Z:
+- FOUND: `.planning/phases/04-node-tier-collapse/04-06-TIER2-CASCADE-AUDIT.md`
+- FOUND: `.planning/phases/04-node-tier-collapse/04-06-tier2-cleanup-cascade-SUMMARY.md`
+- FOUND: `b80638f2` (Task 1 commit)
+- FOUND: `3fb4910f` (Task 2 commit)
+- FOUND: `c8815de0` (Task 3 commit)
 
 ---
 *Phase: 04-node-tier-collapse*

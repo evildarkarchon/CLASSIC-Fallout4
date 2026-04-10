@@ -31,7 +31,7 @@
 - [x] **Phase 1: CXX Parity Gate Tooling** (3/3 plans) — completed 2026-04-07 — first-class C++ bridge parity gate operational; born-green 202-entry baseline; 22 passing tests; contributor doc at docs/api/cxx-parity-gate.md
 - [x] **Phase 2: CXX Bridge Surface Expansion** — Close all narrowing gaps and add first-time C++ surfaces for constants, web, and FCX inspection (completed 2026-04-08)
 - [x] **Phase 3: Python Tier Collapse** — Promote all 285 deferred Python entries (plus 12 Tier-2 migrations and 6 classic_shared rows + A10 residuals) to one enforced tier; wire classic_shared module (completed 2026-04-08)
-- [ ] **Phase 4: Node Tier Collapse** — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction
+- [x] **Phase 4: Node Tier Collapse** (6/6 plans) — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction (completed 2026-04-10)
 - [ ] **Phase 5: CI Enforcement** — Wire all three parity gates into CI with branch-protection blocking on every PR
 - [ ] **Phase 6: Documentation Reset** — Rewrite harmony reference, delete Tier-2 governance files, add parity policy doc
 
@@ -113,9 +113,9 @@ Plans:
 - [x] 04-node-tier-collapse/04-01-tooling-expansion-PLAN.md — Wave 0: RUST_TARGET_CRATES expansion 10->19, bidirectional validate_contract_surface guard, bun run build env smoke test, A10 sizing report, pytest scaffold (NODE-01)
 - [x] 04-node-tier-collapse/04-02-scanlog-promotion-PLAN.md — Wave 1: 66 scanlog rows (57 @rust proxy + 9 normal) using Phase 3 Scenario E pattern; GLOBAL_FCX_HANDLER excluded per A2 (NODE-02, NODE-03, NODE-04, NODE-05)
 - [x] 04-node-tier-collapse/04-03-config-promotion-PLAN.md — Wave 2: 11 @rust proxy + 23 normal config rows; all routing to classic-config-core per live surface (NODE-02, NODE-03, NODE-04, NODE-05)
-- [ ] 04-node-tier-collapse/04-04-version-registry-and-pe-version-PLAN.md — Wave 3: A6 pub use is_valid_executable_path pre-flight + extractPeVersion/isValidPePath NAPI wrappers + JsPeVersion object + 4 version_registry rows + 3 PE-version rows (HARM-01, HARM-02, NODE-02, NODE-04, NODE-05)
-- [ ] 04-node-tier-collapse/04-05-aux-promotion-PLAN.md — Wave 4: 12 crashgen_rules aux rows + cross-owner overlap reconciliation + A10 residual absorption across newly-tracked owners (NODE-02, NODE-03, NODE-04, NODE-05)
-- [ ] 04-node-tier-collapse/04-06-tier2-cleanup-cascade-PLAN.md — Wave 5: M7 atomic cascade deleting gap_type branches + tierDefinitions.tier2 + empty deferred_runtime_backlog.json::entries + flip xfail test + final verification (NODE-02, NODE-03, NODE-04, NODE-06)
+- [x] 04-node-tier-collapse/04-04-version-registry-and-pe-version-PLAN.md — Wave 3: A6 pub use is_valid_executable_path pre-flight + extractPeVersion/isValidPePath NAPI wrappers + JsPeVersion object + 4 version_registry rows + 3 PE-version rows (HARM-01, HARM-02, NODE-02, NODE-04, NODE-05)
+- [x] 04-node-tier-collapse/04-05-aux-promotion-PLAN.md — Wave 4: 12 crashgen_rules aux rows + cross-owner overlap reconciliation + A10 residual absorption across newly-tracked owners (NODE-02, NODE-03, NODE-04, NODE-05)
+- [x] 04-node-tier-collapse/04-06-tier2-cleanup-cascade-PLAN.md — Wave 5: M7 atomic cascade deleting gap_type branches + tierDefinitions.tier2 + empty deferred_runtime_backlog.json::entries + flip xfail test + final verification (NODE-02, NODE-03, NODE-04, NODE-06)
 
 ### Phase 5: CI Enforcement
 **Goal**: All three parity gates run in CI on every PR and block merge on failure; adding a new public Rust API without updating all three bindings fails CI; branch protection enforces the C++ gate in the same PR that adds the CI job
@@ -150,7 +150,7 @@ Plans:
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
 | 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
 | 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
-| 4. Node Tier Collapse | 3/6 | In Progress|  |
+| 4. Node Tier Collapse | 6/6 | Complete   | 2026-04-10 |
 | 5. CI Enforcement | 0/TBD | Not started | - |
 | 6. Documentation Reset | 0/TBD | Not started | - |
 
