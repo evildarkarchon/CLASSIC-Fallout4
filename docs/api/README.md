@@ -35,11 +35,13 @@ Use this directory in this order:
 27. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - current batch scan progress callback contract for `classic::scanner`
 28. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes bridge scan progress through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
 29. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for completion-order batch results, `input_index` correlation, and Results-tab ordering boundaries
-30. [`binding-parity-overview.md`](binding-parity-overview.md) - current C++ bridge, Node, and Python exposure comparison for shared Rust crates
+30. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates
 31. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
 32. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
 33. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 34. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
+35. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
+36. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
 That order matches the current layering in `ClassicLib-rs/business-logic/`:
 
@@ -71,10 +73,12 @@ That order matches the current layering in `ClassicLib-rs/business-logic/`:
 - `classic-cpp-bridge-scan-progress-callback.md` documents the current `classic::scanner` batch progress callback contract, event ordering expectations, and bridge-local drain behavior
 - `classic-gui-scan-progress-consumer.md` documents how the active Qt frontend consumes that batch callback contract and turns it into visible progress and status-bar state
 - `classic-gui-scan-result-ordering.md` documents how the active Qt frontend handles completion-order batch results, uses `input_index` to recover original row identity, and keeps Results-tab ordering separate from scan ordering
-- `binding-parity-overview.md` compares which shared Rust crates are currently exposed through C++, Node, and Python bindings, and where those surfaces diverge
+- `binding-parity-overview.md` provides the complete per-crate binding surface reference for all shared Rust crates across C++, Node, and Python
 - `node-python-contract-map.md` points contributors to the active Node and Python contract files, wrapper modules, and parity-report entry points
-- `binding-contract-refresh-note.md` explains the current maintainer expectation for refreshing Node `index.d.ts` and Python `.pyi` contract artifacts separately or in the same change
+- `binding-contract-refresh-note.md` explains the current maintainer expectation for refreshing C++ baseline, Node `index.d.ts`, and Python `.pyi` contract artifacts separately or in the same change
 - `classic-scanlog-core` consumes config data, crashgen rules, and optional DB lookups while treating OG/VR selection as a Version Registry-backed config-building concern
+- `binding-parity-policy.md` states the one-tier parity policy, gate ownership, and the step-by-step workflow for adding a new public Rust API across all three bindings
+- `error-contract.md` documents the intentionally different error shapes used by each binding surface (C++ empty-string sentinels, Node error codes, Python typed exceptions) with concrete source examples
 
 Scope notes:
 
