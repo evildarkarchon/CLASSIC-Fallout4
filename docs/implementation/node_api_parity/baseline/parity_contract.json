@@ -2770,6 +2770,94 @@
       "rustKind": "function",
       "nodeExport": "parseXseLog",
       "nodeKind": "function"
+    },
+    {
+      "id": "config.ConfigError@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ConfigError@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.CoreModEntry@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "CoreModEntry@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.CoreModExclude@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "CoreModExclude@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.CrashgenEntryRaw@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "CrashgenEntryRaw@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.ModSolutionCriteria@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionCriteria@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.ModSolutionEntry@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionEntry@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.SuspectErrorRule@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "SuspectErrorRule@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.SuspectStackCountRule@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "SuspectStackCountRule@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.SuspectStackRule@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "SuspectStackRule@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.format_registry_game_version@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "format_registry_game_version@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "config.resolve_registry_version_info@rust",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "resolve_registry_version_info@rust",
+      "rustKind": "reexport"
     }
   ]
 }

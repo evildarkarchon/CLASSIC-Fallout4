@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-04-09T23:44:58.171684+00:00",
+  "generated_at_utc": "2026-04-10T00:08:11.917773+00:00",
   "summary": {
-    "tier1_contract_total": 327,
-    "tier1_matched": 327,
+    "tier1_contract_total": 338,
+    "tier1_matched": 338,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 398,
+    "total_gaps": 386,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 398
+    "tier2_gap_total": 386
   },
   "contract_results": [
     {
@@ -4261,6 +4261,149 @@
       "actual_node_kind": "function",
       "expected_node_arity": null,
       "actual_node_arity": 1
+    },
+    {
+      "id": "config.ConfigError@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ConfigError@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.CoreModEntry@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModEntry@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.CoreModExclude@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CoreModExclude@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.CrashgenEntryRaw@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CrashgenEntryRaw@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.ModSolutionCriteria@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModSolutionCriteria@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.ModSolutionEntry@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ModSolutionEntry@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.SuspectErrorRule@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "SuspectErrorRule@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.SuspectStackCountRule@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "SuspectStackCountRule@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.SuspectStackRule@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "SuspectStackRule@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.format_registry_game_version@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "format_registry_game_version@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.resolve_registry_version_info@rust",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "resolve_registry_version_info@rust",
+      "node_export": null,
+      "status": "matched",
+      "expected_node_kind": null,
+      "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
     }
   ],
   "gaps": [
@@ -4269,128 +4412,7 @@
       "tier": "tier2",
       "owner_module": "config",
       "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ConfigError",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "CoreModEntry",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "CoreModExclude",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "CrashgenEntryRaw",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "ModConflictEntry",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ModSolutionCriteria",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ModSolutionEntry",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "SuspectErrorRule",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "SuspectStackCountRule",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "SuspectStackRule",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "format_registry_game_version",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-config-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "resolve_registry_version_info",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-config-core",
@@ -6063,17 +6085,6 @@
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "ConfigDuplicateDetector",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "ConfigError",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scangame-core",
@@ -8596,7 +8607,7 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 35
+      "tier2": 24
     },
     "constants": {
       "tier2": 30
@@ -8623,7 +8634,7 @@
       "tier2": 14
     },
     "scangame": {
-      "tier2": 78
+      "tier2": 77
     },
     "scanlog": {
       "tier2": 6

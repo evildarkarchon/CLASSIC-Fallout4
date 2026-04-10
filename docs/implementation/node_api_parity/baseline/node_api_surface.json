@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-09T23:04:18.236756+00:00",
+  "generated_at_utc": "2026-04-10T00:08:11.917041+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -32,7 +32,7 @@
       "export": "CRASH_LOG_PATTERN",
       "kind": "const",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export const CRASH_LOG_PATTERN: string"
     },
@@ -152,7 +152,7 @@
       "export": "JsAnalysisBuildOptions",
       "kind": "interface",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAnalysisBuildOptions {"
     },
@@ -168,7 +168,7 @@
       "export": "JsAnalysisResult",
       "kind": "interface",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAnalysisResult {"
     },
@@ -528,7 +528,7 @@
       "export": "JsGpuInfo",
       "kind": "interface",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGpuInfo {"
     },
@@ -584,7 +584,7 @@
       "export": "JsLogErrorEntry",
       "kind": "interface",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLogErrorEntry {"
     },
@@ -600,7 +600,7 @@
       "export": "JsLogSegments",
       "kind": "interface",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLogSegments {"
     },
@@ -704,7 +704,7 @@
       "export": "JsPapyrusStats",
       "kind": "interface",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPapyrusStats {"
     },
@@ -1150,7 +1150,7 @@
       "export": "checkXsePlugins",
       "kind": "function",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string",
       "arity": 2
@@ -2212,7 +2212,7 @@
       "export": "parseXseLog",
       "kind": "function",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseXseLog(logPath: string): string | null",
       "arity": 1

@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-09T23:44:58.171684+00:00`
-- Tier-1 contract rows: **327**
-- Tier-1 matched: **327**
+- Generated: `2026-04-10T00:08:11.917773+00:00`
+- Tier-1 contract rows: **338**
+- Tier-1 matched: **338**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **398**
+- Total gaps (Tier-1 + Tier-2): **386**
 
 ## Tier-1 Contract Evaluation
 
@@ -339,13 +339,24 @@
 | `scanlog.papyrus.JsPapyrusStats` | `scanlog` | `PapyrusStats` | `JsPapyrusStats` | `matched` |
 | `scanlog.settings_validator.checkXsePlugins` | `scanlog` | `XseChecker` | `checkXsePlugins` | `matched` |
 | `scanlog.parser.parseXseLog` | `scanlog` | `parse_xse_log` | `parseXseLog` | `matched` |
+| `config.ConfigError@rust` | `config` | `ConfigError@rust` | `None` | `matched` |
+| `config.CoreModEntry@rust` | `config` | `CoreModEntry@rust` | `None` | `matched` |
+| `config.CoreModExclude@rust` | `config` | `CoreModExclude@rust` | `None` | `matched` |
+| `config.CrashgenEntryRaw@rust` | `config` | `CrashgenEntryRaw@rust` | `None` | `matched` |
+| `config.ModSolutionCriteria@rust` | `config` | `ModSolutionCriteria@rust` | `None` | `matched` |
+| `config.ModSolutionEntry@rust` | `config` | `ModSolutionEntry@rust` | `None` | `matched` |
+| `config.SuspectErrorRule@rust` | `config` | `SuspectErrorRule@rust` | `None` | `matched` |
+| `config.SuspectStackCountRule@rust` | `config` | `SuspectStackCountRule@rust` | `None` | `matched` |
+| `config.SuspectStackRule@rust` | `config` | `SuspectStackRule@rust` | `None` | `matched` |
+| `config.format_registry_game_version@rust` | `config` | `format_registry_game_version@rust` | `None` | `matched` |
+| `config.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info@rust` | `None` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
 | `aux` | 0 | 16 |
-| `config` | 0 | 35 |
+| `config` | 0 | 24 |
 | `constants` | 0 | 30 |
 | `crashgen_settings` | 0 | 22 |
 | `database` | 0 | 17 |
@@ -354,7 +365,7 @@
 | `path` | 0 | 25 |
 | `perf` | 0 | 2 |
 | `registry` | 0 | 14 |
-| `scangame` | 0 | 78 |
+| `scangame` | 0 | 77 |
 | `scanlog` | 0 | 6 |
 | `settings` | 0 | 23 |
 | `shared` | 0 | 15 |

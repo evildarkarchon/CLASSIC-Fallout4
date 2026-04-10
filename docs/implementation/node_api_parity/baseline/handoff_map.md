@@ -1,30 +1,19 @@
 # Phase 1 Engineering Handoff Map
 
-- Generated: `2026-04-09T23:04:18.237319+00:00`
-- Total gaps handed off: **473**
+- Generated: `2026-04-10T00:08:11.917773+00:00`
+- Total gaps handed off: **386**
 
 ## Squad A (scanlog/config)
 
 ### `config`
 
-- Total gaps: **35**
+- Total gaps: **24**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **35**
+- Tier 2 gaps: **24**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
-| `rust_unmapped` | `tier2` | `ConfigError` | `-` |
-| `rust_unmapped` | `tier2` | `CoreModEntry` | `-` |
-| `rust_unmapped` | `tier2` | `CoreModExclude` | `-` |
-| `rust_unmapped` | `tier2` | `CrashgenEntryRaw` | `-` |
 | `rust_unmapped` | `tier2` | `ModConflictEntry` | `-` |
-| `rust_unmapped` | `tier2` | `ModSolutionCriteria` | `-` |
-| `rust_unmapped` | `tier2` | `ModSolutionEntry` | `-` |
-| `rust_unmapped` | `tier2` | `SuspectErrorRule` | `-` |
-| `rust_unmapped` | `tier2` | `SuspectStackCountRule` | `-` |
-| `rust_unmapped` | `tier2` | `SuspectStackRule` | `-` |
-| `rust_unmapped` | `tier2` | `format_registry_game_version` | `-` |
-| `rust_unmapped` | `tier2` | `resolve_registry_version_info` | `-` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_INTERVAL` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` |
 | `node_unmapped` | `tier2` | `-` | `DEFAULT_QUERY_CACHE_CAPACITY` |
@@ -51,83 +40,17 @@
 
 ### `scanlog`
 
-- Total gaps: **72**
+- Total gaps: **6**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **72**
+- Tier 2 gaps: **6**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
-| `rust_unmapped` | `tier2` | `AnalysisResult` | `-` |
-| `rust_unmapped` | `tier2` | `CheckId` | `-` |
-| `rust_unmapped` | `tier2` | `ConfigIssue` | `-` |
-| `rust_unmapped` | `tier2` | `CrashgenEntry` | `-` |
-| `rust_unmapped` | `tier2` | `CrashgenRegistry` | `-` |
-| `rust_unmapped` | `tier2` | `FcxModeHandler` | `-` |
-| `rust_unmapped` | `tier2` | `FcxResetError` | `-` |
-| `rust_unmapped` | `tier2` | `FormIDAnalyzer` | `-` |
-| `rust_unmapped` | `tier2` | `FormIDAnalyzerCore` | `-` |
 | `rust_unmapped` | `tier2` | `GLOBAL_FCX_HANDLER` | `-` |
-| `rust_unmapped` | `tier2` | `GpuDetector` | `-` |
-| `rust_unmapped` | `tier2` | `GpuVendor` | `-` |
-| `rust_unmapped` | `tier2` | `PapyrusAnalyzer` | `-` |
-| `rust_unmapped` | `tier2` | `PapyrusError` | `-` |
-| `rust_unmapped` | `tier2` | `PluginAnalyzer` | `-` |
-| `rust_unmapped` | `tier2` | `RecordScanner` | `-` |
-| `rust_unmapped` | `tier2` | `ReportComposer` | `-` |
-| `rust_unmapped` | `tier2` | `ReportFragment` | `-` |
-| `rust_unmapped` | `tier2` | `ReportGenerator` | `-` |
-| `rust_unmapped` | `tier2` | `RustFormIDAnalyzer` | `-` |
-| `rust_unmapped` | `tier2` | `ScanLogError` | `-` |
-| `rust_unmapped` | `tier2` | `ScanProgressPhase` | `-` |
-| `rust_unmapped` | `tier2` | `SettingsValidator` | `-` |
-| `rust_unmapped` | `tier2` | `StreamingIteratorParser` | `-` |
-| `rust_unmapped` | `tier2` | `StreamingLogParser` | `-` |
-| `rust_unmapped` | `tier2` | `StringPool` | `-` |
-| `rust_unmapped` | `tier2` | `SuspectScanner` | `-` |
-| `rust_unmapped` | `tier2` | `contains_plugin` | `-` |
-| `rust_unmapped` | `tier2` | `contains_record` | `-` |
-| `rust_unmapped` | `tier2` | `crashgen_registry` | `-` |
-| `rust_unmapped` | `tier2` | `crashgen_version_gen` | `-` |
-| `rust_unmapped` | `tier2` | `detect_mods_batch` | `-` |
-| `rust_unmapped` | `tier2` | `detect_mods_double` | `-` |
-| `rust_unmapped` | `tier2` | `detect_mods_important` | `-` |
-| `rust_unmapped` | `tier2` | `detect_mods_single` | `-` |
-| `rust_unmapped` | `tier2` | `detect_plugins_batch` | `-` |
-| `rust_unmapped` | `tier2` | `error` | `-` |
-| `rust_unmapped` | `tier2` | `extract_formids_batch` | `-` |
-| `rust_unmapped` | `tier2` | `fcx_handler` | `-` |
-| `rust_unmapped` | `tier2` | `formid` | `-` |
-| `rust_unmapped` | `tier2` | `formid_analyzer` | `-` |
-| `rust_unmapped` | `tier2` | `gpu_detector` | `-` |
-| `rust_unmapped` | `tier2` | `is_valid_formid` | `-` |
-| `rust_unmapped` | `tier2` | `mod_detector` | `-` |
-| `rust_unmapped` | `tier2` | `orchestrator` | `-` |
-| `rust_unmapped` | `tier2` | `papyrus` | `-` |
-| `rust_unmapped` | `tier2` | `parser` | `-` |
-| `rust_unmapped` | `tier2` | `patterns` | `-` |
-| `rust_unmapped` | `tier2` | `plugin_analyzer` | `-` |
-| `rust_unmapped` | `tier2` | `record_scanner` | `-` |
-| `rust_unmapped` | `tier2` | `report` | `-` |
-| `rust_unmapped` | `tier2` | `resolve_batch_concurrency` | `-` |
-| `rust_unmapped` | `tier2` | `scan_records_batch` | `-` |
-| `rust_unmapped` | `tier2` | `segment_key` | `-` |
-| `rust_unmapped` | `tier2` | `settings_validator` | `-` |
-| `rust_unmapped` | `tier2` | `suspect_scanner` | `-` |
-| `rust_unmapped` | `tier2` | `validate_formids_batch` | `-` |
-| `rust_unmapped` | `tier2` | `version` | `-` |
-| `node_unmapped` | `tier2` | `-` | `CRASH_LOG_PATTERN` |
-| `node_unmapped` | `tier2` | `-` | `JsAnalysisBuildOptions` |
-| `node_unmapped` | `tier2` | `-` | `JsAnalysisResult` |
-| `node_unmapped` | `tier2` | `-` | `JsGpuInfo` |
 | `node_unmapped` | `tier2` | `-` | `JsLogCollector` |
-| `node_unmapped` | `tier2` | `-` | `JsLogErrorEntry` |
 | `node_unmapped` | `tier2` | `-` | `JsLogProcessor` |
-| `node_unmapped` | `tier2` | `-` | `JsLogSegments` |
 | `node_unmapped` | `tier2` | `-` | `JsLogger` |
-| `node_unmapped` | `tier2` | `-` | `JsPapyrusStats` |
-| `node_unmapped` | `tier2` | `-` | `checkXsePlugins` |
 | `node_unmapped` | `tier2` | `-` | `createLogger` |
-| `node_unmapped` | `tier2` | `-` | `parseXseLog` |
 | `node_unmapped` | `tier2` | `-` | `processGameLogs` |
 
 ## Squad B (version-registry/aux)
@@ -255,15 +178,14 @@
 
 ### `file_io`
 
-- Total gaps: **26**
+- Total gaps: **24**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **26**
+- Tier 2 gaps: **24**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `BackupType` | `-` |
 | `rust_unmapped` | `tier2` | `CRASH_AUTOSCAN_PATTERN` | `-` |
-| `rust_unmapped` | `tier2` | `CRASH_LOG_PATTERN` | `-` |
 | `rust_unmapped` | `tier2` | `DDSAnalyzer` | `-` |
 | `rust_unmapped` | `tier2` | `DDSHeader` | `-` |
 | `rust_unmapped` | `tier2` | `DDSIssue` | `-` |
@@ -278,7 +200,6 @@
 | `rust_unmapped` | `tier2` | `core` | `-` |
 | `rust_unmapped` | `tier2` | `dds` | `-` |
 | `rust_unmapped` | `tier2` | `encoding` | `-` |
-| `rust_unmapped` | `tier2` | `error` | `-` |
 | `rust_unmapped` | `tier2` | `game_files` | `-` |
 | `rust_unmapped` | `tier2` | `generate_local_yaml` | `-` |
 | `rust_unmapped` | `tier2` | `generation` | `-` |
@@ -308,9 +229,9 @@
 
 ### `path`
 
-- Total gaps: **26**
+- Total gaps: **25**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **26**
+- Tier 2 gaps: **25**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -333,7 +254,6 @@
 | `rust_unmapped` | `tier2` | `check_drive_exists` | `-` |
 | `rust_unmapped` | `tier2` | `has_read_permission` | `-` |
 | `rust_unmapped` | `tier2` | `has_write_permission` | `-` |
-| `rust_unmapped` | `tier2` | `parse_xse_log` | `-` |
 | `rust_unmapped` | `tier2` | `remove_readonly_attribute` | `-` |
 | `rust_unmapped` | `tier2` | `validate_is_directory` | `-` |
 | `rust_unmapped` | `tier2` | `validate_is_file` | `-` |
@@ -377,9 +297,9 @@
 
 ### `scangame`
 
-- Total gaps: **83**
+- Total gaps: **77**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **83**
+- Tier 2 gaps: **77**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -392,9 +312,7 @@
 | `rust_unmapped` | `tier2` | `CheckType` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigCacheError` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigDuplicateDetector` | `-` |
-| `rust_unmapped` | `tier2` | `ConfigError` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigFileCache` | `-` |
-| `rust_unmapped` | `tier2` | `ConfigIssue` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenCheckOrchestrator` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenChecker` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenOrchestratorError` | `-` |
@@ -417,7 +335,6 @@
 | `rust_unmapped` | `tier2` | `IntegrityError` | `-` |
 | `rust_unmapped` | `tier2` | `IssueSeverity` | `-` |
 | `rust_unmapped` | `tier2` | `LogError` | `-` |
-| `rust_unmapped` | `tier2` | `LogErrorEntry` | `-` |
 | `rust_unmapped` | `tier2` | `LogProcessor` | `-` |
 | `rust_unmapped` | `tier2` | `ModIniScanResult` | `-` |
 | `rust_unmapped` | `tier2` | `ModIniScanner` | `-` |
@@ -443,14 +360,12 @@
 | `rust_unmapped` | `tier2` | `WryeError` | `-` |
 | `rust_unmapped` | `tier2` | `WryeIssue` | `-` |
 | `rust_unmapped` | `tier2` | `WryeSeverity` | `-` |
-| `rust_unmapped` | `tier2` | `XseChecker` | `-` |
 | `rust_unmapped` | `tier2` | `XseError` | `-` |
 | `rust_unmapped` | `tier2` | `ba2` | `-` |
 | `rust_unmapped` | `tier2` | `config_cache` | `-` |
 | `rust_unmapped` | `tier2` | `crashgen_orchestrator` | `-` |
 | `rust_unmapped` | `tier2` | `detect_config_issues` | `-` |
 | `rust_unmapped` | `tier2` | `enb` | `-` |
-| `rust_unmapped` | `tier2` | `error` | `-` |
 | `rust_unmapped` | `tier2` | `game_report` | `-` |
 | `rust_unmapped` | `tier2` | `ini` | `-` |
 | `rust_unmapped` | `tier2` | `integrity` | `-` |
@@ -458,7 +373,6 @@
 | `rust_unmapped` | `tier2` | `migrate_game_version_setting` | `-` |
 | `rust_unmapped` | `tier2` | `mod_ini` | `-` |
 | `rust_unmapped` | `tier2` | `needs_path_detection` | `-` |
-| `rust_unmapped` | `tier2` | `orchestrator` | `-` |
 | `rust_unmapped` | `tier2` | `resolve_effective_game_version` | `-` |
 | `rust_unmapped` | `tier2` | `run_combined_checks` | `-` |
 | `rust_unmapped` | `tier2` | `setup` | `-` |
@@ -525,9 +439,9 @@
 
 ### `update`
 
-- Total gaps: **7**
+- Total gaps: **6**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **7**
+- Tier 2 gaps: **6**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -536,7 +450,6 @@
 | `rust_unmapped` | `tier2` | `GithubRelease` | `-` |
 | `rust_unmapped` | `tier2` | `UpdateError` | `-` |
 | `rust_unmapped` | `tier2` | `VERSION` | `-` |
-| `rust_unmapped` | `tier2` | `error` | `-` |
 | `rust_unmapped` | `tier2` | `github` | `-` |
 
 ### `version`
