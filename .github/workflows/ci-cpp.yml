@@ -11,8 +11,33 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  cxx-parity-gate:
+    name: CXX Parity Gate
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run CXX parity gate
+        run: python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+
+      - name: Upload CXX parity diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-parity-diagnostics
+          path: ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/
+          if-no-files-found: warn
+          retention-days: 7
+
   cli-tests:
     name: CLI Tests
+    needs: [cxx-parity-gate]
     runs-on: windows-latest
     timeout-minutes: 90
     env:
@@ -85,6 +110,7 @@ jobs:
 
   gui-tests:
     name: GUI Tests
+    needs: [cxx-parity-gate]
     runs-on: windows-latest
     timeout-minutes: 120
     env:
