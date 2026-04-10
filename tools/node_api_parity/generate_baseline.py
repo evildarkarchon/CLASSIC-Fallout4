@@ -516,43 +516,6 @@ def generate_diff_report(
                 }
             )
 
-    for rust_item in rust_symbols:
-        symbol = rust_item["symbol"]
-        if symbol in tier1_rust_symbols:
-            continue
-        owner_module = rust_item["owner_module"]
-        gaps.append(
-            {
-                "gap_type": "rust_unmapped",
-                "tier": "tier2",
-                "owner_module": owner_module,
-                "squad": SQUAD_BY_OWNER[owner_module],
-                "rust_symbol": symbol,
-                "node_export": None,
-                "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-                "crate": rust_item["crate"],
-                "kind": rust_item["kind"],
-            }
-        )
-
-    for node_item in node_exports:
-        export_name = node_item["export"]
-        if export_name in tier1_node_exports:
-            continue
-        owner_module = node_item["owner_module"]
-        gaps.append(
-            {
-                "gap_type": "node_unmapped",
-                "tier": "tier2",
-                "owner_module": owner_module,
-                "squad": SQUAD_BY_OWNER[owner_module],
-                "rust_symbol": None,
-                "node_export": export_name,
-                "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-                "kind": node_item["kind"],
-            }
-        )
-
     status_counts: dict[str, int] = defaultdict(int)
     for row in contract_results:
         status_counts[row["status"]] += 1
@@ -571,7 +534,6 @@ def generate_diff_report(
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
         "total_gaps": len(gaps),
         "tier1_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier1"),
-        "tier2_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier2"),
     }
 
     return {
@@ -618,8 +580,8 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             "",
             "## Gap Counts By Owner/Tier",
             "",
-            "| Owner Module | Tier 1 Gaps | Tier 2 Gaps |",
-            "|---|---:|---:|",
+            "| Owner Module | Tier 1 Gaps |",
+            "|---|---:|",
         )
     )
     # Phase 4 Plan 1: iterate every owner that appears in the diff report
@@ -631,7 +593,7 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
     for owner in _owner_render_order:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
         lines.append(
-            f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |"
+            f"| `{owner}` | {tier_counts.get('tier1', 0)} |"
         )
 
     lines.extend(

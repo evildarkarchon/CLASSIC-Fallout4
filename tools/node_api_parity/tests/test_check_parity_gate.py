@@ -47,33 +47,24 @@ def test_tier1_contract_total_baseline_floor() -> None:
     """
     contract = _load_contract()
     tier1 = contract.get("tier1Mappings", [])
-    # Update this value in each plan's SUMMARY when the plan raises the
-    # floor. Plan 1 locks it at the pre-promotion count.
-    assert len(tier1) >= 261, (
-        f"tier1Mappings regressed below Plan 1 floor: "
-        f"{len(tier1)} < 261. Something deleted contract rows."
+    # Phase 4 close floor: 711 = 261 (start) + 66 (Plan 2) + 34 (Plan 3)
+    # + 7 (Plan 4) + 343 (Plan 5). Updated by Plan 6 M7 atomic cascade.
+    assert len(tier1) >= 711, (
+        f"tier1Mappings regressed below Phase 4 floor: "
+        f"{len(tier1)} < 711. Something deleted contract rows."
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Plan 6 atomic cascade deletes tierDefinitions.tier2; this test "
-        "flips to passing then. Until Plan 6 runs, tier2 is still present "
-        "in parity_contract.json and the assertion fails (expected)."
-    ),
-)
 def test_tier2_definition_removed_after_plan_6() -> None:
     """Plan 6 tripwire: ``tierDefinitions.tier2`` must be absent post-cascade.
 
-    The xfail marker is REMOVED in Plan 6's M7 atomic commit when the
-    Tier-2 cleanup cascade deletes the key from ``parity_contract.json``.
+    The xfail marker was REMOVED in Plan 6's M7 atomic commit when the
+    Tier-2 cleanup cascade deleted the key from ``parity_contract.json``.
     """
     contract = _load_contract()
     tier_defs = contract.get("tierDefinitions", {})
     assert "tier2" not in tier_defs, (
-        "tierDefinitions.tier2 still present — Plan 6 atomic cascade has "
-        "not yet deleted it."
+        "tierDefinitions.tier2 should be removed as of Plan 6"
     )
 
 

@@ -1,14 +1,13 @@
 {
-  "generated_at_utc": "2026-04-10T01:27:30.942235+00:00",
+  "generated_at_utc": "2026-04-10T01:39:45.513723+00:00",
   "summary": {
     "tier1_contract_total": 711,
     "tier1_matched": 711,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 1,
-    "tier1_gap_total": 0,
-    "tier2_gap_total": 1
+    "total_gaps": 0,
+    "tier1_gap_total": 0
   },
   "contract_results": [
     {
@@ -9255,22 +9254,6 @@
       "actual_node_arity": 2
     }
   ],
-  "gaps": [
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "GLOBAL_FCX_HANDLER",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scanlog-core",
-      "kind": "reexport"
-    }
-  ],
-  "gap_counts_by_owner_tier": {
-    "scanlog": {
-      "tier2": 1
-    }
-  }
+  "gaps": [],
+  "gap_counts_by_owner_tier": {}
 }

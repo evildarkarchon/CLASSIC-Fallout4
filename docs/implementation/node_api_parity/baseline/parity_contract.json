@@ -3,8 +3,7 @@
   "phase": "phase1",
   "description": "Hybrid-tiered Node vs Rust parity contract for high-level APIs.",
   "tierDefinitions": {
-    "tier1": "Must-have high-level APIs required by app workflows and cross-language integration.",
-    "tier2": "Lower-level or advanced APIs intentionally triaged for later parity work."
+    "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
   "ownerModules": {
     "scanlog": {

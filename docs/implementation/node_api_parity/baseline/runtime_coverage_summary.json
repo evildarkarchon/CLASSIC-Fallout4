@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T01:27:30.946552+00:00",
+  "generated_at_utc": "2026-04-10T01:39:45.518140+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,10 +8,10 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 738,
+    "tracked_surface_total": 737,
     "runtime_verified_total": 737,
     "contract_mapped_total": 0,
-    "deferred_total": 1,
+    "deferred_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 711,
     "tier1_missing_runtime_total": 0,
@@ -65,8 +65,7 @@
     },
     "scanlog": {
       "runtime_verified": 95,
-      "total": 96,
-      "deferred": 1
+      "total": 95
     },
     "settings": {
       "runtime_verified": 22,
@@ -12834,25 +12833,6 @@
       "testCaseId": "aux-tier1-parity",
       "fixtureRefs": [],
       "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
-    },
-    {
-      "trackedId": "binding:rust:GLOBAL_FCX_HANDLER",
-      "trackedType": "gap",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "gapType": "rust_unmapped",
-      "classification": "deferred",
-      "rustSymbol": "GLOBAL_FCX_HANDLER",
-      "bindingIdentifier": null,
-      "coverageId": "node-deferred-scanlog-001",
-      "verificationMode": null,
-      "testSuite": null,
-      "testCaseId": null,
-      "fixtureRefs": [],
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "notes": null
     },
     {
       "trackedId": "binding:JsLogCollector",
