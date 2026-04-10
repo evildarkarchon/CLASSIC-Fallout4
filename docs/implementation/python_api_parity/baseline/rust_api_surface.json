@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-09T05:06:36.773679+00:00",
+  "generated_at_utc": "2026-04-10T07:41:52.991127+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -4186,7 +4186,7 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version};",
+      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::PeVersionError",
       "tier": "tier1"
     },
@@ -4196,7 +4196,7 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version};",
+      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::PeVersionResult",
       "tier": "tier1"
     },
@@ -4274,7 +4274,7 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version};",
+      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::extract_pe_version",
       "tier": "tier1"
     },
@@ -4337,6 +4337,16 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn is_known_fallout4_version(version: &Version)",
       "tier": "tier1"
+    },
+    {
+      "symbol": "is_valid_executable_path",
+      "kind": "reexport",
+      "crate": "classic-version-core",
+      "owner_module": "version",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
+      "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
+      "source_expr": "pe_version::is_valid_executable_path",
+      "tier": "tier2"
     },
     {
       "symbol": "parse_version",

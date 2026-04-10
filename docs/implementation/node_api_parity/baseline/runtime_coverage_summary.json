@@ -1,17 +1,15 @@
 {
-  "generated_at_utc": "2026-04-10T01:39:45.518140+00:00",
+  "generated_at_utc": "2026-04-10T07:41:53.917526+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
     "runtime_registry": "ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-    "deferred_registry": "docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json",
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
     "tracked_surface_total": 737,
     "runtime_verified_total": 737,
     "contract_mapped_total": 0,
-    "deferred_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 711,
     "tier1_missing_runtime_total": 0,
