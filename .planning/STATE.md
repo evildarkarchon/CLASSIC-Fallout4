@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 04-03-config-promotion-PLAN.md
-last_updated: "2026-04-10T00:26:53.319Z"
+stopped_at: Completed 04-04-version-registry-and-pe-version-PLAN.md
+last_updated: "2026-04-10T01:11:52.894Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 24
+  completed_plans: 25
   percent: 85
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 04 (node-tier-collapse) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-10
@@ -108,6 +108,7 @@ Progress: [█████████░] 85%
 | Phase 04 P01 | 15min | 3 tasks | 15 files |
 | Phase 04-node-tier-collapse P02 | 18min | 3 tasks | 13 files |
 | Phase 04-node-tier-collapse PP03 | 18min | 3 tasks | 10 files |
+| Phase 04-node-tier-collapse P04 | 39min | 3 tasks | 23 files |
 
 ## Accumulated Context
 
@@ -267,6 +268,9 @@ Recent decisions affecting current work:
 - [Phase 04-node-tier-collapse]: All 11 config proxy rows route to classic-config-core (not classic-crashgen-settings-core) per live rust_api_surface.json; lib.rs re-exports crashgen types from yamldata module
 - [Phase 04-node-tier-collapse]: config.deferred == 1 (ModConflictEntry carve-out per Issue 4); Plan 5 Task 1 promotes it as normal row
 - [Phase 04-node-tier-collapse]: rustSymbol for NAPI wrapper functions uses core delegation target (FileHasher for hash cache functions, consts for getter functions) since NAPI function names are not in rust_api_surface.json
+- [Phase 04]: rustSymbol for JsCrashgenRegistryEntry mapped to CrashgenConfig@classic-version-registry-core (no core CrashgenRegistryEntry exists)
+- [Phase 04]: version-pe-shape row restored per D1 adjudication: parse_node_surface() emits standalone interface entries that become deferred without contract rows
+- [Phase 04]: migrateGameVersionSetting excluded from Plan 4: actual source is classic-scangame-core, handoff to Plan 5
 
 ### Pending Todos
 
@@ -291,7 +295,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10T00:26:53.314Z
-Stopped at: Completed 04-03-config-promotion-PLAN.md
+Last session: 2026-04-10T01:11:52.889Z
+Stopped at: Completed 04-04-version-registry-and-pe-version-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
