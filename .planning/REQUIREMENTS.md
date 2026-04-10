@@ -55,28 +55,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| YAML-01 | — | Pending |
-| YAML-02 | — | Pending |
-| YAML-03 | — | Pending |
-| YAML-04 | — | Pending |
-| CGEN-01 | — | Pending |
-| CGEN-02 | — | Pending |
-| CGEN-03 | — | Pending |
-| CNST-01 | — | Pending |
-| CNST-02 | — | Pending |
-| CNST-03 | — | Pending |
-| GATE-01 | — | Pending |
-| GATE-02 | — | Pending |
-| GATE-03 | — | Pending |
-| GATE-04 | — | Pending |
-| GATE-05 | — | Pending |
-| GATE-06 | — | Pending |
+| YAML-01 | Phase 1 | Pending |
+| YAML-02 | Phase 1 | Pending |
+| YAML-03 | Phase 1 | Pending |
+| YAML-04 | Phase 1 | Pending |
+| CGEN-01 | Phase 2 | Pending |
+| CGEN-02 | Phase 2 | Pending |
+| CGEN-03 | Phase 2 | Pending |
+| CNST-01 | Phase 3 | Pending |
+| CNST-02 | Phase 3 | Pending |
+| CNST-03 | Phase 3 | Pending |
+| GATE-01 | Phase 4 | Pending |
+| GATE-02 | Phase 4 | Pending |
+| GATE-03 | Phase 4 | Pending |
+| GATE-04 | Phase 4 | Pending |
+| GATE-05 | Phase 4 | Pending |
+| GATE-06 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-10*
-*Last updated: 2026-04-10 after initial definition*
+*Last updated: 2026-04-10 after roadmap creation*
