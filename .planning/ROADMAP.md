@@ -127,7 +127,10 @@ Plans:
   3. The C++ parity gate CI job is listed in branch-protection required checks in the same PR that adds the CI job — there is no window where the gate exists in CI but does not block merge
   4. A `.gitignore`-respecting freshness gate fails CI when committed CXX artifacts (baseline JSON or committed header snapshots) drift from what a fresh source scan would produce
   5. The Python and Node parity gates remain green in CI after their respective Tier-2 removal (CI-01 and CI-02 verified as still passing after Phase 3 and Phase 4 changes)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 05-ci-enforcement/05-01-PLAN.md — CXX parity gate CI job in ci-cpp.yml + triple-gate canary assertion script + CI-01/CI-02/CI-06 verification (CI-01, CI-02, CI-03, CI-05, CI-06)
+- [ ] 05-ci-enforcement/05-02-PLAN.md — CI run verification + branch protection configuration checkpoint (CI-04)
 
 ### Phase 6: Documentation Reset
 **Goal**: All Tier-2 governance files are deleted; binding-parity-overview.md is rewritten as the harmony-achieved reference; a single source-of-truth parity policy doc exists; error-contract conventions are documented
@@ -151,7 +154,7 @@ Plans:
 | 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
 | 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
 | 4. Node Tier Collapse | 6/6 | Complete   | 2026-04-10 |
-| 5. CI Enforcement | 0/TBD | Not started | - |
+| 5. CI Enforcement | 0/2 | Not started | - |
 | 6. Documentation Reset | 0/TBD | Not started | - |
 
 ### v9.1.0-bugfixes CLASSIC Codebase Health (Archived — shipped 2026-04-07)
