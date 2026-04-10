@@ -49,8 +49,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 55,
-      "contractIdsHash": "1c6543dffd5cf4b6a1ea54faa8db2813075f53796ed62539967dd103d045b587",
+      "contractCount": 62,
+      "contractIdsHash": "330c5427f50f9248d2a0a33dfdf4f0e41cd196b60cb9144d5cdd381c6e8c9603",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",

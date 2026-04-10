@@ -1656,6 +1656,19 @@ export declare function extractDomain(urlStr: string): string
 export declare function extractFormIds(content: string): Array<string>
 
 /**
+ * Extract a PE file's version from its VS_VERSIONINFO resource.
+ *
+ * Accepts `.exe` and `.dll` files. Delegates to
+ * `classic_version_core::pe_version::extract_pe_version`.
+ *
+ * @param path  Filesystem path to a PE file (absolute or relative).
+ * @returns     Object `{ major, minor, patch, build }`.
+ * @throws      napi::Error if the path is not a valid PE file, the file
+ *              cannot be read, or no version resource is present.
+ */
+export declare function extractPeVersion(path: string): JsPeVersion
+
+/**
  * Extract plugin names from crash log content.
  *
  * Searches for Bethesda game plugin entries (e.g., `[00] Fallout4.esm`)
@@ -2205,6 +2218,18 @@ export declare function isValidExecutablePath(path: string): boolean
  * @returns `true` if the path exists, `false` otherwise.
  */
 export declare function isValidPath(path: string): boolean
+
+/**
+ * Check whether a path points to a valid executable or DLL file.
+ *
+ * Delegates to `classic_version_core::pe_version::is_valid_executable_path`.
+ * Never throws — returns `false` for unreadable, non-existent, or
+ * wrong-extension paths.
+ *
+ * @param path  Filesystem path to check.
+ * @returns     `true` if the path exists, is a file, and ends in `.exe` or `.dll`.
+ */
+export declare function isValidPePath(path: string): boolean
 
 /**
  * Check if a URL string is valid (non-throwing).
@@ -2992,6 +3017,19 @@ export interface JsPathDetectionResult {
   needsGamePath: boolean
   /** Whether docs path needs detection. */
   needsDocsPath: boolean
+}
+
+/**
+ * PE file version components (4-part file version from VS_VERSIONINFO).
+ *
+ * Returned by `extractPeVersion`. All fields are `u16` in the underlying Rust
+ * crate but widened to `u32` for NAPI convention. JavaScript receives plain numbers.
+ */
+export interface JsPeVersion {
+  major: number
+  minor: number
+  patch: number
+  build: number
 }
 
 /**

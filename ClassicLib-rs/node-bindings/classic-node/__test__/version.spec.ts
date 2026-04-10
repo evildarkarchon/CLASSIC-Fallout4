@@ -8,7 +8,12 @@ import {
   extractVersionFromLog,
   extractAllVersions,
   formatVersion,
+  extractPeVersion,
+  isValidPePath,
 } from "../index.js";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 describe("Version bindings", () => {
   // ── parseVersion ──────────────────────────────────────────────────────
@@ -159,5 +164,75 @@ describe("Version bindings", () => {
     test("throws on invalid input", () => {
       expect(() => formatVersion("invalid")).toThrow();
     });
+  });
+
+  // ── isValidPePath ────────────────────────────────────────────────────
+
+  describe("isValidPePath", () => {
+    test("returns false for non-existent path", () => {
+      expect(isValidPePath("/definitely/not/real.exe")).toBe(false);
+    });
+
+    test("returns false for wrong extension", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-pe-"));
+      const txtPath = join(dir, "readme.txt");
+      writeFileSync(txtPath, "not a pe file");
+      try {
+        expect(isValidPePath(txtPath)).toBe(false);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    test("returns true for .exe file that exists", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-pe-"));
+      const exePath = join(dir, "fake.exe");
+      writeFileSync(exePath, Buffer.alloc(0));
+      try {
+        expect(isValidPePath(exePath)).toBe(true);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    test("returns true for .dll file that exists (case-insensitive)", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-pe-"));
+      const dllPath = join(dir, "fake.DLL");
+      writeFileSync(dllPath, Buffer.alloc(0));
+      try {
+        expect(isValidPePath(dllPath)).toBe(true);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  // ── extractPeVersion ─────────────────────────────────────────────────
+
+  describe("extractPeVersion", () => {
+    test("throws on non-existent path", () => {
+      expect(() => extractPeVersion("/definitely/not/real.exe")).toThrow();
+    });
+
+    test("throws on bytes that aren't a PE file", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-pe-"));
+      const fakeExe = join(dir, "fake.exe");
+      writeFileSync(fakeExe, Buffer.from("not a real PE file"));
+      try {
+        expect(() => extractPeVersion(fakeExe)).toThrow();
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    if (process.platform === "win32") {
+      test("extracts version from kernel32.dll (Windows integration)", () => {
+        const version = extractPeVersion("C:\\Windows\\System32\\kernel32.dll");
+        expect(version.major).toBeGreaterThanOrEqual(6);
+        expect(typeof version.minor).toBe("number");
+        expect(typeof version.patch).toBe("number");
+        expect(typeof version.build).toBe("number");
+      });
+    }
   });
 });

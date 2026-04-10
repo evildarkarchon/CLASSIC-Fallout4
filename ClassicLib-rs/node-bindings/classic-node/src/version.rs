@@ -96,3 +96,56 @@ pub fn format_version(version: String) -> Result<String> {
     let v = classic_version_core::parse_version(&version).map_err(to_napi_err)?;
     Ok(classic_version_core::format_version(&v, None))
 }
+
+// ============================================================================
+// PE Version Extraction
+// ============================================================================
+
+use std::path::Path;
+
+/// PE file version components (4-part file version from VS_VERSIONINFO).
+///
+/// Returned by `extractPeVersion`. All fields are `u16` in the underlying Rust
+/// crate but widened to `u32` for NAPI convention. JavaScript receives plain numbers.
+#[napi(object)]
+pub struct JsPeVersion {
+    pub major: u32,
+    pub minor: u32,
+    pub patch: u32,
+    pub build: u32,
+}
+
+/// Extract a PE file's version from its VS_VERSIONINFO resource.
+///
+/// Accepts `.exe` and `.dll` files. Delegates to
+/// `classic_version_core::pe_version::extract_pe_version`.
+///
+/// @param path  Filesystem path to a PE file (absolute or relative).
+/// @returns     Object `{ major, minor, patch, build }`.
+/// @throws      napi::Error if the path is not a valid PE file, the file
+///              cannot be read, or no version resource is present.
+#[napi]
+pub fn extract_pe_version(path: String) -> Result<JsPeVersion> {
+    let (major, minor, patch, build) =
+        classic_version_core::pe_version::extract_pe_version(Path::new(&path))
+            .map_err(to_napi_err)?;
+    Ok(JsPeVersion {
+        major: u32::from(major),
+        minor: u32::from(minor),
+        patch: u32::from(patch),
+        build: u32::from(build),
+    })
+}
+
+/// Check whether a path points to a valid executable or DLL file.
+///
+/// Delegates to `classic_version_core::pe_version::is_valid_executable_path`.
+/// Never throws — returns `false` for unreadable, non-existent, or
+/// wrong-extension paths.
+///
+/// @param path  Filesystem path to check.
+/// @returns     `true` if the path exists, is a file, and ends in `.exe` or `.dll`.
+#[napi]
+pub fn is_valid_pe_path(path: String) -> bool {
+    classic_version_core::pe_version::is_valid_executable_path(Path::new(&path))
+}

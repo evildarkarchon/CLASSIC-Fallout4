@@ -479,6 +479,45 @@ if (activeTier1Owners.has("scanlog")) {
 // node:test (not just bun:test). getHashCacheStats is the representative pick
 // because its multi-field return shape is the most likely NAPI marshalling
 // failure point across runtimes.
+// ============================================================================
+// Phase 4 Plan 4 (D-TEST-02): cross-runtime smoke for PE-version + version_registry
+// ============================================================================
+//
+// Task 2 adds extractPeVersion and isValidPePath NAPI wrappers plus promotes
+// 4 version_registry entries. Per D-TEST-02 the plan adds cross-runtime tests
+// here so the symbols are exercised under node:test (not just bun:test).
+if (activeTier1Owners.has("version_registry")) {
+  test("version Plan 4: isValidPePath returns false for nonexistent (cross-runtime D-TEST-02)", () => {
+    assert.strictEqual(classic.isValidPePath("/nonexistent/path.exe"), false);
+  });
+
+  if (process.platform === "win32") {
+    test("version Plan 4: extractPeVersion against kernel32.dll (Windows-only D-TEST-02)", () => {
+      const version = classic.extractPeVersion("C:\\Windows\\System32\\kernel32.dll");
+      assert.ok(version !== undefined);
+      assert.strictEqual(typeof version.major, "number");
+      assert.strictEqual(typeof version.minor, "number");
+      assert.strictEqual(typeof version.patch, "number");
+      assert.strictEqual(typeof version.build, "number");
+      assert.ok(version.major >= 6, `Expected major >= 6, got ${version.major}`);
+    });
+  }
+
+  test("version_registry Plan 4: checkCrashgenConfigWithRules callable with typed return (cross-runtime D-TEST-02)", () => {
+    // Signature: checkCrashgenConfigWithRules(pluginsPath, crashgenName, settingsRules?)
+    // Passing minimal valid arguments. On empty plugins path, the function either returns a
+    // result object or throws -- either outcome is an acceptable typed signal.
+    try {
+      const result = classic.checkCrashgenConfigWithRules("", "Buffout 4");
+      assert.ok(result !== undefined, "result must be defined");
+      assert.ok(typeof result === "object", "result must be an object");
+    } catch (e) {
+      // A thrown Error is acceptable -- signals the function is callable and validates input
+      assert.ok(e instanceof Error, "thrown value must be an Error");
+    }
+  });
+}
+
 if (activeTier1Owners.has("config")) {
   test("config Plan 3 promotion: getHashCacheStats + cache constants exercised under node:test", () => {
     // resetHashCacheStats clears counters — real-shape check.

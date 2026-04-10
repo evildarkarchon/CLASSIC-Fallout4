@@ -3088,6 +3088,69 @@
       "rustKind": "function",
       "nodeExport": "resetHashCacheStats",
       "nodeKind": "function"
+    },
+    {
+      "id": "version-pe-extract",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-core",
+      "rustSymbol": "extract_pe_version",
+      "nodeExport": "extractPeVersion",
+      "nodeKind": "function"
+    },
+    {
+      "id": "version-pe-is-valid-path",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-core",
+      "rustSymbol": "is_valid_executable_path",
+      "nodeExport": "isValidPePath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "version-pe-shape",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-core",
+      "rustSymbol": "PeVersionResult",
+      "nodeExport": "JsPeVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-crashgen-entry",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "JsCrashgenRegistryEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-crashgen-settings-rules",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-crashgen-settings-core",
+      "rustSymbol": "CrashgenSettingsRules",
+      "nodeExport": "JsCrashgenSettingsRules",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-check-crashgen-config-with-rules",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "CrashgenCheckOrchestrator",
+      "nodeExport": "checkCrashgenConfigWithRules",
+      "nodeKind": "function"
+    },
+    {
+      "id": "version-registry-check-crashgen-full-with-rules",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "CrashgenCheckOrchestrator",
+      "nodeExport": "checkCrashgenFullWithRules",
+      "nodeKind": "function"
     }
   ]
 }

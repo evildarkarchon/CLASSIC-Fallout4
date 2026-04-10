@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T00:30:46.152108+00:00",
+  "generated_at_utc": "2026-04-10T00:41:41.441234+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -608,7 +608,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct CrashgenSettingsRules",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EvaluationContext",
@@ -2273,7 +2273,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use crashgen_orchestrator::{ CrashgenCheckOrchestrator, CrashgenOrchestratorError, CrashgenReport, };",
       "source_expr": "crashgen_orchestrator::CrashgenCheckOrchestrator",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenChecker",
@@ -4187,7 +4187,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::PeVersionResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionError",
@@ -4265,7 +4265,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::extract_pe_version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "extract_version_from_filename",
@@ -4335,7 +4335,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::is_valid_executable_path",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse_version",

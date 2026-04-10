@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-10T00:31:13.054146+00:00`
-- Tier-1 contract rows: **361**
-- Tier-1 matched: **361**
+- Generated: `2026-04-10T00:42:38.655931+00:00`
+- Tier-1 contract rows: **368**
+- Tier-1 matched: **368**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **353**
+- Total gaps (Tier-1 + Tier-2): **344**
 
 ## Tier-1 Contract Evaluation
 
@@ -373,6 +373,13 @@
 | `config.hash_cache.getHashCacheStats` | `config` | `FileHasher` | `getHashCacheStats` | `matched` |
 | `config.path.needsPathDetection` | `config` | `needs_path_detection` | `needsPathDetection` | `matched` |
 | `config.hash_cache.resetHashCacheStats` | `config` | `FileHasher` | `resetHashCacheStats` | `matched` |
+| `version-pe-extract` | `version_registry` | `extract_pe_version` | `extractPeVersion` | `matched` |
+| `version-pe-is-valid-path` | `version_registry` | `is_valid_executable_path` | `isValidPePath` | `matched` |
+| `version-pe-shape` | `version_registry` | `PeVersionResult` | `JsPeVersion` | `matched` |
+| `version-registry-crashgen-entry` | `version_registry` | `CrashgenConfig` | `JsCrashgenRegistryEntry` | `matched` |
+| `version-registry-crashgen-settings-rules` | `version_registry` | `CrashgenSettingsRules` | `JsCrashgenSettingsRules` | `matched` |
+| `version-registry-check-crashgen-config-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenConfigWithRules` | `matched` |
+| `version-registry-check-crashgen-full-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenFullWithRules` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
@@ -381,20 +388,20 @@
 | `aux` | 0 | 16 |
 | `config` | 0 | 1 |
 | `constants` | 0 | 30 |
-| `crashgen_settings` | 0 | 22 |
+| `crashgen_settings` | 0 | 21 |
 | `database` | 0 | 14 |
 | `file_io` | 0 | 24 |
 | `message` | 0 | 9 |
 | `path` | 0 | 25 |
 | `perf` | 0 | 2 |
 | `registry` | 0 | 14 |
-| `scangame` | 0 | 71 |
+| `scangame` | 0 | 70 |
 | `scanlog` | 0 | 6 |
 | `settings` | 0 | 22 |
 | `shared` | 0 | 15 |
 | `update` | 0 | 6 |
-| `version` | 0 | 17 |
-| `version_registry` | 0 | 5 |
+| `version` | 0 | 14 |
+| `version_registry` | 0 | 1 |
 | `web` | 0 | 15 |
 | `xse` | 0 | 17 |
 | `yaml` | 0 | 22 |

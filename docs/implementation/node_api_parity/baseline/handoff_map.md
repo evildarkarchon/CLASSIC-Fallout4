@@ -1,7 +1,7 @@
 # Phase 1 Engineering Handoff Map
 
-- Generated: `2026-04-10T00:30:46.154841+00:00`
-- Total gaps handed off: **353**
+- Generated: `2026-04-10T00:41:41.444126+00:00`
+- Total gaps handed off: **344**
 
 ## Squad A (scanlog/config)
 
@@ -98,15 +98,14 @@
 
 ### `crashgen_settings`
 
-- Total gaps: **22**
+- Total gaps: **21**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **22**
+- Tier 2 gaps: **21**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `CheckRule` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigLayout` | `-` |
-| `rust_unmapped` | `tier2` | `CrashgenSettingsRules` | `-` |
 | `rust_unmapped` | `tier2` | `EvaluationContext` | `-` |
 | `rust_unmapped` | `tier2` | `EvaluationOutcome` | `-` |
 | `rust_unmapped` | `tier2` | `EvaluationResult` | `-` |
@@ -271,9 +270,9 @@
 
 ### `scangame`
 
-- Total gaps: **71**
+- Total gaps: **70**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **71**
+- Tier 2 gaps: **70**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -286,7 +285,6 @@
 | `rust_unmapped` | `tier2` | `CheckType` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigCacheError` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigFileCache` | `-` |
-| `rust_unmapped` | `tier2` | `CrashgenCheckOrchestrator` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenChecker` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenOrchestratorError` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenReport` | `-` |
@@ -421,42 +419,35 @@
 
 ### `version`
 
-- Total gaps: **17**
+- Total gaps: **14**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **17**
+- Tier 2 gaps: **14**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `NULL_VERSION` | `-` |
 | `rust_unmapped` | `tier2` | `PeVersionError` | `-` |
-| `rust_unmapped` | `tier2` | `PeVersionResult` | `-` |
 | `rust_unmapped` | `tier2` | `VersionError` | `-` |
 | `rust_unmapped` | `tier2` | `VersionResult` | `-` |
 | `rust_unmapped` | `tier2` | `compare_versions` | `-` |
 | `rust_unmapped` | `tier2` | `extract_all_versions` | `-` |
-| `rust_unmapped` | `tier2` | `extract_pe_version` | `-` |
 | `rust_unmapped` | `tier2` | `extract_version_from_filename` | `-` |
 | `rust_unmapped` | `tier2` | `extract_version_from_log` | `-` |
 | `rust_unmapped` | `tier2` | `format_version` | `-` |
 | `rust_unmapped` | `tier2` | `is_known_f4se_version` | `-` |
 | `rust_unmapped` | `tier2` | `is_known_fallout4_version` | `-` |
-| `rust_unmapped` | `tier2` | `is_valid_executable_path` | `-` |
 | `rust_unmapped` | `tier2` | `parse_version` | `-` |
 | `rust_unmapped` | `tier2` | `pe_version` | `-` |
 | `rust_unmapped` | `tier2` | `try_parse_version` | `-` |
 
 ### `version_registry`
 
-- Total gaps: **5**
+- Total gaps: **1**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **5**
+- Tier 2 gaps: **1**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
-| `node_unmapped` | `tier2` | `-` | `JsCrashgenRegistryEntry` |
-| `node_unmapped` | `tier2` | `-` | `JsCrashgenSettingsRules` |
-| `node_unmapped` | `tier2` | `-` | `checkCrashgenConfigWithRules` |
-| `node_unmapped` | `tier2` | `-` | `checkCrashgenFullWithRules` |
 | `node_unmapped` | `tier2` | `-` | `migrateGameVersionSetting` |
 
 ### `web`

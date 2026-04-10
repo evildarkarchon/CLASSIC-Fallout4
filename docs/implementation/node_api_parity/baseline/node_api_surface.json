@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T00:30:46.154158+00:00",
+  "generated_at_utc": "2026-04-10T00:41:41.443449+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -296,7 +296,7 @@
       "export": "JsCrashgenRegistryEntry",
       "kind": "interface",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenRegistryEntry {"
     },
@@ -312,7 +312,7 @@
       "export": "JsCrashgenSettingsRules",
       "kind": "interface",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenSettingsRules {"
     },
@@ -725,6 +725,14 @@
       "signature": "export interface JsPathDetectionResult {"
     },
     {
+      "export": "JsPeVersion",
+      "kind": "interface",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPeVersion {"
+    },
+    {
       "export": "JsPoolStatistics",
       "kind": "interface",
       "owner_module": "aux",
@@ -1069,7 +1077,7 @@
       "export": "checkCrashgenConfigWithRules",
       "kind": "function",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenConfigWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenCheckResult",
       "arity": 3
@@ -1087,7 +1095,7 @@
       "export": "checkCrashgenFullWithRules",
       "kind": "function",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenFullWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenReport",
       "arity": 3
@@ -1378,6 +1386,15 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractFormIds(content: string): Array<string>",
+      "arity": 1
+    },
+    {
+      "export": "extractPeVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function extractPeVersion(path: string): JsPeVersion",
       "arity": 1
     },
     {
@@ -2026,6 +2043,15 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isValidPath(path: string): boolean",
+      "arity": 1
+    },
+    {
+      "export": "isValidPePath",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function isValidPePath(path: string): boolean",
       "arity": 1
     },
     {

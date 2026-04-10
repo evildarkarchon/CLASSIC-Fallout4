@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-04-10T00:31:13.054146+00:00",
+  "generated_at_utc": "2026-04-10T00:42:38.655931+00:00",
   "summary": {
-    "tier1_contract_total": 361,
-    "tier1_matched": 361,
+    "tier1_contract_total": 368,
+    "tier1_matched": 368,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 353,
+    "total_gaps": 344,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 353
+    "tier2_gap_total": 344
   },
   "contract_results": [
     {
@@ -4703,6 +4703,97 @@
       "actual_node_kind": "function",
       "expected_node_arity": null,
       "actual_node_arity": 0
+    },
+    {
+      "id": "version-pe-extract",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "extract_pe_version",
+      "node_export": "extractPeVersion",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 1
+    },
+    {
+      "id": "version-pe-is-valid-path",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "is_valid_executable_path",
+      "node_export": "isValidPePath",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 1
+    },
+    {
+      "id": "version-pe-shape",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "PeVersionResult",
+      "node_export": "JsPeVersion",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "version-registry-crashgen-entry",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "CrashgenConfig",
+      "node_export": "JsCrashgenRegistryEntry",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "version-registry-crashgen-settings-rules",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "CrashgenSettingsRules",
+      "node_export": "JsCrashgenSettingsRules",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "version-registry-check-crashgen-config-with-rules",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "CrashgenCheckOrchestrator",
+      "node_export": "checkCrashgenConfigWithRules",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 3
+    },
+    {
+      "id": "version-registry-check-crashgen-full-with-rules",
+      "tier": "tier1",
+      "owner_module": "version_registry",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "CrashgenCheckOrchestrator",
+      "node_export": "checkCrashgenFullWithRules",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 3
     }
   ],
   "gaps": [
@@ -5068,17 +5159,6 @@
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-crashgen-settings-core",
       "kind": "enum"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "CrashgenSettingsRules",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-crashgen-settings-core",
-      "kind": "struct"
     },
     {
       "gap_type": "rust_unmapped",
@@ -6361,17 +6441,6 @@
       "tier": "tier2",
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "CrashgenCheckOrchestrator",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "CrashgenChecker",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -7549,17 +7618,6 @@
       "tier": "tier2",
       "owner_module": "version",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "PeVersionResult",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-version-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "version",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "VersionError",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -7598,17 +7656,6 @@
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-version-core",
       "kind": "function"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "version",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "extract_pe_version",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-version-core",
-      "kind": "reexport"
     },
     {
       "gap_type": "rust_unmapped",
@@ -7664,17 +7711,6 @@
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-version-core",
       "kind": "function"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "version",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "is_valid_executable_path",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-version-core",
-      "kind": "reexport"
     },
     {
       "gap_type": "rust_unmapped",
@@ -8316,26 +8352,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "version_registry",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": null,
-      "node_export": "JsCrashgenRegistryEntry",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "version_registry",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": null,
-      "node_export": "JsCrashgenSettingsRules",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
@@ -8476,26 +8492,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "version_registry",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": null,
-      "node_export": "checkCrashgenConfigWithRules",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "version_registry",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": null,
-      "node_export": "checkCrashgenFullWithRules",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
@@ -8572,7 +8568,7 @@
       "tier2": 30
     },
     "crashgen_settings": {
-      "tier2": 22
+      "tier2": 21
     },
     "database": {
       "tier2": 14
@@ -8593,7 +8589,7 @@
       "tier2": 14
     },
     "scangame": {
-      "tier2": 71
+      "tier2": 70
     },
     "scanlog": {
       "tier2": 6
@@ -8608,7 +8604,7 @@
       "tier2": 6
     },
     "version": {
-      "tier2": 17
+      "tier2": 14
     },
     "web": {
       "tier2": 15
@@ -8623,7 +8619,7 @@
       "tier2": 16
     },
     "version_registry": {
-      "tier2": 5
+      "tier2": 1
     }
   }
 }
