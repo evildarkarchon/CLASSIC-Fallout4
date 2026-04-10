@@ -142,7 +142,10 @@ Plans:
   3. A promotion audit trail at `.planning/milestones/v9.1.0-bindings-promotion-audit.md` records which entries were promoted from each governance file before deletion (this file is committed before any governance file is deleted)
   4. `docs/api/binding-parity-overview.md` contains no Tier-2 language, no `classic-constants-core` / `classic-web-core` divergence rows, and reflects full CXX/Node/Python surface parity with updated columns
   5. `docs/api/binding-parity-policy.md` exists and states the one-tier policy: when gate refreshes happen, who owns each gate, and how to add a new public Rust API across all three bindings
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 06-documentation-reset/06-01-PLAN.md — Gate script deferred-registry cleanup + dead Tier-2 script deletion + promotion audit trail creation (DOC-01, DOC-04)
+- [ ] 06-documentation-reset/06-02-PLAN.md — Governance file deletion + binding-parity-overview rewrite + parity policy doc + error-contract doc + refresh note update (DOC-02, DOC-03, DOC-05, DOC-06, DOC-07, HARM-05)
 
 ## Progress
 
@@ -155,7 +158,7 @@ Plans:
 | 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
 | 4. Node Tier Collapse | 6/6 | Complete   | 2026-04-10 |
 | 5. CI Enforcement | 1/2 | In Progress | - |
-| 6. Documentation Reset | 0/TBD | Not started | - |
+| 6. Documentation Reset | 0/2 | Not started | - |
 
 ### v9.1.0-bugfixes CLASSIC Codebase Health (Archived — shipped 2026-04-07)
 
