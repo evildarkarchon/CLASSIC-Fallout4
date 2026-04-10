@@ -141,9 +141,9 @@ Node keeps binding-local parity artifacts in [`ClassicLib-rs/node-bindings/class
 Current source-backed examples:
 
 - [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and deferred totals
+- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
 
-Repo workflow also points at the contributor-facing baseline docs under [`docs/implementation/node_api_parity/`](../implementation/node_api_parity/), especially when Tier-1 and Tier-2 governance changes.
+See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate refresh policy.
 
 ## Python parity artifacts
 
@@ -152,10 +152,10 @@ Python keeps binding-local parity artifacts in [`ClassicLib-rs/python-bindings/p
 Current source-backed examples:
 
 - [`ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
-- [`ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and deferred totals
+- [`ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
 - [`ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json`](../../ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json) is the direct stub-consistency artifact produced by the current validation workflow
 
-Repo workflow also points at the contributor-facing baseline docs under [`docs/implementation/python_api_parity/`](../implementation/python_api_parity/), especially when Tier-1 and Tier-2 governance changes.
+See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate refresh policy.
 
 ---
 
