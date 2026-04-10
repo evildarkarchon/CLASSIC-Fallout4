@@ -17,7 +17,7 @@ When a new `pub fn` or `pub struct` is added to a `-core` crate's `lib.rs`, all 
 ### CXX Gate
 
 - **Script:** `tools/cxx_api_parity/check_parity_gate.py`
-- **Baseline:** `tools/cxx_api_parity/cxx_baseline_surface.json`
+- **Baseline:** `docs/implementation/cxx_api_parity/baseline/parity_contract.json`
 - **Baseline generator:** `tools/cxx_api_parity/generate_baseline.py`
 - **Contributor docs:** [`docs/api/cxx-parity-gate.md`](cxx-parity-gate.md)
 - **Run command:** `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`

@@ -57,16 +57,16 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 
 ### CI Enforcement (CI)
 
-- [ ] **CI-01**: The Python parity gate runs in CI on every PR and blocks merges on failure (existing — verify it stays green after PYT promotion)
-- [ ] **CI-02**: The Node parity gate runs in CI on every PR and blocks merges on failure (existing — verify it stays green after NODE promotion)
-- [ ] **CI-03**: A new CI job runs `tools/cxx_api_parity/check_parity_gate.py` against the C++ bridge on every PR
+- [x] **CI-01**: The Python parity gate runs in CI on every PR and blocks merges on failure (existing — verify it stays green after PYT promotion)
+- [x] **CI-02**: The Node parity gate runs in CI on every PR and blocks merges on failure (existing — verify it stays green after NODE promotion)
+- [x] **CI-03**: A new CI job runs `tools/cxx_api_parity/check_parity_gate.py` against the C++ bridge on every PR
 - [ ] **CI-04**: The new C++ parity gate is added to branch-protection required checks in the **same PR** that adds the CI job (no "gate exists but doesn't block" window)
-- [ ] **CI-05**: All three parity gates are wired into CI such that adding a new public Rust API in a `*-core` crate fails CI until all three bindings expose it (verified by an explicit assertion test that adds a temporary public API and observes triple-gate failure)
-- [ ] **CI-06**: A `.gitignore`-respecting freshness gate exists for committed CXX artifacts (the `cxx::bridge` `build.rs` outputs a shared header that lives at a known path) so generated header drift fails CI the same way `index.d.ts` does for Node
+- [x] **CI-05**: All three parity gates are wired into CI such that adding a new public Rust API in a `*-core` crate fails CI until all three bindings expose it (verified by an explicit assertion test that adds a temporary public API and observes triple-gate failure)
+- [x] **CI-06**: A `.gitignore`-respecting freshness gate exists for committed CXX artifacts (the `cxx::bridge` `build.rs` outputs a shared header that lives at a known path) so generated header drift fails CI the same way `index.d.ts` does for Node
 
 ### Documentation Reset (DOC)
 
-- [ ] **DOC-01**: Python and Node parity gate scripts make the deferred-registry path argument optional/missing-tolerant **before** any governance file is deleted (prevents the hardcoded-path crash)
+- [x] **DOC-01**: Python and Node parity gate scripts make the deferred-registry path argument optional/missing-tolerant **before** any governance file is deleted (prevents the hardcoded-path crash)
 - [x] **DOC-02**: All Tier-2 backlog/governance/manifest files under `docs/implementation/python_api_parity/governance/` are deleted (not emptied) and broken-link grep across `docs/` is clean
 - [x] **DOC-03**: All Tier-2 backlog/governance/manifest files under `docs/implementation/node_api_parity/governance/` are deleted (not emptied) and broken-link grep across `docs/` is clean
 - [x] **DOC-04**: A promotion audit trail (snapshot of which entries were promoted from each governance file) is captured in `.planning/milestones/v9.1.0-bindings-promotion-audit.md` BEFORE governance files are deleted
@@ -139,12 +139,12 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | HARM-03 | Phase 3 | Complete |
 | HARM-04 | Phase 3 | Complete |
 | HARM-05 | Phase 6 | Complete |
-| CI-01 | Phase 5 | Pending |
-| CI-02 | Phase 5 | Pending |
-| CI-03 | Phase 5 | Pending |
-| CI-04 | Phase 5 | Pending |
-| CI-05 | Phase 5 | Pending |
-| CI-06 | Phase 5 | Pending |
+| CI-01 | Phase 5 | Complete |
+| CI-02 | Phase 5 | Complete |
+| CI-03 | Phase 5 | Complete |
+| CI-04 | Phase 5 | Deferred |
+| CI-05 | Phase 5 | Complete |
+| CI-06 | Phase 5 | Complete |
 | DOC-01 | Phase 6 | Complete |
 | DOC-02 | Phase 6 | Complete |
 | DOC-03 | Phase 6 | Complete |
@@ -160,4 +160,4 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after roadmap created for v9.1.0-bindings*
+*Last updated: 2026-04-10 after Phase 7 milestone cleanup*
