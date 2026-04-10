@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 04-04-version-registry-and-pe-version-PLAN.md
-last_updated: "2026-04-10T01:11:52.894Z"
+stopped_at: Completed 04-05-aux-promotion-PLAN.md
+last_updated: "2026-04-10T01:33:15.948Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
   percent: 85
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 04 (node-tier-collapse) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-10
@@ -109,6 +109,7 @@ Progress: [█████████░] 85%
 | Phase 04-node-tier-collapse P02 | 18min | 3 tasks | 13 files |
 | Phase 04-node-tier-collapse PP03 | 18min | 3 tasks | 10 files |
 | Phase 04-node-tier-collapse P04 | 39min | 3 tasks | 23 files |
+| Phase 04-node-tier-collapse P05 | 14min | 3 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -271,6 +272,10 @@ Recent decisions affecting current work:
 - [Phase 04]: rustSymbol for JsCrashgenRegistryEntry mapped to CrashgenConfig@classic-version-registry-core (no core CrashgenRegistryEntry exists)
 - [Phase 04]: version-pe-shape row restored per D1 adjudication: parse_node_surface() emits standalone interface entries that become deferred without contract rows
 - [Phase 04]: migrateGameVersionSetting excluded from Plan 4: actual source is classic-scangame-core, handoff to Plan 5
+- [Phase 04-05]: Cross-owner routing corrections: getApplicationDir/setApplicationDir in config.rs (classic-registry-core), writeAutoscanReport in fileio.rs (classic-file-io-core)
+- [Phase 04-05]: rustSymbol for resetFcxGlobalState: FcxModeHandler (exported type, not the non-exported method name)
+- [Phase 04-05]: rustSymbol for writeAutoscanReport: FileIOCore (core type used internally; write_autoscan_report is Node-only composition)
+- [Phase 04-05]: All 343 rows promoted in single task pass (Tasks 1+2 combined) since bulk row builder handled all data sources in one pass
 
 ### Pending Todos
 
@@ -295,7 +300,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10T01:11:52.889Z
-Stopped at: Completed 04-04-version-registry-and-pe-version-PLAN.md
+Last session: 2026-04-10T01:33:15.943Z
+Stopped at: Completed 04-05-aux-promotion-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling

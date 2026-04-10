@@ -42,7 +42,7 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 
 - [x] **NODE-01**: `tools/node_api_parity/generate_baseline.py` `RUST_TARGET_CRATES` and `RUST_FULL_INVENTORY_CRATES` are expanded to cover every business-logic crate that has a Node binding module
 - [x] **NODE-02**: All 109 currently-deferred Node parity entries (67 scanlog, 26 config, 12 aux, 4 version_registry) are promoted to enforced contract rows; every `nodeExport` field uses the camelCase identifier produced by NAPI auto-conversion
-- [ ] **NODE-03**: `tools/node_api_parity/check_parity_gate.py` Tier-2 skip logic is removed; the script enforces every contract row as Tier-1
+- [x] **NODE-03**: `tools/node_api_parity/check_parity_gate.py` Tier-2 skip logic is removed; the script enforces every contract row as Tier-1
 - [x] **NODE-04**: `ClassicLib-rs/node-bindings/classic-node/index.d.ts` is regenerated, committed, and the freshness gate passes against the expanded contract
 - [x] **NODE-05**: `bun run test:bun && bun run test:node` pass with the expanded surface, including smoke tests for at least one method per promoted module
 - [ ] **NODE-06**: `bun run parity:gate:local` exits zero with the expanded contract; deferred-entry count drops to 0 in the Node `runtime_coverage_summary.md`
@@ -130,7 +130,7 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | PYT-06 | Phase 3 | Complete |
 | NODE-01 | Phase 4 | Complete |
 | NODE-02 | Phase 4 | Complete |
-| NODE-03 | Phase 4 | Pending |
+| NODE-03 | Phase 4 | Complete |
 | NODE-04 | Phase 4 | Complete |
 | NODE-05 | Phase 4 | Complete |
 | NODE-06 | Phase 4 | Pending |
