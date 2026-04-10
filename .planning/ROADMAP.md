@@ -160,9 +160,9 @@ Plans:
   4. `tools/test_triple_gate_failure.py` lines 40-44 stale governance comment is removed or updated
   5. ROADMAP progress table shows Phase 1 as "3/3 Complete" and Phase 5 as "1/2 Complete (CI-04 deferred)"
   6. `src/scanner.rs` module-level doc comment no longer says "Placeholder"
-**Plans**: (to be planned)
+**Plans**: 1 plan
 Plans:
-- [ ] 07-milestone-cleanup/07-01-PLAN.md
+- [ ] 07-milestone-cleanup/07-01-PLAN.md — Close all 6 milestone audit gaps (traceability, doc path, tier2 labels, stale comments)
 
 ## Progress
 
