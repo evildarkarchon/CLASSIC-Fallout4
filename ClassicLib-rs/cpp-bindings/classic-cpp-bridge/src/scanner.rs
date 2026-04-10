@@ -2,7 +2,6 @@
 //!
 //! Bridges `classic_scanlog_core::OrchestratorCore` for crash log analysis.
 //! This is the PRIMARY FEATURE of the CLASSIC application.
-//! Placeholder — will be implemented by Wave 2 agent.
 
 use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};

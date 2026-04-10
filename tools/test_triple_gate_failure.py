@@ -37,11 +37,6 @@ from pathlib import Path
 
 
 # Gate scripts invoked by this test.
-# NOTE: The Node gate requires
-# docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json
-# to exist. Phase 6 (Documentation Reset) will make the --deferred-registry
-# argument optional before deleting governance files. If this script fails on
-# the Node gate after Phase 6, verify DOC-01 was applied.
 GATE_SCRIPTS: list[tuple[str, str]] = [
     ("CXX", "tools/cxx_api_parity/check_parity_gate.py"),
     ("Python", "tools/python_api_parity/check_parity_gate.py"),
