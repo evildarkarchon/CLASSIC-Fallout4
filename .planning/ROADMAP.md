@@ -110,8 +110,8 @@ Plans:
   5. The `runtime_coverage_summary.md` reports deferred-entry count of 0; the Node coverage registry no longer references any Tier-2 governance files
 **Plans**: 6 plans
 Plans:
-- [ ] 04-node-tier-collapse/04-01-tooling-expansion-PLAN.md — Wave 0: RUST_TARGET_CRATES expansion 10->19, bidirectional validate_contract_surface guard, bun run build env smoke test, A10 sizing report, pytest scaffold (NODE-01)
-- [ ] 04-node-tier-collapse/04-02-scanlog-promotion-PLAN.md — Wave 1: 66 scanlog rows (58 @rust proxy + 8 normal) using Phase 3 Scenario E pattern; GLOBAL_FCX_HANDLER excluded per A2 (NODE-02, NODE-03, NODE-04, NODE-05)
+- [x] 04-node-tier-collapse/04-01-tooling-expansion-PLAN.md — Wave 0: RUST_TARGET_CRATES expansion 10->19, bidirectional validate_contract_surface guard, bun run build env smoke test, A10 sizing report, pytest scaffold (NODE-01)
+- [x] 04-node-tier-collapse/04-02-scanlog-promotion-PLAN.md — Wave 1: 66 scanlog rows (57 @rust proxy + 9 normal) using Phase 3 Scenario E pattern; GLOBAL_FCX_HANDLER excluded per A2 (NODE-02, NODE-03, NODE-04, NODE-05)
 - [ ] 04-node-tier-collapse/04-03-config-promotion-PLAN.md — Wave 2: 12 @rust proxy + 23 normal config rows; cross-crate crashgen_settings rustCrate attribution (NODE-02, NODE-03, NODE-04, NODE-05)
 - [ ] 04-node-tier-collapse/04-04-version-registry-and-pe-version-PLAN.md — Wave 3: A6 pub use is_valid_executable_path pre-flight + extractPeVersion/isValidPePath NAPI wrappers + JsPeVersion object + 4 version_registry rows + 3 PE-version rows (HARM-01, HARM-02, NODE-02, NODE-04, NODE-05)
 - [ ] 04-node-tier-collapse/04-05-aux-promotion-PLAN.md — Wave 4: 12 crashgen_rules aux rows + cross-owner overlap reconciliation + A10 residual absorption across newly-tracked owners (NODE-02, NODE-03, NODE-04, NODE-05)
@@ -150,7 +150,7 @@ Plans:
 | 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
 | 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
 | 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
-| 4. Node Tier Collapse | 1/6 | In Progress|  |
+| 4. Node Tier Collapse | 2/6 | In Progress|  |
 | 5. CI Enforcement | 0/TBD | Not started | - |
 | 6. Documentation Reset | 0/TBD | Not started | - |
 

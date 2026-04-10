@@ -4,15 +4,15 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 04-01-tooling-expansion-PLAN.md
-last_updated: "2026-04-09T23:20:41.202Z"
-last_activity: 2026-04-09
+stopped_at: Completed 04-02-scanlog-promotion-PLAN.md
+last_updated: "2026-04-10T00:01:26.067Z"
+last_activity: 2026-04-10
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 22
-  percent: 100
+  completed_plans: 23
+  percent: 85
 ---
 
 # Project State
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 04 (node-tier-collapse) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Current Plan: 1
 Status: Ready to execute
-Last activity: 2026-04-09
+Last activity: 2026-04-10
 
-Progress: [██████████] 100%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -106,6 +106,7 @@ Progress: [██████████] 100%
 | Phase 03-python-tier-collapse P09a | 135 | 4 tasks | 15 files |
 | Phase 03-python-tier-collapse P09b | 79 min | 4 tasks | 30 files |
 | Phase 04 P01 | 15min | 3 tasks | 15 files |
+| Phase 04-node-tier-collapse P02 | 18min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -259,6 +260,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Left tier2_wave_manifest.json stale (not regenerated) because generate_deferred_backlog.py tolerates missing wave info (falls back to wave=null). Plan 6 deletes the file entirely per DOC-02/03/04.
 - [Phase 04]: Plan 5 scope flag: A10 sizing reveals 374 rows across 16 owner labels destined for Plan 05 vs the original Plan 05 skeleton estimate of 7-12 aux rows. The Plan 5 author MUST re-scope before executing. scangame alone has 83 deferred rows, the largest single new owner.
 - [Phase 04]: Plan 1 Rule 2 auto-fix: replaced render_diff_markdown() hard-coded owner tuple ('scanlog','config','version_registry','aux') with dynamic iteration over diff_report.gap_counts_by_owner_tier keys. The old tuple would have silently dropped 15 new owners from the rendered per-owner gap table.
+- [Phase 04-node-tier-collapse]: 57 proxy + 9 normal (not 58+8): live deferred_runtime_backlog.json is authoritative per U2; both within (57,58) and (8,9) acceptance windows
+- [Phase 04-node-tier-collapse]: All 66 new rows get rustCrate=classic-scanlog-core per A3, even when backing types live in sibling crates; diagnostic hint not load-bearing when symbol exists in global surface
+- [Phase 04-node-tier-collapse]: _effective_rust_symbol() helper strips @rust suffix for diff report + gap bucketing; proxy-row-aware pipeline unblocks Plans 3-5
 
 ### Pending Todos
 
@@ -283,7 +287,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T23:20:41.197Z
-Stopped at: Completed 04-01-tooling-expansion-PLAN.md
+Last session: 2026-04-10T00:01:26.062Z
+Stopped at: Completed 04-02-scanlog-promotion-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
