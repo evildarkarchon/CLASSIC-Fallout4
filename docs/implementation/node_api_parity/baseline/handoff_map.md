@@ -1,7 +1,7 @@
 # Phase 1 Engineering Handoff Map
 
-- Generated: `2026-04-10T00:14:05.403347+00:00`
-- Total gaps handed off: **352**
+- Generated: `2026-04-10T00:30:46.154841+00:00`
+- Total gaps handed off: **353**
 
 ## Squad A (scanlog/config)
 
@@ -421,9 +421,9 @@
 
 ### `version`
 
-- Total gaps: **16**
+- Total gaps: **17**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **16**
+- Tier 2 gaps: **17**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -440,6 +440,7 @@
 | `rust_unmapped` | `tier2` | `format_version` | `-` |
 | `rust_unmapped` | `tier2` | `is_known_f4se_version` | `-` |
 | `rust_unmapped` | `tier2` | `is_known_fallout4_version` | `-` |
+| `rust_unmapped` | `tier2` | `is_valid_executable_path` | `-` |
 | `rust_unmapped` | `tier2` | `parse_version` | `-` |
 | `rust_unmapped` | `tier2` | `pe_version` | `-` |
 | `rust_unmapped` | `tier2` | `try_parse_version` | `-` |

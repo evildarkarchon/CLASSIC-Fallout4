@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T00:14:12.631078+00:00",
+  "generated_at_utc": "2026-04-10T00:31:13.057507+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,11 +8,11 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 729,
+    "tracked_surface_total": 730,
     "runtime_verified_total": 387,
     "contract_mapped_total": 0,
     "deferred_total": 342,
-    "newly_uncovered_total": 0,
+    "newly_uncovered_total": 1,
     "tier1_contract_total": 361,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
@@ -84,7 +84,8 @@
     },
     "version": {
       "deferred": 16,
-      "total": 16
+      "total": 17,
+      "newly_uncovered": 1
     },
     "version_registry": {
       "runtime_verified": 56,
@@ -11958,6 +11959,16 @@
       "owner": "Squad B",
       "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "notes": null
+    },
+    {
+      "trackedId": "binding:rust:is_valid_executable_path",
+      "trackedType": "gap",
+      "ownerModule": "version",
+      "tier": "tier2",
+      "gapType": "rust_unmapped",
+      "classification": "newly_uncovered",
+      "rustSymbol": "is_valid_executable_path",
+      "bindingIdentifier": null
     },
     {
       "trackedId": "binding:rust:parse_version",

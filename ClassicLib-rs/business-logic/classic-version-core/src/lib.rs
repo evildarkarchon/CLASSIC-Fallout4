@@ -40,7 +40,7 @@ use std::cmp::Ordering;
 use thiserror::Error;
 
 // Re-export PE version types for convenience
-pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version};
+pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};
 
 // Re-export VersionRegistry for version information
 pub use classic_constants_core::{

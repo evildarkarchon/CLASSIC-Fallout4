@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-04-10T00:14:12.627780+00:00",
+  "generated_at_utc": "2026-04-10T00:31:13.054146+00:00",
   "summary": {
     "tier1_contract_total": 361,
     "tier1_matched": 361,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 352,
+    "total_gaps": 353,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 352
+    "tier2_gap_total": 353
   },
   "contract_results": [
     {
@@ -7670,6 +7670,17 @@
       "tier": "tier2",
       "owner_module": "version",
       "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "is_valid_executable_path",
+      "node_export": null,
+      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
+      "crate": "classic-version-core",
+      "kind": "reexport"
+    },
+    {
+      "gap_type": "rust_unmapped",
+      "tier": "tier2",
+      "owner_module": "version",
+      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "parse_version",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -8597,7 +8608,7 @@
       "tier2": 6
     },
     "version": {
-      "tier2": 16
+      "tier2": 17
     },
     "web": {
       "tier2": 15
