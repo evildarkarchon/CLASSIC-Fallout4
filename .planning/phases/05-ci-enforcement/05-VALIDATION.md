@@ -1,10 +1,11 @@
 ---
 phase: 5
 slug: ci-enforcement
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: audited
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-09
+audited: 2026-04-09
 ---
 
 # Phase 5 — Validation Strategy
@@ -38,12 +39,12 @@ created: 2026-04-09
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 05-01-01 | 01 | 1 | CI-03 | integration | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` | Exists (Phase 1) | pending |
-| 05-01-02 | 01 | 1 | CI-06 | unit | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` | Exists (Phase 1) | pending |
-| 05-02-01 | 02 | 1 | CI-05 | integration | `python tools/test_triple_gate_failure.py --repo-root .` | Wave 0 | pending |
-| 05-03-01 | 03 | 2 | CI-01 | observational | `gh run list --workflow ci-python-bindings.yml --limit 1` | N/A (manual) | pending |
-| 05-03-02 | 03 | 2 | CI-02 | observational | `gh run list --workflow ci-typescript.yml --limit 1` | N/A (manual) | pending |
-| 05-03-03 | 03 | 2 | CI-04 | manual | GitHub Settings UI verification | N/A (manual) | pending |
+| 05-01-01 | 01 | 1 | CI-03 | integration | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` | Exists (Phase 1) | green |
+| 05-01-02 | 01 | 1 | CI-06 | unit | `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` | Exists (Phase 1) | green |
+| 05-02-01 | 01 | 1 | CI-05 | integration | `python tools/test_triple_gate_failure.py --repo-root .` | Exists (Plan 01) | green |
+| 05-03-01 | 01 | 1 | CI-01 | observational | `gh run list --workflow ci-python-bindings.yml --limit 1` | N/A (manual) | green |
+| 05-03-02 | 01 | 1 | CI-02 | observational | `gh run list --workflow ci-typescript.yml --limit 1` | N/A (manual) | green |
+| 05-03-03 | 02 | 2 | CI-04 | manual | GitHub Settings UI verification | N/A (manual) | skipped |
 
 *Status: pending / green / red / flaky*
 
@@ -51,10 +52,10 @@ created: 2026-04-09
 
 ## Wave 0 Requirements
 
-- [ ] `tools/test_triple_gate_failure.py` — triple-gate canary assertion script (CI-05)
+- [x] `tools/test_triple_gate_failure.py` — triple-gate canary assertion script (CI-05) — delivered in Plan 01
 - No framework install needed — pytest and Python already available via project environment
 
-*Existing infrastructure covers most phase requirements; only the triple-gate test is new.*
+*All Wave 0 requirements delivered during Plan 01 execution.*
 
 ---
 
@@ -68,13 +69,26 @@ created: 2026-04-09
 
 ---
 
+## Validation Audit 2026-04-09
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+| User-deferred | 1 (CI-04) |
+
+**Assessment:** All 5 code requirements (CI-01..CI-03, CI-05, CI-06) have automated or observational verification with documented evidence. CI-04 (branch protection) was user-deferred — not a validation gap. No test files need generation; the gate scripts themselves ARE the tests.
+
+---
+
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-04-09
