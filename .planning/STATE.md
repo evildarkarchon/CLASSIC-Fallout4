@@ -4,14 +4,14 @@ milestone: v9.1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-stopped_at: Completed 04-02-scanlog-promotion-PLAN.md
-last_updated: "2026-04-10T00:01:26.067Z"
+stopped_at: Completed 04-03-config-promotion-PLAN.md
+last_updated: "2026-04-10T00:26:53.319Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 27
-  completed_plans: 23
+  completed_plans: 24
   percent: 85
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 04 (node-tier-collapse) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Current Plan: 1
 Status: Ready to execute
 Last activity: 2026-04-10
@@ -107,6 +107,7 @@ Progress: [█████████░] 85%
 | Phase 03-python-tier-collapse P09b | 79 min | 4 tasks | 30 files |
 | Phase 04 P01 | 15min | 3 tasks | 15 files |
 | Phase 04-node-tier-collapse P02 | 18min | 3 tasks | 13 files |
+| Phase 04-node-tier-collapse PP03 | 18min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -263,6 +264,9 @@ Recent decisions affecting current work:
 - [Phase 04-node-tier-collapse]: 57 proxy + 9 normal (not 58+8): live deferred_runtime_backlog.json is authoritative per U2; both within (57,58) and (8,9) acceptance windows
 - [Phase 04-node-tier-collapse]: All 66 new rows get rustCrate=classic-scanlog-core per A3, even when backing types live in sibling crates; diagnostic hint not load-bearing when symbol exists in global surface
 - [Phase 04-node-tier-collapse]: _effective_rust_symbol() helper strips @rust suffix for diff report + gap bucketing; proxy-row-aware pipeline unblocks Plans 3-5
+- [Phase 04-node-tier-collapse]: All 11 config proxy rows route to classic-config-core (not classic-crashgen-settings-core) per live rust_api_surface.json; lib.rs re-exports crashgen types from yamldata module
+- [Phase 04-node-tier-collapse]: config.deferred == 1 (ModConflictEntry carve-out per Issue 4); Plan 5 Task 1 promotes it as normal row
+- [Phase 04-node-tier-collapse]: rustSymbol for NAPI wrapper functions uses core delegation target (FileHasher for hash cache functions, consts for getter functions) since NAPI function names are not in rust_api_surface.json
 
 ### Pending Todos
 
@@ -287,7 +291,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10T00:01:26.062Z
-Stopped at: Completed 04-02-scanlog-promotion-PLAN.md
+Last session: 2026-04-10T00:26:53.314Z
+Stopped at: Completed 04-03-config-promotion-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 1` to plan Phase 1: CXX Parity Gate Tooling
