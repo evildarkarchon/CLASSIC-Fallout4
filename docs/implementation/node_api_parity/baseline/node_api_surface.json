@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T00:41:41.443449+00:00",
+  "generated_at_utc": "2026-04-10T01:23:03.537840+00:00",
   "scope": {
     "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
@@ -232,7 +232,7 @@
       "export": "JsCheckRule",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCheckRule {"
     },
@@ -416,7 +416,7 @@
       "export": "JsExpectedValue",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsExpectedValue {"
     },
@@ -576,7 +576,7 @@
       "export": "JsLogCollector",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLogCollector {"
     },
@@ -592,7 +592,7 @@
       "export": "JsLogProcessor",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLogProcessor {"
     },
@@ -608,7 +608,7 @@
       "export": "JsLogger",
       "kind": "class",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLogger {"
     },
@@ -647,8 +647,8 @@
     {
       "export": "JsModConflictEntry",
       "kind": "interface",
-      "owner_module": "aux",
-      "tier": "tier2",
+      "owner_module": "config",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModConflictEntry {"
     },
@@ -688,7 +688,7 @@
       "export": "JsModSolutionCriteria",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModSolutionCriteria {"
     },
@@ -696,7 +696,7 @@
       "export": "JsModSolutionEntry",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModSolutionEntry {"
     },
@@ -744,7 +744,7 @@
       "export": "JsPreflightAction",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPreflightAction {"
     },
@@ -752,7 +752,7 @@
       "export": "JsPreflightRule",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPreflightRule {"
     },
@@ -760,7 +760,7 @@
       "export": "JsRuleMessages",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsRuleMessages {"
     },
@@ -768,7 +768,7 @@
       "export": "JsRuleTarget",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsRuleTarget {"
     },
@@ -776,7 +776,7 @@
       "export": "JsSuspectErrorRule",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsSuspectErrorRule {"
     },
@@ -784,7 +784,7 @@
       "export": "JsSuspectStackCountRule",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsSuspectStackCountRule {"
     },
@@ -792,7 +792,7 @@
       "export": "JsSuspectStackRule",
       "kind": "interface",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsSuspectStackRule {"
     },
@@ -1248,7 +1248,7 @@
       "export": "createLogger",
       "kind": "function",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createLogger(name: string): JsLogger",
       "arity": 1
@@ -1554,7 +1554,7 @@
       "export": "getApplicationDir",
       "kind": "function",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getApplicationDir(): string | null",
       "arity": 0
@@ -2148,7 +2148,7 @@
       "export": "migrateGameVersionSetting",
       "kind": "function",
       "owner_module": "version_registry",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function migrateGameVersionSetting(gameVersion?: string | undefined | null): string | null",
       "arity": 1
@@ -2256,7 +2256,7 @@
       "export": "processGameLogs",
       "kind": "function",
       "owner_module": "scanlog",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processGameLogs(logDir: string, catchErrors: Array<string>, excludeFiles: Array<string>, excludeErrors: Array<string>): string",
       "arity": 4
@@ -2400,7 +2400,7 @@
       "export": "resetFcxGlobalState",
       "kind": "function",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resetFcxGlobalState(): void",
       "arity": 0
@@ -2481,7 +2481,7 @@
       "export": "setApplicationDir",
       "kind": "function",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function setApplicationDir(path: string): void",
       "arity": 1
@@ -2598,7 +2598,7 @@
       "export": "writeAutoscanReport",
       "kind": "function",
       "owner_module": "aux",
-      "tier": "tier2",
+      "tier": "tier1",
       "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
       "signature": "export declare function writeAutoscanReport(logPath: string, content: string): Promise<string>",
       "arity": 2

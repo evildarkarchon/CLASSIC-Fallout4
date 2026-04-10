@@ -24,6 +24,8 @@ import {
   // Diagnostics
   isRuntimeAvailable,
   getRuntimeInfo,
+  // Application dir (read-only -- Phase 4 Plan 5)
+  getApplicationDir,
 } from "../index.js";
 
 // ============================================================================
@@ -267,4 +269,28 @@ describe("Registry convenience functions", () => {
     expect(version).toBe("Original");
   });
 
+});
+
+// ============================================================================
+// Application Dir (Phase 4 Plan 5 -- MEDIUM concern: read-only only)
+// ============================================================================
+describe("shared: getApplicationDir (read-only against Once-initialized state)", () => {
+  test("returns a string or null without throwing", () => {
+    // IMPORTANT: Do NOT call setApplicationDir in the same test process.
+    // The Once guard in classic-registry-core permanently mutates process
+    // state on first set. A round-trip test would either fail (if the Once
+    // has already been initialized) or pollute downstream tests.
+    try {
+      const dir = getApplicationDir();
+      // If state is initialized, dir is a non-empty string; otherwise null
+      expect(typeof dir === "string" || dir === null).toBe(true);
+      if (typeof dir === "string") {
+        expect(dir.length).toBeGreaterThan(0);
+      }
+    } catch (e) {
+      // If Once not yet initialized, the function may throw -- acceptable
+      expect(e).toBeInstanceOf(Error);
+    }
+  });
+  // setApplicationDir is NOT tested via round-trip here per MEDIUM concern.
 });

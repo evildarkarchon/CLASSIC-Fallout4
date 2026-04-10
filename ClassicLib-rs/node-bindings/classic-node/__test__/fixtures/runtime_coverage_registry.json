@@ -11,8 +11,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 82,
-      "contractIdsHash": "b95fa095b7eeb4eddc986edaae92ed06062b2f6c0c3aec4ab4c903e4cdeb9065",
+      "contractCount": 87,
+      "contractIdsHash": "013a26b15ad0129ba07a37ea64149bb2fc634823e6f60fad5cf97819bbf74921",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "scanlog-tier1-parity",
@@ -31,8 +31,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 84,
-      "contractIdsHash": "68a27ba2f58bc86bb548bcb81580c2bc4f6b1efb3ad2e153de5fec5047838826",
+      "contractCount": 86,
+      "contractIdsHash": "caa0872bd3cb2417a7268ca285be40ce3c79d735f61e07e7b14c4078be98d167",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -49,8 +49,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 62,
-      "contractIdsHash": "330c5427f50f9248d2a0a33dfdf4f0e41cd196b60cb9144d5cdd381c6e8c9603",
+      "contractCount": 63,
+      "contractIdsHash": "4557a62a88102440b38e82beb51d4bd06f06e4dc5a2b81217fa620eae6a0449e",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",
@@ -67,8 +67,8 @@
         "ownerModule": "aux",
         "tier": "tier1"
       },
-      "contractCount": 140,
-      "contractIdsHash": "c1cbcb2e9fb911552ff48433081bb3ea2412bb005027b289b79db8e325730995",
+      "contractCount": 155,
+      "contractIdsHash": "a4062cc908448c8ed4833109729c3a87ea475e773369521831cf6e3343e4bdea",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "aux-tier1-parity",
@@ -187,6 +187,262 @@
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "scanlog-fcx-state-isolation",
       "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
+    },
+    {
+      "coverageId": "node-tier1-constants",
+      "classification": "runtime_verified",
+      "ownerModule": "constants",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "constants",
+        "tier": "tier1"
+      },
+      "contractCount": 30,
+      "contractIdsHash": "71f302477e6d1476d488c5d9df556a519a8c005e29712063f83955b7fa446970",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "constants-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-crashgen-settings",
+      "classification": "runtime_verified",
+      "ownerModule": "crashgen_settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "crashgen_settings",
+        "tier": "tier1"
+      },
+      "contractCount": 21,
+      "contractIdsHash": "9a8e9bbe4e846229f9b6698e73b6b65e8fe250868107c618ce8d381bee3a512d",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "crashgen-settings-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-database",
+      "classification": "runtime_verified",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "database",
+        "tier": "tier1"
+      },
+      "contractCount": 14,
+      "contractIdsHash": "3c4bd255d9c615d7b5dcb827dd795131595556e2817a2dd68076d3da639208d5",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-file-io",
+      "classification": "runtime_verified",
+      "ownerModule": "file_io",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "file_io",
+        "tier": "tier1"
+      },
+      "contractCount": 24,
+      "contractIdsHash": "8e4b79b2669e1890e38c200c0bef46c7067a9d1f60b4663f7926674a63131bcd",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "file-io-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-message",
+      "classification": "runtime_verified",
+      "ownerModule": "message",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "message",
+        "tier": "tier1"
+      },
+      "contractCount": 9,
+      "contractIdsHash": "37703d9d6e48b747c932d819ffea07f1f90801525bbab5761aab1d03eb599f1f",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "message-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-path",
+      "classification": "runtime_verified",
+      "ownerModule": "path",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "path",
+        "tier": "tier1"
+      },
+      "contractCount": 25,
+      "contractIdsHash": "c8c45e573e877499c1a7e520cf4a7a3cc2b20184fc65332e01f0b2ef467f3a38",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "path-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-perf",
+      "classification": "runtime_verified",
+      "ownerModule": "perf",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "perf",
+        "tier": "tier1"
+      },
+      "contractCount": 2,
+      "contractIdsHash": "939016a92148f0d427829ad19d173bd8cc994d04858992a55b9ac430ab45ea2a",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "perf-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-registry",
+      "classification": "runtime_verified",
+      "ownerModule": "registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "registry",
+        "tier": "tier1"
+      },
+      "contractCount": 14,
+      "contractIdsHash": "62598721dcb8bf4f810d9b0f130d373080676d06370941dc38f74c8ebe9860fc",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "registry-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-scangame",
+      "classification": "runtime_verified",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scangame",
+        "tier": "tier1"
+      },
+      "contractCount": 70,
+      "contractIdsHash": "6e8349a06890e6b347d949f0fbed5272bc48e19d0d8b118918ea215431b71b5e",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scangame-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-settings",
+      "classification": "runtime_verified",
+      "ownerModule": "settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "settings",
+        "tier": "tier1"
+      },
+      "contractCount": 22,
+      "contractIdsHash": "24dc1501145175cea03f9bcbbd4e20ba551a856b01b5f686295db4f3428e6c6f",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "settings-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-shared",
+      "classification": "runtime_verified",
+      "ownerModule": "shared",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "shared",
+        "tier": "tier1"
+      },
+      "contractCount": 15,
+      "contractIdsHash": "a3b7d35076a34e08da9a7874b33e7ed099a038c9bcf579d380f775864bf0b1dc",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "shared-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-update",
+      "classification": "runtime_verified",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "update",
+        "tier": "tier1"
+      },
+      "contractCount": 6,
+      "contractIdsHash": "f6eab258a4b47a270ea35201938cda956571a29844d44061296e48f4c9400d10",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "update-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-version",
+      "classification": "runtime_verified",
+      "ownerModule": "version",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version",
+        "tier": "tier1"
+      },
+      "contractCount": 14,
+      "contractIdsHash": "8e913cf6db39f1b7e26002d264cb2b1e61be0afcdaadc6ecfd223f90bc461531",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "version-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-web",
+      "classification": "runtime_verified",
+      "ownerModule": "web",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "web",
+        "tier": "tier1"
+      },
+      "contractCount": 15,
+      "contractIdsHash": "dec36c87fe5c80548ca26624fefed0a8ed7a4e0b750ec726313243a2981edb94",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "web-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-xse",
+      "classification": "runtime_verified",
+      "ownerModule": "xse",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "xse",
+        "tier": "tier1"
+      },
+      "contractCount": 17,
+      "contractIdsHash": "0d7249c6797d77b926dd944640f1bc24641b3edb09235d3da1684b514f34992b",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "xse-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-yaml",
+      "classification": "runtime_verified",
+      "ownerModule": "yaml",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "yaml",
+        "tier": "tier1"
+      },
+      "contractCount": 22,
+      "contractIdsHash": "3a9a9e21da34ac3d08b47cc2f642560a0d3427945e99772a31a9a81394cf4fce",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "yaml-tier1-parity",
+      "fixtureRefs": []
     }
   ]
 }

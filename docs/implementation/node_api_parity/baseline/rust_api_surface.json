@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T00:41:41.441234+00:00",
+  "generated_at_utc": "2026-04-10T01:23:03.535189+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -103,7 +103,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ModConflictEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModSolutionCriteria",
@@ -250,7 +250,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub enum Fallout4Version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameId",
@@ -259,7 +259,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub enum GameId",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MatchConfidence",
@@ -288,7 +288,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const NULL_VERSION",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SETTINGS_IGNORE_NONE",
@@ -297,7 +297,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const SETTINGS_IGNORE_NONE",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionInfo",
@@ -336,7 +336,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub enum YamlFile",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "display_name",
@@ -346,7 +346,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn display_name(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "display_name_string",
@@ -356,7 +356,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn display_name_string(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -365,7 +365,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -374,7 +374,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -383,7 +383,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -392,7 +392,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -401,7 +401,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -410,7 +410,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -419,7 +419,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -428,7 +428,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -437,7 +437,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -446,7 +446,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -455,7 +455,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -464,7 +464,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -473,7 +473,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -482,7 +482,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "fn",
@@ -491,7 +491,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub const fn",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "game_version",
@@ -501,7 +501,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn game_version(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_version_info",
@@ -511,7 +511,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn get_version_info(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_version_registry",
@@ -531,7 +531,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn must_not_be_none(key: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "short_name",
@@ -541,7 +541,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn short_name(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "version_semver",
@@ -551,7 +551,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn version_semver(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "xse_acronym",
@@ -561,7 +561,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn xse_acronym(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "xse_acronym_string",
@@ -571,7 +571,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn xse_acronym_string(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "xse_config",
@@ -581,7 +581,7 @@
       "owner_module": "constants",
       "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "source_decl": "pub fn xse_config(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CheckRule",
@@ -590,7 +590,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct CheckRule",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigLayout",
@@ -599,7 +599,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum ConfigLayout",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenSettingsRules",
@@ -617,7 +617,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct EvaluationContext",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EvaluationOutcome",
@@ -626,7 +626,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct EvaluationOutcome",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EvaluationResult",
@@ -635,7 +635,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct EvaluationResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ExpectedValue",
@@ -644,7 +644,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum ExpectedValue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "OutcomeKind",
@@ -653,7 +653,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum OutcomeKind",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Predicate",
@@ -662,7 +662,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum Predicate",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PreflightAction",
@@ -671,7 +671,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct PreflightAction",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PreflightActionKind",
@@ -680,7 +680,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum PreflightActionKind",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PreflightRule",
@@ -689,7 +689,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct PreflightRule",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RuleMessages",
@@ -698,7 +698,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct RuleMessages",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RuleReportBucket",
@@ -707,7 +707,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum RuleReportBucket",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RuleSeverity",
@@ -716,7 +716,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum RuleSeverity",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RuleTarget",
@@ -725,7 +725,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub struct RuleTarget",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "TargetValueType",
@@ -734,7 +734,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub enum TargetValueType",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse",
@@ -744,7 +744,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub fn parse(value: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse",
@@ -754,7 +754,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub fn parse(value: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse",
@@ -764,7 +764,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub fn parse(value: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse",
@@ -774,7 +774,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub fn parse(value: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse",
@@ -784,7 +784,7 @@
       "owner_module": "crashgen_settings",
       "source_file": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
       "source_decl": "pub fn parse(value: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BATCH_CACHE_TTL_SECS",
@@ -794,7 +794,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::BATCH_CACHE_TTL_SECS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CacheEntry",
@@ -804,7 +804,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::CacheEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CacheKey",
@@ -814,7 +814,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::CacheKey",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
@@ -844,7 +844,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::DEFAULT_CACHE_TTL_SECS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DEFAULT_QUERY_CACHE_CAPACITY",
@@ -864,7 +864,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::DatabaseError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DatabasePool",
@@ -874,7 +874,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::DatabasePool",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MAX_CACHE_CLEANUP_INTERVAL_SECS",
@@ -884,7 +884,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MAX_CACHE_CLEANUP_INTERVAL_SECS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MAX_CACHE_CLEANUP_OP_THRESHOLD",
@@ -894,7 +894,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MAX_CACHE_CLEANUP_OP_THRESHOLD",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MAX_CACHE_TTL_SECS",
@@ -904,7 +904,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MAX_CACHE_TTL_SECS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MAX_QUERY_CACHE_CAPACITY",
@@ -914,7 +914,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MAX_QUERY_CACHE_CAPACITY",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MIN_CACHE_CLEANUP_INTERVAL_SECS",
@@ -924,7 +924,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MIN_CACHE_CLEANUP_INTERVAL_SECS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MIN_CACHE_CLEANUP_OP_THRESHOLD",
@@ -934,7 +934,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MIN_CACHE_CLEANUP_OP_THRESHOLD",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MIN_QUERY_CACHE_CAPACITY",
@@ -944,7 +944,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::MIN_QUERY_CACHE_CAPACITY",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PoolStatistics",
@@ -954,7 +954,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::PoolStatistics",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupInfo",
@@ -984,7 +984,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use backup::{BackupInfo, BackupManager, BackupType};",
       "source_expr": "backup::BackupType",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CRASH_AUTOSCAN_PATTERN",
@@ -994,7 +994,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::CRASH_AUTOSCAN_PATTERN",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CRASH_LOG_PATTERN",
@@ -1014,7 +1014,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::DDSAnalyzer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DDSHeader",
@@ -1024,7 +1024,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::DDSHeader",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DDSIssue",
@@ -1034,7 +1034,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::DDSIssue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EncodingDetector",
@@ -1064,7 +1064,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
       "source_expr": "generation::FileGeneratorConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileHasher",
@@ -1094,7 +1094,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use error::FileIOError;",
       "source_expr": "error::FileIOError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileOperation",
@@ -1104,7 +1104,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};",
       "source_expr": "game_files::FileOperation",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "FileOperationResult",
@@ -1134,7 +1134,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};",
       "source_expr": "dds::GameTarget",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "LogCollector",
@@ -1144,7 +1144,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::LogCollector",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RejectedInput",
@@ -1154,7 +1154,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::RejectedInput",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "TargetedResolution",
@@ -1164,7 +1164,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::TargetedResolution",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "backup",
@@ -1173,7 +1173,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod backup;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "calculate_similarity",
@@ -1192,7 +1192,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod core;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "dds",
@@ -1201,7 +1201,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod dds;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "encoding",
@@ -1210,7 +1210,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod encoding;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "error",
@@ -1228,7 +1228,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod game_files;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "generate_ignore_file",
@@ -1248,7 +1248,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use generation::{ FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml, };",
       "source_expr": "generation::generate_local_yaml",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "generation",
@@ -1257,7 +1257,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod generation;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "hash",
@@ -1266,7 +1266,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod hash;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "log_collection",
@@ -1275,7 +1275,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod log_collection;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "resolve_targeted_inputs",
@@ -1285,7 +1285,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
       "source_expr": "log_collection::resolve_targeted_inputs",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "similarity",
@@ -1294,7 +1294,7 @@
       "owner_module": "file_io",
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod similarity;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "similarity_ratio",
@@ -1304,7 +1304,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use similarity::{calculate_similarity, similarity_ratio};",
       "source_expr": "similarity::similarity_ratio",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ContractEvent",
@@ -1314,7 +1314,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
       "source_expr": "logging::ContractEvent",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EVENT_STARTUP_ACCELERATION_STATUS",
@@ -1324,7 +1324,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
       "source_expr": "logging::EVENT_STARTUP_ACCELERATION_STATUS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EVENT_STARTUP_BINDING_CONTRACT_FAILED",
@@ -1334,7 +1334,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
       "source_expr": "logging::EVENT_STARTUP_BINDING_CONTRACT_FAILED",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EVENT_STARTUP_BINDING_CONTRACT_VALIDATED",
@@ -1344,7 +1344,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
       "source_expr": "logging::EVENT_STARTUP_BINDING_CONTRACT_VALIDATED",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Logger",
@@ -1354,7 +1354,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
       "source_expr": "logging::Logger",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Message",
@@ -1394,7 +1394,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
       "source_expr": "logging::format_contract_event",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "format_log_message",
@@ -1413,7 +1413,7 @@
       "owner_module": "message",
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub mod logging;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "redact_contract_fields",
@@ -1423,7 +1423,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use redaction::{redact_contract_fields, redact_field_value};",
       "source_expr": "redaction::redact_contract_fields",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "redact_field_value",
@@ -1433,7 +1433,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "source_decl": "pub use redaction::{redact_contract_fields, redact_field_value};",
       "source_expr": "redaction::redact_field_value",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "strip_emoji",
@@ -1453,7 +1453,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::// Boolean convenience wrappers drive_exists",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "// Permission and accessibility checks is_valid_executable_path",
@@ -1463,7 +1463,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::// Permission and accessibility checks is_valid_executable_path",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupError",
@@ -1473,7 +1473,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::BackupError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupManager",
@@ -1503,7 +1503,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::BackupResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DocsPathError",
@@ -1513,7 +1513,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::DocsPathError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DocsPathFinder",
@@ -1533,7 +1533,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::DocsPathResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DocumentsChecker",
@@ -1563,7 +1563,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use docs_path::DocumentsPathManager;",
       "source_expr": "docs_path::DocumentsPathManager",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GamePathError",
@@ -1573,7 +1573,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::GamePathError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GamePathFinder",
@@ -1603,7 +1603,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::GamePathResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IniCheckResult",
@@ -1613,7 +1613,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use checker::{DocumentsChecker, IniCheckResult};",
       "source_expr": "checker::IniCheckResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IniFile",
@@ -1623,7 +1623,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use ini_parser::IniFile;",
       "source_expr": "ini_parser::IniFile",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PathError",
@@ -1633,7 +1633,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::PathError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PathResult",
@@ -1643,7 +1643,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::PathResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ValidationError",
@@ -1653,7 +1653,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::ValidationError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ValidationResult",
@@ -1663,7 +1663,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::ValidationResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseVersion",
@@ -1673,7 +1673,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use backup::{BackupManager, XseVersion};",
       "source_expr": "backup::XseVersion",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "check_drive_exists",
@@ -1683,7 +1683,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::check_drive_exists",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "check_read_permissions",
@@ -1723,7 +1723,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::has_read_permission",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "has_write_permission",
@@ -1733,7 +1733,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::has_write_permission",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_restricted_path",
@@ -1803,7 +1803,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::remove_readonly_attribute",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_custom_scan_path",
@@ -1823,7 +1823,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_is_directory",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_is_file",
@@ -1833,7 +1833,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_is_file",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_path_exists",
@@ -1843,7 +1843,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_path_exists",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_path_with_permissions",
@@ -1873,7 +1873,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_settings_path",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_settings_paths",
@@ -1883,7 +1883,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_settings_paths",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "MetricsSummary",
@@ -1903,7 +1903,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
       "source_decl": "pub use timer::{Timer, start_timer};",
       "source_expr": "timer::Timer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "clear_metrics",
@@ -1943,7 +1943,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
       "source_decl": "pub use timer::{Timer, start_timer};",
       "source_expr": "timer::start_timer",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Keys",
@@ -1953,7 +1953,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use keys::Keys;",
       "source_expr": "keys::Keys",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "clear_all",
@@ -1983,7 +1983,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_application_dir, set_application_dir};",
       "source_expr": "registry::get_application_dir",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_game",
@@ -2003,7 +2003,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode, set_game, };",
       "source_expr": "registry::get_game_path_gui",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_game_version",
@@ -2013,7 +2013,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version, is_version_auto_detected};",
       "source_expr": "registry::get_game_version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_game_version_string",
@@ -2023,7 +2023,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::get_game_version_string",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_local_dir",
@@ -2033,7 +2033,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode, set_game, };",
       "source_expr": "registry::get_local_dir",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_manual_docs_gui",
@@ -2043,7 +2043,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode, set_game, };",
       "source_expr": "registry::get_manual_docs_gui",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_yaml_cache",
@@ -2053,7 +2053,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode, set_game, };",
       "source_expr": "registry::get_yaml_cache",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_enb_present",
@@ -2063,7 +2063,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::is_enb_present",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_gui_mode",
@@ -2073,7 +2073,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{ get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_yaml_cache, is_gui_mode, set_game, };",
       "source_expr": "registry::is_gui_mode",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_registered",
@@ -2083,7 +2083,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::is_registered",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_version_auto_detected",
@@ -2093,7 +2093,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version, is_version_auto_detected};",
       "source_expr": "registry::is_version_auto_detected",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_xse_valid",
@@ -2103,7 +2103,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::is_xse_valid",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "register",
@@ -2123,7 +2123,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_application_dir, set_application_dir};",
       "source_expr": "registry::set_application_dir",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "set_game",
@@ -2153,7 +2153,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseError};",
       "source_expr": "xse::AddressLibInfo",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BA2Error",
@@ -2163,7 +2163,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ba2::{BA2Error, BA2Issues, BA2Scanner};",
       "source_expr": "ba2::BA2Error",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BA2Issues",
@@ -2173,7 +2173,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ba2::{BA2Error, BA2Issues, BA2Scanner};",
       "source_expr": "ba2::BA2Issues",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BA2Scanner",
@@ -2183,7 +2183,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ba2::{BA2Error, BA2Issues, BA2Scanner};",
       "source_expr": "ba2::BA2Scanner",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CachedConfigFile",
@@ -2193,7 +2193,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use config_cache::{CachedConfigFile, ConfigCacheError, ConfigFileCache};",
       "source_expr": "config_cache::CachedConfigFile",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CheckResult",
@@ -2203,7 +2203,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::CheckResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CheckType",
@@ -2213,7 +2213,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use integrity::{ CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError, };",
       "source_expr": "integrity::CheckType",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigCacheError",
@@ -2223,7 +2223,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use config_cache::{CachedConfigFile, ConfigCacheError, ConfigFileCache};",
       "source_expr": "config_cache::ConfigCacheError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigDuplicateDetector",
@@ -2253,7 +2253,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use config_cache::{CachedConfigFile, ConfigCacheError, ConfigFileCache};",
       "source_expr": "config_cache::ConfigFileCache",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigIssue",
@@ -2283,7 +2283,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};",
       "source_expr": "toml::CrashgenChecker",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenOrchestratorError",
@@ -2293,7 +2293,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use crashgen_orchestrator::{ CrashgenCheckOrchestrator, CrashgenOrchestratorError, CrashgenReport, };",
       "source_expr": "crashgen_orchestrator::CrashgenOrchestratorError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CrashgenReport",
@@ -2303,7 +2303,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use crashgen_orchestrator::{ CrashgenCheckOrchestrator, CrashgenOrchestratorError, CrashgenReport, };",
       "source_expr": "crashgen_orchestrator::CrashgenReport",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DuplicateEntry",
@@ -2313,7 +2313,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use mod_ini::{DuplicateEntry, ModIniScanResult, ModIniScanner, VsyncEntry};",
       "source_expr": "mod_ini::DuplicateEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DuplicateGroup",
@@ -2323,7 +2323,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use config::{ConfigDuplicateDetector, ConfigError, DuplicateGroup};",
       "source_expr": "config::DuplicateGroup",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EnbChecker",
@@ -2333,7 +2333,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};",
       "source_expr": "enb::EnbChecker",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EnbConfigResult",
@@ -2353,7 +2353,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};",
       "source_expr": "enb::EnbError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EnbResult",
@@ -2363,7 +2363,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};",
       "source_expr": "enb::EnbResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EnbValidationResult",
@@ -2373,7 +2373,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};",
       "source_expr": "enb::EnbValidationResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameIntegrityChecker",
@@ -2383,7 +2383,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use integrity::{ CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError, };",
       "source_expr": "integrity::GameIntegrityChecker",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameScanConfig",
@@ -2403,7 +2403,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::GameScanOrchestrator",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameScanResult",
@@ -2413,7 +2413,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::GameScanResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameVersion",
@@ -2433,7 +2433,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};",
       "source_expr": "ini::IniError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IniValidator",
@@ -2443,7 +2443,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};",
       "source_expr": "ini::IniValidator",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IntegrityCheckResult",
@@ -2453,7 +2453,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use integrity::{ CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError, };",
       "source_expr": "integrity::IntegrityCheckResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IntegrityConfig",
@@ -2473,7 +2473,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use integrity::{ CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError, };",
       "source_expr": "integrity::IntegrityError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IssueSeverity",
@@ -2483,7 +2483,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};",
       "source_expr": "ini::IssueSeverity",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "LogError",
@@ -2493,7 +2493,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use logs::{LogError, LogErrorEntry, LogProcessor};",
       "source_expr": "logs::LogError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "LogErrorEntry",
@@ -2513,7 +2513,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use logs::{LogError, LogErrorEntry, LogProcessor};",
       "source_expr": "logs::LogProcessor",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModIniScanResult",
@@ -2523,7 +2523,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use mod_ini::{DuplicateEntry, ModIniScanResult, ModIniScanner, VsyncEntry};",
       "source_expr": "mod_ini::ModIniScanResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModIniScanner",
@@ -2533,7 +2533,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use mod_ini::{DuplicateEntry, ModIniScanResult, ModIniScanner, VsyncEntry};",
       "source_expr": "mod_ini::ModIniScanner",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModScanResult",
@@ -2543,7 +2543,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::ModScanResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "OrchestratorError",
@@ -2553,7 +2553,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::OrchestratorError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ScanGameError",
@@ -2563,7 +2563,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use error::ScanGameError;",
       "source_expr": "error::ScanGameError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ScanReportBuilder",
@@ -2573,7 +2573,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use game_report::{ScanReportBuilder, ScanValidators};",
       "source_expr": "game_report::ScanReportBuilder",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ScanValidators",
@@ -2583,7 +2583,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use game_report::{ScanReportBuilder, ScanValidators};",
       "source_expr": "game_report::ScanValidators",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SetupCheckConfig",
@@ -2593,7 +2593,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::SetupCheckConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SetupCheckResults",
@@ -2603,7 +2603,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::SetupCheckResults",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SetupError",
@@ -2613,7 +2613,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::SetupError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SetupResult",
@@ -2623,7 +2623,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::SetupResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "TomlConfigIssue",
@@ -2643,7 +2643,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};",
       "source_expr": "toml::TomlError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "TomlIssueSeverity",
@@ -2653,7 +2653,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};",
       "source_expr": "toml::TomlIssueSeverity",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "UnpackedError",
@@ -2663,7 +2663,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};",
       "source_expr": "unpacked::UnpackedError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "UnpackedIssues",
@@ -2673,7 +2673,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};",
       "source_expr": "unpacked::UnpackedIssues",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "UnpackedScanner",
@@ -2683,7 +2683,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};",
       "source_expr": "unpacked::UnpackedScanner",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VERSION",
@@ -2692,7 +2692,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub const VERSION",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ValidationResult",
@@ -2702,7 +2702,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseError};",
       "source_expr": "xse::ValidationResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VsyncEntry",
@@ -2712,7 +2712,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use mod_ini::{DuplicateEntry, ModIniScanResult, ModIniScanner, VsyncEntry};",
       "source_expr": "mod_ini::VsyncEntry",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "WryeBashParser",
@@ -2722,7 +2722,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};",
       "source_expr": "wrye::WryeBashParser",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "WryeError",
@@ -2732,7 +2732,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};",
       "source_expr": "wrye::WryeError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "WryeIssue",
@@ -2742,7 +2742,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};",
       "source_expr": "wrye::WryeIssue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "WryeSeverity",
@@ -2752,7 +2752,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};",
       "source_expr": "wrye::WryeSeverity",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseChecker",
@@ -2772,7 +2772,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseError};",
       "source_expr": "xse::XseError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ba2",
@@ -2781,7 +2781,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod ba2;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "config",
@@ -2799,7 +2799,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod config_cache;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "crashgen_orchestrator",
@@ -2808,7 +2808,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod crashgen_orchestrator;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_config_issues",
@@ -2818,7 +2818,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::detect_config_issues",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "enb",
@@ -2827,7 +2827,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod enb;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "error",
@@ -2845,7 +2845,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod game_report;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ini",
@@ -2854,7 +2854,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod ini;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "integrity",
@@ -2863,7 +2863,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod integrity;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "logs",
@@ -2872,7 +2872,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod logs;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "migrate_game_version_setting",
@@ -2882,7 +2882,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::migrate_game_version_setting",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "mod_ini",
@@ -2891,7 +2891,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod mod_ini;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "needs_path_detection",
@@ -2920,7 +2920,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::resolve_effective_game_version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "run_combined_checks",
@@ -2930,7 +2930,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::run_combined_checks",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "setup",
@@ -2939,7 +2939,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod setup;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "toml",
@@ -2948,7 +2948,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod toml;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "unpacked",
@@ -2957,7 +2957,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod unpacked;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "wrye",
@@ -2966,7 +2966,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod wrye;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "xse",
@@ -2975,7 +2975,7 @@
       "owner_module": "scangame",
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod xse;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "AnalysisConfig",
@@ -3677,7 +3677,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
       "source_expr": "error::SettingsError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SettingsSource",
@@ -3687,7 +3687,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
       "source_expr": "error::SettingsSource",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Yaml",
@@ -3697,7 +3697,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use yaml_rust2::Yaml;",
       "source_expr": "yaml_rust2::Yaml",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "cache_keys",
@@ -3707,7 +3707,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::cache_keys",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "cache_size",
@@ -3717,7 +3717,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::cache_size",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "cache_stats",
@@ -3727,7 +3727,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::cache_stats",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "clear_cache",
@@ -3737,7 +3737,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::clear_cache",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_cached",
@@ -3747,7 +3747,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::get_cached",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "invalidate",
@@ -3757,7 +3757,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::invalidate",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_cached",
@@ -3767,7 +3767,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::is_cached",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_batch_async",
@@ -3797,7 +3797,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::load_settings_async",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_settings_sync",
@@ -3807,7 +3807,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::load_settings_sync",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_async",
@@ -3817,7 +3817,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_async",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_batch_async",
@@ -3827,7 +3827,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_batch_async",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_batch_sync",
@@ -3837,7 +3837,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_batch_sync",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_merged_async",
@@ -3847,7 +3847,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_merged_async",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_merged_sync",
@@ -3857,7 +3857,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_merged_sync",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_sync",
@@ -3867,7 +3867,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_sync",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "merge_yaml_documents",
@@ -3877,7 +3877,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::merge_yaml_documents",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse_yaml_content",
@@ -3887,7 +3887,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
       "source_expr": "loader::parse_yaml_content",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "reset_cache_stats",
@@ -3897,7 +3897,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::reset_cache_stats",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validators",
@@ -3906,7 +3906,7 @@
       "owner_module": "settings",
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub mod validators;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "AsyncBridge",
@@ -3916,7 +3916,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use async_bridge::{ AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher, };",
       "source_expr": "async_bridge::AsyncBridge",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BridgeError",
@@ -3926,7 +3926,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use async_bridge::{ AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher, };",
       "source_expr": "async_bridge::BridgeError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ClassicError",
@@ -3936,7 +3936,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use errors::{ClassicError, ClassicResult, IntoClassicError};",
       "source_expr": "errors::ClassicError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ClassicResult",
@@ -3946,7 +3946,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use errors::{ClassicError, ClassicResult, IntoClassicError};",
       "source_expr": "errors::ClassicResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EventLoopDispatcher",
@@ -3956,7 +3956,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use async_bridge::{ AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher, };",
       "source_expr": "async_bridge::EventLoopDispatcher",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IntoClassicError",
@@ -3966,7 +3966,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use errors::{ClassicError, ClassicResult, IntoClassicError};",
       "source_expr": "errors::IntoClassicError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "RuntimeConfig",
@@ -3975,7 +3975,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub struct RuntimeConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "SlintDispatcher",
@@ -3985,7 +3985,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use async_bridge::{ AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher, };",
       "source_expr": "async_bridge::SlintDispatcher",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "async_bridge",
@@ -3994,7 +3994,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub mod async_bridge;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "cpu_optimized",
@@ -4004,7 +4004,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub fn cpu_optimized()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "errors",
@@ -4013,7 +4013,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub mod errors;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_runtime",
@@ -4033,7 +4033,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub fn io_optimized()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "minimal",
@@ -4043,7 +4043,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub fn minimal()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "path_core",
@@ -4061,7 +4061,7 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub mod performance_core;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "set_dispatcher",
@@ -4071,7 +4071,7 @@
       "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use async_bridge::{ AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher, };",
       "source_expr": "async_bridge::set_dispatcher",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "strings_core",
@@ -4090,7 +4090,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use github::{GithubAsset, GithubClient, GithubRelease};",
       "source_expr": "github::GithubAsset",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GithubClient",
@@ -4100,7 +4100,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use github::{GithubAsset, GithubClient, GithubRelease};",
       "source_expr": "github::GithubClient",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GithubRelease",
@@ -4110,7 +4110,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use github::{GithubAsset, GithubClient, GithubRelease};",
       "source_expr": "github::GithubRelease",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Result",
@@ -4130,7 +4130,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use error::{Result, UpdateError};",
       "source_expr": "error::UpdateError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VERSION",
@@ -4139,7 +4139,7 @@
       "owner_module": "update",
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub const VERSION",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "error",
@@ -4157,7 +4157,7 @@
       "owner_module": "update",
       "source_file": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub mod github;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "NULL_VERSION",
@@ -4167,7 +4167,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use classic_constants_core::NULL_VERSION;",
       "source_expr": "classic_constants_core::NULL_VERSION",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PeVersionError",
@@ -4177,7 +4177,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::PeVersionError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "PeVersionResult",
@@ -4196,7 +4196,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub enum VersionError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "VersionInfo",
@@ -4235,7 +4235,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub type VersionResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "compare_versions",
@@ -4245,7 +4245,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn compare_versions(v1: &Version, v2: &Version)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "extract_all_versions",
@@ -4255,7 +4255,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn extract_all_versions(content: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "extract_pe_version",
@@ -4275,7 +4275,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn extract_version_from_filename(filename: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "extract_version_from_log",
@@ -4285,7 +4285,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn extract_version_from_log(log_content: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "format_version",
@@ -4295,7 +4295,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn format_version(version: &Version, prefix: Option<&str>)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_version_registry",
@@ -4315,7 +4315,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn is_known_f4se_version(version: &Version)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_known_fallout4_version",
@@ -4325,7 +4325,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn is_known_fallout4_version(version: &Version)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_valid_executable_path",
@@ -4345,7 +4345,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn parse_version(version_str: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "pe_version",
@@ -4354,7 +4354,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub mod pe_version;",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "try_parse_version",
@@ -4364,7 +4364,7 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn try_parse_version(version_str: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "AddressLibFormat",
@@ -4542,7 +4542,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub const CLASSIC_VERSION",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ModSite",
@@ -4551,7 +4551,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub enum ModSite",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "USER_AGENT_PREFIX",
@@ -4560,7 +4560,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub const USER_AGENT_PREFIX",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "WebError",
@@ -4569,7 +4569,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub enum WebError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "WebResult",
@@ -4578,7 +4578,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub type WebResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "base_url",
@@ -4588,7 +4588,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn base_url(self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "build_url_with_query",
@@ -4598,7 +4598,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn build_url_with_query(base: &str, params: &[(&str, &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "extract_domain",
@@ -4608,7 +4608,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn extract_domain(url_str: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "game_url",
@@ -4618,7 +4618,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn game_url(self, game_id: classic_constants_core::GameId)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_user_agent",
@@ -4628,7 +4628,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn get_user_agent()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_user_agent_with_suffix",
@@ -4638,7 +4638,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn get_user_agent_with_suffix(suffix: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_valid_url",
@@ -4648,7 +4648,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn is_valid_url(url_str: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "join_url",
@@ -4658,7 +4658,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn join_url(base: &str, path: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "name",
@@ -4668,7 +4668,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn name(self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "validate_url",
@@ -4678,7 +4678,7 @@
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "source_decl": "pub fn validate_url(url_str: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseError",
@@ -4687,7 +4687,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub enum XseError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseInfo",
@@ -4696,7 +4696,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub struct XseInfo",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseResult",
@@ -4705,7 +4705,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub type XseResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "XseType",
@@ -4714,7 +4714,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub enum XseType",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "as_str",
@@ -4724,7 +4724,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn as_str(self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "check_installed",
@@ -4734,7 +4734,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn check_installed(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "compare_versions",
@@ -4744,7 +4744,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub use classic_version_core::{compare_versions, parse_version, try_parse_version};",
       "source_expr": "classic_version_core::compare_versions",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "detect_xse_version",
@@ -4754,7 +4754,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn detect_xse_version(loader_path: &Path, xse_type: XseType)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "dll_prefix",
@@ -4764,7 +4764,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn dll_prefix(self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "from_game_id",
@@ -4774,7 +4774,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn from_game_id(game_id: GameId)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_xse_info",
@@ -4784,7 +4784,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn get_xse_info(game_path: &Path, xse_type: XseType)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_xse_installed",
@@ -4794,7 +4794,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn is_xse_installed(game_path: &Path, xse_type: XseType)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "loader_name",
@@ -4804,7 +4804,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn loader_name(self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "loader_path",
@@ -4814,7 +4814,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn loader_path(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "new",
@@ -4824,7 +4824,7 @@
       "owner_module": "xse",
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub fn new(xse_type: XseType, path: PathBuf)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse_version",
@@ -4834,7 +4834,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub use classic_version_core::{compare_versions, parse_version, try_parse_version};",
       "source_expr": "classic_version_core::parse_version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "try_parse_version",
@@ -4844,7 +4844,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub use classic_version_core::{compare_versions, parse_version, try_parse_version};",
       "source_expr": "classic_version_core::try_parse_version",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "CacheStats",
@@ -4862,7 +4862,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub enum YamlError",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "YamlOperations",
@@ -4871,7 +4871,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub struct YamlOperations",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "cache_stats",
@@ -4881,7 +4881,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn cache_stats()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "clear_cache",
@@ -4891,7 +4891,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn clear_cache(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "clear_global_yaml_cache",
@@ -4911,7 +4911,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn dump_yaml(&self, yaml: &Yaml)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_cache_stats",
@@ -4921,7 +4921,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_cache_stats(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_hashmap_value",
@@ -4931,7 +4931,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_hashmap_value(&self, data: &Yaml, key_path: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_indexmap_value",
@@ -4941,7 +4941,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_indexmap_value(&self, data: &Yaml, key_path: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_setting",
@@ -4951,7 +4951,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_setting(&self, yaml: &Yaml, key_path: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_settings_batch",
@@ -4961,7 +4961,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_settings_batch(&self, yaml: &Yaml, key_paths: &[&str])",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_string_value",
@@ -4971,7 +4971,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_string_value(&self, data: &Yaml, key_path: &str, default: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "get_vec_value",
@@ -4981,7 +4981,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn get_vec_value(&self, data: &Yaml, key_path: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "is_cache_enabled",
@@ -4991,7 +4991,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn is_cache_enabled(&self)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_file",
@@ -5001,7 +5001,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn load_yaml_file(&self, path: &Path)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "load_yaml_files_batch",
@@ -5011,7 +5011,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn load_yaml_files_batch(&self, paths: &[&Path])",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "merge_keys",
@@ -5021,7 +5021,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub use merge::merge_keys;",
       "source_expr": "merge::merge_keys",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "new",
@@ -5031,7 +5031,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn new()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse_yaml",
@@ -5041,7 +5041,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn parse_yaml(&self, content: &str)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "reset_cache_stats",
@@ -5051,7 +5051,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn reset_cache_stats()",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "save_yaml_file",
@@ -5061,7 +5061,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn save_yaml_file(&self, path: &Path, yaml: &Yaml)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "set_cache_enabled",
@@ -5071,7 +5071,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn set_cache_enabled(&mut self, enabled: bool)",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "set_setting",
@@ -5081,7 +5081,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub fn set_setting(&self, yaml: &Yaml, key_path: &str, value: Yaml)",
-      "tier": "tier2"
+      "tier": "tier1"
     }
   ]
 }

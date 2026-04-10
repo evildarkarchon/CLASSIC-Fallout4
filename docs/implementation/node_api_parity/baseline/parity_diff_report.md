@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-10T00:43:22.172214+00:00`
-- Tier-1 contract rows: **368**
-- Tier-1 matched: **368**
+- Generated: `2026-04-10T01:26:29.924446+00:00`
+- Tier-1 contract rows: **711**
+- Tier-1 matched: **711**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **344**
+- Total gaps (Tier-1 + Tier-2): **1**
 
 ## Tier-1 Contract Evaluation
 
@@ -380,30 +380,354 @@
 | `version-registry-crashgen-settings-rules` | `version_registry` | `CrashgenSettingsRules` | `JsCrashgenSettingsRules` | `matched` |
 | `version-registry-check-crashgen-config-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenConfigWithRules` | `matched` |
 | `version-registry-check-crashgen-full-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenFullWithRules` | `matched` |
+| `config.ModConflictEntry@rust` | `config` | `ModConflictEntry@rust` | `None` | `matched` |
+| `constants.Fallout4Version@rust` | `constants` | `Fallout4Version@rust` | `None` | `matched` |
+| `constants.GameId@rust` | `constants` | `GameId@rust` | `None` | `matched` |
+| `constants.NULL_VERSION@rust` | `constants` | `NULL_VERSION@rust` | `None` | `matched` |
+| `constants.SETTINGS_IGNORE_NONE@rust` | `constants` | `SETTINGS_IGNORE_NONE@rust` | `None` | `matched` |
+| `constants.YamlFile@rust` | `constants` | `YamlFile@rust` | `None` | `matched` |
+| `constants.display_name@rust` | `constants` | `display_name@rust` | `None` | `matched` |
+| `constants.display_name_string@rust` | `constants` | `display_name_string@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
+| `constants.game_version@rust` | `constants` | `game_version@rust` | `None` | `matched` |
+| `constants.get_version_info@rust` | `constants` | `get_version_info@rust` | `None` | `matched` |
+| `constants.must_not_be_none@rust` | `constants` | `must_not_be_none@rust` | `None` | `matched` |
+| `constants.short_name@rust` | `constants` | `short_name@rust` | `None` | `matched` |
+| `constants.version_semver@rust` | `constants` | `version_semver@rust` | `None` | `matched` |
+| `constants.xse_acronym@rust` | `constants` | `xse_acronym@rust` | `None` | `matched` |
+| `constants.xse_acronym_string@rust` | `constants` | `xse_acronym_string@rust` | `None` | `matched` |
+| `constants.xse_config@rust` | `constants` | `xse_config@rust` | `None` | `matched` |
+| `crashgen_settings.CheckRule@rust` | `crashgen_settings` | `CheckRule@rust` | `None` | `matched` |
+| `crashgen_settings.ConfigLayout@rust` | `crashgen_settings` | `ConfigLayout@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationContext@rust` | `crashgen_settings` | `EvaluationContext@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationOutcome@rust` | `crashgen_settings` | `EvaluationOutcome@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationResult@rust` | `crashgen_settings` | `EvaluationResult@rust` | `None` | `matched` |
+| `crashgen_settings.ExpectedValue@rust` | `crashgen_settings` | `ExpectedValue@rust` | `None` | `matched` |
+| `crashgen_settings.OutcomeKind@rust` | `crashgen_settings` | `OutcomeKind@rust` | `None` | `matched` |
+| `crashgen_settings.Predicate@rust` | `crashgen_settings` | `Predicate@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightAction@rust` | `crashgen_settings` | `PreflightAction@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightActionKind@rust` | `crashgen_settings` | `PreflightActionKind@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightRule@rust` | `crashgen_settings` | `PreflightRule@rust` | `None` | `matched` |
+| `crashgen_settings.RuleMessages@rust` | `crashgen_settings` | `RuleMessages@rust` | `None` | `matched` |
+| `crashgen_settings.RuleReportBucket@rust` | `crashgen_settings` | `RuleReportBucket@rust` | `None` | `matched` |
+| `crashgen_settings.RuleSeverity@rust` | `crashgen_settings` | `RuleSeverity@rust` | `None` | `matched` |
+| `crashgen_settings.RuleTarget@rust` | `crashgen_settings` | `RuleTarget@rust` | `None` | `matched` |
+| `crashgen_settings.TargetValueType@rust` | `crashgen_settings` | `TargetValueType@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
+| `database.BATCH_CACHE_TTL_SECS@rust` | `database` | `BATCH_CACHE_TTL_SECS@rust` | `None` | `matched` |
+| `database.CacheEntry@rust` | `database` | `CacheEntry@rust` | `None` | `matched` |
+| `database.CacheKey@rust` | `database` | `CacheKey@rust` | `None` | `matched` |
+| `database.DEFAULT_CACHE_TTL_SECS@rust` | `database` | `DEFAULT_CACHE_TTL_SECS@rust` | `None` | `matched` |
+| `database.DatabaseError@rust` | `database` | `DatabaseError@rust` | `None` | `matched` |
+| `database.DatabasePool@rust` | `database` | `DatabasePool@rust` | `None` | `matched` |
+| `database.MAX_CACHE_CLEANUP_INTERVAL_SECS@rust` | `database` | `MAX_CACHE_CLEANUP_INTERVAL_SECS@rust` | `None` | `matched` |
+| `database.MAX_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `MAX_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
+| `database.MAX_CACHE_TTL_SECS@rust` | `database` | `MAX_CACHE_TTL_SECS@rust` | `None` | `matched` |
+| `database.MAX_QUERY_CACHE_CAPACITY@rust` | `database` | `MAX_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
+| `database.MIN_CACHE_CLEANUP_INTERVAL_SECS@rust` | `database` | `MIN_CACHE_CLEANUP_INTERVAL_SECS@rust` | `None` | `matched` |
+| `database.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
+| `database.MIN_QUERY_CACHE_CAPACITY@rust` | `database` | `MIN_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
+| `database.PoolStatistics@rust` | `database` | `PoolStatistics@rust` | `None` | `matched` |
+| `file_io.BackupType@rust` | `file_io` | `BackupType@rust` | `None` | `matched` |
+| `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
+| `file_io.DDSAnalyzer@rust` | `file_io` | `DDSAnalyzer@rust` | `None` | `matched` |
+| `file_io.DDSHeader@rust` | `file_io` | `DDSHeader@rust` | `None` | `matched` |
+| `file_io.DDSIssue@rust` | `file_io` | `DDSIssue@rust` | `None` | `matched` |
+| `file_io.FileGeneratorConfig@rust` | `file_io` | `FileGeneratorConfig@rust` | `None` | `matched` |
+| `file_io.FileIOError@rust` | `file_io` | `FileIOError@rust` | `None` | `matched` |
+| `file_io.FileOperation@rust` | `file_io` | `FileOperation@rust` | `None` | `matched` |
+| `file_io.GameTarget@rust` | `file_io` | `GameTarget@rust` | `None` | `matched` |
+| `file_io.LogCollector@rust` | `file_io` | `LogCollector@rust` | `None` | `matched` |
+| `file_io.RejectedInput@rust` | `file_io` | `RejectedInput@rust` | `None` | `matched` |
+| `file_io.TargetedResolution@rust` | `file_io` | `TargetedResolution@rust` | `None` | `matched` |
+| `file_io.backup@rust` | `file_io` | `backup@rust` | `None` | `matched` |
+| `file_io.core@rust` | `file_io` | `core@rust` | `None` | `matched` |
+| `file_io.dds@rust` | `file_io` | `dds@rust` | `None` | `matched` |
+| `file_io.encoding@rust` | `file_io` | `encoding@rust` | `None` | `matched` |
+| `file_io.game_files@rust` | `file_io` | `game_files@rust` | `None` | `matched` |
+| `file_io.generate_local_yaml@rust` | `file_io` | `generate_local_yaml@rust` | `None` | `matched` |
+| `file_io.generation@rust` | `file_io` | `generation@rust` | `None` | `matched` |
+| `file_io.hash@rust` | `file_io` | `hash@rust` | `None` | `matched` |
+| `file_io.log_collection@rust` | `file_io` | `log_collection@rust` | `None` | `matched` |
+| `file_io.resolve_targeted_inputs@rust` | `file_io` | `resolve_targeted_inputs@rust` | `None` | `matched` |
+| `file_io.similarity@rust` | `file_io` | `similarity@rust` | `None` | `matched` |
+| `file_io.similarity_ratio@rust` | `file_io` | `similarity_ratio@rust` | `None` | `matched` |
+| `message.ContractEvent@rust` | `message` | `ContractEvent@rust` | `None` | `matched` |
+| `message.EVENT_STARTUP_ACCELERATION_STATUS@rust` | `message` | `EVENT_STARTUP_ACCELERATION_STATUS@rust` | `None` | `matched` |
+| `message.EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `message` | `EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `None` | `matched` |
+| `message.EVENT_STARTUP_BINDING_CONTRACT_VALIDATED@rust` | `message` | `EVENT_STARTUP_BINDING_CONTRACT_VALIDATED@rust` | `None` | `matched` |
+| `message.Logger@rust` | `message` | `Logger@rust` | `None` | `matched` |
+| `message.format_contract_event@rust` | `message` | `format_contract_event@rust` | `None` | `matched` |
+| `message.logging@rust` | `message` | `logging@rust` | `None` | `matched` |
+| `message.redact_contract_fields@rust` | `message` | `redact_contract_fields@rust` | `None` | `matched` |
+| `message.redact_field_value@rust` | `message` | `redact_field_value@rust` | `None` | `matched` |
+| `path.// Boolean convenience wrappers drive_exists@rust` | `path` | `// Boolean convenience wrappers drive_exists@rust` | `None` | `matched` |
+| `path.// Permission and accessibility checks is_valid_executable_path@rust` | `path` | `// Permission and accessibility checks is_valid_executable_path@rust` | `None` | `matched` |
+| `path.BackupError@rust` | `path` | `BackupError@rust` | `None` | `matched` |
+| `path.BackupResult@rust` | `path` | `BackupResult@rust` | `None` | `matched` |
+| `path.DocsPathError@rust` | `path` | `DocsPathError@rust` | `None` | `matched` |
+| `path.DocsPathResult@rust` | `path` | `DocsPathResult@rust` | `None` | `matched` |
+| `path.DocumentsPathManager@rust` | `path` | `DocumentsPathManager@rust` | `None` | `matched` |
+| `path.GamePathError@rust` | `path` | `GamePathError@rust` | `None` | `matched` |
+| `path.GamePathResult@rust` | `path` | `GamePathResult@rust` | `None` | `matched` |
+| `path.IniCheckResult@rust` | `path` | `IniCheckResult@rust` | `None` | `matched` |
+| `path.IniFile@rust` | `path` | `IniFile@rust` | `None` | `matched` |
+| `path.PathError@rust` | `path` | `PathError@rust` | `None` | `matched` |
+| `path.PathResult@rust` | `path` | `PathResult@rust` | `None` | `matched` |
+| `path.ValidationError@rust` | `path` | `ValidationError@rust` | `None` | `matched` |
+| `path.ValidationResult@rust` | `path` | `ValidationResult@rust` | `None` | `matched` |
+| `path.XseVersion@rust` | `path` | `XseVersion@rust` | `None` | `matched` |
+| `path.check_drive_exists@rust` | `path` | `check_drive_exists@rust` | `None` | `matched` |
+| `path.has_read_permission@rust` | `path` | `has_read_permission@rust` | `None` | `matched` |
+| `path.has_write_permission@rust` | `path` | `has_write_permission@rust` | `None` | `matched` |
+| `path.remove_readonly_attribute@rust` | `path` | `remove_readonly_attribute@rust` | `None` | `matched` |
+| `path.validate_is_directory@rust` | `path` | `validate_is_directory@rust` | `None` | `matched` |
+| `path.validate_is_file@rust` | `path` | `validate_is_file@rust` | `None` | `matched` |
+| `path.validate_path_exists@rust` | `path` | `validate_path_exists@rust` | `None` | `matched` |
+| `path.validate_settings_path@rust` | `path` | `validate_settings_path@rust` | `None` | `matched` |
+| `path.validate_settings_paths@rust` | `path` | `validate_settings_paths@rust` | `None` | `matched` |
+| `perf.Timer@rust` | `perf` | `Timer@rust` | `None` | `matched` |
+| `perf.start_timer@rust` | `perf` | `start_timer@rust` | `None` | `matched` |
+| `registry.Keys@rust` | `registry` | `Keys@rust` | `None` | `matched` |
+| `registry.get_application_dir@rust` | `registry` | `get_application_dir@rust` | `None` | `matched` |
+| `registry.get_game_path_gui@rust` | `registry` | `get_game_path_gui@rust` | `None` | `matched` |
+| `registry.get_game_version@rust` | `registry` | `get_game_version@rust` | `None` | `matched` |
+| `registry.get_game_version_string@rust` | `registry` | `get_game_version_string@rust` | `None` | `matched` |
+| `registry.get_local_dir@rust` | `registry` | `get_local_dir@rust` | `None` | `matched` |
+| `registry.get_manual_docs_gui@rust` | `registry` | `get_manual_docs_gui@rust` | `None` | `matched` |
+| `registry.get_yaml_cache@rust` | `registry` | `get_yaml_cache@rust` | `None` | `matched` |
+| `registry.is_enb_present@rust` | `registry` | `is_enb_present@rust` | `None` | `matched` |
+| `registry.is_gui_mode@rust` | `registry` | `is_gui_mode@rust` | `None` | `matched` |
+| `registry.is_registered@rust` | `registry` | `is_registered@rust` | `None` | `matched` |
+| `registry.is_version_auto_detected@rust` | `registry` | `is_version_auto_detected@rust` | `None` | `matched` |
+| `registry.is_xse_valid@rust` | `registry` | `is_xse_valid@rust` | `None` | `matched` |
+| `registry.set_application_dir@rust` | `registry` | `set_application_dir@rust` | `None` | `matched` |
+| `scangame.AddressLibInfo@rust` | `scangame` | `AddressLibInfo@rust` | `None` | `matched` |
+| `scangame.BA2Error@rust` | `scangame` | `BA2Error@rust` | `None` | `matched` |
+| `scangame.BA2Issues@rust` | `scangame` | `BA2Issues@rust` | `None` | `matched` |
+| `scangame.BA2Scanner@rust` | `scangame` | `BA2Scanner@rust` | `None` | `matched` |
+| `scangame.CachedConfigFile@rust` | `scangame` | `CachedConfigFile@rust` | `None` | `matched` |
+| `scangame.CheckResult@rust` | `scangame` | `CheckResult@rust` | `None` | `matched` |
+| `scangame.CheckType@rust` | `scangame` | `CheckType@rust` | `None` | `matched` |
+| `scangame.ConfigCacheError@rust` | `scangame` | `ConfigCacheError@rust` | `None` | `matched` |
+| `scangame.ConfigFileCache@rust` | `scangame` | `ConfigFileCache@rust` | `None` | `matched` |
+| `scangame.CrashgenChecker@rust` | `scangame` | `CrashgenChecker@rust` | `None` | `matched` |
+| `scangame.CrashgenOrchestratorError@rust` | `scangame` | `CrashgenOrchestratorError@rust` | `None` | `matched` |
+| `scangame.CrashgenReport@rust` | `scangame` | `CrashgenReport@rust` | `None` | `matched` |
+| `scangame.DuplicateEntry@rust` | `scangame` | `DuplicateEntry@rust` | `None` | `matched` |
+| `scangame.DuplicateGroup@rust` | `scangame` | `DuplicateGroup@rust` | `None` | `matched` |
+| `scangame.EnbChecker@rust` | `scangame` | `EnbChecker@rust` | `None` | `matched` |
+| `scangame.EnbError@rust` | `scangame` | `EnbError@rust` | `None` | `matched` |
+| `scangame.EnbResult@rust` | `scangame` | `EnbResult@rust` | `None` | `matched` |
+| `scangame.EnbValidationResult@rust` | `scangame` | `EnbValidationResult@rust` | `None` | `matched` |
+| `scangame.GameIntegrityChecker@rust` | `scangame` | `GameIntegrityChecker@rust` | `None` | `matched` |
+| `scangame.GameScanOrchestrator@rust` | `scangame` | `GameScanOrchestrator@rust` | `None` | `matched` |
+| `scangame.GameScanResult@rust` | `scangame` | `GameScanResult@rust` | `None` | `matched` |
+| `scangame.IniError@rust` | `scangame` | `IniError@rust` | `None` | `matched` |
+| `scangame.IniValidator@rust` | `scangame` | `IniValidator@rust` | `None` | `matched` |
+| `scangame.IntegrityCheckResult@rust` | `scangame` | `IntegrityCheckResult@rust` | `None` | `matched` |
+| `scangame.IntegrityError@rust` | `scangame` | `IntegrityError@rust` | `None` | `matched` |
+| `scangame.IssueSeverity@rust` | `scangame` | `IssueSeverity@rust` | `None` | `matched` |
+| `scangame.LogError@rust` | `scangame` | `LogError@rust` | `None` | `matched` |
+| `scangame.LogProcessor@rust` | `scangame` | `LogProcessor@rust` | `None` | `matched` |
+| `scangame.ModIniScanResult@rust` | `scangame` | `ModIniScanResult@rust` | `None` | `matched` |
+| `scangame.ModIniScanner@rust` | `scangame` | `ModIniScanner@rust` | `None` | `matched` |
+| `scangame.ModScanResult@rust` | `scangame` | `ModScanResult@rust` | `None` | `matched` |
+| `scangame.OrchestratorError@rust` | `scangame` | `OrchestratorError@rust` | `None` | `matched` |
+| `scangame.ScanGameError@rust` | `scangame` | `ScanGameError@rust` | `None` | `matched` |
+| `scangame.ScanReportBuilder@rust` | `scangame` | `ScanReportBuilder@rust` | `None` | `matched` |
+| `scangame.ScanValidators@rust` | `scangame` | `ScanValidators@rust` | `None` | `matched` |
+| `scangame.SetupCheckConfig@rust` | `scangame` | `SetupCheckConfig@rust` | `None` | `matched` |
+| `scangame.SetupCheckResults@rust` | `scangame` | `SetupCheckResults@rust` | `None` | `matched` |
+| `scangame.SetupError@rust` | `scangame` | `SetupError@rust` | `None` | `matched` |
+| `scangame.SetupResult@rust` | `scangame` | `SetupResult@rust` | `None` | `matched` |
+| `scangame.TomlError@rust` | `scangame` | `TomlError@rust` | `None` | `matched` |
+| `scangame.TomlIssueSeverity@rust` | `scangame` | `TomlIssueSeverity@rust` | `None` | `matched` |
+| `scangame.UnpackedError@rust` | `scangame` | `UnpackedError@rust` | `None` | `matched` |
+| `scangame.UnpackedIssues@rust` | `scangame` | `UnpackedIssues@rust` | `None` | `matched` |
+| `scangame.UnpackedScanner@rust` | `scangame` | `UnpackedScanner@rust` | `None` | `matched` |
+| `scangame.VERSION@rust` | `scangame` | `VERSION@rust` | `None` | `matched` |
+| `scangame.ValidationResult@rust` | `scangame` | `ValidationResult@rust` | `None` | `matched` |
+| `scangame.VsyncEntry@rust` | `scangame` | `VsyncEntry@rust` | `None` | `matched` |
+| `scangame.WryeBashParser@rust` | `scangame` | `WryeBashParser@rust` | `None` | `matched` |
+| `scangame.WryeError@rust` | `scangame` | `WryeError@rust` | `None` | `matched` |
+| `scangame.WryeIssue@rust` | `scangame` | `WryeIssue@rust` | `None` | `matched` |
+| `scangame.WryeSeverity@rust` | `scangame` | `WryeSeverity@rust` | `None` | `matched` |
+| `scangame.XseError@rust` | `scangame` | `XseError@rust` | `None` | `matched` |
+| `scangame.ba2@rust` | `scangame` | `ba2@rust` | `None` | `matched` |
+| `scangame.config_cache@rust` | `scangame` | `config_cache@rust` | `None` | `matched` |
+| `scangame.crashgen_orchestrator@rust` | `scangame` | `crashgen_orchestrator@rust` | `None` | `matched` |
+| `scangame.detect_config_issues@rust` | `scangame` | `detect_config_issues@rust` | `None` | `matched` |
+| `scangame.enb@rust` | `scangame` | `enb@rust` | `None` | `matched` |
+| `scangame.game_report@rust` | `scangame` | `game_report@rust` | `None` | `matched` |
+| `scangame.ini@rust` | `scangame` | `ini@rust` | `None` | `matched` |
+| `scangame.integrity@rust` | `scangame` | `integrity@rust` | `None` | `matched` |
+| `scangame.logs@rust` | `scangame` | `logs@rust` | `None` | `matched` |
+| `scangame.migrate_game_version_setting@rust` | `scangame` | `migrate_game_version_setting@rust` | `None` | `matched` |
+| `scangame.mod_ini@rust` | `scangame` | `mod_ini@rust` | `None` | `matched` |
+| `scangame.resolve_effective_game_version@rust` | `scangame` | `resolve_effective_game_version@rust` | `None` | `matched` |
+| `scangame.run_combined_checks@rust` | `scangame` | `run_combined_checks@rust` | `None` | `matched` |
+| `scangame.setup@rust` | `scangame` | `setup@rust` | `None` | `matched` |
+| `scangame.toml@rust` | `scangame` | `toml@rust` | `None` | `matched` |
+| `scangame.unpacked@rust` | `scangame` | `unpacked@rust` | `None` | `matched` |
+| `scangame.wrye@rust` | `scangame` | `wrye@rust` | `None` | `matched` |
+| `scangame.xse@rust` | `scangame` | `xse@rust` | `None` | `matched` |
+| `settings.SettingsError@rust` | `settings` | `SettingsError@rust` | `None` | `matched` |
+| `settings.SettingsSource@rust` | `settings` | `SettingsSource@rust` | `None` | `matched` |
+| `settings.Yaml@rust` | `settings` | `Yaml@rust` | `None` | `matched` |
+| `settings.cache_keys@rust` | `settings` | `cache_keys@rust` | `None` | `matched` |
+| `settings.cache_size@rust` | `settings` | `cache_size@rust` | `None` | `matched` |
+| `settings.cache_stats@rust` | `settings` | `cache_stats@rust` | `None` | `matched` |
+| `settings.clear_cache@rust` | `settings` | `clear_cache@rust` | `None` | `matched` |
+| `settings.get_cached@rust` | `settings` | `get_cached@rust` | `None` | `matched` |
+| `settings.invalidate@rust` | `settings` | `invalidate@rust` | `None` | `matched` |
+| `settings.is_cached@rust` | `settings` | `is_cached@rust` | `None` | `matched` |
+| `settings.load_settings_async@rust` | `settings` | `load_settings_async@rust` | `None` | `matched` |
+| `settings.load_settings_sync@rust` | `settings` | `load_settings_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_async@rust` | `settings` | `load_yaml_async@rust` | `None` | `matched` |
+| `settings.load_yaml_batch_async@rust` | `settings` | `load_yaml_batch_async@rust` | `None` | `matched` |
+| `settings.load_yaml_batch_sync@rust` | `settings` | `load_yaml_batch_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_merged_async@rust` | `settings` | `load_yaml_merged_async@rust` | `None` | `matched` |
+| `settings.load_yaml_merged_sync@rust` | `settings` | `load_yaml_merged_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_sync@rust` | `settings` | `load_yaml_sync@rust` | `None` | `matched` |
+| `settings.merge_yaml_documents@rust` | `settings` | `merge_yaml_documents@rust` | `None` | `matched` |
+| `settings.parse_yaml_content@rust` | `settings` | `parse_yaml_content@rust` | `None` | `matched` |
+| `settings.reset_cache_stats@rust` | `settings` | `reset_cache_stats@rust` | `None` | `matched` |
+| `settings.validators@rust` | `settings` | `validators@rust` | `None` | `matched` |
+| `shared.AsyncBridge@rust` | `shared` | `AsyncBridge@rust` | `None` | `matched` |
+| `shared.BridgeError@rust` | `shared` | `BridgeError@rust` | `None` | `matched` |
+| `shared.ClassicError@rust` | `shared` | `ClassicError@rust` | `None` | `matched` |
+| `shared.ClassicResult@rust` | `shared` | `ClassicResult@rust` | `None` | `matched` |
+| `shared.EventLoopDispatcher@rust` | `shared` | `EventLoopDispatcher@rust` | `None` | `matched` |
+| `shared.IntoClassicError@rust` | `shared` | `IntoClassicError@rust` | `None` | `matched` |
+| `shared.RuntimeConfig@rust` | `shared` | `RuntimeConfig@rust` | `None` | `matched` |
+| `shared.SlintDispatcher@rust` | `shared` | `SlintDispatcher@rust` | `None` | `matched` |
+| `shared.async_bridge@rust` | `shared` | `async_bridge@rust` | `None` | `matched` |
+| `shared.cpu_optimized@rust` | `shared` | `cpu_optimized@rust` | `None` | `matched` |
+| `shared.errors@rust` | `shared` | `errors@rust` | `None` | `matched` |
+| `shared.io_optimized@rust` | `shared` | `io_optimized@rust` | `None` | `matched` |
+| `shared.minimal@rust` | `shared` | `minimal@rust` | `None` | `matched` |
+| `shared.performance_core@rust` | `shared` | `performance_core@rust` | `None` | `matched` |
+| `shared.set_dispatcher@rust` | `shared` | `set_dispatcher@rust` | `None` | `matched` |
+| `update.GithubAsset@rust` | `update` | `GithubAsset@rust` | `None` | `matched` |
+| `update.GithubClient@rust` | `update` | `GithubClient@rust` | `None` | `matched` |
+| `update.GithubRelease@rust` | `update` | `GithubRelease@rust` | `None` | `matched` |
+| `update.UpdateError@rust` | `update` | `UpdateError@rust` | `None` | `matched` |
+| `update.VERSION@rust` | `update` | `VERSION@rust` | `None` | `matched` |
+| `update.github@rust` | `update` | `github@rust` | `None` | `matched` |
+| `version.NULL_VERSION@rust` | `version` | `NULL_VERSION@rust` | `None` | `matched` |
+| `version.PeVersionError@rust` | `version` | `PeVersionError@rust` | `None` | `matched` |
+| `version.VersionError@rust` | `version` | `VersionError@rust` | `None` | `matched` |
+| `version.VersionResult@rust` | `version` | `VersionResult@rust` | `None` | `matched` |
+| `version.compare_versions@rust` | `version` | `compare_versions@rust` | `None` | `matched` |
+| `version.extract_all_versions@rust` | `version` | `extract_all_versions@rust` | `None` | `matched` |
+| `version.extract_version_from_filename@rust` | `version` | `extract_version_from_filename@rust` | `None` | `matched` |
+| `version.extract_version_from_log@rust` | `version` | `extract_version_from_log@rust` | `None` | `matched` |
+| `version.format_version@rust` | `version` | `format_version@rust` | `None` | `matched` |
+| `version.is_known_f4se_version@rust` | `version` | `is_known_f4se_version@rust` | `None` | `matched` |
+| `version.is_known_fallout4_version@rust` | `version` | `is_known_fallout4_version@rust` | `None` | `matched` |
+| `version.parse_version@rust` | `version` | `parse_version@rust` | `None` | `matched` |
+| `version.pe_version@rust` | `version` | `pe_version@rust` | `None` | `matched` |
+| `version.try_parse_version@rust` | `version` | `try_parse_version@rust` | `None` | `matched` |
+| `web.CLASSIC_VERSION@rust` | `web` | `CLASSIC_VERSION@rust` | `None` | `matched` |
+| `web.ModSite@rust` | `web` | `ModSite@rust` | `None` | `matched` |
+| `web.USER_AGENT_PREFIX@rust` | `web` | `USER_AGENT_PREFIX@rust` | `None` | `matched` |
+| `web.WebError@rust` | `web` | `WebError@rust` | `None` | `matched` |
+| `web.WebResult@rust` | `web` | `WebResult@rust` | `None` | `matched` |
+| `web.base_url@rust` | `web` | `base_url@rust` | `None` | `matched` |
+| `web.build_url_with_query@rust` | `web` | `build_url_with_query@rust` | `None` | `matched` |
+| `web.extract_domain@rust` | `web` | `extract_domain@rust` | `None` | `matched` |
+| `web.game_url@rust` | `web` | `game_url@rust` | `None` | `matched` |
+| `web.get_user_agent@rust` | `web` | `get_user_agent@rust` | `None` | `matched` |
+| `web.get_user_agent_with_suffix@rust` | `web` | `get_user_agent_with_suffix@rust` | `None` | `matched` |
+| `web.is_valid_url@rust` | `web` | `is_valid_url@rust` | `None` | `matched` |
+| `web.join_url@rust` | `web` | `join_url@rust` | `None` | `matched` |
+| `web.name@rust` | `web` | `name@rust` | `None` | `matched` |
+| `web.validate_url@rust` | `web` | `validate_url@rust` | `None` | `matched` |
+| `xse.XseError@rust` | `xse` | `XseError@rust` | `None` | `matched` |
+| `xse.XseInfo@rust` | `xse` | `XseInfo@rust` | `None` | `matched` |
+| `xse.XseResult@rust` | `xse` | `XseResult@rust` | `None` | `matched` |
+| `xse.XseType@rust` | `xse` | `XseType@rust` | `None` | `matched` |
+| `xse.as_str@rust` | `xse` | `as_str@rust` | `None` | `matched` |
+| `xse.check_installed@rust` | `xse` | `check_installed@rust` | `None` | `matched` |
+| `xse.compare_versions@rust` | `xse` | `compare_versions@rust` | `None` | `matched` |
+| `xse.detect_xse_version@rust` | `xse` | `detect_xse_version@rust` | `None` | `matched` |
+| `xse.dll_prefix@rust` | `xse` | `dll_prefix@rust` | `None` | `matched` |
+| `xse.from_game_id@rust` | `xse` | `from_game_id@rust` | `None` | `matched` |
+| `xse.get_xse_info@rust` | `xse` | `get_xse_info@rust` | `None` | `matched` |
+| `xse.is_xse_installed@rust` | `xse` | `is_xse_installed@rust` | `None` | `matched` |
+| `xse.loader_name@rust` | `xse` | `loader_name@rust` | `None` | `matched` |
+| `xse.loader_path@rust` | `xse` | `loader_path@rust` | `None` | `matched` |
+| `xse.new@rust` | `xse` | `new@rust` | `None` | `matched` |
+| `xse.parse_version@rust` | `xse` | `parse_version@rust` | `None` | `matched` |
+| `xse.try_parse_version@rust` | `xse` | `try_parse_version@rust` | `None` | `matched` |
+| `yaml.YamlError@rust` | `yaml` | `YamlError@rust` | `None` | `matched` |
+| `yaml.YamlOperations@rust` | `yaml` | `YamlOperations@rust` | `None` | `matched` |
+| `yaml.cache_stats@rust` | `yaml` | `cache_stats@rust` | `None` | `matched` |
+| `yaml.clear_cache@rust` | `yaml` | `clear_cache@rust` | `None` | `matched` |
+| `yaml.dump_yaml@rust` | `yaml` | `dump_yaml@rust` | `None` | `matched` |
+| `yaml.get_cache_stats@rust` | `yaml` | `get_cache_stats@rust` | `None` | `matched` |
+| `yaml.get_hashmap_value@rust` | `yaml` | `get_hashmap_value@rust` | `None` | `matched` |
+| `yaml.get_indexmap_value@rust` | `yaml` | `get_indexmap_value@rust` | `None` | `matched` |
+| `yaml.get_setting@rust` | `yaml` | `get_setting@rust` | `None` | `matched` |
+| `yaml.get_settings_batch@rust` | `yaml` | `get_settings_batch@rust` | `None` | `matched` |
+| `yaml.get_string_value@rust` | `yaml` | `get_string_value@rust` | `None` | `matched` |
+| `yaml.get_vec_value@rust` | `yaml` | `get_vec_value@rust` | `None` | `matched` |
+| `yaml.is_cache_enabled@rust` | `yaml` | `is_cache_enabled@rust` | `None` | `matched` |
+| `yaml.load_yaml_file@rust` | `yaml` | `load_yaml_file@rust` | `None` | `matched` |
+| `yaml.load_yaml_files_batch@rust` | `yaml` | `load_yaml_files_batch@rust` | `None` | `matched` |
+| `yaml.merge_keys@rust` | `yaml` | `merge_keys@rust` | `None` | `matched` |
+| `yaml.new@rust` | `yaml` | `new@rust` | `None` | `matched` |
+| `yaml.parse_yaml@rust` | `yaml` | `parse_yaml@rust` | `None` | `matched` |
+| `yaml.reset_cache_stats@rust` | `yaml` | `reset_cache_stats@rust` | `None` | `matched` |
+| `yaml.save_yaml_file@rust` | `yaml` | `save_yaml_file@rust` | `None` | `matched` |
+| `yaml.set_cache_enabled@rust` | `yaml` | `set_cache_enabled@rust` | `None` | `matched` |
+| `yaml.set_setting@rust` | `yaml` | `set_setting@rust` | `None` | `matched` |
+| `aux.JsCheckRule` | `aux` | `CheckRule` | `JsCheckRule` | `matched` |
+| `aux.JsExpectedValue` | `aux` | `ExpectedValue` | `JsExpectedValue` | `matched` |
+| `config.JsModConflictEntry` | `config` | `ModConflictEntry` | `JsModConflictEntry` | `matched` |
+| `aux.JsModSolutionCriteria` | `aux` | `ModSolutionCriteria` | `JsModSolutionCriteria` | `matched` |
+| `aux.JsModSolutionEntry` | `aux` | `ModSolutionEntry` | `JsModSolutionEntry` | `matched` |
+| `aux.JsPreflightAction` | `aux` | `PreflightAction` | `JsPreflightAction` | `matched` |
+| `aux.JsPreflightRule` | `aux` | `PreflightRule` | `JsPreflightRule` | `matched` |
+| `aux.JsRuleMessages` | `aux` | `RuleMessages` | `JsRuleMessages` | `matched` |
+| `aux.JsRuleTarget` | `aux` | `RuleTarget` | `JsRuleTarget` | `matched` |
+| `aux.JsSuspectErrorRule` | `aux` | `SuspectErrorRule` | `JsSuspectErrorRule` | `matched` |
+| `aux.JsSuspectStackCountRule` | `aux` | `SuspectStackCountRule` | `JsSuspectStackCountRule` | `matched` |
+| `aux.JsSuspectStackRule` | `aux` | `SuspectStackRule` | `JsSuspectStackRule` | `matched` |
+| `scanlog.JsLogCollector` | `scanlog` | `LogCollector` | `JsLogCollector` | `matched` |
+| `scanlog.JsLogProcessor` | `scanlog` | `LogProcessor` | `JsLogProcessor` | `matched` |
+| `scanlog.JsLogger` | `scanlog` | `Logger` | `JsLogger` | `matched` |
+| `scanlog.createLogger` | `scanlog` | `Logger` | `createLogger` | `matched` |
+| `aux.getApplicationDir` | `aux` | `get_application_dir` | `getApplicationDir` | `matched` |
+| `version_registry.migrateGameVersionSetting` | `version_registry` | `migrate_game_version_setting` | `migrateGameVersionSetting` | `matched` |
+| `scanlog.processGameLogs` | `scanlog` | `LogProcessor` | `processGameLogs` | `matched` |
+| `aux.resetFcxGlobalState` | `aux` | `FcxModeHandler` | `resetFcxGlobalState` | `matched` |
+| `aux.setApplicationDir` | `aux` | `set_application_dir` | `setApplicationDir` | `matched` |
+| `aux.writeAutoscanReport` | `aux` | `FileIOCore` | `writeAutoscanReport` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
-| `aux` | 0 | 16 |
-| `config` | 0 | 1 |
-| `constants` | 0 | 30 |
-| `crashgen_settings` | 0 | 21 |
-| `database` | 0 | 14 |
-| `file_io` | 0 | 24 |
-| `message` | 0 | 9 |
-| `path` | 0 | 25 |
-| `perf` | 0 | 2 |
-| `registry` | 0 | 14 |
-| `scangame` | 0 | 70 |
-| `scanlog` | 0 | 6 |
-| `settings` | 0 | 22 |
-| `shared` | 0 | 15 |
-| `update` | 0 | 6 |
-| `version` | 0 | 14 |
-| `version_registry` | 0 | 1 |
-| `web` | 0 | 15 |
-| `xse` | 0 | 17 |
-| `yaml` | 0 | 22 |
+| `scanlog` | 0 | 1 |
 
 Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.

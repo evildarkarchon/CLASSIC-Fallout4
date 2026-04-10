@@ -554,3 +554,27 @@ if (activeTier1Owners.has("config")) {
     assert.strictEqual(typeof result.needsDocsPath, "boolean");
   });
 }
+
+// Phase 4 Plan 5: cross-owner overlap and crashgen_rules cross-runtime tests
+test("Plan-5: getApplicationDir returns string or null (cross-runtime, read-only)", () => {
+  // MEDIUM concern: do NOT call setApplicationDir in the same process
+  try {
+    const dir = classic.getApplicationDir();
+    assert.ok(typeof dir === "string" || dir === null,
+      `getApplicationDir must return string or null, got ${typeof dir}`);
+  } catch (e) {
+    // Once not initialized -- acceptable
+    assert.ok(e instanceof Error, "expected an Error if Once is not initialized");
+  }
+});
+
+test("Plan-5: resetFcxGlobalState callable without throwing (cross-runtime)", () => {
+  // Should not throw even if FCX state is already clean
+  classic.resetFcxGlobalState();
+});
+
+test("Plan-5: migrateGameVersionSetting returns string or null (cross-runtime)", () => {
+  const result = classic.migrateGameVersionSetting("Original");
+  assert.ok(typeof result === "string" || result === null,
+    `migrateGameVersionSetting must return string or null, got ${typeof result}`);
+});

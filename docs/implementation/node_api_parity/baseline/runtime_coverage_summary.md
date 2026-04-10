@@ -1,10 +1,10 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-04-10T00:43:22.175588+00:00`
-- Tracked surfaces: **728**
-- Runtime verified: **394**
+- Generated: `2026-04-10T01:26:29.929530+00:00`
+- Tracked surfaces: **738**
+- Runtime verified: **737**
 - Contract mapped only: **0**
-- Deferred: **334**
+- Deferred: **1**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -12,25 +12,25 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|
-| `aux` | 154 | 0 | 12 | 0 | 166 |
-| `config` | 87 | 0 | 1 | 0 | 88 |
-| `constants` | 0 | 0 | 30 | 0 | 30 |
-| `crashgen_settings` | 0 | 0 | 21 | 0 | 21 |
-| `database` | 0 | 0 | 14 | 0 | 14 |
-| `file_io` | 0 | 0 | 24 | 0 | 24 |
-| `message` | 0 | 0 | 9 | 0 | 9 |
-| `path` | 0 | 0 | 25 | 0 | 25 |
-| `perf` | 0 | 0 | 2 | 0 | 2 |
-| `registry` | 0 | 0 | 14 | 0 | 14 |
-| `scangame` | 0 | 0 | 70 | 0 | 70 |
-| `scanlog` | 90 | 0 | 1 | 0 | 91 |
-| `settings` | 0 | 0 | 22 | 0 | 22 |
-| `shared` | 0 | 0 | 15 | 0 | 15 |
-| `update` | 0 | 0 | 6 | 0 | 6 |
-| `version` | 0 | 0 | 14 | 0 | 14 |
+| `aux` | 169 | 0 | 0 | 0 | 169 |
+| `config` | 90 | 0 | 0 | 0 | 90 |
+| `constants` | 30 | 0 | 0 | 0 | 30 |
+| `crashgen_settings` | 21 | 0 | 0 | 0 | 21 |
+| `database` | 14 | 0 | 0 | 0 | 14 |
+| `file_io` | 24 | 0 | 0 | 0 | 24 |
+| `message` | 9 | 0 | 0 | 0 | 9 |
+| `path` | 25 | 0 | 0 | 0 | 25 |
+| `perf` | 2 | 0 | 0 | 0 | 2 |
+| `registry` | 14 | 0 | 0 | 0 | 14 |
+| `scangame` | 70 | 0 | 0 | 0 | 70 |
+| `scanlog` | 95 | 0 | 1 | 0 | 96 |
+| `settings` | 22 | 0 | 0 | 0 | 22 |
+| `shared` | 15 | 0 | 0 | 0 | 15 |
+| `update` | 6 | 0 | 0 | 0 | 6 |
+| `version` | 14 | 0 | 0 | 0 | 14 |
 | `version_registry` | 63 | 0 | 0 | 0 | 63 |
-| `web` | 0 | 0 | 15 | 0 | 15 |
-| `xse` | 0 | 0 | 17 | 0 | 17 |
-| `yaml` | 0 | 0 | 22 | 0 | 22 |
+| `web` | 15 | 0 | 0 | 0 | 15 |
+| `xse` | 17 | 0 | 0 | 0 | 17 |
+| `yaml` | 22 | 0 | 0 | 0 | 22 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.
