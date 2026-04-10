@@ -6,7 +6,7 @@
 
 The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
 
-**v9.1.0-bindings progress:** Phases 1-5 complete. Phase 1 (CXX Parity Gate Tooling) and Phase 2 (CXX Bridge Surface Expansion) delivered the CXX gate tooling and bridge widening (202 → 316 entries across 19 modules, first-time exposure of `classic-constants-core`, `classic-web-core`, and the FCX issue getter). Phase 3 (Python Tier Collapse) collapsed the Python parity contract to a single enforced tier: tier1Mappings grew from ~311 to 1098, `deferred_total` is 0, `tierDefinitions.tier2` is deleted, `python_unmapped`/`rust_unmapped` branches are removed from `generate_baseline.py`, `classic_shared` is gate-enrolled with 61 contract rows (HARM-03/04), and 154 new D-07 per-class smoke tests cover the promoted residuals. Phase 4 (Node Tier Collapse) promoted all 109 deferred Node entries to the single enforced tier. Phase 5 (CI Enforcement) wired the CXX parity gate into `ci-cpp.yml` as a lightweight pre-check gating CLI/GUI builds, and created the triple-gate canary assertion script proving all three gates detect undeclared APIs. All three parity gates exit 0 at 0 drift and are CI-enforced. Branch protection (CI-04) was user-deferred.
+**v9.1.0-bindings progress:** All 6 phases complete. Phase 1 (CXX Parity Gate Tooling) and Phase 2 (CXX Bridge Surface Expansion) delivered the CXX gate tooling and bridge widening (202 → 316 entries across 19 modules, first-time exposure of `classic-constants-core`, `classic-web-core`, and the FCX issue getter). Phase 3 (Python Tier Collapse) collapsed the Python parity contract to a single enforced tier: tier1Mappings grew from ~311 to 1098, `deferred_total` is 0, `tierDefinitions.tier2` is deleted, `classic_shared` is gate-enrolled with 61 contract rows (HARM-03/04), and 154 new D-07 per-class smoke tests cover the promoted residuals. Phase 4 (Node Tier Collapse) promoted all 109 deferred Node entries to the single enforced tier. Phase 5 (CI Enforcement) wired the CXX parity gate into `ci-cpp.yml` as a lightweight pre-check gating CLI/GUI builds, and created the triple-gate canary assertion script proving all three gates detect undeclared APIs. Phase 6 (Documentation Reset) deleted all 8 Tier-2 governance files (archived to promotion audit trail first), rewrote `binding-parity-overview.md` as the harmony-achieved reference, created `binding-parity-policy.md` and `error-contract.md`, and cleaned all stale governance cross-references. All three parity gates exit 0 at 0 drift and are CI-enforced. Branch protection (CI-04) was user-deferred.
 
 ## Current Milestone: v9.1.0-bindings Full Bindings Parity
 
@@ -67,16 +67,16 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 <!-- v9.1.0-bindings: Full Bindings Parity. Detailed REQ-IDs in REQUIREMENTS.md. -->
 
 - [x] Python Tier-1/Tier-2 collapsed: 1098 tier1Mappings enforced, `deferred_total == 0`, `tierDefinitions.tier2` deleted, `classic_shared` gate-enrolled with 61 rows — Validated in Phase 3: Python Tier Collapse
-- [ ] Node Tier-1/Tier-2 collapsed: all 101 deferred entries promoted to one enforced contract
-- [ ] First-class C++ bridge parity gate exists with baseline + diff + CI enforcement
+- [x] Node Tier-1/Tier-2 collapsed: all 109 deferred entries promoted to one enforced contract — Validated in Phase 4: Node Tier Collapse
+- [x] First-class C++ bridge parity gate exists with baseline + diff + CI enforcement — Validated in Phase 1: CXX Parity Gate Tooling + Phase 5: CI Enforcement
 - [x] C++ bridge exposes the full surface of every shared Rust crate it currently narrows (scangame, database, version-registry, config suspect rules, path, xse) plus first-time C++ surfaces for `classic-constants-core`, `classic-web-core`, and the FCX issue getter — Validated in Phase 2: CXX Bridge Surface Expansion
-- [ ] Node binding gains PE-version extraction parity with C++/Python
+- [x] Node binding gains PE-version extraction parity with C++/Python — Validated in Phase 4: Node Tier Collapse
 - [x] Python binding gains explicit `classic_shared` runtime helpers — Validated in Phase 3 (HARM-03/04: stub + runtime coverage + mypy --strict sweep)
-- [ ] Per-binding error-contract conventions documented (string sentinel vs null vs exception)
-- [ ] CI runs Python, Node, and C++ parity gates; new Rust public APIs cannot land until all three bindings cover them
-- [ ] `binding-parity-overview.md` rewritten as the harmony-achieved reference
-- [ ] Tier-2 backlog/governance/manifest files deleted from `docs/implementation/{python,node}_api_parity/governance/`
-- [ ] Single source-of-truth parity policy doc added
+- [x] Per-binding error-contract conventions documented (string sentinel vs null vs exception) — Validated in Phase 6: Documentation Reset (HARM-05)
+- [x] CI runs Python, Node, and C++ parity gates; new Rust public APIs cannot land until all three bindings cover them — Validated in Phase 5: CI Enforcement
+- [x] `binding-parity-overview.md` rewritten as the harmony-achieved reference — Validated in Phase 6: Documentation Reset (DOC-05)
+- [x] Tier-2 backlog/governance/manifest files deleted from `docs/implementation/{python,node}_api_parity/governance/` — Validated in Phase 6: Documentation Reset (DOC-02, DOC-03)
+- [x] Single source-of-truth parity policy doc added — Validated in Phase 6: Documentation Reset (DOC-06)
 
 ### Out of Scope
 
@@ -119,8 +119,8 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 | Treat FCX `Unnecessary` as success across bindings | Lets binding code keep the no-op reset path benign without breaking explicit-failure handling | ✓ Validated in Phase 3 |
 | In-place verification refresh for gap-closure phases (9/10/11) | Avoids parallel verification artifacts; the parent phase verification stays the single source of truth | ✓ Validated in Phase 9, 10, 11 |
 | Internal milestone label `v1.0` renamed to `v9.1.0-bugfixes` at ship time | Keeps the project's existing v8.x version progression contiguous and avoids the duplicate v1.0 entry that would otherwise collide with the 2026-02 "Codebase Cleanup" milestone | ✓ Applied at v9.1.0-bugfixes ship 2026-04-07 |
-| Full bindings parity in v9.1.0-bindings: collapse Python/Node Tier-1/Tier-2 into one enforced tier and add a first-class C++ bridge parity gate | Tier-2 deferral was a tactical choice during v9.1.0-bugfixes; the user's stated goal is "everything in harmony, keeping the parity gates to prevent drift" -- this requires deleting Tier-2 governance and gating C++ bridge surface alongside Python and Node | — Pending |
-| Delete (not empty) Tier-2 backlog/manifest/governance files | Active Tier-2 files would otherwise leak back into discussions of "deferred for next milestone"; the milestone goal is one tier and only one tier | — Pending |
+| Full bindings parity in v9.1.0-bindings: collapse Python/Node Tier-1/Tier-2 into one enforced tier and add a first-class C++ bridge parity gate | Tier-2 deferral was a tactical choice during v9.1.0-bugfixes; the user's stated goal is "everything in harmony, keeping the parity gates to prevent drift" -- this requires deleting Tier-2 governance and gating C++ bridge surface alongside Python and Node | ✓ Validated in Phases 1-6 |
+| Delete (not empty) Tier-2 backlog/manifest/governance files | Active Tier-2 files would otherwise leak back into discussions of "deferred for next milestone"; the milestone goal is one tier and only one tier | ✓ Validated in Phase 6 |
 | Continue phase numbering from v9.1.0-bugfixes (next phase = Phase 12) | No `--reset-phase-numbers` requested; v9.1.0-bugfixes archive flow stays compatible with continuous numbering | — Pending |
 
 ## Evolution
@@ -141,4 +141,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-08 after Phase 3 (Python Tier Collapse) completion*
+*Last updated: 2026-04-10 after Phase 6 (Documentation Reset) completion — final phase of v9.1.0-bindings milestone*
