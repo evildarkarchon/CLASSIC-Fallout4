@@ -53,7 +53,7 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 - [x] **HARM-02**: `extractPeVersion` returns a typed object `{ major, minor, patch, build }` (or null/throw per documented Node error contract); the return shape is added to `index.d.ts` and runtime-tested for parity against the existing Python/Rust API
 - [x] **HARM-03**: `foundation/classic-shared-py` is wired as a maturin build target in `rebuild_rust.ps1 -Target python` and produces an importable `classic_shared` Python module exposing `RuntimeStats`, `get_runtime_stats()`, and `is_runtime_healthy()` (already implemented in `src/lib.rs`; this requirement is build-wiring and gate enrollment)
 - [x] **HARM-04**: A `classic-shared.pyi` stub exists alongside the build output and the Python parity gate's module map includes `classic_shared` so the new module is gate-enforced from day one
-- [ ] **HARM-05**: `docs/api/error-contract.md` documents the per-binding error-shape conventions (Python exception classes, Node `error.code` strings or null, C++ `rust::Error` exceptions and fail-soft sentinels) for every `ClassicError` variant — explicitly documents the conventions, does not standardize them
+- [x] **HARM-05**: `docs/api/error-contract.md` documents the per-binding error-shape conventions (Python exception classes, Node `error.code` strings or null, C++ `rust::Error` exceptions and fail-soft sentinels) for every `ClassicError` variant — explicitly documents the conventions, does not standardize them
 
 ### CI Enforcement (CI)
 
@@ -67,12 +67,12 @@ Requirements for milestone v9.1.0-bindings. Each maps to a single roadmap phase.
 ### Documentation Reset (DOC)
 
 - [ ] **DOC-01**: Python and Node parity gate scripts make the deferred-registry path argument optional/missing-tolerant **before** any governance file is deleted (prevents the hardcoded-path crash)
-- [ ] **DOC-02**: All Tier-2 backlog/governance/manifest files under `docs/implementation/python_api_parity/governance/` are deleted (not emptied) and broken-link grep across `docs/` is clean
-- [ ] **DOC-03**: All Tier-2 backlog/governance/manifest files under `docs/implementation/node_api_parity/governance/` are deleted (not emptied) and broken-link grep across `docs/` is clean
-- [ ] **DOC-04**: A promotion audit trail (snapshot of which entries were promoted from each governance file) is captured in `.planning/milestones/v9.1.0-bindings-promotion-audit.md` BEFORE governance files are deleted
-- [ ] **DOC-05**: `docs/api/binding-parity-overview.md` is rewritten as the "harmony achieved" reference with no Tier-2 language, no `classic-constants-core` / `classic-web-core` divergence rows, and updated CXX columns reflecting full surface exposure
-- [ ] **DOC-06**: `docs/api/binding-parity-policy.md` is added as the single source-of-truth parity policy doc — when refreshes happen, who owns the gate, how to add a new public Rust API
-- [ ] **DOC-07**: `docs/api/binding-contract-refresh-note.md` is updated to cover the C++ refresh workflow alongside the existing Node/Python guidance
+- [x] **DOC-02**: All Tier-2 backlog/governance/manifest files under `docs/implementation/python_api_parity/governance/` are deleted (not emptied) and broken-link grep across `docs/` is clean
+- [x] **DOC-03**: All Tier-2 backlog/governance/manifest files under `docs/implementation/node_api_parity/governance/` are deleted (not emptied) and broken-link grep across `docs/` is clean
+- [x] **DOC-04**: A promotion audit trail (snapshot of which entries were promoted from each governance file) is captured in `.planning/milestones/v9.1.0-bindings-promotion-audit.md` BEFORE governance files are deleted
+- [x] **DOC-05**: `docs/api/binding-parity-overview.md` is rewritten as the "harmony achieved" reference with no Tier-2 language, no `classic-constants-core` / `classic-web-core` divergence rows, and updated CXX columns reflecting full surface exposure
+- [x] **DOC-06**: `docs/api/binding-parity-policy.md` is added as the single source-of-truth parity policy doc — when refreshes happen, who owns the gate, how to add a new public Rust API
+- [x] **DOC-07**: `docs/api/binding-contract-refresh-note.md` is updated to cover the C++ refresh workflow alongside the existing Node/Python guidance
 
 ## v2 Requirements
 
@@ -138,20 +138,20 @@ Explicitly excluded from v9.1.0-bindings. Documented to prevent scope creep.
 | HARM-02 | Phase 4 | Complete |
 | HARM-03 | Phase 3 | Complete |
 | HARM-04 | Phase 3 | Complete |
-| HARM-05 | Phase 6 | Pending |
+| HARM-05 | Phase 6 | Complete |
 | CI-01 | Phase 5 | Pending |
 | CI-02 | Phase 5 | Pending |
 | CI-03 | Phase 5 | Pending |
 | CI-04 | Phase 5 | Pending |
 | CI-05 | Phase 5 | Pending |
 | CI-06 | Phase 5 | Pending |
-| DOC-01 | Phase 6 | Pending |
-| DOC-02 | Phase 6 | Pending |
-| DOC-03 | Phase 6 | Pending |
-| DOC-04 | Phase 6 | Pending |
-| DOC-05 | Phase 6 | Pending |
-| DOC-06 | Phase 6 | Pending |
-| DOC-07 | Phase 6 | Pending |
+| DOC-01 | Phase 6 | Complete |
+| DOC-02 | Phase 6 | Complete |
+| DOC-03 | Phase 6 | Complete |
+| DOC-04 | Phase 6 | Complete |
+| DOC-05 | Phase 6 | Complete |
+| DOC-06 | Phase 6 | Complete |
+| DOC-07 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 45 total

@@ -33,7 +33,7 @@
 - [x] **Phase 3: Python Tier Collapse** — Promote all 285 deferred Python entries (plus 12 Tier-2 migrations and 6 classic_shared rows + A10 residuals) to one enforced tier; wire classic_shared module (completed 2026-04-08)
 - [x] **Phase 4: Node Tier Collapse** (6/6 plans) — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction (completed 2026-04-10)
 - [ ] **Phase 5: CI Enforcement** — Wire all three parity gates into CI with branch-protection blocking on every PR
-- [ ] **Phase 6: Documentation Reset** — Rewrite harmony reference, delete Tier-2 governance files, add parity policy doc
+- [x] **Phase 6: Documentation Reset** (2/2 plans) — completed 2026-04-10 — Tier-2 governance files deleted, binding-parity-overview rewritten, parity policy and error-contract docs created
 
 ## Phase Details
 
@@ -144,8 +144,8 @@ Plans:
   5. `docs/api/binding-parity-policy.md` exists and states the one-tier policy: when gate refreshes happen, who owns each gate, and how to add a new public Rust API across all three bindings
 **Plans**: 2 plans
 Plans:
-- [ ] 06-documentation-reset/06-01-PLAN.md — Gate script deferred-registry cleanup + dead Tier-2 script deletion + promotion audit trail creation (DOC-01, DOC-04)
-- [ ] 06-documentation-reset/06-02-PLAN.md — Governance file deletion + binding-parity-overview rewrite + parity policy doc + error-contract doc + refresh note update (DOC-02, DOC-03, DOC-05, DOC-06, DOC-07, HARM-05)
+- [x] 06-documentation-reset/06-01-PLAN.md — Gate script deferred-registry cleanup + dead Tier-2 script deletion + promotion audit trail creation (DOC-01, DOC-04)
+- [x] 06-documentation-reset/06-02-PLAN.md — Governance file deletion + binding-parity-overview rewrite + parity policy doc + error-contract doc + refresh note update (DOC-02, DOC-03, DOC-05, DOC-06, DOC-07, HARM-05)
 
 ## Progress
 
@@ -158,7 +158,7 @@ Plans:
 | 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
 | 4. Node Tier Collapse | 6/6 | Complete   | 2026-04-10 |
 | 5. CI Enforcement | 1/2 | In Progress | - |
-| 6. Documentation Reset | 0/2 | Not started | - |
+| 6. Documentation Reset | 2/2 | Complete | 2026-04-10 |
 
 ### v9.1.0-bugfixes CLASSIC Codebase Health (Archived — shipped 2026-04-07)
 
