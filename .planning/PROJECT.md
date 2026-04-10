@@ -2,11 +2,11 @@
 
 ## Current State
 
-**Latest shipped milestone:** v9.1.0-bugfixes CLASSIC Codebase Health (2026-04-07)
+**Latest shipped milestone:** v9.1.0-bindings Full Bindings Parity (2026-04-10)
 
-The codebase is now in a healthier, audit-clean state: no dead code, no silent legacy fallbacks, no unbounded caches, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, FCX state hardening across all bindings, canonical CacheStats contract, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance with CI freshness gating.
+The codebase now has full bindings parity: every shared Rust crate is exposed at full fidelity through C++, Node, and Python with no Tier-2 deferrals, no narrowing, and parity gates that prevent future drift on all three surfaces. All three parity gates (CXX, Python, Node) are CI-enforced and exit 0 at 0 drift. Branch protection (CI-04) was user-deferred.
 
-**v9.1.0-bindings progress:** All 6 phases complete. Phase 1 (CXX Parity Gate Tooling) and Phase 2 (CXX Bridge Surface Expansion) delivered the CXX gate tooling and bridge widening (202 → 316 entries across 19 modules, first-time exposure of `classic-constants-core`, `classic-web-core`, and the FCX issue getter). Phase 3 (Python Tier Collapse) collapsed the Python parity contract to a single enforced tier: tier1Mappings grew from ~311 to 1098, `deferred_total` is 0, `tierDefinitions.tier2` is deleted, `classic_shared` is gate-enrolled with 61 contract rows (HARM-03/04), and 154 new D-07 per-class smoke tests cover the promoted residuals. Phase 4 (Node Tier Collapse) promoted all 109 deferred Node entries to the single enforced tier. Phase 5 (CI Enforcement) wired the CXX parity gate into `ci-cpp.yml` as a lightweight pre-check gating CLI/GUI builds, and created the triple-gate canary assertion script proving all three gates detect undeclared APIs. Phase 6 (Documentation Reset) deleted all 8 Tier-2 governance files (archived to promotion audit trail first), rewrote `binding-parity-overview.md` as the harmony-achieved reference, created `binding-parity-policy.md` and `error-contract.md`, and cleaned all stale governance cross-references. All three parity gates exit 0 at 0 drift and are CI-enforced. Branch protection (CI-04) was user-deferred.
+**v9.1.0-bindings summary:** All 7 phases complete. Phase 1 (CXX Parity Gate Tooling) and Phase 2 (CXX Bridge Surface Expansion) delivered the CXX gate tooling and bridge widening (202 to 316 entries across 19 modules). Phase 3 (Python Tier Collapse) collapsed the Python parity contract to a single enforced tier (1098 tier1Mappings, deferred_total 0). Phase 4 (Node Tier Collapse) promoted all 109 deferred Node entries to the single enforced tier. Phase 5 (CI Enforcement) wired all three parity gates into CI. Phase 6 (Documentation Reset) deleted Tier-2 governance files, rewrote binding-parity-overview.md, and created parity-policy and error-contract docs. Phase 7 (Milestone Cleanup) closed all cosmetic and tracking gaps from the milestone audit: fixed REQUIREMENTS.md traceability staleness, corrected the CXX baseline doc path, removed vestigial tier2 labels from baseline generators, and cleaned stale comments.
 
 ## Current Milestone: v9.1.0-bindings Full Bindings Parity
 
@@ -141,4 +141,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Phase 6 (Documentation Reset) completion — final phase of v9.1.0-bindings milestone*
+*Last updated: 2026-04-10 after Phase 7 (Milestone Cleanup) completion — all phases of v9.1.0-bindings milestone complete*
