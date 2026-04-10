@@ -1,10 +1,10 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-04-09T05:06:40.615296+00:00`
-- Tracked surfaces: **1264**
-- Runtime verified: **1264**
+- Generated: `2026-04-10T04:33:51.505450+00:00`
+- Tracked surfaces: **360**
+- Runtime verified: **71**
 - Contract mapped only: **0**
-- Deferred: **0**
+- Deferred: **289**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
 
@@ -12,24 +12,9 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|
-| `config` | 58 | 0 | 0 | 0 | 58 |
-| `constants` | 46 | 0 | 0 | 0 | 46 |
-| `database` | 44 | 0 | 0 | 0 | 44 |
-| `file_io` | 95 | 0 | 0 | 0 | 95 |
-| `message` | 46 | 0 | 0 | 0 | 46 |
-| `path` | 72 | 0 | 0 | 0 | 72 |
-| `perf` | 10 | 0 | 0 | 0 | 10 |
-| `registry` | 20 | 0 | 0 | 0 | 20 |
-| `resource` | 36 | 0 | 0 | 0 | 36 |
-| `scangame` | 172 | 0 | 0 | 0 | 172 |
-| `scanlog` | 377 | 0 | 0 | 0 | 377 |
-| `settings` | 28 | 0 | 0 | 0 | 28 |
-| `shared` | 61 | 0 | 0 | 0 | 61 |
-| `update` | 10 | 0 | 0 | 0 | 10 |
-| `version` | 15 | 0 | 0 | 0 | 15 |
-| `version_registry` | 84 | 0 | 0 | 0 | 84 |
-| `web` | 23 | 0 | 0 | 0 | 23 |
-| `xse` | 36 | 0 | 0 | 0 | 36 |
-| `yaml` | 31 | 0 | 0 | 0 | 31 |
+| `aux` | 3 | 0 | 1 | 0 | 4 |
+| `config` | 19 | 0 | 26 | 0 | 45 |
+| `scanlog` | 24 | 0 | 228 | 0 | 252 |
+| `version_registry` | 25 | 0 | 34 | 0 | 59 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.
