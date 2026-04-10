@@ -696,11 +696,6 @@ def main() -> int:
         default="ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
         help="Path to the Node runtime coverage registry JSON, relative to repo root.",
     )
-    parser.add_argument(
-        "--deferred-registry",
-        default="docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json",
-        help="Path to the Node deferred backlog registry JSON, relative to repo root.",
-    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -735,17 +730,14 @@ def main() -> int:
     )
     diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
     runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    deferred_registry = load_json_file(repo_root / args.deferred_registry)
     coverage_summary = build_coverage_summary(
         binding="node",
         contract=contract,
         diff_report=diff_report,
         runtime_registry=runtime_registry,
-        deferred_registry=deferred_registry,
         source_paths={
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
-            "deferred_registry": args.deferred_registry,
             "index_dts": args.index_dts,
         },
     )

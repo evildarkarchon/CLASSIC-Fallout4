@@ -187,11 +187,6 @@ def main() -> int:
         help="Path to the Python runtime coverage registry JSON, relative to repo root.",
     )
     parser.add_argument(
-        "--deferred-registry",
-        default="docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json",
-        help="Path to the Python deferred backlog registry JSON, relative to repo root.",
-    )
-    parser.add_argument(
         "--baseline-output-dir",
         default="docs/implementation/python_api_parity/baseline",
         help="Directory containing checked-in baseline artifacts, relative to repo root.",
@@ -228,17 +223,14 @@ def main() -> int:
 
     diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
     runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    deferred_registry = load_json_file(repo_root / args.deferred_registry)
     coverage_summary = build_coverage_summary(
         binding="python",
         contract=contract,
         diff_report=diff_report,
         runtime_registry=runtime_registry,
-        deferred_registry=deferred_registry,
         source_paths={
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
-            "deferred_registry": args.deferred_registry,
         },
     )
 

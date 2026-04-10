@@ -31,7 +31,7 @@ def load_tool_module():
     return module
 
 
-def test_build_coverage_summary_classifies_runtime_deferred_and_new() -> None:
+def test_build_coverage_summary_classifies_runtime_and_newly_uncovered() -> None:
     module = load_tool_module()
 
     contract = {
@@ -85,37 +85,23 @@ def test_build_coverage_summary_classifies_runtime_deferred_and_new() -> None:
             }
         ]
     }
-    deferred_registry = {
-        "entries": [
-            {
-                "coverageId": "node-aux-deferred-logger",
-                "bindingIdentifiers": ["JsLogger"],
-                "classification": "deferred",
-                "ownerModule": "aux",
-                "wave": "wave4",
-                "deferReason": "Low-priority utility surface",
-            }
-        ]
-    }
 
     summary = module.build_coverage_summary(
         binding="node",
         contract=contract,
         diff_report=diff_report,
         runtime_registry=runtime_registry,
-        deferred_registry=deferred_registry,
     )
 
     assert summary["summary"]["runtime_verified_total"] == 1
-    assert summary["summary"]["deferred_total"] == 1
-    assert summary["summary"]["newly_uncovered_total"] == 1
+    assert summary["summary"]["newly_uncovered_total"] == 2
     assert summary["summary"]["tier1_missing_runtime_total"] == 0
 
     classifications = {
         item["trackedId"]: item["classification"] for item in summary["trackedSurface"]
     }
     assert classifications["contract:scanlog-parser"] == "runtime_verified"
-    assert classifications["binding:JsLogger"] == "deferred"
+    assert classifications["binding:JsLogger"] == "newly_uncovered"
     assert classifications["binding:FutureExport"] == "newly_uncovered"
 
 
@@ -154,7 +140,6 @@ def test_build_coverage_summary_flags_tier1_rows_without_runtime_metadata() -> N
         contract=contract,
         diff_report=diff_report,
         runtime_registry={"entries": []},
-        deferred_registry={"entries": []},
     )
 
     assert summary["summary"]["tier1_missing_runtime_total"] == 1
@@ -206,7 +191,6 @@ def test_build_coverage_summary_reports_selector_snapshot_mismatch() -> None:
                 }
             ]
         },
-        deferred_registry={"entries": []},
     )
 
     assert summary["summary"]["registry_mismatch_total"] == 1
