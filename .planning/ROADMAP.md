@@ -34,6 +34,7 @@
 - [x] **Phase 4: Node Tier Collapse** (6/6 plans) — Promote all 109 deferred Node entries to one enforced tier; add PE-version extraction (completed 2026-04-10)
 - [ ] **Phase 5: CI Enforcement** — Wire all three parity gates into CI with branch-protection blocking on every PR
 - [x] **Phase 6: Documentation Reset** (2/2 plans) — completed 2026-04-10 — Tier-2 governance files deleted, binding-parity-overview rewritten, parity policy and error-contract docs created
+- [ ] **Phase 7: Milestone Cleanup** — Close all cosmetic and tracking gaps from milestone audit (REQUIREMENTS.md staleness, wrong doc path, vestigial tier2 labels, stale comments)
 
 ## Phase Details
 
@@ -147,18 +148,35 @@ Plans:
 - [x] 06-documentation-reset/06-01-PLAN.md — Gate script deferred-registry cleanup + dead Tier-2 script deletion + promotion audit trail creation (DOC-01, DOC-04)
 - [x] 06-documentation-reset/06-02-PLAN.md — Governance file deletion + binding-parity-overview rewrite + parity policy doc + error-contract doc + refresh note update (DOC-02, DOC-03, DOC-05, DOC-06, DOC-07, HARM-05)
 
+### Phase 7: Milestone Cleanup
+**Goal**: Close all cosmetic and tracking gaps identified by the milestone audit — fix REQUIREMENTS.md traceability staleness, correct wrong doc paths, remove vestigial tier2 labels from baseline generators, and clean stale comments
+**Depends on**: Phase 6 (documentation reset must be complete before cleaning up tracking references)
+**Requirements**: (none — gap closure phase; no new requirements)
+**Gap Closure**: Closes gaps from v9.1.0-bindings-MILESTONE-AUDIT.md
+**Success Criteria** (what must be TRUE):
+  1. REQUIREMENTS.md traceability table shows CI-01/02/03/05/06 as "Complete" and DOC-01 checkbox is `[x]`
+  2. `docs/api/binding-parity-policy.md` line 20 references the correct CXX baseline path (`docs/implementation/cxx_api_parity/baseline/parity_contract.json`)
+  3. `grep -c "tier.*2" tools/python_api_parity/generate_baseline.py tools/node_api_parity/generate_baseline.py` returns 0 (all vestigial tier2 labels removed)
+  4. `tools/test_triple_gate_failure.py` lines 40-44 stale governance comment is removed or updated
+  5. ROADMAP progress table shows Phase 1 as "3/3 Complete" and Phase 5 as "1/2 Complete (CI-04 deferred)"
+  6. `src/scanner.rs` module-level doc comment no longer says "Placeholder"
+**Plans**: (to be planned)
+Plans:
+- [ ] 07-milestone-cleanup/07-01-PLAN.md
+
 ## Progress
 
 ### v9.1.0-bindings Full Bindings Parity
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. CXX Parity Gate Tooling | 1/3 | In Progress|  |
-| 2. CXX Bridge Surface Expansion | 8/8 | Complete   | 2026-04-08 |
-| 3. Python Tier Collapse | 10/10 | Complete    | 2026-04-08 |
-| 4. Node Tier Collapse | 6/6 | Complete   | 2026-04-10 |
-| 5. CI Enforcement | 1/2 | In Progress | - |
+| 1. CXX Parity Gate Tooling | 3/3 | Complete | 2026-04-07 |
+| 2. CXX Bridge Surface Expansion | 8/8 | Complete | 2026-04-08 |
+| 3. Python Tier Collapse | 10/10 | Complete | 2026-04-08 |
+| 4. Node Tier Collapse | 6/6 | Complete | 2026-04-10 |
+| 5. CI Enforcement | 1/2 | Complete (CI-04 deferred) | 2026-04-09 |
 | 6. Documentation Reset | 2/2 | Complete | 2026-04-10 |
+| 7. Milestone Cleanup | 0/1 | Pending | - |
 
 ### v9.1.0-bugfixes CLASSIC Codebase Health (Archived — shipped 2026-04-07)
 
