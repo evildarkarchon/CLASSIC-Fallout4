@@ -151,3 +151,15 @@ These rows already existed in `tools/cxx_api_parity/tests/test_{parser,gate}.py`
 | Extra coverage surfaced | 0 |
 
 **Method:** Re-ran every command in the per-task map a second time on the same day. `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -v` → 22 passed in 2.87s (Python 3.14.3, pytest 9.0.2). All four non-pytest commands re-verified: `test -d tools/cxx_api_parity/tests/fixtures` ok; `python tools/cxx_api_parity/check_parity_gate.py --help` ok and `--deferred-registry` still absent from argparse; `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 with `CXX parity gate passed.`; `test -f docs/api/cxx-parity-gate.md && grep -q '## Local Run' …` ok. No drift since the morning audit; no test files created or modified; per-task map and Manual-Only section unchanged. Phase 1 remains `nyquist_compliant: true`.
+
+## Validation Re-Audit 2026-04-09
+
+| Metric | Count |
+|--------|-------|
+| Rows audited | 26 |
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+| Extra coverage surfaced | 0 |
+
+**Method:** Full re-run of all 26 verification commands after Phases 2-4 completed (bridge surface expanded, Python/Node tier collapses done). `ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -v` → 22 passed in 2.92s (Python 3.14.3, pytest 9.0.2). Non-pytest checks: `Test-Path tools/cxx_api_parity/tests/fixtures` → True; `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` exits 0 with `CXX parity gate passed.`; `docs/api/cxx-parity-gate.md` present with `## Local Run` section confirmed. No regression from subsequent phases; per-task map and Manual-Only section unchanged. Phase 1 remains `nyquist_compliant: true`.
