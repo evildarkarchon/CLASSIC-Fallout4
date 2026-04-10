@@ -1,12 +1,12 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-10T00:08:11.917773+00:00`
-- Tier-1 contract rows: **338**
-- Tier-1 matched: **338**
+- Generated: `2026-04-10T00:14:12.627780+00:00`
+- Tier-1 contract rows: **361**
+- Tier-1 matched: **361**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
-- Total gaps (Tier-1 + Tier-2): **386**
+- Total gaps (Tier-1 + Tier-2): **352**
 
 ## Tier-1 Contract Evaluation
 
@@ -350,30 +350,53 @@
 | `config.SuspectStackRule@rust` | `config` | `SuspectStackRule@rust` | `None` | `matched` |
 | `config.format_registry_game_version@rust` | `config` | `format_registry_game_version@rust` | `None` | `matched` |
 | `config.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info@rust` | `None` | `matched` |
+| `config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL` | `config` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `DEFAULT_CACHE_CLEANUP_INTERVAL` | `matched` |
+| `config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD` | `config` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` | `matched` |
+| `config.caches.DEFAULT_QUERY_CACHE_CAPACITY` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `DEFAULT_QUERY_CACHE_CAPACITY` | `matched` |
+| `config.hash_cache.HashCacheStats` | `config` | `CacheStats` | `HashCacheStats` | `matched` |
+| `config.analysis.JsAnalysisConfig` | `config` | `AnalysisConfig` | `JsAnalysisConfig` | `matched` |
+| `config.scangame.JsConfigIssue` | `config` | `ConfigIssue` | `JsConfigIssue` | `matched` |
+| `config.fcx.JsFcxConfigIssue` | `config` | `ConfigIssue` | `JsFcxConfigIssue` | `matched` |
+| `config.scangame.JsGameScanConfig` | `config` | `GameScanConfig` | `JsGameScanConfig` | `matched` |
+| `config.scangame.JsIntegrityConfig` | `config` | `IntegrityConfig` | `JsIntegrityConfig` | `matched` |
+| `config.path.JsPathDetectionResult` | `config` | `needs_path_detection` | `JsPathDetectionResult` | `matched` |
+| `config.scangame.JsTomlConfigIssue` | `config` | `TomlConfigIssue` | `JsTomlConfigIssue` | `matched` |
+| `config.version_registry.JsXseConfig` | `config` | `XseConfig` | `JsXseConfig` | `matched` |
+| `config.scangame.JsEnbConfigResult` | `config` | `EnbConfigResult` | `JsEnbConfigResult` | `matched` |
+| `config.duplicate_detector.JsConfigDuplicateDetector` | `config` | `ConfigDuplicateDetector` | `JsConfigDuplicateDetector` | `matched` |
+| `config.hash_cache.clearHashCache` | `config` | `FileHasher` | `clearHashCache` | `matched` |
+| `config.duplicate_detector.detectConfigDuplicates` | `config` | `ConfigDuplicateDetector` | `detectConfigDuplicates` | `matched` |
+| `config.caches.getDefaultCacheCleanupInterval` | `config` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `getDefaultCacheCleanupInterval` | `matched` |
+| `config.caches.getDefaultCacheCleanupThreshold` | `config` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `getDefaultCacheCleanupThreshold` | `matched` |
+| `config.caches.getDefaultQueryCacheCapacity` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `getDefaultQueryCacheCapacity` | `matched` |
+| `config.fcx.getFcxConfigIssues` | `config` | `ConfigIssue` | `getFcxConfigIssues` | `matched` |
+| `config.hash_cache.getHashCacheStats` | `config` | `FileHasher` | `getHashCacheStats` | `matched` |
+| `config.path.needsPathDetection` | `config` | `needs_path_detection` | `needsPathDetection` | `matched` |
+| `config.hash_cache.resetHashCacheStats` | `config` | `FileHasher` | `resetHashCacheStats` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
 | Owner Module | Tier 1 Gaps | Tier 2 Gaps |
 |---|---:|---:|
 | `aux` | 0 | 16 |
-| `config` | 0 | 24 |
+| `config` | 0 | 1 |
 | `constants` | 0 | 30 |
 | `crashgen_settings` | 0 | 22 |
-| `database` | 0 | 17 |
+| `database` | 0 | 14 |
 | `file_io` | 0 | 24 |
 | `message` | 0 | 9 |
 | `path` | 0 | 25 |
 | `perf` | 0 | 2 |
 | `registry` | 0 | 14 |
-| `scangame` | 0 | 77 |
+| `scangame` | 0 | 71 |
 | `scanlog` | 0 | 6 |
-| `settings` | 0 | 23 |
+| `settings` | 0 | 22 |
 | `shared` | 0 | 15 |
 | `update` | 0 | 6 |
 | `version` | 0 | 16 |
 | `version_registry` | 0 | 5 |
 | `web` | 0 | 15 |
 | `xse` | 0 | 17 |
-| `yaml` | 0 | 23 |
+| `yaml` | 0 | 22 |
 
 Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.

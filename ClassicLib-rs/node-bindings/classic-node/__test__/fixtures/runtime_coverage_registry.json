@@ -31,8 +31,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 61,
-      "contractIdsHash": "0579d6fc07dfa50b84b10b5188edbc857342e18cd4752fd79fafa3138060fe01",
+      "contractCount": 84,
+      "contractIdsHash": "68a27ba2f58bc86bb548bcb81580c2bc4f6b1efb3ad2e153de5fec5047838826",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",

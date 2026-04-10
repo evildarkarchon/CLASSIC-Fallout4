@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T00:08:11.914879+00:00",
+  "generated_at_utc": "2026-04-10T00:14:05.400363+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -824,7 +824,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
@@ -834,7 +834,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DEFAULT_CACHE_TTL_SECS",
@@ -854,7 +854,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
       "source_decl": "pub use pool_sqlx::{ BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabaseError, DatabasePool, MAX_CACHE_CLEANUP_INTERVAL_SECS, MAX_CACHE_CLEANUP_OP_THRESHOLD, MAX_CACHE_TTL_SECS, MAX_QUERY_CACHE_CAPACITY, MIN_CACHE_CLEANUP_INTERVAL_SECS, MIN_CACHE_CLEANUP_OP_THRESHOLD, MIN_QUERY_CACHE_CAPACITY, PoolStatistics, };",
       "source_expr": "pool_sqlx::DEFAULT_QUERY_CACHE_CAPACITY",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "DatabaseError",
@@ -2233,7 +2233,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use config::{ConfigDuplicateDetector, ConfigError, DuplicateGroup};",
       "source_expr": "config::ConfigDuplicateDetector",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "ConfigError",
@@ -2343,7 +2343,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};",
       "source_expr": "enb::EnbConfigResult",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "EnbError",
@@ -2393,7 +2393,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use orchestrator::{ CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult, OrchestratorError, detect_config_issues, };",
       "source_expr": "orchestrator::GameScanConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GameScanOrchestrator",
@@ -2463,7 +2463,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use integrity::{ CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError, };",
       "source_expr": "integrity::IntegrityConfig",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "IntegrityError",
@@ -2633,7 +2633,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};",
       "source_expr": "toml::TomlConfigIssue",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "TomlError",
@@ -2901,7 +2901,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
       "source_expr": "setup::needs_path_detection",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "orchestrator",
@@ -3657,7 +3657,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
       "source_expr": "cache::CacheStats",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "Result",
@@ -4843,7 +4843,7 @@
       "owner_module": "yaml",
       "source_file": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
       "source_decl": "pub struct CacheStats",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "YamlError",

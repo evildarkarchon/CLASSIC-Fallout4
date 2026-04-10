@@ -898,3 +898,121 @@ describe("clearYamlCache", () => {
     // No error means success
   });
 });
+
+// ============================================================================
+// Phase 4 Plan 3: Promoted config cache constants (real-shape assertions)
+// ============================================================================
+
+import {
+  DEFAULT_CACHE_CLEANUP_INTERVAL,
+  DEFAULT_CACHE_CLEANUP_THRESHOLD,
+  DEFAULT_QUERY_CACHE_CAPACITY,
+  getDefaultCacheCleanupInterval,
+  getDefaultCacheCleanupThreshold,
+  getDefaultQueryCacheCapacity,
+  getHashCacheStats,
+  resetHashCacheStats,
+  clearHashCache,
+  detectConfigDuplicates,
+  getFcxConfigIssues,
+  needsPathDetection,
+  JsConfigDuplicateDetector,
+} from "../index.js";
+
+describe("config: cache constants (Plan 3 promotion)", () => {
+  test("DEFAULT_CACHE_CLEANUP_INTERVAL is a positive number", () => {
+    expect(typeof DEFAULT_CACHE_CLEANUP_INTERVAL).toBe("number");
+    expect(DEFAULT_CACHE_CLEANUP_INTERVAL).toBeGreaterThan(0);
+  });
+
+  test("getDefaultCacheCleanupInterval returns the const value", () => {
+    expect(getDefaultCacheCleanupInterval()).toBe(
+      DEFAULT_CACHE_CLEANUP_INTERVAL,
+    );
+  });
+
+  test("DEFAULT_CACHE_CLEANUP_THRESHOLD is a positive number", () => {
+    expect(typeof DEFAULT_CACHE_CLEANUP_THRESHOLD).toBe("number");
+    expect(DEFAULT_CACHE_CLEANUP_THRESHOLD).toBeGreaterThan(0);
+  });
+
+  test("getDefaultCacheCleanupThreshold returns the const value", () => {
+    expect(getDefaultCacheCleanupThreshold()).toBe(
+      DEFAULT_CACHE_CLEANUP_THRESHOLD,
+    );
+  });
+
+  test("DEFAULT_QUERY_CACHE_CAPACITY is a positive integer", () => {
+    expect(typeof DEFAULT_QUERY_CACHE_CAPACITY).toBe("number");
+    expect(Number.isInteger(DEFAULT_QUERY_CACHE_CAPACITY)).toBe(true);
+    expect(DEFAULT_QUERY_CACHE_CAPACITY).toBeGreaterThan(0);
+  });
+
+  test("getDefaultQueryCacheCapacity returns the const value", () => {
+    expect(getDefaultQueryCacheCapacity()).toBe(DEFAULT_QUERY_CACHE_CAPACITY);
+  });
+});
+
+describe("config: hash cache stats (Plan 3 promotion)", () => {
+  test("getHashCacheStats returns a stats shape with numeric fields", () => {
+    const stats = getHashCacheStats();
+    expect(stats).toBeDefined();
+    expect(typeof stats.hits).toBe("number");
+    expect(typeof stats.misses).toBe("number");
+    expect(typeof stats.hit_rate).toBe("number");
+    expect(typeof stats.size).toBe("number");
+    expect(typeof stats.capacity).toBe("number");
+  });
+
+  test("resetHashCacheStats clears counters", () => {
+    resetHashCacheStats();
+    const stats = getHashCacheStats();
+    expect(stats.hits).toBe(0);
+    expect(stats.misses).toBe(0);
+  });
+
+  test("clearHashCache is callable without throwing", () => {
+    expect(() => clearHashCache()).not.toThrow();
+  });
+});
+
+describe("config: duplicate detector class (Plan 3 promotion)", () => {
+  test("JsConfigDuplicateDetector can be constructed", () => {
+    const det = new JsConfigDuplicateDetector();
+    expect(det).toBeDefined();
+    expect(typeof det).toBe("object");
+  });
+
+  test("JsConfigDuplicateDetector.withWhitelist creates instance", () => {
+    const det = JsConfigDuplicateDetector.withWhitelist(["test.dll"]);
+    expect(det).toBeDefined();
+    expect(typeof det).toBe("object");
+  });
+
+  test("detectConfigDuplicates returns an array for a temp dir", () => {
+    const dir = mkdtempSync(join(tmpdir(), "classic-node-dup-"));
+    try {
+      const result = detectConfigDuplicates(dir);
+      expect(Array.isArray(result)).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("config: fcx + path detection helpers (Plan 3 promotion)", () => {
+  test("getFcxConfigIssues returns array or throws typed error", () => {
+    try {
+      const issues = getFcxConfigIssues();
+      expect(Array.isArray(issues)).toBe(true);
+    } catch (e) {
+      expect(e).toBeInstanceOf(Error);
+    }
+  });
+
+  test("needsPathDetection returns object with boolean fields", () => {
+    const result = needsPathDetection();
+    expect(typeof result.needsGamePath).toBe("boolean");
+    expect(typeof result.needsDocsPath).toBe("boolean");
+  });
+});

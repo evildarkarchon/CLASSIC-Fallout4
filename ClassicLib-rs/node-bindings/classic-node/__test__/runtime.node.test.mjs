@@ -468,3 +468,50 @@ if (activeTier1Owners.has("scanlog")) {
     }
   });
 }
+
+// ============================================================================
+// Phase 4 Plan 3 (D-TEST-02): cross-runtime smoke for promoted config symbols
+// ============================================================================
+//
+// Task 2 promotes 23 Node-exposed config entries from Tier-2 deferred to
+// enforced Tier-1 contract rows. Per D-TEST-02 the plan adds at least one
+// representative cross-runtime test here so the symbols are exercised under
+// node:test (not just bun:test). getHashCacheStats is the representative pick
+// because its multi-field return shape is the most likely NAPI marshalling
+// failure point across runtimes.
+if (activeTier1Owners.has("config")) {
+  test("config Plan 3 promotion: getHashCacheStats + cache constants exercised under node:test", () => {
+    // resetHashCacheStats clears counters — real-shape check.
+    classic.resetHashCacheStats();
+    const stats = classic.getHashCacheStats();
+    assert.ok(stats !== undefined);
+    assert.strictEqual(typeof stats.hits, "number");
+    assert.strictEqual(typeof stats.misses, "number");
+    assert.strictEqual(typeof stats.hit_rate, "number");
+    assert.strictEqual(typeof stats.size, "number");
+    assert.strictEqual(typeof stats.capacity, "number");
+    assert.strictEqual(stats.hits, 0);
+    assert.strictEqual(stats.misses, 0);
+
+    // Cache constants — real-shape check.
+    assert.strictEqual(typeof classic.DEFAULT_CACHE_CLEANUP_INTERVAL, "number");
+    assert.ok(classic.DEFAULT_CACHE_CLEANUP_INTERVAL > 0);
+    assert.strictEqual(typeof classic.DEFAULT_CACHE_CLEANUP_THRESHOLD, "number");
+    assert.ok(classic.DEFAULT_CACHE_CLEANUP_THRESHOLD > 0);
+    assert.strictEqual(typeof classic.DEFAULT_QUERY_CACHE_CAPACITY, "number");
+    assert.ok(classic.DEFAULT_QUERY_CACHE_CAPACITY > 0);
+
+    // Getter functions return the const values.
+    assert.strictEqual(classic.getDefaultCacheCleanupInterval(), classic.DEFAULT_CACHE_CLEANUP_INTERVAL);
+    assert.strictEqual(classic.getDefaultCacheCleanupThreshold(), classic.DEFAULT_CACHE_CLEANUP_THRESHOLD);
+    assert.strictEqual(classic.getDefaultQueryCacheCapacity(), classic.DEFAULT_QUERY_CACHE_CAPACITY);
+
+    // clearHashCache is callable without throwing.
+    classic.clearHashCache();
+
+    // needsPathDetection returns object with boolean fields.
+    const result = classic.needsPathDetection();
+    assert.strictEqual(typeof result.needsGamePath, "boolean");
+    assert.strictEqual(typeof result.needsDocsPath, "boolean");
+  });
+}

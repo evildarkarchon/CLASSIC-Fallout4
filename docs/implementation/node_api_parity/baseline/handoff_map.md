@@ -1,42 +1,19 @@
 # Phase 1 Engineering Handoff Map
 
-- Generated: `2026-04-10T00:08:11.917773+00:00`
-- Total gaps handed off: **386**
+- Generated: `2026-04-10T00:14:05.403347+00:00`
+- Total gaps handed off: **352**
 
 ## Squad A (scanlog/config)
 
 ### `config`
 
-- Total gaps: **24**
+- Total gaps: **1**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **24**
+- Tier 2 gaps: **1**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `ModConflictEntry` | `-` |
-| `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_INTERVAL` |
-| `node_unmapped` | `tier2` | `-` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` |
-| `node_unmapped` | `tier2` | `-` | `DEFAULT_QUERY_CACHE_CAPACITY` |
-| `node_unmapped` | `tier2` | `-` | `HashCacheStats` |
-| `node_unmapped` | `tier2` | `-` | `JsAnalysisConfig` |
-| `node_unmapped` | `tier2` | `-` | `JsConfigDuplicateDetector` |
-| `node_unmapped` | `tier2` | `-` | `JsConfigIssue` |
-| `node_unmapped` | `tier2` | `-` | `JsEnbConfigResult` |
-| `node_unmapped` | `tier2` | `-` | `JsFcxConfigIssue` |
-| `node_unmapped` | `tier2` | `-` | `JsGameScanConfig` |
-| `node_unmapped` | `tier2` | `-` | `JsIntegrityConfig` |
-| `node_unmapped` | `tier2` | `-` | `JsPathDetectionResult` |
-| `node_unmapped` | `tier2` | `-` | `JsTomlConfigIssue` |
-| `node_unmapped` | `tier2` | `-` | `JsXseConfig` |
-| `node_unmapped` | `tier2` | `-` | `clearHashCache` |
-| `node_unmapped` | `tier2` | `-` | `detectConfigDuplicates` |
-| `node_unmapped` | `tier2` | `-` | `getDefaultCacheCleanupInterval` |
-| `node_unmapped` | `tier2` | `-` | `getDefaultCacheCleanupThreshold` |
-| `node_unmapped` | `tier2` | `-` | `getDefaultQueryCacheCapacity` |
-| `node_unmapped` | `tier2` | `-` | `getFcxConfigIssues` |
-| `node_unmapped` | `tier2` | `-` | `getHashCacheStats` |
-| `node_unmapped` | `tier2` | `-` | `needsPathDetection` |
-| `node_unmapped` | `tier2` | `-` | `resetHashCacheStats` |
 
 ### `scanlog`
 
@@ -152,19 +129,16 @@
 
 ### `database`
 
-- Total gaps: **17**
+- Total gaps: **14**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **17**
+- Tier 2 gaps: **14**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
 | `rust_unmapped` | `tier2` | `BATCH_CACHE_TTL_SECS` | `-` |
 | `rust_unmapped` | `tier2` | `CacheEntry` | `-` |
 | `rust_unmapped` | `tier2` | `CacheKey` | `-` |
-| `rust_unmapped` | `tier2` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `-` |
-| `rust_unmapped` | `tier2` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `-` |
 | `rust_unmapped` | `tier2` | `DEFAULT_CACHE_TTL_SECS` | `-` |
-| `rust_unmapped` | `tier2` | `DEFAULT_QUERY_CACHE_CAPACITY` | `-` |
 | `rust_unmapped` | `tier2` | `DatabaseError` | `-` |
 | `rust_unmapped` | `tier2` | `DatabasePool` | `-` |
 | `rust_unmapped` | `tier2` | `MAX_CACHE_CLEANUP_INTERVAL_SECS` | `-` |
@@ -297,9 +271,9 @@
 
 ### `scangame`
 
-- Total gaps: **77**
+- Total gaps: **71**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **77**
+- Tier 2 gaps: **71**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
@@ -311,7 +285,6 @@
 | `rust_unmapped` | `tier2` | `CheckResult` | `-` |
 | `rust_unmapped` | `tier2` | `CheckType` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigCacheError` | `-` |
-| `rust_unmapped` | `tier2` | `ConfigDuplicateDetector` | `-` |
 | `rust_unmapped` | `tier2` | `ConfigFileCache` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenCheckOrchestrator` | `-` |
 | `rust_unmapped` | `tier2` | `CrashgenChecker` | `-` |
@@ -320,18 +293,15 @@
 | `rust_unmapped` | `tier2` | `DuplicateEntry` | `-` |
 | `rust_unmapped` | `tier2` | `DuplicateGroup` | `-` |
 | `rust_unmapped` | `tier2` | `EnbChecker` | `-` |
-| `rust_unmapped` | `tier2` | `EnbConfigResult` | `-` |
 | `rust_unmapped` | `tier2` | `EnbError` | `-` |
 | `rust_unmapped` | `tier2` | `EnbResult` | `-` |
 | `rust_unmapped` | `tier2` | `EnbValidationResult` | `-` |
 | `rust_unmapped` | `tier2` | `GameIntegrityChecker` | `-` |
-| `rust_unmapped` | `tier2` | `GameScanConfig` | `-` |
 | `rust_unmapped` | `tier2` | `GameScanOrchestrator` | `-` |
 | `rust_unmapped` | `tier2` | `GameScanResult` | `-` |
 | `rust_unmapped` | `tier2` | `IniError` | `-` |
 | `rust_unmapped` | `tier2` | `IniValidator` | `-` |
 | `rust_unmapped` | `tier2` | `IntegrityCheckResult` | `-` |
-| `rust_unmapped` | `tier2` | `IntegrityConfig` | `-` |
 | `rust_unmapped` | `tier2` | `IntegrityError` | `-` |
 | `rust_unmapped` | `tier2` | `IssueSeverity` | `-` |
 | `rust_unmapped` | `tier2` | `LogError` | `-` |
@@ -347,7 +317,6 @@
 | `rust_unmapped` | `tier2` | `SetupCheckResults` | `-` |
 | `rust_unmapped` | `tier2` | `SetupError` | `-` |
 | `rust_unmapped` | `tier2` | `SetupResult` | `-` |
-| `rust_unmapped` | `tier2` | `TomlConfigIssue` | `-` |
 | `rust_unmapped` | `tier2` | `TomlError` | `-` |
 | `rust_unmapped` | `tier2` | `TomlIssueSeverity` | `-` |
 | `rust_unmapped` | `tier2` | `UnpackedError` | `-` |
@@ -372,7 +341,6 @@
 | `rust_unmapped` | `tier2` | `logs` | `-` |
 | `rust_unmapped` | `tier2` | `migrate_game_version_setting` | `-` |
 | `rust_unmapped` | `tier2` | `mod_ini` | `-` |
-| `rust_unmapped` | `tier2` | `needs_path_detection` | `-` |
 | `rust_unmapped` | `tier2` | `resolve_effective_game_version` | `-` |
 | `rust_unmapped` | `tier2` | `run_combined_checks` | `-` |
 | `rust_unmapped` | `tier2` | `setup` | `-` |
@@ -383,13 +351,12 @@
 
 ### `settings`
 
-- Total gaps: **23**
+- Total gaps: **22**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **23**
+- Tier 2 gaps: **22**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
-| `rust_unmapped` | `tier2` | `CacheStats` | `-` |
 | `rust_unmapped` | `tier2` | `SettingsError` | `-` |
 | `rust_unmapped` | `tier2` | `SettingsSource` | `-` |
 | `rust_unmapped` | `tier2` | `Yaml` | `-` |
@@ -543,13 +510,12 @@
 
 ### `yaml`
 
-- Total gaps: **23**
+- Total gaps: **22**
 - Tier 1 gaps: **0**
-- Tier 2 gaps: **23**
+- Tier 2 gaps: **22**
 
 | Gap Type | Tier | Rust Symbol | Node Export |
 |---|---|---|---|
-| `rust_unmapped` | `tier2` | `CacheStats` | `-` |
 | `rust_unmapped` | `tier2` | `YamlError` | `-` |
 | `rust_unmapped` | `tier2` | `YamlOperations` | `-` |
 | `rust_unmapped` | `tier2` | `cache_stats` | `-` |

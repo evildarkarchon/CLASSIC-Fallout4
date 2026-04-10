@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-04-10T00:08:11.917773+00:00",
+  "generated_at_utc": "2026-04-10T00:14:12.627780+00:00",
   "summary": {
-    "tier1_contract_total": 338,
-    "tier1_matched": 338,
+    "tier1_contract_total": 361,
+    "tier1_matched": 361,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
-    "total_gaps": 386,
+    "total_gaps": 352,
     "tier1_gap_total": 0,
-    "tier2_gap_total": 386
+    "tier2_gap_total": 352
   },
   "contract_results": [
     {
@@ -4404,6 +4404,305 @@
       "actual_node_kind": null,
       "expected_node_arity": null,
       "actual_node_arity": null
+    },
+    {
+      "id": "config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
+      "node_export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
+      "status": "matched",
+      "expected_node_kind": "const",
+      "actual_node_kind": "const",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
+      "node_export": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
+      "status": "matched",
+      "expected_node_kind": "const",
+      "actual_node_kind": "const",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.caches.DEFAULT_QUERY_CACHE_CAPACITY",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "node_export": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "status": "matched",
+      "expected_node_kind": "const",
+      "actual_node_kind": "const",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.hash_cache.HashCacheStats",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "CacheStats",
+      "node_export": "HashCacheStats",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.analysis.JsAnalysisConfig",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "AnalysisConfig",
+      "node_export": "JsAnalysisConfig",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.scangame.JsConfigIssue",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ConfigIssue",
+      "node_export": "JsConfigIssue",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.fcx.JsFcxConfigIssue",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ConfigIssue",
+      "node_export": "JsFcxConfigIssue",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.scangame.JsGameScanConfig",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "GameScanConfig",
+      "node_export": "JsGameScanConfig",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.scangame.JsIntegrityConfig",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "IntegrityConfig",
+      "node_export": "JsIntegrityConfig",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.path.JsPathDetectionResult",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "needs_path_detection",
+      "node_export": "JsPathDetectionResult",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.scangame.JsTomlConfigIssue",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "TomlConfigIssue",
+      "node_export": "JsTomlConfigIssue",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.version_registry.JsXseConfig",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "XseConfig",
+      "node_export": "JsXseConfig",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.scangame.JsEnbConfigResult",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "EnbConfigResult",
+      "node_export": "JsEnbConfigResult",
+      "status": "matched",
+      "expected_node_kind": "const_enum",
+      "actual_node_kind": "const_enum",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.duplicate_detector.JsConfigDuplicateDetector",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ConfigDuplicateDetector",
+      "node_export": "JsConfigDuplicateDetector",
+      "status": "matched",
+      "expected_node_kind": "class",
+      "actual_node_kind": "class",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.hash_cache.clearHashCache",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "FileHasher",
+      "node_export": "clearHashCache",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
+    },
+    {
+      "id": "config.duplicate_detector.detectConfigDuplicates",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ConfigDuplicateDetector",
+      "node_export": "detectConfigDuplicates",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 1
+    },
+    {
+      "id": "config.caches.getDefaultCacheCleanupInterval",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
+      "node_export": "getDefaultCacheCleanupInterval",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
+    },
+    {
+      "id": "config.caches.getDefaultCacheCleanupThreshold",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
+      "node_export": "getDefaultCacheCleanupThreshold",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
+    },
+    {
+      "id": "config.caches.getDefaultQueryCacheCapacity",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "node_export": "getDefaultQueryCacheCapacity",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
+    },
+    {
+      "id": "config.fcx.getFcxConfigIssues",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "ConfigIssue",
+      "node_export": "getFcxConfigIssues",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
+    },
+    {
+      "id": "config.hash_cache.getHashCacheStats",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "FileHasher",
+      "node_export": "getHashCacheStats",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
+    },
+    {
+      "id": "config.path.needsPathDetection",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "needs_path_detection",
+      "node_export": "needsPathDetection",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 2
+    },
+    {
+      "id": "config.hash_cache.resetHashCacheStats",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "FileHasher",
+      "node_export": "resetHashCacheStats",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": null,
+      "actual_node_arity": 0
     }
   ],
   "gaps": [
@@ -5028,40 +5327,7 @@
       "tier": "tier2",
       "owner_module": "database",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-database-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "database",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-database-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "database",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "DEFAULT_CACHE_TTL_SECS",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-database-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "database",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-database-core",
@@ -6084,17 +6350,6 @@
       "tier": "tier2",
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "ConfigDuplicateDetector",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "ConfigFileCache",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -6183,17 +6438,6 @@
       "tier": "tier2",
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "EnbConfigResult",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "EnbError",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -6228,17 +6472,6 @@
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "GameIntegrityChecker",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "GameScanConfig",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scangame-core",
@@ -6294,17 +6527,6 @@
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "IntegrityCheckResult",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "IntegrityConfig",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scangame-core",
@@ -6470,17 +6692,6 @@
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "SetupResult",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "TomlConfigIssue",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scangame-core",
@@ -6755,17 +6966,6 @@
       "tier": "tier2",
       "owner_module": "scangame",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "needs_path_detection",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-scangame-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "scangame",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "resolve_effective_game_version",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -6847,17 +7047,6 @@
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
       "crate": "classic-scanlog-core",
-      "kind": "reexport"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "settings",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "CacheStats",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-settings-core",
       "kind": "reexport"
     },
     {
@@ -7866,17 +8055,6 @@
       "tier": "tier2",
       "owner_module": "yaml",
       "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "CacheStats",
-      "node_export": null,
-      "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "crate": "classic-yaml-core",
-      "kind": "struct"
-    },
-    {
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "owner_module": "yaml",
-      "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "YamlError",
       "node_export": null,
       "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
@@ -8117,80 +8295,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "const"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "const"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "DEFAULT_QUERY_CACHE_CAPACITY",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "const"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "HashCacheStats",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsAnalysisConfig",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
       "node_export": "JsCheckRule",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsConfigDuplicateDetector",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "class"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsConfigIssue",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "interface"
     },
@@ -8217,50 +8325,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsEnbConfigResult",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "const_enum"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
       "node_export": "JsExpectedValue",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsFcxConfigIssue",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsGameScanConfig",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsIntegrityConfig",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "interface"
     },
@@ -8321,16 +8389,6 @@
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
       "node_export": "JsModSolutionEntry",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsPathDetectionResult",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "interface"
     },
@@ -8407,26 +8465,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsTomlConfigIssue",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "JsXseConfig",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "interface"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
@@ -8447,30 +8485,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "clearHashCache",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": null,
       "node_export": "createLogger",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "detectConfigDuplicates",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
     },
@@ -8487,70 +8505,10 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "getDefaultCacheCleanupInterval",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "getDefaultCacheCleanupThreshold",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "getDefaultQueryCacheCapacity",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "getFcxConfigIssues",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "getHashCacheStats",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
       "node_export": "migrateGameVersionSetting",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "needsPathDetection",
       "reason": "Node export is outside Tier-1 mapping scope (deferred).",
       "kind": "function"
     },
@@ -8577,16 +8535,6 @@
     {
       "gap_type": "node_unmapped",
       "tier": "tier2",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": null,
-      "node_export": "resetHashCacheStats",
-      "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-      "kind": "function"
-    },
-    {
-      "gap_type": "node_unmapped",
-      "tier": "tier2",
       "owner_module": "aux",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": null,
@@ -8607,7 +8555,7 @@
   ],
   "gap_counts_by_owner_tier": {
     "config": {
-      "tier2": 24
+      "tier2": 1
     },
     "constants": {
       "tier2": 30
@@ -8616,7 +8564,7 @@
       "tier2": 22
     },
     "database": {
-      "tier2": 17
+      "tier2": 14
     },
     "file_io": {
       "tier2": 24
@@ -8634,13 +8582,13 @@
       "tier2": 14
     },
     "scangame": {
-      "tier2": 77
+      "tier2": 71
     },
     "scanlog": {
       "tier2": 6
     },
     "settings": {
-      "tier2": 23
+      "tier2": 22
     },
     "shared": {
       "tier2": 15
@@ -8658,7 +8606,7 @@
       "tier2": 17
     },
     "yaml": {
-      "tier2": 23
+      "tier2": 22
     },
     "aux": {
       "tier2": 16
