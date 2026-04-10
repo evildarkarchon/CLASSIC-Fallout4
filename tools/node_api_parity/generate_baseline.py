@@ -225,7 +225,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                     "owner_module": owner_module,
                     "source_file": rel_path,
                     "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    "tier": "tier1",
                 }
             )
 
@@ -243,7 +243,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                     "owner_module": owner_module,
                     "source_file": rel_path,
                     "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    "tier": "tier1",
                 }
             )
 
@@ -261,7 +261,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                     "owner_module": owner_module,
                     "source_file": rel_path,
                     "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    "tier": "tier1",
                 }
             )
 
@@ -279,7 +279,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                         "source_file": rel_path,
                         "source_decl": f"pub use {normalize_whitespace(use_body)};",
                         "source_expr": source_expr,
-                        "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                        "tier": "tier1",
                     }
                 )
 
@@ -379,7 +379,7 @@ def parse_node_surface(
             "export": name,
             "kind": kind,
             "owner_module": owner_module,
-            "tier": "tier1" if name in tier1_node_exports else "tier2",
+            "tier": "tier1",
             "source_file": index_dts_rel,
             "signature": signature,
         }
@@ -562,7 +562,7 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
-            f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
+            f"- Total gaps: **{summary['total_gaps']}**",
             "",
             "## Tier-1 Contract Evaluation",
             "",
@@ -592,9 +592,7 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
     _owner_render_order = sorted(diff_report.get("gap_counts_by_owner_tier", {}))
     for owner in _owner_render_order:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
-        lines.append(
-            f"| `{owner}` | {tier_counts.get('tier1', 0)} |"
-        )
+        lines.append(f"| `{owner}` | {tier_counts.get('tier1', 0)} |")
 
     lines.extend(
         (
@@ -636,14 +634,12 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
         for owner_module in sorted(module_map):
             module_gaps = module_map[owner_module]
             tier1_count = sum(1 for gap in module_gaps if gap["tier"] == "tier1")
-            tier2_count = sum(1 for gap in module_gaps if gap["tier"] == "tier2")
             lines.extend(
                 (
                     f"### `{owner_module}`",
                     "",
                     f"- Total gaps: **{len(module_gaps)}**",
                     f"- Tier 1 gaps: **{tier1_count}**",
-                    f"- Tier 2 gaps: **{tier2_count}**",
                     "",
                     "| Gap Type | Tier | Rust Symbol | Node Export |",
                     "|---|---|---|---|",

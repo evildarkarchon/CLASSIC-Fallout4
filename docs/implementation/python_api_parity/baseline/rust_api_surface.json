@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T07:41:52.991127+00:00",
+  "generated_at_utc": "2026-04-10T10:03:01.230609+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -1250,7 +1250,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::// Boolean convenience wrappers drive_exists",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "// Permission and accessibility checks is_valid_executable_path",
@@ -1260,7 +1260,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::// Permission and accessibility checks is_valid_executable_path",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "BackupError",
@@ -3038,7 +3038,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::GLOBAL_FCX_HANDLER",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GpuDetector",
@@ -4346,7 +4346,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path};",
       "source_expr": "pe_version::is_valid_executable_path",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "parse_version",

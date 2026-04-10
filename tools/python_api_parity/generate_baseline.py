@@ -23,123 +23,123 @@ from binding_parity_runtime_coverage import (
 
 RUST_TARGET_CRATES: dict[str, str] = {
     # Existing 3 (preserved for stability)
-    "classic-scanlog-core":          "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-    "classic-config-core":           "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+    "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
     "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
     # Phase 3 additions -- 15 additional business-logic crates
-    "classic-yaml-core":             "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
-    "classic-database-core":         "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
-    "classic-file-io-core":          "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
-    "classic-scangame-core":         "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
-    "classic-registry-core":         "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
-    "classic-perf-core":             "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
-    "classic-settings-core":         "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
-    "classic-message-core":          "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
-    "classic-path-core":             "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
-    "classic-constants-core":        "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-    "classic-version-core":          "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-    "classic-resource-core":         "ClassicLib-rs/business-logic/classic-resource-core/src/lib.rs",
-    "classic-xse-core":              "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
-    "classic-web-core":              "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
-    "classic-update-core":           "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
+    "classic-yaml-core": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
+    "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
+    "classic-file-io-core": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+    "classic-scangame-core": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
+    "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+    "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+    "classic-settings-core": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+    "classic-message-core": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+    "classic-path-core": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+    "classic-constants-core": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
+    "classic-version-core": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
+    "classic-resource-core": "ClassicLib-rs/business-logic/classic-resource-core/src/lib.rs",
+    "classic-xse-core": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
+    "classic-web-core": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
+    "classic-update-core": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
     # Foundation crate (Phase 3 D-09 / HARM-03)
-    "classic-shared-py":             "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
+    "classic-shared-py": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
     # NOTE: classic-crashgen-settings-core is INTENTIONALLY EXCLUDED -- its symbols
     # flow through classic-config-py / classic-scanlog-py / classic-scangame-py
     # wrappers (see .planning/phases/03-python-tier-collapse/03-RESEARCH.md A5).
 }
 
 RUST_OWNER_BY_CRATE: dict[str, str] = {
-    "classic-scanlog-core":          "scanlog",
-    "classic-config-core":           "config",
+    "classic-scanlog-core": "scanlog",
+    "classic-config-core": "config",
     "classic-version-registry-core": "version_registry",
-    "classic-yaml-core":             "yaml",
-    "classic-database-core":         "database",
-    "classic-file-io-core":          "file_io",
-    "classic-scangame-core":         "scangame",
-    "classic-registry-core":         "registry",
-    "classic-perf-core":             "perf",
-    "classic-settings-core":         "settings",
-    "classic-message-core":          "message",
-    "classic-path-core":             "path",
-    "classic-constants-core":        "constants",
-    "classic-version-core":          "version",
-    "classic-resource-core":         "resource",
-    "classic-xse-core":              "xse",
-    "classic-web-core":              "web",
-    "classic-update-core":           "update",
-    "classic-shared-py":             "shared",
+    "classic-yaml-core": "yaml",
+    "classic-database-core": "database",
+    "classic-file-io-core": "file_io",
+    "classic-scangame-core": "scangame",
+    "classic-registry-core": "registry",
+    "classic-perf-core": "perf",
+    "classic-settings-core": "settings",
+    "classic-message-core": "message",
+    "classic-path-core": "path",
+    "classic-constants-core": "constants",
+    "classic-version-core": "version",
+    "classic-resource-core": "resource",
+    "classic-xse-core": "xse",
+    "classic-web-core": "web",
+    "classic-update-core": "update",
+    "classic-shared-py": "shared",
 }
 
 PYTHON_TARGET_MODULES: dict[str, str] = {
-    "classic_scanlog":          "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-    "classic_config":           "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
+    "classic_scanlog": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+    "classic_config": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
     "classic_version_registry": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-    "classic_yaml":             "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-    "classic_database":         "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
-    "classic_file_io":          "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
-    "classic_scangame":         "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
-    "classic_registry":         "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
-    "classic_perf":             "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
-    "classic_settings":         "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
-    "classic_message":          "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
-    "classic_path":             "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
-    "classic_constants":        "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
-    "classic_version":          "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
-    "classic_resource":         "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
-    "classic_xse":              "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
-    "classic_web":              "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
-    "classic_update":           "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
-    "classic_shared":           "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
+    "classic_yaml": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
+    "classic_database": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
+    "classic_file_io": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
+    "classic_scangame": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
+    "classic_registry": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
+    "classic_perf": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
+    "classic_settings": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+    "classic_message": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
+    "classic_path": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
+    "classic_constants": "ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi",
+    "classic_version": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
+    "classic_resource": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
+    "classic_xse": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
+    "classic_web": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
+    "classic_update": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
+    "classic_shared": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
 }
 
 PYTHON_OWNER_BY_MODULE: dict[str, str] = {
-    "classic_scanlog":          "scanlog",
-    "classic_config":           "config",
+    "classic_scanlog": "scanlog",
+    "classic_config": "config",
     "classic_version_registry": "version_registry",
-    "classic_yaml":             "yaml",
-    "classic_database":         "database",
-    "classic_file_io":          "file_io",
-    "classic_scangame":         "scangame",
-    "classic_registry":         "registry",
-    "classic_perf":             "perf",
-    "classic_settings":         "settings",
-    "classic_message":          "message",
-    "classic_path":             "path",
-    "classic_constants":        "constants",
-    "classic_version":          "version",
-    "classic_resource":         "resource",
-    "classic_xse":              "xse",
-    "classic_web":              "web",
-    "classic_update":           "update",
-    "classic_shared":           "shared",
+    "classic_yaml": "yaml",
+    "classic_database": "database",
+    "classic_file_io": "file_io",
+    "classic_scangame": "scangame",
+    "classic_registry": "registry",
+    "classic_perf": "perf",
+    "classic_settings": "settings",
+    "classic_message": "message",
+    "classic_path": "path",
+    "classic_constants": "constants",
+    "classic_version": "version",
+    "classic_resource": "resource",
+    "classic_xse": "xse",
+    "classic_web": "web",
+    "classic_update": "update",
+    "classic_shared": "shared",
 }
 
 SQUAD_BY_OWNER: dict[str, str] = {
     # Existing (pre-Phase-3) labels preserved for historical compatibility.
-    "scanlog":          "Squad A (scanlog/config)",
-    "config":           "Squad A (scanlog/config)",
+    "scanlog": "Squad A (scanlog/config)",
+    "config": "Squad A (scanlog/config)",
     "version_registry": "Squad B (version-registry)",
     # Phase 3 owner labels -- every new owner needs a squad label for reporting.
-    "yaml":             "Squad C (yaml/settings/registry)",
-    "database":         "Squad D (database/file_io/resource)",
-    "file_io":          "Squad D (database/file_io/resource)",
-    "scangame":         "Squad E (scangame/xse)",
-    "registry":         "Squad C (yaml/settings/registry)",
-    "perf":             "Squad F (perf/message/path/constants/version/web/update)",
-    "settings":         "Squad C (yaml/settings/registry)",
-    "message":          "Squad F (perf/message/path/constants/version/web/update)",
-    "path":             "Squad F (perf/message/path/constants/version/web/update)",
-    "constants":        "Squad F (perf/message/path/constants/version/web/update)",
-    "version":          "Squad F (perf/message/path/constants/version/web/update)",
-    "resource":         "Squad D (database/file_io/resource)",
-    "xse":              "Squad E (scangame/xse)",
-    "web":              "Squad F (perf/message/path/constants/version/web/update)",
-    "update":           "Squad F (perf/message/path/constants/version/web/update)",
-    "shared":           "Squad G (foundation/classic-shared-py)",
+    "yaml": "Squad C (yaml/settings/registry)",
+    "database": "Squad D (database/file_io/resource)",
+    "file_io": "Squad D (database/file_io/resource)",
+    "scangame": "Squad E (scangame/xse)",
+    "registry": "Squad C (yaml/settings/registry)",
+    "perf": "Squad F (perf/message/path/constants/version/web/update)",
+    "settings": "Squad C (yaml/settings/registry)",
+    "message": "Squad F (perf/message/path/constants/version/web/update)",
+    "path": "Squad F (perf/message/path/constants/version/web/update)",
+    "constants": "Squad F (perf/message/path/constants/version/web/update)",
+    "version": "Squad F (perf/message/path/constants/version/web/update)",
+    "resource": "Squad D (database/file_io/resource)",
+    "xse": "Squad E (scangame/xse)",
+    "web": "Squad F (perf/message/path/constants/version/web/update)",
+    "update": "Squad F (perf/message/path/constants/version/web/update)",
+    "shared": "Squad G (foundation/classic-shared-py)",
     # The 'aux' bucket captures owner-less rows such as the file-io
     # FileHasher.cache_size entry tracked outside the primary crate owners.
-    "aux":              "Squad D (database/file_io/resource)",
+    "aux": "Squad D (database/file_io/resource)",
 }
 
 # Module-level rendering order for the owner/tier gap table in
@@ -274,7 +274,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                     "owner_module": owner_module,
                     "source_file": rel_path,
                     "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    "tier": "tier1",
                 }
             )
 
@@ -291,7 +291,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                     "owner_module": owner_module,
                     "source_file": rel_path,
                     "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    "tier": "tier1",
                 }
             )
 
@@ -309,7 +309,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                     "owner_module": owner_module,
                     "source_file": rel_path,
                     "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                    "tier": "tier1",
                 }
             )
 
@@ -327,7 +327,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
                         "source_file": rel_path,
                         "source_decl": f"pub use {normalize_whitespace(use_body)};",
                         "source_expr": source_expr,
-                        "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
+                        "tier": "tier1",
                     }
                 )
 
@@ -414,9 +414,7 @@ def parse_python_surface(
                             "export_path": class_name,
                             "kind": "class",
                             "owner_module": owner_module,
-                            "tier": "tier1"
-                            if class_name in tier1_python_exports
-                            else "tier2",
+                            "tier": "tier1",
                             "source_file": rel_path,
                             "signature": stripped,
                         }
@@ -467,10 +465,7 @@ def parse_python_surface(
                                             params, pending_decorators
                                         ),
                                         "owner_module": owner_module,
-                                        "tier": "tier1"
-                                        if export_path in tier1_python_exports
-                                        or export_name in tier1_python_exports
-                                        else "tier2",
+                                        "tier": "tier1",
                                         "source_file": rel_path,
                                         "signature": signature,
                                     }
@@ -501,9 +496,7 @@ def parse_python_surface(
                             "kind": "function",
                             "arity": count_top_level_params(params),
                             "owner_module": owner_module,
-                            "tier": "tier1"
-                            if export_name in tier1_python_exports
-                            else "tier2",
+                            "tier": "tier1",
                             "source_file": rel_path,
                             "signature": signature,
                         }
@@ -669,12 +662,11 @@ def generate_diff_report(
                 }
             )
 
-    # Plan 09b removed the Tier-2 gap emission branches (formerly iterated rust
-    # symbols and python exports outside the Tier-1 mapping). Phase 3 enrolled
-    # every in-scope Python binding as a Tier-1 contract row, so those deferral
-    # branches no longer contribute gate signal. See
-    # .planning/phases/03-python-tier-collapse/03-09b-TIER2-CASCADE-AUDIT.md for
-    # the full remediation trace and Plan 09b SUMMARY for the C3 endgame details.
+    # Plan 09b removed the former deferred-gap emission branches (which iterated
+    # rust symbols and python exports outside the enforced mapping). Phase 3
+    # enrolled every in-scope Python binding as a contract row, so those deferral
+    # branches no longer contribute gate signal. See the Plan 09b SUMMARY and the
+    # cascade audit in .planning/phases/03-python-tier-collapse/ for details.
 
     status_counts: dict[str, int] = defaultdict(int)
     for row in contract_results:
@@ -747,9 +739,7 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
     )
     for owner in _OWNER_RENDER_ORDER:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
-        lines.append(
-            f"| `{owner}` | {tier_counts.get('tier1', 0)} |"
-        )
+        lines.append(f"| `{owner}` | {tier_counts.get('tier1', 0)} |")
 
     lines.extend(
         ("", "Detailed per-gap diagnostics are in `parity_diff_report.json`.", "")

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T07:41:53.909833+00:00",
+  "generated_at_utc": "2026-04-10T10:03:05.136620+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3105,7 +3105,7 @@
       "source_file": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};",
       "source_expr": "fcx_handler::GLOBAL_FCX_HANDLER",
-      "tier": "tier2"
+      "tier": "tier1"
     },
     {
       "symbol": "GpuDetector",
