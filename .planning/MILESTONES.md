@@ -1,5 +1,37 @@
 # Project Milestones: CLASSIC
 
+## v9.1.0-bindings Full Bindings Parity (Shipped: 2026-04-10)
+
+**Delivered:** Full binding parity across C++, Node, and Python with drift-preventing parity gates on all three surfaces. Every shared Rust crate is now exposed at full fidelity through all three bindings with zero Tier-2 deferrals.
+
+**Phases completed:** 7 phases, 32 plans, 90 tasks
+
+**Stats:**
+
+- ~192 commits over 4 days (2026-04-07 to 2026-04-10)
+- 44/45 v1 requirements satisfied (CI-04 branch protection user-deferred)
+- 7/7 phases verified passed (all Nyquist-compliant)
+- 10/12 cross-phase integration points wired (2 cosmetic issues closed by Phase 7)
+- 2/2 end-to-end flows complete
+- Audit: `.planning/milestones/v9.1.0-bindings-MILESTONE-AUDIT.md`
+
+**Git range:** v9.1.0-bugfixes tag to `3a08b27c` on main
+
+**Key accomplishments:**
+
+- Built a first-class C++ bridge parity gate (source-only, no build required) with born-green baseline expanding from 202 to 316 entries across 19 modules as the bridge surface widened (Phases 1-2)
+- Collapsed Python Tier-1/Tier-2 into a single enforced tier — 1098 tier1Mappings, `deferred_total == 0`, `classic_shared` wired as a gate-enrolled build target with 61 contract rows (Phase 3)
+- Collapsed Node Tier-1/Tier-2 into a single enforced tier — all 109 deferred entries promoted, `extractPeVersion`/`isValidPePath` added for PE-version extraction parity (Phase 4)
+- Wired all three parity gates (CXX, Python, Node) into CI with triple-gate canary assertion proving new public Rust APIs fail CI until all three bindings cover them (Phase 5)
+- Deleted all Tier-2 governance files, rewrote `binding-parity-overview.md` as the harmony-achieved reference, created `binding-parity-policy.md` and `error-contract.md` as new single-source-of-truth docs (Phase 6)
+- Closed all cosmetic audit gaps: traceability corrections, CXX baseline path fix, vestigial tier2 label removal from generators, stale comment cleanup (Phase 7)
+
+**Known Gaps:**
+
+- CI-04: Branch protection not configured for CXX parity gate (user-deferred)
+
+---
+
 ## v9.1.0-bugfixes CLASSIC Codebase Health (Shipped: 2026-04-07)
 
 **Delivered:** Resolved every concern from the codebase audit — deprecated API removal, dead code elimination, FCX state hardening across bindings, bounded cache replacement with canonical CacheStats, hot-path regex/parser caching with Criterion proof, mmap TOCTOU safety, LazyLock consistency sweep, workspace dependency promotion, Linux Proton docs-path wiring, and committed Node `index.d.ts` governance.
