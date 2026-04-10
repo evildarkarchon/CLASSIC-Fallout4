@@ -1,14 +1,15 @@
 # CLASSIC
 
-## Current State
+## Current Milestone: v9.1.0-consolidation Crate Consolidation
 
-**Latest shipped milestone:** v9.1.0-bindings Full Bindings Parity (2026-04-10)
+**Goal:** Reduce workspace granularity by merging 3 pairs of crates (19 → 16), updating all binding surfaces and parity gates, with zero functional changes.
 
-The codebase now has full bindings parity: every shared Rust crate is exposed at full fidelity through C++, Node, and Python with no Tier-2 deferrals, no narrowing, and parity gates that prevent future drift on all three surfaces. All three parity gates (CXX, Python, Node) are CI-enforced and exit 0 at 0 drift. Branch protection (CI-04) was user-deferred.
-
-**Previous milestone:** v9.1.0-bugfixes CLASSIC Codebase Health (2026-04-07) resolved every concern from the codebase audit: deprecated API removal, dead code elimination, FCX state hardening, bounded caches, hot-path caching, mmap safety, consistency sweep, workspace promotion, and Linux Proton docs-path wiring.
-
-**Next milestone:** Not yet planned. Run `/gsd:new-milestone` to start the next cycle.
+**Target features:**
+- Merge `classic-yaml-core` into `classic-settings-core` (unify YAML loading/caching)
+- Merge `classic-crashgen-settings-core` into `classic-config-core` (absorb single-consumer rule model)
+- Merge `classic-constants-core` into `classic-version-registry-core` (unify game/version identity metadata)
+- Update all binding crates (C++, Node, Python) for changed import paths
+- All three parity gates (CXX, Python, Node) pass at zero drift after consolidation
 
 ## What This Is
 
@@ -16,7 +17,7 @@ The CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase: a Rust-
 
 ## Core Value
 
-Every concern identified in the codebase audit is resolved — no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
+The Rust workspace has minimal, well-bounded crates with no redundant boundaries — every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
 
 ## Requirements
 
@@ -64,7 +65,11 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 
 ### Active
 
-(None — next milestone not yet planned)
+- [ ] Merge classic-yaml-core into classic-settings-core
+- [ ] Merge classic-crashgen-settings-core into classic-config-core
+- [ ] Merge classic-constants-core into classic-version-registry-core
+- [ ] Update all binding crates for changed import paths
+- [ ] All three parity gates pass at zero drift after consolidation
 
 ### Out of Scope
 
@@ -126,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after v9.1.0-bindings milestone completion*
+*Last updated: 2026-04-10 after v9.1.0-consolidation milestone started*

@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: none
+milestone: v9.1.0-consolidation
+milestone_name: Crate Consolidation
 current_plan: none
-status: idle
-stopped_at: v9.1.0-bindings milestone completed
-last_updated: "2026-04-10T11:00:00.000Z"
+status: defining-requirements
+stopped_at: Milestone started, defining requirements
+last_updated: "2026-04-10T12:00:00.000Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 0
@@ -21,20 +21,19 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-04-10)
 
-**Core value:** Every shared Rust crate is exposed at full fidelity through C++, Node, and Python — no Tier-2 deferrals, no narrowing, with parity gates that prevent future drift on all three surfaces.
-**Current focus:** Planning next milestone
+**Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries — every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
+**Current focus:** Defining requirements for v9.1.0-consolidation
 
 ## Current Position
 
-Milestone: v9.1.0-bindings (shipped 2026-04-10)
-Status: Between milestones
-Last activity: 2026-04-10
-
-Progress: [██████████] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-10 — Milestone v9.1.0-consolidation started
 
 ## Session Continuity
 
 Last session: 2026-04-10
-Stopped at: v9.1.0-bindings milestone completed
+Stopped at: Milestone started, defining requirements
 Resume file: None
-Next action: `/gsd:new-milestone` to start the next milestone cycle
+Next action: Define requirements and create roadmap
