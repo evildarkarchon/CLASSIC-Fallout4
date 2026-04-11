@@ -1,4 +1,4 @@
-use classic_crashgen_settings_core::{
+use classic_config_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
     PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
     TargetValueType,
@@ -93,7 +93,7 @@ fn parse_expected_value(value: &Bound<'_, PyAny>) -> Option<ExpectedValue> {
 /// Parse a Python mapping into typed crashgen settings rules.
 ///
 /// The expected input shape mirrors the `CrashgenSettingsRules` schema used by
-/// `classic_crashgen_settings_core` and returns `None` when required fields are
+/// `classic_config_core` and returns `None` when required fields are
 /// missing or invalid.
 pub fn parse_settings_rules(value: &Bound<'_, PyAny>) -> Option<CrashgenSettingsRules> {
     let map = as_dict(value)?;

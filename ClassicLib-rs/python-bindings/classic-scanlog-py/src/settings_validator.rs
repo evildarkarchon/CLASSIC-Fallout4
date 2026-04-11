@@ -75,8 +75,8 @@ impl PySettingsValidator {
     ) -> PyResult<Vec<Vec<String>>> {
         let layout = config_layout
             .as_deref()
-            .and_then(classic_crashgen_settings_core::ConfigLayout::parse)
-            .unwrap_or(classic_crashgen_settings_core::ConfigLayout::Unknown);
+            .and_then(classic_config_core::ConfigLayout::parse)
+            .unwrap_or(classic_config_core::ConfigLayout::Unknown);
 
         let fragments = self
             .inner
