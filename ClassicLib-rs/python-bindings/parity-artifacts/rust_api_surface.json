@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-11T06:21:10.827334+00:00",
+  "generated_at_utc": "2026-04-11T11:52:36.999194+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -44,6 +44,25 @@
   },
   "symbols": [
     {
+      "symbol": "*",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use crashgen_rules::*;",
+      "source_expr": "crashgen_rules::*",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CheckRule",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct CheckRule",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ClassicConfig",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -79,6 +98,15 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::ConfigError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ConfigLayout",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum ConfigLayout",
       "tier": "tier1"
     },
     {
@@ -139,6 +167,51 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashgenSettingsRules",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct CrashgenSettingsRules",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "EvaluationContext",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct EvaluationContext",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "EvaluationOutcome",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct EvaluationOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "EvaluationResult",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct EvaluationResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExpectedValue",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum ExpectedValue",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ModConflictEntry",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -196,6 +269,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "OutcomeKind",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum OutcomeKind",
+      "tier": "tier1"
+    },
+    {
       "symbol": "PathConfig",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -212,6 +294,78 @@
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/config.rs",
       "source_decl": "pub struct PathConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Predicate",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum Predicate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PreflightAction",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct PreflightAction",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PreflightActionKind",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum PreflightActionKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PreflightRule",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct PreflightRule",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RuleMessages",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct RuleMessages",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RuleReportBucket",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum RuleReportBucket",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RuleSeverity",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum RuleSeverity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RuleTarget",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct RuleTarget",
       "tier": "tier1"
     },
     {
@@ -272,6 +426,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "TargetValueType",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum TargetValueType",
+      "tier": "tier1"
+    },
+    {
       "symbol": "YamlDataCore",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -326,6 +489,15 @@
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod config;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "crashgen_rules",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod crashgen_rules;",
       "tier": "tier1"
     },
     {
@@ -416,6 +588,56 @@
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use classic_shared_core::get_runtime;",
       "source_expr": "classic_shared_core::get_runtime",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn parse(value: &str)",
       "tier": "tier1"
     },
     {

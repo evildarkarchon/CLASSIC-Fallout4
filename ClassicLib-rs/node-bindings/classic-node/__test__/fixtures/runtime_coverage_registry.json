@@ -31,14 +31,15 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 86,
-      "contractIdsHash": "caa0872bd3cb2417a7268ca285be40ce3c79d735f61e07e7b14c4078be98d167",
+      "contractCount": 107,
+      "contractIdsHash": "5979e7195066a913fd0e5e84f3eccd8fa335d994b09aa2c66d6a093f77a6e399",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
       "fixtureRefs": [
         "configSourceCases"
-      ]
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "coverageId": "node-tier1-version-registry",
@@ -202,22 +203,6 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": []
-    },
-    {
-      "coverageId": "node-tier1-crashgen-settings",
-      "classification": "runtime_verified",
-      "ownerModule": "crashgen_settings",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "crashgen_settings",
-        "tier": "tier1"
-      },
-      "contractCount": 21,
-      "contractIdsHash": "9a8e9bbe4e846229f9b6698e73b6b65e8fe250868107c618ce8d381bee3a512d",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
       "fixtureRefs": []
     },
     {

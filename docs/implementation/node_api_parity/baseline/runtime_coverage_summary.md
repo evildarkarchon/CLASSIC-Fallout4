@@ -1,6 +1,6 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-04-11T06:13:27.426182+00:00`
+- Generated: `2026-04-11T11:56:31.263580+00:00`
 - Tracked surfaces: **731**
 - Runtime verified: **731**
 - Contract mapped only: **0**
@@ -12,9 +12,8 @@
 | Owner Module | Runtime Verified | Contract Mapped | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|
 | `aux` | 169 | 0 | 0 | 169 |
-| `config` | 90 | 0 | 0 | 90 |
+| `config` | 111 | 0 | 0 | 111 |
 | `constants` | 30 | 0 | 0 | 30 |
-| `crashgen_settings` | 21 | 0 | 0 | 21 |
 | `database` | 14 | 0 | 0 | 14 |
 | `file_io` | 24 | 0 | 0 | 24 |
 | `message` | 9 | 0 | 0 | 9 |

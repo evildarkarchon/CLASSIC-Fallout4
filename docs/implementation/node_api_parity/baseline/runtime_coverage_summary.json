@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-11T06:13:27.426182+00:00",
+  "generated_at_utc": "2026-04-11T11:56:31.263580+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -22,16 +22,12 @@
       "total": 169
     },
     "config": {
-      "runtime_verified": 90,
-      "total": 90
+      "runtime_verified": 111,
+      "total": 111
     },
     "constants": {
       "runtime_verified": 30,
       "total": 30
-    },
-    "crashgen_settings": {
-      "runtime_verified": 21,
-      "total": 21
     },
     "database": {
       "runtime_verified": 14,
@@ -448,7 +444,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-create-yamldata-content",
@@ -467,7 +463,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-classic-config-class",
@@ -486,7 +482,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-create-default-config",
@@ -505,7 +501,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-clear-yaml-cache",
@@ -524,7 +520,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-enum",
@@ -543,7 +539,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-path",
@@ -562,7 +558,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-display-name",
@@ -581,7 +577,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-display-name-with-game",
@@ -600,7 +596,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-fileio-config-interface",
@@ -619,7 +615,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-path-config-interface",
@@ -638,7 +634,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-file-enum",
@@ -657,7 +653,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-all-yaml-files",
@@ -676,7 +672,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-yaml-file-description",
@@ -695,7 +691,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-default-cache-ttl-const",
@@ -714,7 +710,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-batch-cache-ttl-const",
@@ -733,7 +729,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-max-cache-ttl-const",
@@ -752,7 +748,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-default-cache-ttl",
@@ -771,7 +767,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-batch-cache-ttl",
@@ -790,7 +786,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-max-cache-ttl",
@@ -809,7 +805,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-generate-local-yaml",
@@ -828,7 +824,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-settings-cache-stats-interface",
@@ -847,7 +843,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-load-settings-sync",
@@ -866,7 +862,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-load-settings-async",
@@ -885,7 +881,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-cached",
@@ -904,7 +900,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-is-cached",
@@ -923,7 +919,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-invalidate-settings",
@@ -942,7 +938,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-clear-settings-cache",
@@ -961,7 +957,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-settings-cache-size",
@@ -980,7 +976,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-settings-cache-keys",
@@ -999,7 +995,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-settings-cache-stats",
@@ -1018,7 +1014,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-reset-settings-cache-stats",
@@ -1037,7 +1033,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-validate-settings-path",
@@ -1056,7 +1052,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-validate-settings-paths",
@@ -1075,7 +1071,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-document-class",
@@ -1094,7 +1090,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-parse",
@@ -1113,7 +1109,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-stringify",
@@ -1132,7 +1128,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-load-file",
@@ -1151,7 +1147,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-value",
@@ -1170,7 +1166,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-string-value",
@@ -1189,7 +1185,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-vec-value",
@@ -1208,7 +1204,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-hashmap-value",
@@ -1227,7 +1223,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-save-file",
@@ -1246,7 +1242,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-set-setting",
@@ -1265,7 +1261,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-settings-batch",
@@ -1284,7 +1280,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-set-settings-batch",
@@ -1303,7 +1299,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-indexmap-value",
@@ -1322,7 +1318,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-hashmap-vec-value",
@@ -1341,7 +1337,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-clear-cache",
@@ -1360,7 +1356,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-cache-stats",
@@ -1379,7 +1375,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:version-registry-get-by-id",
@@ -6209,7 +6205,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.CoreModEntry@rust",
@@ -6228,7 +6224,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.CoreModExclude@rust",
@@ -6247,7 +6243,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.CrashgenEntryRaw@rust",
@@ -6266,7 +6262,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.ModSolutionCriteria@rust",
@@ -6285,7 +6281,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.ModSolutionEntry@rust",
@@ -6304,7 +6300,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.SuspectErrorRule@rust",
@@ -6323,7 +6319,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.SuspectStackCountRule@rust",
@@ -6342,7 +6338,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.SuspectStackRule@rust",
@@ -6361,7 +6357,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.format_registry_game_version@rust",
@@ -6380,7 +6376,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.resolve_registry_version_info@rust",
@@ -6399,7 +6395,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL",
@@ -6418,7 +6414,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD",
@@ -6437,7 +6433,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.DEFAULT_QUERY_CACHE_CAPACITY",
@@ -6456,7 +6452,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.HashCacheStats",
@@ -6475,7 +6471,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.analysis.JsAnalysisConfig",
@@ -6494,7 +6490,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsConfigIssue",
@@ -6513,7 +6509,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.fcx.JsFcxConfigIssue",
@@ -6532,7 +6528,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsGameScanConfig",
@@ -6551,7 +6547,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsIntegrityConfig",
@@ -6570,7 +6566,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.path.JsPathDetectionResult",
@@ -6589,7 +6585,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsTomlConfigIssue",
@@ -6608,7 +6604,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.version_registry.JsXseConfig",
@@ -6627,7 +6623,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsEnbConfigResult",
@@ -6646,7 +6642,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.duplicate_detector.JsConfigDuplicateDetector",
@@ -6665,7 +6661,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.clearHashCache",
@@ -6684,7 +6680,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.duplicate_detector.detectConfigDuplicates",
@@ -6703,7 +6699,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.getDefaultCacheCleanupInterval",
@@ -6722,7 +6718,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.getDefaultCacheCleanupThreshold",
@@ -6741,7 +6737,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.getDefaultQueryCacheCapacity",
@@ -6760,7 +6756,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.fcx.getFcxConfigIssues",
@@ -6779,7 +6775,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.getHashCacheStats",
@@ -6798,7 +6794,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.path.needsPathDetection",
@@ -6817,7 +6813,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.resetHashCacheStats",
@@ -6836,7 +6832,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:version-pe-extract",
@@ -6988,7 +6984,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:constants.Fallout4Version@rust",
@@ -7504,358 +7500,400 @@
       "trackedId": "contract:crashgen_settings.CheckRule@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.CheckRule@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "CheckRule@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.ConfigLayout@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.ConfigLayout@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "ConfigLayout@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.EvaluationContext@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.EvaluationContext@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "EvaluationContext@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.EvaluationOutcome@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.EvaluationOutcome@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "EvaluationOutcome@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.EvaluationResult@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.EvaluationResult@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "EvaluationResult@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.ExpectedValue@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.ExpectedValue@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "ExpectedValue@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.OutcomeKind@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.OutcomeKind@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "OutcomeKind@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.Predicate@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.Predicate@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "Predicate@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.PreflightAction@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.PreflightAction@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "PreflightAction@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.PreflightActionKind@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.PreflightActionKind@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "PreflightActionKind@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.PreflightRule@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.PreflightRule@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "PreflightRule@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleMessages@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleMessages@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleMessages@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleReportBucket@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleReportBucket@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleReportBucket@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleSeverity@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleSeverity@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleSeverity@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleTarget@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleTarget@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleTarget@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.TargetValueType@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.TargetValueType@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "TargetValueType@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:database.BATCH_CACHE_TTL_SECS@rust",
@@ -12379,7 +12417,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:aux.JsModSolutionCriteria",

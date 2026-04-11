@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-11T06:13:27.422098+00:00`
+- Generated: `2026-04-11T11:56:31.259877+00:00`
 - Tier-1 contract rows: **705**
 - Tier-1 matched: **705**
 - Tier-1 missing Rust: **0**
@@ -411,27 +411,27 @@
 | `constants.xse_acronym@rust` | `constants` | `xse_acronym@rust` | `None` | `matched` |
 | `constants.xse_acronym_string@rust` | `constants` | `xse_acronym_string@rust` | `None` | `matched` |
 | `constants.xse_config@rust` | `constants` | `xse_config@rust` | `None` | `matched` |
-| `crashgen_settings.CheckRule@rust` | `crashgen_settings` | `CheckRule@rust` | `None` | `matched` |
-| `crashgen_settings.ConfigLayout@rust` | `crashgen_settings` | `ConfigLayout@rust` | `None` | `matched` |
-| `crashgen_settings.EvaluationContext@rust` | `crashgen_settings` | `EvaluationContext@rust` | `None` | `matched` |
-| `crashgen_settings.EvaluationOutcome@rust` | `crashgen_settings` | `EvaluationOutcome@rust` | `None` | `matched` |
-| `crashgen_settings.EvaluationResult@rust` | `crashgen_settings` | `EvaluationResult@rust` | `None` | `matched` |
-| `crashgen_settings.ExpectedValue@rust` | `crashgen_settings` | `ExpectedValue@rust` | `None` | `matched` |
-| `crashgen_settings.OutcomeKind@rust` | `crashgen_settings` | `OutcomeKind@rust` | `None` | `matched` |
-| `crashgen_settings.Predicate@rust` | `crashgen_settings` | `Predicate@rust` | `None` | `matched` |
-| `crashgen_settings.PreflightAction@rust` | `crashgen_settings` | `PreflightAction@rust` | `None` | `matched` |
-| `crashgen_settings.PreflightActionKind@rust` | `crashgen_settings` | `PreflightActionKind@rust` | `None` | `matched` |
-| `crashgen_settings.PreflightRule@rust` | `crashgen_settings` | `PreflightRule@rust` | `None` | `matched` |
-| `crashgen_settings.RuleMessages@rust` | `crashgen_settings` | `RuleMessages@rust` | `None` | `matched` |
-| `crashgen_settings.RuleReportBucket@rust` | `crashgen_settings` | `RuleReportBucket@rust` | `None` | `matched` |
-| `crashgen_settings.RuleSeverity@rust` | `crashgen_settings` | `RuleSeverity@rust` | `None` | `matched` |
-| `crashgen_settings.RuleTarget@rust` | `crashgen_settings` | `RuleTarget@rust` | `None` | `matched` |
-| `crashgen_settings.TargetValueType@rust` | `crashgen_settings` | `TargetValueType@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `crashgen_settings` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.CheckRule@rust` | `config` | `CheckRule@rust` | `None` | `matched` |
+| `crashgen_settings.ConfigLayout@rust` | `config` | `ConfigLayout@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationContext@rust` | `config` | `EvaluationContext@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationOutcome@rust` | `config` | `EvaluationOutcome@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationResult@rust` | `config` | `EvaluationResult@rust` | `None` | `matched` |
+| `crashgen_settings.ExpectedValue@rust` | `config` | `ExpectedValue@rust` | `None` | `matched` |
+| `crashgen_settings.OutcomeKind@rust` | `config` | `OutcomeKind@rust` | `None` | `matched` |
+| `crashgen_settings.Predicate@rust` | `config` | `Predicate@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightAction@rust` | `config` | `PreflightAction@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightActionKind@rust` | `config` | `PreflightActionKind@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightRule@rust` | `config` | `PreflightRule@rust` | `None` | `matched` |
+| `crashgen_settings.RuleMessages@rust` | `config` | `RuleMessages@rust` | `None` | `matched` |
+| `crashgen_settings.RuleReportBucket@rust` | `config` | `RuleReportBucket@rust` | `None` | `matched` |
+| `crashgen_settings.RuleSeverity@rust` | `config` | `RuleSeverity@rust` | `None` | `matched` |
+| `crashgen_settings.RuleTarget@rust` | `config` | `RuleTarget@rust` | `None` | `matched` |
+| `crashgen_settings.TargetValueType@rust` | `config` | `TargetValueType@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
 | `database.BATCH_CACHE_TTL_SECS@rust` | `database` | `BATCH_CACHE_TTL_SECS@rust` | `None` | `matched` |
 | `database.CacheEntry@rust` | `database` | `CacheEntry@rust` | `None` | `matched` |
 | `database.CacheKey@rust` | `database` | `CacheKey@rust` | `None` | `matched` |

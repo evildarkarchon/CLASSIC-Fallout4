@@ -3128,7 +3128,7 @@
       "id": "version-registry-crashgen-settings-rules",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "CrashgenSettingsRules",
       "nodeExport": "JsCrashgenSettingsRules",
       "nodeKind": "interface"
@@ -3402,168 +3402,168 @@
     {
       "id": "crashgen_settings.CheckRule@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "CheckRule@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.ConfigLayout@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "ConfigLayout@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.EvaluationContext@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "EvaluationContext@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.EvaluationOutcome@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "EvaluationOutcome@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.EvaluationResult@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "EvaluationResult@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.ExpectedValue@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "ExpectedValue@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.OutcomeKind@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "OutcomeKind@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.Predicate@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "Predicate@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.PreflightAction@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightAction@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.PreflightActionKind@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightActionKind@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.PreflightRule@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightRule@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.RuleMessages@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleMessages@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.RuleReportBucket@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleReportBucket@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.RuleSeverity@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleSeverity@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.RuleTarget@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleTarget@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.TargetValueType@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "TargetValueType@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
@@ -5675,7 +5675,7 @@
       "id": "aux.JsCheckRule",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "CheckRule",
       "nodeExport": "JsCheckRule",
       "nodeKind": "interface"
@@ -5684,7 +5684,7 @@
       "id": "aux.JsExpectedValue",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "ExpectedValue",
       "nodeExport": "JsExpectedValue",
       "nodeKind": "interface"
@@ -5720,7 +5720,7 @@
       "id": "aux.JsPreflightAction",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightAction",
       "nodeExport": "JsPreflightAction",
       "nodeKind": "interface"
@@ -5729,7 +5729,7 @@
       "id": "aux.JsPreflightRule",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightRule",
       "nodeExport": "JsPreflightRule",
       "nodeKind": "interface"
@@ -5738,7 +5738,7 @@
       "id": "aux.JsRuleMessages",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleMessages",
       "nodeExport": "JsRuleMessages",
       "nodeKind": "interface"
@@ -5747,7 +5747,7 @@
       "id": "aux.JsRuleTarget",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleTarget",
       "nodeExport": "JsRuleTarget",
       "nodeKind": "interface"
