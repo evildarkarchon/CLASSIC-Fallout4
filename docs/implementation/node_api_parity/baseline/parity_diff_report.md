@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-10T10:03:05.139905+00:00`
-- Tier-1 contract rows: **711**
-- Tier-1 matched: **711**
+- Generated: `2026-04-11T06:13:27.422098+00:00`
+- Tier-1 contract rows: **705**
+- Tier-1 matched: **705**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -612,21 +612,15 @@
 | `settings.parse_yaml_content@rust` | `settings` | `parse_yaml_content@rust` | `None` | `matched` |
 | `settings.reset_cache_stats@rust` | `settings` | `reset_cache_stats@rust` | `None` | `matched` |
 | `settings.validators@rust` | `settings` | `validators@rust` | `None` | `matched` |
-| `shared.AsyncBridge@rust` | `shared` | `AsyncBridge@rust` | `None` | `matched` |
-| `shared.BridgeError@rust` | `shared` | `BridgeError@rust` | `None` | `matched` |
 | `shared.ClassicError@rust` | `shared` | `ClassicError@rust` | `None` | `matched` |
 | `shared.ClassicResult@rust` | `shared` | `ClassicResult@rust` | `None` | `matched` |
-| `shared.EventLoopDispatcher@rust` | `shared` | `EventLoopDispatcher@rust` | `None` | `matched` |
 | `shared.IntoClassicError@rust` | `shared` | `IntoClassicError@rust` | `None` | `matched` |
 | `shared.RuntimeConfig@rust` | `shared` | `RuntimeConfig@rust` | `None` | `matched` |
-| `shared.SlintDispatcher@rust` | `shared` | `SlintDispatcher@rust` | `None` | `matched` |
-| `shared.async_bridge@rust` | `shared` | `async_bridge@rust` | `None` | `matched` |
 | `shared.cpu_optimized@rust` | `shared` | `cpu_optimized@rust` | `None` | `matched` |
 | `shared.errors@rust` | `shared` | `errors@rust` | `None` | `matched` |
 | `shared.io_optimized@rust` | `shared` | `io_optimized@rust` | `None` | `matched` |
 | `shared.minimal@rust` | `shared` | `minimal@rust` | `None` | `matched` |
 | `shared.performance_core@rust` | `shared` | `performance_core@rust` | `None` | `matched` |
-| `shared.set_dispatcher@rust` | `shared` | `set_dispatcher@rust` | `None` | `matched` |
 | `update.GithubAsset@rust` | `update` | `GithubAsset@rust` | `None` | `matched` |
 | `update.GithubClient@rust` | `update` | `GithubClient@rust` | `None` | `matched` |
 | `update.GithubRelease@rust` | `update` | `GithubRelease@rust` | `None` | `matched` |
@@ -679,28 +673,28 @@
 | `xse.new@rust` | `xse` | `new@rust` | `None` | `matched` |
 | `xse.parse_version@rust` | `xse` | `parse_version@rust` | `None` | `matched` |
 | `xse.try_parse_version@rust` | `xse` | `try_parse_version@rust` | `None` | `matched` |
-| `yaml.YamlError@rust` | `yaml` | `YamlError@rust` | `None` | `matched` |
-| `yaml.YamlOperations@rust` | `yaml` | `YamlOperations@rust` | `None` | `matched` |
-| `yaml.cache_stats@rust` | `yaml` | `cache_stats@rust` | `None` | `matched` |
-| `yaml.clear_cache@rust` | `yaml` | `clear_cache@rust` | `None` | `matched` |
-| `yaml.dump_yaml@rust` | `yaml` | `dump_yaml@rust` | `None` | `matched` |
-| `yaml.get_cache_stats@rust` | `yaml` | `get_cache_stats@rust` | `None` | `matched` |
-| `yaml.get_hashmap_value@rust` | `yaml` | `get_hashmap_value@rust` | `None` | `matched` |
-| `yaml.get_indexmap_value@rust` | `yaml` | `get_indexmap_value@rust` | `None` | `matched` |
-| `yaml.get_setting@rust` | `yaml` | `get_setting@rust` | `None` | `matched` |
-| `yaml.get_settings_batch@rust` | `yaml` | `get_settings_batch@rust` | `None` | `matched` |
-| `yaml.get_string_value@rust` | `yaml` | `get_string_value@rust` | `None` | `matched` |
-| `yaml.get_vec_value@rust` | `yaml` | `get_vec_value@rust` | `None` | `matched` |
-| `yaml.is_cache_enabled@rust` | `yaml` | `is_cache_enabled@rust` | `None` | `matched` |
-| `yaml.load_yaml_file@rust` | `yaml` | `load_yaml_file@rust` | `None` | `matched` |
-| `yaml.load_yaml_files_batch@rust` | `yaml` | `load_yaml_files_batch@rust` | `None` | `matched` |
-| `yaml.merge_keys@rust` | `yaml` | `merge_keys@rust` | `None` | `matched` |
-| `yaml.new@rust` | `yaml` | `new@rust` | `None` | `matched` |
-| `yaml.parse_yaml@rust` | `yaml` | `parse_yaml@rust` | `None` | `matched` |
-| `yaml.reset_cache_stats@rust` | `yaml` | `reset_cache_stats@rust` | `None` | `matched` |
-| `yaml.save_yaml_file@rust` | `yaml` | `save_yaml_file@rust` | `None` | `matched` |
-| `yaml.set_cache_enabled@rust` | `yaml` | `set_cache_enabled@rust` | `None` | `matched` |
-| `yaml.set_setting@rust` | `yaml` | `set_setting@rust` | `None` | `matched` |
+| `yaml.YamlError@rust` | `settings` | `YamlError@rust` | `None` | `matched` |
+| `yaml.YamlOperations@rust` | `settings` | `YamlOperations@rust` | `None` | `matched` |
+| `yaml.cache_stats@rust` | `settings` | `cache_stats@rust` | `None` | `matched` |
+| `yaml.clear_cache@rust` | `settings` | `clear_cache@rust` | `None` | `matched` |
+| `yaml.dump_yaml@rust` | `settings` | `dump_yaml@rust` | `None` | `matched` |
+| `yaml.get_cache_stats@rust` | `settings` | `get_cache_stats@rust` | `None` | `matched` |
+| `yaml.get_hashmap_value@rust` | `settings` | `get_hashmap_value@rust` | `None` | `matched` |
+| `yaml.get_indexmap_value@rust` | `settings` | `get_indexmap_value@rust` | `None` | `matched` |
+| `yaml.get_setting@rust` | `settings` | `get_setting@rust` | `None` | `matched` |
+| `yaml.get_settings_batch@rust` | `settings` | `get_settings_batch@rust` | `None` | `matched` |
+| `yaml.get_string_value@rust` | `settings` | `get_string_value@rust` | `None` | `matched` |
+| `yaml.get_vec_value@rust` | `settings` | `get_vec_value@rust` | `None` | `matched` |
+| `yaml.is_cache_enabled@rust` | `settings` | `is_cache_enabled@rust` | `None` | `matched` |
+| `yaml.load_yaml_file@rust` | `settings` | `load_yaml_file@rust` | `None` | `matched` |
+| `yaml.load_yaml_files_batch@rust` | `settings` | `load_yaml_files_batch@rust` | `None` | `matched` |
+| `yaml.merge_keys@rust` | `settings` | `merge_keys@rust` | `None` | `matched` |
+| `yaml.new@rust` | `settings` | `new@rust` | `None` | `matched` |
+| `yaml.parse_yaml@rust` | `settings` | `parse_yaml@rust` | `None` | `matched` |
+| `yaml.reset_cache_stats@rust` | `settings` | `reset_cache_stats@rust` | `None` | `matched` |
+| `yaml.save_yaml_file@rust` | `settings` | `save_yaml_file@rust` | `None` | `matched` |
+| `yaml.set_cache_enabled@rust` | `settings` | `set_cache_enabled@rust` | `None` | `matched` |
+| `yaml.set_setting@rust` | `settings` | `set_setting@rust` | `None` | `matched` |
 | `aux.JsCheckRule` | `aux` | `CheckRule` | `JsCheckRule` | `matched` |
 | `aux.JsExpectedValue` | `aux` | `ExpectedValue` | `JsExpectedValue` | `matched` |
 | `config.JsModConflictEntry` | `config` | `ModConflictEntry` | `JsModConflictEntry` | `matched` |

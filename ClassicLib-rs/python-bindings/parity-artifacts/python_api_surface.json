@@ -1,11 +1,10 @@
 {
-  "generated_at_utc": "2026-04-10T07:55:55.711995+00:00",
+  "generated_at_utc": "2026-04-11T06:21:10.843613+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
       "classic_config",
       "classic_version_registry",
-      "classic_yaml",
       "classic_database",
       "classic_file_io",
       "classic_scangame",
@@ -26,7 +25,6 @@
       "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
       "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-      "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
       "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
       "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
       "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
@@ -7345,6 +7343,36 @@
     },
     {
       "module": "classic_settings",
+      "export": "RustYamlError",
+      "export_path": "RustYamlError",
+      "kind": "class",
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "class RustYamlError(Exception):"
+    },
+    {
+      "module": "classic_settings",
+      "export": "RustYamlIOError",
+      "export_path": "RustYamlIOError",
+      "kind": "class",
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "class RustYamlIOError(RustYamlError):"
+    },
+    {
+      "module": "classic_settings",
+      "export": "RustYamlParseError",
+      "export_path": "RustYamlParseError",
+      "kind": "class",
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "class RustYamlParseError(RustYamlError):"
+    },
+    {
+      "module": "classic_settings",
       "export": "SettingsCacheStats",
       "export_path": "SettingsCacheStats",
       "kind": "class",
@@ -7352,6 +7380,170 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "class SettingsCacheStats(TypedDict):"
+    },
+    {
+      "module": "classic_settings",
+      "export": "YamlCacheStats",
+      "export_path": "YamlCacheStats",
+      "kind": "class",
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "class YamlCacheStats(TypedDict):"
+    },
+    {
+      "module": "classic_settings",
+      "export": "YamlOperations",
+      "export_path": "YamlOperations",
+      "kind": "class",
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "class YamlOperations:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "__init__",
+      "export_path": "YamlOperations.__init__",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def __init__(self) -> None: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "clear_cache",
+      "export_path": "YamlOperations.clear_cache",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def clear_cache(self) -> None: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "dump_yaml",
+      "export_path": "YamlOperations.dump_yaml",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def dump_yaml(self, data: Any) -> str: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "get_cache_stats",
+      "export_path": "YamlOperations.get_cache_stats",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def get_cache_stats(self) -> YamlCacheStats: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "get_hashmap_value",
+      "export_path": "YamlOperations.get_hashmap_value",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def get_hashmap_value(self, data: Any, key_path: str) -> dict[str, str]: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "get_setting",
+      "export_path": "YamlOperations.get_setting",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def get_setting(self, data: Any, key_path: str) -> Any | None: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "get_string_value",
+      "export_path": "YamlOperations.get_string_value",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def get_string_value(self, data: Any, key_path: str, default: str) -> str: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "get_vec_value",
+      "export_path": "YamlOperations.get_vec_value",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def get_vec_value(self, data: Any, key_path: str) -> list[str]: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "load_yaml_file",
+      "export_path": "YamlOperations.load_yaml_file",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def load_yaml_file(self, path: str | Path) -> Any: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "parse_yaml",
+      "export_path": "YamlOperations.parse_yaml",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def parse_yaml(self, content: str) -> Any: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "save_yaml_file",
+      "export_path": "YamlOperations.save_yaml_file",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def save_yaml_file(self, path: str | Path, data: Any) -> None: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "set_setting",
+      "export_path": "YamlOperations.set_setting",
+      "parent_class": "YamlOperations",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def set_setting(self, data: Any, key_path: str, value: Any) -> Any: ..."
     },
     {
       "module": "classic_settings",
@@ -7396,6 +7588,17 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def clear_cache() -> None:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "clear_global_yaml_cache",
+      "export_path": "clear_global_yaml_cache",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def clear_global_yaml_cache() -> None:"
     },
     {
       "module": "classic_settings",
@@ -7487,6 +7690,17 @@
     },
     {
       "module": "classic_settings",
+      "export": "merge_keys",
+      "export_path": "merge_keys",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def merge_keys(data: Any) -> Any:"
+    },
+    {
+      "module": "classic_settings",
       "export": "reset_cache_stats",
       "export_path": "reset_cache_stats",
       "kind": "function",
@@ -7495,6 +7709,17 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def reset_cache_stats() -> None:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "reset_yaml_cache_stats",
+      "export_path": "reset_yaml_cache_stats",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def reset_yaml_cache_stats() -> None:"
     },
     {
       "module": "classic_settings",
@@ -7517,6 +7742,17 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def validate_settings_structure(yaml_content: str) -> list[dict[str, Any]]:"
+    },
+    {
+      "module": "classic_settings",
+      "export": "yaml_cache_stats",
+      "export_path": "yaml_cache_stats",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "def yaml_cache_stats() -> YamlCacheStats:"
     },
     {
       "module": "classic_shared",
@@ -9287,170 +9523,6 @@
       "tier": "tier1",
       "source_file": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def parse_xse_type(type_name: str) -> XseType:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "YamlCacheStats",
-      "export_path": "YamlCacheStats",
-      "kind": "class",
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "class YamlCacheStats(TypedDict):"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "YamlOperations",
-      "export_path": "YamlOperations",
-      "kind": "class",
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "class YamlOperations:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "__init__",
-      "export_path": "YamlOperations.__init__",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def __init__(self) -> None:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "clear_cache",
-      "export_path": "YamlOperations.clear_cache",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def clear_cache(self) -> None:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "dump_yaml",
-      "export_path": "YamlOperations.dump_yaml",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def dump_yaml(self, data: Any) -> str:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "get_cache_stats",
-      "export_path": "YamlOperations.get_cache_stats",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def get_cache_stats(self) -> YamlCacheStats:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "get_hashmap_value",
-      "export_path": "YamlOperations.get_hashmap_value",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def get_hashmap_value(self, data: dict[str, Any], key_path: str) -> dict[str, str]:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "get_setting",
-      "export_path": "YamlOperations.get_setting",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def get_setting(self, data: dict[str, Any], key_path: str) -> Any | None:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "get_string_value",
-      "export_path": "YamlOperations.get_string_value",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 3,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def get_string_value( self, data: dict[str, Any], key_path: str, default: str ) -> str:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "get_vec_value",
-      "export_path": "YamlOperations.get_vec_value",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def get_vec_value(self, data: dict[str, Any], key_path: str) -> list[str]:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "load_yaml_file",
-      "export_path": "YamlOperations.load_yaml_file",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def load_yaml_file(self, path: str | Path) -> dict[str, Any]:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "parse_yaml",
-      "export_path": "YamlOperations.parse_yaml",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def parse_yaml(self, content: str) -> Any:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "save_yaml_file",
-      "export_path": "YamlOperations.save_yaml_file",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def save_yaml_file(self, path: str | Path, data: dict[str, Any]) -> None:"
-    },
-    {
-      "module": "classic_yaml",
-      "export": "set_setting",
-      "export_path": "YamlOperations.set_setting",
-      "parent_class": "YamlOperations",
-      "kind": "method",
-      "arity": 3,
-      "owner_module": "yaml",
-      "tier": "tier1",
-      "source_file": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
-      "signature": "def set_setting( self, data: dict[str, Any], key_path: str, value: Any ) -> dict[str, Any]:"
     }
   ]
 }

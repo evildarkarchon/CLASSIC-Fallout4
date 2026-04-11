@@ -5008,22 +5008,6 @@
       "rustKind": "module"
     },
     {
-      "id": "shared.AsyncBridge@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "AsyncBridge@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "shared.BridgeError@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "BridgeError@rust",
-      "rustKind": "reexport"
-    },
-    {
       "id": "shared.ClassicError@rust",
       "tier": "tier1",
       "ownerModule": "shared",
@@ -5037,14 +5021,6 @@
       "ownerModule": "shared",
       "rustCrate": "classic-shared-core",
       "rustSymbol": "ClassicResult@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "shared.EventLoopDispatcher@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "EventLoopDispatcher@rust",
       "rustKind": "reexport"
     },
     {
@@ -5062,22 +5038,6 @@
       "rustCrate": "classic-shared-core",
       "rustSymbol": "RuntimeConfig@rust",
       "rustKind": "struct"
-    },
-    {
-      "id": "shared.SlintDispatcher@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "SlintDispatcher@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "shared.async_bridge@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "async_bridge@rust",
-      "rustKind": "module"
     },
     {
       "id": "shared.cpu_optimized@rust",
@@ -5118,14 +5078,6 @@
       "rustCrate": "classic-shared-core",
       "rustSymbol": "performance_core@rust",
       "rustKind": "module"
-    },
-    {
-      "id": "shared.set_dispatcher@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "set_dispatcher@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "update.GithubAsset@rust",

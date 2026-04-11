@@ -251,83 +251,137 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
     return expanded
 
 
+def _collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, str]]:
+    """Return ordered [(rel_path, content), ...] for lib.rs + referenced sub-modules.
+
+    Scans `mod foo;` and `pub mod foo;` declarations inside `lib.rs` and resolves
+    each to either `<crate_src>/foo.rs` or `<crate_src>/foo/mod.rs` if the file
+    exists. One level deep is enough for the parity gate's use case (post-v9.1.0
+    Phase 1 merge: yaml_ops.rs lives as a sibling of lib.rs in settings-core).
+    """
+    lib_path = repo_root / lib_rs_rel
+    content = lib_path.read_text(encoding="utf-8")
+    sources = [(lib_rs_rel, content)]
+    src_dir = lib_path.parent
+    mod_names: list[str] = []
+    for match in re.finditer(r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content):
+        mod_names.append(match.group(1))
+    for mod_name in mod_names:
+        candidate_file = src_dir / f"{mod_name}.rs"
+        candidate_mod = src_dir / mod_name / "mod.rs"
+        chosen: Path | None = None
+        if candidate_file.exists():
+            chosen = candidate_file
+        elif candidate_mod.exists():
+            chosen = candidate_mod
+        if chosen is not None:
+            sub_rel = str(chosen.relative_to(repo_root)).replace("\\", "/")
+            try:
+                sub_content = chosen.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            sources.append((sub_rel, sub_content))
+    return sources
+
+
 def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[str, Any]:
-    """Extract Rust symbols from target crate `lib.rs` files."""
+    """Extract Rust symbols from target crate `lib.rs` files.
+
+    Post v9.1.0 Phase 1: when a `-core` crate uses a sub-module (e.g.,
+    `classic-settings-core/src/yaml_ops.rs`), this function also scans that
+    sub-module file for `pub fn` / `pub struct` / `pub use` declarations so the
+    parity gate can see methods and types declared there.
+    """
     entries: list[dict[str, Any]] = []
 
     for crate_name, rel_path in RUST_TARGET_CRATES.items():
-        source_path = repo_root / rel_path
-        content = source_path.read_text(encoding="utf-8")
         owner_module = RUST_OWNER_BY_CRATE[crate_name]
+        crate_sources = _collect_crate_sources(repo_root, rel_path)
 
-        for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
-            symbol = match.group(1)
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": "module",
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": match.group(0).strip(),
-                    "tier": "tier1",
-                }
-            )
-
-        for match in re.finditer(
-            r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
-        ):
-            symbol = match.group(1)
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": "function",
-                    "arity": count_top_level_params(match.group(2)),
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": match.group(0).strip(),
-                    "tier": "tier1",
-                }
-            )
-
-        for match in re.finditer(
-            r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
-            content,
-        ):
-            kind = match.group(1)
-            symbol = match.group(2)
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": kind,
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": match.group(0).strip(),
-                    "tier": "tier1",
-                }
-            )
-
-        for match in re.finditer(
-            r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
-        ):
-            use_body = match.group(1)
-            for symbol, source_expr in expand_pub_use_statement(use_body):
-                entries.append(
-                    {
-                        "symbol": symbol,
-                        "kind": "reexport",
-                        "crate": crate_name,
-                        "owner_module": owner_module,
-                        "source_file": rel_path,
-                        "source_decl": f"pub use {normalize_whitespace(use_body)};",
-                        "source_expr": source_expr,
-                        "tier": "tier1",
-                    }
-                )
+        for source_rel, content in crate_sources:
+            _extract_rust_symbols(entries, content, source_rel, crate_name, owner_module, rel_path)
 
     entries.sort(key=operator.itemgetter("crate", "symbol", "kind"))
+    return _finalize_rust_manifest(entries)
+
+
+def _extract_rust_symbols(
+    entries: list[dict[str, Any]],
+    content: str,
+    source_rel: str,
+    crate_name: str,
+    owner_module: str,
+    crate_lib_rel: str,
+) -> None:
+    for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
+        symbol = match.group(1)
+        entries.append(
+            {
+                "symbol": symbol,
+                "kind": "module",
+                "crate": crate_name,
+                "owner_module": owner_module,
+                "source_file": source_rel,
+                "source_decl": match.group(0).strip(),
+                "tier": "tier1",
+            }
+        )
+
+    for match in re.finditer(
+        r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
+    ):
+        symbol = match.group(1)
+        entries.append(
+            {
+                "symbol": symbol,
+                "kind": "function",
+                "arity": count_top_level_params(match.group(2)),
+                "crate": crate_name,
+                "owner_module": owner_module,
+                "source_file": source_rel,
+                "source_decl": match.group(0).strip(),
+                "tier": "tier1",
+            }
+        )
+
+    for match in re.finditer(
+        r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
+        content,
+    ):
+        kind = match.group(1)
+        symbol = match.group(2)
+        entries.append(
+            {
+                "symbol": symbol,
+                "kind": kind,
+                "crate": crate_name,
+                "owner_module": owner_module,
+                "source_file": source_rel,
+                "source_decl": match.group(0).strip(),
+                "tier": "tier1",
+            }
+        )
+
+    for match in re.finditer(
+        r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
+    ):
+        use_body = match.group(1)
+        for symbol, source_expr in expand_pub_use_statement(use_body):
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": "reexport",
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": source_rel,
+                    "source_decl": f"pub use {normalize_whitespace(use_body)};",
+                    "source_expr": source_expr,
+                    "tier": "tier1",
+                }
+            )
+
+
+def _finalize_rust_manifest(entries: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "scope": {

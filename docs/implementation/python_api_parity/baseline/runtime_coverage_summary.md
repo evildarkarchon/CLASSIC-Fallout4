@@ -1,6 +1,6 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-04-10T10:03:01.254680+00:00`
+- Generated: `2026-04-11T06:21:10.851469+00:00`
 - Tracked surfaces: **1264**
 - Runtime verified: **1264**
 - Contract mapped only: **0**
@@ -22,13 +22,12 @@
 | `resource` | 36 | 0 | 0 | 36 |
 | `scangame` | 172 | 0 | 0 | 172 |
 | `scanlog` | 377 | 0 | 0 | 377 |
-| `settings` | 28 | 0 | 0 | 28 |
+| `settings` | 59 | 0 | 0 | 59 |
 | `shared` | 61 | 0 | 0 | 61 |
 | `update` | 10 | 0 | 0 | 10 |
 | `version` | 15 | 0 | 0 | 15 |
 | `version_registry` | 84 | 0 | 0 | 84 |
 | `web` | 23 | 0 | 0 | 23 |
 | `xse` | 36 | 0 | 0 | 36 |
-| `yaml` | 31 | 0 | 0 | 31 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.

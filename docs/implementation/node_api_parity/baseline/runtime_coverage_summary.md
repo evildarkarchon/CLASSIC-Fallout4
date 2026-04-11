@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-04-10T10:03:05.144409+00:00`
-- Tracked surfaces: **737**
-- Runtime verified: **737**
+- Generated: `2026-04-11T06:13:27.426182+00:00`
+- Tracked surfaces: **731**
+- Runtime verified: **731**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -23,13 +23,12 @@
 | `registry` | 14 | 0 | 0 | 14 |
 | `scangame` | 70 | 0 | 0 | 70 |
 | `scanlog` | 95 | 0 | 0 | 95 |
-| `settings` | 22 | 0 | 0 | 22 |
-| `shared` | 15 | 0 | 0 | 15 |
+| `settings` | 44 | 0 | 0 | 44 |
+| `shared` | 9 | 0 | 0 | 9 |
 | `update` | 6 | 0 | 0 | 6 |
 | `version` | 14 | 0 | 0 | 14 |
 | `version_registry` | 63 | 0 | 0 | 63 |
 | `web` | 15 | 0 | 0 | 15 |
 | `xse` | 17 | 0 | 0 | 17 |
-| `yaml` | 22 | 0 | 0 | 22 |
 
 Detailed tracked-surface diagnostics are in the JSON summary artifact.

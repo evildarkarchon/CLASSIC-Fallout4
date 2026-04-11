@@ -357,8 +357,8 @@
         "ownerModule": "shared",
         "tier": "tier1"
       },
-      "contractCount": 15,
-      "contractIdsHash": "a3b7d35076a34e08da9a7874b33e7ed099a038c9bcf579d380f775864bf0b1dc",
+      "contractCount": 9,
+      "contractIdsHash": "2d59a9e740d6767a6c1503585cb00ff3b865957162f6e24ee576159f08342141",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "shared-tier1-parity",

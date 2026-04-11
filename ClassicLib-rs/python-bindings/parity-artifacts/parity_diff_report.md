@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-04-10T07:55:55.713686+00:00`
+- Generated: `2026-04-11T06:21:10.845306+00:00`
 - Tier-1 contract rows: **1098**
 - Tier-1 matched: **1098**
 - Tier-1 missing Rust: **0**
@@ -1079,37 +1079,37 @@
 | `xse.lib.parse_version@rust` | `xse` | `parse_version` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.parse_xse_type` | `xse` | `XseType` | `classic_xse.parse_xse_type` | `matched` |
 | `xse.lib.try_parse_version@rust` | `xse` | `try_parse_version` | `classic_xse.XseInfo` | `matched` |
-| `yaml.lib.YamlCacheStats` | `yaml` | `YamlOperations` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.YamlError@rust` | `yaml` | `YamlError` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.YamlOperations` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations` | `matched` |
-| `yaml.lib.YamlOperations.__init__` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.__init__` | `matched` |
-| `yaml.lib.YamlOperations.clear_cache` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.clear_cache` | `matched` |
-| `yaml.lib.YamlOperations.dump_yaml` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.dump_yaml` | `matched` |
-| `yaml.lib.YamlOperations.get_cache_stats` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.get_cache_stats` | `matched` |
-| `yaml.lib.YamlOperations.get_hashmap_value` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.get_hashmap_value` | `matched` |
-| `yaml.lib.YamlOperations.get_setting` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.get_setting` | `matched` |
-| `yaml.lib.YamlOperations.get_string_value` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.get_string_value` | `matched` |
-| `yaml.lib.YamlOperations.get_vec_value` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.get_vec_value` | `matched` |
-| `yaml.lib.YamlOperations.load_yaml_file` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.load_yaml_file` | `matched` |
-| `yaml.lib.YamlOperations.parse_yaml` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.parse_yaml` | `matched` |
-| `yaml.lib.YamlOperations.save_yaml_file` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.save_yaml_file` | `matched` |
-| `yaml.lib.YamlOperations.set_setting` | `yaml` | `YamlOperations` | `classic_yaml.YamlOperations.set_setting` | `matched` |
-| `yaml.lib.dump_yaml@rust` | `yaml` | `dump_yaml` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_cache_stats@rust` | `yaml` | `get_cache_stats` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_hashmap_value@rust` | `yaml` | `get_hashmap_value` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_indexmap_value@rust` | `yaml` | `get_indexmap_value` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_setting@rust` | `yaml` | `get_setting` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_settings_batch@rust` | `yaml` | `get_settings_batch` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_string_value@rust` | `yaml` | `get_string_value` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.get_vec_value@rust` | `yaml` | `get_vec_value` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.is_cache_enabled@rust` | `yaml` | `is_cache_enabled` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.load_yaml_file@rust` | `yaml` | `load_yaml_file` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.load_yaml_files_batch@rust` | `yaml` | `load_yaml_files_batch` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.merge_keys@rust` | `yaml` | `merge_keys` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.parse_yaml@rust` | `yaml` | `parse_yaml` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.save_yaml_file@rust` | `yaml` | `save_yaml_file` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.set_cache_enabled@rust` | `yaml` | `set_cache_enabled` | `classic_yaml.YamlCacheStats` | `matched` |
-| `yaml.lib.set_setting@rust` | `yaml` | `set_setting` | `classic_yaml.YamlCacheStats` | `matched` |
+| `yaml.lib.YamlCacheStats` | `settings` | `YamlOperations` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.YamlError@rust` | `settings` | `YamlError` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.YamlOperations` | `settings` | `YamlOperations` | `classic_settings.YamlOperations` | `matched` |
+| `yaml.lib.YamlOperations.__init__` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.__init__` | `matched` |
+| `yaml.lib.YamlOperations.clear_cache` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.clear_cache` | `matched` |
+| `yaml.lib.YamlOperations.dump_yaml` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.dump_yaml` | `matched` |
+| `yaml.lib.YamlOperations.get_cache_stats` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.get_cache_stats` | `matched` |
+| `yaml.lib.YamlOperations.get_hashmap_value` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.get_hashmap_value` | `matched` |
+| `yaml.lib.YamlOperations.get_setting` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.get_setting` | `matched` |
+| `yaml.lib.YamlOperations.get_string_value` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.get_string_value` | `matched` |
+| `yaml.lib.YamlOperations.get_vec_value` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.get_vec_value` | `matched` |
+| `yaml.lib.YamlOperations.load_yaml_file` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.load_yaml_file` | `matched` |
+| `yaml.lib.YamlOperations.parse_yaml` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.parse_yaml` | `matched` |
+| `yaml.lib.YamlOperations.save_yaml_file` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.save_yaml_file` | `matched` |
+| `yaml.lib.YamlOperations.set_setting` | `settings` | `YamlOperations` | `classic_settings.YamlOperations.set_setting` | `matched` |
+| `yaml.lib.dump_yaml@rust` | `settings` | `dump_yaml` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_cache_stats@rust` | `settings` | `get_cache_stats` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_hashmap_value@rust` | `settings` | `get_hashmap_value` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_indexmap_value@rust` | `settings` | `get_indexmap_value` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_setting@rust` | `settings` | `get_setting` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_settings_batch@rust` | `settings` | `get_settings_batch` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_string_value@rust` | `settings` | `get_string_value` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.get_vec_value@rust` | `settings` | `get_vec_value` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.is_cache_enabled@rust` | `settings` | `is_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.load_yaml_file@rust` | `settings` | `load_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.load_yaml_files_batch@rust` | `settings` | `load_yaml_files_batch` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.merge_keys@rust` | `settings` | `merge_keys` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.parse_yaml@rust` | `settings` | `parse_yaml` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.save_yaml_file@rust` | `settings` | `save_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.set_cache_enabled@rust` | `settings` | `set_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.set_setting@rust` | `settings` | `set_setting` | `classic_settings.YamlCacheStats` | `matched` |
 
 ## Gap Counts By Owner/Tier
 
@@ -1118,7 +1118,6 @@
 | `scanlog` | 0 |
 | `config` | 0 |
 | `version_registry` | 0 |
-| `yaml` | 0 |
 | `database` | 0 |
 | `file_io` | 0 |
 | `scangame` | 0 |
