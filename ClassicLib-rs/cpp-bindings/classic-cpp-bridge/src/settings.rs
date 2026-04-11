@@ -235,7 +235,8 @@ fn yaml_ops_has_document(ops: &YamlOps) -> bool {
 // ── Settings cache ops (D-09 — process-wide settings cache) ────────
 
 fn settings_load_sync(key: &str, path: &str) -> Result<u32, String> {
-    let docs = settings_core::load_settings_sync(key, Path::new(path)).map_err(|e| e.to_string())?;
+    let docs =
+        settings_core::load_settings_sync(key, Path::new(path)).map_err(|e| e.to_string())?;
     Ok(docs.len() as u32)
 }
 
@@ -249,16 +250,14 @@ fn settings_load_async_blocking(key: &str, path: &str) -> Result<u32, String> {
 }
 
 fn settings_load_batch_sync(paths: Vec<String>) -> Result<u32, String> {
-    let path_bufs: Vec<std::path::PathBuf> =
-        paths.iter().map(std::path::PathBuf::from).collect();
+    let path_bufs: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
     let path_refs: Vec<&Path> = path_bufs.iter().map(|p| p.as_path()).collect();
     let count = settings_core::load_batch_sync(&path_refs).map_err(|e| e.to_string())?;
     Ok(count as u32)
 }
 
 fn settings_load_batch_async_blocking(paths: Vec<String>) -> Result<u32, String> {
-    let path_bufs: Vec<std::path::PathBuf> =
-        paths.iter().map(std::path::PathBuf::from).collect();
+    let path_bufs: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
     let count = classic_shared_core::get_runtime()
         .block_on(async move {
             let path_refs: Vec<&Path> = path_bufs.iter().map(|p| p.as_path()).collect();
@@ -515,14 +514,9 @@ mod ffi {
         fn settings_invalidate(key: &str) -> bool;
 
         // Validators (D-09 — mirrors Python surface)
-        fn settings_validate_structure(
-            yaml_content: &str,
-        ) -> Result<Vec<SettingsValidationIssue>>;
+        fn settings_validate_structure(yaml_content: &str) -> Result<Vec<SettingsValidationIssue>>;
         fn settings_validate_value(value: &str, expected_type: &str) -> Result<bool>;
-        fn settings_coerce_value(
-            value: &str,
-            target_type: &str,
-        ) -> Result<SettingsCoercedValue>;
+        fn settings_coerce_value(value: &str, target_type: &str) -> Result<SettingsCoercedValue>;
     }
 }
 
@@ -833,8 +827,7 @@ mod tests {
 
     #[test]
     fn test_settings_validate_structure_happy_path() {
-        let issues =
-            settings_validate_structure("CLASSIC_Settings:\n  VR Mode: false\n").unwrap();
+        let issues = settings_validate_structure("CLASSIC_Settings:\n  VR Mode: false\n").unwrap();
         assert!(issues.is_empty());
     }
 

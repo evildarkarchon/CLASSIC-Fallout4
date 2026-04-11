@@ -25,7 +25,6 @@
       <sourceFolder url="file://$MODULE_DIR$/classic-tui/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/classic-tui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/classic-tui/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/classic-yaml-py/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/classic-gui-slint/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-config-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-config-core/tests" isTestSource="true" />
@@ -80,8 +79,6 @@
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-version-registry-py/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-web-py/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-xse-py/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-yaml-py/benches" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-yaml-py/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/ui-applications/classic-tui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/ui-applications/classic-tui/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />

@@ -13,8 +13,9 @@ and calls at least one real method. No hasattr-only assertions for promoted
 
 Coverage:
 
-- 14 newly-enrolled owner modules (scangame, path, constants, message,
-  database, resource, xse, settings, yaml, registry, web, version, perf, update)
+- 13 newly-enrolled owner modules (scangame, path, constants, message,
+  database, resource, xse, settings, registry, web, version, perf, update)
+  — classic_yaml was folded into classic_settings in plan 01-02
 - 4 scanlog method residuals (CrashgenVersion.to_tuple, LogParser.find_errors,
   PatternMatcher.find_all, PatternMatcher.has_match)
 
@@ -41,7 +42,6 @@ import classic_update
 import classic_version
 import classic_web
 import classic_xse
-import classic_yaml
 
 # ---------------------------------------------------------------------------
 # classic_constants (3 classes + 1 free function)
@@ -450,29 +450,29 @@ def test_settings_cache_stats_class_is_typeddict() -> None:
 
 
 # ---------------------------------------------------------------------------
-# classic_yaml (2 classes)
+# YamlOperations (folded into classic_settings per plan 01-02 D-05/D-06)
 # ---------------------------------------------------------------------------
 
 
 def test_yaml_operations_construct_default() -> None:
-    ops = classic_yaml.YamlOperations()
+    ops = classic_settings.YamlOperations()
     assert ops is not None
 
 
 def test_yaml_operations_get_cache_stats() -> None:
-    ops = classic_yaml.YamlOperations()
+    ops = classic_settings.YamlOperations()
     stats = ops.get_cache_stats()
     assert isinstance(stats, dict)
 
 
 def test_yaml_operations_clear_cache_is_callable() -> None:
-    ops = classic_yaml.YamlOperations()
+    ops = classic_settings.YamlOperations()
     ops.clear_cache()
 
 
 def test_yaml_cache_stats_is_typeddict() -> None:
     """YamlCacheStats is a .pyi TypedDict; verify runtime dict shape."""
-    ops = classic_yaml.YamlOperations()
+    ops = classic_settings.YamlOperations()
     stats = ops.get_cache_stats()
     assert isinstance(stats, dict)
 

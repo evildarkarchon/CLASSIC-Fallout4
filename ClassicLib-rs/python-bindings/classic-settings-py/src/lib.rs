@@ -1,12 +1,70 @@
-//! Python bindings for YAML settings cache.
+//! Python bindings for the unified YAML settings cache and YAML operations.
 //!
 //! This module provides Python access to the Rust-accelerated YAML settings cache
-//! with both synchronous and asynchronous loading support.
+//! (sync + async loading, cache management, validators) AND the YAML operations
+//! class that was formerly in `classic-yaml-py`. The two crates were merged in
+//! plan 01-02 (D-05/D-06) after `classic-yaml-core` was absorbed into
+//! `classic-settings-core` in plan 01-01.
 
-use classic_settings_core::{self as core, Yaml};
+use classic_settings_core::{
+    self as core, Yaml, YamlError, YamlOperations,
+    clear_global_yaml_cache as core_clear_yaml_cache, merge_keys as core_merge_keys,
+    reset_yaml_cache_stats as core_reset_yaml_cache_stats,
+    yaml_cache_stats as core_yaml_cache_stats,
+};
+use classic_shared::{PathLike, define_exceptions, register_exceptions, without_gil};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
+use std::collections::HashMap;
 use std::path::PathBuf;
+
+// ============================================================================
+// Exception hierarchy (folded in from classic-yaml-py — D-06)
+// ============================================================================
+//
+// Three yaml-specific exception types preserved from classic-yaml-py:
+//   - RustYamlError (base — inherits PyException)
+//   - RustYamlIOError (inherits RustYamlError)
+//   - RustYamlParseError (inherits RustYamlError)
+//
+// There is NO RustYamlSerializeError. YamlError::SerializeError maps to
+// RustYamlParseError in `yaml_err_to_pyerr` below (matching the yaml-py
+// behavior at yaml-py/src/lib.rs lines 117-119).
+
+define_exceptions!(
+    module: classic_settings,
+    base: RustYamlError,
+    io: RustYamlIOError,
+    parse: RustYamlParseError
+);
+
+/// Convert `YamlError` to a `PyErr` using the 3-tier exception hierarchy.
+///
+/// Preserved verbatim from classic-yaml-py/src/lib.rs `to_pyerr`:
+/// `SerializeError` routes to `RustYamlParseError` — there is no separate
+/// `RustYamlSerializeError` exception.
+fn yaml_err_to_pyerr(err: YamlError) -> PyErr {
+    match err {
+        YamlError::IoError(e) => RustYamlIOError::new_err(format!("Failed to read file: {}", e)),
+        YamlError::ParseError(msg) => {
+            RustYamlParseError::new_err(format!("Failed to parse YAML: {}", msg))
+        }
+        YamlError::SerializeError(msg) => {
+            RustYamlParseError::new_err(format!("Serialize error: {}", msg))
+        }
+        YamlError::EmptyDocument => RustYamlParseError::new_err("Empty YAML document"),
+        YamlError::InvalidValue(msg) => {
+            RustYamlParseError::new_err(format!("Invalid value: {}", msg))
+        }
+        YamlError::UnresolvedAlias => RustYamlParseError::new_err("Unresolved YAML alias"),
+        YamlError::InvalidKeyPath(msg) => {
+            RustYamlParseError::new_err(format!("Invalid key path: {}", msg))
+        }
+        YamlError::TypeConversionError(msg) => {
+            RustYamlParseError::new_err(format!("Type conversion error: {}", msg))
+        }
+    }
+}
 
 /// Convert Rust Yaml to Python object.
 ///
@@ -62,6 +120,262 @@ fn yaml_to_py(py: Python, yaml: &Yaml) -> PyResult<Py<PyAny>> {
             ))
         }
     }
+}
+
+/// Convert a Python object to a yaml-rust2 Yaml value.
+///
+/// Mirrors `python_to_yaml` from the former classic-yaml-py module. Needed by
+/// `PyYamlOperations` to round-trip Python data through the Rust YAML API.
+fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
+    let bound_obj = obj.bind(py);
+
+    if bound_obj.is_none() {
+        return Ok(Yaml::Null);
+    }
+
+    if let Ok(b) = bound_obj.extract::<bool>() {
+        return Ok(Yaml::Boolean(b));
+    }
+
+    if let Ok(i) = bound_obj.extract::<i64>() {
+        return Ok(Yaml::Integer(i));
+    }
+
+    if let Ok(f) = bound_obj.extract::<f64>() {
+        return Ok(Yaml::Real(f.to_string()));
+    }
+
+    if let Ok(s) = bound_obj.extract::<String>() {
+        return Ok(Yaml::String(s));
+    }
+
+    if let Ok(list) = bound_obj.clone().into_any().cast_into::<PyList>() {
+        let mut arr = Vec::new();
+        for item in list.iter() {
+            arr.push(python_to_yaml(py, item.unbind())?);
+        }
+        return Ok(Yaml::Array(arr));
+    }
+
+    if let Ok(dict) = bound_obj.clone().into_any().cast_into::<PyDict>() {
+        let mut hash = yaml_rust2::yaml::Hash::new();
+        for (k, v) in dict.iter() {
+            let key = python_to_yaml(py, k.unbind())?;
+            let value = python_to_yaml(py, v.unbind())?;
+            hash.insert(key, value);
+        }
+        return Ok(Yaml::Hash(hash));
+    }
+
+    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
+        "Cannot convert Python type to YAML: {:?}",
+        bound_obj.get_type()
+    )))
+}
+
+// ============================================================================
+// YamlOperations wrapper (folded in from classic-yaml-py — D-05/D-06)
+// ============================================================================
+
+/// Python-facing YAML operations wrapper.
+///
+/// Stateful YAML handler with caching. Delegates to
+/// `classic_settings_core::YamlOperations`. All methods that do file I/O or
+/// heavy serialization release the GIL via `without_gil` so concurrent Python
+/// threads can keep running.
+#[pyclass(name = "YamlOperations")]
+pub struct PyYamlOperations {
+    inner: YamlOperations,
+}
+
+#[pymethods]
+impl PyYamlOperations {
+    #[new]
+    fn new() -> PyResult<Self> {
+        Ok(Self {
+            inner: YamlOperations::new(),
+        })
+    }
+
+    /// Parse YAML content from a string.
+    ///
+    /// Releases GIL during parsing for content >1KB to allow concurrent Python threads.
+    #[pyo3(signature = (content))]
+    fn parse_yaml(&self, py: Python<'_>, content: &str) -> PyResult<Py<PyAny>> {
+        let content_owned = content.to_string();
+        let yaml = if content.len() > 1024 {
+            without_gil(py, || self.inner.parse_yaml(&content_owned)).map_err(yaml_err_to_pyerr)?
+        } else {
+            self.inner
+                .parse_yaml(&content_owned)
+                .map_err(yaml_err_to_pyerr)?
+        };
+        yaml_to_py(py, &yaml)
+    }
+
+    /// Convert data to YAML string with format preservation.
+    ///
+    /// Releases GIL during serialization to allow concurrent Python threads.
+    #[pyo3(signature = (data))]
+    fn dump_yaml(&self, py: Python<'_>, data: Py<PyAny>) -> PyResult<String> {
+        let yaml = python_to_yaml(py, data)?;
+        without_gil(py, || self.inner.dump_yaml(&yaml)).map_err(yaml_err_to_pyerr)
+    }
+
+    /// Load YAML file with caching.
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    #[pyo3(signature = (path))]
+    fn load_yaml_file(&self, py: Python<'_>, path: PathLike) -> PyResult<Py<PyAny>> {
+        let path_buf: PathBuf = path.into();
+        let yaml =
+            without_gil(py, || self.inner.load_yaml_file(&path_buf)).map_err(yaml_err_to_pyerr)?;
+        yaml_to_py(py, &yaml)
+    }
+
+    /// Save data to YAML file with atomic write.
+    #[pyo3(signature = (path, data))]
+    fn save_yaml_file(&self, py: Python<'_>, path: PathLike, data: Py<PyAny>) -> PyResult<()> {
+        let path_buf: PathBuf = path.into();
+        let yaml = python_to_yaml(py, data)?;
+        without_gil(py, || self.inner.save_yaml_file(&path_buf, &yaml)).map_err(yaml_err_to_pyerr)
+    }
+
+    /// Get a setting value by key path (dot notation).
+    #[pyo3(signature = (data, key_path))]
+    fn get_setting(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+    ) -> PyResult<Option<Py<PyAny>>> {
+        let yaml = python_to_yaml(py, data)?;
+        match self.inner.get_setting(&yaml, key_path) {
+            Some(value) => Ok(Some(yaml_to_py(py, &value)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Set a setting value by key path (dot notation).
+    #[pyo3(signature = (data, key_path, value))]
+    fn set_setting(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+        value: Py<PyAny>,
+    ) -> PyResult<Py<PyAny>> {
+        let yaml = python_to_yaml(py, data)?;
+        let new_value = python_to_yaml(py, value)?;
+        let result = self
+            .inner
+            .set_setting(&yaml, key_path, new_value)
+            .map_err(yaml_err_to_pyerr)?;
+        yaml_to_py(py, &result)
+    }
+
+    /// Clear the YAML cache.
+    fn clear_cache(&self) {
+        self.inner.clear_cache();
+    }
+
+    /// Get cache statistics for the YAML-file cache.
+    ///
+    /// This delegates to `classic_settings_core::yaml_cache_stats` (distinct
+    /// from the settings cache stats returned by `classic_settings.cache_stats`).
+    /// Plan 01-01 renamed `cache_stats` → `yaml_cache_stats` in settings-core
+    /// per D-03, so this must call `yaml_cache_stats()` to preserve the
+    /// original yaml-py semantics — calling the unrelated `cache_stats()` would
+    /// silently return the settings cache numbers.
+    fn get_cache_stats(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let stats = core_yaml_cache_stats();
+        let dict = PyDict::new(py);
+        dict.set_item("hits", stats.hits)?;
+        dict.set_item("misses", stats.misses)?;
+        dict.set_item("hit_rate", stats.hit_rate)?;
+        dict.set_item("size", stats.size)?;
+        dict.set_item("capacity", stats.capacity)?;
+        Ok(dict.unbind().into())
+    }
+
+    /// Extract a string value from YAML using a dot-separated key path.
+    #[pyo3(signature = (data, key_path, default))]
+    fn get_string_value(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+        default: &str,
+    ) -> PyResult<String> {
+        let yaml = python_to_yaml(py, data)?;
+        Ok(self.inner.get_string_value(&yaml, key_path, default))
+    }
+
+    /// Extract a vector of strings from YAML using a dot-separated key path.
+    #[pyo3(signature = (data, key_path))]
+    fn get_vec_value(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+    ) -> PyResult<Vec<String>> {
+        let yaml = python_to_yaml(py, data)?;
+        Ok(self.inner.get_vec_value(&yaml, key_path))
+    }
+
+    /// Extract a string-to-string map from YAML using a dot-separated key path.
+    #[pyo3(signature = (data, key_path))]
+    fn get_hashmap_value(
+        &self,
+        py: Python<'_>,
+        data: Py<PyAny>,
+        key_path: &str,
+    ) -> PyResult<HashMap<String, String>> {
+        let yaml = python_to_yaml(py, data)?;
+        Ok(self.inner.get_hashmap_value(&yaml, key_path))
+    }
+}
+
+// ============================================================================
+// Module-level yaml helpers (folded in from classic-yaml-py)
+// ============================================================================
+
+/// Clear the global YAML-file cache.
+#[pyfunction]
+fn clear_global_yaml_cache() {
+    core_clear_yaml_cache();
+}
+
+/// Reset the global YAML-file cache hit/miss counters.
+#[pyfunction]
+fn reset_yaml_cache_stats() {
+    core_reset_yaml_cache_stats();
+}
+
+/// Get statistics for the global YAML-file cache.
+///
+/// Distinct from `cache_stats()` — that one covers the settings cache.
+#[pyfunction]
+fn yaml_cache_stats(py: Python) -> PyResult<Py<PyAny>> {
+    let stats = core_yaml_cache_stats();
+    let dict = PyDict::new(py);
+    dict.set_item("hits", stats.hits)?;
+    dict.set_item("misses", stats.misses)?;
+    dict.set_item("hit_rate", stats.hit_rate)?;
+    dict.set_item("size", stats.size)?;
+    dict.set_item("capacity", stats.capacity)?;
+    Ok(dict.unbind().into())
+}
+
+/// Apply YAML merge keys (`<<:`) to a document.
+///
+/// Takes a parsed YAML value (typically obtained from `YamlOperations.parse_yaml`)
+/// and returns a new value with all merge keys expanded.
+#[pyfunction]
+fn merge_keys(py: Python, data: Py<PyAny>) -> PyResult<Py<PyAny>> {
+    let yaml = python_to_yaml(py, data)?;
+    let merged = core_merge_keys(yaml).map_err(yaml_err_to_pyerr)?;
+    yaml_to_py(py, &merged)
 }
 
 /// Load YAML settings synchronously.
@@ -431,6 +745,18 @@ fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(validate_settings_structure, m)?)?;
     m.add_function(wrap_pyfunction!(validate_setting_value, m)?)?;
     m.add_function(wrap_pyfunction!(coerce_setting_value, m)?)?;
+
+    // YAML operations class (folded in from classic-yaml-py)
+    m.add_class::<PyYamlOperations>()?;
+
+    // Module-level YAML helpers (folded in from classic-yaml-py)
+    m.add_function(wrap_pyfunction!(clear_global_yaml_cache, m)?)?;
+    m.add_function(wrap_pyfunction!(reset_yaml_cache_stats, m)?)?;
+    m.add_function(wrap_pyfunction!(yaml_cache_stats, m)?)?;
+    m.add_function(wrap_pyfunction!(merge_keys, m)?)?;
+
+    // YAML exception hierarchy (folded in from classic-yaml-py — D-06)
+    register_exceptions!(m, RustYamlError, RustYamlIOError, RustYamlParseError);
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

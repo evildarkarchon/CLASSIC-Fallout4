@@ -32,9 +32,36 @@ Usage:
         cached = classic_settings.get_cached("config")
 """
 
+from pathlib import Path
 from typing import Any, TypedDict
 
 __version__: str
+
+# ----------------------------------------------------------------------------
+# YAML exception hierarchy (folded in from classic-yaml-py per plan 01-02 D-06)
+# ----------------------------------------------------------------------------
+
+class RustYamlError(Exception):
+    """Base exception for classic_settings YAML errors."""
+
+class RustYamlIOError(RustYamlError):
+    """YAML I/O errors (file read/write failures)."""
+
+class RustYamlParseError(RustYamlError):
+    """YAML parse/validation errors (including serialization failures)."""
+
+# NOTE: There is intentionally NO `RustYamlSerializeError`. YAML serialization
+# errors are reported via ``RustYamlParseError`` — same mapping as the former
+# classic-yaml-py crate used at its ``to_pyerr`` helper.
+
+class YamlCacheStats(TypedDict):
+    """Canonical YAML-file cache statistics contract."""
+
+    hits: int
+    misses: int
+    hit_rate: float
+    size: int
+    capacity: int
 
 class SettingsCacheStats(TypedDict):
     """Canonical settings cache statistics contract."""
@@ -352,4 +379,51 @@ def coerce_setting_value(value: str, target_type: str) -> Any:
         >>> classic_settings.coerce_setting_value("3.14", "float")
         3.14
 
+    """
+
+
+# ============================================================================
+# YAML operations (folded in from classic-yaml-py per plan 01-02 D-05/D-06)
+# ============================================================================
+
+class YamlOperations:
+    """Stateful YAML operations handler with file caching.
+
+    Delegates to `classic_settings_core::YamlOperations`. Provides parsing,
+    dumping, file I/O, dot-notation lookups, and per-handle cache inspection.
+
+    The YAML-file cache is distinct from the settings cache exposed at the
+    module level (`cache_stats` vs `get_cache_stats()`).
+    """
+
+    def __init__(self) -> None: ...
+    def load_yaml_file(self, path: str | Path) -> Any: ...
+    def parse_yaml(self, content: str) -> Any: ...
+    def dump_yaml(self, data: Any) -> str: ...
+    def save_yaml_file(self, path: str | Path, data: Any) -> None: ...
+    def get_setting(self, data: Any, key_path: str) -> Any | None: ...
+    def set_setting(self, data: Any, key_path: str, value: Any) -> Any: ...
+    def get_string_value(self, data: Any, key_path: str, default: str) -> str: ...
+    def get_vec_value(self, data: Any, key_path: str) -> list[str]: ...
+    def get_hashmap_value(self, data: Any, key_path: str) -> dict[str, str]: ...
+    def clear_cache(self) -> None: ...
+    def get_cache_stats(self) -> YamlCacheStats: ...
+
+def clear_global_yaml_cache() -> None:
+    """Clear the process-wide YAML-file cache."""
+
+def reset_yaml_cache_stats() -> None:
+    """Reset the YAML-file cache hit/miss counters to zero."""
+
+def yaml_cache_stats() -> YamlCacheStats:
+    """Get statistics for the process-wide YAML-file cache.
+
+    Distinct from `cache_stats()` — that one reports the settings cache.
+    """
+
+def merge_keys(data: Any) -> Any:
+    """Apply YAML merge keys (`<<:`) to a parsed document.
+
+    Takes a parsed YAML value (from `YamlOperations.parse_yaml`) and returns
+    a new value with all merge keys expanded.
     """

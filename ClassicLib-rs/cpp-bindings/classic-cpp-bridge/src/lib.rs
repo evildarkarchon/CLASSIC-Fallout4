@@ -72,6 +72,8 @@ pub mod scangame;
 #[cfg(windows)]
 pub mod scanner;
 #[cfg(windows)]
+pub mod settings;
+#[cfg(windows)]
 pub mod types;
 #[cfg(windows)]
 pub mod update;
@@ -81,8 +83,6 @@ pub mod version_registry;
 pub mod web;
 #[cfg(windows)]
 pub mod xse;
-#[cfg(windows)]
-pub mod settings;
 
 #[cfg(not(windows))]
 pub const CPP_BRIDGE_UNAVAILABLE: &str = "classic-cpp-bridge is only available on Windows targets";
