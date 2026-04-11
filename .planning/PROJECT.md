@@ -7,7 +7,7 @@
 **Target features:**
 - Merge `classic-yaml-core` into `classic-settings-core` (unify YAML loading/caching)
 - Merge `classic-crashgen-settings-core` into `classic-config-core` (absorb single-consumer rule model)
-- Merge `classic-constants-core` into `classic-version-registry-core` (unify game/version identity metadata)
+- Redistribute `classic-constants-core` across `classic-version-registry-core` (Fallout4Version, NULL_VERSION), `classic-settings-core` (YamlFile, settings constants), and `classic-shared-core` (GameId) by semantic domain
 - Update all binding crates (C++, Node, Python) for changed import paths
 - All three parity gates (CXX, Python, Node) pass at zero drift after consolidation
 
@@ -67,7 +67,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 
 ### Active
 
-- [ ] Merge classic-constants-core into classic-version-registry-core
+- [ ] Redistribute classic-constants-core across version-registry-core, settings-core, and shared-core
 - [ ] Update all binding crates for changed import paths
 - [ ] All three parity gates pass at zero drift after consolidation
 
@@ -131,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after v9.1.0-consolidation Phase 2 (crashgen-config-merge) complete*
+*Last updated: 2026-04-11 after Phase 3 scope amendment to three-target redistribution*

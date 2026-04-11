@@ -20,10 +20,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CGEN-02**: All workspace crates that imported from classic-crashgen-settings-core import from classic-config-core instead
 - [x] **CGEN-03**: classic-crashgen-settings-core crate is removed from Cargo.toml workspace members and its directory deleted
 
-### Constants -> Version Registry Merge
+### Constants Redistribution
 
-- [ ] **CNST-01**: classic-constants-core source modules are relocated into classic-version-registry-core with the same public API surface preserved
-- [ ] **CNST-02**: All workspace crates that imported from classic-constants-core import from classic-version-registry-core instead
+- [ ] **CNST-01**: classic-constants-core source modules are redistributed by semantic domain: Fallout4Version + NULL_VERSION to classic-version-registry-core, YamlFile + SETTINGS_IGNORE_NONE + must_not_be_none to classic-settings-core, and GameId to classic-shared-core, with the same public API names preserved at their new locations
+- [ ] **CNST-02**: All workspace crates that imported from classic-constants-core now import from the semantic-domain-appropriate target crate (classic-version-registry-core, classic-settings-core, or classic-shared-core) depending on which symbol they use
 - [ ] **CNST-03**: classic-constants-core crate is removed from Cargo.toml workspace members and its directory deleted
 
 ### Parity & Validation

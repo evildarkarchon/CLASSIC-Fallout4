@@ -18,7 +18,7 @@
 
 - [ ] **Phase 1: YAML -> Settings Merge** - Absorb classic-yaml-core into classic-settings-core, update all consumers and bindings
 - [ ] **Phase 2: Crashgen -> Config Merge** - Absorb classic-crashgen-settings-core into classic-config-core, update all consumers
-- [ ] **Phase 3: Constants -> Version Registry Merge** - Absorb classic-constants-core into classic-version-registry-core, update all consumers across the workspace
+- [ ] **Phase 3: Constants Redistribution** - Redistribute classic-constants-core across three target crates by semantic domain (version-registry-core, settings-core, shared-core), update all consumers across the workspace
 - [ ] **Phase 4: Gate Validation & Documentation** - All parity gates green, workspace tests pass, documentation reflects 16-crate topology
 
 <details>
@@ -85,15 +85,17 @@ Plans:
 - [x] 02-01-PLAN.md — Rust core merge: git mv source, consumer/binding migration, crate deletion, yamldata.rs.bak cleanup
 - [x] 02-02-PLAN.md — Node parity tooling update, API docs consolidation, parity gate verification
 
-### Phase 3: Constants -> Version Registry Merge
-**Goal**: classic-constants-core no longer exists as a separate crate; all game/version identity constants live in classic-version-registry-core with no consumer-visible behavior change
+### Phase 3: Constants Redistribution
+**Goal**: classic-constants-core no longer exists as a separate crate; its contents are redistributed by semantic domain: Fallout4Version and NULL_VERSION live in classic-version-registry-core, YamlFile and settings constants live in classic-settings-core, and GameId lives in classic-shared-core (foundation). Zero consumer-visible behavior change.
 **Depends on**: Nothing (independent of other merges; listed after Phase 2 for execution ordering)
 **Requirements**: CNST-01, CNST-02, CNST-03
 **Success Criteria** (what must be TRUE):
-  1. Every public type, constant, and enum that classic-constants-core provided is accessible from classic-version-registry-core at the same API surface
-  2. No crate in the workspace has a `classic-constants-core` dependency in its Cargo.toml -- all former consumers import from classic-version-registry-core
-  3. The classic-constants-core directory is deleted and removed from workspace members in the root Cargo.toml
-  4. `cargo build --workspace` and `cargo test --workspace` succeed with zero failures
+  1. Fallout4Version, NULL_VERSION, and related version identity APIs are accessible from classic-version-registry-core at the same public names
+  2. YamlFile, SETTINGS_IGNORE_NONE, and must_not_be_none() are accessible from classic-settings-core at the same public names
+  3. GameId is accessible from classic-shared-core (foundation layer) at the same public name
+  4. No crate in the workspace has a `classic-constants-core` dependency in its Cargo.toml -- all former consumers import from the semantic-domain-appropriate target crate (version-registry-core, settings-core, or shared-core)
+  5. The classic-constants-core directory is deleted and removed from workspace members in the root Cargo.toml
+  6. `cargo build --workspace` and `cargo test --workspace` succeed with zero failures
 **Plans**: TBD
 
 ### Phase 4: Gate Validation & Documentation
@@ -117,5 +119,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. YAML -> Settings Merge | 1/3 | In Progress|  |
 | 2. Crashgen -> Config Merge | 0/TBD | Not started | - |
-| 3. Constants -> Version Registry Merge | 0/TBD | Not started | - |
+| 3. Constants Redistribution | 0/TBD | Not started | - |
 | 4. Gate Validation & Documentation | 0/TBD | Not started | - |
