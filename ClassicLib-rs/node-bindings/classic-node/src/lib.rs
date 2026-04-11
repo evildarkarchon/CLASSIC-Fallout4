@@ -29,7 +29,6 @@ mod version;
 
 // Wave 2: Complete Existing Modules
 mod scanlog;
-mod yaml;
 
 // Wave 3: File I/O & Data
 mod config;
