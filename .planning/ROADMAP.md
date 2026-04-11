@@ -83,7 +83,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Rust core merge: git mv source, consumer/binding migration, crate deletion, yamldata.rs.bak cleanup
-- [ ] 02-02-PLAN.md — Node parity tooling update, API docs consolidation, parity gate verification
+- [x] 02-02-PLAN.md — Node parity tooling update, API docs consolidation, parity gate verification
 
 ### Phase 3: Constants -> Version Registry Merge
 **Goal**: classic-constants-core no longer exists as a separate crate; all game/version identity constants live in classic-version-registry-core with no consumer-visible behavior change
