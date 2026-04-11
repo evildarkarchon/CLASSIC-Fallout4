@@ -11,7 +11,10 @@
 //! All async operations use `classic_shared_core::get_runtime().block_on()`.
 
 pub mod config;
+pub mod crashgen_rules;
 pub mod yamldata;
+
+pub use crashgen_rules::*;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
 pub use yamldata::{

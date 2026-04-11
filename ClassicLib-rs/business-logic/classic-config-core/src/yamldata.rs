@@ -6,7 +6,7 @@
 //! 2. Parallel loading of multiple YAML files with Tokio
 //! 3. Efficient memory representation
 
-use classic_crashgen_settings_core::{
+use crate::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
     PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
     TargetValueType,

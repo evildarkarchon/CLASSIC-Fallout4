@@ -22,7 +22,6 @@ mimalloc = { workspace = true, optional = true }
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-config-core = { path = "../classic-config-core" }
-classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-database-core = { path = "../classic-database-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }

@@ -23,7 +23,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 use crate::toml::{CrashgenChecker, TomlConfigIssue};
-use classic_crashgen_settings_core::CrashgenSettingsRules;
+use classic_config_core::CrashgenSettingsRules;
 
 /// Errors that can occur during crash generator orchestration
 #[derive(Debug, Error)]

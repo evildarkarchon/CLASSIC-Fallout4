@@ -19,7 +19,6 @@ classic-registry-core = { path = "../classic-registry-core" }
 
 # YAML operations (provides YamlOperations with helpers)
 classic-settings-core = { path = "../classic-settings-core" }
-classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # Async runtime (for JoinSet and file I/O)

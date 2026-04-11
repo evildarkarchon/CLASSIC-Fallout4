@@ -19,7 +19,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-use classic_crashgen_settings_core::CrashgenSettingsRules;
+use classic_config_core::CrashgenSettingsRules;
 use thiserror::Error;
 use tokio::task::JoinSet;
 

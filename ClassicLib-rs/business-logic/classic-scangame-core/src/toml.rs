@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 use toml::Value;
 
-use classic_crashgen_settings_core::{
+use classic_config_core::{
     ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
 };
 
@@ -148,7 +148,7 @@ pub struct CrashgenChecker {
     message_list: Vec<String>,
 
     /// Optional YAML-defined settings rules.
-    settings_rules: Option<classic_crashgen_settings_core::CrashgenSettingsRules>,
+    settings_rules: Option<classic_config_core::CrashgenSettingsRules>,
 }
 
 impl CrashgenChecker {
@@ -178,7 +178,7 @@ impl CrashgenChecker {
     pub fn new_with_rules(
         plugins_path: &Path,
         crashgen_name: impl Into<String>,
-        settings_rules: Option<classic_crashgen_settings_core::CrashgenSettingsRules>,
+        settings_rules: Option<classic_config_core::CrashgenSettingsRules>,
     ) -> Self {
         let crashgen_name = crashgen_name.into();
         let plugins_path = plugins_path.to_path_buf();
@@ -713,7 +713,7 @@ impl CrashgenChecker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use classic_crashgen_settings_core::{
+    use classic_config_core::{
         CheckRule, CrashgenSettingsRules, ExpectedValue, Predicate, RuleMessages, RuleSeverity,
         RuleTarget, TargetValueType,
     };

@@ -1192,10 +1192,10 @@ impl OrchestratorCore {
         {
             for bucketed_fragment in bucketed_settings_fragments {
                 match bucketed_fragment.bucket {
-                    classic_crashgen_settings_core::RuleReportBucket::Settings => {
+                    classic_config_core::RuleReportBucket::Settings => {
                         settings_fragments.push(bucketed_fragment.fragment);
                     }
-                    classic_crashgen_settings_core::RuleReportBucket::ErrorInformation => {
+                    classic_config_core::RuleReportBucket::ErrorInformation => {
                         error_information_fragments.push(bucketed_fragment.fragment);
                     }
                 }
@@ -1880,14 +1880,14 @@ impl OrchestratorCore {
     fn derive_scanlog_config_layout(
         &self,
         detected_game_version_str: &str,
-    ) -> classic_crashgen_settings_core::ConfigLayout {
+    ) -> classic_config_core::ConfigLayout {
         if self
             .parse_detected_game_version(detected_game_version_str)
             .is_some()
         {
-            classic_crashgen_settings_core::ConfigLayout::Og
+            classic_config_core::ConfigLayout::Og
         } else {
-            classic_crashgen_settings_core::ConfigLayout::Unknown
+            classic_config_core::ConfigLayout::Unknown
         }
     }
 
@@ -2531,7 +2531,7 @@ mod tests {
 
     #[test]
     fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
-        use classic_crashgen_settings_core::{
+        use classic_config_core::{
             CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
             RuleReportBucket, RuleSeverity,
         };
@@ -2603,7 +2603,7 @@ mod tests {
                 &HashMap::new(),
                 &xse_modules,
                 None,
-                classic_crashgen_settings_core::ConfigLayout::Unknown,
+                classic_config_core::ConfigLayout::Unknown,
             )
             .unwrap();
         let all_lines: Vec<String> = fragments
@@ -2625,7 +2625,7 @@ mod tests {
 
     #[test]
     fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
-        use classic_crashgen_settings_core::{
+        use classic_config_core::{
             CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
             RuleReportBucket, RuleSeverity,
         };
@@ -2844,7 +2844,7 @@ mod tests {
         let orchestrator = OrchestratorCore::new(config).unwrap();
 
         let layout = orchestrator.derive_scanlog_config_layout("Fallout 4 v1.10.163");
-        assert_eq!(layout, classic_crashgen_settings_core::ConfigLayout::Og);
+        assert_eq!(layout, classic_config_core::ConfigLayout::Og);
     }
 
     #[test]
@@ -2853,7 +2853,7 @@ mod tests {
         let orchestrator = OrchestratorCore::new(config).unwrap();
 
         let layout = orchestrator.derive_scanlog_config_layout("Fallout 4 VR v1.2.72");
-        assert_eq!(layout, classic_crashgen_settings_core::ConfigLayout::Og);
+        assert_eq!(layout, classic_config_core::ConfigLayout::Og);
     }
 
     #[test]
@@ -2864,7 +2864,7 @@ mod tests {
         let layout = orchestrator.derive_scanlog_config_layout("not a valid version line");
         assert_eq!(
             layout,
-            classic_crashgen_settings_core::ConfigLayout::Unknown
+            classic_config_core::ConfigLayout::Unknown
         );
     }
 

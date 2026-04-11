@@ -11,7 +11,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use classic_crashgen_settings_core::CrashgenSettingsRules;
+use classic_config_core::CrashgenSettingsRules;
 
 /// Named check identifiers for crash generator settings validation.
 ///
