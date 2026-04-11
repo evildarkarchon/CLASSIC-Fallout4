@@ -131,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after v9.1.0-consolidation Phase 1 (yaml-settings-merge) complete*
+*Last updated: 2026-04-11 after v9.1.0-consolidation Phase 2 (crashgen-config-merge) complete*
