@@ -67,7 +67,7 @@
 
 Plans:
 - [x] 01-01-PLAN.md — Rust core merge: git mv yaml-core into settings-core, content edits, consumer migration, crate removal
-- [ ] 01-02-PLAN.md — Binding consolidation: C++ bridge rename, Node yaml merge, Python yaml-py fold-in
+- [x] 01-02-PLAN.md — Binding consolidation: C++ bridge rename, Node yaml merge, Python yaml-py fold-in
 - [ ] 01-03-PLAN.md — Test migration, documentation consolidation, parity gate regeneration
 
 ### Phase 2: Crashgen -> Config Merge

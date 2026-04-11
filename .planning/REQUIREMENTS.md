@@ -12,7 +12,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **YAML-01**: classic-yaml-core source modules are relocated into classic-settings-core with the same public API surface preserved
 - [x] **YAML-02**: All workspace crates that imported from classic-yaml-core import from classic-settings-core instead
 - [x] **YAML-03**: classic-yaml-core crate is removed from Cargo.toml workspace members and its directory deleted
-- [ ] **YAML-04**: Binding crates (C++, Node, Python) that referenced yaml-core types are updated to the settings-core import path
+- [x] **YAML-04**: Binding crates (C++, Node, Python) that referenced yaml-core types are updated to the settings-core import path
 
 ### Crashgen -> Config Merge
 
@@ -58,7 +58,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | YAML-01 | Phase 1 | Complete |
 | YAML-02 | Phase 1 | Complete |
 | YAML-03 | Phase 1 | Complete |
-| YAML-04 | Phase 1 | Pending |
+| YAML-04 | Phase 1 | Complete |
 | CGEN-01 | Phase 2 | Pending |
 | CGEN-02 | Phase 2 | Pending |
 | CGEN-03 | Phase 2 | Pending |
