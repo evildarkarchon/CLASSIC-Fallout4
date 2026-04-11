@@ -96,7 +96,13 @@ Plans:
   4. No crate in the workspace has a `classic-constants-core` dependency in its Cargo.toml -- all former consumers import from the semantic-domain-appropriate target crate (version-registry-core, settings-core, or shared-core)
   5. The classic-constants-core directory is deleted and removed from workspace members in the root Cargo.toml
   6. `cargo build --workspace` and `cargo test --workspace` succeed with zero failures
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Redistribute Rust core constants into version-registry, settings, and shared crates; migrate Rust consumers; delete classic-constants-core
+- [ ] 03-02-PLAN.md — Carve classic-constants-py into version-registry-py, settings-py, and shared-py; migrate Python consumers; delete classic-constants-py
+- [ ] 03-03-PLAN.md — Disperse Node and CXX constants surfaces into semantic modules, including new classic::shared bridge support
+- [ ] 03-04-PLAN.md — Migrate tests, consolidate docs, refresh parity tooling inputs, and regenerate all three parity baselines
 
 ### Phase 4: Gate Validation & Documentation
 **Goal**: All three parity gates confirm zero drift after consolidation, and project documentation reflects the new 16-crate workspace topology
@@ -119,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. YAML -> Settings Merge | 1/3 | In Progress|  |
 | 2. Crashgen -> Config Merge | 0/TBD | Not started | - |
-| 3. Constants Redistribution | 0/TBD | Not started | - |
+| 3. Constants Redistribution | 0/4 | Not started | - |
 | 4. Gate Validation & Documentation | 0/TBD | Not started | - |
