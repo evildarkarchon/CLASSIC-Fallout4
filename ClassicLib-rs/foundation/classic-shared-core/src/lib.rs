@@ -22,17 +22,8 @@ pub mod path_core;
 pub mod performance_core;
 pub mod strings_core;
 
-// GUI bridge module (optional, enabled with "gui-bridge" feature)
-#[cfg(feature = "gui-bridge")]
-pub mod async_bridge;
-
 // Re-export key types
 pub use errors::{ClassicError, ClassicResult, IntoClassicError};
-
-#[cfg(feature = "gui-bridge")]
-pub use async_bridge::{
-    AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher,
-};
 
 /// Configuration for the global Tokio runtime
 ///

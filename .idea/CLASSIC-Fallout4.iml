@@ -28,9 +28,71 @@
       <sourceFolder url="file://$MODULE_DIR$/classic-yaml-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/classic-yaml-py/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/classic-gui-slint/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-config-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-config-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-constants-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-crashgen-settings-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-database-core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-database-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-database-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-file-io-core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-file-io-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-file-io-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-message-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-path-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-path-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-perf-core/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-perf-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-registry-core/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-registry-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-resource-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-scangame-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-scanlog-core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-scanlog-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-scanlog-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-settings-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-update-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-version-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-version-registry-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-web-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-xse-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-yaml-core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-yaml-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/business-logic/classic-yaml-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/foundation/classic-shared-core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/foundation/classic-shared-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/foundation/classic-shared-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/foundation/classic-shared-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/node-bindings/classic-node/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-config-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-constants-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-database-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-file-io-py/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-file-io-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-message-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-path-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-perf-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-registry-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-resource-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-scangame-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-scanlog-py/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-scanlog-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-settings-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-update-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-version-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-version-registry-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-web-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-xse-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-yaml-py/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/classic-yaml-py/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/ui-applications/classic-tui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ClassicLib-rs/ui-applications/classic-tui/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/ClassicLib-rs/python-bindings/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/ClassicLib-rs/target" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (CLASSIC-Fallout4)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
