@@ -79,7 +79,11 @@ Plans:
   2. No crate in the workspace has a `classic-crashgen-settings-core` dependency in its Cargo.toml -- all former consumers import from classic-config-core
   3. The classic-crashgen-settings-core directory is deleted and removed from workspace members in the root Cargo.toml
   4. `cargo build --workspace` and `cargo test --workspace` succeed with zero failures
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Rust core merge: git mv source, consumer/binding migration, crate deletion, yamldata.rs.bak cleanup
+- [ ] 02-02-PLAN.md — Node parity tooling update, API docs consolidation, parity gate verification
 
 ### Phase 3: Constants -> Version Registry Merge
 **Goal**: classic-constants-core no longer exists as a separate crate; all game/version identity constants live in classic-version-registry-core with no consumer-visible behavior change
