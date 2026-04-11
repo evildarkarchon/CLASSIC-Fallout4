@@ -80,11 +80,11 @@
 //! ```
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, ModSolutionCriteria,
-    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
+    CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
 };
 use classic_config_core::{
-    CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
+    ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, ModSolutionCriteria,
+    PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_settings_core::SettingsError;
 use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};

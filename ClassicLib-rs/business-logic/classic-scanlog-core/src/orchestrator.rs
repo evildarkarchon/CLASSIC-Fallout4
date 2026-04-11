@@ -2862,10 +2862,7 @@ mod tests {
         let orchestrator = OrchestratorCore::new(config).unwrap();
 
         let layout = orchestrator.derive_scanlog_config_layout("not a valid version line");
-        assert_eq!(
-            layout,
-            classic_config_core::ConfigLayout::Unknown
-        );
+        assert_eq!(layout, classic_config_core::ConfigLayout::Unknown);
     }
 
     #[test]
