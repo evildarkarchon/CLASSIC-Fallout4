@@ -128,13 +128,11 @@ def test_update_baseline_flag_refreshes_stale_baseline(
 
     contract_rel = "contract.json"
     runtime_rel = "runtime_registry.json"
-    deferred_rel = "deferred_registry.json"
     output_rel = "generated"
     baseline_rel = "baseline"
 
     write_json(tmp_path / contract_rel, {"tier1Mappings": []})
     write_json(tmp_path / runtime_rel, {"entries": []})
-    write_json(tmp_path / deferred_rel, {"entries": []})
 
     if binding == "node":
         index_dts_rel = "index.d.ts"
@@ -175,8 +173,6 @@ def test_update_baseline_flag_refreshes_stale_baseline(
         output_rel,
         "--runtime-registry",
         runtime_rel,
-        "--deferred-registry",
-        deferred_rel,
         "--baseline-output-dir",
         baseline_rel,
         "--update-baseline",
