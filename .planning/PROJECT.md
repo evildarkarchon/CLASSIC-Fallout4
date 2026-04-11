@@ -62,10 +62,10 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ `binding-parity-overview.md` rewritten as harmony-achieved reference — v9.1.0-bindings Phase 6
 - ✓ Tier-2 backlog/governance/manifest files deleted — v9.1.0-bindings Phase 6
 - ✓ Single source-of-truth parity policy doc added — v9.1.0-bindings Phase 6
+- ✓ Merge classic-yaml-core into classic-settings-core — v9.1.0-consolidation Phase 1
 
 ### Active
 
-- [ ] Merge classic-yaml-core into classic-settings-core
 - [ ] Merge classic-crashgen-settings-core into classic-config-core
 - [ ] Merge classic-constants-core into classic-version-registry-core
 - [ ] Update all binding crates for changed import paths
@@ -131,4 +131,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after v9.1.0-consolidation milestone started*
+*Last updated: 2026-04-11 after v9.1.0-consolidation Phase 1 (yaml-settings-merge) complete*
