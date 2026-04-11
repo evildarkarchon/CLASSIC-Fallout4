@@ -63,10 +63,10 @@
   3. The classic-yaml-core directory is deleted and removed from workspace members in the root Cargo.toml
   4. All three binding crates (C++ bridge, Node, Python) that referenced yaml-core types compile and their existing tests pass against the settings-core import path
   5. `cargo build --workspace` and `cargo test --workspace` succeed with zero failures
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 01-01-PLAN.md — Rust core merge: git mv yaml-core into settings-core, content edits, consumer migration, crate removal
+- [x] 01-01-PLAN.md — Rust core merge: git mv yaml-core into settings-core, content edits, consumer migration, crate removal
 - [ ] 01-02-PLAN.md — Binding consolidation: C++ bridge rename, Node yaml merge, Python yaml-py fold-in
 - [ ] 01-03-PLAN.md — Test migration, documentation consolidation, parity gate regeneration
 
@@ -111,7 +111,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. YAML -> Settings Merge | 0/3 | Planning complete | - |
+| 1. YAML -> Settings Merge | 1/3 | In Progress|  |
 | 2. Crashgen -> Config Merge | 0/TBD | Not started | - |
 | 3. Constants -> Version Registry Merge | 0/TBD | Not started | - |
 | 4. Gate Validation & Documentation | 0/TBD | Not started | - |
