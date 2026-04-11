@@ -1,15 +1,13 @@
 //! YAML operations bridge for CXX FFI.
 //!
-//! Bridges `classic_yaml_core::YamlOperations` for file loading, parsing,
+//! Bridges `classic_settings_core::YamlOperations` for file loading, parsing,
 //! settings access via dot-notation keys, and cache management.
 //!
 //! Since CXX cannot pass `yaml_rust2::Yaml` objects across the FFI boundary,
 //! YAML content is exchanged as strings and settings values are returned
 //! as a `YamlValue` shared struct with type information.
 
-use classic_yaml_core::{
-    CacheStats as YamlCacheStats, YamlOperations, cache_stats as yaml_cache_stats,
-};
+use classic_settings_core::{YamlCacheStats, YamlOperations, yaml_cache_stats};
 use std::path::Path;
 use yaml_rust2::Yaml;
 

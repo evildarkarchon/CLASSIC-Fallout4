@@ -1,14 +1,14 @@
-//! YAML bindings for classic-yaml-core
+//! YAML bindings for classic-settings-core
 //!
 //! Exposes YAML parsing, serialization, and value extraction to JavaScript/TypeScript.
-//! All business logic is delegated to `classic_yaml_core::YamlOperations`.
+//! All business logic is delegated to `classic_settings_core::YamlOperations`.
 //!
 //! ## Modules
 //! - **Free functions**: Stateless YAML parsing, serialization, extraction, and batch operations.
 //! - **YamlDocument class**: Stateful wrapper that holds a parsed YAML document in memory
 //!   for repeated reads and mutations without re-parsing.
 
-use classic_yaml_core::{YamlError, YamlOperations, cache_stats as yaml_cache_stats};
+use classic_settings_core::{YamlError, YamlOperations, yaml_cache_stats};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::Path;

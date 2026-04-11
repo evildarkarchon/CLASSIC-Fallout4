@@ -38,7 +38,6 @@ classic-version-core = { path = "../../business-logic/classic-version-core" }
 classic-message-core = { path = "../../business-logic/classic-message-core" }
 
 # Wave 2: Existing modules (already partial)
-classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 
 # Wave 3: File I/O & Data

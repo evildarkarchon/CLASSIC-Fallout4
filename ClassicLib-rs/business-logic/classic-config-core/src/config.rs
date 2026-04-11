@@ -4,8 +4,7 @@
 //! for both classic-cli and classic-tui applications.
 
 use anyhow::{Context, Result};
-use classic_settings_core::load_yaml_merged_async;
-use classic_yaml_core::YamlOperations;
+use classic_settings_core::{YamlOperations, load_yaml_merged_async};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

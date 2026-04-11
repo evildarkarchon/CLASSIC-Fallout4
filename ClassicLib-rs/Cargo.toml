@@ -4,7 +4,6 @@ members = [
     "foundation/classic-shared-core",
     "foundation/classic-shared-py",
     # Business Logic (Pure Rust - no PyO3)
-    "business-logic/classic-yaml-core",
     "business-logic/classic-database-core",
     "business-logic/classic-file-io-core",
     "business-logic/classic-crashgen-settings-core",
@@ -29,7 +28,6 @@ members = [
     # Version Registry (Game version detection and matching)
     "business-logic/classic-version-registry-core",
     # Python Bindings (PyO3 adapters)
-    "python-bindings/classic-yaml-py",
     "python-bindings/classic-database-py",
     "python-bindings/classic-file-io-py",
     "python-bindings/classic-scanlog-py",

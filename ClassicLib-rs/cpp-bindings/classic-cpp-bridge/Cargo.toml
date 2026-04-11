@@ -39,7 +39,6 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
 classic-perf-core = { path = "../../business-logic/classic-perf-core" }
 classic-message-core = { path = "../../business-logic/classic-message-core" }
-classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }

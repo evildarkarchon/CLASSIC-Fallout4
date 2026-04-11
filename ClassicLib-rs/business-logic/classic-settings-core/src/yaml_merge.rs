@@ -10,7 +10,7 @@
 //! # Example
 //!
 //! ```rust
-//! use classic_yaml_core::{YamlOperations, merge_keys};
+//! use classic_settings_core::{YamlOperations, merge_keys};
 //!
 //! let ops = YamlOperations::new();
 //! let yaml_str = r#"
@@ -63,7 +63,7 @@ use yaml_rust2::Yaml;
 /// # Example
 ///
 /// ```rust
-/// use classic_yaml_core::{YamlOperations, merge_keys};
+/// use classic_settings_core::{YamlOperations, merge_keys};
 ///
 /// let ops = YamlOperations::new();
 /// let yaml_str = r#"

@@ -1,8 +1,8 @@
-//! CLASSIC YAML Core - Pure Rust YAML business logic
+//! YAML operations absorbed from classic-yaml-core (D-01).
 //!
-//! This crate provides the core YAML operations for CLASSIC without any PyO3 dependencies.
+//! This module provides the core YAML operations for CLASSIC without any PyO3 dependencies.
 //! It can be used directly by Rust applications (CLI/TUI) or through the Python bindings
-//! in classic-yaml-py.
+//! in classic-settings-py.
 //!
 //! ## Architecture
 //! - Pure Rust - no PyO3, usable by CLI/TUI directly
@@ -13,7 +13,7 @@
 //! # Complete Usage Example
 //!
 //! ```rust,no_run
-//! use classic_yaml_core::{YamlOperations, YamlError};
+//! use classic_settings_core::{YamlOperations, YamlError};
 //! use std::path::Path;
 //!
 //! fn main() -> Result<(), YamlError> {
@@ -67,7 +67,7 @@
 //! The module includes automatic file caching with modification time tracking:
 //!
 //! ```rust,no_run
-//! use classic_yaml_core::YamlOperations;
+//! use classic_settings_core::YamlOperations;
 //! use std::path::Path;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,7 +95,7 @@
 //! All operations are thread-safe. The cache uses `quick_cache` for concurrent access:
 //!
 //! ```rust,no_run
-//! use classic_yaml_core::YamlOperations;
+//! use classic_settings_core::YamlOperations;
 //! use std::sync::Arc;
 //! use std::thread;
 //! use std::path::Path;
@@ -153,18 +153,18 @@ static CACHE_MISSES: AtomicU64 = AtomicU64::new(0);
 /// Cache performance statistics.
 ///
 /// Provides insight into cache effectiveness via hit/miss tracking.
-/// Use `cache_stats()` to retrieve current statistics.
+/// Use `yaml_cache_stats()` to retrieve current statistics.
 ///
 /// # Example
 ///
 /// ```rust
-/// use classic_yaml_core::cache_stats;
+/// use classic_settings_core::yaml_cache_stats;
 ///
-/// let stats = cache_stats();
+/// let stats = yaml_cache_stats();
 /// println!("Hit rate: {:.2}%", stats.hit_rate * 100.0);
 /// ```
 #[derive(Debug, Clone, Serialize)]
-pub struct CacheStats {
+pub struct YamlCacheStats {
     /// Number of cache hits since last reset.
     pub hits: u64,
     /// Number of cache misses since last reset.
@@ -191,18 +191,18 @@ fn total_cached_bytes() -> usize {
 /// # Example
 ///
 /// ```rust
-/// use classic_yaml_core::cache_stats;
+/// use classic_settings_core::yaml_cache_stats;
 ///
-/// let stats = cache_stats();
+/// let stats = yaml_cache_stats();
 /// println!("Hits: {}, Misses: {}", stats.hits, stats.misses);
 /// println!("Hit rate: {:.1}%", stats.hit_rate * 100.0);
 /// ```
-pub fn cache_stats() -> CacheStats {
+pub fn yaml_cache_stats() -> YamlCacheStats {
     let hits = CACHE_HITS.load(Ordering::Relaxed);
     let misses = CACHE_MISSES.load(Ordering::Relaxed);
     let total = hits + misses;
 
-    CacheStats {
+    YamlCacheStats {
         hits,
         misses,
         hit_rate: if total > 0 {
@@ -224,14 +224,14 @@ pub fn cache_stats() -> CacheStats {
 /// # Example
 ///
 /// ```rust
-/// use classic_yaml_core::{reset_cache_stats, cache_stats};
+/// use classic_settings_core::{reset_yaml_cache_stats, yaml_cache_stats};
 ///
-/// reset_cache_stats();
-/// let stats = cache_stats();
+/// reset_yaml_cache_stats();
+/// let stats = yaml_cache_stats();
 /// assert_eq!(stats.hits, 0);
 /// assert_eq!(stats.misses, 0);
 /// ```
-pub fn reset_cache_stats() {
+pub fn reset_yaml_cache_stats() {
     CACHE_HITS.store(0, Ordering::Relaxed);
     CACHE_MISSES.store(0, Ordering::Relaxed);
 }
@@ -278,7 +278,7 @@ pub fn reset_cache_stats() {
 ///
 /// # Example
 /// ```rust
-/// use classic_yaml_core::YamlError;
+/// use classic_settings_core::YamlError;
 ///
 /// fn handle_yaml() -> Result<(), YamlError> {
 ///     // Example usage of the YamlError enum.
@@ -392,7 +392,7 @@ struct CachedYaml {
 ///
 /// Example:
 /// ```rust
-/// use classic_yaml_core::YamlOperations;
+/// use classic_settings_core::YamlOperations;
 ///
 /// let yaml_ops = YamlOperations::new();
 /// assert!(yaml_ops.is_cache_enabled());
@@ -409,7 +409,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     ///
     /// let instance = YamlOperations::new();
     /// assert!(instance.is_cache_enabled());
@@ -794,7 +794,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     ///
     /// let yaml_ops = YamlOperations::new();
     /// let stats = yaml_ops.get_cache_stats();
@@ -806,7 +806,7 @@ impl YamlOperations {
     /// This function assumes that `YAML_CACHE` is a globally accessible data structure
     /// that holds cached entries, where each entry may contain an optional `raw_content`.
     pub fn get_cache_stats(&self) -> HashMap<String, usize> {
-        let canonical = cache_stats();
+        let canonical = yaml_cache_stats();
         let mut stats = HashMap::new();
         stats.insert("cached_files".to_string(), canonical.size);
         stats.insert("capacity".to_string(), canonical.capacity);
@@ -839,7 +839,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let ops = YamlOperations::new();
@@ -885,7 +885,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_yaml_core::{YamlOperations, YamlError};
+    /// use classic_settings_core::{YamlOperations, YamlError};
     /// use yaml_rust2::Yaml;
     ///
     /// # fn example() -> Result<(), YamlError> {
@@ -933,7 +933,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     /// use std::path::Path;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -975,7 +975,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let ops = YamlOperations::new();
@@ -1029,7 +1029,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let ops = YamlOperations::new();
@@ -1089,7 +1089,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_yaml_core::YamlOperations;
+    /// use classic_settings_core::YamlOperations;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let ops = YamlOperations::new();
@@ -1153,7 +1153,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust
-    /// # use classic_yaml_core::YamlOperations;
+    /// # use classic_settings_core::YamlOperations;
     /// # use yaml_rust2::Yaml;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let ops = YamlOperations::new();
@@ -1346,7 +1346,7 @@ impl Default for YamlOperations {
 ///
 /// # Example
 /// ```rust,no_run
-/// use classic_yaml_core::clear_global_yaml_cache;
+/// use classic_settings_core::clear_global_yaml_cache;
 ///
 /// // Clear all cached YAML files
 /// clear_global_yaml_cache();
@@ -1354,10 +1354,6 @@ impl Default for YamlOperations {
 pub fn clear_global_yaml_cache() {
     YAML_CACHE.clear();
 }
-
-// YAML Merge Key extension support
-mod merge;
-pub use merge::merge_keys;
 
 #[cfg(test)]
 #[serial_test::serial]
@@ -1668,7 +1664,7 @@ nested:
     #[test]
     fn test_cache_hit_on_second_load() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "cached: true").expect("Write failed");
@@ -1683,7 +1679,7 @@ nested:
             .load_yaml_file(&file_path)
             .expect("Second load should succeed");
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.misses, 1, "First unchanged load should miss once");
         assert_eq!(stats.hits, 1, "Second unchanged load should hit once");
         assert_eq!(stats.size, 1, "Exactly one file should be cached");
@@ -1729,7 +1725,7 @@ nested:
     #[test]
     fn test_cache_disabled_always_reads() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "cached: false").expect("Write failed");
@@ -1745,7 +1741,7 @@ nested:
             .load_yaml_file(&file_path)
             .expect("Second load should succeed");
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.hits, 0, "Disabled caching should not record hits");
         assert_eq!(
             stats.misses, 2,
@@ -1768,7 +1764,7 @@ nested:
     #[test]
     fn test_cache_stats_after_load() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let ops = YamlOperations::new();
 
@@ -2714,9 +2710,9 @@ list:
     #[test]
     fn test_cache_stats_function() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.hits, 0);
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
@@ -2739,7 +2735,7 @@ list:
     #[test]
     fn test_cache_stats_after_operations() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "stats_test: true").expect("Write failed");
@@ -2753,7 +2749,7 @@ list:
             .load_yaml_file(temp_file.path())
             .expect("Second load should succeed");
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.misses, 1, "Initial read should miss once");
         assert_eq!(stats.hits, 1, "Second unchanged read should hit once");
         assert_eq!(stats.size, 1, "One file should remain cached");
@@ -2769,7 +2765,7 @@ list:
     #[test]
     fn test_reset_cache_stats_function() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         // Generate some hits/misses
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
@@ -2779,13 +2775,13 @@ list:
         let _ = ops.load_yaml_file(temp_file.path()).unwrap();
         let _ = ops.load_yaml_file(temp_file.path()).unwrap();
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert!(stats.hits > 0 || stats.misses > 0);
 
         // Reset
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.hits, 0);
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.hit_rate, 0.0);
@@ -2798,7 +2794,7 @@ list:
     #[test]
     fn test_cache_size_is_bounded_without_assuming_evicted_key() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let ops = YamlOperations::new();
@@ -2809,7 +2805,7 @@ list:
             let _ = ops.load_yaml_file(&path).expect("Load should succeed");
         }
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         let serialized = serde_json::to_value(&stats).expect("Cache stats should serialize");
 
         assert_eq!(serialized["capacity"].as_u64(), Some(128));
@@ -2955,7 +2951,7 @@ root:
     #[test]
     fn test_load_yaml_file_with_cache_disabled_no_cache_entry() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "no_cache: true").expect("Write failed");
@@ -2970,7 +2966,7 @@ root:
             Some(Yaml::Boolean(true))
         );
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(
             stats.size, 0,
             "Disabled cache reads should not retain entries"

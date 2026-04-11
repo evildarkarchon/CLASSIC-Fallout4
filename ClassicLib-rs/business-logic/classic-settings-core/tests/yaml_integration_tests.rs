@@ -1,10 +1,10 @@
-//! Integration tests for classic-yaml-core
+//! Integration tests for YAML operations (absorbed from classic-yaml-core)
 //!
 //! These tests verify cross-component workflows and file I/O operations
 //! that involve multiple YAML operations working together.
 
-use classic_yaml_core::{
-    YamlError, YamlOperations, cache_stats, clear_global_yaml_cache, reset_cache_stats,
+use classic_settings_core::{
+    YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats,
 };
 use serial_test::serial;
 use std::fs;
@@ -209,7 +209,7 @@ mod cache_workflows {
     #[serial]
     fn test_cache_records_hit_and_miss_through_public_stats() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "data: test\ncount: 100").expect("Failed to write");
@@ -227,7 +227,7 @@ mod cache_workflows {
             ops.get_string_value(&yaml2, "data", "")
         );
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.misses, 1, "First unchanged read should miss once");
         assert_eq!(stats.hits, 1, "Second unchanged read should hit once");
         assert_eq!(stats.size, 1, "Exactly one YAML file should be cached");
@@ -239,7 +239,7 @@ mod cache_workflows {
     #[serial]
     fn test_cache_invalidation_on_external_modification() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config_path = temp_dir.path().join("invalidation_test.yaml");
@@ -271,7 +271,7 @@ mod cache_workflows {
             "Should see updated content after external modification"
         );
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(stats.hits, 0, "Stale entries should not count as hits");
         assert_eq!(
             stats.misses, 2,
@@ -289,7 +289,7 @@ mod cache_workflows {
     #[serial]
     fn test_cache_clear_and_reset_helpers_isolate_state() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config_path = temp_dir.path().join("isolation_test.yaml");
@@ -305,13 +305,13 @@ mod cache_workflows {
             .load_yaml_file(&config_path)
             .expect("Second load should succeed");
 
-        let stats_before_clear = cache_stats();
+        let stats_before_clear = yaml_cache_stats();
         assert_eq!(stats_before_clear.misses, 1);
         assert_eq!(stats_before_clear.hits, 1);
         assert_eq!(stats_before_clear.size, 1);
 
         clear_global_yaml_cache();
-        let stats_after_clear = cache_stats();
+        let stats_after_clear = yaml_cache_stats();
         assert_eq!(
             stats_after_clear.size, 0,
             "Clearing should drop cached entries"
@@ -325,8 +325,8 @@ mod cache_workflows {
             "Clearing should not reset counters"
         );
 
-        reset_cache_stats();
-        let stats_after_reset = cache_stats();
+        reset_yaml_cache_stats();
+        let stats_after_reset = yaml_cache_stats();
         assert_eq!(stats_after_reset.hits, 0, "Reset should clear hit counter");
         assert_eq!(
             stats_after_reset.misses, 0,
@@ -347,7 +347,7 @@ mod cache_workflows {
     #[serial]
     fn test_cache_capacity_is_enforced_without_internal_eviction_assertions() {
         clear_global_yaml_cache();
-        reset_cache_stats();
+        reset_yaml_cache_stats();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let ops = YamlOperations::new();
@@ -359,7 +359,7 @@ mod cache_workflows {
             assert_eq!(ops.get_setting(&yaml, "index"), Some(Yaml::Integer(index)));
         }
 
-        let stats = cache_stats();
+        let stats = yaml_cache_stats();
         assert_eq!(
             stats.capacity, 128,
             "Capacity should expose the fixed bound"

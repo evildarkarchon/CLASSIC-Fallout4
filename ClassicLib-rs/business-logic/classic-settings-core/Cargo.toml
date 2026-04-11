@@ -40,10 +40,19 @@ anyhow = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Ordered collections (preserves YAML key order)
+indexmap = { workspace = true }
 
 [dev-dependencies]
 serial_test = "3.2"
 tempfile = "3.14"
+criterion = { version = "0.6.0", features = ["html_reports"] }
+
+[[bench]]
+name = "yaml_benchmarks"
+harness = false
 
 [lints.rust]
 deprecated = "deny"

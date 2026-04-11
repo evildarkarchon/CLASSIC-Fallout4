@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::OnceLock;
 
-use classic_yaml_core::YamlOperations;
+use classic_settings_core::YamlOperations;
 
 use crate::defaults;
 use crate::matching::{MatchResult, VersionMatcher};
