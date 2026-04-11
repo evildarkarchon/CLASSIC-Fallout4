@@ -5,7 +5,7 @@ fn main() {
         "src/constants.rs",
         "src/runtime.rs",
         "src/registry.rs",
-        "src/yaml.rs",
+        "src/settings.rs",
         "src/config.rs",
         "src/scanner.rs",
         "src/database.rs",

@@ -23,7 +23,7 @@
 //! - [`types`] - Shared collection wrappers (StringMap, StringVecMap)
 //! - [`runtime`] - Tokio runtime management
 //! - [`registry`] - Global key-value store
-//! - [`yaml`] - YAML operations
+//! - [`settings`] - YAML operations, settings cache, and validators
 //! - [`config`] - YamlDataCore configuration loading
 //!
 //! ## Scanning (Wave 2)
@@ -82,7 +82,7 @@ pub mod web;
 #[cfg(windows)]
 pub mod xse;
 #[cfg(windows)]
-pub mod yaml;
+pub mod settings;
 
 #[cfg(not(windows))]
 pub const CPP_BRIDGE_UNAVAILABLE: &str = "classic-cpp-bridge is only available on Windows targets";

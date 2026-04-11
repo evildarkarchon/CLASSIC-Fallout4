@@ -47,7 +47,7 @@
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/scangame.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 #include "rust/cxx.h"
 
 #include <QDateTime>
@@ -149,10 +149,10 @@ bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, Q
     }
 
     try {
-        auto mainOps = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
+        auto mainOps = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
 
-        auto defaultSettings = classic::yaml::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_settings", "");
+        auto defaultSettings = classic::settings::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_settings", "");
         if (defaultSettings.empty()) {
             if (errorOut) {
                 *errorOut = QStringLiteral("CLASSIC_Info.default_settings is missing in CLASSIC Main.yaml.");
@@ -221,10 +221,10 @@ bool ensureIgnoreFileExists(const QString& dataRoot, const QString& dataDir, QSt
     }
 
     try {
-        auto mainOps = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
+        auto mainOps = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
 
-        auto defaultIgnore = classic::yaml::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_ignorefile", "");
+        auto defaultIgnore = classic::settings::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_ignorefile", "");
         if (defaultIgnore.empty()) {
             if (errorOut) {
                 *errorOut = QStringLiteral("CLASSIC_Info.default_ignorefile is missing in CLASSIC Main.yaml.");
@@ -766,9 +766,9 @@ void MainWindow::connectSignals()
 
         QString mainYamlPath = m_dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
         try {
-            auto ops = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
-            auto helpText = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Interface.help_popup_main", "");
+            auto ops = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
+            auto helpText = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Interface.help_popup_main", "");
             if (!helpText.empty()) {
                 QMessageBox::information(this, QStringLiteral("NEED HELP?"), classic::toQString(helpText));
             } else {
@@ -839,31 +839,31 @@ void MainWindow::loadSettings()
     // Load CLASSIC Settings.yaml via CXX YAML bridge
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         m_editStagingFolder->clear();
         m_editCustomFolder->clear();
 
-        auto staging = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Staging Mods Folder", "");
+        auto staging = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Staging Mods Folder", "");
         if (!staging.empty()) {
             m_editStagingFolder->setText(classic::toQString(staging));
         }
 
-        auto custom = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
+        auto custom = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
         if (!custom.empty()) {
             m_editCustomFolder->setText(classic::toQString(custom));
         }
 
         auto getBool = [&](const char* key, bool fallback) -> bool {
-            auto value = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
             if (value.value_type == "bool") {
                 return value.value == "true";
             }
             return fallback;
         };
         auto getInt = [&](const char* key, int fallback) -> int {
-            auto value = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
             if (value.value_type == "integer") {
                 bool ok = false;
                 const int parsed = QString::fromStdString(std::string(value.value)).toInt(&ok);
@@ -877,7 +877,7 @@ void MainWindow::loadSettings()
         m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
         m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
 
-        auto gameVersion = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
+        auto gameVersion = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
         m_gameVersion = classic::toQString(gameVersion);
 
         m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
@@ -892,7 +892,7 @@ void MainWindow::loadSettings()
         // Update backup controller with the game root from settings.
         // Guard against the first call during construction (before
         // m_backupController is created).
-        auto gameRoot = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
+        auto gameRoot = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
         if (!gameRoot.empty() && m_backupController) {
             m_backupController->setGameRoot(classic::toQString(gameRoot));
         }
@@ -931,22 +931,22 @@ void MainWindow::saveSettings()
 
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         auto stagingValue = m_editStagingFolder->text();
         if (!stagingValue.isEmpty()) {
-            classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Staging Mods Folder",
+            classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Staging Mods Folder",
                                                        std::string(stagingValue.toUtf8().constData()));
         }
 
         auto customValue = m_editCustomFolder->text();
         if (!customValue.isEmpty()) {
-            classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder",
+            classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder",
                                                        std::string(customValue.toUtf8().constData()));
         }
 
-        classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
     } catch (const std::exception& e) {
         setStatusMessage(QStringLiteral("Settings save failed: ") + QString::fromUtf8(e.what()));
     } catch (...) {
@@ -1019,21 +1019,21 @@ void MainWindow::checkFirstRunPaths()
     QString gameVersion = QStringLiteral("auto");
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
-        auto gp = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
+        auto gp = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
         if (!gp.empty()) {
             gamePath = classic::toQString(gp);
         }
 
-        auto dp = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
+        auto dp = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
         if (!dp.empty()) {
             docsPath = classic::toQString(dp);
         }
 
         gameVersion = classic::toQString(
-            classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
+            classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
 
     } catch (...) {
         // If settings can't be read, fall through to path detection
@@ -1053,11 +1053,11 @@ void MainWindow::checkFirstRunPaths()
     if (gamePath.isEmpty() || docsPath.isEmpty()) {
         const QString localYamlPath = m_dataDir + QStringLiteral("/CLASSIC Fallout4 Local.yaml");
         try {
-            auto localOps = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*localOps, std::string(localYamlPath.toUtf8().constData()));
+            auto localOps = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*localOps, std::string(localYamlPath.toUtf8().constData()));
 
             if (gamePath.isEmpty()) {
-                auto gp = classic::yaml::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Game", "");
+                auto gp = classic::settings::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Game", "");
                 if (!gp.empty()) {
                     gamePath = classic::toQString(gp);
                     resolvedFromFallbacks = true;
@@ -1065,7 +1065,7 @@ void MainWindow::checkFirstRunPaths()
             }
 
             if (docsPath.isEmpty()) {
-                auto dp = classic::yaml::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Docs", "");
+                auto dp = classic::settings::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Docs", "");
                 if (!dp.empty()) {
                     docsPath = classic::toQString(dp);
                     resolvedFromFallbacks = true;
@@ -1098,29 +1098,29 @@ void MainWindow::checkFirstRunPaths()
 
     if (resolvedFromFallbacks) {
         try {
-            auto ops = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+            auto ops = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
             if (!gamePath.isEmpty()) {
-                classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
                                                            std::string(gamePath.toUtf8().constData()));
 
-                auto exePath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
+                auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
                 if (exePath.empty()) {
                     auto exeName = classic::path::resolve_fallout4_exe_name(
                         std::string(gameVersion.toUtf8().constData()));
                     auto defaultExe = gamePath + QStringLiteral("/") + classic::toQString(exeName);
-                    classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
+                    classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
                                                                std::string(defaultExe.toUtf8().constData()));
                 }
             }
 
             if (!docsPath.isEmpty()) {
-                classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
                                                            std::string(docsPath.toUtf8().constData()));
             }
 
-            classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+            classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
             if (m_backupController && !gamePath.isEmpty()) {
                 m_backupController->setGameRoot(gamePath);
@@ -1170,19 +1170,19 @@ void MainWindow::checkFirstRunPaths()
 
         // Save the user-provided paths to YAML settings
         try {
-            auto ops = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+            auto ops = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
             if (needs.needs_game_path && !finalGamePath.isEmpty()) {
-                classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
                                                            std::string(finalGamePath.toUtf8().constData()));
             }
             if (needs.needs_docs_path && !finalDocsPath.isEmpty()) {
-                classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
                                                            std::string(finalDocsPath.toUtf8().constData()));
             }
 
-            classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+            classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
             QString manualLocalYamlError;
             if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), finalGamePath, finalDocsPath,
@@ -1244,20 +1244,20 @@ void MainWindow::saveTabGeometry(int tabIndex)
 
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         auto prefix = std::string("UI.window_geometry.") + kTabNames[tabIndex] + ".";
 
         bool isMax = isMaximized();
-        classic::yaml::yaml_ops_set_bool_setting(*ops, prefix + "maximized", isMax);
+        classic::settings::yaml_ops_set_bool_setting(*ops, prefix + "maximized", isMax);
 
         // Save the normal (non-maximized) size
         QSize sz = isMax ? normalGeometry().size() : size();
-        classic::yaml::yaml_ops_set_integer_setting(*ops, prefix + "width", static_cast<int64_t>(sz.width()));
-        classic::yaml::yaml_ops_set_integer_setting(*ops, prefix + "height", static_cast<int64_t>(sz.height()));
+        classic::settings::yaml_ops_set_integer_setting(*ops, prefix + "width", static_cast<int64_t>(sz.width()));
+        classic::settings::yaml_ops_set_integer_setting(*ops, prefix + "height", static_cast<int64_t>(sz.height()));
 
-        classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
     } catch (...) {
         // Non-critical -- geometry will use defaults next time
     }
@@ -1283,13 +1283,13 @@ void MainWindow::restoreTabGeometry(int tabIndex)
     bool wasMax = false;
 
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         auto prefix = std::string("UI.window_geometry.") + kTabNames[tabIndex] + ".";
 
         auto getInt = [&](const std::string& key) -> int {
-            auto val = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            auto val = classic::settings::yaml_ops_get_setting_value(*ops, key);
             if (val.value_type == "integer") {
                 bool ok = false;
                 int result = QString::fromStdString(std::string(val.value)).toInt(&ok);
@@ -1302,7 +1302,7 @@ void MainWindow::restoreTabGeometry(int tabIndex)
         savedW = getInt(prefix + "width");
         savedH = getInt(prefix + "height");
 
-        auto maxVal = classic::yaml::yaml_ops_get_setting_value(*ops, prefix + "maximized");
+        auto maxVal = classic::settings::yaml_ops_get_setting_value(*ops, prefix + "maximized");
         wasMax = (maxVal.value == "true");
     } catch (...) {
         // Fall through to defaults
@@ -1367,15 +1367,15 @@ bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* do
     QString docsPath;
     const QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
-        auto root = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
+        auto root = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
         if (!root.empty()) {
             gamePath = QDir::cleanPath(classic::toQString(root).trimmed());
         }
 
-        auto docs = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
+        auto docs = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
         if (!docs.empty()) {
             docsPath = QDir::cleanPath(classic::toQString(docs).trimmed());
         }
@@ -1483,10 +1483,10 @@ void MainWindow::onCustomFolderEdited()
         if (!m_dataDir.isEmpty()) {
             QString settingsPath = settingsFilePath(m_dataRoot);
             try {
-                auto ops = classic::yaml::yaml_ops_new();
-                classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-                classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
-                classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+                auto ops = classic::settings::yaml_ops_new();
+                classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
+                classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
             } catch (...) {
             }
         }
@@ -1505,10 +1505,10 @@ void MainWindow::onCustomFolderEdited()
         if (!m_dataDir.isEmpty()) {
             QString settingsPath = settingsFilePath(m_dataRoot);
             try {
-                auto ops = classic::yaml::yaml_ops_new();
-                classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-                classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
-                classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+                auto ops = classic::settings::yaml_ops_new();
+                classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
+                classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
             } catch (...) {
             }
         }
@@ -1600,10 +1600,10 @@ void MainWindow::onScanGameFiles()
     }
 
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
-        auto exePath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
+        auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
         if (!exePath.empty()) {
             gameExePath = QDir::cleanPath(classic::toQString(exePath).trimmed());
         }
@@ -1953,9 +1953,9 @@ void MainWindow::onTogglePapyrusMonitor()
         QString papyrusLogPath;
         QString settingsPath = settingsFilePath(m_dataRoot);
         try {
-            auto ops = classic::yaml::yaml_ops_new();
-            classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-            auto logPath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Papyrus Log Path", "");
+            auto ops = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+            auto logPath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Papyrus Log Path", "");
             if (!logPath.empty()) {
                 papyrusLogPath = classic::toQString(logPath);
             }
