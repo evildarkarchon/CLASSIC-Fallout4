@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 Phase: 2
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-04-11
+Last activity: 2026-04-11 - Completed quick task 260410-wsw: Fix pytest failures related to removed --deferred-registry flag
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -76,6 +76,12 @@ None yet.
 ### Blockers/Concerns
 
 None yet.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260410-wsw | Fix pytest failures related to removed --deferred-registry flag | 2026-04-11 | f0b6aa17 | Verified | [260410-wsw-fix-pytest-failures-related-to-removed-d](./quick/260410-wsw-fix-pytest-failures-related-to-removed-d/) |
 
 ## Session Continuity
 
