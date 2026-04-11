@@ -41,7 +41,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         constants.rs
         runtime.rs
         registry.rs
-        yaml.rs
+        settings.rs
         config.rs
         scanner.rs
         database.rs
