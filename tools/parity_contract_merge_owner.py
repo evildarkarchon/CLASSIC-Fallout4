@@ -123,6 +123,17 @@ def merge_owner_group(
     squads_changed = 0
     top_level_deleted = 0
 
+    # Snapshot row id counts before merge so we only flag duplicates newly introduced
+    # by the merge (pre-existing duplicates in the contract are tolerated).
+    pre_id_counts: dict[str, int] = {}
+    for row in contract.get("tier1Mappings", []):
+        if not isinstance(row, dict):
+            continue
+        row_id = row.get("id")
+        if row_id is None:
+            continue
+        pre_id_counts[row_id] = pre_id_counts.get(row_id, 0) + 1
+
     # Step 2: top-level ownerModules entry handling.
     owner_modules = contract.get("ownerModules", {})
     if isinstance(owner_modules, dict) and source_owner in owner_modules:
@@ -195,22 +206,22 @@ def merge_owner_group(
         owner_rows_changed += sub_owner
         rust_crate_rows_changed += sub_rust
 
-    # Step 7: collision detection by row id.
-    seen_ids: dict[str, int] = {}
-    duplicates: list[str] = []
+    # Step 7: collision detection by row id. Only NEW duplicates introduced by the
+    # merge are fatal; pre-existing duplicates in the contract are a pre-existing
+    # quirk that the merge does not worsen.
+    post_id_counts: dict[str, int] = {}
     for row in rows:
         if not isinstance(row, dict):
             continue
         row_id = row.get("id")
         if row_id is None:
             continue
-        seen_ids[row_id] = seen_ids.get(row_id, 0) + 1
-        if seen_ids[row_id] == 2:
-            duplicates.append(row_id)
+        post_id_counts[row_id] = post_id_counts.get(row_id, 0) + 1
 
-    if duplicates:
+    new_collisions = [rid for rid, n in post_id_counts.items() if n > pre_id_counts.get(rid, 0) and n > 1]
+    if new_collisions:
         print(
-            f"ERROR: duplicate row id(s) detected after owner merge: {duplicates}; "
+            f"ERROR: duplicate row id(s) newly introduced by merge: {new_collisions}; "
             f"helper aborted; no changes written. Manual resolution required.",
             file=sys.stderr,
         )

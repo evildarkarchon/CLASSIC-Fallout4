@@ -45,7 +45,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_config_smoke.py",
       "testCaseId": "config-plan06-promoted-smoke",
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows — the Python surface parser skips @property (per Wave 3a precedent)."
     },
     {
       "coverageId": "python-tier1-scanlog",
@@ -285,7 +285,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py",
       "testCaseId": "classic-shared-smoke-suite",
-      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 \u2014 tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
+      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 — tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
     },
     {
       "coverageId": "python-tier1-file_io",
@@ -301,7 +301,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_file_io_aux_smoke.py",
       "testCaseId": "classic-file-io-promoted-smoke",
-      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] \u2014 all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
+      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] — all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
     },
     {
       "coverageId": "python-tier1-version-registry-plan07-promoted",
@@ -455,25 +455,10 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 28,
-      "contractIdsHash": "e3ebdf7fb76fe7099b94dec94676220cf1da874f4c95aa8422e1376dc189466e",
+      "contractCount": 59,
+      "contractIdsHash": "daee81ecff14178bf0eda57d3613055224704455659ce59c7cd954856ff16d73",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "settings-residuals-smoke"
-    },
-    {
-      "coverageId": "python-tier1-yaml",
-      "classification": "runtime_verified",
-      "verificationMode": "direct_call",
-      "ownerModule": "yaml",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "yaml",
-        "tier": "tier1"
-      },
-      "contractCount": 31,
-      "contractIdsHash": "8423af086b9308df3d7fb8f27b4a691963ce40b6b3601c5de80c899bf7785e1f",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "yaml-residuals-smoke"
     },
     {
       "coverageId": "python-tier1-registry",

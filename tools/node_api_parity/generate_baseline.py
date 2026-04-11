@@ -33,11 +33,11 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
     "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
     "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
-    # Phase 4 Plan 1 expansion (+9 crates) — matches Phase 3's set PLUS
+    # Phase 4 Plan 1 expansion (+8 crates) — matches Phase 3's set PLUS
     # classic-crashgen-settings-core per research amendment A1 (Node has a
     # direct classic-node/src/crashgen_rules.rs binding that IS the
     # classic-crashgen-settings-core Node surface).
-    "classic-yaml-core": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
+    # (The former yaml-core crate was absorbed into settings-core in v9.1.0 Phase 1.)
     "classic-version-core": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
     "classic-web-core": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
     "classic-crashgen-settings-core": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
@@ -66,7 +66,7 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-registry-core": "registry",
     "classic-shared-core": "shared",
     # Phase 4 expansion — each new crate gets its own distinct owner label.
-    "classic-yaml-core": "yaml",
+    # (yaml owner was absorbed into settings in v9.1.0 Phase 1.)
     "classic-version-core": "version",
     "classic-web-core": "web",
     "classic-crashgen-settings-core": "crashgen_settings",
@@ -95,7 +95,7 @@ SQUAD_BY_OWNER: dict[str, str] = {
     "registry": "Squad B (version-registry/aux)",
     "shared": "Squad B (version-registry/aux)",
     # Phase 4 Plan 1 expansion owners.
-    "yaml": "Squad B (version-registry/aux)",
+    # (yaml was absorbed into settings in v9.1.0 Phase 1.)
     "version": "Squad B (version-registry/aux)",
     "web": "Squad B (version-registry/aux)",
     "crashgen_settings": "Squad B (version-registry/aux)",

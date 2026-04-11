@@ -4875,7 +4875,7 @@
       "id": "settings.cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "cache_stats@rust",
       "rustKind": "function"
     },
@@ -4883,7 +4883,7 @@
       "id": "settings.clear_cache@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "clear_cache@rust",
       "rustKind": "function"
     },
@@ -4995,7 +4995,7 @@
       "id": "settings.reset_cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "reset_cache_stats@rust",
       "rustKind": "function"
     },
@@ -5523,7 +5523,7 @@
       "id": "xse.new@rust",
       "tier": "tier1",
       "ownerModule": "xse",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "new@rust",
       "rustKind": "function"
     },
@@ -5546,176 +5546,176 @@
     {
       "id": "yaml.YamlError@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "YamlError@rust",
       "rustKind": "enum"
     },
     {
       "id": "yaml.YamlOperations@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "YamlOperations@rust",
       "rustKind": "struct"
     },
     {
       "id": "yaml.cache_stats@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "cache_stats@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.clear_cache@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "clear_cache@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.dump_yaml@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "dump_yaml@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_cache_stats@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_cache_stats@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_hashmap_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_hashmap_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_indexmap_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_indexmap_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_setting@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_setting@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_settings_batch@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_settings_batch@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_string_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_string_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_vec_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_vec_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.is_cache_enabled@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "is_cache_enabled@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.load_yaml_file@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "load_yaml_file@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.load_yaml_files_batch@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "load_yaml_files_batch@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.merge_keys@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "merge_keys@rust",
       "rustKind": "reexport"
     },
     {
       "id": "yaml.new@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "new@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.parse_yaml@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "parse_yaml@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.reset_cache_stats@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "reset_cache_stats@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.save_yaml_file@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "save_yaml_file@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.set_cache_enabled@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "set_cache_enabled@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.set_setting@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "set_setting@rust",
       "rustKind": "function"
     },

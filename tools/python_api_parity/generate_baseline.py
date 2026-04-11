@@ -26,8 +26,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
     "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
     "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
-    # Phase 3 additions -- 15 additional business-logic crates
-    "classic-yaml-core": "ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs",
+    # Phase 3 additions -- 14 additional business-logic crates (the former yaml-core was absorbed into settings-core in v9.1.0 Phase 1)
     "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
     "classic-file-io-core": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
     "classic-scangame-core": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
@@ -53,7 +52,6 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-config-core": "config",
     "classic-version-registry-core": "version_registry",
-    "classic-yaml-core": "yaml",
     "classic-database-core": "database",
     "classic-file-io-core": "file_io",
     "classic-scangame-core": "scangame",
@@ -75,7 +73,6 @@ PYTHON_TARGET_MODULES: dict[str, str] = {
     "classic_scanlog": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
     "classic_config": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
     "classic_version_registry": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-    "classic_yaml": "ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi",
     "classic_database": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
     "classic_file_io": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
     "classic_scangame": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
@@ -97,7 +94,6 @@ PYTHON_OWNER_BY_MODULE: dict[str, str] = {
     "classic_scanlog": "scanlog",
     "classic_config": "config",
     "classic_version_registry": "version_registry",
-    "classic_yaml": "yaml",
     "classic_database": "database",
     "classic_file_io": "file_io",
     "classic_scangame": "scangame",
@@ -121,7 +117,7 @@ SQUAD_BY_OWNER: dict[str, str] = {
     "config": "Squad A (scanlog/config)",
     "version_registry": "Squad B (version-registry)",
     # Phase 3 owner labels -- every new owner needs a squad label for reporting.
-    "yaml": "Squad C (yaml/settings/registry)",
+    # yaml was absorbed into settings in v9.1.0 Phase 1.
     "database": "Squad D (database/file_io/resource)",
     "file_io": "Squad D (database/file_io/resource)",
     "scangame": "Squad E (scangame/xse)",
