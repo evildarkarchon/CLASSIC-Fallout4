@@ -45,7 +45,6 @@ CLASSIC-Fallout4/                        # Repo root
 │   │   ├── classic-file-io-core/
 │   │   ├── classic-resource-core/
 │   │   ├── classic-database-core/
-│   │   ├── classic-crashgen-settings-core/
 │   │   ├── classic-scangame-core/
 │   │   └── classic-scanlog-core/        # Primary analysis engine
 │   ├── cpp-bindings/

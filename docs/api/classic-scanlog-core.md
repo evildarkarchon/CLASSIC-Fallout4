@@ -247,7 +247,7 @@ Important methods:
 Contributor notes:
 
 - If `CrashgenEntry.settings_rules` exists, the validator prefers those rules and only falls back to legacy checks for uncovered areas.
-- Rule-driven preflight outcomes can now carry a report bucket from [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
+- Rule-driven preflight outcomes can now carry a report bucket from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
 - `check_disabled_settings()` always runs and uses `ignore_keys` as its skip set.
 - In `classic-scanlog-core`, `config_layout` is currently a coarse valid/invalid fact for settings evaluation: `derive_scanlog_config_layout()` returns `Og` for parseable detected versions and `Unknown` otherwise.
 - OG vs VR selection is handled earlier through `AnalysisConfig` construction and Version Registry data, not by `config_layout` in this crate.
@@ -424,8 +424,7 @@ Notes:
 
 ## Related Crates And Integration Points
 
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`
-- [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) - typed settings-rule evaluation used by `SettingsValidator`
+- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
 - [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
 - [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
 - [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
@@ -496,7 +495,7 @@ If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool`
 - `process_logs_batch()` does not preserve input ordering.
 - `SettingsValidator::scan_addictol_settings_scaffold()` is intentionally a scaffold, not a complete Addictol rules implementation.
 - `derive_scanlog_config_layout()` is effectively a valid/invalid gate today: it returns `Og` for parseable detected versions and `Unknown` otherwise.
-- `classic-crashgen-settings-core` still defines `ConfigLayout::Vr`, but this crate no longer uses `ConfigLayout` as the OG/VR selector; that decision now lives in Version Registry-backed config building.
+- The crashgen rule model in `classic-config-core` still defines `ConfigLayout::Vr`, but this crate no longer uses `ConfigLayout` as the OG/VR selector; that decision now lives in Version Registry-backed config building.
 - Report output is designed for Python parity, so text shape matters to downstream consumers more than a stable structured schema does.
 
 If you extend this crate, update this document when you change:

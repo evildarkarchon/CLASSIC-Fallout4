@@ -38,8 +38,7 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 - [`docs/api/classic-version-core.md`](api/classic-version-core.md) — version parsing, text extraction, and PE-version helpers
 - [`docs/api/classic-web-core.md`](api/classic-web-core.md) — small URL, user-agent, and mod-site helper layer
 - [`docs/api/classic-update-core.md`](api/classic-update-core.md) — async GitHub release/update-check client and DTO layer
-- [`docs/api/classic-crashgen-settings-core.md`](api/classic-crashgen-settings-core.md) — shared crashgen settings rule model and evaluator
-- [`docs/api/classic-config-core.md`](api/classic-config-core.md) — CLASSIC settings plus Main/Game/Ignore YAML loading
+- [`docs/api/classic-config-core.md`](api/classic-config-core.md) — CLASSIC settings, Main/Game/Ignore YAML loading, AND the absorbed crashgen rule model (formerly its own crate, merged in v9.1.0 Phase 2)
 - [`docs/api/classic-path-core.md`](api/classic-path-core.md) — game-path, documents-path, validation, and backup helpers
 - [`docs/api/classic-xse-core.md`](api/classic-xse-core.md) — XSE loader/version detection helpers used by setup checks and bindings
 - [`docs/api/game-setup-workflow.md`](api/game-setup-workflow.md) — cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates

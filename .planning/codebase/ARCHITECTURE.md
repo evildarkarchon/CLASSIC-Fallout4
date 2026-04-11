@@ -25,7 +25,7 @@
 **Business Logic (-core crates):**
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 18 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core` (19 -> 18).
+- Contains: 17 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core` (19 -> 18). **v9.1.0 Phase 2 merge:** the former `classic-crashgen-settings-core` crate was absorbed into `classic-config-core` (rule model now at `classic_config_core::crashgen_rules::*`), 18 -> 17.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 
@@ -40,7 +40,7 @@
 **Python Bindings (-py crates):**
 - Purpose: Expose all `-core` APIs to Python via PyO3
 - Location: `ClassicLib-rs/python-bindings/`
-- Contains: 18 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1 and folded into `classic-settings-py`.
+- Contains: 17 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1 and folded into `classic-settings-py`. The former `classic-crashgen-settings-py` equivalent never existed as a distinct Python crate (its surface was always embedded in `classic-config-py`, `classic-scanlog-py`, and `classic-scangame-py`); after Phase 2's core-crate merge those wrappers now consume the rule model from `classic_config_core::crashgen_rules::*`.
 - Depends on: corresponding `-core` crates + `foundation/classic-shared-py`
 - Used by: Python consumers; parity checked against Node bindings
 

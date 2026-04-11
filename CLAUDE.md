@@ -278,7 +278,7 @@ A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setu
 - Used by: every `-core` crate and every binding crate
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 18 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core`, reducing the business-logic crate count from 19 to 18.
+- Contains: 17 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core`, reducing the business-logic crate count from 19 to 18; **v9.1.0 Phase 2 merge:** the former `classic-crashgen-settings-core` crate was absorbed into `classic-config-core` (its rule model now lives at `classic_config_core::crashgen_rules::*`), further reducing the count from 18 to 17.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 - Purpose: Expose Rust APIs to C++ via CXX FFI as a static library

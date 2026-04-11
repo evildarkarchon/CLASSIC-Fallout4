@@ -17,30 +17,29 @@ Use this directory in this order:
 9. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer
 11. [`classic-update-core.md`](classic-update-core.md) - async GitHub release/update-check client and DTO layer
-12. [`classic-crashgen-settings-core.md`](classic-crashgen-settings-core.md) - shared crashgen settings rule model and evaluator
-13. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata
-14. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for settings discovery, merged YAML semantics, and consumed schema keys
-15. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, validation, and backup helpers
-16. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
-17. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
-18. [`formid-settings-boundary.md`](formid-settings-boundary.md) - current split between Rust config serialization and scan-time FormID DB path consumption
-19. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, hashing, and log collection helpers
-20. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers
-21. [`classic-database-core.md`](classic-database-core.md) - SQLite/FormID lookup pool used by analysis paths
-22. [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - practical fixture/schema/path rules for contributor FormID DB work
-23. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
-24. [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md) - active C++ bridge entry points for path, game, and scangame workflows
-25. [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) - active C++ bridge entry points for config, file I/O, database, and scanlog workflows
-26. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - current batch scan progress callback contract for `classic::scanner`
-27. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes bridge scan progress through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
-28. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for completion-order batch results, `input_index` correlation, and Results-tab ordering boundaries
-29. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates
-30. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
-31. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
-32. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
-33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
-34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
-35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
+12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
+13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for settings discovery, merged YAML semantics, and consumed schema keys
+14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, validation, and backup helpers
+15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
+16. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
+17. [`formid-settings-boundary.md`](formid-settings-boundary.md) - current split between Rust config serialization and scan-time FormID DB path consumption
+18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, hashing, and log collection helpers
+19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers
+20. [`classic-database-core.md`](classic-database-core.md) - SQLite/FormID lookup pool used by analysis paths
+21. [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - practical fixture/schema/path rules for contributor FormID DB work
+22. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
+23. [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md) - active C++ bridge entry points for path, game, and scangame workflows
+24. [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) - active C++ bridge entry points for config, file I/O, database, and scanlog workflows
+25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - current batch scan progress callback contract for `classic::scanner`
+26. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes bridge scan progress through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
+27. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for completion-order batch results, `input_index` correlation, and Results-tab ordering boundaries
+28. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates
+29. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
+30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
+31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
+32. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
+33. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
+34. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
 That order matches the current layering in `ClassicLib-rs/business-logic/`:
 
@@ -54,8 +53,7 @@ That order matches the current layering in `ClassicLib-rs/business-logic/`:
 - `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime
-- `classic-crashgen-settings-core` defines the reusable rule/evaluator model consumed by higher layers
-- `classic-config-core` loads YAML and uses Version Registry plus crashgen-settings types to build config data
+- `classic-config-core` loads YAML and uses Version Registry metadata to build config data; in v9.1.0 Phase 2 it absorbed the former crashgen rules crate, so the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (re-exported at the crate root)
 - `classic-config-core-yaml-schema.md` captures the runtime YAML contract for merged settings files and the Main/Game/Ignore sections that `classic-config-core` actually consumes
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups
 - `classic-xse-core` builds on path/version helpers to detect XSE installation state and parse XSE versions

@@ -27,7 +27,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Single shared Tokio runtime (ONE RUNTIME RULE) — existing
 - ✓ C++, Python, and Node.js binding surfaces delegating to `-core` crates — existing
 - ✓ Windows-native C++ frontends (CLI + Qt GUI) via CXX bridge — existing
-- ✓ 19 business-logic `-core` crates with no PyO3 dependencies — existing
+- ✓ 17 business-logic `-core` crates with no PyO3 dependencies — v9.1.0-consolidation Phases 1 and 2 (started at 19, yaml-core merged in Phase 1 -> 18, crashgen-settings-core merged in Phase 2 -> 17)
 - ✓ Parity tooling for Node and Python bindings — existing
 - ✓ All deprecated API callers migrated with deprecation warnings — v9.1.0-bugfixes Phase 1
 - ✓ Phase 1 deprecated API migration closure evidence refreshed — v9.1.0-bugfixes Phase 9
@@ -63,10 +63,10 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Tier-2 backlog/governance/manifest files deleted — v9.1.0-bindings Phase 6
 - ✓ Single source-of-truth parity policy doc added — v9.1.0-bindings Phase 6
 - ✓ Merge classic-yaml-core into classic-settings-core — v9.1.0-consolidation Phase 1
+- ✓ Merge classic-crashgen-settings-core into classic-config-core — v9.1.0-consolidation Phase 2
 
 ### Active
 
-- [ ] Merge classic-crashgen-settings-core into classic-config-core
 - [ ] Merge classic-constants-core into classic-version-registry-core
 - [ ] Update all binding crates for changed import paths
 - [ ] All three parity gates pass at zero drift after consolidation
