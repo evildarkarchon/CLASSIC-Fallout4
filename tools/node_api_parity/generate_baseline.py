@@ -33,14 +33,12 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
     "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
     "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
-    # Phase 4 Plan 1 expansion (+8 crates) — matches Phase 3's set PLUS
-    # classic-crashgen-settings-core per research amendment A1 (Node has a
-    # direct classic-node/src/crashgen_rules.rs binding that IS the
-    # classic-crashgen-settings-core Node surface).
-    # (The former yaml-core crate was absorbed into settings-core in v9.1.0 Phase 1.)
+    # Phase 4 Plan 1 expansion — matches Phase 3's set.
+    # (yaml-core was absorbed into settings-core in v9.1.0 Phase 1.
+    # The former crashgen rules crate was absorbed into classic-config-core
+    # in v9.1.0 Phase 2 — rule model now lives in config-core::crashgen_rules.)
     "classic-version-core": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
     "classic-web-core": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
-    "classic-crashgen-settings-core": "ClassicLib-rs/business-logic/classic-crashgen-settings-core/src/lib.rs",
     "classic-update-core": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
     "classic-xse-core": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
     "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
@@ -49,8 +47,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 }
 
 # Phase 4 Plan 1 A5: distinct owner labels matching Phase 3 — do NOT collapse
-# shared/perf/registry to ``aux``. Crashgen settings gets an explicit
-# ``crashgen_settings`` label so it is never silently bucketed.
+# shared/perf/registry to ``aux``.
 # MEDIUM concern fix: every crate MUST have an explicit entry here — the
 # sizing pipeline fails loud if one is missing rather than defaulting to aux.
 RUST_OWNER_BY_CRATE: dict[str, str] = {
@@ -69,7 +66,6 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     # (yaml owner was absorbed into settings in v9.1.0 Phase 1.)
     "classic-version-core": "version",
     "classic-web-core": "web",
-    "classic-crashgen-settings-core": "crashgen_settings",
     "classic-update-core": "update",
     "classic-xse-core": "xse",
     "classic-database-core": "database",
@@ -98,7 +94,6 @@ SQUAD_BY_OWNER: dict[str, str] = {
     # (yaml was absorbed into settings in v9.1.0 Phase 1.)
     "version": "Squad B (version-registry/aux)",
     "web": "Squad B (version-registry/aux)",
-    "crashgen_settings": "Squad B (version-registry/aux)",
     "update": "Squad B (version-registry/aux)",
     "xse": "Squad B (version-registry/aux)",
     "database": "Squad B (version-registry/aux)",

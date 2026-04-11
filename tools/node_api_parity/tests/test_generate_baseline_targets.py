@@ -6,8 +6,8 @@ crate is added to ``RUST_TARGET_CRATES`` but the ``lib.rs`` path is wrong
 zero symbols for that crate and downstream gate reports show phantom
 deferred rows.
 
-The floor assertion is ``>= 19`` (NOT ``== 19``) so Plan 5's A10 residual
-absorption can legitimately add a 20th crate without blocking Plan 1.
+The floor assertion is ``>= 17`` (NOT ``== 17``) so later crate additions
+can legitimately expand the tracked set without blocking Plan 1.
 """
 from __future__ import annotations
 
@@ -18,25 +18,18 @@ import generate_baseline as gb
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_rust_target_crates_floor_is_nineteen() -> None:
-    """Phase 4 Plan 1 expands the tracked set from 10 to 19+ crates.
+def test_rust_target_crates_floor_is_seventeen() -> None:
+    """Phase 4 Plan 1 expands the tracked set from 10 to 17+ crates.
 
     Floor is load-bearing; tight equality is hostile to future discovery.
+    (v9.1.0 Phase 2 reduced the tracked set by one when the former crashgen
+    rules crate was absorbed into classic-config-core; actual post-Phase-2
+    count is 17.)
     """
-    assert len(gb.RUST_TARGET_CRATES) >= 19, (
-        f"expected >= 19 entries in RUST_TARGET_CRATES, got "
+    assert len(gb.RUST_TARGET_CRATES) >= 17, (
+        f"expected >= 17 entries in RUST_TARGET_CRATES, got "
         f"{len(gb.RUST_TARGET_CRATES)}: {sorted(gb.RUST_TARGET_CRATES)}"
     )
-
-
-def test_crashgen_settings_core_is_present() -> None:
-    """Amendment A1: classic-crashgen-settings-core is a direct Node binding.
-
-    Unlike Phase 3 Python which excluded it, Node has a direct
-    ``classic-node/src/crashgen_rules.rs`` binding that IS the
-    ``classic-crashgen-settings-core`` Node surface and must be tracked.
-    """
-    assert "classic-crashgen-settings-core" in gb.RUST_TARGET_CRATES
 
 
 def test_inventory_filter_is_deleted() -> None:
@@ -64,18 +57,6 @@ def test_owner_by_crate_has_entry_for_every_target_crate() -> None:
     assert missing == [], (
         f"Every tracked crate needs an explicit owner label — missing for: "
         f"{missing}. No default-to-aux fallback permitted."
-    )
-
-
-def test_crashgen_settings_core_has_explicit_owner() -> None:
-    """A1/MEDIUM concern fix: classic-crashgen-settings-core MUST have an
-    explicit owner label. If the crate falls through to a silent default,
-    the sizing pipeline would silently bucket rows to ``aux`` and Plan 5's
-    task budget would be wrong.
-    """
-    assert "classic-crashgen-settings-core" in gb.RUST_OWNER_BY_CRATE, (
-        "classic-crashgen-settings-core must have an explicit owner label "
-        "in RUST_OWNER_BY_CRATE — no default-to-aux fallback permitted."
     )
 
 
