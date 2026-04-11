@@ -451,7 +451,7 @@ That is useful for contributor ergonomics, but callers that need to preserve exa
 
 This crate does not replace the more specific error enums in higher layers such as:
 
-- `YamlError` in [`classic-yaml-core`](../../docs/api/classic-yaml-core.md)
+- `YamlError` in [`classic-settings-core`](../../docs/api/classic-settings-core.md) (absorbed from the former ``yaml-core`` in v9.1.0 Phase 1)
 - `ConfigError` in [`classic-config-core`](../../docs/api/classic-config-core.md)
 - `FileIOError` in [`classic-file-io-core`](../../docs/api/classic-file-io-core.md)
 - `DatabaseError` in [`classic-database-core`](../../docs/api/classic-database-core.md)

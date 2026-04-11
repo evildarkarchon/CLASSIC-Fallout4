@@ -2,6 +2,8 @@
 
 As of the v9.1.0-bindings milestone, all shared Rust business-logic crates are exposed through all three binding surfaces: C++ via CXX, Node via NAPI-RS, and Python via PyO3. The sole exception is `classic-resource-core`, which has no C++ bridge module.
 
+**Phase 1 consolidation note (v9.1.0):** ``yaml-core`` has been absorbed into `classic-settings-core`. The C++ bridge module was renamed `classic::yaml` -> `classic::settings` and expanded with the D-09 surface (cache operations and validators matching the Python surface). The Node `yaml.rs` module was folded into `settings.rs`. The Python `classic-yaml-py` crate was deleted and its `YamlOperations` surface folded into `classic-settings-py`. See `.planning/phases/01-yaml-settings-merge/` for details.
+
 This page is a contributor-facing reference for the complete binding surface.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
@@ -18,8 +20,7 @@ Each shared Rust crate and its corresponding binding module across all three sur
 | `classic-registry-core` | [`registry.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs) | (via [`shared.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs)) | [`classic-registry-py`](../../ClassicLib-rs/python-bindings/classic-registry-py/) |
 | `classic-perf-core` | [`perf.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs) | (via [`shared.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs)) | [`classic-perf-py`](../../ClassicLib-rs/python-bindings/classic-perf-py/) |
 | `classic-message-core` | [`message.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs) | [`message.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/message.rs) | [`classic-message-py`](../../ClassicLib-rs/python-bindings/classic-message-py/) |
-| `classic-yaml-core` | [`yaml.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs) | [`yaml.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/yaml.rs) | [`classic-yaml-py`](../../ClassicLib-rs/python-bindings/classic-yaml-py/) |
-| `classic-settings-core` | (via [`config.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs)) | [`settings.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/settings.rs) | [`classic-settings-py`](../../ClassicLib-rs/python-bindings/classic-settings-py/) |
+| `classic-settings-core` (absorbed the former ``yaml-core`` in Phase 1 of the v9.1.0 merge) | [`settings.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs) | [`settings.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/settings.rs) | [`classic-settings-py`](../../ClassicLib-rs/python-bindings/classic-settings-py/) |
 | `classic-version-registry-core` | [`version_registry.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs) | [`version_registry.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs) | [`classic-version-registry-py`](../../ClassicLib-rs/python-bindings/classic-version-registry-py/) |
 | `classic-constants-core` | [`constants.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs) | [`constants.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/constants.rs) | [`classic-constants-py`](../../ClassicLib-rs/python-bindings/classic-constants-py/) |
 | `classic-version-core` | (via [`game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs)) | [`version.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/version.rs) | [`classic-version-py`](../../ClassicLib-rs/python-bindings/classic-version-py/) |

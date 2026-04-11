@@ -278,18 +278,18 @@ A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setu
 - Used by: every `-core` crate and every binding crate
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 19 pure Rust crates (see Crate Inventory below); no PyO3 dependencies
+- Contains: 18 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core`, reducing the business-logic crate count from 19 to 18.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 - Purpose: Expose Rust APIs to C++ via CXX FFI as a static library
 - Location: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
-- Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `yaml`, `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
+- Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `settings` (renamed from `yaml` in v9.1.0 Phase 1 and expanded with the D-09 settings-core cache ops and validators), `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
 - Depends on: all business-logic `-core` crates
 - Used by: `classic-cli/`, `classic-gui/`
 - Note: Windows-only (`#[cfg(windows)]` on all modules)
 - Purpose: Expose all `-core` APIs to Python via PyO3
 - Location: `ClassicLib-rs/python-bindings/`
-- Contains: 19 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`)
+- Contains: 18 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1; its `YamlOperations` surface is now part of `classic-settings-py`.
 - Depends on: corresponding `-core` crates + `foundation/classic-shared-py`
 - Used by: Python consumers; parity checked against Node bindings
 - Purpose: Expose all `-core` APIs to JavaScript/TypeScript via NAPI-RS

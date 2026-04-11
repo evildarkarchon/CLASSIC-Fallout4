@@ -30,8 +30,7 @@ CLASSIC-Fallout4/                        # Repo root
 │   │   ├── classic-shared-core/         # ONE RUNTIME, errors, paths, strings
 │   │   └── classic-shared-py/          # PyO3 utility adapters
 │   ├── business-logic/                  # Pure Rust domain crates
-│   │   ├── classic-yaml-core/
-│   │   ├── classic-settings-core/
+│   │   ├── classic-settings-core/         # Absorbed `yaml-core` in v9.1.0 Phase 1
 │   │   ├── classic-config-core/
 │   │   ├── classic-constants-core/
 │   │   ├── classic-version-core/

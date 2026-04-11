@@ -25,14 +25,14 @@
 **Business Logic (-core crates):**
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 19 pure Rust crates (see Crate Inventory below); no PyO3 dependencies
+- Contains: 18 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core` (19 -> 18).
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 
 **C++ Bridge:**
 - Purpose: Expose Rust APIs to C++ via CXX FFI as a static library
 - Location: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
-- Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `yaml`, `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
+- Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `settings` (renamed from `yaml` in v9.1.0 Phase 1 and expanded with the D-09 settings-core cache ops and validators), `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
 - Depends on: all business-logic `-core` crates
 - Used by: `classic-cli/`, `classic-gui/`
 - Note: Windows-only (`#[cfg(windows)]` on all modules)
@@ -40,7 +40,7 @@
 **Python Bindings (-py crates):**
 - Purpose: Expose all `-core` APIs to Python via PyO3
 - Location: `ClassicLib-rs/python-bindings/`
-- Contains: 19 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`)
+- Contains: 18 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1 and folded into `classic-settings-py`.
 - Depends on: corresponding `-core` crates + `foundation/classic-shared-py`
 - Used by: Python consumers; parity checked against Node bindings
 
@@ -97,7 +97,7 @@
 
 1. Any consumer calls `classic_config_core::YamlDataCore::load()`
 2. `YamlDataCore` reads from `CLASSIC Data/databases/CLASSIC Main.yaml` and game-specific YAML
-3. `classic-yaml-core` handles parsing and caching (thread-safe DashMap cache)
+3. `classic-settings-core` handles parsing and caching (mtime-aware `quick_cache` file cache, absorbed from the former ``yaml-core`` in v9.1.0 Phase 1)
 4. `classic-version-registry-core` provides game version metadata as single source of truth
 5. Config is passed down into scan and analysis functions as `AnalysisConfig` or `ClassicConfig`
 

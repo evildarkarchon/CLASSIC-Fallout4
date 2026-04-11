@@ -64,7 +64,7 @@ Bulk YAML dataset loader for scanlog/business logic.
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core)
+- `clear_global_yaml_cache` from [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (absorbed from the former ``yaml-core`` in v9.1.0 Phase 1)
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -242,7 +242,7 @@ Read/write path policy is defined in [`classic-config-core-yaml-schema.md`](clas
 2. The crate resolves file paths and checks that all three YAML files exist.
 3. It reads all three files in parallel with `tokio::join!`.
 4. It parses and merges every YAML document from each file.
-5. `YamlOperations` from [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) extracts nested values.
+5. `YamlOperations` from [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) extracts nested values.
 6. `Crashgen_Registry` is parsed into `HashMap<String, CrashgenEntryRaw>`.
 7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core):
    - `crashgen_name`
@@ -298,7 +298,7 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 ## Related Crates And Integration Points
 
 - [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) - YAML extraction helpers and cache management
+- [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (absorbed the former ``yaml-core`` in v9.1.0 Phase 1)
 - [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - version metadata and fallback resolution
 - [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) - typed crashgen settings rules embedded in `CrashgenEntryRaw`
 - [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration

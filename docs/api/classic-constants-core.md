@@ -33,7 +33,7 @@ Do not use this crate for:
 - defining a new source of truth for version metadata
 - owning async or Tokio runtime behavior
 
-Those concerns live in related crates such as [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core), [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core), [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core), and higher layers that consume them.
+Those concerns live in related crates such as [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (which absorbed the former ``yaml-core`` in v9.1.0 Phase 1), [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core), [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core), and higher layers that consume them.
 
 ---
 

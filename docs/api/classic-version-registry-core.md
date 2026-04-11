@@ -258,7 +258,7 @@ Variants:
 
 - `InvalidVersion(String)`
 - `NotFound(String)`
-- `YamlError(classic_yaml_core::YamlError)`
+- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1)
 - `NotInitialized`
 - `InvalidConfig(String)`
 
@@ -280,7 +280,7 @@ This crate is synchronous.
 
 - It does not expose async APIs.
 - It does not construct a Tokio runtime.
-- Registry initialization uses synchronous YAML loading through [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core).
+- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (the former ``yaml-core`` was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
 - This fits the repo rule that runtime ownership stays in shared higher layers rather than inside business-logic crates.
 
 Contributor rule: if you extend this crate, keep it runtime-agnostic and compatible with the shared-runtime assumptions used elsewhere in CLASSIC.
@@ -289,7 +289,7 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 
 ## Related Crates And Integration Points
 
-- [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) - YAML loading and extraction used during registry initialization
+- [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (absorbed the former ``yaml-core`` in v9.1.0 Phase 1)
 - [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
 - [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
 - [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
