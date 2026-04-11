@@ -82,7 +82,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Rust core merge: git mv source, consumer/binding migration, crate deletion, yamldata.rs.bak cleanup
+- [x] 02-01-PLAN.md — Rust core merge: git mv source, consumer/binding migration, crate deletion, yamldata.rs.bak cleanup
 - [ ] 02-02-PLAN.md — Node parity tooling update, API docs consolidation, parity gate verification
 
 ### Phase 3: Constants -> Version Registry Merge

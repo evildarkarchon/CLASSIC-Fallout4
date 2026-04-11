@@ -16,9 +16,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Crashgen -> Config Merge
 
-- [ ] **CGEN-01**: classic-crashgen-settings-core source modules are relocated into classic-config-core with the same public API surface preserved
-- [ ] **CGEN-02**: All workspace crates that imported from classic-crashgen-settings-core import from classic-config-core instead
-- [ ] **CGEN-03**: classic-crashgen-settings-core crate is removed from Cargo.toml workspace members and its directory deleted
+- [x] **CGEN-01**: classic-crashgen-settings-core source modules are relocated into classic-config-core with the same public API surface preserved
+- [x] **CGEN-02**: All workspace crates that imported from classic-crashgen-settings-core import from classic-config-core instead
+- [x] **CGEN-03**: classic-crashgen-settings-core crate is removed from Cargo.toml workspace members and its directory deleted
 
 ### Constants -> Version Registry Merge
 
@@ -59,9 +59,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | YAML-02 | Phase 1 | Complete |
 | YAML-03 | Phase 1 | Complete |
 | YAML-04 | Phase 1 | Complete |
-| CGEN-01 | Phase 2 | Pending |
-| CGEN-02 | Phase 2 | Pending |
-| CGEN-03 | Phase 2 | Pending |
+| CGEN-01 | Phase 2 | Complete |
+| CGEN-02 | Phase 2 | Complete |
+| CGEN-03 | Phase 2 | Complete |
 | CNST-01 | Phase 3 | Pending |
 | CNST-02 | Phase 3 | Pending |
 | CNST-03 | Phase 3 | Pending |
