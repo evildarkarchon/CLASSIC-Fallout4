@@ -1,341 +1,241 @@
 ---
 phase: 1
-review_round: 2
+review_round: 3
 reviewers: [gemini, claude, codex]
-reviewed_at: 2026-04-10T20:30:00-07:00
+reviewed_at: 2026-04-10T21:30:00-07:00
 plans_reviewed: [01-01-PLAN.md, 01-02-PLAN.md, 01-03-PLAN.md]
 verdicts:
-  gemini: READY-TO-EXECUTE
-  claude: REVISE-AGAIN (narrow)
-  codex: REVISE-AGAIN
-consensus: REVISE-AGAIN (2-of-3 reviewers)
-supersedes: "Round 1 REVIEWS.md (committed 2026-04-10 as 98f598d6) which reviewed the initial 01-01/02/03 plans. That review's 5 HIGH blockers and 15 MEDIUM concerns drove the targeted revisions verified here. The Round 1 content is preserved in git history."
+  gemini: READY-TO-EXECUTE (LOW risk, 1 harmless LOW note)
+  claude: READY-TO-EXECUTE (LOW risk, 3 LOW cleanup notes)
+  codex: REVISE-TARGETED (MEDIUM risk, 2 MEDIUM + 2 LOW)
+consensus: REVISE-TARGETED (Codex caught two genuine contradictions the cheaper reviewers missed)
+supersedes: "Round 2 REVIEWS.md (committed 2026-04-10 as c8fcfde2) which flagged 3 HIGH + 4 MEDIUM + several LOW concerns. Round 3 revisions verified here closed all HIGH and all but one MEDIUM finding (MEDIUM-6 downgraded to PARTIALLY CLOSED by Codex due to stale parenthetical at 01-03-PLAN.md:767). Round 1 and Round 2 content preserved in git history."
 ---
 
-# Cross-AI Plan Review — Phase 1 (YAML -> Settings Merge), Round 2
+# Cross-AI Plan Review — Phase 1 (YAML -> Settings Merge), Round 3
 
-Round 2 re-review of the revised plans after Round 1 drove a full replan via `/gsd:plan-phase 1 --reviews`. Three independent reviewers (Google Gemini, Anthropic Claude CLI, OpenAI Codex CLI) ran in parallel against the same prompt, each with the Round 2 focus directive: **confirm blockers closed, flag new issues, do not re-litigate Round 1**.
+Round 3 re-review of the revised plans after Round 2 drove a targeted replan via `/gsd:plan-phase 1 --reviews`. Three independent reviewers (Google Gemini, Anthropic Claude CLI, OpenAI Codex CLI) ran in parallel against the same prompt, each with the Round 3 focus directive: **confirm Round 2 findings closed, flag new issues introduced by the Round 3 revisions, watch for encoded-logic drift (hash algorithms, grep patterns, JSON schemas, token tables)**.
+
+Unlike Round 2 where all three reviewers reached rough consensus, Round 3 produced a notable verdict split: Gemini and Claude both rated LOW risk / all-closed, while Codex rated MEDIUM risk and flagged one Round 2 finding (MEDIUM-6) as only PARTIALLY CLOSED. Codex's finding was verified against live plan text by the orchestrator before writing this file — both contradictions Codex identified are real.
+
+---
 
 ## Gemini Review
 
-### Summary
+# Cross-AI Plan Review — Phase 1 (YAML -> Settings Merge) — Round 3
 
-The Implementation Plans for Phase 1 (YAML -> Settings Merge) have been successfully revised to address all 5 HIGH blockers and 15 MEDIUM concerns identified in the Round 1 review. The planner correctly adopted "Option A" for the buildability blocker (revoking `classic-yaml-py` workspace membership in Wave 1) and introduced a robust, reusable Python helper script for parity contract merges. The C++ bridge expansion spec now accurately reflects the ground truth of `classic-settings-core::validators`. No significant new defects or regressions were introduced by the revisions.
+The Implementation Plans for Phase 1 (YAML -> Settings Merge) have been successfully revised to incorporate all feedback from Round 2. The structural decomposition remains sound, and the "encoded logic" (grep patterns, JSON schemas, hash algorithms) has been correctly aligned with the live codebase. The addition of the reusable `parity_contract_merge_owner.py` helper and the explicit registry recomputation scripts significantly reduces the execution risk for the parity gates.
 
-### Round 1 Blocker Closure
+## 1. Summary
+The plans are of exceptional quality, demonstrating rigorous attention to the multi-language binding constraints of the CLASSIC project. Every identified blocker from previous rounds has been closed with source-cited evidence. The executor is provided with precise, idempotent scripts for complex JSON transformations, ensuring that the workspace remains buildable and that parity integrity is maintained throughout the consolidation.
 
-| Blocker # | Status | Evidence | Notes |
-| :--- | :--- | :--- | :--- |
-| 1 | **CLOSED** | 01-01 Task 2, Sec H | Revokes `classic-yaml-py` workspace membership in the same commit as `classic-yaml-core` deletion, ensuring `cargo build --workspace` passes. |
-| 2 | **CLOSED** | 01-02 Task 1, Sec C.6 | Shared structs for CXX now match `validators.rs` (no `path` field, correct severities/types, preserves `Path` variant). |
-| 3 | **CLOSED** | 01-03 Task 2, Sec D | `tools/*/generate_baseline.py` scripts updated to remove hardcoded `classic-yaml-core` and `classic_yaml` modules. |
-| 4 | **CLOSED** | 01-03 Task 2, Sec C | Both `runtime_coverage_registry.json` fixtures updated to reparent `yaml` selectors to `settings`. |
-| 5 | **CLOSED** | 01-03 Task 2, Sec A | Introduces a reusable `tools/parity_contract_merge_owner.py` helper script with detailed deterministic semantics. |
+## 2. Round 2 Closure Audit
 
-### Round 1 Medium Concern Closure
-
-| Concern # | Status | Evidence |
+| Finding # | Status | Evidence |
 | :--- | :--- | :--- |
-| 6 | **CLOSED** | 01-02 Task 3.A.2 (Correctly identifies 3 exceptions; no `SerializeError`). |
-| 7 | **CLOSED** | 01-02 Task 1.C.2 (Added grep check for `tempfile` dev-dependency). |
-| 8 | **CLOSED** | 01-02 Task 1.B.0 (Mandatory grep verification for C++ consumers). |
-| 9 | **CLOSED** | 01-02 Task 2.A.0 (Mandatory grep verification for Node CLI wrapper). |
-| 10 | **CLOSED** | 01-02 Task 1.C.1 (Existing bridge struct renamed to `YamlCacheStatsDto` to avoid collision). |
-| 11 | **CLOSED** | 01-01 Task 2.F.5 (Added grep verification for `scanlog-core` direct usage). |
-| 12 | **CLOSED** | 01-02 Objective (Corrected scope language to "FFI-safe surface plus documented exceptions"). |
-| 13 | **CLOSED** | 01-02 Task 3.A.2 (Explicit method call update for `PyYamlOperations::get_cache_stats`). |
-| 14 | **CLOSED** | 01-02 Task 3.A.3 (Python foundation dependencies marked as mandatory). |
-| 15 | **CLOSED** | 01-03 Task 2.A.2/B.3 (Helper handles top-level `ownerModules` and squads metadata). |
+| **HIGH-1** | **CLOSED** | 01-03 Task 2.A.2 Step 7: "Corrected collision key uses the row id field... guaranteed unique by contract convention." |
+| **HIGH-2** | **CLOSED** | 01-03 Task 2.A.1/A.2 Step 6: Explicitly documents that `scope` lives in `rust_api_surface.json` and is handled by `--update-baseline`. |
+| **HIGH-3** | **CLOSED** | 01-03 Task 2.A.2 Step 4: Correctly identifies `nodeExport` field usage and avoids inventing a `jsModule` field. |
+| **MEDIUM-4** | **CLOSED** | 01-02 Task 1.C.1 Step 5: Mandates a 3-way grep pattern (`classic::settings::CacheStats\|classic::yaml::CacheStats\|yaml_ops_cache_stats`) to catch post-flip references. |
+| **MEDIUM-5** | **CLOSED** | 01-03 Task 2.C: Provides an inline Python helper that recomputes `contractCount` and SHA-256 `contractIdsHash` (newline-joined, sorted) byte-equivalently to the parity tooling. |
+| **MEDIUM-6** | **CLOSED** | 01-03 Task 2.B.5: Explicitly edits `.md` companions in Task 2 because `--update-baseline` skips them. |
+| **MEDIUM-7** | **CLOSED** | 01-02 Task 1.C.5: Bridge expansion now accepts exactly 9 tokens (`int`, `integer`, `bool`, `boolean`, `float`, `double`, `path`, `string`, `str`) matching `classic-settings-py`. |
 
-### NEW Concerns Introduced by Revisions
+## 3. New Concerns
+- **LOW** (01-03 Task 2.A.2 Step 4 `pythonExportPath` logic): The plan instructs the helper to replace prefixes in `pythonExportPath` if they start with `<binding_module_old> + "."`. Live inspection shows that `pythonExportPath` in this contract is relative to the module (e.g., `"YamlOperations.clear_cache"`) and does not contain the module prefix. This logic will be a harmless no-op, as the `pythonModule` field correctly handles the rename.
 
-- **LOW** (01-02 Task 3.D redundant instruction): Task 3.D repeats the removal of `classic-yaml-py` from workspace members already performed in 01-01 Task 2.H. This is harmless but technically redundant.
-- **LOW** (01-01 Task 2.I.2 path reconciling): The root `.iml` file is noted as already modified in git status; the plan correctly instructs the executor to reconcile edits, but this increases the manual attention requirement for that specific file.
+## 4. Persistent Concerns
+None. All 7 Round 2 findings and the original Round 1 blockers are fully addressed.
 
-### Helper Script Review (tools/parity_contract_merge_owner.py spec)
+## 5. Suggestions
+- **01-03 Task 2.C.1 (Registry recompute helper):** For absolute parity with `tools/binding_parity_runtime_coverage.py`, ensure the Python helper uses `chr(10)` (newline) as the joiner. The plan already specifies this in the code block.
 
-The spec provided in Plan 01-03 Task 2 Section A is technically sound and comprehensive.
+## 6. Risk Assessment
+**Risk Level: LOW**
+The execution path is now highly deterministic. The use of `git mv` preserves history, the `CacheStats` naming collision is resolved via a thorough search-and-replace, and the parity gate validation includes re-hashing of stable IDs, which was the final high-complexity risk.
 
-- **Interface**: The parameter set (`--source-owner`, `--rust-crate-old`, etc.) is sufficient for the structural merges required in this phase and reusable for Phase 2/3.
-- **Semantics**: The 9-step walk (Step 5 recursive walk, Step 4 path prefix replacement) is essential for maintaining contract integrity.
-- **Safety**: The Key Collision Detection (Step 7) ensures the script will abort rather than produce a corrupt or ambiguous contract.
-- **Conclusion**: The interface and steps are sufficient and safe.
-
-### Risk Assessment
-
-**LOW Risk.** The planner has effectively converted a high-risk consolidation into a well-sequenced series of buildable commits. The addition of mandatory grep verification steps (`B.0`, `F.5`, `A.0`) and the move to a scripted contract merge significantly reduce the likelihood of human error during execution. The C++ bridge expansion is now anchored to actual source types, removing the contract-mismatch risk from Round 1.
-
-### Verdict
-
-**READY-TO-EXECUTE**
+## REVIEW COMPLETE
 
 ---
 
 ## Claude Review
 
-### Summary
+# Round 3 Cross-AI Review — Phase 1 (YAML → Settings Merge)
 
-Round 1 closed cleanly overall. All 5 HIGH blockers and 15 MEDIUM concerns are addressed with explicit, well-cited edits. The helper script spec (blocker 5 fix) is sound in concept and semantics. However, the revisions introduced **one MEDIUM regression** around task ordering in Plan 01-02 Task 1 that will cause a deterministic C++ compile error, and **one MEDIUM latent risk** around runtime coverage registry stable-ID hashing that wasn't surfaced in Round 1. One small revision pass is warranted.
+## 1. Summary
 
-### Round 1 Blocker Closure
+The Round 3 revisions comprehensively close all seven Round 2 findings with source-cited evidence. I independently verified every HIGH and MEDIUM finding against the live repository: the Python contract schema, Node contract schema, `parse_setting_type` token list, `_stable_id_hash` recipe, `check_parity_gate.py --update-baseline` file list, and generator script line numbers all match what the plans claim. The helper script spec at `tools/parity_contract_merge_owner.py` is now schema-correct. Residual risk is concentrated in three LOW-severity cleanup gaps (dead `"yaml"` entries in SQUAD_BY_OWNER maps, a potentially-hardcoded drift test, and one under-specified smoke-test case). None are blockers — all would surface deterministically during Task 3 execution and are fixable in follow-up commits.
 
-| # | Blocker | Status | Evidence | Notes |
-|---|---------|--------|----------|-------|
-| 1 | Wave 1 not buildable (yaml-py->yaml-core dangling dep) | CLOSED | 01-01 Task 2 §H.3 removes yaml-py from `members`; §H.5 keeps directory on disk; acceptance criterion "Wave 1 acceptance gate: cargo build --workspace exits 0" | Clean fix via Option A. The stranded yaml-py directory with broken path dep is invisible to cargo because it's no longer a workspace member. |
-| 2 | D-09 validator DTO spec factually wrong | CLOSED | 01-02 Task 1 §C.0 mandates re-Read of `validators.rs`; interface block now shows verified `ValidationIssue` (severity+message only), `IssueSeverity::{Warning,Error}`, 5-variant `SettingType`, `CoercedValue::Path(String)` distinct from `String(String)`; §C.6 shared structs match 1:1; §C.5 type-token mapping is exactly 5 tokens | Acceptance criteria include an explicit "NO `path` field" assertion and "NO `info` token" assertion |
-| 3 | Parity gate generators hardcode yaml-core | CLOSED | 01-03 Task 2 §D.1 lists exact lines 30/56/78/100 in `tools/python_api_parity/generate_baseline.py`; §D.2 lists lines 40/69 in Node script; §D.3 word-boundary grep verification | Line-number citations are precise and source-backed |
-| 4 | Runtime coverage registries have yaml owner selectors | CLOSED | 01-03 Task 2 §C covers both registry files with grep-first verification and post-edit grep check | See NEW concern below about stable-ID hashing |
-| 5 | Parity contract owner-group merge underspecified | CLOSED | 01-03 Task 2 §A delivers `tools/parity_contract_merge_owner.py` with 9-step semantics, key collision abort, idempotency, and reuse plan for Phases 2/3 | Helper approach (Claude's suggestion option b) is the right call |
+## 2. Round 2 Closure Audit
 
-### Round 1 Medium Concern Closure
-
-| # | Concern | Status | Evidence |
+| # | Finding | Status | Evidence |
 |---|---------|--------|----------|
-| 6 | `RustYamlSerializeError` doesn't exist | CLOSED | 01-02 Task 3 §A.1 explicitly lists the three real exceptions and notes `SerializeError` maps to `RustYamlParseError` in `to_pyerr` |
-| 7 | `tempfile` dev-dep check | CLOSED | 01-02 Task 1 §C.2 adds grep verification; acceptance criterion verifies match under `[dev-dependencies]` |
-| 8 | C++ consumer grep-first | CLOSED | 01-02 Task 1 §B.0 mandates `grep -rl "classic::yaml\|classic_cxx_bridge/yaml.h"` as authoritative consumer set |
-| 9 | Node CLI wrapper grep | CLOSED | 01-02 Task 2 §A.0 adds CLI wrapper grep; notes typical result is zero hits due to NAPI regeneration |
-| 10 | Two `CacheStats` collision | CLOSED | 01-02 Task 1 §C.1 renames pre-existing `CacheStats` -> `YamlCacheStatsDto` in same commit; acceptance criterion prohibits any `CacheStats` struct in `ffi` block | See NEW concern 1 below — closure created a task-ordering bug |
-| 11 | scanlog-core direct usage grep | CLOSED | 01-01 Task 2 §F.5 adds mandatory grep of `classic-scanlog-core/src/` |
-| 12 | "full settings-core surface" language | CLOSED | 01-02 objective now says "all FFI-safe settings-core surface plus documented exceptions" and explicitly documents `get_cached` skip and `load_*` returning `u32` |
-| 13 | `PyYamlOperations.get_cache_stats` silently wrong | CLOSED | 01-02 Task 3 §A.2 mandates rewriting `core::cache_stats()` -> `yaml_cache_stats()`; acceptance criterion verifies it |
-| 14 | Python shared deps "likely needs" | CLOSED | 01-02 Task 3 §A.3 labels deps MANDATORY with grep verification step |
-| 15 | Node contract top-level `ownerModules` | CLOSED | Helper script step A.2.2 handles `ownerModules.<source>` deletion; step A.2.3 walks `squads.<name>.ownerModules` arrays |
-| LOW | IDE metadata cleanup incomplete | CLOSED | 01-01 Task 2 §I.1/I.2/I.3 covers both `.iml` files + `workspace.xml` with element-content edits (not line numbers); 01-02 Task 3 §E covers yaml-py entries in same three files |
+| HIGH-1 | Helper collision key too coarse | **CLOSED** | 01-03 Task 2.A.2 step 7 uses `row["id"]` as primary dedup key (unique by contract invariant). Verified live contract rows all have unique `id` fields like `yaml.lib.YamlCacheStats` (line 11081) and `settings.lib.CacheStats@rust` (line 8684). Disjoint prefixes eliminate collision risk. |
+| HIGH-2 | Python `scope` block location | **CLOSED** | 01-03 Task 2.A.2 step 6 deleted entirely. Live verification: `grep -c '"scope"' docs/implementation/python_api_parity/baseline/parity_contract.json` → **0**; `grep -c '"scope"' ClassicLib-rs/python-bindings/parity-artifacts/rust_api_surface.json` → **1**. Plan correctly routes scope updates through `generate_baseline.py` → `check_parity_gate.py` regeneration. |
+| HIGH-3 | Node `nodeExport` schema | **CLOSED** | 01-03 Task 2.A.2 step 4 uses `nodeExport` and explicitly does NOT rewrite export name strings. Live verification: `grep -c '"nodeExport"'` → **322**; `"jsModule"` → **0**; `"nodeExportPath"` → **0**. Plan matches actual schema. |
+| MEDIUM-4 | `CacheStats` grep pattern stale after `§B.1` namespace flip | **CLOSED** | 01-02 Task 1.C.1 step 5 uses three-alternative pattern: `grep -rn "classic::settings::CacheStats\|classic::yaml::CacheStats\|yaml_ops_cache_stats"`. Catches both pre-flip and post-flip forms regardless of execution order. |
+| MEDIUM-5 | `stable_id_hash` regeneration unspecified | **CLOSED** | 01-03 Task 2.C.1 includes explicit inline Python recompute helper. Verified byte-equivalent to `tools/binding_parity_runtime_coverage.py:56-58` (`_stable_id_hash`): both sort, `"\n".join`, encode UTF-8, SHA-256. Live registry entries confirmed at lines 449/464 (Python) and 336/432 (Node). |
+| MEDIUM-6 | `parity_contract.md` not auto-regenerated | **CLOSED** | 01-03 Task 2.B.5 edits `.md` companions directly. Live verification: `tools/python_api_parity/check_parity_gate.py:258-264` copies only `parity_diff_report.{json,md}` and `runtime_coverage_summary.{json,md}` — confirms `parity_contract.md` is NOT regenerated by `--update-baseline`. |
+| MEDIUM-7 | C++ setting-type token aliases | **CLOSED** | 01-02 Task 1.C.5 documents 9 tokens: `int`, `integer`, `bool`, `boolean`, `float`, `double`, `path`, `string`, `str`. Byte-matches live `parse_setting_type` at `classic-settings-py/src/lib.rs:557-567`. Plan correctly notes case-insensitive matching via `.to_lowercase()`. |
 
-### NEW Concerns Introduced by Revisions
+## 3. New Concerns (introduced or surfaced by Round 3 revisions)
 
-- **[MEDIUM] Plan 01-02 Task 1 §C.1 step 5 grep pattern is stale after §B.1 runs** — This is a closure-induced regression. The task order is A (rename file) → B (C++ consumer namespace flip) → C (bridge expansion including C.1 `CacheStats` -> `YamlCacheStatsDto` rename). Section B.1 mechanically replaces `classic::yaml::` -> `classic::settings::` in all C++ consumer files, which turns every `classic::yaml::CacheStats` reference into `classic::settings::CacheStats`. Then §C.1 step 5 grep searches for `classic::yaml::CacheStats\|yaml_ops_cache_stats` — the first pattern finds zero hits post-flip, so the executor will miss the references that need renaming to `YamlCacheStatsDto`. After §C.1 renames the Rust struct, `classic::settings::CacheStats` becomes a dangling C++ symbol and `cargo test -p classic-cpp-bridge` will fail with an undefined-symbol link error against the generated CXX header. **Fix:** either (a) change the §C.1 step 5 grep pattern to `classic::settings::CacheStats\|classic::yaml::CacheStats\|yaml_ops_cache_stats` (covers both pre- and post-B states), or (b) move the `CacheStats` rename into §B.1's C++ replacement pass as a special case (rewrite `classic::yaml::CacheStats` -> `classic::settings::YamlCacheStatsDto` before the general `classic::yaml::` -> `classic::settings::` substitution). Option (a) is less invasive.
+- **[LOW] Dead `"yaml"` entries remain in both `SQUAD_BY_OWNER` maps after Task 2.D scrub.** Plan 01-03 Task 2 Section D instructs deletion of lines 30, 56, 78, 100 in the Python generator and lines 40, 69 in the Node generator, but **misses**:
+  - `tools/python_api_parity/generate_baseline.py:124` → `"yaml": "Squad C (yaml/settings/registry)",`
+  - `tools/node_api_parity/generate_baseline.py:98` → `"yaml": "Squad B (version-registry/aux)",`
 
-- **[MEDIUM] Plan 01-03 Task 2 §C does not address stable-ID hash regeneration in runtime coverage registries** — User memory notes (`project_python_parity_tooling_internals.md`) record that `_stable_id_hash` uses full-SHA and that the Python parity tooling computes stable IDs from `(owner, symbol)` tuples. §C manually rewrites `"ownerModule": "yaml"` -> `"ownerModule": "settings"` but does NOT rehash any dependent stable-ID fields in the same row. If the registry stores `"stableId"` or `"hashKey"` fields computed from owner+symbol, the hash-of-(yaml,X) will no longer match the recomputed hash-of-(settings,X), and the parity runtime coverage check will report `registry_mismatch_total > 0`, failing Task 3 Section C (Python gate). §C.1 handwaves this with "If any row contains a stable-id hash field keyed on the owner module... update those too" but doesn't specify HOW (re-hashing requires running the same SHA function the generator uses). **Fix:** either (a) add an explicit step that regenerates stable IDs via a purpose-built helper or by re-running the registry generator after the owner rewrites, or (b) confirm by inspection that the registries do NOT use owner-keyed hashes and remove the ambiguous paragraph. Without one of these, Task 3 gate-regeneration may fail in a way the plan does not predict.
+  Not a runtime error (the key becomes unused after row reparenting), but it contradicts the plan's "fully scrub yaml references" narrative. The acceptance criterion `grep -nE "classic_yaml\b"` uses a word-boundary regex that does NOT match bare `"yaml"` string literals, so the gap passes verification silently. Recommend adding both deletions and tightening the acceptance grep to `grep -nE '"yaml"' tools/*_api_parity/generate_baseline.py` → 0.
 
-- **[LOW] Plan 01-02 Task 1 §C.3 bridge signature type widths** — `fn settings_cache_size() -> u64` and `SettingsCacheStats { size: u64, capacity: u64 }` use `u64` but the underlying Rust cache functions return `usize`. Requires explicit `as u64` casts in the adapter layer. Most executors will handle this automatically, but it's unspecified. Not a blocker.
+- **[LOW] `tests/test_owner_render_drift.py` may have hardcoded `"yaml"` expectation.** `tools/python_api_parity/generate_baseline.py:148-150` references a drift-guard test: `_OWNER_RENDER_ORDER: tuple[str, ...] = tuple(RUST_OWNER_BY_CRATE.values()) + ("aux",)`. The comment explicitly mentions `tests/test_owner_render_drift.py` enforces this tuple. If that test hardcodes the expected tuple including `"yaml"`, Task 3's `uv run pytest` will fail with a drift mismatch. The plan does not inspect or update this test file.
 
-- **[LOW] Helper script Python-version dependency unstated** — `tools/parity_contract_merge_owner.py` relies on Python 3.7+ dict-insertion order preservation (step A.2.1: "preserving key order via `object_pairs_hook=dict` (Python 3.7+ dicts are insertion-ordered, so this is free)"). Helper has no `#!/usr/bin/env python3` shebang or version check in its spec. CLASSIC standard env uses `uv` with Python 3.12, so this is fine in practice. Add a one-line version assert for defensive measure in future phases.
+- **[LOW/INFO] `yaml-residuals-smoke` test case fate unclear.** Live registry at `ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json:475-476` references `testSuite: test_promoted_residuals_smoke.py` and `testCaseId: yaml-residuals-smoke`. Plan 01-03 Task 2.C.1 deletes the `python-tier1-yaml` registry entry entirely but does NOT instruct Plan 01-02 Task 3.C (the only place `test_promoted_residuals_smoke.py` is edited) to delete a `yaml-residuals-smoke` test function if one exists. Plan 01-02 Task 3.C only rewrites `import classic_yaml` → `import classic_settings` symbol references. If the smoke test file has a registry-driven test case named `yaml-residuals-smoke`, it will fail at runtime after the registry entry is gone. Recommend Plan 01-03 Task 2.C.1 add a grep: `grep -n 'yaml-residuals-smoke\|test_yaml_residuals' ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py` and instruct deletion of any matching function alongside the registry entry deletion.
 
-- **[LOW] Plan 01-03 Task 2 file list includes `.md` companions but §B.5 defers their edits to Task 3** — Listing them in `files_modified` frontmatter while also saying "leave them in files_modified frontmatter because Task 3's --update-baseline run still modifies them" creates a documentation inconsistency with Task 2's actual scope. Trivially correct but a potential confusion point for Task 2 acceptance review.
+## 4. Persistent Concerns (Round 2 findings not adequately addressed)
 
-### Helper Script Review (`tools/parity_contract_merge_owner.py`)
+**None.** All seven Round 2 findings (3 HIGH + 4 MEDIUM) are closed with independently verifiable evidence.
 
-**Interface (step A.1):** Correct shape — source/target owner, old/new crate, old/new binding module, optional binding-key-name flags for Python vs Node asymmetry. Reusable for Phase 2 (crashgen->config, `classic-crashgen-settings-core` -> `classic-config-core`) and Phase 3 (constants->version-registry) without modification. Good.
+## 5. Suggestions (concrete improvements)
 
-**Semantic steps (step A.2):**
+1. **Tighten Task 2.D scrub of generator scripts**. Add these deletions to 01-03 Task 2 Section D:
+   - `tools/python_api_parity/generate_baseline.py` line 124: remove `"yaml": "Squad C (yaml/settings/registry)",`
+   - `tools/node_api_parity/generate_baseline.py` line 98: remove `"yaml": "Squad B (version-registry/aux)",`
 
-1. **JSON load with order preservation** — relies on Python 3.7+ dict ordering (see LOW concern above). Sufficient.
-2. **Top-level `ownerModules` merge** — correct: deletes source entry, leaves target alone, handles degenerate "target doesn't exist" case. Good.
-3. **Squad metadata update** — covers `squads.<name>.ownerModules` array mutation with dedup logic. Correct.
-4. **Tier mapping row updates** — covers `ownerModule`, `rustCrate`, `<binding_module_key>`, `pythonExportPath`, `nodeExportPath` with dot-suffix prefix matching to prevent false positives. The dot suffix is critical (prevents `classic_yaml_core.X` from matching `classic_yaml.` pattern). Good.
-5. **Nested owner-group recursive walk** — defensive, idempotent (already-target rows pass through untouched). Good.
-6. **Scope block (Python-only)** — removes `scope.target_crates` entry and `scope.source_files` entries matching the crate directory segment. Correct, though depends on Python contract actually having a `scope` block.
-7. **Key collision detection** — uses `(ownerModule, rustSymbol, <binding_module_key>_value)` triple as dedup key. For Phase 1, no overlap is expected between existing `settings`-owned rows and yaml rows being reparented (Plan 01-02 already proves this at the binding layer — yaml-py and settings-py expose disjoint function sets). Correct. **Gap:** if Phase 2 or 3 does cause a collision, the helper aborts but provides no merge-hint — the executor must resolve manually. Acceptable for a first-cut helper; Phase 2/3 can extend.
-8. **Output** — `json.dump(indent=2, ensure_ascii=False)` with trailing newline. Matches CLASSIC parity contract formatting conventions.
-9. **Exit code** — 0/1 with summary line. Good.
+   Tighten acceptance criterion:
+   ```
+   grep -nE '"yaml"|classic-yaml-core|classic_yaml\b' tools/python_api_parity/generate_baseline.py tools/node_api_parity/generate_baseline.py
+   # Expected: 0 matches
+   ```
 
-**Overall assessment of helper:** Interface correct. Semantics sound. Key-collision abort rule is safe. The 9 steps are sufficient for deterministic owner-group merges in the CLASSIC parity contract structure. **Will not break existing contract structure** — the helper is purely additive (rewrites values in-place, deletes source owner) and preserves all unrelated rows.
+2. **Audit `test_owner_render_drift.py` before Task 3**. Add a pre-Task-3 step to 01-03:
+   ```
+   grep -rn "yaml\|_OWNER_RENDER_ORDER" tools/python_api_parity/tests/ ClassicLib-rs/python-bindings/tests/ 2>/dev/null
+   ```
+   If the test file exists and hardcodes a tuple including `"yaml"`, add it to `files_modified` for Task 2.D and remove the `"yaml"` entry.
 
-**Minor recommendation:** consider adding a `--dry-run` flag for Phase 2/3 validation before committing. Not blocking.
+3. **Add yaml-residuals-smoke audit to 01-03 Task 2.C.1**. Before deleting the `python-tier1-yaml` registry entry, grep:
+   ```
+   grep -n 'yaml-residuals-smoke\|test_yaml_residuals\|yaml.*residuals' ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py
+   ```
+   If a matching test case exists, document explicitly in Plan 01-02 Task 3.C that the case is to be deleted (not just import-rewritten).
 
-### Risk Assessment
+4. **Helper script CLI help text**. Task 2.A mentions `--dry-run` but doesn't specify that `--help` must exit 0. The acceptance criterion "Running the helper script with `--help` exits 0 (basic smoke test)" is present — good, keep as-is.
 
-**MEDIUM** (down from HIGH in Round 1). Both Round 1 HIGH-level structural blockers (Wave 1 buildability, D-09 factual errors, parity-gate generator hardcoding, runtime registry selectors, parity merge underspecification) are closed with concrete, source-cited edits. The two new MEDIUM concerns are narrower:
+5. **Node contract top-level `ownerModules` cosmetic inconsistency** (noted but correctly deferred). Round 3 Task 2.B.3 correctly identifies that post-merge, Node rows will have `ownerModule: settings` while the top-level map only declares `{scanlog, config, version_registry, aux}`. The plan explicitly documents this as a pre-existing schema quirk not to be fixed in Phase 1. Acceptable — no change recommended.
 
-- The CacheStats grep-pattern regression is a deterministic compile error but has a one-line fix.
-- The stable-ID hash regeneration concern is conditional on the registry structure and may be a non-issue if the registries use opaque (non-derived) stable IDs.
+## 6. Risk Assessment
 
-Neither new concern represents a re-plan-level failure. Both can be addressed with small targeted edits in a 3rd revision pass, or with explicit executor-time guidance if the user accepts the risk.
+**LOW**.
 
-### Verdict
+The three Round 2 HIGH findings that depended on specific live schemas (collision key, scope block, Node nodeExport) have all been re-verified against the actual contract JSONs and show the plan's claims are correct. The four MEDIUM findings that depended on tool behavior (grep pattern ordering, hash recipe, `.md` regeneration, token aliases) have all been re-verified against the actual Python source at the exact line numbers the plan cites. The three new concerns are all LOW-severity cleanup items that would surface deterministically at Task 3 (cargo test / pytest will fail loudly if any of them matter) and can be resolved with targeted follow-up commits rather than another plan revision round.
 
-**REVISE-AGAIN** (narrowly)
+**Recommendation:** This plan set is ready for execution. Address the three LOW concerns via executor-time guidance in `/gsd:execute-phase 1` (specifically: watch for test failures in `test_owner_render_drift.py` and `test_promoted_residuals_smoke.py`, and add the missed `SQUAD_BY_OWNER["yaml"]` deletions in the same commit as Task 2.D). A fourth cross-AI round is not warranted — the marginal value is below the cost.
 
-The Round 1 closure work is strong — all 5 blockers and 15 concerns are demonstrably fixed with source-cited evidence, and the helper script spec is sound. But the new MEDIUM regression in Plan 01-02 Task 1 §C.1 step 5 (stale grep pattern after §B.1 namespace flip) will deterministically fail the `cargo test -p classic-cpp-bridge` verify step during execution — exactly the kind of "encoded logic" issue the cross-AI review process is meant to catch. Fix that one grep pattern (add `classic::settings::CacheStats` as an alternate) and either resolve or explicitly acknowledge the stable-ID hash concern in Plan 01-03 Task 2 §C, and the plans should be ready to execute without a further cross-AI round.
-
-If the user prefers to move forward without a 3rd revision, they should add these two notes as executor-time guidance in `/gsd:execute-phase` and accept the small risk that the stable-ID path may need a follow-up commit.
+## REVIEW COMPLETE
 
 ---
 
 ## Codex Review
 
-### Summary
+*(Extracted from Codex streaming transcript — review lines 15242-15273 of the raw transcript, the canonical second copy per extraction convention. Raw transcript: 1.4 MB / 15275 lines.)*
 
-Round 2 closes most of the Wave 1 / bindings issues from Round 1, but Wave 3 is still not execution-safe. Blockers 1 and 3 are effectively closed, blocker 2 is closed at the DTO/type level, but blockers 4 and 5 are only partially closed because the new parity-helper path is modeled against the wrong schema in a few key places and still misses the selector-hash mechanics the runtime coverage gate enforces.
+# Round 3 Cross-AI Review — Phase 1 (YAML -> Settings Merge) — Codex
 
-### Round 1 Blocker Closure
+**Summary**
+Round 3 materially improves the plans. The live-file checks back the big closures: the helper spec now matches the actual Python/Node contract schemas, the C++ token table matches the real Python parser, and the runtime-registry rehash plan matches the live hash/count semantics. The remaining risk is concentrated in `01-03`: one helper-spec contradiction and one stale acceptance statement.
 
-| blocker # | status | evidence | notes |
-|---|---|---|---|
-| 1. Wave 1 not buildable because `classic-yaml-py` still points at deleted `classic-yaml-core` | CLOSED | `01-01 Task 2.H`; `must_haves.truths` in `01-01-PLAN.md` explicitly remove `python-bindings/classic-yaml-py` from workspace members in the same commit as yaml-core removal and gate on `cargo build --workspace` | This addresses the actual compile-atomicity failure. |
-| 2. D-09 validator DTO spec was factually wrong | CLOSED | `01-02 <interfaces>` validator block; `01-02 Task 1.C.0`, `C.4`, `C.5`, `C.6` | The revised plan now matches `classic-settings-core/src/validators.rs` on `ValidationIssue`, `IssueSeverity`, `SettingType`, and `CoercedValue`. A new token-synonym mismatch exists (see NEW concerns), but the original blocker is closed. |
-| 3. Parity generator scripts still hardcode `classic-yaml-core` / `classic_yaml` | CLOSED | `01-03 files_modified`; `01-03 Task 2.D.1-D.3` | This closes the deleted-path/generator hardcoding blocker. |
-| 4. Runtime coverage registries still have `ownerModule: "yaml"` selectors | **PARTIALLY-CLOSED** | `01-03 Task 2.C.1-C.3` | The plan now touches both registry files, but it only rewrites `ownerModule`. The gate also validates selector-based `contractCount` and `contractIdsHash`; those are not recomputed here, so `registry_mismatch_total` can still fail. |
-| 5. Parity-contract owner merge was underspecified | **PARTIALLY-CLOSED** | `01-03 Task 2.A.1-A.2` | Adding `tools/parity_contract_merge_owner.py` is the right direction, but the spec is still wrong for the live schema in several places: collision key is too coarse, Node schema assumptions are off, and the Python contract does not contain the `scope` block the helper expects. |
+**Round 2 Closure Audit**
 
-### Round 1 Medium Concern Closure
-
-| concern # | status | evidence |
+| Finding | Status | Evidence |
 |---|---|---|
-| 6. `RustYamlSerializeError` does not exist | CLOSED | `01-02 Task 3.A.1-A.2` explicitly says only `RustYamlError`, `RustYamlIOError`, `RustYamlParseError` exist |
-| 7. `tempfile` dev-dep may be missing in `classic-cpp-bridge` | CLOSED | `01-02 Task 1.C.2` adds explicit grep/conditional add |
-| 8. C++ consumer file list not grep-verified | CLOSED | `01-02 Task 1.B.0` mandatory grep-first step |
-| 9. Node CLI wrapper not inspected | CLOSED | `01-02 Task 2.A.0` grep on `classic-node/cli/` |
-| 10. Two `CacheStats` types in `classic::settings` namespace | CLOSED | `01-02 Task 1.C.1` renames bridge DTO to `YamlCacheStatsDto` |
-| 11. `scanlog-core` direct yaml-core usage not grep-verified | CLOSED | `01-01 Task 2.F.5` explicit grep gate before dep removal |
-| 12. "Full settings-core surface" language inconsistent with exceptions | CLOSED | `01-02 objective` and `must_haves.truths` now say "all FFI-safe surface plus documented exceptions" |
-| 13. Python `get_cache_stats()` would silently call wrong cache API | CLOSED | `01-02 Task 3.A.2` explicitly rewrites to `yaml_cache_stats()` / `reset_yaml_cache_stats()` |
-| 14. Python dependency additions were treated as optional | CLOSED | `01-02 Task 3.A.3` makes `classic-shared-py` mandatory |
-| 15. Node contract has top-level owner metadata, not just row-level `ownerModule` | **PARTIALLY-CLOSED** | `01-03 Task 2.A.2` adds `ownerModules` / `squads` handling, but `01-03 Task 2.B.3` explicitly leaves the live Node contract's top-level metadata incoherent when `yaml` is absent |
+| `HIGH-1` helper collision key | `CLOSED` | `01-03-PLAN.md:335-342` switches to primary dedup on `row["id"]` with fallback `(ownerModule, rustSymbol, pythonExportPath OR nodeExport, rustCrate)`. |
+| `HIGH-2` Python scope block | `CLOSED` | `01-03-PLAN.md:331-333` explicitly removes `scope` work from the helper and points it to generated `ClassicLib-rs/python-bindings/parity-artifacts/rust_api_surface.json`; the live Python contract top keys are `contractVersion, phase, description, tierDefinitions, ownerModules, tier1Mappings` with no `scope`. |
+| `HIGH-3` Node `nodeExport` schema | `CLOSED` | `01-03-PLAN.md:313-322` now treats Node rows as `nodeExport` only; the live Node contract uses `nodeExport` and has no `jsModule` / `nodeExportPath`. |
+| `MEDIUM-4` CacheStats grep pattern | `CLOSED` | `01-02-PLAN.md:315` now requires `grep -rn "classic::settings::CacheStats\\|classic::yaml::CacheStats\\|yaml_ops_cache_stats" ...`, which covers both pre- and post-flip states. |
+| `MEDIUM-5` stable_id_hash regeneration | `CLOSED` | `01-03-PLAN.md:475-527` deletes `*-tier1-yaml` and recomputes `contractCount` / `contractIdsHash`; live hash logic is `"\n".join(sorted(values))` + SHA-256 in `tools/binding_parity_runtime_coverage.py:56-58,79-90`, and a raw-contract recompute reproduces the current checked-in registry hashes exactly. |
+| `MEDIUM-6` `parity_contract.md` not auto-regenerated | `PARTIALLY CLOSED` | `01-03-PLAN.md:51` and `01-03-PLAN.md:664` correctly state Task 2 must edit `.md` directly because `--update-baseline` does not sync it; but `01-03-PLAN.md:767` still says the `.md` companions are “fully regenerated ... by --update-baseline.” |
+| `MEDIUM-7` C++ setting-type aliases | `CLOSED` | `01-02-PLAN.md:355-371,466` lists the 9-token superset; the live parser in `ClassicLib-rs/python-bindings/classic-settings-py/src/lib.rs:557-562` matches exactly: `int, integer, bool, boolean, float, double, path, string, str`. |
 
-### NEW Concerns Introduced by Revisions
+**New Concerns**
+- `MEDIUM` `01-03-PLAN.md:304-306` is internally contradictory. Line 304 says missing `ownerModules[settings]` should abort; lines 305-306 say the live Node case should warn and continue. That ambiguity is in the helper’s core control flow.
+- `LOW` `01-03-PLAN.md:563-576` cleans Python generator hardcodes for `classic-yaml-core` / `classic_yaml`, but the live `tools/python_api_parity/generate_baseline.py:124` still has `\"yaml\": \"Squad C (yaml/settings/registry)\"`. The planned verification would not catch that stale owner label.
+- `LOW` `01-03-PLAN.md:388` expects the Node helper summary to report `22 rows updated`, but the live Node contract has `22` `ownerModule: "yaml"` rows and `26` `rustCrate: "classic-yaml-core"` rows. If the helper counts all mutated rows, the summary will be `26`, not `22`.
 
-- **`HIGH`** `01-03 Task 2.A.2 step 7`: the helper's collision key is unusable for the live Python contract. It proposes `(ownerModule, rustSymbol, <binding_module_key>_value)`, but many legitimate rows already share that triple. In the current contract, `settings` rows for `validators` under `classic_settings` already collide. This helper would abort on valid data before doing any merge.
-- **`HIGH`** `01-03 Task 2.A.2 step 6` and Task 2 acceptance: the plan targets `scope.target_crates` inside `docs/implementation/python_api_parity/baseline/parity_contract.json`, but that file has no `scope` block. `scope` lives in generated `ClassicLib-rs/python-bindings/parity-artifacts/rust_api_surface.json`. The current acceptance criterion is impossible as written.
-- **`MEDIUM`** `01-03 Task 2.B.5` and `01-03 Task 3`: the plan now defers `parity_contract.md` edits because it assumes `--update-baseline` regenerates them. Both `tools/python_api_parity/check_parity_gate.py` and `tools/node_api_parity/check_parity_gate.py` only sync `parity_diff_report.*` and `runtime_coverage_summary.*`; they do not rewrite `parity_contract.md`.
-- **`MEDIUM`** `01-02 Task 1.C.5`: the plan says the C++ setting-type parser must match Python `parse_setting_type()` "1:1", but then only accepts `int`, `bool`, `float`, `path`, `string`. The live Python helper in `classic-settings-py/src/lib.rs` also accepts `integer`, `boolean`, `double`, and `str`. This would introduce a new C++/Python mismatch.
-- **`MEDIUM`** `01-03 Task 2.A.2 step 4`: the helper spec still talks about `jsModule` and `nodeExportPath`, but the live Node contract rows use `nodeExport` and have no module field. That indicates the merge logic is still partially modeled against the wrong schema.
+**Persistent Concerns**
+- `MEDIUM` `MEDIUM-6` is not fully closed because `01-03-PLAN.md:767` still embeds the exact wrong assumption the revision was supposed to remove, even though the task body above it was corrected.
 
-### Helper Script Review (`tools/parity_contract_merge_owner.py` spec)
+**Suggestions**
+- In [01-03-PLAN.md](/abs/path/J:/CLASSIC-Fallout4/.planning/phases/01-yaml-settings-merge/01-03-PLAN.md:304), replace the missing-target rule with explicit branching: `Python contract: abort if ownerModules.settings missing`; `Node contract: warn and continue without top-level ownerModules edit`.
+- In [01-03-PLAN.md](/abs/path/J:/CLASSIC-Fallout4/.planning/phases/01-yaml-settings-merge/01-03-PLAN.md:563), add removal of `tools/python_api_parity/generate_baseline.py:124` literal entry `\"yaml\": \"Squad C (yaml/settings/registry)\"`.
+- In [01-03-PLAN.md](/abs/path/J:/CLASSIC-Fallout4/.planning/phases/01-yaml-settings-merge/01-03-PLAN.md:767), change the parenthetical to: `.md companions were edited directly in Task 2; --update-baseline does not regenerate them`.
+- In [01-03-PLAN.md](/abs/path/J:/CLASSIC-Fallout4/.planning/phases/01-yaml-settings-merge/01-03-PLAN.md:388), change `22 rows updated` to either `26 rows updated` or `22 owner rows reparented`.
+- Optional tightening: in [01-02-PLAN.md](/abs/path/J:/CLASSIC-Fallout4/.planning/phases/01-yaml-settings-merge/01-02-PLAN.md:470), add an explicit acceptance grep for `classic::settings::CacheStats` returning zero hits.
 
-Interface: not quite correct for the live contracts.
+**Risk Assessment**
+`MEDIUM`. The substantive Round 2 logic issues are mostly closed and the live files support the revised hash/token/schema claims, but `01-03` still has one real implementation ambiguity and one stale verification statement that should be cleaned up before execution.
 
-- Python contract: `pythonModule` / `pythonExportPath` exist, but no `scope` block exists in `parity_contract.json`.
-- Node contract: `rustCrate` exists, but there is no `jsModule` and no `nodeExportPath`; rows use `nodeExport`.
-- The current CLI could work if the implementation treats binding-module keys as truly optional and schema-driven, but the spec text does not.
-
-Nine semantic steps: not sufficient yet.
-
-- Step 2/3 on `ownerModules` and `squads` is directionally good.
-- Step 4 needs to understand actual field names per contract.
-- Step 6 is pointed at the wrong file.
-- The spec does not address contract row IDs such as `yaml.*`, which remain inconsistent after owner reparenting.
-- Most importantly, it does not cover the runtime-registry selector hashes/counts that must move with the owner merge if the gates are expected to pass end-to-end.
-
-Key-collision abort rule: unsafe as specified.
-
-- Abort-on-collision is reasonable in principle.
-- The chosen key is wrong. For Python it will false-positive on ordinary class/method rows because many mappings legitimately share `ownerModule + rustSymbol + pythonModule`.
-- A safe key would need the binding export identity too, e.g. include `pythonExportPath` / `nodeExport`, and likely `rustCrate` or `id`.
-
-Could this break existing contract structure: yes.
-
-- The helper would preserve JSON validity, but it can still leave semantic drift:
-  - row owners reparented without corresponding selector hash/count refresh,
-  - IDs still prefixed `yaml.*`,
-  - Node schema fields not actually touched because the spec names the wrong keys.
-
-### Risk Assessment
-
-Still **`HIGH`**.
-
-Wave 1 and most Wave 2 issues are in good shape now. The remaining risk is concentrated in Wave 3, and it is material: the new helper spec is not executable against the live schema as written, and the runtime coverage registry plan still does not fully satisfy the gate's selector-mismatch logic.
-
-### Verdict
-
-**REVISE-AGAIN**
+## REVIEW COMPLETE
 
 ---
 
 ## Consensus Summary
 
-### Verdict Tally
+### Verdict Distribution
 
-| Reviewer | Risk | Verdict |
-|----------|------|---------|
-| Gemini | LOW | READY-TO-EXECUTE |
-| Claude | MEDIUM | REVISE-AGAIN (narrow) |
-| Codex | HIGH | REVISE-AGAIN |
+| Reviewer | Risk | Verdict | Round 2 Findings Closed |
+|----------|------|---------|-------------------------|
+| Gemini   | LOW  | READY-TO-EXECUTE | 7/7 |
+| Claude   | LOW  | READY-TO-EXECUTE | 7/7 |
+| Codex    | MEDIUM | REVISE-TARGETED | 6/7 (MEDIUM-6 PARTIALLY CLOSED) |
 
-**Consensus: REVISE-AGAIN** (2-of-3). Gemini's LOW-risk assessment is discounted because it did not inspect the live parity contract JSON files during review — it evaluated the helper script spec against the prompt text, while Codex inspected the actual `docs/implementation/*/baseline/parity_contract.json` files and found multiple schema mismatches.
+### Agreed Strengths (2+ reviewers)
 
-### Agreed Round 1 Closure (all 3 reviewers agree)
+- **All 3 HIGH findings (HIGH-1, HIGH-2, HIGH-3) closed with schema-verified evidence** — all three reviewers independently spot-checked live contract JSON files and confirmed the helper spec, collision key, and Node `nodeExport` schema are correct.
+- **Hash recompute helper is byte-equivalent to `tools/binding_parity_runtime_coverage.py:56-91`** — all three reviewers verified the SHA-256-of-newline-joined-sorted-row-IDs algorithm matches the live source.
+- **9-token setting-type table matches `classic-settings-py/src/lib.rs:557-567`** — Gemini, Claude, and Codex all confirmed byte-match against live Python parser source.
+- **CacheStats triple-grep pattern (MEDIUM-4) correctly catches both pre- and post-namespace-flip references.**
+- **Git-history preservation via `git mv` is well-specified.**
 
-**HIGH blockers fully closed (3):**
-- **Blocker 1** — Wave 1 buildability via `yaml-py` workspace member removal in 01-01 Task 2 §H
-- **Blocker 2** — D-09 validator DTO spec matches `classic-settings-core/src/validators.rs` in 01-02 Task 1 §C.0/C.4/C.5/C.6 (Codex flags a new token-synonym issue as separate)
-- **Blocker 3** — Parity generator scripts de-yaml'd in 01-03 Task 2 §D
+### Agreed Concerns (2+ reviewers)
 
-**MEDIUM concerns fully closed (12 of 15):** concerns 6, 7, 8, 9, 10, 11, 12, 13, 14 — all three reviewers agree.
+1. **[LOW → should fix] Missing `SQUAD_BY_OWNER["yaml"]` deletions in `generate_baseline.py` scrub.** Both Claude and Codex independently found that Plan 01-03 Task 2 Section D does not remove:
+   - `tools/python_api_parity/generate_baseline.py:124` → `"yaml": "Squad C (yaml/settings/registry)",`
+   - `tools/node_api_parity/generate_baseline.py:98` → `"yaml": "Squad B (version-registry/aux)",`
 
-### Disputed Closures
+   The planned acceptance grep `grep -nE "classic_yaml\b"` uses a word boundary that does NOT match bare `"yaml"` string literals, so the gap would pass verification silently. Claude recommends tightening the grep to `grep -nE '"yaml"|classic-yaml-core|classic_yaml\b'`.
 
-**Blocker 4 — Runtime coverage registries**
-- Gemini + Claude: CLOSED
-- Codex: **PARTIALLY-CLOSED**. Claim: plan rewrites `ownerModule` but doesn't recompute selector-based `contractCount` and `contractIdsHash` fields — gate may still fail on `registry_mismatch_total`.
-- Claude raises the same underlying concern as a separate "NEW MEDIUM" (stable-ID hashing) rather than calling blocker 4 partially closed.
-- **Consensus:** NEEDS VERIFICATION. The user's memory `project_python_parity_tooling_internals.md` records that `_stable_id_hash` uses full-SHA — if the registries contain owner-keyed hashes, the plan must regenerate them. If not, a one-line note to 01-03 Task 2 §C suffices.
+### Divergent Views (genuinely worth investigating)
 
-**Blocker 5 — Parity contract owner merge helper**
-- Gemini + Claude: CLOSED (helper spec is sound)
-- Codex: **PARTIALLY-CLOSED**. Claim: helper spec is modeled against a schema that does not match the live parity_contract.json files in two concrete ways (see NEW HIGH concerns below).
-- Codex used live file inspection during review; Gemini and Claude evaluated the spec text in isolation.
-- **Consensus:** Codex's findings are specific and testable. The helper spec must be re-aligned to the actual JSON schema before execution.
+1. **[MEDIUM — CODEX ONLY, VERIFIED REAL] MEDIUM-6 is only PARTIALLY CLOSED.** Gemini and Claude both marked MEDIUM-6 CLOSED based on the Task 2 §B.5 correction. Codex found that `01-03-PLAN.md:767` still has the stale parenthetical:
 
-**Concern 15 — Node contract top-level `ownerModules`**
-- Gemini + Claude: CLOSED
-- Codex: **PARTIALLY-CLOSED**. Claim: 01-03 Task 2 §B.3 explicitly leaves the live Node contract's top-level metadata incoherent when `yaml` is absent (the live Node contract currently has no top-level `yaml` entry, only row-level `yaml` selectors).
-- **Consensus:** Minor inconsistency in plan text; does not block execution but should be reconciled with Codex's HIGH-3 schema finding.
+   > ``grep -c "classic-yaml-core\|classic_yaml" docs/implementation/python_api_parity/baseline/parity_contract.md docs/implementation/node_api_parity/baseline/parity_contract.md` returns 0 (`.md` companions fully regenerated from updated JSON by `--update-baseline`)``
 
-### Agreed NEW Concerns (2+ reviewers)
+   The parenthetical embeds the exact wrong mental model the Round 2 fix was supposed to remove. **Orchestrator verified the claim against live plan text — Codex is correct.** Gemini and Claude stopped reading the closure-audit body after the Task 2 §B.5 fix and did not scan downstream acceptance criteria for residual drift. Codex's suggested fix: change the parenthetical to `.md companions were edited directly in Task 2; --update-baseline does not regenerate them`.
 
-**NONE.** Each reviewer found distinct new issues. This is expected — different reviewers stress different aspects of the plan. Below are the union of new findings.
+2. **[MEDIUM — CODEX ONLY, VERIFIED REAL] Internal contradiction at `01-03-PLAN.md:304-306` in the helper's core control flow.** Codex flagged that:
+   - Line 304 says: *"If `ownerModules[<target>]` does NOT exist: this is a degenerate schema. Abort with `sys.exit(1)` and a diagnostic"*
+   - Line 305 says: *"The helper must handle BOTH cases: ... or log a warning that the target owner is missing from the top-level map and leave the file untouched for that specific edit (Node)"*
+   - Line 306 says: *"This does NOT abort — subsequent row-level edits still run."*
 
-### NEW Concerns — Union of All Reviewers (to address in Round 3)
+   **Orchestrator verified the claim against live plan text — Codex is correct.** The "abort with sys.exit(1)" in line 304 directly contradicts "does NOT abort" in line 306. The executor writing the helper will see two mutually exclusive instructions. Codex's suggested fix: replace the missing-target rule with explicit per-contract branching: `Python contract: abort if ownerModules.settings missing`; `Node contract: warn and continue without top-level ownerModules edit`.
 
-**HIGH severity (all from Codex — surfaced via live file inspection):**
+3. **[LOW — CODEX ONLY] Row-count mismatch at `01-03-PLAN.md:388`.** Codex claims the Node contract has 22 `"ownerModule": "yaml"` rows but 26 `"rustCrate": "classic-yaml-core"` rows. If the helper counts all mutated rows (not just the owner field), the summary will be `26 rows updated`, not `22`. The plan's expected-output text at line 388 should either be corrected to `26 rows updated` or clarified to `22 owner rows reparented`.
 
-1. **Helper collision key is too coarse for live Python contract** (Codex, 01-03 Task 2.A.2 step 7)
-   The proposed key `(ownerModule, rustSymbol, <binding_module_key>_value)` false-positives on valid data — `settings` rows for `validators` under `classic_settings` already share this triple in the current contract. Helper would abort on valid input.
-   **Fix:** Extend collision key to include binding export identity. Recommended key: `(ownerModule, rustSymbol, pythonExportPath_or_nodeExport, rustCrate)` or just use the row `id` field if present.
+4. **[LOW — CLAUDE ONLY] `test_owner_render_drift.py` may hardcode `"yaml"` in `_OWNER_RENDER_ORDER` tuple.** Claude surfaced that `tools/python_api_parity/generate_baseline.py:148-150` references this drift-guard test. If the test hardcodes an expected tuple including `"yaml"`, Task 3's `uv run pytest` will fail. Plan does not currently audit this file.
 
-2. **Python contract has no `scope` block** (Codex, 01-03 Task 2.A.2 step 6)
-   Helper spec targets `scope.target_crates` inside `docs/implementation/python_api_parity/baseline/parity_contract.json`, but `scope` lives in the generated `ClassicLib-rs/python-bindings/parity-artifacts/rust_api_surface.json` instead. Acceptance criterion is impossible as written.
-   **Fix:** Either (a) point the helper at `rust_api_surface.json` for scope updates, or (b) remove step 6 entirely and document that `scope` is regenerated automatically by `--update-baseline`.
+5. **[LOW/INFO — CLAUDE ONLY] `yaml-residuals-smoke` test case fate unclear.** Live runtime registry at `runtime_coverage_registry.json:475-476` references `testCaseId: yaml-residuals-smoke` in `test_promoted_residuals_smoke.py`. Plan 01-03 deletes the `python-tier1-yaml` registry entry but does not instruct Plan 01-02 Task 3.C to delete any matching test function. Claude recommends adding a grep audit before the registry entry deletion.
 
-3. **Node contract schema mismatch: `nodeExport` not `jsModule`/`nodeExportPath`** (Codex, 01-03 Task 2.A.2 step 4)
-   Helper spec uses `jsModule` and `nodeExportPath` but live Node contract rows use only `nodeExport`. Merge logic targets fields that don't exist.
-   **Fix:** Update helper step 4 field list to match actual Node contract schema: `ownerModule`, `rustCrate`, `nodeExport` (no module field, no export-path field).
+6. **[LOW — GEMINI ONLY, HARMLESS] `pythonExportPath` prefix replace is a no-op.** Gemini noticed the helper's `pythonExportPath` prefix-rewrite logic will never trigger because live `pythonExportPath` values are already module-relative (e.g., `"YamlOperations.clear_cache"`) and do not contain the module prefix. The rename is handled correctly by the separate `pythonModule` field. Harmless, but the dead code branch could be removed or documented.
 
-**MEDIUM severity:**
+### Recommended Action
 
-4. **01-02 Task 1 §C.1 step 5 grep pattern stale after §B.1** (Claude) — deterministic compile-time regression. Section B.1 already rewrote `classic::yaml::CacheStats` -> `classic::settings::CacheStats` before §C.1 step 5 runs, so the grep pattern `classic::yaml::CacheStats\|yaml_ops_cache_stats` misses all post-B references. Result: `cargo test -p classic-cpp-bridge` fails with undefined-symbol link error.
-   **Fix:** Change §C.1 step 5 grep pattern to `classic::settings::CacheStats\|classic::yaml::CacheStats\|yaml_ops_cache_stats`.
+**REVISE-TARGETED with a small Round 4 pass.** Two real MEDIUM contradictions (not caught by Gemini/Claude) warrant fixing before execution. The divergence is a classic adversarial-review win: tool-heavy Codex caught internal plan-text contradictions that the cheaper no-tool reviewers missed. Suggested minimal edits for `/gsd:plan-phase 1 --reviews`:
 
-5. **01-03 Task 2 §C stable-ID hash regeneration unspecified** (Claude) — Runtime coverage registries may contain stable IDs hashed from `(owner, symbol)` tuples. Plan rewrites `ownerModule` but doesn't address hash regeneration. Could cause `registry_mismatch_total > 0` on gate run. This is the same issue Codex flagged as making Blocker 4 "PARTIALLY-CLOSED".
-   **Fix:** Inspect registry structure. If stable IDs are owner-keyed, add explicit regeneration step (run the registry generator or a purpose-built hash helper). If not, add a one-line confirmation note.
+1. **01-03-PLAN.md:767** — Rewrite acceptance parenthetical from `(.md companions fully regenerated from updated JSON by --update-baseline)` to `(.md companions were edited directly in Task 2; --update-baseline does not regenerate them)`. Fixes Codex MEDIUM-6 residual.
+2. **01-03-PLAN.md:304-306** — Rewrite the missing-target rule as explicit per-contract branching: Python aborts, Node warns-and-continues. Remove the ambiguous language in line 304. Fixes Codex MEDIUM helper-control-flow contradiction.
+3. **01-03-PLAN.md Task 2 §D** — Add deletion of `tools/python_api_parity/generate_baseline.py:124` (`"yaml": "Squad C (yaml/settings/registry)",`) and `tools/node_api_parity/generate_baseline.py:98` (`"yaml": "Squad B (version-registry/aux)",`). Tighten acceptance grep to `grep -nE '"yaml"|classic-yaml-core|classic_yaml\b' tools/*_api_parity/generate_baseline.py → 0`. Closes Claude + Codex joint LOW finding.
+4. **01-03-PLAN.md:388** — Either correct `22 rows updated` to `26 rows updated` or clarify to `22 owner rows reparented`. Fixes Codex LOW row-count mismatch.
+5. **[OPTIONAL] 01-03-PLAN.md Task 2.C.1** — Add audit grep for `yaml-residuals-smoke` / `test_yaml_residuals` in `test_promoted_residuals_smoke.py` before the registry entry deletion. Addresses Claude's LOW.
+6. **[OPTIONAL] 01-03-PLAN.md pre-Task-3 step** — Add audit grep for `_OWNER_RENDER_ORDER` in `tools/python_api_parity/tests/` and `ClassicLib-rs/python-bindings/tests/`. Addresses Claude's LOW.
 
-6. **01-03 Task 2 §B.5 + Task 3 `.md` companion regeneration assumption is wrong** (Codex) — Plan defers `parity_contract.md` edits because it assumes `--update-baseline` regenerates them, but `check_parity_gate.py` only syncs `parity_diff_report.*` and `runtime_coverage_summary.*`, not `parity_contract.md`.
-   **Fix:** Either (a) add explicit `.md` companion edits back to Task 2 action, or (b) verify by reading `check_parity_gate.py --update-baseline` behavior and document the actual regeneration scope.
+These are all targeted text edits — no structural replan, no research, no new tasks. Estimate: 5-10 minutes of planner work to apply. Round 4 should then execute directly.
 
-7. **01-02 Task 1.C.5 C++/Python type-token mismatch** (Codex) — Plan says C++ parser matches Python `parse_setting_type()` "1:1" but only accepts the 5 canonical tokens. Live Python helper in `classic-settings-py/src/lib.rs` also accepts aliases: `integer`, `boolean`, `double`, `str`. This introduces a new C++/Python mismatch.
-   **Fix:** Read `classic-settings-py/src/lib.rs` `parse_setting_type()` and copy the full token list (canonical + aliases) into the C++ parser.
-
-**LOW severity:**
-
-8. **01-02 Task 3.D redundant yaml-py workspace member removal** (Gemini) — Task 3.D repeats what 01-01 Task 2.H already did. Harmless (idempotent) but worth marking as verify-only.
-9. **01-01 Task 2.I.2 root `.iml` already modified in git status** (Gemini) — Plan correctly instructs executor to reconcile, but increases manual attention.
-10. **01-02 Task 1 §C.3 `u64` vs `usize` width casts unspecified** (Claude) — Minor adapter-layer detail; most executors handle automatically.
-11. **Helper script Python version assert unstated** (Claude) — Relies on Python 3.7+ dict ordering without explicit version check. Fine in practice under `uv` + Python 3.12.
-12. **01-03 Task 2 `.md` files in `files_modified` frontmatter but deferred in §B.5** (Claude) — Documentation inconsistency with Task 2's actual scope.
-
-### Divergent Views
-
-- **Risk assessment spread:** Gemini=LOW, Claude=MEDIUM, Codex=HIGH. The spread reflects how deeply each reviewer inspected the actual live contract JSON files during review. Codex used tool access to read the schemas; Gemini did not.
-- **Helper script verdict:** Gemini + Claude say "sound and comprehensive"; Codex says "wrong schema in multiple places". Resolving this means reading the actual `parity_contract.json` files against the helper's 9-step spec — which the planner should do in Round 3.
-- **Blocker 4/5/Concern 15 status:** Gemini + Claude marked CLOSED; Codex marked PARTIALLY-CLOSED. Codex's findings are concrete and source-cited (file paths, field names, row examples), so they should be treated as authoritative pending verification.
-
-### Recommended Next Action
-
-**Run `/gsd:plan-phase 1 --reviews` one more time** to close the 3 NEW HIGH and 4 NEW MEDIUM concerns. The revision pass should be small and targeted:
-
-1. Re-align helper script spec with actual `parity_contract.json` schemas (HIGH 1, HIGH 2, HIGH 3, MEDIUM 6) — planner must Read both contract files during revision.
-2. Fix the `CacheStats` grep pattern stale-after-flip regression (MEDIUM 4) — one-line change.
-3. Resolve stable-ID hash regeneration for runtime coverage registries (MEDIUM 5) — inspect registry structure and either add a regeneration step or confirm no-op.
-4. Correct the C++ setting-type parser token list to include Python aliases (MEDIUM 7) — read `classic-settings-py/src/lib.rs`.
-5. LOW concerns can be addressed opportunistically or deferred.
-
-This is still a "targeted edits" round, not a full replan. The structural decomposition (Wave 1 / 2 / 3, D-15 git mv discipline, D-09 bridge expansion scope) remains correct.
-
-**Alternative:** If the user chooses to proceed directly to execution, add items 1-7 above as executor-time guidance in `/gsd:execute-phase 1` and accept the risk that Wave 3 may need follow-up commits before the parity gates pass. Wave 1 and most of Wave 2 are solid; the residual risk is concentrated in Plan 01-03 (parity gate regeneration).
-
-## Next Steps
-
-Run: `/gsd:plan-phase 1 --reviews` to incorporate Round 2 feedback into a final revised plan set, OR proceed to `/gsd:execute-phase 1` with manual executor guidance for the 7 Round 2 items.
