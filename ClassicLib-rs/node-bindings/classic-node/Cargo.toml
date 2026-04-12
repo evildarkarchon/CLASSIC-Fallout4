@@ -33,7 +33,6 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # Wave 1: Core Infrastructure
 classic-perf-core = { path = "../../business-logic/classic-perf-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
-classic-constants-core = { path = "../../business-logic/classic-constants-core" }
 classic-version-core = { path = "../../business-logic/classic-version-core" }
 classic-message-core = { path = "../../business-logic/classic-message-core" }
 

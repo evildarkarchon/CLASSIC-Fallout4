@@ -45,12 +45,12 @@ pub use pe_version::{
 };
 
 // Re-export VersionRegistry for version information
-pub use classic_constants_core::{
+pub use classic_version_registry_core::{
     VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry,
 };
 
 // Re-export NULL_VERSION for convenience
-pub use classic_constants_core::NULL_VERSION;
+pub use classic_version_registry_core::NULL_VERSION;
 
 /// Version parsing and comparison errors.
 #[derive(Error, Debug)]

@@ -27,6 +27,7 @@
 //! assert_eq!(nexus_url, "https://www.nexusmods.com");
 //! ```
 
+use classic_shared_core::GameId;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::Url;
@@ -280,18 +281,18 @@ impl ModSite {
     ///
     /// ```rust
     /// use classic_web_core::ModSite;
-    /// use classic_constants_core::GameId;
+    /// use classic_shared_core::GameId;
     ///
     /// let url = ModSite::NexusMods.game_url(GameId::Fallout4);
     /// assert_eq!(url, "https://www.nexusmods.com/fallout4");
     /// ```
     #[must_use]
-    pub fn game_url(self, game_id: classic_constants_core::GameId) -> String {
+    pub fn game_url(self, game_id: GameId) -> String {
         let game_slug = match game_id {
-            classic_constants_core::GameId::Fallout4 => "fallout4",
-            classic_constants_core::GameId::Fallout4VR => "fallout4vr",
-            classic_constants_core::GameId::Skyrim => "skyrimspecialedition",
-            classic_constants_core::GameId::Starfield => "starfield",
+            GameId::Fallout4 => "fallout4",
+            GameId::Fallout4VR => "fallout4vr",
+            GameId::Skyrim => "skyrimspecialedition",
+            GameId::Starfield => "starfield",
         };
 
         match self {
@@ -439,7 +440,7 @@ mod tests {
 
     #[test]
     fn test_mod_site_game_url() {
-        use classic_constants_core::GameId;
+        use classic_shared_core::GameId;
 
         let url = ModSite::NexusMods.game_url(GameId::Fallout4);
         assert_eq!(url, "https://www.nexusmods.com/fallout4");
@@ -579,7 +580,7 @@ mod tests {
 
     #[test]
     fn test_mod_site_all_game_urls() {
-        use classic_constants_core::GameId;
+        use classic_shared_core::GameId;
 
         // Nexus Mods
         assert_eq!(

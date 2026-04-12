@@ -76,7 +76,7 @@ impl Keys {
     ///
     /// ```rust,ignore
     /// use classic_registry_core::{register, get, Keys};
-    /// use classic_constants_core::Fallout4Version;
+    /// use classic_version_registry_core::Fallout4Version;
     ///
     /// // Register a version
     /// register(Keys::GAME_VERSION, Fallout4Version::Vr);

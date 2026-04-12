@@ -24,8 +24,8 @@ anyhow = { workspace = true }
 # PE file parsing
 pelite = { workspace = true }
 
-# Constants access
-classic-constants-core = { path = "../classic-constants-core" }
+# Version registry access
+classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # NO PyO3 dependency!
 

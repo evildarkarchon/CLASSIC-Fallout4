@@ -4,7 +4,7 @@ version = "9.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["CLASSIC Development Team"]
-description = "Python bindings for classic-constants-core (PyO3)"
+description = "Python bindings for redistributed CLASSIC constants surfaces (PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
@@ -13,7 +13,9 @@ name = "classic_constants"
 
 [dependencies]
 # Business logic - NO PyO3 here!
-classic-constants-core = { path = "../../business-logic/classic-constants-core" }
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 # PyO3 bindings
 pyo3 = { workspace = true }

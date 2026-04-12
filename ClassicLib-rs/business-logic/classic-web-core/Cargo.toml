@@ -11,8 +11,8 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 
 [dependencies]
-# Constants
-classic-constants-core = { path = "../classic-constants-core" }
+# Shared types
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 # Error handling
 thiserror = { workspace = true }

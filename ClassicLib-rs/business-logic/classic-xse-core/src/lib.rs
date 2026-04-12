@@ -23,7 +23,7 @@
 //! }
 //! ```
 
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -133,7 +133,7 @@ impl XseType {
     ///
     /// ```rust
     /// use classic_xse_core::XseType;
-    /// use classic_constants_core::GameId;
+    /// use classic_shared_core::GameId;
     ///
     /// assert_eq!(XseType::from_game_id(GameId::Fallout4), XseType::F4SE);
     /// assert_eq!(XseType::from_game_id(GameId::Fallout4VR), XseType::F4SEVR);

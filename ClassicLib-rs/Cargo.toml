@@ -16,8 +16,6 @@ members = [
     "business-logic/classic-message-core",
     # Phase 2 - Path Management (Business Logic)
     "business-logic/classic-path-core",
-    # Phase 4 - Constants and Utilities (Business Logic)
-    "business-logic/classic-constants-core",
     "business-logic/classic-version-core",
     "business-logic/classic-resource-core",
     "business-logic/classic-xse-core",
