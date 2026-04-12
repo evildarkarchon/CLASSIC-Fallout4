@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -233,13 +235,41 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             ],
         )
 
-    @unittest.skip("Phase 6 Wave 3 pending")
     def test_cargo_root_detection(self) -> None:
-        pass
+        locate_result = subprocess.run(
+            ["cargo", "locate-project", "--workspace", "--message-format", "plain"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(Path(locate_result.stdout.strip()), WORKSPACE_MANIFEST)
 
-    @unittest.skip("Phase 6 Wave 3 pending")
+        metadata_result = subprocess.run(
+            ["cargo", "metadata", "--format-version", "1", "--no-deps"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        metadata = json.loads(metadata_result.stdout)
+        self.assertEqual(Path(metadata["workspace_root"]), REPO_ROOT)
+        self.assertEqual(Path(metadata["target_directory"]), REPO_ROOT / "target")
+
     def test_old_manifest_audit(self) -> None:
-        pass
+        self.assertFalse(LEGACY_WORKSPACE_MANIFEST.exists())
+
+        for path in [
+            CI_RUST_WORKFLOW,
+            BENCHMARKS_WORKFLOW,
+            REBUILD_SCRIPT,
+            STUB_VALIDATOR,
+            CLEAN_RUN_HELPER,
+        ]:
+            text = read_text(path)
+            with self.subTest(path=str(path)):
+                self.assertNotIn("ClassicLib-rs/Cargo.toml", text)
+                self.assertNotIn("--manifest-path", text)
 
     def test_clean_target_guard(self) -> None:
         self.assertTrue(CLEAN_RUN_HELPER.exists())
