@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-12T13:13:08.513Z"
+status: planning
+stopped_at: Phase 8 context gathered
+last_updated: "2026-04-12T22:13:00.607Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 7
   percent: 100
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 07 — crate-relocation-and-path-rewire
+**Current focus:** Phase 08 — wrapper-and-parity-rewire
 
 ## Current Position
 
-Phase: 7
+Phase: 8
 Plan: Not started
-Status: Complete
+Status: Ready to plan
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -36,26 +36,30 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: --
-- Total execution time: 0 hours
+- Total plans completed: 7
+- Average duration: tracked in phase summaries
+- Total execution time: tracked in phase summaries
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 6-10 | 0 | 0 | - |
+| 06 | 4 | tracked | tracked |
+| 07 | 3 | tracked | tracked |
 
 **Recent Trend:**
 
-- Last 5 plans: --
-- Trend: --
+- Last 5 plans: `06-02`, `06-03`, `07-01`, `07-02`, `07-03`
+- Trend: Phase 6 and Phase 7 are complete; next work shifts to Phase 8 integration rewiring.
 
 *Updated after each plan completion*
 | Phase 06 P00 | 0min | 1 tasks | 2 files |
 | Phase 06 P01 | 5 min | 2 tasks | 6 files |
 | Phase 06 P02 | 1 min | 2 tasks | 13 files |
 | Phase 06 P03 | 1h 19m | 3 tasks | 32 files |
+| Phase 07 P01 | session | 2 tasks | 2 files |
+| Phase 07 P02 | session | 2 tasks | 10+ files |
+| Phase 07 P03 | session | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -100,11 +104,15 @@ Recent decisions affecting current work:
 - [Phase 06]: Normalize repo-root and explicit ClassicLib-rs --rust-dir inputs to the live python-bindings tree during Phase 6
 - [Phase 06]: Use plain repo-root cargo commands in rebuild_rust.ps1 instead of legacy manifest-path calls
 - [Phase 06]: Keep benchmark support files owned only at repo root so Criterion config and shared helper discovery have one canonical location during Phase 6.
-- [Phase 06]: Standardize crate-level benchmark helper imports on ../../../../benches/common/* so every known benchmark keeps resolving after the repo-root move.
+- [Phase 06]: Standardize crate-level benchmark helper imports before relocation so the later repo-root move only needs a minimal include-path rebase.
 - [Phase 06]: Keep Rust CI on plain repo-root cargo commands and repo-root target caching with no --manifest-path compatibility shim.
 - [Phase 06]: Use cargo locate-project --workspace plus cargo metadata --format-version 1 --no-deps as the authoritative Phase 6 root proof.
 - [Phase 06]: Limit benchmark workflow changes in Phase 6 to the minimum repo-root path/config fixes needed to keep moved benchmark assets viable.
 - [Phase 06]: Treat active always-on docs and quick-start surfaces as closure-critical and audit them for stale ClassicLib-rs workspace guidance.
+- [Phase 07]: Move `foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/` intact to repo root and strip only the `ClassicLib-rs/` prefix from root workspace members.
+- [Phase 07]: Preserve crate-manifest `path =` relationships where the moved layer geometry keeps them valid; only rebase repo-relative include/helper paths proven broken by the move.
+- [Phase 07]: Treat remaining `ClassicLib-rs` residue as non-authoritative only; no live `Cargo.toml` files or owned Rust sources remain there outside legacy `target/` output.
+- [Phase 07]: Use the checked-in relocation audit plus Cargo root/member proof as the Phase 7 closure contract.
 
 ### Pending Todos
 
@@ -123,7 +131,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T12:53:47.740Z
-Stopped at: Completed 06-03-PLAN.md
-Resume file: None
-Next action: Plan Phase 07 work
+Last session: 2026-04-12T22:13:00.603Z
+Stopped at: Phase 8 context gathered
+Resume file: .planning/phases/08-wrapper-and-parity-rewire/08-CONTEXT.md
+Next action: Plan or execute Phase 08 wrapper/parity rewiring
