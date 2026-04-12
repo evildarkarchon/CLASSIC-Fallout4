@@ -7,10 +7,24 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PHASE_DIR = REPO_ROOT / ".planning/phases/06-repo-root-workspace-cutover"
 CLEAN_RUN_HELPER = REPO_ROOT / "tests/planning/phase06_clean_run.ps1"
+WORKSPACE_MANIFEST = REPO_ROOT / "Cargo.toml"
+ROOT_CARGO_LOCK = REPO_ROOT / "Cargo.lock"
+ROOT_CARGO_CONFIG = REPO_ROOT / ".cargo/config.toml"
+LEGACY_WORKSPACE_MANIFEST = REPO_ROOT / "ClassicLib-rs/Cargo.toml"
+LEGACY_CARGO_LOCK = REPO_ROOT / "ClassicLib-rs/Cargo.lock"
+LEGACY_CARGO_CONFIG = REPO_ROOT / "ClassicLib-rs/.cargo/config.toml"
 
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def assert_contains_all(
+    test_case: unittest.TestCase, text: str, fragments: list[str]
+) -> None:
+    for fragment in fragments:
+        with test_case.subTest(fragment=fragment):
+            test_case.assertIn(fragment, text)
 
 
 class Phase06ValidationAuditTests(unittest.TestCase):
@@ -18,13 +32,43 @@ class Phase06ValidationAuditTests(unittest.TestCase):
         self.assertTrue(REPO_ROOT.exists())
         self.assertTrue(PHASE_DIR.exists())
 
-    @unittest.skip("Phase 6 Wave 1 pending")
     def test_workspace_root_manifest(self) -> None:
-        pass
+        self.assertTrue(WORKSPACE_MANIFEST.exists())
+        self.assertFalse(LEGACY_WORKSPACE_MANIFEST.exists())
 
-    @unittest.skip("Phase 6 Wave 1 pending")
+        text = read_text(WORKSPACE_MANIFEST)
+        assert_contains_all(
+            self,
+            text,
+            [
+                "[workspace]",
+                'resolver = "2"',
+                '"ClassicLib-rs/business-logic/classic-scanlog-core"',
+                '"ClassicLib-rs/python-bindings/classic-config-py"',
+                "[workspace.dependencies]",
+                "[workspace.lints.rust]",
+                "[profile.release]",
+                "[profile.release-with-debug]",
+            ],
+        )
+        self.assertNotIn("default-members", text)
+
     def test_core_root_files(self) -> None:
-        pass
+        self.assertTrue(ROOT_CARGO_LOCK.exists())
+        self.assertTrue(ROOT_CARGO_CONFIG.exists())
+        self.assertFalse(LEGACY_CARGO_LOCK.exists())
+        self.assertFalse(LEGACY_CARGO_CONFIG.exists())
+
+        assert_contains_all(
+            self,
+            read_text(ROOT_CARGO_CONFIG),
+            [
+                "[alias]",
+                'flame = "flamegraph"',
+                'flame-bench = "flamegraph --bench"',
+                'profile-build = "build --profile release-with-debug"',
+            ],
+        )
 
     @unittest.skip("Phase 6 Wave 1 pending")
     def test_stub_validator(self) -> None:
