@@ -135,7 +135,7 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md — Close the consolidation milestone cleanup debt (docs index links, Phase 3 verification bookkeeping, Node parity floor tripwire)
-- [ ] 05-02-PLAN.md — Close the remaining live-tree/audit gap behind the refreshed Phase 3 verification artifact
+- [x] 05-02-PLAN.md — Close the remaining live-tree/audit gap behind the refreshed Phase 3 verification artifact
 
 ## Progress
 

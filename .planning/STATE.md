@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-04-12T03:41:08.732Z"
+status: executing
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-04-12T03:53:53.369Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 ## Current Position
 
 Phase: 05 (milestone-cleanup) — EXECUTING
-Plan: 1 of 1
-Status: Phase complete — ready for verification
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 4 min | 2 tasks | 5 files |
 | Phase 04 P03 | 7 min | 2 tasks | 1 files |
 | Phase 05 P01 | 20 min | 3 tasks | 5 files |
+| Phase 05 P02 | 8min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Refresh 03-VERIFICATION.md in place so Phase 3 keeps a single canonical verifier artifact.
 - [Phase 05]: Use docs/api/README.md owner routing to repair the top-level Rust documentation index instead of adding replacement pages.
 - [Phase 05]: Treat 705 rows as the live Node parity floor because the committed contract and diff report already show a 705/705 one-tier baseline.
+- [Phase 05]: Enforce the passed Phase 3 closure claim with a live-path absence assertion instead of rewriting the Phase 3 artifact again.
+- [Phase 05]: Treat the empty classic-constants-core directory as live-tree audit debt: remove it from disk and prevent recurrence through the Phase 5 test.
 
 ### Pending Todos
 
@@ -110,7 +113,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T03:41:08.729Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-04-12T03:53:53.366Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
 Next action: `/gsd-progress`
