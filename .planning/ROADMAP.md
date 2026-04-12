@@ -99,10 +99,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Redistribute Rust core constants into version-registry, settings, and shared crates; migrate Rust consumers; delete classic-constants-core
-- [ ] 03-02-PLAN.md — Carve classic-constants-py into version-registry-py, settings-py, and shared-py; migrate Python consumers; delete classic-constants-py
-- [ ] 03-03-PLAN.md — Disperse Node and CXX constants surfaces into semantic modules, including new classic::shared bridge support
-- [ ] 03-04-PLAN.md — Migrate tests, consolidate docs, refresh parity tooling inputs, and regenerate all three parity baselines
+- [ ] 03-01-PLAN.md — Redistribute Rust core constants, migrate inline tests first, sweep workspace Cargo dependencies, then delete classic-constants-core
+- [ ] 03-02-PLAN.md — Carve classic-constants-py into version-registry-py, settings-py, and shared-py with module retags; migrate Python consumers; delete classic-constants-py
+- [ ] 03-03-PLAN.md — Disperse Node and CXX constants surfaces into semantic modules, migrate constants.spec.ts and the GUI consumer, and add classic::shared bridge support
+- [ ] 03-04-PLAN.md — Consolidate active docs, refresh parity tooling inputs in split-aware order, and regenerate all three parity baselines with live-reference checks
 
 ### Phase 4: Gate Validation & Documentation
 **Goal**: All three parity gates confirm zero drift after consolidation, and project documentation reflects the new 16-crate workspace topology
