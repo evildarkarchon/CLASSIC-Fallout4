@@ -27,7 +27,11 @@
   1. Contributor can run Cargo from the repository root without relying on `ClassicLib-rs/Cargo.toml` as the live workspace manifest.
   2. Contributor can run canonical repo-root workspace commands including `cargo fmt --all`, `cargo clippy --workspace`, and `cargo test --workspace`.
   3. Contributor can observe one active workspace root instead of a dual-workspace steady state.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] `06-01-PLAN.md` — Promote the repo-root workspace shell, support files, and root-aware helper scripts.
+- [ ] `06-02-PLAN.md` — Rewire cargo-based CI/workflow paths and prove the clean repo-root Cargo contract.
 
 ### Phase 7: Crate Relocation and Path Rewire
 **Goal**: Every Rust crate currently under `ClassicLib-rs/` exists at its new repo-root-relative location with working local path relationships.
@@ -74,7 +78,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Repo-Root Workspace Cutover | 0/TBD | Not started | - |
+| 6. Repo-Root Workspace Cutover | 0/2 | Not started | - |
 | 7. Crate Relocation and Path Rewire | 0/TBD | Not started | - |
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
