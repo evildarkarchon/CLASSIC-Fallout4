@@ -10,8 +10,8 @@ Requirements for milestone `v9.1.0-root`. Each requirement maps to exactly one r
 
 ### Workspace Root
 
-- [ ] **ROOT-01**: Contributor can run the Rust workspace from the repository root without using `ClassicLib-rs/Cargo.toml` as the canonical workspace manifest
-- [ ] **ROOT-02**: Contributor can use repo-root Cargo workflows for the relocated workspace, including `cargo fmt --all`, `cargo clippy --workspace`, and `cargo test --workspace`
+- [x] **ROOT-01**: Contributor can run the Rust workspace from the repository root without using `ClassicLib-rs/Cargo.toml` as the canonical workspace manifest
+- [x] **ROOT-02**: Contributor can use repo-root Cargo workflows for the relocated workspace, including `cargo fmt --all`, `cargo clippy --workspace`, and `cargo test --workspace`
 
 ### Crate Relocation
 
@@ -51,8 +51,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOT-01 | Phase 6 | Pending |
-| ROOT-02 | Phase 6 | Pending |
+| ROOT-01 | Phase 6 | Complete |
+| ROOT-02 | Phase 6 | Complete |
 | MOVE-01 | Phase 7 | Pending |
 | MOVE-02 | Phase 7 | Pending |
 | INTG-01 | Phase 8 | Pending |

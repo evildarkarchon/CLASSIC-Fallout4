@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-04-12T06:54:41.757Z"
-last_activity: 2026-04-11 — Created roadmap for milestone v9.1.0-root
+status: executing
+stopped_at: Completed 06-00-PLAN.md
+last_updated: "2026-04-12T12:37:25.807Z"
+last_activity: 2026-04-12 — Completed 06-00 validation scaffold bootstrap
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 4
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 6 roadmap ready for planning — repo-root workspace cutover
+**Current focus:** Phase 06 — repo-root-workspace-cutover (next: 06-01)
 
 ## Current Position
 
-Phase: 6 of 10 (Repo-Root Workspace Cutover)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-04-11 — Created roadmap for milestone v9.1.0-root
+Phase: 06 (repo-root-workspace-cutover) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-12 — Completed 06-00 validation scaffold bootstrap
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: --
 
 *Updated after each plan completion*
+| Phase 06 P00 | 0min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Treat parity_contract.json as the source of truth and require the markdown contract to name the live one-tier 705-row floor explicitly.
 - [Phase 05]: Keep scope to the JSON contract description and existing audit/tripwire surfaces instead of refreshing any parity baselines.
 - [Phase 05]: Require both audit surfaces to read the committed parity_contract.json description so stale hybrid-tier wording fails immediately.
+- [Phase 06]: Reserved the full Phase 6 audit hook surface up front with skipped tests so later plans can fill the contract without renaming it. — Creates a stable validation contract before workspace-cutover tasks depend on it.
+- [Phase 06]: Rename ClassicLib-rs/target during clean proof runs so stale legacy artifacts cannot mask repo-root Cargo failures. — Forces Phase 6 proof to use the new repo-root workspace outputs instead of legacy caches.
 
 ### Pending Todos
 
@@ -108,7 +111,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T06:54:41.754Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-repo-root-workspace-cutover/06-CONTEXT.md
-Next action: /gsd-plan-phase 6
+Last session: 2026-04-12T12:37:25.803Z
+Stopped at: Completed 06-00-PLAN.md
+Resume file: .planning/phases/06-repo-root-workspace-cutover/06-01-PLAN.md
+Next action: Execute 06-01-PLAN.md
