@@ -32,8 +32,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **GATE-02**: CXX parity gate baseline regenerated and exits 0
 - [ ] **GATE-03**: Python parity gate exits 0 under the current one-tier parity contract with zero coverage gaps, registry mismatches, and stale tracked artifacts
 - [ ] **GATE-04**: Node parity gate exits 0
-- [ ] **GATE-05**: API docs under `docs/api/` updated for merged crates (absorbed crate pages removed or consolidated, references updated)
-- [ ] **GATE-06**: `CLAUDE.md` technology stack section updated to reflect 16 business-logic crates
+- [x] **GATE-05**: API docs under `docs/api/` updated for merged crates (absorbed crate pages removed or consolidated, references updated)
+- [x] **GATE-06**: `CLAUDE.md` technology stack section updated to reflect 16 business-logic crates
 
 ## Future Requirements
 
@@ -69,8 +69,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GATE-02 | Phase 4 | Pending |
 | GATE-03 | Phase 4 | Pending |
 | GATE-04 | Phase 4 | Pending |
-| GATE-05 | Phase 4 | Pending |
-| GATE-06 | Phase 4 | Pending |
+| GATE-05 | Phase 4 | Complete |
+| GATE-06 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-04-12T02:22:17.444Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-04-12T02:45:13.824Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 12
+  completed_plans: 10
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 03 — constants-version-registry-merge
+**Current focus:** Phase 04 — gate-validation-documentation
 
 ## Current Position
 
-Phase: 03 (constants-version-registry-merge) — EXECUTING
-Plan: 4 of 4
+Phase: 04 (gate-validation-documentation) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P02 | 40min | 3 tasks | 24 files |
 | Phase 03 P01 | 9 min | 2 tasks | 19 files |
 | Phase 03 P04 | 13 min | 2 tasks | 41 files |
+| Phase 04 P01 | 1 min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Retire the standalone constants API doc and document Fallout4Version, YamlFile/settings constants, and GameId under their surviving owners.
 - [Phase 03]: Keep Python parity scanning both classic-shared-core and classic-shared-py so GameId redistribution and shared PyO3 wrappers both remain visible to the gate.
 - [Phase 03]: Track Node version-core rust-only proxy rows with an explicit runtime-coverage selector after NULL_VERSION moved out of the retired constants owner.
+- [Phase 04]: Use bun run parity:gate as the canonical active-doc Node audit command; reserve parity:gate:update-baseline for intentional refreshes.
+- [Phase 04]: Keep retired crate names in active docs only as short historical notes attached to surviving owners.
 
 ### Pending Todos
 
@@ -97,7 +100,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T02:22:17.440Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-gate-validation-documentation/04-CONTEXT.md
+Last session: 2026-04-12T02:45:13.820Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
 Next action: `/gsd:plan-phase 3`
