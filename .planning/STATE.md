@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.1.0
-milestone_name: milestone
+milestone: v9.1.0-root
+milestone_name: move crates to project root
 status: planning
-stopped_at: Milestone v9.1.0 archived
-last_updated: "2026-04-12T04:38:48.477Z"
-last_activity: 2026-04-12
+stopped_at: Defining requirements
+last_updated: "2026-04-11T22:09:35.7155847-07:00"
+last_activity: 2026-04-11
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-12)
+See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Planning next milestone
+**Current focus:** Milestone v9.1.0-root requirements and roadmap definition
 
 ## Current Position
 
-Phase: None
-Plan: None
-Status: Milestone v9.1.0 archived — ready for next milestone definition
-Last activity: 2026-04-12
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-11 — Milestone v9.1.0-root started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -52,20 +52,6 @@ Progress: [██████████] 100%
 - Trend: --
 
 *Updated after each plan completion*
-| Phase 01 P01 | 45 min | 2 tasks | 29 files |
-| Phase 01 P02 | 90 min | 3 tasks | 27 files |
-| Phase 01 P03 | ~120 min | 3 tasks | 37 files |
-| Phase 02 P01 | 18 min | 4 tasks | 22 files |
-| Phase 02 P02 | 40min | 3 tasks | 24 files |
-| Phase 03 P01 | 9 min | 2 tasks | 19 files |
-| Phase 03 P04 | 13 min | 2 tasks | 41 files |
-| Phase 04 P01 | 1 min | 2 tasks | 12 files |
-| Phase 04 P02 | 4 min | 2 tasks | 5 files |
-| Phase 04 P03 | 7 min | 2 tasks | 1 files |
-| Phase 05 P01 | 20 min | 3 tasks | 5 files |
-| Phase 05 P02 | 8min | 2 tasks | 1 files |
-| Phase 05 P03 | 2min | 2 tasks | 2 files |
-| Phase 05 P04 | 1min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -119,7 +105,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T04:15:16.866Z
-Stopped at: Milestone v9.1.0 archived
+Last session: 2026-04-11T22:09:35.7155847-07:00
+Stopped at: Defining requirements
 Resume file: None
-Next action: `/gsd-new-milestone`
+Next action: Continue milestone planning

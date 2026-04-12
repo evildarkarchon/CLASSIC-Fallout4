@@ -6,13 +6,17 @@
 
 **Status:** The Rust business-logic workspace is now consolidated to 16 crates, all three binding surfaces remain at full parity, and the milestone cleanup pass aligned docs, verification artifacts, and Node parity contract surfaces to the live one-tier baseline.
 
-**Current focus:** Plan the next milestone and create a fresh `.planning/REQUIREMENTS.md`.
+**Current focus:** Define and execute milestone `v9.1.0-root` to relocate the Rust workspace from `ClassicLib-rs/` to the repository root.
 
-## Next Milestone Goals
+## Current Milestone: `v9.1.0-root` Move Crates to Project Root
 
-- Define the next shipped scope with `/gsd-new-milestone`
-- Create a new milestone-scoped `.planning/REQUIREMENTS.md`
-- Decide which backlog items or new feature work should drive the next milestone
+**Goal:** Move the Rust workspace out of `ClassicLib-rs/` by relocating all crates currently under that directory to the repository root so Cargo work happens from the project root.
+
+**Target features:**
+- Move every Rust crate currently under `ClassicLib-rs/` to the repo root
+- Preserve each crate's existing internal directory structure during the move
+- Update docs, skills, and agent context files that currently point at `ClassicLib-rs/`
+- Keep existing build, parity, and frontend wrapper workflows working after the relocation
 
 <details>
 <summary>Archived milestone snapshot: v9.1.0-consolidation Crate Consolidation</summary>
@@ -87,7 +91,10 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 
 ### Active
 
-- None until the next milestone is defined.
+- [ ] Cargo workspace runs from the repository root while preserving the existing crate layout
+- [ ] Every crate currently under `ClassicLib-rs/` is relocated without changing intended ownership boundaries
+- [ ] Docs, skills, and agent context files reference the new root-level workspace paths
+- [ ] Existing wrapper, parity, and frontend workflows still work against the relocated workspace
 
 ### Out of Scope
 
@@ -108,6 +115,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - Codebase map from 2026-04-04 at `.planning/codebase/CONCERNS.md` — all actionable concerns resolved across v9.1.0-bugfixes and v9.1.0-bindings
 - v9.1.0-consolidation Phase 4 closed with green docs, parity, workspace, and native wrapper evidence in `.planning/phases/04-gate-validation-documentation/04-VERIFICATION.md`
 - v9.1.0-consolidation Phase 5 closed the remaining audit debt: top-level docs routing, Phase 3 verification bookkeeping, and Node parity contract artifacts now agree with the live 705-row one-tier baseline
+- The next milestone is a brownfield workspace relocation: move the full Rust workspace from `ClassicLib-rs/` to the repository root without redesigning the crate graph
 
 ## Constraints
 
@@ -151,4 +159,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 after v9.1.0 milestone archival*
+*Last updated: 2026-04-11 after milestone v9.1.0-root start*
