@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.1.0-root
-milestone_name: move crates to project root
-status: ready_to_plan
-stopped_at: Roadmap created
-last_updated: "2026-04-11T23:00:00-07:00"
-last_activity: 2026-04-11
+milestone: v9.1.0
+milestone_name: milestone
+status: planning
+stopped_at: Phase 6 context gathered
+last_updated: "2026-04-12T06:54:41.757Z"
+last_activity: 2026-04-11 — Created roadmap for milestone v9.1.0-root
 progress:
   total_phases: 5
   completed_phases: 0
@@ -35,6 +35,7 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: --
 - Total execution time: 0 hours
@@ -46,6 +47,7 @@ Progress: [░░░░░░░░░░] 0%
 | 6-10 | 0 | 0 | - |
 
 **Recent Trend:**
+
 - Last 5 plans: --
 - Trend: --
 
@@ -106,7 +108,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T23:00:00-07:00
-Stopped at: Roadmap created
-Resume file: None
+Last session: 2026-04-12T06:54:41.754Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-repo-root-workspace-cutover/06-CONTEXT.md
 Next action: /gsd-plan-phase 6
