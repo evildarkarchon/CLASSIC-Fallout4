@@ -38,7 +38,7 @@
 //! ```ignore
 //! use criterion::{criterion_group, criterion_main, Criterion};
 //!
-//! #[path = "../../benches/common/mod.rs"]
+//! #[path = "../../../../benches/common/mod.rs"]
 //! mod common;
 //! use common::config::configure_criterion;
 //!

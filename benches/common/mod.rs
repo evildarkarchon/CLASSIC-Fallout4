@@ -9,7 +9,7 @@
 //! In benchmark files:
 //!
 //! ```ignore
-//! #[path = "../../benches/common/mod.rs"]
+//! #[path = "../../../../benches/common/mod.rs"]
 //! mod common;
 //! use common::config::configure_criterion;
 //! use common::fixtures;

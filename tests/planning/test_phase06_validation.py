@@ -17,6 +17,12 @@ LEGACY_CARGO_CONFIG = REPO_ROOT / "ClassicLib-rs/.cargo/config.toml"
 STUB_VALIDATOR = REPO_ROOT / "validate_stubs.py"
 LEGACY_STUB_VALIDATOR = REPO_ROOT / "ClassicLib-rs/validate_stubs.py"
 REBUILD_SCRIPT = REPO_ROOT / "rebuild_rust.ps1"
+BENCHMARK_CONFIG = REPO_ROOT / "benchmark-config.yaml"
+CRITERION_CONFIG = REPO_ROOT / "criterion.toml"
+BENCH_COMMON_DIR = REPO_ROOT / "benches/common"
+LEGACY_BENCHMARK_CONFIG = REPO_ROOT / "ClassicLib-rs/benchmark-config.yaml"
+LEGACY_CRITERION_CONFIG = REPO_ROOT / "ClassicLib-rs/criterion.toml"
+LEGACY_BENCH_COMMON_DIR = REPO_ROOT / "ClassicLib-rs/benches/common"
 
 
 def read_text(path: Path) -> str:
@@ -136,9 +142,40 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             ],
         )
 
-    @unittest.skip("Phase 6 Wave 2 pending")
     def test_benchmark_support_set(self) -> None:
-        pass
+        self.assertTrue(CRITERION_CONFIG.exists())
+        self.assertTrue(BENCHMARK_CONFIG.exists())
+        self.assertTrue((BENCH_COMMON_DIR / "mod.rs").exists())
+        self.assertTrue((BENCH_COMMON_DIR / "config.rs").exists())
+        self.assertTrue((BENCH_COMMON_DIR / "db_fixtures.rs").exists())
+        self.assertTrue((BENCH_COMMON_DIR / "fixtures.rs").exists())
+
+        self.assertFalse(LEGACY_CRITERION_CONFIG.exists())
+        self.assertFalse(LEGACY_BENCHMARK_CONFIG.exists())
+        self.assertFalse((LEGACY_BENCH_COMMON_DIR / "mod.rs").exists())
+        self.assertFalse((LEGACY_BENCH_COMMON_DIR / "config.rs").exists())
+        self.assertFalse((LEGACY_BENCH_COMMON_DIR / "db_fixtures.rs").exists())
+        self.assertFalse((LEGACY_BENCH_COMMON_DIR / "fixtures.rs").exists())
+
+        assert_contains_all(
+            self,
+            read_text(CRITERION_CONFIG),
+            [
+                'criterion_home = "./target/criterion"',
+                "[output]",
+                "verbose = true",
+            ],
+        )
+        assert_contains_all(
+            self,
+            read_text(BENCHMARK_CONFIG),
+            [
+                "defaults:",
+                "warning_threshold: 5",
+                "failure_threshold: 10",
+                "overrides:",
+            ],
+        )
 
     @unittest.skip("Phase 6 Wave 3 pending")
     def test_repo_root_workflows(self) -> None:
