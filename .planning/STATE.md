@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-04-12T12:44:13.219Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-04-12T12:48:55.739Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 06 (repo-root-workspace-cutover) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-12
 
-Progress: [█████░░░░░] 50%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [█████░░░░░] 50%
 *Updated after each plan completion*
 | Phase 06 P00 | 0min | 1 tasks | 2 files |
 | Phase 06 P01 | 5 min | 2 tasks | 6 files |
+| Phase 06 P02 | 1 min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Keep the promoted root manifest as a virtual workspace with resolver = "2" and no default-members.
 - [Phase 06]: Normalize repo-root and explicit ClassicLib-rs --rust-dir inputs to the live python-bindings tree during Phase 6
 - [Phase 06]: Use plain repo-root cargo commands in rebuild_rust.ps1 instead of legacy manifest-path calls
+- [Phase 06]: Keep benchmark support files owned only at repo root so Criterion config and shared helper discovery have one canonical location during Phase 6.
+- [Phase 06]: Standardize crate-level benchmark helper imports on ../../../../benches/common/* so every known benchmark keeps resolving after the repo-root move.
 
 ### Pending Todos
 
@@ -115,7 +118,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T12:44:13.216Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-04-12T12:48:55.735Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
-Next action: Execute 06-02-PLAN.md
+Next action: Execute 06-03-PLAN.md

@@ -31,8 +31,8 @@
 
 Plans:
 - [x] `06-00-PLAN.md` — Bootstrap the Phase 6 validation scaffold and clean-run helper.
-- [ ] `06-01-PLAN.md` — Promote the repo-root workspace shell and root-aware helper scripts.
-- [ ] `06-02-PLAN.md` — Move benchmark-owned support files to repo root and remove old copies.
+- [x] `06-01-PLAN.md` — Promote the repo-root workspace shell and root-aware helper scripts.
+- [x] `06-02-PLAN.md` — Move benchmark-owned support files to repo root and remove old copies.
 - [ ] `06-03-PLAN.md` — Rewire cargo-based CI/workflow paths, sync active workflow docs, and prove the clean repo-root Cargo contract.
 
 ### Phase 7: Crate Relocation and Path Rewire
@@ -80,7 +80,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Repo-Root Workspace Cutover | 2/4 | In Progress | - |
+| 6. Repo-Root Workspace Cutover | 3/4 | In Progress | - |
 | 7. Crate Relocation and Path Rewire | 0/TBD | Not started | - |
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
