@@ -51,23 +51,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOT-01 | — | Pending |
-| ROOT-02 | — | Pending |
-| MOVE-01 | — | Pending |
-| MOVE-02 | — | Pending |
-| INTG-01 | — | Pending |
-| INTG-02 | — | Pending |
-| INTG-03 | — | Pending |
-| INTG-04 | — | Pending |
-| DOCS-01 | — | Pending |
-| DOCS-02 | — | Pending |
-| DOCS-03 | — | Pending |
+| ROOT-01 | Phase 6 | Pending |
+| ROOT-02 | Phase 6 | Pending |
+| MOVE-01 | Phase 7 | Pending |
+| MOVE-02 | Phase 7 | Pending |
+| INTG-01 | Phase 8 | Pending |
+| INTG-02 | Phase 8 | Pending |
+| INTG-03 | Phase 9 | Pending |
+| INTG-04 | Phase 9 | Pending |
+| DOCS-01 | Phase 10 | Pending |
+| DOCS-02 | Phase 10 | Pending |
+| DOCS-03 | Phase 10 | Pending |
 
 **Coverage:**
 - Milestone requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11 ⚠
+- Mapped to phases: 11
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-11 after initial definition*
+*Last updated: 2026-04-11 after roadmap creation*

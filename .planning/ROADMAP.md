@@ -2,6 +2,7 @@
 
 ## Milestones
 
+- 🚧 **v9.1.0-root Move Crates to Project Root** — Phases 6-10 (planned)
 - ✅ **v9.1.0-consolidation Crate Consolidation** — Phases 1-5 (shipped 2026-04-12) — see [`milestones/v9.1.0-ROADMAP.md`](./milestones/v9.1.0-ROADMAP.md)
 - ✅ **v9.1.0-bindings Full Bindings Parity** — Phases 1-7 (shipped 2026-04-10) — see [`milestones/v9.1.0-bindings-ROADMAP.md`](./milestones/v9.1.0-bindings-ROADMAP.md)
 - ✅ **v9.1.0-bugfixes CLASSIC Codebase Health** — Phases 1-11 (shipped 2026-04-07) — see [`milestones/v9.1.0-bugfixes-ROADMAP.md`](./milestones/v9.1.0-bugfixes-ROADMAP.md)
@@ -10,7 +11,74 @@
 
 ## Phases
 
-No active milestone is currently planned. Start the next one with `/gsd-new-milestone`.
+- [ ] **Phase 6: Repo-Root Workspace Cutover** - Repository root becomes the only canonical Cargo workspace entrypoint.
+- [ ] **Phase 7: Crate Relocation and Path Rewire** - All crates move out of `ClassicLib-rs/` intact and still resolve as one workspace.
+- [ ] **Phase 8: Wrapper and Parity Rewire** - Existing wrappers, frontends, and parity gates keep working against the relocated workspace.
+- [ ] **Phase 9: Clean Validation and CI Refresh** - Clean-state validation, CI, and path-bearing artifacts prove the new layout is durable.
+- [ ] **Phase 10: Docs, Guidance, and Tripwires** - Active docs and agent guidance point at the new root layout and guard against regressions.
+
+## Phase Details
+
+### Phase 6: Repo-Root Workspace Cutover
+**Goal**: Contributors can treat the repository root as the single authoritative Cargo workspace root.
+**Depends on**: Phase 5
+**Requirements**: ROOT-01, ROOT-02
+**Success Criteria** (what must be TRUE):
+  1. Contributor can run Cargo from the repository root without relying on `ClassicLib-rs/Cargo.toml` as the live workspace manifest.
+  2. Contributor can run canonical repo-root workspace commands including `cargo fmt --all`, `cargo clippy --workspace`, and `cargo test --workspace`.
+  3. Contributor can observe one active workspace root instead of a dual-workspace steady state.
+**Plans**: TBD
+
+### Phase 7: Crate Relocation and Path Rewire
+**Goal**: Every Rust crate currently under `ClassicLib-rs/` exists at its new repo-root-relative location with working local path relationships.
+**Depends on**: Phase 6
+**Requirements**: MOVE-01, MOVE-02
+**Success Criteria** (what must be TRUE):
+  1. Contributor can find each relocated crate at its new repository-root-relative path with its internal directory layout preserved.
+  2. Contributor can resolve all workspace members and local crate path dependencies after the move.
+  3. Contributor does not need a second active workspace under `ClassicLib-rs/` to build or inspect crate relationships.
+**Plans**: TBD
+
+### Phase 8: Wrapper and Parity Rewire
+**Goal**: Existing Rust-consuming wrappers, frontends, and parity gates continue to operate against the relocated workspace.
+**Depends on**: Phase 7
+**Requirements**: INTG-01, INTG-02
+**Success Criteria** (what must be TRUE):
+  1. Contributor can run the existing rebuild and wrapper entrypoints against the relocated workspace.
+  2. Contributor can run native CLI, GUI, and TUI integration flows without restoring `ClassicLib-rs/` as the workspace root.
+  3. Contributor can run the Python, Node, and CXX parity gates against the relocated workspace with no parity-contract changes caused by the move.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 9: Clean Validation and CI Refresh
+**Goal**: Clean-state verification and CI prove the repo-root workspace works without stale caches or legacy path artifacts.
+**Depends on**: Phase 8
+**Requirements**: INTG-03, INTG-04
+**Success Criteria** (what must be TRUE):
+  1. Contributor can run CI and path-sensitive build or packaging jobs against the new repository-root layout.
+  2. Contributor can verify the relocation from a clean state with regenerated path-bearing artifacts.
+  3. Contributor can see that successful validation does not depend on stale caches, stale outputs, or leftover `ClassicLib-rs` artifacts.
+**Plans**: TBD
+
+### Phase 10: Docs, Guidance, and Tripwires
+**Goal**: Active documentation and agent guidance teach the new workspace layout and help prevent `ClassicLib-rs` workspace-root regressions.
+**Depends on**: Phase 9
+**Requirements**: DOCS-01, DOCS-02, DOCS-03
+**Success Criteria** (what must be TRUE):
+  1. Contributor can follow active docs, skills, and agent context files without being sent to `ClassicLib-rs/` as the live workspace root.
+  2. Contributor can use migration notes or a verification matrix to translate old `ClassicLib-rs` workflows into repo-root workflows.
+  3. Contributor gets automated regression protection against newly introduced active `ClassicLib-rs` workspace-root references in validation-critical docs, scripts, or tests.
+**Plans**: TBD
+
+## Progress
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 6. Repo-Root Workspace Cutover | 0/TBD | Not started | - |
+| 7. Crate Relocation and Path Rewire | 0/TBD | Not started | - |
+| 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
+| 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
+| 10. Docs, Guidance, and Tripwires | 0/TBD | Not started | - |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>

@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v9.1.0-root
 milestone_name: move crates to project root
-status: planning
-stopped_at: Defining requirements
-last_updated: "2026-04-11T22:09:35.7155847-07:00"
+status: ready_to_plan
+stopped_at: Roadmap created
+last_updated: "2026-04-11T23:00:00-07:00"
 last_activity: 2026-04-11
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,21 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Milestone v9.1.0-root requirements and roadmap definition
+**Current focus:** Phase 6 roadmap ready for planning — repo-root workspace cutover
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 6 of 10 (Repo-Root Workspace Cutover)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-11 — Milestone v9.1.0-root started
+Status: Ready to plan
+Last activity: 2026-04-11 — Created roadmap for milestone v9.1.0-root
 
 Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
-
 - Total plans completed: 0
 - Average duration: --
 - Total execution time: 0 hours
@@ -44,10 +43,9 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 6-10 | 0 | 0 | - |
 
 **Recent Trend:**
-
 - Last 5 plans: --
 - Trend: --
 
@@ -60,6 +58,9 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [Roadmap]: Treat v9.1.0-root as a workspace-location migration only, not a crate-graph or API redesign.
+- [Roadmap]: Keep continuous numbering from the prior milestone, so this roadmap starts at Phase 6.
+- [Roadmap]: Sequence the work as root cutover → crate move → integration rewiring → clean validation → docs/tripwires.
 - [Roadmap]: Three merges are independent -- execute sequentially (Phases 1-3) then validate gates together (Phase 4)
 - [Roadmap]: Constants merge (Phase 3) has widest import fanout but does not depend on the other merges
 - [Phase 01]: 01-02: Bridge D-09 expansion and rename landed in same commit; CMakeLists 5th-place registration added to project knowledge; parity gate failures deferred to 01-03
@@ -105,7 +106,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T22:09:35.7155847-07:00
-Stopped at: Defining requirements
+Last session: 2026-04-11T23:00:00-07:00
+Stopped at: Roadmap created
 Resume file: None
-Next action: Continue milestone planning
+Next action: /gsd-plan-phase 6
