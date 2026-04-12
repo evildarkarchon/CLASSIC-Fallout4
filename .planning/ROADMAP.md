@@ -80,7 +80,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Repo-Root Workspace Cutover | 1/4 | In Progress | - |
+| 6. Repo-Root Workspace Cutover | 2/4 | In Progress | - |
 | 7. Crate Relocation and Path Rewire | 0/TBD | Not started | - |
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |

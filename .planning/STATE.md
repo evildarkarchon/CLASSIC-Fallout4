@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-00-PLAN.md
-last_updated: "2026-04-12T12:37:25.807Z"
-last_activity: 2026-04-12 — Completed 06-00 validation scaffold bootstrap
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-04-12T12:44:13.219Z"
+last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 06 — repo-root-workspace-cutover (next: 06-01)
+**Current focus:** Phase 06 — repo-root-workspace-cutover
 
 ## Current Position
 
 Phase: 06 (repo-root-workspace-cutover) — EXECUTING
 Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-04-12 — Completed 06-00 validation scaffold bootstrap
+Last activity: 2026-04-12
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 25%
 
 *Updated after each plan completion*
 | Phase 06 P00 | 0min | 1 tasks | 2 files |
+| Phase 06 P01 | 5 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 05]: Require both audit surfaces to read the committed parity_contract.json description so stale hybrid-tier wording fails immediately.
 - [Phase 06]: Reserved the full Phase 6 audit hook surface up front with skipped tests so later plans can fill the contract without renaming it. — Creates a stable validation contract before workspace-cutover tasks depend on it.
 - [Phase 06]: Rename ClassicLib-rs/target during clean proof runs so stale legacy artifacts cannot mask repo-root Cargo failures. — Forces Phase 6 proof to use the new repo-root workspace outputs instead of legacy caches.
+- [Phase 06]: Keep the promoted root manifest as a virtual workspace with resolver = "2" and no default-members.
+- [Phase 06]: Normalize repo-root and explicit ClassicLib-rs --rust-dir inputs to the live python-bindings tree during Phase 6
+- [Phase 06]: Use plain repo-root cargo commands in rebuild_rust.ps1 instead of legacy manifest-path calls
 
 ### Pending Todos
 
@@ -111,7 +115,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T12:37:25.803Z
-Stopped at: Completed 06-00-PLAN.md
-Resume file: .planning/phases/06-repo-root-workspace-cutover/06-01-PLAN.md
-Next action: Execute 06-01-PLAN.md
+Last session: 2026-04-12T12:44:13.216Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
+Next action: Execute 06-02-PLAN.md
