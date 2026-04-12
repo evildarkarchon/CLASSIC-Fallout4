@@ -17,6 +17,7 @@
 **Environment:**
 - Windows-only native targets (MSVC x64); Rust workspace is cross-platform at source level but CI is Windows-only
 - Single shared Tokio async runtime — one runtime rule enforced project-wide (`classic-shared-core`)
+- 16 pure Rust business-logic crates remain after the v9.1.0 consolidation merges; active contributor docs should describe that final topology
 
 **Package Managers:**
 - Cargo (Rust workspace) — lockfile present at `ClassicLib-rs/Cargo.lock`

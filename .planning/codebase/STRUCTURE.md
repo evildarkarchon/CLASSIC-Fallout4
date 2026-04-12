@@ -105,7 +105,7 @@ CLASSIC-Fallout4/                        # Repo root
 
 **`ClassicLib-rs/business-logic/`:**
 - Purpose: All domain logic; never import PyO3 here
-- Contains: 16 pure Rust `-core` crates after the v9.1.0 consolidation milestone's Phase 1-3 merges/redistribution; each has its own `src/` and `tests/` subdirectories
+- Contains: the surviving 16 pure Rust `-core` crates after the v9.1.0 consolidation milestone's Phase 1-3 merge sequence; each has its own `src/` and `tests/` subdirectories
 - Key files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs` (primary analysis engine), `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs` (config loading)
 
 **`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`:**
@@ -117,6 +117,7 @@ CLASSIC-Fallout4/                        # Repo root
 - Purpose: NAPI-RS Node.js/Bun bindings as a single compiled `.node` native module
 - Contains: `src/` (20 Rust modules), `__test__/` (per-module `.spec.ts` files + parity specs), `cli/` (TypeScript CLI wrapper)
 - Key files: `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`, `package.json`, `tsconfig.json`
+- Phase 4 closure guidance: use `bun run parity:gate` to verify zero drift; use `bun run parity:gate:update-baseline` only when an intentional source-backed change needs a refreshed baseline
 
 **`ClassicLib-rs/python-bindings/`:**
 - Purpose: PyO3 Python bindings mirroring business-logic crates 1:1

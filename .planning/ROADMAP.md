@@ -111,7 +111,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. `cargo test --workspace` passes end-to-end with zero failures across all 16 remaining business-logic crates
   2. CXX parity gate baseline is regenerated to reflect the merged crate topology and exits 0
-  3. Python parity gate exits 0 with `deferred_total == 0` after import path updates for merged crates
+  3. Python parity gate exits 0 under the current one-tier parity contract after import path updates for merged crates, with zero coverage gaps, registry mismatches, or stale tracked artifacts
   4. Node parity gate exits 0 after any needed import path updates for merged crates
   5. API docs under `docs/api/` are updated: absorbed crate pages (yaml-core, crashgen-settings-core, constants-core) are consolidated into their target crate pages, and all cross-references point to the surviving crates
 **Plans**: 3 plans

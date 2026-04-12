@@ -29,7 +29,8 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationT
 
 ```
 bun install && bun run build
-bun run parity:gate:local
+bun run parity:gate
+bun run parity:gate:update-baseline   # only when intentional source-backed drift must refresh the baseline
 bun run test:bun && bun run test:node
 ```
 
@@ -70,7 +71,7 @@ For module-specific instructions (e.g., `ClassicLib-rs/CLAUDE.md`, `classic-cli/
 
 **CLASSIC Crate Consolidation Milestone**
 
-The active milestone reduces workspace granularity by merging or redistributing redundant crates while keeping the Rust core, C++ bridge, Node bindings, and Python bindings in parity. Phase 3 specifically redistributes the retired constants surface across `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core` with zero behavioral drift.
+The active milestone closes with a surviving 16-crate Rust business-logic workspace after the Phase 1 yaml/settings merge, Phase 2 crashgen/config merge, and Phase 3 constants redistribution. The Rust core, C++ bridge, Node bindings, and Python bindings all stay aligned against that post-merge topology with zero parity drift.
 
 **Core Value:** The Rust workspace keeps minimal, well-bounded crates with no redundant boundaries, while all three binding surfaces stay in full parity with zero drift.
 
@@ -78,7 +79,7 @@ The active milestone reduces workspace granularity by merging or redistributing 
 
 - **Platform**: Native C++ targets are Windows-only (MSVC x64); Rust workspace is cross-platform at source level
 - **Runtime**: Single shared Tokio runtime — no new runtimes
-- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `parity:gate:local` for Node)
+- **Bindings**: All binding changes must pass the existing parity gates (`check_parity_gate.py` for Python and CXX, `bun run parity:gate` for Node; use `bun run parity:gate:update-baseline` only for intentional refreshes)
 - **Testing**: Use PowerShell build wrappers for C++ tests, never raw ctest
 - **Backwards compat**: Python FormID legacy map format gets deprecation warning first, not immediate removal
 <!-- GSD:project-end -->
@@ -94,6 +95,7 @@ The active milestone reduces workspace granularity by merging or redistributing 
 ## Runtime
 - Windows-only native targets (MSVC x64); Rust workspace is cross-platform at source level but CI is Windows-only
 - Single shared Tokio async runtime — one runtime rule enforced project-wide (`classic-shared-core`)
+- The active Rust business-logic workspace now consists of 16 pure Rust crates after the yaml/settings merge, crashgen/config merge, and constants redistribution
 - Cargo (Rust workspace) — lockfile present at `ClassicLib-rs/Cargo.lock`
 - Bun (Node bindings) — lockfile present at `ClassicLib-rs/node-bindings/classic-node/bun.lockb`
 - uv (Python bindings) — venv at `ClassicLib-rs/python-bindings/.venv`

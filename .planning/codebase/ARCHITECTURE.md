@@ -25,7 +25,7 @@
 **Business Logic (-core crates):**
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 16 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core` (19 -> 18). **v9.1.0 Phase 2 merge:** the former `classic-crashgen-settings-core` crate was absorbed into `classic-config-core` (18 -> 17). **Phase 3 redistribution:** the former constants surface moved into `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core` (17 -> 16).
+- Contains: 16 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. Historical note: v9.1.0 Phase 1 absorbed `classic-yaml-core` into `classic-settings-core`, Phase 2 absorbed `classic-crashgen-settings-core` into `classic-config-core`, and Phase 3 redistributed the former constants surface into `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core`.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 
@@ -185,7 +185,7 @@
 
 **Performance Monitoring:** `classic-perf-core` provides process-wide `DashMap`-backed timing buckets; scoped RAII timer via `start_timer()`; summary statistics (count, total, avg, min, max)
 
-**Parity Enforcement:** Python and Node binding surfaces are tracked against Rust core via automated parity reports in `ClassicLib-rs/python-bindings/parity-artifacts/` and `ClassicLib-rs/node-bindings/classic-node/__test__/`
+**Parity Enforcement:** Python, Node, and CXX surfaces are verified against the active Rust core with one-tier zero-drift gates; Node verification runs through `bun run parity:gate`, Python through `tools/python_api_parity/check_parity_gate.py`, and CXX through `tools/cxx_api_parity/check_parity_gate.py`
 
 ---
 

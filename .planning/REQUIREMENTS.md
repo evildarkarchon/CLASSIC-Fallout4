@@ -30,7 +30,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **GATE-01**: `cargo test --workspace` passes with no failures after all merges
 - [ ] **GATE-02**: CXX parity gate baseline regenerated and exits 0
-- [ ] **GATE-03**: Python parity gate exits 0 with `deferred_total == 0`
+- [ ] **GATE-03**: Python parity gate exits 0 under the current one-tier parity contract with zero coverage gaps, registry mismatches, and stale tracked artifacts
 - [ ] **GATE-04**: Node parity gate exits 0
 - [ ] **GATE-05**: API docs under `docs/api/` updated for merged crates (absorbed crate pages removed or consolidated, references updated)
 - [ ] **GATE-06**: `CLAUDE.md` technology stack section updated to reflect 16 business-logic crates

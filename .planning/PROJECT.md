@@ -51,8 +51,8 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Replace per-call `LogParser::new` in C++ bridge with cached parser — v9.1.0-bugfixes Phase 5/10
 - ✓ Replace per-entry regex in `detect_mods_important` with AhoCorasick — v9.1.0-bugfixes Phase 5
 - ✓ Add before/after criterion benchmarks for performance improvements — v9.1.0-bugfixes Phase 5/6
-- ✓ Python Tier-1/Tier-2 collapsed: 1098 tier1Mappings enforced, `deferred_total == 0` — v9.1.0-bindings Phase 3
-- ✓ Node Tier-1/Tier-2 collapsed: all 109 deferred entries promoted to one enforced contract — v9.1.0-bindings Phase 4
+- ✓ Python Tier-1/Tier-2 collapsed into the current one-tier parity contract (historical v9.1.0-bindings note: the old `deferred_total == 0` target was achieved during Phase 3)
+- ✓ Node Tier-1/Tier-2 collapsed into one enforced contract with no deferred owners remaining — v9.1.0-bindings Phase 4
 - ✓ First-class C++ bridge parity gate with baseline + diff + CI enforcement — v9.1.0-bindings Phases 1+5
 - ✓ C++ bridge exposes full surface of every shared Rust crate (316 entries across 19 modules) — v9.1.0-bindings Phase 2
 - ✓ Node binding gains PE-version extraction parity — v9.1.0-bindings Phase 4
@@ -85,15 +85,15 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - Three binding surfaces: C++ (CXX), Python (PyO3), Node (NAPI-RS) — all at full parity
 - Three CI-enforced parity gates prevent drift on all binding surfaces
 - CXX bridge surface: 316 entries across 19 modules
-- Python parity contract: 1098 tier1Mappings, deferred_total 0
-- Node parity contract: all entries enforced, deferred_total 0
+- Python parity contract: one enforced tier with zero drift and no stale tracked artifacts accepted at closure
+- Node parity contract: one enforced tier; verify with `bun run parity:gate` and refresh only with `bun run parity:gate:update-baseline` when drift is intentional
 - Codebase map from 2026-04-04 at `.planning/codebase/CONCERNS.md` — all actionable concerns resolved across v9.1.0-bugfixes and v9.1.0-bindings
 
 ## Constraints
 
 - **Platform**: Native C++ targets are Windows-only (MSVC x64); Rust workspace is cross-platform at source level
 - **Runtime**: Single shared Tokio runtime — no new runtimes
-- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `parity:gate:local` for Node, `check_parity_gate.py` for CXX)
+- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `bun run parity:gate` for Node, `check_parity_gate.py` for CXX); only use refresh commands when source-backed drift is intentional
 - **Testing**: Use PowerShell build wrappers for C++ tests, never raw ctest
 - **Parity**: One-tier policy — new public Rust APIs must be exposed in all three bindings before CI passes
 
