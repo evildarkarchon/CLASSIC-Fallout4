@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-04-12T12:48:55.739Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-04-12T12:53:47.743Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 06 — repo-root-workspace-cutover
+**Current focus:** Phase 07 — crate-relocation-and-path-rewire
 
 ## Current Position
 
-Phase: 06 (repo-root-workspace-cutover) — EXECUTING
-Plan: 3 of 4
-Status: Ready to execute
+Phase: 06 (repo-root-workspace-cutover) — COMPLETE
+Plan: 4 of 4
+Status: Complete
 Last activity: 2026-04-12
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [████████░░] 75%
 | Phase 06 P00 | 0min | 1 tasks | 2 files |
 | Phase 06 P01 | 5 min | 2 tasks | 6 files |
 | Phase 06 P02 | 1 min | 2 tasks | 13 files |
+| Phase 06 P03 | 1h 19m | 3 tasks | 32 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,10 @@ Recent decisions affecting current work:
 - [Phase 06]: Use plain repo-root cargo commands in rebuild_rust.ps1 instead of legacy manifest-path calls
 - [Phase 06]: Keep benchmark support files owned only at repo root so Criterion config and shared helper discovery have one canonical location during Phase 6.
 - [Phase 06]: Standardize crate-level benchmark helper imports on ../../../../benches/common/* so every known benchmark keeps resolving after the repo-root move.
+- [Phase 06]: Keep Rust CI on plain repo-root cargo commands and repo-root target caching with no --manifest-path compatibility shim.
+- [Phase 06]: Use cargo locate-project --workspace plus cargo metadata --format-version 1 --no-deps as the authoritative Phase 6 root proof.
+- [Phase 06]: Limit benchmark workflow changes in Phase 6 to the minimum repo-root path/config fixes needed to keep moved benchmark assets viable.
+- [Phase 06]: Treat active always-on docs and quick-start surfaces as closure-critical and audit them for stale ClassicLib-rs workspace guidance.
 
 ### Pending Todos
 
@@ -118,7 +123,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T12:48:55.735Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-04-12T12:53:47.740Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
-Next action: Execute 06-03-PLAN.md
+Next action: Plan Phase 07 work
