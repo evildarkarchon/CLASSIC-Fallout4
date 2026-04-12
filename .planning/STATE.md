@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: complete
-stopped_at: Phase 04 complete
-last_updated: "2026-04-11T20:03:14.7415174-07:00"
+status: verifying
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-04-12T03:41:08.732Z"
 last_activity: 2026-04-12
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 13
+  completed_plans: 13
   percent: 100
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Milestone v9.1.0 complete
+**Current focus:** Phase 05 — milestone-cleanup
 
 ## Current Position
 
-Phase: 04 (gate-validation-documentation) — COMPLETE
-Plan: 3 of 3
-Status: Verification passed — no incomplete plans remain
+Phase: 05 (milestone-cleanup) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -62,6 +62,7 @@ Progress: [██████████] 100%
 | Phase 04 P01 | 1 min | 2 tasks | 12 files |
 | Phase 04 P02 | 4 min | 2 tasks | 5 files |
 | Phase 04 P03 | 7 min | 2 tasks | 1 files |
+| Phase 05 P01 | 20 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Refresh Python stub validation evidence after Node runtime verification so Phase 4 closure uses current 16-crate binding counts.
 - [Phase 04]: Record the heavy closure suite in the dedicated verification artifact first, then finalize the artifact as the single auditable milestone proof.
 - [Phase 04]: Treat historical deferred_total wording as satisfied by current one-tier gate semantics and state that explicitly in the closure checklist.
+- [Phase 05]: Refresh 03-VERIFICATION.md in place so Phase 3 keeps a single canonical verifier artifact.
+- [Phase 05]: Use docs/api/README.md owner routing to repair the top-level Rust documentation index instead of adding replacement pages.
+- [Phase 05]: Treat 705 rows as the live Node parity floor because the committed contract and diff report already show a 705/705 one-tier baseline.
 
 ### Pending Todos
 
@@ -106,7 +110,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T20:03:14.7415174-07:00
-Stopped at: Phase 04 complete
+Last session: 2026-04-12T03:41:08.729Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
 Next action: `/gsd-progress`

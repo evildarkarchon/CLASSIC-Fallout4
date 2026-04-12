@@ -134,7 +134,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 05-01-PLAN.md — Close the consolidation milestone cleanup debt (docs index links, Phase 3 verification bookkeeping, Node parity floor tripwire)
+- [x] 05-01-PLAN.md — Close the consolidation milestone cleanup debt (docs index links, Phase 3 verification bookkeeping, Node parity floor tripwire)
 
 ## Progress
 
@@ -147,4 +147,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Crashgen -> Config Merge | 0/TBD | Not started | - |
 | 3. Constants Redistribution | 4/4 | Complete   | 2026-04-12 |
 | 4. Gate Validation & Documentation | 3/3 | Complete   | 2026-04-12 |
-| 5. Milestone Cleanup | 0/1 | Pending | - |
+| 5. Milestone Cleanup | 1/1 | Complete | 2026-04-12 |
