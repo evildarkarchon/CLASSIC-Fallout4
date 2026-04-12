@@ -17,7 +17,7 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-file-io-py
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 use std::path::PathBuf;
 
