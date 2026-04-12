@@ -7,6 +7,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUST_DOCUMENTATION_INDEX = REPO_ROOT / "docs/RUST_DOCUMENTATION_INDEX.md"
+RETIRED_CONSTANTS_CORE_DIR = (
+    REPO_ROOT / "ClassicLib-rs/business-logic/classic-constants-core"
+)
 PHASE3_VERIFICATION = (
     REPO_ROOT
     / ".planning/phases/03-constants-version-registry-merge/03-VERIFICATION.md"
@@ -47,6 +50,8 @@ class Phase05ValidationAuditTests(unittest.TestCase):
 
     def test_phase3_verification_reports_the_live_passed_state(self) -> None:
         text = read_text(PHASE3_VERIFICATION)
+
+        self.assertFalse(RETIRED_CONSTANTS_CORE_DIR.exists())
 
         for fragment in [
             "status: passed",
