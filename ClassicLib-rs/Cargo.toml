@@ -38,7 +38,6 @@ members = [
     # Phase 2 - Path Management (Python Bindings)
     "python-bindings/classic-path-py",
     # Phase 4 - Constants and Utilities (Python Bindings)
-    "python-bindings/classic-constants-py",
     "python-bindings/classic-version-py",
     "python-bindings/classic-resource-py",
     "python-bindings/classic-xse-py",

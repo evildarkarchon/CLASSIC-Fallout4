@@ -23,12 +23,12 @@ All tests are construct-or-reference-plus-real-method calls. Where a class has
 no #[new] constructor (NO_CONSTRUCTOR in the inventory), the test either calls
 a factory or uses an enum variant.
 """
+
 from __future__ import annotations
 
 import tempfile
 from pathlib import Path
 
-import classic_constants
 import classic_database
 import classic_message
 import classic_path
@@ -38,66 +38,68 @@ import classic_resource
 import classic_scangame
 import classic_scanlog
 import classic_settings
+import classic_shared
 import classic_update
+import classic_version_registry
 import classic_version
 import classic_web
 import classic_xse
 
 # ---------------------------------------------------------------------------
-# classic_constants (3 classes + 1 free function)
+# redistributed constants surfaces (3 classes + 1 free function)
 # ---------------------------------------------------------------------------
 
 
 def test_constants_yaml_file_enum_variant_and_method() -> None:
     """YamlFile is an enum; access a variant and call as_str()."""
-    v = classic_constants.YamlFile.Main
+    v = classic_settings.YamlFile.Main
     assert v.as_str() == "Main"
     assert "CLASSIC Main.yaml" in v.description()
 
 
 def test_constants_yaml_file_settings_variant() -> None:
-    v = classic_constants.YamlFile.Settings
+    v = classic_settings.YamlFile.Settings
     assert v.as_str() == "Settings"
 
 
 def test_constants_yaml_file_game_variant() -> None:
-    v = classic_constants.YamlFile.Game
+    v = classic_settings.YamlFile.Game
     assert v.as_str() == "Game"
 
 
 def test_constants_game_id_fallout4_variant_and_methods() -> None:
-    gid = classic_constants.GameId.Fallout4
+    gid = classic_shared.GameId.Fallout4
     assert gid.as_str() == "Fallout4"
     assert gid.exe_name() == "Fallout4.exe"
     assert gid.is_vr() is False
 
 
 def test_constants_game_id_fallout4vr_is_vr() -> None:
-    gid = classic_constants.GameId.Fallout4VR
+    gid = classic_shared.GameId.Fallout4VR
     assert gid.is_vr() is True
 
 
 def test_constants_fallout4_version_next_gen() -> None:
-    v = classic_constants.Fallout4Version.NextGen
+    v = classic_version_registry.Fallout4Version.NextGen
     # display_name() returns a human-readable string
     assert isinstance(v.display_name(), str)
     assert isinstance(v.exe_name(), str)
 
 
 def test_constants_fallout4_version_original_variant() -> None:
-    v = classic_constants.Fallout4Version.Original
+    v = classic_version_registry.Fallout4Version.Original
     assert isinstance(v.as_str(), str)
     assert v.is_vr() is False
 
 
 def test_constants_fallout4_version_vr_variant() -> None:
-    v = classic_constants.Fallout4Version.Vr
+    v = classic_version_registry.Fallout4Version.Vr
     assert v.is_vr() is True
 
 
 def test_constants_must_not_be_none_free_function() -> None:
-    assert classic_constants.must_not_be_none("SCAN Custom Path") is True
-    assert classic_constants.must_not_be_none("Some Other Setting") is False
+    assert classic_settings.must_not_be_none("SCAN Custom Path") is True
+    assert classic_settings.must_not_be_none("Some Other Setting") is False
 
 
 # ---------------------------------------------------------------------------
@@ -860,9 +862,18 @@ def test_scangame_game_scan_config_construct() -> None:
         "F4SE",
         "Buffout4",
         "Fallout4",
-        None, None, None, None,
+        None,
+        None,
+        None,
+        None,
         False,
-        None, None, None, None, None, None, None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     )
     assert cfg is not None
 
@@ -874,9 +885,18 @@ def test_scangame_game_scan_orchestrator_construct() -> None:
         "F4SE",
         "Buffout4",
         "Fallout4",
-        None, None, None, None,
+        None,
+        None,
+        None,
+        None,
         False,
-        None, None, None, None, None, None, None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     )
     orch = classic_scangame.GameScanOrchestrator(cfg)
     assert orch is not None

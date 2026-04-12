@@ -2,11 +2,10 @@
 
 use crate::FcxResetError as PyFcxResetError;
 use classic_config_core::ClassicConfig;
-use classic_constants_core::GameId;
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError};
-use classic_shared_core::get_runtime;
+use classic_shared_core::{GameId, get_runtime};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
