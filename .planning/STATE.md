@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 3 context gathered
-last_updated: "2026-04-11T22:57:44.346Z"
-last_activity: 2026-04-11
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-04-12T00:44:27.815Z"
+last_activity: 2026-04-12
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 9
+  completed_plans: 6
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 02 — crashgen-config-merge
+**Current focus:** Phase 03 — constants-version-registry-merge
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-11
+Phase: 03 (constants-version-registry-merge) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-12
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P03 | ~120 min | 3 tasks | 37 files |
 | Phase 02 P01 | 18 min | 4 tasks | 22 files |
 | Phase 02 P02 | 40min | 3 tasks | 24 files |
+| Phase 03 P01 | 9 min | 2 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Added tools/parity_contract_merge_owner.py as a reusable deterministic owner-group merge helper (delta-only collision check, schema auto-detection, --dry-run support). Reusable in Phase 2 constants+crashgen-settings merge and Phase 3 shared-helpers merge
 - [Phase 02]: 02-01: Workspace crate merges need intermediate stub lib.rs between git mv and directory deletion — cargo parses full workspace manifest even for package-scoped builds. Pattern reusable for phase 3 constants merge.
 - [Phase 02]: 02-01: *.bak files are gitignored (.gitignore line 47) so D-17's separate Chore commit for yamldata.rs.bak was mechanically impossible — resolved via filesystem delete without a git commit.
+- [Phase 03]: Wave 1 removes every live workspace Cargo edge to classic-constants-core before later binding source rewrites land.
+- [Phase 03]: classic-resource-core had no live constants usage, so its dependency was deleted instead of replaced.
 
 ### Pending Todos
 
@@ -90,7 +93,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T23:05:00.000Z
-Stopped at: Completed quick task 260411-m7y - Phase 3 roadmap amendment landed; ready for /gsd:plan-phase 3
-Resume file: .planning/phases/03-constants-version-registry-merge/03-CONTEXT.md
+Last session: 2026-04-12T00:44:27.811Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
 Next action: `/gsd:plan-phase 3`

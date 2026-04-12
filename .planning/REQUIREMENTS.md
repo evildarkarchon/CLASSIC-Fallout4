@@ -22,9 +22,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Constants Redistribution
 
-- [ ] **CNST-01**: classic-constants-core source modules are redistributed by semantic domain: Fallout4Version + NULL_VERSION to classic-version-registry-core, YamlFile + SETTINGS_IGNORE_NONE + must_not_be_none to classic-settings-core, and GameId to classic-shared-core, with the same public API names preserved at their new locations
-- [ ] **CNST-02**: All workspace crates that imported from classic-constants-core now import from the semantic-domain-appropriate target crate (classic-version-registry-core, classic-settings-core, or classic-shared-core) depending on which symbol they use
-- [ ] **CNST-03**: classic-constants-core crate is removed from Cargo.toml workspace members and its directory deleted
+- [x] **CNST-01**: classic-constants-core source modules are redistributed by semantic domain: Fallout4Version + NULL_VERSION to classic-version-registry-core, YamlFile + SETTINGS_IGNORE_NONE + must_not_be_none to classic-settings-core, and GameId to classic-shared-core, with the same public API names preserved at their new locations
+- [x] **CNST-02**: All workspace crates that imported from classic-constants-core now import from the semantic-domain-appropriate target crate (classic-version-registry-core, classic-settings-core, or classic-shared-core) depending on which symbol they use
+- [x] **CNST-03**: classic-constants-core crate is removed from Cargo.toml workspace members and its directory deleted
 
 ### Parity & Validation
 
@@ -62,9 +62,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CGEN-01 | Phase 2 | Complete |
 | CGEN-02 | Phase 2 | Complete |
 | CGEN-03 | Phase 2 | Complete |
-| CNST-01 | Phase 3 | Pending |
-| CNST-02 | Phase 3 | Pending |
-| CNST-03 | Phase 3 | Pending |
+| CNST-01 | Phase 3 | Complete |
+| CNST-02 | Phase 3 | Complete |
+| CNST-03 | Phase 3 | Complete |
 | GATE-01 | Phase 4 | Pending |
 | GATE-02 | Phase 4 | Pending |
 | GATE-03 | Phase 4 | Pending |

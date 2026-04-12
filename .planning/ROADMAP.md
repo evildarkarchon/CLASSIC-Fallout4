@@ -99,7 +99,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Redistribute Rust core constants, migrate inline tests first, sweep workspace Cargo dependencies, then delete classic-constants-core
+- [x] 03-01-PLAN.md — Redistribute Rust core constants, migrate inline tests first, sweep workspace Cargo dependencies, then delete classic-constants-core
 - [ ] 03-02-PLAN.md — Carve classic-constants-py into version-registry-py, settings-py, and shared-py with module retags; migrate Python consumers; delete classic-constants-py
 - [ ] 03-03-PLAN.md — Disperse Node and CXX constants surfaces into semantic modules, migrate constants.spec.ts and the GUI consumer, and add classic::shared bridge support
 - [ ] 03-04-PLAN.md — Consolidate active docs, refresh parity tooling inputs in split-aware order, and regenerate all three parity baselines with live-reference checks
