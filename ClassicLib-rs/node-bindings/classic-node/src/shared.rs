@@ -8,6 +8,7 @@ use classic_perf_core::{clear_metrics, get_summary, record_timing};
 use classic_registry_core::{clear_all, register, unregister};
 use classic_shared_core::path_core::PathHandler;
 use classic_shared_core::strings_core::StringProcessor;
+use classic_shared_core::GameId;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -17,11 +18,63 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
 }
 
+/// Supported game identifiers exposed to JavaScript.
+#[napi(string_enum)]
+pub enum JsGameId {
+    /// Fallout 4 (base game)
+    Fallout4,
+    /// Fallout 4 VR
+    #[napi(value = "Fallout4VR")]
+    Fallout4Vr,
+    /// Skyrim Special Edition
+    Skyrim,
+    /// Starfield
+    Starfield,
+}
+
+fn js_to_core_game_id(id: &JsGameId) -> GameId {
+    match id {
+        JsGameId::Fallout4 => GameId::Fallout4,
+        JsGameId::Fallout4Vr => GameId::Fallout4VR,
+        JsGameId::Skyrim => GameId::Skyrim,
+        JsGameId::Starfield => GameId::Starfield,
+    }
+}
+
+fn core_to_js_game_id(id: &GameId) -> JsGameId {
+    match id {
+        GameId::Fallout4 => JsGameId::Fallout4,
+        GameId::Fallout4VR => JsGameId::Fallout4Vr,
+        GameId::Skyrim => JsGameId::Skyrim,
+        GameId::Starfield => JsGameId::Starfield,
+    }
+}
+
 /// Module-level PathHandler with default cache settings (5-minute TTL).
 static PATH_HANDLER: LazyLock<PathHandler> = LazyLock::new(PathHandler::default);
 
 /// Module-level StringProcessor for string interning.
 static STRING_PROCESSOR: LazyLock<StringProcessor> = LazyLock::new(StringProcessor::default);
+
+/// Get a human-readable name for a game identifier.
+///
+/// Returns names like "Fallout 4", "Fallout 4 VR", "Skyrim", "Starfield".
+#[napi]
+pub fn get_game_name(id: JsGameId) -> String {
+    let core_id = js_to_core_game_id(&id);
+    match core_id {
+        GameId::Fallout4 => "Fallout 4".to_string(),
+        GameId::Fallout4VR => "Fallout 4 VR".to_string(),
+        GameId::Skyrim => "Skyrim".to_string(),
+        GameId::Starfield => "Starfield".to_string(),
+    }
+}
+
+/// Get all supported game identifiers.
+#[napi]
+pub fn get_all_game_ids() -> Vec<JsGameId> {
+    GameId::all().iter().map(core_to_js_game_id).collect()
+}
 
 // ============================================================================
 // 1. Path Utilities (from classic-shared-core::path_core)

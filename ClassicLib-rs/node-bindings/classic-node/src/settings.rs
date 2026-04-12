@@ -31,7 +31,7 @@
 //! - `new YamlDocument(content)` with `getValue`, `getStringValue`, `getVecValue`,
 //!   `getHashmapValue`, `setValue`, `toString`
 
-use classic_settings_core::{self as core, YamlError, YamlOperations, yaml_cache_stats};
+use classic_settings_core::{self as core, YamlError, YamlFile, YamlOperations, yaml_cache_stats};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -40,6 +40,49 @@ use yaml_rust2::Yaml;
 /// Convert any Display error to a napi::Error.
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
+}
+
+/// YAML configuration file identifiers exposed to JavaScript.
+#[napi(string_enum)]
+pub enum JsYamlFile {
+    /// CLASSIC Data/databases/CLASSIC Main.yaml
+    Main,
+    /// CLASSIC Settings.yaml
+    Settings,
+    /// CLASSIC Ignore.yaml
+    Ignore,
+    /// CLASSIC Data/databases/CLASSIC {Game}.yaml
+    Game,
+    /// CLASSIC Data/CLASSIC {Game} Local.yaml
+    GameLocal,
+    /// tests/test_settings.yaml (for testing only)
+    Test,
+    /// User config dir/CLASSIC/cache.yaml
+    Cache,
+}
+
+fn js_to_core_yaml_file(file: &JsYamlFile) -> YamlFile {
+    match file {
+        JsYamlFile::Main => YamlFile::Main,
+        JsYamlFile::Settings => YamlFile::Settings,
+        JsYamlFile::Ignore => YamlFile::Ignore,
+        JsYamlFile::Game => YamlFile::Game,
+        JsYamlFile::GameLocal => YamlFile::GameLocal,
+        JsYamlFile::Test => YamlFile::Test,
+        JsYamlFile::Cache => YamlFile::Cache,
+    }
+}
+
+fn core_to_js_yaml_file(file: &YamlFile) -> JsYamlFile {
+    match file {
+        YamlFile::Main => JsYamlFile::Main,
+        YamlFile::Settings => JsYamlFile::Settings,
+        YamlFile::Ignore => JsYamlFile::Ignore,
+        YamlFile::Game => JsYamlFile::Game,
+        YamlFile::GameLocal => JsYamlFile::GameLocal,
+        YamlFile::Test => JsYamlFile::Test,
+        YamlFile::Cache => JsYamlFile::Cache,
+    }
 }
 
 /// Convert a yaml-rust2 Yaml value to a serde_json::Value for JavaScript consumption.
@@ -220,6 +263,19 @@ pub fn get_settings_cache_stats() -> SettingsCacheStats {
 #[napi]
 pub fn reset_settings_cache_stats() {
     core::reset_cache_stats();
+}
+
+/// Get a human-readable description for a YAML file type.
+#[napi]
+pub fn get_yaml_file_description(file: JsYamlFile) -> String {
+    let core_file = js_to_core_yaml_file(&file);
+    core_file.description().to_string()
+}
+
+/// Get all YAML file type identifiers.
+#[napi]
+pub fn get_all_yaml_files() -> Vec<JsYamlFile> {
+    YamlFile::all().iter().map(core_to_js_yaml_file).collect()
 }
 
 // ============================================================================

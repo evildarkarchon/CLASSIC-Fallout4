@@ -12,7 +12,7 @@
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
 use classic_config_core::{ClassicConfig, YamlDataCore};
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::OrchestratorCore;
