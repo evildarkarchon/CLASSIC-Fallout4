@@ -6,13 +6,13 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MILESTONE_PHASES_ROOT = REPO_ROOT / ".planning/milestones/v9.1.0-phases"
 RUST_DOCUMENTATION_INDEX = REPO_ROOT / "docs/RUST_DOCUMENTATION_INDEX.md"
 RETIRED_CONSTANTS_CORE_DIR = (
     REPO_ROOT / "ClassicLib-rs/business-logic/classic-constants-core"
 )
 PHASE3_VERIFICATION = (
-    REPO_ROOT
-    / ".planning/phases/03-constants-version-registry-merge/03-VERIFICATION.md"
+    MILESTONE_PHASES_ROOT / "03-constants-version-registry-merge/03-VERIFICATION.md"
 )
 NODE_PARITY_GATE_TEST = (
     REPO_ROOT / "tools/node_api_parity/tests/test_check_parity_gate.py"
@@ -27,7 +27,7 @@ NODE_PARITY_DIFF_REPORT = (
     REPO_ROOT / "docs/implementation/node_api_parity/baseline/parity_diff_report.md"
 )
 PHASE2_DEFERRED_ITEMS = (
-    REPO_ROOT / ".planning/phases/02-crashgen-config-merge/deferred-items.md"
+    MILESTONE_PHASES_ROOT / "02-crashgen-config-merge/deferred-items.md"
 )
 
 
