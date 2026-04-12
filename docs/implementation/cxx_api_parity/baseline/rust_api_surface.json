@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-11T06:13:56Z",
+  "generated_at_utc": "2026-04-12T01:16:39Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
@@ -954,280 +954,6 @@
           "type": "String"
         }
       ]
-    },
-    {
-      "id": "34c12ce38207ea55",
-      "rustSymbol": "Fallout4Version",
-      "kind": "enum",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Original",
-        "NextGen",
-        "AnniversaryEdition",
-        "Vr"
-      ]
-    },
-    {
-      "id": "e57edc6804040626",
-      "rustSymbol": "GameId",
-      "kind": "enum",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Fallout4",
-        "Fallout4VR",
-        "Skyrim",
-        "Starfield"
-      ]
-    },
-    {
-      "id": "29ccc98356730344",
-      "rustSymbol": "YamlFile",
-      "kind": "enum",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Main",
-        "Settings",
-        "Ignore",
-        "Game",
-        "GameLocal",
-        "Test",
-        "Cache"
-      ]
-    },
-    {
-      "id": "97680732e84fed04",
-      "rustSymbol": "fallout4_version_as_str",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "String"
-      }
-    },
-    {
-      "id": "4c1f47afcc612eeb",
-      "rustSymbol": "fallout4_version_docs_folder_name",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "String"
-      }
-    },
-    {
-      "id": "ab732a2b178f849a",
-      "rustSymbol": "fallout4_version_exe_name",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "String"
-      }
-    },
-    {
-      "id": "dc878d270db4e4ef",
-      "rustSymbol": "fallout4_version_is_standard",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "bool"
-      }
-    },
-    {
-      "id": "46b581bb01d5ad93",
-      "rustSymbol": "fallout4_version_is_vr",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "bool"
-      }
-    },
-    {
-      "id": "88aa433b4a6d4373",
-      "rustSymbol": "fallout4_version_registry_id",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "String"
-      }
-    },
-    {
-      "id": "ad01cb5bcb70b3dc",
-      "rustSymbol": "fallout4_version_steam_app_id",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "v",
-            "type": "Fallout4Version"
-          }
-        ],
-        "returnType": "u32"
-      }
-    },
-    {
-      "id": "ed2578875288dfa3",
-      "rustSymbol": "game_id_as_str",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "id",
-            "type": "GameId"
-          }
-        ],
-        "returnType": "String"
-      }
-    },
-    {
-      "id": "892c2c7212b5fbdd",
-      "rustSymbol": "is_null_version",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "major",
-            "type": "u32"
-          },
-          {
-            "name": "minor",
-            "type": "u32"
-          },
-          {
-            "name": "patch",
-            "type": "u32"
-          }
-        ],
-        "returnType": "bool"
-      }
-    },
-    {
-      "id": "3d122d7f08046c7c",
-      "rustSymbol": "must_not_be_none_key",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "key",
-            "type": "&str"
-          }
-        ],
-        "returnType": "bool"
-      }
-    },
-    {
-      "id": "8562275d3ba8927d",
-      "rustSymbol": "settings_ignore_none_contains",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "key",
-            "type": "&str"
-          }
-        ],
-        "returnType": "bool"
-      }
-    },
-    {
-      "id": "193fdb772e41ab05",
-      "rustSymbol": "yaml_file_as_str",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "f",
-            "type": "YamlFile"
-          }
-        ],
-        "returnType": "String"
-      }
-    },
-    {
-      "id": "946a63e28d352de9",
-      "rustSymbol": "yaml_file_description",
-      "kind": "function",
-      "bridgeModule": "constants",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/constants.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "f",
-            "type": "YamlFile"
-          }
-        ],
-        "returnType": "String"
-      }
     },
     {
       "id": "698065f32540d11b",
@@ -4803,6 +4529,40 @@
       ]
     },
     {
+      "id": "944ab5475ec76ef8",
+      "rustSymbol": "YamlFile",
+      "kind": "enum",
+      "bridgeModule": "settings",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Main",
+        "Settings",
+        "Ignore",
+        "Game",
+        "GameLocal",
+        "Test",
+        "Cache"
+      ]
+    },
+    {
+      "id": "471dfac358240ff7",
+      "rustSymbol": "must_not_be_none_key",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "key",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
       "id": "0b5a4ad5368e8a02",
       "rustSymbol": "settings_cache_keys",
       "kind": "function",
@@ -4869,6 +4629,23 @@
           }
         ],
         "returnType": "Result<SettingsCoercedValue>"
+      }
+    },
+    {
+      "id": "b303f68008e43f3e",
+      "rustSymbol": "settings_ignore_none_contains",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "key",
+            "type": "&str"
+          }
+        ],
+        "returnType": "bool"
       }
     },
     {
@@ -5029,6 +4806,40 @@
           }
         ],
         "returnType": "Result<bool>"
+      }
+    },
+    {
+      "id": "867131bd442e6121",
+      "rustSymbol": "yaml_file_as_str",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "f",
+            "type": "YamlFile"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "580f6717bd5ba7bb",
+      "rustSymbol": "yaml_file_description",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "f",
+            "type": "YamlFile"
+          }
+        ],
+        "returnType": "String"
       }
     },
     {
@@ -5497,6 +5308,37 @@
       ]
     },
     {
+      "id": "d04a85fb7225176b",
+      "rustSymbol": "GameId",
+      "kind": "enum",
+      "bridgeModule": "shared",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/shared.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Fallout4",
+        "Fallout4VR",
+        "Skyrim",
+        "Starfield"
+      ]
+    },
+    {
+      "id": "e5c87d8b488cc983",
+      "rustSymbol": "game_id_as_str",
+      "kind": "function",
+      "bridgeModule": "shared",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/shared.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "id",
+            "type": "GameId"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
       "id": "43170371baf7eb95",
       "rustSymbol": "string_map_contains",
       "kind": "function",
@@ -5786,6 +5628,164 @@
           "type": "String"
         }
       ]
+    },
+    {
+      "id": "b44331b1502123ea",
+      "rustSymbol": "Fallout4Version",
+      "kind": "enum",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Original",
+        "NextGen",
+        "AnniversaryEdition",
+        "Vr"
+      ]
+    },
+    {
+      "id": "5dae9f5dc26da915",
+      "rustSymbol": "fallout4_version_as_str",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "3a21b9406bb4c3cf",
+      "rustSymbol": "fallout4_version_docs_folder_name",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "3dfc84f544e66a6b",
+      "rustSymbol": "fallout4_version_exe_name",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "48a6955582f0fca2",
+      "rustSymbol": "fallout4_version_is_standard",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "e8b952340bdccfbf",
+      "rustSymbol": "fallout4_version_is_vr",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "6ae0917b1c2a9661",
+      "rustSymbol": "fallout4_version_registry_id",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "9c9e99ae498e0e45",
+      "rustSymbol": "fallout4_version_steam_app_id",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "v",
+            "type": "Fallout4Version"
+          }
+        ],
+        "returnType": "u32"
+      }
+    },
+    {
+      "id": "76de962f36a6993c",
+      "rustSymbol": "is_null_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "major",
+            "type": "u32"
+          },
+          {
+            "name": "minor",
+            "type": "u32"
+          },
+          {
+            "name": "patch",
+            "type": "u32"
+          }
+        ],
+        "returnType": "bool"
+      }
     },
     {
       "id": "9d82340dd1a34d6b",

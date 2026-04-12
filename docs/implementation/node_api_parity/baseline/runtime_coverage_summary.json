@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-11T11:56:31.263580+00:00",
+  "generated_at_utc": "2026-04-12T01:18:53.373267+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -24,10 +24,6 @@
     "config": {
       "runtime_verified": 111,
       "total": 111
-    },
-    "constants": {
-      "runtime_verified": 30,
-      "total": 30
     },
     "database": {
       "runtime_verified": 14,
@@ -62,24 +58,24 @@
       "total": 95
     },
     "settings": {
-      "runtime_verified": 44,
-      "total": 44
+      "runtime_verified": 47,
+      "total": 47
     },
     "shared": {
-      "runtime_verified": 9,
-      "total": 9
+      "runtime_verified": 10,
+      "total": 10
     },
     "update": {
       "runtime_verified": 6,
       "total": 6
     },
     "version": {
-      "runtime_verified": 14,
-      "total": 14
+      "runtime_verified": 13,
+      "total": 13
     },
     "version_registry": {
-      "runtime_verified": 63,
-      "total": 63
+      "runtime_verified": 90,
+      "total": 90
     },
     "web": {
       "runtime_verified": 15,
@@ -6987,513 +6983,565 @@
       "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
-      "trackedId": "contract:constants.Fallout4Version@rust",
+      "trackedId": "contract:version_registry.Fallout4Version@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.Fallout4Version@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.Fallout4Version@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "Fallout4Version@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.GameId@rust",
+      "trackedId": "contract:shared.GameId@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.GameId@rust",
-      "ownerModule": "constants",
+      "contractId": "shared.GameId@rust",
+      "ownerModule": "shared",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "GameId@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-shared",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "shared-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.NULL_VERSION@rust",
+      "trackedId": "contract:version_registry.NULL_VERSION@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.NULL_VERSION@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.NULL_VERSION@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "NULL_VERSION@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.SETTINGS_IGNORE_NONE@rust",
+      "trackedId": "contract:settings.SETTINGS_IGNORE_NONE@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.SETTINGS_IGNORE_NONE@rust",
-      "ownerModule": "constants",
+      "contractId": "settings.SETTINGS_IGNORE_NONE@rust",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "SETTINGS_IGNORE_NONE@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.YamlFile@rust",
+      "trackedId": "contract:settings.YamlFile@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.YamlFile@rust",
-      "ownerModule": "constants",
+      "contractId": "settings.YamlFile@rust",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "YamlFile@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.display_name@rust",
+      "trackedId": "contract:version_registry.display_name@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.display_name@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.display_name@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "display_name@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.display_name_string@rust",
+      "trackedId": "contract:version_registry.display_name_string@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.display_name_string@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.display_name_string@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "display_name_string@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.game_version@rust",
+      "trackedId": "contract:version_registry.game_version@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.game_version@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.game_version@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "game_version@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.get_version_info@rust",
+      "trackedId": "contract:version_registry.get_version_info@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.get_version_info@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.get_version_info@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_version_info@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.must_not_be_none@rust",
+      "trackedId": "contract:settings.must_not_be_none@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.must_not_be_none@rust",
-      "ownerModule": "constants",
+      "contractId": "settings.must_not_be_none@rust",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "must_not_be_none@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.short_name@rust",
+      "trackedId": "contract:version_registry.short_name@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.short_name@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.short_name@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "short_name@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.version_semver@rust",
+      "trackedId": "contract:version_registry.version_semver@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.version_semver@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.version_semver@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "version_semver@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.xse_acronym@rust",
+      "trackedId": "contract:version_registry.xse_acronym@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.xse_acronym@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.xse_acronym@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "xse_acronym@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.xse_acronym_string@rust",
+      "trackedId": "contract:version_registry.xse_acronym_string@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.xse_acronym_string@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.xse_acronym_string@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "xse_acronym_string@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.xse_config@rust",
+      "trackedId": "contract:version_registry.xse_config@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.xse_config@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.xse_config@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "xse_config@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
@@ -11214,17 +11262,19 @@
       "trackedId": "contract:version.NULL_VERSION@rust",
       "trackedType": "contract_row",
       "contractId": "version.NULL_VERSION@rust",
-      "ownerModule": "version",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "NULL_VERSION@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-version",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
@@ -11240,9 +11290,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.VersionError@rust",
@@ -11257,9 +11309,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.VersionResult@rust",
@@ -11274,9 +11328,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.compare_versions@rust",
@@ -11291,9 +11347,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.extract_all_versions@rust",
@@ -11308,9 +11366,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.extract_version_from_filename@rust",
@@ -11325,9 +11385,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.extract_version_from_log@rust",
@@ -11342,9 +11404,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.format_version@rust",
@@ -11359,9 +11423,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.is_known_f4se_version@rust",
@@ -11376,9 +11442,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.is_known_fallout4_version@rust",
@@ -11393,9 +11461,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.parse_version@rust",
@@ -11410,9 +11480,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.pe_version@rust",
@@ -11427,9 +11499,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.try_parse_version@rust",
@@ -11444,9 +11518,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:web.CLASSIC_VERSION@rust",

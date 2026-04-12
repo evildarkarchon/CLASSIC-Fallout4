@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-11T11:52:36.999194+00:00",
+  "generated_at_utc": "2026-04-12T01:17:02.678787+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -13,12 +13,12 @@
       "classic-settings-core",
       "classic-message-core",
       "classic-path-core",
-      "classic-constants-core",
       "classic-version-core",
       "classic-resource-core",
       "classic-xse-core",
       "classic-web-core",
       "classic-update-core",
+      "classic-shared-core",
       "classic-shared-py"
     ],
     "source_files": [
@@ -33,12 +33,12 @@
       "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
-      "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-resource-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
       "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
+      "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
       "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs"
     ]
   },
@@ -687,346 +687,6 @@
       "owner_module": "config",
       "source_file": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod yamldata;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "Fallout4Version",
-      "kind": "enum",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub enum Fallout4Version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "GameId",
-      "kind": "enum",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub enum GameId",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MatchConfidence",
-      "kind": "reexport",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::MatchConfidence",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MatchResult",
-      "kind": "reexport",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::MatchResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "NULL_VERSION",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const NULL_VERSION",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SETTINGS_IGNORE_NONE",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const SETTINGS_IGNORE_NONE",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionInfo",
-      "kind": "reexport",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::VersionInfo",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionRegistry",
-      "kind": "reexport",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::VersionRegistry",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "VersionRegistryError",
-      "kind": "reexport",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::VersionRegistryError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlFile",
-      "kind": "enum",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub enum YamlFile",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "display_name",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn display_name(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "display_name_string",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn display_name_string(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "fn",
-      "kind": "const",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub const fn",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "game_version",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn game_version(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_version_info",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn get_version_info(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_version_registry",
-      "kind": "reexport",
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub use classic_version_registry_core::{ MatchConfidence, MatchResult, VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_version_registry_core::get_version_registry",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "must_not_be_none",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn must_not_be_none(key: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "short_name",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn short_name(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "version_semver",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn version_semver(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "xse_acronym",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn xse_acronym(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "xse_acronym_string",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn xse_acronym_string(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "xse_config",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-constants-core",
-      "owner_module": "constants",
-      "source_file": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
-      "source_decl": "pub fn xse_config(&self)",
       "tier": "tier1"
     },
     {
@@ -10035,6 +9695,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "*",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+      "source_decl": "pub use yaml_file::*;",
+      "source_expr": "yaml_file::*",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CacheStats",
       "kind": "reexport",
       "crate": "classic-settings-core",
@@ -10088,6 +9758,15 @@
       "owner_module": "settings",
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/error.rs",
       "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SETTINGS_IGNORE_NONE",
+      "kind": "const",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs",
+      "source_decl": "pub const SETTINGS_IGNORE_NONE",
       "tier": "tier1"
     },
     {
@@ -10192,6 +9871,15 @@
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
       "source_expr": "yaml_ops::YamlError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlFile",
+      "kind": "enum",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs",
+      "source_decl": "pub enum YamlFile",
       "tier": "tier1"
     },
     {
@@ -10381,6 +10069,33 @@
       "owner_module": "settings",
       "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_ops.rs",
       "source_decl": "pub fn dump_yaml(&self, yaml: &Yaml)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -10744,6 +10459,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "must_not_be_none",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs",
+      "source_decl": "pub fn must_not_be_none(key: &str)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "new",
       "kind": "function",
       "arity": 0,
@@ -10913,6 +10638,736 @@
       "tier": "tier1"
     },
     {
+      "symbol": "*",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub use game_id::*;",
+      "source_expr": "game_id::*",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ClassicError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub enum ClassicError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ClassicError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub use errors::{ClassicError, ClassicResult, IntoClassicError};",
+      "source_expr": "errors::ClassicError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ClassicResult",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub use errors::{ClassicError, ClassicResult, IntoClassicError};",
+      "source_expr": "errors::ClassicResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ClassicResult",
+      "kind": "type",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub type ClassicResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameId",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub enum GameId",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "IntoClassicError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub use errors::{ClassicError, ClassicResult, IntoClassicError};",
+      "source_expr": "errors::IntoClassicError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "IntoClassicError",
+      "kind": "trait",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub trait IntoClassicError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "OperationStats",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub struct OperationStats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ParseStringOperationError",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub struct ParseStringOperationError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PathHandler",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub struct PathHandler",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PerformanceMetrics",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub struct PerformanceMetrics",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RuntimeConfig",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub struct RuntimeConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "StringOperation",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub enum StringOperation",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "StringProcessor",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub struct StringProcessor",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Timer",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub struct Timer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_metrics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn cache_metrics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn cache_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cleanup_cache",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn cleanup_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn clear(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn clear_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_pool",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn clear_pool(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "common_prefix",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn common_prefix(&self, paths: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "common_prefix",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn common_prefix(&self, strings: &[&str])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cpu_optimized",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub fn cpu_optimized()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "database",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn database(message: impl Into<String>, query: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "encoding",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn encoding(message: impl Into<String>, encoding: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "errors",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod errors;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_extension",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn get_extension(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_filename",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn get_filename(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_global_metrics",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn get_global_metrics()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_operations",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn get_operations(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_parent",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn get_parent(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_runtime",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub fn get_runtime()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_stats",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn get_stats(&self, operation: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_timer_start",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn get_timer_start()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "intern",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn intern(&self, s: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "intern_spur",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn intern_spur(&self, s: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "io_optimized",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub fn io_optimized()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_absolute",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn is_absolute(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "join_lines",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn join_lines(&self, lines: &[String], separator: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "join_paths",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn join_paths(&self, base: &str, components: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "minimal",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub fn minimal()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn new(cache_ttl_seconds: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new_with_limits",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn new_with_limits(cache_ttl_seconds: u64, max_cache_size: usize)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "normalize_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn normalize_path(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "normalize_string",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn normalize_string(&self, s: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "not_found",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn not_found(resource: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn path(message: impl Into<String>, path: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path_core",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod path_core;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "performance_core",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod performance_core;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "permission",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn permission(message: impl Into<String>, resource: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "pool_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn pool_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "process_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn process_batch(&self, strings: &[&str], operation: StringOperation)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_bytes",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_bytes(&self, operation: &str, bytes: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_timing",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_timing(&self, operation: &str, duration: Duration)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn resolve(&self, spur: &Spur)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_bytes",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn set_bytes(&mut self, bytes: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "split_lines",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/strings_core.rs",
+      "source_decl": "pub fn split_lines(&self, text: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "split_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn split_path(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "start",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn start(operation: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "stop",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn stop(mut self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "strings_core",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod strings_core;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "throughput",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn throughput(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "timeout",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn timeout(operation: impl Into<String>, duration_ms: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "to_absolute",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn to_absolute(&self, path: &str, base: Option<&str>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_paths_batch",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub fn validate_paths_batch(&self, paths: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validation",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn validation(message: impl Into<String>, field: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_context",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn with_context(self, context: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ClassicError",
       "kind": "reexport",
       "crate": "classic-shared-py",
@@ -10949,6 +11404,15 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/path.rs",
       "source_decl": "pub struct PathLike",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PyGameId",
+      "kind": "struct",
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/game_id.rs",
+      "source_decl": "pub struct PyGameId",
       "tier": "tier1"
     },
     {
@@ -11151,6 +11615,15 @@
       "owner_module": "shared",
       "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub mod exceptions;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_id",
+      "kind": "module",
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
+      "source_decl": "pub mod game_id;",
       "tier": "tier1"
     },
     {
@@ -11440,6 +11913,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "register",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "ClassicLib-rs/foundation/classic-shared-py/src/game_id.rs",
+      "source_decl": "pub fn register(m: &Bound<'_, PyModule>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "resolve_python_entry_dir",
       "kind": "function",
       "arity": 1,
@@ -11686,8 +12169,8 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_constants_core::NULL_VERSION;",
-      "source_expr": "classic_constants_core::NULL_VERSION",
+      "source_decl": "pub use classic_version_registry_core::NULL_VERSION;",
+      "source_expr": "classic_version_registry_core::NULL_VERSION",
       "tier": "tier1"
     },
     {
@@ -11743,8 +12226,8 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_constants_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_constants_core::VersionInfo",
+      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
+      "source_expr": "classic_version_registry_core::VersionInfo",
       "tier": "tier1"
     },
     {
@@ -11753,8 +12236,8 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_constants_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_constants_core::VersionRegistry",
+      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
+      "source_expr": "classic_version_registry_core::VersionRegistry",
       "tier": "tier1"
     },
     {
@@ -11763,8 +12246,8 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_constants_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_constants_core::VersionRegistryError",
+      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
+      "source_expr": "classic_version_registry_core::VersionRegistryError",
       "tier": "tier1"
     },
     {
@@ -11852,8 +12335,8 @@
       "crate": "classic-version-core",
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-      "source_decl": "pub use classic_constants_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
-      "source_expr": "classic_constants_core::get_version_registry",
+      "source_decl": "pub use classic_version_registry_core::{ VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry, };",
+      "source_expr": "classic_version_registry_core::get_version_registry",
       "tier": "tier1"
     },
     {
@@ -11923,6 +12406,16 @@
       "owner_module": "version",
       "source_file": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
       "source_decl": "pub fn try_parse_version(version_str: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "*",
+      "kind": "reexport",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+      "source_decl": "pub use fallout4_version::*;",
+      "source_expr": "fallout4_version::*",
       "tier": "tier1"
     },
     {
@@ -12002,6 +12495,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Fallout4Version",
+      "kind": "enum",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub enum Fallout4Version",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GameVersion",
       "kind": "reexport",
       "crate": "classic-version-registry-core",
@@ -12075,6 +12577,15 @@
       "owner_module": "version_registry",
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/matching.rs",
       "source_decl": "pub struct MatchResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NULL_VERSION",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const NULL_VERSION",
       "tier": "tier1"
     },
     {
@@ -12220,6 +12731,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "address_library",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn address_library(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "contains",
       "kind": "function",
       "arity": 2,
@@ -12267,6 +12788,98 @@
       "owner_module": "version_registry",
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/defaults.rs",
       "source_decl": "pub fn create_fo4_vr()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "display_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn display_name(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "display_name_string",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn display_name_string(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -12359,6 +12972,16 @@
       "owner_module": "version_registry",
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/models.rs",
       "source_decl": "pub fn from_version_string(version: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn game_version(&self)",
       "tier": "tier1"
     },
     {
@@ -12502,6 +13125,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_version_info",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn get_version_info(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_version_registry",
       "kind": "function",
       "arity": 0,
@@ -12612,6 +13245,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "short_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn short_name(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "unknown_version_handling",
       "kind": "function",
       "arity": 1,
@@ -12622,6 +13265,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "version_semver",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn version_semver(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "version_string",
       "kind": "function",
       "arity": 1,
@@ -12629,6 +13282,36 @@
       "owner_module": "version_registry",
       "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/models.rs",
       "source_decl": "pub fn version_string(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "xse_acronym",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn xse_acronym(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "xse_acronym_string",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn xse_acronym_string(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "xse_config",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs",
+      "source_decl": "pub fn xse_config(&self)",
       "tier": "tier1"
     },
     {
@@ -12713,7 +13396,7 @@
       "crate": "classic-web-core",
       "owner_module": "web",
       "source_file": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
-      "source_decl": "pub fn game_url(self, game_id: classic_constants_core::GameId)",
+      "source_decl": "pub fn game_url(self, game_id: GameId)",
       "tier": "tier1"
     },
     {

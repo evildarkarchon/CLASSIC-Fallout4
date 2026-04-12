@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import operator
 import re
@@ -43,7 +44,6 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-xse-core": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
     "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
     "classic-scangame-core": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
-    "classic-constants-core": "ClassicLib-rs/business-logic/classic-constants-core/src/lib.rs",
 }
 
 # Phase 4 Plan 1 A5: distinct owner labels matching Phase 3 — do NOT collapse
@@ -70,7 +70,6 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-xse-core": "xse",
     "classic-database-core": "database",
     "classic-scangame-core": "scangame",
-    "classic-constants-core": "constants",
 }
 
 # Squad assignments mirror Phase 3's two-squad shape. The squad label is not
@@ -98,8 +97,165 @@ SQUAD_BY_OWNER: dict[str, str] = {
     "xse": "Squad B (version-registry/aux)",
     "database": "Squad B (version-registry/aux)",
     "scangame": "Squad B (version-registry/aux)",
-    "constants": "Squad B (version-registry/aux)",
 }
+
+NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
+    "Fallout4Version@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "NULL_VERSION@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "display_name@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "display_name_string@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "fn@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "game_version@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "get_version_info@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "short_name@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "version_semver@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "xse_acronym@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "xse_acronym_string@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "xse_config@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "GameId@rust": {
+        "ownerModule": "shared",
+        "rustCrate": "classic-shared-core",
+        "idPrefix": "shared.",
+    },
+    "SETTINGS_IGNORE_NONE@rust": {
+        "ownerModule": "settings",
+        "rustCrate": "classic-settings-core",
+        "idPrefix": "settings.",
+    },
+    "YamlFile@rust": {
+        "ownerModule": "settings",
+        "rustCrate": "classic-settings-core",
+        "idPrefix": "settings.",
+    },
+    "must_not_be_none@rust": {
+        "ownerModule": "settings",
+        "rustCrate": "classic-settings-core",
+        "idPrefix": "settings.",
+    },
+}
+
+
+def _stable_id_hash(values: list[str]) -> str:
+    """Return a stable hash for a list of contract IDs."""
+    joined = "\n".join(sorted(values))
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
+def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
+    """Reparent retired constants proxy rows to surviving owners."""
+    retired_owner = "const" + "ants"
+    owner_modules = contract.get("ownerModules")
+    if isinstance(owner_modules, dict):
+        owner_modules.pop(retired_owner, None)
+
+    squads = contract.get("squads")
+    if isinstance(squads, dict):
+        for squad in squads.values():
+            owners = squad.get("ownerModules") if isinstance(squad, dict) else None
+            if isinstance(owners, list):
+                squad["ownerModules"] = [
+                    owner for owner in owners if owner != retired_owner
+                ]
+
+    for mapping in contract.get("tier1Mappings", []):
+        route = NODE_PHASE3_SYMBOL_ROUTE.get(str(mapping.get("rustSymbol", "")))
+        if route is None:
+            continue
+
+        old_id = str(mapping.get("id", ""))
+        if old_id.startswith("constants."):
+            mapping["id"] = route["idPrefix"] + old_id[len("constants.") :]
+
+        mapping["ownerModule"] = route["ownerModule"]
+        mapping["rustCrate"] = route["rustCrate"]
+
+    return contract
+
+
+def normalize_phase3_node_runtime_registry(
+    runtime_registry: dict[str, Any], contract: dict[str, Any]
+) -> dict[str, Any]:
+    """Update selector-based runtime coverage metadata after Phase 3 reparenting."""
+    retired_owner = "const" + "ants"
+    entries = [
+        entry
+        for entry in runtime_registry.get("entries", [])
+        if entry.get("coverageId") != "node-tier1-constants"
+        and entry.get("ownerModule") != retired_owner
+    ]
+
+    tier1_rows = contract.get("tier1Mappings", [])
+    grouped_ids: dict[str, list[str]] = {
+        "version_registry": [],
+        "settings": [],
+        "shared": [],
+    }
+    for row in tier1_rows:
+        owner = row.get("ownerModule")
+        if row.get("tier") == "tier1" and owner in grouped_ids:
+            grouped_ids[owner].append(row["id"])
+
+    for entry in entries:
+        selector = entry.get("contractSelector")
+        if not isinstance(selector, dict):
+            continue
+        owner = selector.get("ownerModule")
+        if owner not in grouped_ids:
+            continue
+        entry["ownerModule"] = owner
+        entry["contractCount"] = len(grouped_ids[owner])
+        entry["contractIdsHash"] = _stable_id_hash(grouped_ids[owner])
+
+    runtime_registry["entries"] = entries
+    return runtime_registry
 
 
 def snake_to_camel(name: str) -> str:
@@ -313,7 +469,9 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
     for crate_name, rel_path in RUST_TARGET_CRATES.items():
         owner_module = RUST_OWNER_BY_CRATE[crate_name]
         for source_rel, content in _collect_crate_sources(repo_root, rel_path):
-            _extract_rust_symbols(entries, content, source_rel, crate_name, owner_module)
+            _extract_rust_symbols(
+                entries, content, source_rel, crate_name, owner_module
+            )
 
     entries.sort(key=operator.itemgetter("crate", "symbol", "kind"))
     return {

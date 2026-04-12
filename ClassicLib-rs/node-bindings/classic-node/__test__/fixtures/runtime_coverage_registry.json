@@ -50,8 +50,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 63,
-      "contractIdsHash": "4557a62a88102440b38e82beb51d4bd06f06e4dc5a2b81217fa620eae6a0449e",
+      "contractCount": 90,
+      "contractIdsHash": "c39fd2710c3a5600ae169d5431bf45c85f4e9bbd165c9bfe68dfa800d2562aed",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",
@@ -190,22 +190,6 @@
       "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     },
     {
-      "coverageId": "node-tier1-constants",
-      "classification": "runtime_verified",
-      "ownerModule": "constants",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "constants",
-        "tier": "tier1"
-      },
-      "contractCount": 30,
-      "contractIdsHash": "71f302477e6d1476d488c5d9df556a519a8c005e29712063f83955b7fa446970",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": []
-    },
-    {
       "coverageId": "node-tier1-database",
       "classification": "runtime_verified",
       "ownerModule": "database",
@@ -326,8 +310,8 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 44,
-      "contractIdsHash": "fdfe63a026c108d9a75a4c502385d0af25e77615053d046767832aa3e01ce9bb",
+      "contractCount": 47,
+      "contractIdsHash": "2eb14033161d5a5fcc9422e4819f243e806ca890283e9a1f75e6c20edbadbf53",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "settings-tier1-parity",
@@ -342,8 +326,8 @@
         "ownerModule": "shared",
         "tier": "tier1"
       },
-      "contractCount": 9,
-      "contractIdsHash": "2d59a9e740d6767a6c1503585cb00ff3b865957162f6e24ee576159f08342141",
+      "contractCount": 10,
+      "contractIdsHash": "bfa1ae2cc924496cd18147af3df554ce405813af2a183f1bf509e59467929b59",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "shared-tier1-parity",
@@ -363,22 +347,6 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "update-tier1-parity",
-      "fixtureRefs": []
-    },
-    {
-      "coverageId": "node-tier1-version",
-      "classification": "runtime_verified",
-      "ownerModule": "version",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "version",
-        "tier": "tier1"
-      },
-      "contractCount": 14,
-      "contractIdsHash": "8e913cf6db39f1b7e26002d264cb2b1e61be0afcdaadc6ecfd223f90bc461531",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
       "fixtureRefs": []
     },
     {
@@ -412,6 +380,25 @@
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "xse-tier1-parity",
       "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-version",
+      "classification": "runtime_verified",
+      "ownerModule": "version",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version",
+        "tier": "tier1"
+      },
+      "contractCount": 13,
+      "contractIdsHash": "2a15a7f43ed86992b20f02983b8b652892bf1d3a2150167258e77fcd6fb86266",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     }
   ]
 }

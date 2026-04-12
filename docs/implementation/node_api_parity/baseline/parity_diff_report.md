@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-11T11:56:31.259877+00:00`
+- Generated: `2026-04-12T01:18:53.369486+00:00`
 - Tier-1 contract rows: **705**
 - Tier-1 matched: **705**
 - Tier-1 missing Rust: **0**
@@ -381,36 +381,36 @@
 | `version-registry-check-crashgen-config-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenConfigWithRules` | `matched` |
 | `version-registry-check-crashgen-full-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenFullWithRules` | `matched` |
 | `config.ModConflictEntry@rust` | `config` | `ModConflictEntry@rust` | `None` | `matched` |
-| `constants.Fallout4Version@rust` | `constants` | `Fallout4Version@rust` | `None` | `matched` |
-| `constants.GameId@rust` | `constants` | `GameId@rust` | `None` | `matched` |
-| `constants.NULL_VERSION@rust` | `constants` | `NULL_VERSION@rust` | `None` | `matched` |
-| `constants.SETTINGS_IGNORE_NONE@rust` | `constants` | `SETTINGS_IGNORE_NONE@rust` | `None` | `matched` |
-| `constants.YamlFile@rust` | `constants` | `YamlFile@rust` | `None` | `matched` |
-| `constants.display_name@rust` | `constants` | `display_name@rust` | `None` | `matched` |
-| `constants.display_name_string@rust` | `constants` | `display_name_string@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.fn@rust` | `constants` | `fn@rust` | `None` | `matched` |
-| `constants.game_version@rust` | `constants` | `game_version@rust` | `None` | `matched` |
-| `constants.get_version_info@rust` | `constants` | `get_version_info@rust` | `None` | `matched` |
-| `constants.must_not_be_none@rust` | `constants` | `must_not_be_none@rust` | `None` | `matched` |
-| `constants.short_name@rust` | `constants` | `short_name@rust` | `None` | `matched` |
-| `constants.version_semver@rust` | `constants` | `version_semver@rust` | `None` | `matched` |
-| `constants.xse_acronym@rust` | `constants` | `xse_acronym@rust` | `None` | `matched` |
-| `constants.xse_acronym_string@rust` | `constants` | `xse_acronym_string@rust` | `None` | `matched` |
-| `constants.xse_config@rust` | `constants` | `xse_config@rust` | `None` | `matched` |
+| `version_registry.Fallout4Version@rust` | `version_registry` | `Fallout4Version@rust` | `None` | `matched` |
+| `shared.GameId@rust` | `shared` | `GameId@rust` | `None` | `matched` |
+| `version_registry.NULL_VERSION@rust` | `version_registry` | `NULL_VERSION@rust` | `None` | `matched` |
+| `settings.SETTINGS_IGNORE_NONE@rust` | `settings` | `SETTINGS_IGNORE_NONE@rust` | `None` | `matched` |
+| `settings.YamlFile@rust` | `settings` | `YamlFile@rust` | `None` | `matched` |
+| `version_registry.display_name@rust` | `version_registry` | `display_name@rust` | `None` | `matched` |
+| `version_registry.display_name_string@rust` | `version_registry` | `display_name_string@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
+| `version_registry.game_version@rust` | `version_registry` | `game_version@rust` | `None` | `matched` |
+| `version_registry.get_version_info@rust` | `version_registry` | `get_version_info@rust` | `None` | `matched` |
+| `settings.must_not_be_none@rust` | `settings` | `must_not_be_none@rust` | `None` | `matched` |
+| `version_registry.short_name@rust` | `version_registry` | `short_name@rust` | `None` | `matched` |
+| `version_registry.version_semver@rust` | `version_registry` | `version_semver@rust` | `None` | `matched` |
+| `version_registry.xse_acronym@rust` | `version_registry` | `xse_acronym@rust` | `None` | `matched` |
+| `version_registry.xse_acronym_string@rust` | `version_registry` | `xse_acronym_string@rust` | `None` | `matched` |
+| `version_registry.xse_config@rust` | `version_registry` | `xse_config@rust` | `None` | `matched` |
 | `crashgen_settings.CheckRule@rust` | `config` | `CheckRule@rust` | `None` | `matched` |
 | `crashgen_settings.ConfigLayout@rust` | `config` | `ConfigLayout@rust` | `None` | `matched` |
 | `crashgen_settings.EvaluationContext@rust` | `config` | `EvaluationContext@rust` | `None` | `matched` |
@@ -627,7 +627,7 @@
 | `update.UpdateError@rust` | `update` | `UpdateError@rust` | `None` | `matched` |
 | `update.VERSION@rust` | `update` | `VERSION@rust` | `None` | `matched` |
 | `update.github@rust` | `update` | `github@rust` | `None` | `matched` |
-| `version.NULL_VERSION@rust` | `version` | `NULL_VERSION@rust` | `None` | `matched` |
+| `version.NULL_VERSION@rust` | `version_registry` | `NULL_VERSION@rust` | `None` | `matched` |
 | `version.PeVersionError@rust` | `version` | `PeVersionError@rust` | `None` | `matched` |
 | `version.VersionError@rust` | `version` | `VersionError@rust` | `None` | `matched` |
 | `version.VersionResult@rust` | `version` | `VersionResult@rust` | `None` | `matched` |

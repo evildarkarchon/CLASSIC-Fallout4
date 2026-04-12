@@ -1,6 +1,6 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-04-11T11:56:31.263580+00:00`
+- Generated: `2026-04-12T01:18:53.373267+00:00`
 - Tracked surfaces: **731**
 - Runtime verified: **731**
 - Contract mapped only: **0**
@@ -13,7 +13,6 @@
 |---|---:|---:|---:|---:|
 | `aux` | 169 | 0 | 0 | 169 |
 | `config` | 111 | 0 | 0 | 111 |
-| `constants` | 30 | 0 | 0 | 30 |
 | `database` | 14 | 0 | 0 | 14 |
 | `file_io` | 24 | 0 | 0 | 24 |
 | `message` | 9 | 0 | 0 | 9 |
@@ -22,11 +21,11 @@
 | `registry` | 14 | 0 | 0 | 14 |
 | `scangame` | 70 | 0 | 0 | 70 |
 | `scanlog` | 95 | 0 | 0 | 95 |
-| `settings` | 44 | 0 | 0 | 44 |
-| `shared` | 9 | 0 | 0 | 9 |
+| `settings` | 47 | 0 | 0 | 47 |
+| `shared` | 10 | 0 | 0 | 10 |
 | `update` | 6 | 0 | 0 | 6 |
-| `version` | 14 | 0 | 0 | 14 |
-| `version_registry` | 63 | 0 | 0 | 63 |
+| `version` | 13 | 0 | 0 | 13 |
+| `version_registry` | 90 | 0 | 0 | 90 |
 | `web` | 15 | 0 | 0 | 15 |
 | `xse` | 17 | 0 | 0 | 17 |
 
