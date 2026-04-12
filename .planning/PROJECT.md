@@ -4,6 +4,8 @@
 
 **Goal:** Reduce workspace granularity by merging 3 pairs of crates (19 → 16), updating all binding surfaces and parity gates, with zero functional changes.
 
+**Status:** Phase 4 complete — docs, parity gates, workspace tests, and native wrapper validation are green.
+
 **Target features:**
 - Merge `classic-yaml-core` into `classic-settings-core` (unify YAML loading/caching)
 - Merge `classic-crashgen-settings-core` into `classic-config-core` (absorb single-consumer rule model)
@@ -64,12 +66,13 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Single source-of-truth parity policy doc added — v9.1.0-bindings Phase 6
 - ✓ Merge classic-yaml-core into classic-settings-core — v9.1.0-consolidation Phase 1
 - ✓ Merge classic-crashgen-settings-core into classic-config-core — v9.1.0-consolidation Phase 2
+- ✓ Redistribute constants ownership across version-registry-core, settings-core, and shared-core — v9.1.0-consolidation Phase 3
+- ✓ Update all binding crates for changed import paths — v9.1.0-consolidation Phases 1-3
+- ✓ All three parity gates pass at zero drift after consolidation, with closure evidence recorded in `04-VERIFICATION.md` — v9.1.0-consolidation Phase 4
 
 ### Active
 
-- [ ] Redistribute constants ownership across version-registry-core, settings-core, and shared-core
-- [ ] Update all binding crates for changed import paths
-- [ ] All three parity gates pass at zero drift after consolidation
+- None for the active v9.1.0-consolidation milestone scope.
 
 ### Out of Scope
 
@@ -88,6 +91,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - Python parity contract: one enforced tier with zero drift and no stale tracked artifacts accepted at closure
 - Node parity contract: one enforced tier; verify with `bun run parity:gate` and refresh only with `bun run parity:gate:update-baseline` when drift is intentional
 - Codebase map from 2026-04-04 at `.planning/codebase/CONCERNS.md` — all actionable concerns resolved across v9.1.0-bugfixes and v9.1.0-bindings
+- v9.1.0-consolidation Phase 4 closed with green docs, parity, workspace, and native wrapper evidence in `.planning/phases/04-gate-validation-documentation/04-VERIFICATION.md`
 
 ## Constraints
 
@@ -131,4 +135,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after Phase 3 scope amendment to three-target redistribution*
+*Last updated: 2026-04-12 after Phase 4 closure verification*
