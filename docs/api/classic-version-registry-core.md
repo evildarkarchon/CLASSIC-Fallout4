@@ -346,7 +346,7 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 - [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
 - [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic-constants-py`](../../ClassicLib-rs/python-bindings/classic-constants-py) and [`classic-version-registry-py`](../../ClassicLib-rs/python-bindings/classic-version-registry-py) - maintained Python-facing integration layers
+- [`classic-version-registry-py`](../../ClassicLib-rs/python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 
