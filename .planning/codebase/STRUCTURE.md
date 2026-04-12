@@ -1,272 +1,212 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-04
+**Analysis Date:** 2026-04-11
 
 ## Directory Layout
 
-```
-CLASSIC-Fallout4/                        # Repo root
-├── classic-cli/                         # C++20 CLI frontend
-│   ├── src/                             # CLI source files
-│   ├── tests/                           # CLI integration tests
-│   ├── build_cli.ps1                    # Canonical build/test script
-│   ├── CMakeLists.txt
-│   └── vcpkg.json
-├── classic-gui/                         # Qt 6 C++20 GUI frontend
-│   ├── src/
-│   │   ├── app/                         # Main window + dialogs
-│   │   ├── controllers/                 # Business-action controllers
-│   │   ├── core/                        # Bridge helpers, signal hub, thread manager
-│   │   ├── workers/                     # QObject thread workers
-│   │   └── widgets/                     # Custom Qt widgets
-│   ├── tests/                           # GUI tests
-│   ├── build_gui.ps1                    # Canonical build/test script
-│   ├── cmake/
-│   ├── resources/
-│   └── vcpkg.json
-├── ClassicLib-rs/                       # Rust workspace (all Rust code lives here)
-│   ├── Cargo.toml                       # Workspace manifest
-│   ├── foundation/                      # Shared runtime & utilities
-│   │   ├── classic-shared-core/         # ONE RUNTIME, errors, paths, strings
-│   │   └── classic-shared-py/          # PyO3 utility adapters
-│   ├── business-logic/                  # Pure Rust domain crates
-│   │   ├── classic-settings-core/         # Absorbed `yaml-core` in v9.1.0 Phase 1
-│   │   ├── classic-config-core/
-│   │   ├── classic-version-core/
-│   │   ├── classic-version-registry-core/
-│   │   ├── classic-registry-core/
-│   │   ├── classic-message-core/
-│   │   ├── classic-perf-core/
-│   │   ├── classic-path-core/
-│   │   ├── classic-xse-core/
-│   │   ├── classic-web-core/
-│   │   ├── classic-update-core/
-│   │   ├── classic-file-io-core/
-│   │   ├── classic-resource-core/
-│   │   ├── classic-database-core/
-│   │   ├── classic-scangame-core/
-│   │   └── classic-scanlog-core/        # Primary analysis engine
-│   ├── cpp-bindings/
-│   │   └── classic-cpp-bridge/          # CXX FFI static library
-│   │       ├── src/                     # Bridge modules (one per domain)
-│   │       ├── include/classic_cxx_bridge/  # CXX-generated + handwritten headers
-│   │       └── build.rs
-│   ├── node-bindings/
-│   │   └── classic-node/                # NAPI-RS bindings (single crate)
-│   │       ├── src/                     # One .rs module per domain
-│   │       ├── __test__/                # TypeScript/Bun tests
-│   │       ├── cli/                     # Node CLI wrapper (TypeScript)
-│   │       └── package.json
-│   ├── python-bindings/                 # PyO3 binding crates
-│   │   ├── classic-*-py/                # One crate per business-logic crate
-│   │   ├── parity-artifacts/            # Parity diff reports and API surfaces
-│   │   └── tests/                       # Python parity and smoke tests
-│   ├── ui-applications/
-│   │   └── classic-tui/                 # Ratatui TUI (pure Rust)
-│   │       └── src/
-│   │           ├── tabs/                # Tab views (main, results, backup, articles)
-│   │           └── widgets/
-│   └── benches/                         # Criterion benchmarks
-│       └── common/                      # Shared benchmark fixtures
-├── CLASSIC Data/                        # Runtime data directory
-│   └── databases/
-│       ├── CLASSIC Main.yaml            # Single source of truth for app version + config
-│       └── CLASSIC Fallout4.yaml        # Game-specific rules and mod data
-├── sample_logs/                         # Git submodule with test fixture crash logs
-│   └── FO4/
-├── tests/                               # Top-level integration tests (PowerShell)
-│   └── powershell/
-├── tools/                               # Developer tooling
-│   ├── python_api_parity/               # Python parity check tooling
-│   ├── node_api_parity/                 # Node parity check tooling
-│   ├── use_msvc_from_git_bash.sh        # MSVC linker shim for Git Bash
-│   └── sign-binaries.ps1
-├── docs/                                # Contributor documentation
-│   ├── api/                             # Per-crate API docs (canonical contract)
-│   └── architecture/                    # Architecture overview docs
-├── .planning/                           # GSD planning artifacts
-│   └── codebase/                        # Codebase map documents
-├── scripts/                             # bench/profile helpers
-├── performance_baselines/               # Criterion baseline results
-├── openspec/                            # OpenSpec change specs
-├── conductor/                           # Workflow orchestration
-├── rebuild_rust.ps1                     # Cross-platform Rust rebuild helper
-├── rebuild_node.ps1                     # Node binding rebuild helper
-├── set_version.ps1                      # Version bump tooling
-└── ClassicLib-rs/Cargo.toml             # Workspace root
+```text
+[project-root]/
+├── classic-cli/                 # Native C++ CLI frontend
+├── classic-gui/                 # Native Qt 6 desktop frontend
+├── ClassicLib-rs/               # Rust workspace: foundation, business logic, bindings, TUI
+├── CLASSIC Data/                # Runtime YAML, databases, graphics, help, game metadata
+├── docs/                        # Contributor docs, API docs, architecture docs, parity docs
+├── tests/                       # Repo-level PowerShell/script tests
+├── tools/                       # Parity, signing, shell, and support tooling
+├── sample_logs/                 # Crash-log fixtures submodule content
+├── .planning/                   # Planning artifacts consumed by GSD workflows
+├── rebuild_rust.ps1             # Canonical Rust rebuild entrypoint
+├── rebuild_node.ps1             # Node binding rebuild entrypoint
+└── README.md                    # Top-level repository guide
 ```
 
 ## Directory Purposes
 
+**`classic-cli/`:**
+- Purpose: House the C++ command-line application.
+- Contains: Build wrapper `classic-cli/build_cli.ps1`, CMake files, source in `classic-cli/src/`, tests in `classic-cli/tests/`, and runtime test fixtures in `classic-cli/test_data/`.
+- Key files: `classic-cli/CMakeLists.txt`, `classic-cli/src/main.cpp`, `classic-cli/src/scanner.cpp`, `classic-cli/tests/test_cli_args.cpp`.
+
+**`classic-gui/`:**
+- Purpose: House the Qt desktop application and its test/build scaffolding.
+- Contains: Build wrapper `classic-gui/build_gui.ps1`, CMake files, source in `classic-gui/src/`, tests in `classic-gui/tests/`, Qt/CMake helpers in `classic-gui/cmake/`, and resources in `classic-gui/resources/`.
+- Key files: `classic-gui/CMakeLists.txt`, `classic-gui/src/CMakeLists.txt`, `classic-gui/src/main.cpp`, `classic-gui/src/app/mainwindow.cpp`, `classic-gui/tests/CMakeLists.txt`.
+
+**`ClassicLib-rs/`:**
+- Purpose: House the Rust workspace that owns shared runtime facilities, business rules, bindings, and the TUI.
+- Contains: Workspace manifest in `ClassicLib-rs/Cargo.toml`, foundation crates in `ClassicLib-rs/foundation/`, domain crates in `ClassicLib-rs/business-logic/`, C++ bridge in `ClassicLib-rs/cpp-bindings/`, Node bindings in `ClassicLib-rs/node-bindings/`, Python bindings in `ClassicLib-rs/python-bindings/`, and Rust UI binaries in `ClassicLib-rs/ui-applications/`.
+- Key files: `ClassicLib-rs/Cargo.toml`, `ClassicLib-rs/foundation/classic-shared-core/src/lib.rs`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs`, `ClassicLib-rs/validate_stubs.py`.
+
 **`ClassicLib-rs/foundation/`:**
-- Purpose: Process-wide shared runtime, errors, path/string helpers, PyO3 utilities
-- Contains: `classic-shared-core` (ONE RUNTIME RULE via `LazyLock<Runtime>`), `classic-shared-py`
-- Key files: `ClassicLib-rs/foundation/classic-shared-core/src/lib.rs` (runtime bootstrap + `get_runtime()`)
+- Purpose: Hold shared foundational crates.
+- Contains: `ClassicLib-rs/foundation/classic-shared-core/` and `ClassicLib-rs/foundation/classic-shared-py/`.
+- Key files: `ClassicLib-rs/foundation/classic-shared-core/src/lib.rs`, `ClassicLib-rs/foundation/classic-shared-py/src/lib.rs`.
 
 **`ClassicLib-rs/business-logic/`:**
-- Purpose: All domain logic; never import PyO3 here
-- Contains: the surviving 16 pure Rust `-core` crates after the v9.1.0 consolidation milestone's Phase 1-3 merge sequence; each has its own `src/` and `tests/` subdirectories
-- Key files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs` (primary analysis engine), `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs` (config loading)
+- Purpose: Hold focused Rust domain crates.
+- Contains: One crate per domain, including `classic-config-core/`, `classic-database-core/`, `classic-file-io-core/`, `classic-message-core/`, `classic-path-core/`, `classic-perf-core/`, `classic-registry-core/`, `classic-resource-core/`, `classic-scangame-core/`, `classic-scanlog-core/`, `classic-settings-core/`, `classic-update-core/`, `classic-version-core/`, `classic-version-registry-core/`, `classic-web-core/`, and `classic-xse-core/`.
+- Key files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`, `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`, `ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs`.
 
-**`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`:**
-- Purpose: CXX FFI surface consumed by `classic-cli` and `classic-gui`
-- Contains: 14 domain-aligned `.rs` modules in `src/`; CXX-generated C++ headers in `include/classic_cxx_bridge/`
-- Key files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs`, `src/scanner.rs`, `src/runtime.rs`
+**`ClassicLib-rs/cpp-bindings/`:**
+- Purpose: Hold the CXX-based bridge consumed by native C++ frontends.
+- Contains: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/` with bridge modules under `src/`, generated/build support in `build.rs`, exported headers in `include/`, and parity artifacts in `parity-artifacts/`.
+- Key files: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/Cargo.toml`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs`, `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`.
 
-**`ClassicLib-rs/node-bindings/classic-node/`:**
-- Purpose: NAPI-RS Node.js/Bun bindings as a single compiled `.node` native module
-- Contains: `src/` (20 Rust modules), `__test__/` (per-module `.spec.ts` files + parity specs), `cli/` (TypeScript CLI wrapper)
-- Key files: `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`, `package.json`, `tsconfig.json`
-- Phase 4 closure guidance: use `bun run parity:gate` to verify zero drift; use `bun run parity:gate:update-baseline` only when an intentional source-backed change needs a refreshed baseline
+**`ClassicLib-rs/node-bindings/`:**
+- Purpose: Hold the maintained Node/Bun integration surface.
+- Contains: `ClassicLib-rs/node-bindings/classic-node/` with Rust NAPI modules in `src/`, JS packaging files, tests in `__test__/`, and generated contract files like `index.d.ts`.
+- Key files: `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`, `ClassicLib-rs/node-bindings/classic-node/index.js`, `ClassicLib-rs/node-bindings/classic-node/package.json`.
 
 **`ClassicLib-rs/python-bindings/`:**
-- Purpose: PyO3 Python bindings mirroring business-logic crates 1:1
-- Contains: One `-py` crate per `-core` crate; `parity-artifacts/` for automated diff reports; `tests/` for parity smoke tests
-- Key files: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/lib.rs`, `parity-artifacts/parity_diff_report.md`
+- Purpose: Hold maintained PyO3 bindings and binding-specific tests.
+- Contains: Per-domain `classic-*-py/` crates, shared fixtures/tests in `ClassicLib-rs/python-bindings/tests/`, parity artifacts, and binding-local virtualenv state in `ClassicLib-rs/python-bindings/.venv/`.
+- Key files: `ClassicLib-rs/python-bindings/tests/conftest.py`, `ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py`, `ClassicLib-rs/python-bindings/requirements-ci.txt`.
 
-**`ClassicLib-rs/ui-applications/classic-tui/`:**
-- Purpose: Ratatui terminal UI; uses `-core` crates directly without bridge indirection
-- Contains: `src/` with `app.rs`, `state.rs`, `tabs/`, `widgets/`, `ui.rs`, `theme.rs`
+**`ClassicLib-rs/ui-applications/`:**
+- Purpose: Hold Rust-native application crates.
+- Contains: `ClassicLib-rs/ui-applications/classic-tui/` with `src/main.rs`, `src/lib.rs`, and TUI tests.
+- Key files: `ClassicLib-rs/ui-applications/classic-tui/Cargo.toml`, `ClassicLib-rs/ui-applications/classic-tui/src/main.rs`.
 
-**`classic-cli/src/`:**
-- Purpose: C++ CLI scanner entry point and pipeline
-- Key files: `classic-cli/src/main.cpp`, `scanner.cpp` (drives bridge scan), `cli_args.cpp`, `progress.cpp`, `report_writer.cpp`, `thread_pool.cpp`
+**`CLASSIC Data/`:**
+- Purpose: Hold runtime-owned assets loaded by the frontends and Rust core.
+- Contains: `CLASSIC Data/databases/`, `CLASSIC Data/games/`, `CLASSIC Data/graphics/`, `CLASSIC Data/Help/` and local YAML like `CLASSIC Data/CLASSIC Fallout4 Local.yaml`.
+- Key files: `CLASSIC Data/databases/`, `CLASSIC Data/games/`, `CLASSIC Data/graphics/CLASSIC.ico`.
 
-**`classic-gui/src/`:**
-- Purpose: Qt 6 desktop GUI organized by MVC-ish role
-- Contains: `app/` (dialogs + MainWindow), `controllers/` (feature controllers owning business action flow), `workers/` (QObject thread workers for async bridge calls), `core/` (bridge helpers, signal bus), `widgets/` (custom Qt widgets)
-- Key files: `classic-gui/src/main.cpp`, `app/mainwindow.cpp`, `controllers/scancontroller.cpp`, `workers/scanworker.cpp`
+**`docs/`:**
+- Purpose: Hold contributor-facing documentation and contract docs.
+- Contains: API docs in `docs/api/`, architecture docs in `docs/architecture/`, testing docs in `docs/testing/`, and parity/implementation docs in `docs/implementation/`.
+- Key files: `docs/api/README.md`, `docs/architecture/ARCHITECTURE_OVERVIEW.md`, `docs/README.md`.
 
-**`CLASSIC Data/databases/`:**
-- Purpose: Runtime YAML data consumed by the application; NOT committed to Rust source
-- Key files: `CLASSIC Data/databases/CLASSIC Main.yaml` (single source of truth for version + core config), `CLASSIC Data/databases/CLASSIC Fallout4.yaml` (game rules)
+**`tests/`:**
+- Purpose: Hold repo-level script tests rather than app-local unit tests.
+- Contains: PowerShell tests in `tests/powershell/` and planning-related test assets in `tests/planning/`.
+- Key files: `tests/powershell/cpp_build_scripts.test.ps1`, `tests/powershell/rebuild_rust.general_target.test.ps1`.
 
-**`sample_logs/FO4/`:**
-- Purpose: Git submodule providing real crash log test fixtures for integration and parity tests
-- Generated: No (curated fixtures)
-- Committed: As a submodule reference
-
-**`docs/api/`:**
-- Purpose: Contributor-facing API documentation; one `.md` per crate or workflow boundary
-- Key files: `docs/api/README.md` (loading order index), `docs/api/classic-scanlog-core.md`, `docs/api/binding-parity-overview.md`
-
-## Naming Conventions
-
-**Files:**
-- Rust source: `snake_case.rs` matching the module name
-- C++ source: `lowercase_with_underscores.cpp` / `.h`
-- Qt worker suffix: `*worker.cpp` / `*worker.h`
-- Qt controller suffix: `*controller.cpp` / `*controller.h`
-- PowerShell scripts: `PascalCase_snake_mix.ps1` or `verb_noun.ps1`
-
-**Directories:**
-- Rust crates: `classic-{domain}-{layer}` (e.g., `classic-scanlog-core`, `classic-scanlog-py`)
-- The `-core` suffix means pure Rust business logic; the `-py` suffix means PyO3 adapter
-
-**Rust modules:**
-- One `.rs` file per module, matching the `mod foo;` declaration
-- `lib.rs` always present as the crate root
-
-**C++ namespaces:**
-- `classic::runtime`, `classic::scanner`, `classic::message`, `classic::registry`, etc. (mirrors bridge module names)
+**`tools/`:**
+- Purpose: Hold reusable support tooling.
+- Contains: Parity checkers under `tools/cxx_api_parity/`, `tools/node_api_parity/`, `tools/python_api_parity/`, shell helpers like `tools/use_msvc_from_git_bash.sh`, and signing/dev-shell scripts.
+- Key files: `tools/enter_vs_dev_shell.ps1`, `tools/parity_contract_merge_owner.py`, `tools/cxx_api_parity/`, `tools/node_api_parity/`, `tools/python_api_parity/`.
 
 ## Key File Locations
 
 **Entry Points:**
-- `classic-gui/src/main.cpp`: Qt GUI application startup
-- `classic-cli/src/main.cpp`: CLI application startup
-- `ClassicLib-rs/ui-applications/classic-tui/src/main.rs`: TUI application startup
-- `ClassicLib-rs/node-bindings/classic-node/cli/main.ts`: Node CLI entry
+- `classic-cli/src/main.cpp`: CLI process entrypoint.
+- `classic-gui/src/main.cpp`: Qt GUI process entrypoint.
+- `ClassicLib-rs/ui-applications/classic-tui/src/main.rs`: Rust TUI entrypoint.
+- `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`: NAPI export root.
+- `ClassicLib-rs/python-bindings/*-py/src/lib.rs`: PyO3 export roots.
 
 **Configuration:**
-- `ClassicLib-rs/Cargo.toml`: Workspace definition and shared dependency versions
-- `CLASSIC Data/databases/CLASSIC Main.yaml`: Runtime app config and version (NOT in Rust workspace)
-- `ClassicLib-rs/.cargo/`: Cargo configuration (linker settings for MSVC)
+- `ClassicLib-rs/Cargo.toml`: Rust workspace layout and shared dependencies.
+- `classic-cli/CMakeLists.txt`: CLI build, bridge import, and test target registration.
+- `classic-gui/CMakeLists.txt`: GUI build, bridge import, packaging, and Qt deployment.
+- `classic-gui/src/CMakeLists.txt`: GUI source ownership and link graph.
+- `classic-gui/tests/CMakeLists.txt`: Qt test target registration.
+- `rebuild_rust.ps1`: Canonical Rust rebuild dispatcher.
 
 **Core Logic:**
-- `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs`: Crash log analysis pipeline
-- `ClassicLib-rs/business-logic/classic-scangame-core/src/orchestrator.rs`: Game scan pipeline
-- `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs`: Config loading types
-- `ClassicLib-rs/foundation/classic-shared-core/src/lib.rs`: Shared Tokio runtime
-- `ClassicLib-rs/business-logic/classic-registry-core/src/registry.rs`: Global state store
-- `ClassicLib-rs/business-logic/classic-version-registry-core/src/registry.rs`: Game version metadata
-
-**Bridge:**
-- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`: Scan bridge (primary feature)
-- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/runtime.rs`: Runtime init/shutdown bridge
-- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`: C++ callback interface
+- `ClassicLib-rs/foundation/classic-shared-core/src/lib.rs`: Shared runtime and foundational exports.
+- `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`: Config/YAML model entrypoint.
+- `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`: Scanlog domain entrypoint.
+- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`: Native bridge orchestrator surface.
+- `classic-gui/src/controllers/scancontroller.cpp`: GUI scan orchestration.
+- `classic-cli/src/scanner.cpp`: CLI scan orchestration.
 
 **Testing:**
-- `ClassicLib-rs/node-bindings/classic-node/__test__/`: Node per-module specs + parity tests
-- `ClassicLib-rs/python-bindings/tests/`: Python parity smoke tests
-- `ClassicLib-rs/python-bindings/parity-artifacts/`: Automated parity diff reports
-- `sample_logs/FO4/`: Crash log fixtures (submodule)
-- `tests/powershell/`: Integration tests for C++ frontends
+- `classic-cli/tests/`: CLI unit tests.
+- `classic-gui/tests/`: GUI Qt tests.
+- `ClassicLib-rs/python-bindings/tests/`: Python binding smoke/parity tests.
+- `tests/powershell/`: Repo-level build and script tests.
+- `sample_logs/FO4/`: Crash-log fixture corpus for integration-style workflows.
 
-**API Contracts:**
-- `docs/api/README.md`: Navigation index; read before changing any public Rust API
-- `docs/api/classic-scanlog-core.md`: Scanlog contract
-- `docs/api/binding-parity-overview.md`: What is exposed across C++/Node/Python
+## Ownership Boundaries
+
+**Rust core owns behavior:**
+- Put shared product logic in `ClassicLib-rs/business-logic/*-core/` or `ClassicLib-rs/foundation/classic-shared-core/`.
+- Keep parsing, validation, orchestration, persistence rules, version logic, and scan rules out of `classic-cli/` and `classic-gui/` when the behavior should be shared.
+
+**C++ frontends own presentation and process integration:**
+- Put CLI-only UX in `classic-cli/src/`.
+- Put Qt windows, controllers, workers, and widgets in `classic-gui/src/app/`, `src/controllers/`, `src/workers/`, `src/widgets/`, and `src/core/`.
+- Keep these files focused on UI flow, threading, dialogs, signal wiring, and type conversion.
+
+**Bridge crates own translation, not policy:**
+- Put C++ FFI shims in `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`.
+- Put JS adapter code in `ClassicLib-rs/node-bindings/classic-node/src/`.
+- Put Python adapter code in `ClassicLib-rs/python-bindings/*-py/src/`.
+- Do not move shared business rules into these surfaces.
+
+**Runtime assets live outside code crates:**
+- Keep packaged YAML, DBs, graphics, and help content under `CLASSIC Data/`.
+- Frontends discover these assets at runtime; they are not owned by `classic-cli/src/` or `classic-gui/src/`.
+
+**Docs and planning stay separate from implementation:**
+- API contract docs live in `docs/api/`.
+- Architecture docs live in `docs/architecture/`.
+- Planning artifacts live in `.planning/`.
+
+## Naming Conventions
+
+**Files:**
+- Rust crate directories use kebab-case with domain suffixes: `ClassicLib-rs/business-logic/classic-scanlog-core/`, `ClassicLib-rs/python-bindings/classic-config-py/`.
+- Rust module files use snake_case: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs`, `ClassicLib-rs/node-bindings/classic-node/src/logging_contract.rs`.
+- C++ source files use lowercase snake_case: `classic-gui/src/controllers/scancontroller.cpp`, `classic-cli/src/report_writer.cpp`.
+
+**Directories:**
+- Repo-level product surfaces use descriptive names: `classic-cli/`, `classic-gui/`, `ClassicLib-rs/`, `CLASSIC Data/`.
+- GUI subdirectories are role-based: `classic-gui/src/app/`, `src/controllers/`, `src/core/`, `src/workers/`, `src/widgets/`.
+- Rust workspace directories are layer-based: `ClassicLib-rs/foundation/`, `ClassicLib-rs/business-logic/`, `ClassicLib-rs/cpp-bindings/`, `ClassicLib-rs/node-bindings/`, `ClassicLib-rs/python-bindings/`, `ClassicLib-rs/ui-applications/`.
 
 ## Where to Add New Code
 
-**New business-logic feature (Rust):**
-- Implementation: Create a new crate under `ClassicLib-rs/business-logic/classic-{domain}-core/`
-- Tests: Add `tests/` subdirectory within the crate
-- Register: Add to `ClassicLib-rs/Cargo.toml` workspace `members`
-- API doc: Add a corresponding page under `docs/api/`
+**New Feature:**
+- Primary shared logic: `ClassicLib-rs/business-logic/<new-or-existing-domain>-core/src/`.
+- C++ bridge exposure for native apps: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/<domain>.rs` and corresponding bridge declarations consumed by `classic-cli/CMakeLists.txt` or `classic-gui/CMakeLists.txt`.
+- Native GUI orchestration: `classic-gui/src/controllers/` plus `classic-gui/src/workers/` when the task is asynchronous.
+- Tests: Rust crate-local tests in the touched crate, CLI tests under `classic-cli/tests/`, GUI tests under `classic-gui/tests/`, binding tests under `ClassicLib-rs/python-bindings/tests/` or `ClassicLib-rs/node-bindings/classic-node/__test__/`.
 
-**New bridge module (C++):**
-- Implementation: Add a new `.rs` file under `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`
-- Register: Add `pub mod {name};` to `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs`
-- If headers are needed: Add to `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/`
-
-**New Python binding:**
-- Implementation: Create `ClassicLib-rs/python-bindings/classic-{domain}-py/` crate
-- Register: Add to `ClassicLib-rs/Cargo.toml` workspace `members`
-- Update parity: Run `python tools/python_api_parity/check_parity_gate.py --repo-root .`
-
-**New Node.js binding module:**
-- Implementation: Add a new `.rs` file under `ClassicLib-rs/node-bindings/classic-node/src/`
-- Register: Add `mod {name};` in `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`
-- Tests: Add `ClassicLib-rs/node-bindings/classic-node/__test__/{name}.spec.ts`
-
-**New C++ GUI feature:**
-- Controller: `classic-gui/src/controllers/{name}controller.{cpp,h}`
-- Worker (if async): `classic-gui/src/workers/{name}worker.{cpp,h}`
-- Dialog/widget: `classic-gui/src/app/{name}dialog.{cpp,h}` or `classic-gui/src/widgets/{name}.{cpp,h}`
+**New Component/Module:**
+- Qt visual components: `classic-gui/src/widgets/`.
+- Qt dialogs/windows: `classic-gui/src/app/`.
+- Qt feature coordination: `classic-gui/src/controllers/`.
+- Rust domain modules: `ClassicLib-rs/business-logic/<crate>/src/`.
 
 **Utilities:**
-- Shared Rust helpers: Add to the appropriate `-core` crate's `src/` (prefer extending existing modules over new crates)
-- Build scripts: `tools/` for developer utilities; `scripts/` for bench/profile scripts
+- Shared Rust helpers: `ClassicLib-rs/foundation/classic-shared-core/src/`.
+- Repo scripts/tooling: `tools/` or root scripts such as `rebuild_rust.ps1` only when the utility is repo-wide and not product runtime logic.
 
 ## Special Directories
 
-**`ClassicLib-rs/benches/`:**
-- Purpose: Criterion benchmark entry points and shared fixture helpers
-- Generated: No
-- Committed: Yes
+**`ClassicLib-rs/target/`:**
+- Purpose: Cargo build output.
+- Generated: Yes.
+- Committed: No.
 
-**`ClassicLib-rs/python-bindings/parity-artifacts/`:**
-- Purpose: Generated parity diff reports comparing Python and Node API surfaces against Rust core
-- Generated: Yes (via `python tools/python_api_parity/check_parity_gate.py`)
-- Committed: Yes (treated as checked-in contract artifacts)
+**`classic-cli/build/` and `classic-gui/build/`:**
+- Purpose: CMake/Ninja build output.
+- Generated: Yes.
+- Committed: No.
+
+**`ClassicLib-rs/node-bindings/classic-node/dist/`:**
+- Purpose: Node binding build artifacts.
+- Generated: Yes.
+- Committed: Mixed; treat emitted artifacts as build output unless the touched workflow explicitly requires refreshed contract files like `index.d.ts`.
+
+**`ClassicLib-rs/python-bindings/.venv/`:**
+- Purpose: Binding-local virtual environment for Python validation.
+- Generated: Yes.
+- Committed: No.
 
 **`sample_logs/`:**
-- Purpose: Git submodule with real Fallout 4 crash log test fixtures
-- Generated: No (curated)
-- Committed: As submodule pointer only
-
-**`openspec/`:**
-- Purpose: OpenSpec change-management spec files for structured feature proposals
-- Generated: No
-- Committed: Yes
+- Purpose: Fixture corpus for crash-log scenarios.
+- Generated: No.
+- Committed: Yes, as submodule-backed fixture content.
 
 **`.planning/`:**
-- Purpose: GSD planning documents, roadmap, phase plans, codebase maps
-- Generated: Partially (codebase map files generated by `/gsd:map-codebase`)
-- Committed: Yes
+- Purpose: Planning, milestone, and execution context for GSD workflows.
+- Generated: No.
+- Committed: Yes.
 
 ---
 
-*Structure analysis: 2026-04-04*
+*Structure analysis: 2026-04-11*
