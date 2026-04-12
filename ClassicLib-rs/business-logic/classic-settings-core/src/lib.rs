@@ -86,6 +86,7 @@ mod cache;
 mod error;
 mod loader;
 pub mod validators;
+mod yaml_file;
 
 // YAML operations (absorbed from classic-yaml-core per D-01)
 mod yaml_merge;
@@ -102,6 +103,7 @@ pub use loader::{
     load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async,
     load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content,
 };
+pub use yaml_file::*;
 
 // YAML operations re-exports (D-04 flat re-exports)
 pub use yaml_merge::merge_keys;

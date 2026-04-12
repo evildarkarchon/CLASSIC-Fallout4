@@ -14,6 +14,10 @@ crate-type = ["rlib"]
 # Foundation layer
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
+# Version and serialization
+semver = { workspace = true }
+serde = { workspace = true }
+
 # YAML loading
 classic-settings-core = { path = "../classic-settings-core" }
 yaml-rust2 = { workspace = true }
@@ -23,6 +27,7 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.9"
+serde_json = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

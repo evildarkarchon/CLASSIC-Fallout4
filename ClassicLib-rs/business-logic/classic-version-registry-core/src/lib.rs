@@ -46,6 +46,7 @@
 
 mod defaults;
 mod error;
+mod fallout4_version;
 mod matching;
 mod models;
 mod registry;
@@ -53,6 +54,7 @@ mod version;
 
 // Re-export public API
 pub use error::VersionRegistryError;
+pub use fallout4_version::*;
 pub use matching::{MatchConfidence, MatchResult, VersionMatcher};
 pub use models::{
     AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel,

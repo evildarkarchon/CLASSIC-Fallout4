@@ -36,9 +36,13 @@ xxhash-rust = { workspace = true }
 # Logging
 log = { workspace = true }
 
+# Serialization
+serde = { workspace = true }
+
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 serial_test = "3.2"
+serde_json = { workspace = true }
 
 [[bench]]
 name = "string_benchmarks"

@@ -18,12 +18,14 @@ use tokio::runtime::Runtime;
 
 // Module declarations
 pub mod errors;
+mod game_id;
 pub mod path_core;
 pub mod performance_core;
 pub mod strings_core;
 
 // Re-export key types
 pub use errors::{ClassicError, ClassicResult, IntoClassicError};
+pub use game_id::*;
 
 /// Configuration for the global Tokio runtime
 ///
