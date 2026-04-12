@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import unittest
 from pathlib import Path
 
@@ -13,6 +14,9 @@ ROOT_CARGO_CONFIG = REPO_ROOT / ".cargo/config.toml"
 LEGACY_WORKSPACE_MANIFEST = REPO_ROOT / "ClassicLib-rs/Cargo.toml"
 LEGACY_CARGO_LOCK = REPO_ROOT / "ClassicLib-rs/Cargo.lock"
 LEGACY_CARGO_CONFIG = REPO_ROOT / "ClassicLib-rs/.cargo/config.toml"
+STUB_VALIDATOR = REPO_ROOT / "validate_stubs.py"
+LEGACY_STUB_VALIDATOR = REPO_ROOT / "ClassicLib-rs/validate_stubs.py"
+REBUILD_SCRIPT = REPO_ROOT / "rebuild_rust.ps1"
 
 
 def read_text(path: Path) -> str:
@@ -25,6 +29,15 @@ def assert_contains_all(
     for fragment in fragments:
         with test_case.subTest(fragment=fragment):
             test_case.assertIn(fragment, text)
+
+
+def load_module(path: Path, module_name: str) -> object:
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class Phase06ValidationAuditTests(unittest.TestCase):
@@ -70,17 +83,58 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             ],
         )
 
-    @unittest.skip("Phase 6 Wave 1 pending")
     def test_stub_validator(self) -> None:
-        pass
+        self.assertTrue(STUB_VALIDATOR.exists())
+        self.assertFalse(LEGACY_STUB_VALIDATOR.exists())
 
-    @unittest.skip("Phase 6 Wave 1 pending")
+        text = read_text(STUB_VALIDATOR)
+        assert_contains_all(
+            self,
+            text,
+            [
+                "python validate_stubs.py",
+                "--rust-dir ClassicLib-rs",
+                "repo root",
+                "ClassicLib-rs",
+            ],
+        )
+
+        module = load_module(STUB_VALIDATOR, "phase06_validate_stubs")
+        expected_workspace = REPO_ROOT / "ClassicLib-rs"
+        self.assertEqual(module.normalize_rust_dir(REPO_ROOT), expected_workspace)
+        self.assertEqual(
+            module.normalize_rust_dir(REPO_ROOT / "ClassicLib-rs"),
+            expected_workspace,
+        )
+
     def test_rebuild_script(self) -> None:
-        pass
+        self.assertTrue(REBUILD_SCRIPT.exists())
+        text = read_text(REBUILD_SCRIPT)
 
-    @unittest.skip("Phase 6 Wave 1 pending")
+        self.assertNotIn("ClassicLib-rs/Cargo.toml", text)
+        self.assertNotIn("--manifest-path", text)
+        assert_contains_all(
+            self,
+            text,
+            [
+                '$WorkspaceRootManifest = Join-Path $ProjectRoot "Cargo.toml"',
+                "& cargo clean",
+                '$cargoArgs = @("build")',
+                '$cargoArgs += "--workspace"',
+                "& cargo clean -p classic-node",
+            ],
+        )
+
     def test_cargo_aliases(self) -> None:
-        pass
+        assert_contains_all(
+            self,
+            read_text(ROOT_CARGO_CONFIG),
+            [
+                'flame = "flamegraph"',
+                'flame-bench = "flamegraph --bench"',
+                'profile-build = "build --profile release-with-debug"',
+            ],
+        )
 
     @unittest.skip("Phase 6 Wave 2 pending")
     def test_benchmark_support_set(self) -> None:

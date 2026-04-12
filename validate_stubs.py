@@ -9,9 +9,10 @@ corresponding Rust implementation by checking for:
 - Missing module-level exports
 
 Usage:
-    python ClassicLib-rs/validate_stubs.py              # Validate all crates
-    python ClassicLib-rs/validate_stubs.py --verbose    # Show detailed output
-    python ClassicLib-rs/validate_stubs.py --fix        # Auto-fix simple issues (future)
+    python validate_stubs.py                            # Validate all crates from repo root
+    python validate_stubs.py --rust-dir ClassicLib-rs   # Explicit transitional legacy path
+    python validate_stubs.py --verbose                  # Show detailed output
+    python validate_stubs.py --fix                      # Auto-fix simple issues (future)
 """
 
 import argparse
@@ -20,6 +21,33 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+LEGACY_WORKSPACE_DIR = SCRIPT_DIR / "ClassicLib-rs"
+
+
+def normalize_rust_dir(rust_dir: Path) -> Path:
+    """Normalize repo-root and legacy rust-dir inputs to the live workspace tree.
+
+    Phase 6 promotes this script to repo root while the actual crate tree still lives
+    under ``ClassicLib-rs``. Accept both the repo root and the legacy workspace path
+    so existing callers keep working during the transition.
+    """
+
+    resolved = rust_dir.resolve()
+    candidates = [resolved, resolved / "ClassicLib-rs"]
+
+    for candidate in candidates:
+        if (candidate / "python-bindings").exists():
+            return candidate
+
+    candidate_text = ", ".join(
+        str(candidate / "python-bindings") for candidate in candidates
+    )
+    raise FileNotFoundError(
+        "python-bindings directory not found. Checked: " + candidate_text
+    )
 
 
 class StubValidator:
@@ -415,8 +443,11 @@ def main() -> None:
     parser.add_argument(
         "--rust-dir",
         type=Path,
-        default=Path(__file__).parent,
-        help="Path to rust directory (default: script directory)",
+        default=SCRIPT_DIR,
+        help=(
+            "Workspace root to validate. Defaults to the repo root; during Phase 6 "
+            "both the repo root and ./ClassicLib-rs normalize to the live bindings tree."
+        ),
     )
     parser.add_argument(
         "--json-out", type=Path, help="Optional path to write JSON validation report"
@@ -437,9 +468,15 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    try:
+        normalized_rust_dir = normalize_rust_dir(args.rust_dir)
+    except FileNotFoundError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(1)
+
     validator = StubValidator(verbose=args.verbose)
     success, report = validator.validate_all(
-        args.rust_dir,
+        normalized_rust_dir,
         fail_on_warnings=args.fail_on_warnings,
         include_crates=args.include_crates,
         parity_contract=args.parity_contract,

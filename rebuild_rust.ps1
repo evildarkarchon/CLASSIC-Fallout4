@@ -84,7 +84,7 @@ param (
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = $PSScriptRoot
-$WorkspaceManifest = Join-Path $ProjectRoot "ClassicLib-rs/Cargo.toml"
+$WorkspaceRootManifest = Join-Path $ProjectRoot "Cargo.toml"
 $UseUv = [bool](Get-Command uv -ErrorAction SilentlyContinue)
 $PythonBindingsRoot = Join-Path $ProjectRoot "ClassicLib-rs/python-bindings"
 $PythonBindingsVenv = Join-Path $PythonBindingsRoot ".venv"
@@ -442,21 +442,27 @@ function Invoke-RustWorkspaceRebuild {
         [string[]]$CrateFilters
     )
 
-    if (-not (Test-Path $WorkspaceManifest)) {
-        Write-Error "Rust workspace manifest not found: $WorkspaceManifest"
+    if (-not (Test-Path $WorkspaceRootManifest)) {
+        Write-Error "Rust workspace manifest not found: $WorkspaceRootManifest"
         exit 1
     }
 
     if ($CleanBuild) {
         Write-Host "🧹 Cleaning Rust workspace..." -ForegroundColor Cyan
-        & cargo clean --manifest-path $WorkspaceManifest
-        Assert-LastExitCode -CommandLabel "cargo clean --manifest-path ClassicLib-rs/Cargo.toml"
+        Push-Location $ProjectRoot
+        try {
+            & cargo clean
+            Assert-LastExitCode -CommandLabel "cargo clean"
+        }
+        finally {
+            Pop-Location
+        }
     }
     else {
         Write-Host "ℹ️  Skipping workspace clean step (use -Clean to force)" -ForegroundColor Gray
     }
 
-    $cargoArgs = @("build", "--manifest-path", $WorkspaceManifest)
+    $cargoArgs = @("build")
     if ($CrateFilters -and $CrateFilters.Count -gt 0) {
         Write-Host "Using workspace crate filters: $($CrateFilters -join ', ')" -ForegroundColor Cyan
         foreach ($crate in $CrateFilters) {
@@ -472,8 +478,14 @@ function Invoke-RustWorkspaceRebuild {
 
     Write-Host "🔨 Building Rust workspace..." -ForegroundColor Yellow
     Write-Host "cargo $($cargoArgs -join ' ')" -ForegroundColor DarkGray
-    & cargo @cargoArgs
-    Assert-LastExitCode -CommandLabel "cargo build --workspace"
+    Push-Location $ProjectRoot
+    try {
+        & cargo @cargoArgs
+        Assert-LastExitCode -CommandLabel "cargo build --workspace"
+    }
+    finally {
+        Pop-Location
+    }
 
     Write-Host "✨ Rust workspace rebuild complete!" -ForegroundColor Green
 }
@@ -504,7 +516,7 @@ function Invoke-NodeBindingsRebuild {
             Remove-Item -Force -ErrorAction SilentlyContinue index.js
             Remove-Item -Force -ErrorAction SilentlyContinue index.d.ts
 
-            & cargo clean -p classic-node --manifest-path $WorkspaceManifest
+            & cargo clean -p classic-node
             Assert-LastExitCode -CommandLabel "cargo clean -p classic-node"
         }
         else {
