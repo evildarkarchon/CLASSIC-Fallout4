@@ -54,6 +54,22 @@ def test_tier2_definition_removed_after_plan_6() -> None:
     )
 
 
+def test_contract_description_matches_live_one_tier_baseline() -> None:
+    """The committed contract narrative must stay aligned to the live baseline."""
+    contract = _load_contract()
+    description = contract.get("description", "")
+
+    assert "one-tier" in description, (
+        "parity_contract.json description must describe the live one-tier baseline"
+    )
+    assert "705" in description, (
+        "parity_contract.json description must preserve the live 705-row floor"
+    )
+    assert "Hybrid-tiered" not in description, (
+        "parity_contract.json description must not drift back to hybrid-tier wording"
+    )
+
+
 def test_parity_contract_file_exists() -> None:
     """Sanity check: the committed contract file path is discoverable from
     the test directory without any ``sys.path`` juggling.
