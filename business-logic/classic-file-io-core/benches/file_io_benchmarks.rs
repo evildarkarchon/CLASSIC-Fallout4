@@ -27,7 +27,7 @@ use tempfile::TempDir;
 // Import shared benchmark configuration from workspace benches/common/
 // Note: Path is relative to this file. rust-analyzer may show a false positive
 // warning about unresolved module, but the path is correct and compiles fine.
-#[path = "../../../../benches/common/mod.rs"]
+#[path = "../../../benches/common/mod.rs"]
 #[allow(dead_code)]
 mod common;
 

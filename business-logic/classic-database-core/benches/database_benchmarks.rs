@@ -8,9 +8,9 @@ use std::hint::black_box;
 use std::path::PathBuf;
 use std::time::Duration;
 
-#[path = "../../../../benches/common/mod.rs"]
+#[path = "../../../benches/common/mod.rs"]
 mod common;
-#[path = "../../../../benches/common/db_fixtures.rs"]
+#[path = "../../../benches/common/db_fixtures.rs"]
 mod db_fixtures;
 
 fn init_pool(db_paths: Vec<PathBuf>, table_name: &str, max_connections: usize) -> DatabasePool {

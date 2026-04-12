@@ -24,9 +24,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 // Import shared benchmark configuration from workspace benches/common/
-#[path = "../../../../benches/common/mod.rs"]
+#[path = "../../../benches/common/mod.rs"]
 mod common;
-#[path = "../../../../benches/common/db_fixtures.rs"]
+#[path = "../../../benches/common/db_fixtures.rs"]
 mod db_fixtures;
 
 use classic_config_core::CoreModEntry;

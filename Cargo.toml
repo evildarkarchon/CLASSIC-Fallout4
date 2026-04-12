@@ -1,57 +1,57 @@
 [workspace]
 members = [
     # Foundation
-    "ClassicLib-rs/foundation/classic-shared-core",
-    "ClassicLib-rs/foundation/classic-shared-py",
+    "foundation/classic-shared-core",
+    "foundation/classic-shared-py",
     # Business Logic (Pure Rust - no PyO3)
-    "ClassicLib-rs/business-logic/classic-database-core",
-    "ClassicLib-rs/business-logic/classic-file-io-core",
-    "ClassicLib-rs/business-logic/classic-scanlog-core",
-    "ClassicLib-rs/business-logic/classic-config-core",
-    "ClassicLib-rs/business-logic/classic-scangame-core",
+    "business-logic/classic-database-core",
+    "business-logic/classic-file-io-core",
+    "business-logic/classic-scanlog-core",
+    "business-logic/classic-config-core",
+    "business-logic/classic-scangame-core",
     # Phase 1 - Core Infrastructure (Business Logic)
-    "ClassicLib-rs/business-logic/classic-registry-core",
-    "ClassicLib-rs/business-logic/classic-perf-core",
-    "ClassicLib-rs/business-logic/classic-settings-core",
-    "ClassicLib-rs/business-logic/classic-message-core",
+    "business-logic/classic-registry-core",
+    "business-logic/classic-perf-core",
+    "business-logic/classic-settings-core",
+    "business-logic/classic-message-core",
     # Phase 2 - Path Management (Business Logic)
-    "ClassicLib-rs/business-logic/classic-path-core",
-    "ClassicLib-rs/business-logic/classic-version-core",
-    "ClassicLib-rs/business-logic/classic-resource-core",
-    "ClassicLib-rs/business-logic/classic-xse-core",
-    "ClassicLib-rs/business-logic/classic-web-core",
+    "business-logic/classic-path-core",
+    "business-logic/classic-version-core",
+    "business-logic/classic-resource-core",
+    "business-logic/classic-xse-core",
+    "business-logic/classic-web-core",
     # Phase 5 - Application Coordination (Business Logic)
-    "ClassicLib-rs/business-logic/classic-update-core",
+    "business-logic/classic-update-core",
     # Version Registry (Game version detection and matching)
-    "ClassicLib-rs/business-logic/classic-version-registry-core",
+    "business-logic/classic-version-registry-core",
     # Python Bindings (PyO3 adapters)
-    "ClassicLib-rs/python-bindings/classic-database-py",
-    "ClassicLib-rs/python-bindings/classic-file-io-py",
-    "ClassicLib-rs/python-bindings/classic-scanlog-py",
-    "ClassicLib-rs/python-bindings/classic-config-py",
-    "ClassicLib-rs/python-bindings/classic-scangame-py",
+    "python-bindings/classic-database-py",
+    "python-bindings/classic-file-io-py",
+    "python-bindings/classic-scanlog-py",
+    "python-bindings/classic-config-py",
+    "python-bindings/classic-scangame-py",
     # Phase 1 - Core Infrastructure (Python Bindings)
-    "ClassicLib-rs/python-bindings/classic-registry-py",
-    "ClassicLib-rs/python-bindings/classic-perf-py",
-    "ClassicLib-rs/python-bindings/classic-settings-py",
-    "ClassicLib-rs/python-bindings/classic-message-py",
+    "python-bindings/classic-registry-py",
+    "python-bindings/classic-perf-py",
+    "python-bindings/classic-settings-py",
+    "python-bindings/classic-message-py",
     # Phase 2 - Path Management (Python Bindings)
-    "ClassicLib-rs/python-bindings/classic-path-py",
+    "python-bindings/classic-path-py",
     # Phase 4 - Constants and Utilities (Python Bindings)
-    "ClassicLib-rs/python-bindings/classic-version-py",
-    "ClassicLib-rs/python-bindings/classic-resource-py",
-    "ClassicLib-rs/python-bindings/classic-xse-py",
-    "ClassicLib-rs/python-bindings/classic-web-py",
+    "python-bindings/classic-version-py",
+    "python-bindings/classic-resource-py",
+    "python-bindings/classic-xse-py",
+    "python-bindings/classic-web-py",
     # Phase 5 - Application Coordination (Python Bindings)
-    "ClassicLib-rs/python-bindings/classic-update-py",
+    "python-bindings/classic-update-py",
     # Version Registry (Python Bindings)
-    "ClassicLib-rs/python-bindings/classic-version-registry-py",
+    "python-bindings/classic-version-registry-py",
     # Node.js/Bun Bindings (NAPI-RS adapters)
-    "ClassicLib-rs/node-bindings/classic-node",
+    "node-bindings/classic-node",
     # UI Applications
-    "ClassicLib-rs/ui-applications/classic-tui",
+    "ui-applications/classic-tui",
     # C++ Bindings (CXX FFI adapters)
-    "ClassicLib-rs/cpp-bindings/classic-cpp-bridge",
+    "cpp-bindings/classic-cpp-bridge",
 ]
 resolver = "2"
 

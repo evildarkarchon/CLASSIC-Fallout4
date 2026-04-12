@@ -44,18 +44,12 @@ CLASSIC_PROJECT_GUIDE_FILES = [
     REPO_ROOT / ".agent/skills/classic-project-guide/references/repo-guide.md",
 ]
 BENCHMARK_INCLUDE_FILES = [
-    REPO_ROOT
-    / "ClassicLib-rs/business-logic/classic-settings-core/benches/yaml_benchmarks.rs",
-    REPO_ROOT
-    / "ClassicLib-rs/business-logic/classic-scanlog-core/benches/scanlog_benchmarks.rs",
-    REPO_ROOT
-    / "ClassicLib-rs/business-logic/classic-file-io-core/benches/file_io_benchmarks.rs",
-    REPO_ROOT
-    / "ClassicLib-rs/business-logic/classic-database-core/benches/database_benchmarks.rs",
-    REPO_ROOT
-    / "ClassicLib-rs/python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs",
-    REPO_ROOT
-    / "ClassicLib-rs/python-bindings/classic-file-io-py/benches/gil_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-settings-core/benches/yaml_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-scanlog-core/benches/scanlog_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-file-io-core/benches/file_io_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-database-core/benches/database_benchmarks.rs",
+    REPO_ROOT / "python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs",
+    REPO_ROOT / "python-bindings/classic-file-io-py/benches/gil_benchmarks.rs",
 ]
 
 
@@ -96,14 +90,15 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             [
                 "[workspace]",
                 'resolver = "2"',
-                '"ClassicLib-rs/business-logic/classic-scanlog-core"',
-                '"ClassicLib-rs/python-bindings/classic-config-py"',
+                '"business-logic/classic-scanlog-core"',
+                '"python-bindings/classic-config-py"',
                 "[workspace.dependencies]",
                 "[workspace.lints.rust]",
                 "[profile.release]",
                 "[profile.release-with-debug]",
             ],
         )
+        self.assertNotIn('"ClassicLib-rs/', text)
         self.assertNotIn("default-members", text)
 
     def test_core_root_files(self) -> None:
@@ -140,7 +135,7 @@ class Phase06ValidationAuditTests(unittest.TestCase):
         )
 
         module = load_module(STUB_VALIDATOR, "phase06_validate_stubs")
-        expected_workspace = REPO_ROOT / "ClassicLib-rs"
+        expected_workspace = REPO_ROOT
         self.assertEqual(module.normalize_rust_dir(REPO_ROOT), expected_workspace)
         self.assertEqual(
             module.normalize_rust_dir(REPO_ROOT / "ClassicLib-rs"),
@@ -214,8 +209,8 @@ class Phase06ValidationAuditTests(unittest.TestCase):
         for path in BENCHMARK_INCLUDE_FILES:
             text = read_text(path)
             with self.subTest(path=str(path)):
-                self.assertIn("../../../../benches/common/", text)
-                self.assertNotIn('#[path = "../../../benches/common/', text)
+                self.assertIn("../../../benches/common/", text)
+                self.assertNotIn("../../../../benches/common/", text)
 
     def test_repo_root_workflows(self) -> None:
         text = read_text(CI_RUST_WORKFLOW)

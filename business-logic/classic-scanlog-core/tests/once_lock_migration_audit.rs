@@ -2,7 +2,7 @@
 
 const RECORD_SCANNER_RS: &str = include_str!("../src/record_scanner.rs");
 const CARGO_TOML: &str = include_str!("../Cargo.toml");
-const API_DOC: &str = include_str!("../../../../docs/api/classic-scanlog-core.md");
+const API_DOC: &str = include_str!("../../../docs/api/classic-scanlog-core.md");
 
 #[test]
 fn record_scanner_and_docs_exit_direct_once_cell_usage() {

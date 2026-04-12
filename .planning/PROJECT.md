@@ -4,9 +4,9 @@
 
 **Latest shipped milestone:** `v9.1.0-consolidation Crate Consolidation` (2026-04-12)
 
-**Status:** The Rust business-logic workspace remains consolidated to 16 crates, the repository root is now the single live Cargo workspace shell, and active CI, docs, helper scripts, parity checks, and native wrapper entrypoints validate against that repo-root contract.
+**Status:** The Rust crate tree now lives under repo-root layer directories, the repository root remains the single live Cargo workspace shell, and `ClassicLib-rs/` no longer contains live Rust workspace authority.
 
-**Current focus:** Phase 6 is complete; next focus is Phase 7 crate relocation and path rewiring for milestone `v9.1.0-root`.
+**Current focus:** Phase 7 is complete; next focus is Phase 8 wrapper and parity rewiring for milestone `v9.1.0-root`.
 
 ## Current Milestone: `v9.1.0-root` Move Crates to Project Root
 

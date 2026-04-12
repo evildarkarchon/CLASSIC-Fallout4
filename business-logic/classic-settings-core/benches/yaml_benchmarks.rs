@@ -17,11 +17,11 @@
 //! cargo bench --bench yaml_benchmarks -- --test
 //! ```
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use yaml_rust2::{Yaml, YamlLoader};
 
 // Import shared benchmark configuration from workspace benches/common/
-#[path = "../../../../benches/common/mod.rs"]
+#[path = "../../../benches/common/mod.rs"]
 mod common;
 
 use classic_settings_core::YamlOperations;

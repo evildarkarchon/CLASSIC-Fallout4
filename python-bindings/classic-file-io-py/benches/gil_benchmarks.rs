@@ -17,12 +17,12 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-file-io-py
 //! ```
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::hint::black_box;
 use std::path::PathBuf;
 
 // Import shared benchmark configuration from workspace benches/common/
-#[path = "../../../../benches/common/mod.rs"]
+#[path = "../../../benches/common/mod.rs"]
 mod common;
 
 /// Generate test file paths for benchmarking
