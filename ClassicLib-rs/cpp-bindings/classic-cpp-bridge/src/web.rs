@@ -10,8 +10,8 @@
 //!
 //! Note on cross-module shared enums: CXX shared enums don't share across
 //! `#[cxx::bridge]` modules. `WebGameId` here mirrors the variant set of
-//! `classic::constants::GameId` but is a separate CXX type. C++ callers
-//! that have a `classic::constants::GameId` value translate via the value
+//! `classic::shared::GameId` but is a separate CXX type. C++ callers
+//! that have a `classic::shared::GameId` value translate via the value
 //! (both enums use the same `#[repr(u8)]` discriminants).
 //!
 //! # CXXS-02 surface
@@ -33,13 +33,13 @@
 //! // → "https://www.nexusmods.com"
 //! ```
 
-use classic_constants_core::GameId as CoreGameId;
+use classic_shared_core::GameId as CoreGameId;
 use classic_web_core::{
-    ModSite as CoreModSite, build_url_with_query as core_build_url_with_query,
-    extract_domain as core_extract_domain, get_user_agent as core_get_user_agent,
+    build_url_with_query as core_build_url_with_query, extract_domain as core_extract_domain,
+    get_user_agent as core_get_user_agent,
     get_user_agent_with_suffix as core_get_user_agent_with_suffix,
     is_valid_url as core_is_valid_url, join_url as core_join_url,
-    validate_url as core_validate_url,
+    validate_url as core_validate_url, ModSite as CoreModSite,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -161,7 +161,7 @@ mod ffi {
 
     /// Game identifier for mod-site URL construction.
     ///
-    /// Mirrors `classic_constants_core::GameId` exactly (same repr(u8) discriminants).
+    /// Mirrors `classic_shared_core::GameId` exactly (same repr(u8) discriminants).
     /// Declared here as a separate type because CXX shared enums cannot be reused
     /// across `#[cxx::bridge]` module boundaries.
     #[repr(u8)]

@@ -9,7 +9,53 @@
 //! NOTE: `src/registry.rs` is a SEPARATE bridge module for `classic-registry-core`
 //! (the typed key/value singleton) — it is NOT this file (D-02 wording).
 
-use classic_version_registry_core::{GameVersion, get_version_registry};
+use classic_version_registry_core::{
+    get_version_registry, Fallout4Version as CoreFallout4Version, GameVersion,
+};
+
+fn from_bridge_fallout4_version(v: ffi::Fallout4Version) -> CoreFallout4Version {
+    match v {
+        ffi::Fallout4Version::Original => CoreFallout4Version::Original,
+        ffi::Fallout4Version::NextGen => CoreFallout4Version::NextGen,
+        ffi::Fallout4Version::AnniversaryEdition => CoreFallout4Version::AnniversaryEdition,
+        ffi::Fallout4Version::Vr => CoreFallout4Version::Vr,
+        _ => CoreFallout4Version::Original,
+    }
+}
+
+fn fallout4_version_as_str(v: ffi::Fallout4Version) -> String {
+    from_bridge_fallout4_version(v).as_str().to_string()
+}
+
+fn fallout4_version_registry_id(v: ffi::Fallout4Version) -> String {
+    from_bridge_fallout4_version(v).registry_id().to_string()
+}
+
+fn fallout4_version_is_vr(v: ffi::Fallout4Version) -> bool {
+    from_bridge_fallout4_version(v).is_vr()
+}
+
+fn fallout4_version_is_standard(v: ffi::Fallout4Version) -> bool {
+    from_bridge_fallout4_version(v).is_standard()
+}
+
+fn fallout4_version_exe_name(v: ffi::Fallout4Version) -> String {
+    from_bridge_fallout4_version(v).exe_name().to_string()
+}
+
+fn fallout4_version_docs_folder_name(v: ffi::Fallout4Version) -> String {
+    from_bridge_fallout4_version(v)
+        .docs_folder_name()
+        .to_string()
+}
+
+fn fallout4_version_steam_app_id(v: ffi::Fallout4Version) -> u32 {
+    from_bridge_fallout4_version(v).steam_app_id()
+}
+
+fn is_null_version(major: u32, minor: u32, patch: u32) -> bool {
+    major == 0 && minor == 0 && patch == 0
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // Wrapper bodies — verbatim from game.rs (Codex MEDIUM correction applied)
@@ -193,6 +239,14 @@ fn version_registry_get_all_for_game(game: &str, is_vr: bool) -> Vec<ffi::Versio
 
 #[cxx::bridge(namespace = "classic::version_registry")]
 mod ffi {
+    #[repr(u8)]
+    enum Fallout4Version {
+        Original = 0,
+        NextGen = 1,
+        AnniversaryEdition = 2,
+        Vr = 3,
+    }
+
     // Shared structs — copy verbatim from game.rs (same field names + types)
     struct VersionInfoDto {
         id: String,
@@ -239,6 +293,15 @@ mod ffi {
     }
 
     extern "Rust" {
+        fn fallout4_version_as_str(v: Fallout4Version) -> String;
+        fn fallout4_version_registry_id(v: Fallout4Version) -> String;
+        fn fallout4_version_is_vr(v: Fallout4Version) -> bool;
+        fn fallout4_version_is_standard(v: Fallout4Version) -> bool;
+        fn fallout4_version_exe_name(v: Fallout4Version) -> String;
+        fn fallout4_version_docs_folder_name(v: Fallout4Version) -> String;
+        fn fallout4_version_steam_app_id(v: Fallout4Version) -> u32;
+        fn is_null_version(major: u32, minor: u32, patch: u32) -> bool;
+
         fn version_registry_get_by_id(id: &str) -> VersionInfoDto;
         fn version_registry_get_all_ids() -> Vec<String>;
         fn version_registry_get_all_count() -> usize;

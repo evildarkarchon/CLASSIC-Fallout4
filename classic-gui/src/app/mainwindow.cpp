@@ -41,13 +41,13 @@
 #include "workers/updateworker.h"
 
 #include "classic_cxx_bridge/config.h"
-#include "classic_cxx_bridge/constants.h"
 #include "classic_cxx_bridge/files.h"
 #include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/scangame.h"
 #include "classic_cxx_bridge/settings.h"
+#include "classic_cxx_bridge/shared.h"
 #include "rust/cxx.h"
 
 #include <QDateTime>
@@ -1583,10 +1583,10 @@ void MainWindow::onScanGameFiles()
     QString gameRoot;
     QString docsPath;
     // D-11 / CXXS-01 consumer migration: use the bridged GameId helper instead
-    // of hardcoding the literal "Fallout4". This proves classic::constants is
+    // of hardcoding the literal "Fallout4". This proves classic::shared is
     // callable from production C++ code.
     auto gameIdRustStr =
-        classic::constants::game_id_as_str(classic::constants::GameId::Fallout4);
+        classic::shared::game_id_as_str(classic::shared::GameId::Fallout4);
     QString gameName =
         QString::fromUtf8(gameIdRustStr.data(), static_cast<int>(gameIdRustStr.size()));
 

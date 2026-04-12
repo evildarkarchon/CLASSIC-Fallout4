@@ -34,7 +34,8 @@
 
 use classic_settings_core::validators::{self, CoercedValue, IssueSeverity, SettingType};
 use classic_settings_core::{
-    self as settings_core, YamlCacheStats, YamlOperations, yaml_cache_stats,
+    self as settings_core, YamlCacheStats, YamlFile as CoreYamlFile, YamlOperations,
+    SETTINGS_IGNORE_NONE, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
 };
 use std::path::Path;
 use yaml_rust2::Yaml;
@@ -302,6 +303,35 @@ fn settings_invalidate(key: &str) -> bool {
     settings_core::invalidate(key)
 }
 
+fn from_bridge_yaml_file(f: ffi::YamlFile) -> CoreYamlFile {
+    match f {
+        ffi::YamlFile::Main => CoreYamlFile::Main,
+        ffi::YamlFile::Settings => CoreYamlFile::Settings,
+        ffi::YamlFile::Ignore => CoreYamlFile::Ignore,
+        ffi::YamlFile::Game => CoreYamlFile::Game,
+        ffi::YamlFile::GameLocal => CoreYamlFile::GameLocal,
+        ffi::YamlFile::Test => CoreYamlFile::Test,
+        ffi::YamlFile::Cache => CoreYamlFile::Cache,
+        _ => CoreYamlFile::Settings,
+    }
+}
+
+fn yaml_file_as_str(f: ffi::YamlFile) -> String {
+    from_bridge_yaml_file(f).as_str().to_string()
+}
+
+fn yaml_file_description(f: ffi::YamlFile) -> String {
+    from_bridge_yaml_file(f).description().to_string()
+}
+
+fn must_not_be_none_key(key: &str) -> bool {
+    core_must_not_be_none(key)
+}
+
+fn settings_ignore_none_contains(key: &str) -> bool {
+    SETTINGS_IGNORE_NONE.contains(&key)
+}
+
 // ── Validators (D-09 — mirrors Python classic_settings surface) ────
 
 /// Parse a setting-type token into `SettingType`.
@@ -397,6 +427,17 @@ fn settings_coerce_value(
 
 #[cxx::bridge(namespace = "classic::settings")]
 mod ffi {
+    #[repr(u8)]
+    enum YamlFile {
+        Main = 0,
+        Settings = 1,
+        Ignore = 2,
+        Game = 3,
+        GameLocal = 4,
+        Test = 5,
+        Cache = 6,
+    }
+
     /// YAML-file cache stats DTO (distinct from `SettingsCacheStats` below).
     ///
     /// Returned by `yaml_ops_cache_stats` for observing the YAML-file cache
@@ -461,6 +502,11 @@ mod ffi {
 
     extern "Rust" {
         type YamlOps;
+
+        fn yaml_file_as_str(f: YamlFile) -> String;
+        fn yaml_file_description(f: YamlFile) -> String;
+        fn must_not_be_none_key(key: &str) -> bool;
+        fn settings_ignore_none_contains(key: &str) -> bool;
 
         // Construction
         fn yaml_ops_new() -> Box<YamlOps>;
