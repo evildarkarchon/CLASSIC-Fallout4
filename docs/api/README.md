@@ -4,6 +4,8 @@ Contributor-facing API guides for active Rust business-logic crates live here.
 
 Current contract note: `Mods_FREQ` and `Mods_SOLU` are now documented as structured ordered sequences across config, scanlog, and binding-facing surfaces rather than key/value maps.
 
+The active API set now tracks the surviving 16 Rust business-logic crates plus the live bridge/workflow guides that sit on top of them. Historical absorbed-crate names appear only as short migration notes on the surviving owner pages.
+
 Use this directory in this order:
 
 1. [`QUICK_START.md`](QUICK_START.md) - repo-level setup, build, and test workflow
@@ -46,14 +48,14 @@ That order matches the current layering in `ClassicLib-rs/business-logic/`:
 - `classic-perf-core` provides process-wide timing buckets, scoped timers, and summary computation for lightweight metrics collection
 - `classic-registry-core` provides process-wide typed singleton storage and key helpers for callers that share state across boundaries
 - `classic-message-core` provides shared message DTOs, routing enums, and structured/startup logging helpers used by bindings and bridge code
-- `classic-settings-core` provides shared YAML stream parsing/merge helpers, raw settings loading, a sync/async cache layer keyed by caller-chosen strings, AND the absorbed path-backed `YamlOperations` file cache with mtime-based invalidation (merged from the former ``yaml-core`` crate during the v9.1.0 Phase 1 consolidation)
+- `classic-settings-core` provides shared YAML stream parsing/merge helpers, raw settings loading, a sync/async cache layer keyed by caller-chosen strings, plus the path-backed `YamlOperations` file cache with mtime-based invalidation (historical note: this owner absorbed the former `classic-yaml-core` crate during v9.1.0 Phase 1)
 - `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers, and now owns the contributor-facing `Fallout4Version` / `NULL_VERSION` surface that used to live in the retired constants crate
 - `classic-shared-core` also owns the shared `GameId` enum used across bridge, web, and setup flows
 - `classic-settings-core` also owns `YamlFile`, `SETTINGS_IGNORE_NONE`, and `must_not_be_none()` alongside its YAML/cache helpers
 - `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime
-- `classic-config-core` loads YAML and uses Version Registry metadata to build config data; in v9.1.0 Phase 2 it absorbed the former crashgen rules crate, so the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (re-exported at the crate root)
+- `classic-config-core` loads YAML and uses Version Registry metadata to build config data; the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (historical note: this owner absorbed the former `classic-crashgen-settings-core` crate during v9.1.0 Phase 2)
 - `classic-config-core-yaml-schema.md` captures the runtime YAML contract for merged settings files and the Main/Game/Ignore sections that `classic-config-core` actually consumes
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups
 - `classic-xse-core` builds on path/version helpers to detect XSE installation state and parse XSE versions

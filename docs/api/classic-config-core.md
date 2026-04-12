@@ -64,7 +64,7 @@ Bulk YAML dataset loader for scanlog/business logic.
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (absorbed from the former ``yaml-core`` in v9.1.0 Phase 1)
+- `clear_global_yaml_cache` from [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
