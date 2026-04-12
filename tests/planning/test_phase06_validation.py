@@ -17,6 +17,8 @@ LEGACY_CARGO_CONFIG = REPO_ROOT / "ClassicLib-rs/.cargo/config.toml"
 STUB_VALIDATOR = REPO_ROOT / "validate_stubs.py"
 LEGACY_STUB_VALIDATOR = REPO_ROOT / "ClassicLib-rs/validate_stubs.py"
 REBUILD_SCRIPT = REPO_ROOT / "rebuild_rust.ps1"
+CI_RUST_WORKFLOW = REPO_ROOT / ".github/workflows/ci-rust.yml"
+BENCHMARKS_WORKFLOW = REPO_ROOT / ".github/workflows/benchmarks.yml"
 BENCHMARK_CONFIG = REPO_ROOT / "benchmark-config.yaml"
 CRITERION_CONFIG = REPO_ROOT / "criterion.toml"
 BENCH_COMMON_DIR = REPO_ROOT / "benches/common"
@@ -197,13 +199,39 @@ class Phase06ValidationAuditTests(unittest.TestCase):
                 self.assertIn("../../../../benches/common/", text)
                 self.assertNotIn('#[path = "../../../benches/common/', text)
 
-    @unittest.skip("Phase 6 Wave 3 pending")
     def test_repo_root_workflows(self) -> None:
-        pass
+        text = read_text(CI_RUST_WORKFLOW)
+        self.assertNotIn("ClassicLib-rs/Cargo.toml", text)
+        self.assertNotIn("ClassicLib-rs/target", text)
+        self.assertNotIn("--manifest-path", text)
+        assert_contains_all(
+            self,
+            text,
+            [
+                "cargo fmt --all -- --check",
+                "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+                "cargo build --workspace --release",
+                "cargo test -p classic-message-core -- --nocapture",
+                "cargo test --workspace --release -- --nocapture",
+                "cargo test --workspace --release --all-features -- --nocapture",
+                "path: target",
+            ],
+        )
 
-    @unittest.skip("Phase 6 Wave 3 pending")
     def test_benchmark_workflow_paths(self) -> None:
-        pass
+        text = read_text(BENCHMARKS_WORKFLOW)
+        self.assertNotIn("working-directory: ClassicLib-rs", text)
+        self.assertNotIn("ClassicLib-rs/target", text)
+        assert_contains_all(
+            self,
+            text,
+            [
+                "path: target",
+                "path: target/criterion/baseline",
+                'CONFIG_FILE="benchmark-config.yaml"',
+                "run: cargo bench -- --save-baseline current",
+            ],
+        )
 
     @unittest.skip("Phase 6 Wave 3 pending")
     def test_cargo_root_detection(self) -> None:

@@ -26,7 +26,7 @@ jobs:
           components: rustfmt
 
       - name: Run rustfmt check
-        run: cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+        run: cargo fmt --all -- --check
 
   lint:
     name: Linting (Clippy)
@@ -64,14 +64,14 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
+          path: target
           key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
 
       - name: Run clippy
-        run: cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   build:
     name: Build
@@ -109,14 +109,14 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
+          path: target
           key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
 
       - name: Build all Rust workspace
-        run: cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+        run: cargo build --workspace --release
 
   test:
     name: Tests
@@ -154,17 +154,17 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
+          path: target
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-test-
 
       - name: Run phase-1 logging contract tests (Rust)
-        run: cargo test -p classic-message-core --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+        run: cargo test -p classic-message-core -- --nocapture
 
       - name: Run Rust tests
-        run: cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+        run: cargo test --workspace --release -- --nocapture
 
       - name: Run Rust tests with all features
-        run: cargo test --workspace --release --all-features --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+        run: cargo test --workspace --release --all-features -- --nocapture
