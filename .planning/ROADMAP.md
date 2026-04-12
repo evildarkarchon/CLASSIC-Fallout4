@@ -12,7 +12,7 @@
 ## Phases
 
 - [x] **Phase 6: Repo-Root Workspace Cutover** - Repository root becomes the only canonical Cargo workspace entrypoint.
-- [ ] **Phase 7: Crate Relocation and Path Rewire** - All crates move out of `ClassicLib-rs/` intact and still resolve as one workspace.
+- [x] **Phase 7: Crate Relocation and Path Rewire** - All crates move out of `ClassicLib-rs/` intact and still resolve as one workspace.
 - [ ] **Phase 8: Wrapper and Parity Rewire** - Existing wrappers, frontends, and parity gates keep working against the relocated workspace.
 - [ ] **Phase 9: Clean Validation and CI Refresh** - Clean-state validation, CI, and path-bearing artifacts prove the new layout is durable.
 - [ ] **Phase 10: Docs, Guidance, and Tripwires** - Active docs and agent guidance point at the new root layout and guard against regressions.
@@ -46,9 +46,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] `07-01-PLAN.md` — Bootstrap the relocation audit artifact and Phase 7 planning validation scaffold.
-- [ ] `07-02-PLAN.md` — Move the six Rust layer directories to repo root and rewire only broken member/path edges.
-- [ ] `07-03-PLAN.md` — Complete the relocation audit and prove `ClassicLib-rs` is no longer a live Rust workspace home.
+- [x] `07-01-PLAN.md` — Bootstrap the relocation audit artifact and Phase 7 planning validation scaffold.
+- [x] `07-02-PLAN.md` — Move the six Rust layer directories to repo root and rewire only broken member/path edges.
+- [x] `07-03-PLAN.md` — Complete the relocation audit and prove `ClassicLib-rs` is no longer a live Rust workspace home.
 
 ### Phase 8: Wrapper and Parity Rewire
 **Goal**: Existing Rust-consuming wrappers, frontends, and parity gates continue to operate against the relocated workspace.
@@ -58,8 +58,16 @@ Plans:
   1. Contributor can run the existing rebuild and wrapper entrypoints against the relocated workspace.
   2. Contributor can run native CLI, GUI, and TUI integration flows without restoring `ClassicLib-rs/` as the workspace root.
   3. Contributor can run the Python, Node, and CXX parity gates against the relocated workspace with no parity-contract changes caused by the move.
-**Plans**: TBD
+**Plans**: 6 plans
 **UI hint**: yes
+
+Plans:
+- [ ] `08-01-PLAN.md` — Rewire repo-root rebuild wrappers and collapse `rebuild_node.ps1` into the canonical Node flow.
+- [ ] `08-02-PLAN.md` — Rewire native CLI/GUI bridge includes and add a lightweight repo-root TUI smoke path.
+- [ ] `08-03-PLAN.md` — Cut Python stub/parity tooling over to root-level binding paths with legacy-path rejection.
+- [ ] `08-04-PLAN.md` — Rewire `classic-node` package scripts plus Node parity and d.ts freshness defaults.
+- [ ] `08-05-PLAN.md` — Cut CXX parity tooling over to repo-root bridge paths and refresh stale CXX baseline metadata.
+- [ ] `08-06-PLAN.md` — Refresh Python/Node checked-in parity artifacts and add the final Phase 8 planning audit.
 
 ### Phase 9: Clean Validation and CI Refresh
 **Goal**: Clean-state verification and CI prove the repo-root workspace works without stale caches or legacy path artifacts.
@@ -86,7 +94,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 6. Repo-Root Workspace Cutover | 4/4 | Complete | 2026-04-12 |
-| 7. Crate Relocation and Path Rewire | 0/TBD | Not started | - |
+| 7. Crate Relocation and Path Rewire | 3/3 | Complete | 2026-04-12 |
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
 | 10. Docs, Guidance, and Tripwires | 0/TBD | Not started | - |
