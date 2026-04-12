@@ -27,13 +27,13 @@
 //!   `resolve_fallout4_exe_name`, `detect_fallout4_docs_path`
 
 use classic_path_core::{
-    is_restricted_path as core_is_restricted_path, is_valid_path as core_is_valid_path,
-    parse_xse_log as core_parse_xse_log,
+    BackupManager, DocsPathFinder, DocumentsChecker, GamePathFinder,
+    IniCheckResult as CoreIniCheckResult, is_restricted_path as core_is_restricted_path,
+    is_valid_path as core_is_valid_path, parse_xse_log as core_parse_xse_log,
     validate_custom_scan_path as core_validate_custom_scan_path,
     validate_is_directory as core_validate_is_directory, validate_is_file as core_validate_is_file,
     validate_path_exists as core_validate_path_exists,
-    validate_required_files as core_validate_required_files, BackupManager, DocsPathFinder,
-    DocumentsChecker, GamePathFinder, IniCheckResult as CoreIniCheckResult,
+    validate_required_files as core_validate_required_files,
 };
 use classic_version_registry_core::Fallout4Version;
 use std::path::Path;

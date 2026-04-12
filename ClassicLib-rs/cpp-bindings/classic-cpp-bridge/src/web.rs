@@ -35,11 +35,11 @@
 
 use classic_shared_core::GameId as CoreGameId;
 use classic_web_core::{
-    build_url_with_query as core_build_url_with_query, extract_domain as core_extract_domain,
-    get_user_agent as core_get_user_agent,
+    ModSite as CoreModSite, build_url_with_query as core_build_url_with_query,
+    extract_domain as core_extract_domain, get_user_agent as core_get_user_agent,
     get_user_agent_with_suffix as core_get_user_agent_with_suffix,
     is_valid_url as core_is_valid_url, join_url as core_join_url,
-    validate_url as core_validate_url, ModSite as CoreModSite,
+    validate_url as core_validate_url,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

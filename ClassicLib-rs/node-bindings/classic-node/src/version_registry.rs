@@ -7,8 +7,8 @@ use napi::bindgen_prelude::*;
 use std::collections::{BTreeSet, HashMap};
 
 use classic_version_registry_core::{
-    get_version_registry as core_get_version_registry, Fallout4Version, GameVersion,
-    MatchConfidence,
+    Fallout4Version, GameVersion, MatchConfidence,
+    get_version_registry as core_get_version_registry,
 };
 
 /// Convert any Display error to a napi::Error

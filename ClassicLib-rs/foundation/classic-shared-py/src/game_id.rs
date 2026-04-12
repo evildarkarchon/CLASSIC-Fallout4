@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+/// Python wrapper around [`classic_shared_core::GameId`].
 #[pyclass(module = "classic_shared", name = "GameId")]
 #[derive(Clone)]
 pub struct PyGameId {
@@ -74,6 +75,7 @@ impl PyGameId {
     }
 }
 
+/// Register `GameId` on the Python module.
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGameId>()?;
     Ok(())

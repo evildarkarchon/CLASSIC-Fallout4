@@ -27,6 +27,7 @@ use std::path::{Path, PathBuf};
 // Module declarations
 pub mod error_convert;
 pub mod exceptions;
+/// Python bindings for the shared `GameId` enum.
 pub mod game_id;
 pub mod indexmap_utils;
 pub mod path;

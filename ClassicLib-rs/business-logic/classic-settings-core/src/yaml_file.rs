@@ -3,16 +3,24 @@ use serde::{Deserialize, Serialize};
 /// Enumeration for YAML configuration files used by CLASSIC.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum YamlFile {
+    /// The main database-backed configuration file.
     Main,
+    /// The user-editable settings file.
     Settings,
+    /// The ignore-list configuration file.
     Ignore,
+    /// The game-specific database file.
     Game,
+    /// The local per-game override file.
     GameLocal,
+    /// The test-only settings fixture.
     Test,
+    /// The cached derived-settings file.
     Cache,
 }
 
 impl YamlFile {
+    /// Return the stable identifier used for this YAML file kind.
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
@@ -26,6 +34,7 @@ impl YamlFile {
         }
     }
 
+    /// Describe the canonical location or purpose of this YAML file.
     #[must_use]
     pub const fn description(&self) -> &'static str {
         match self {
@@ -39,6 +48,7 @@ impl YamlFile {
         }
     }
 
+    /// Return all supported YAML file kinds in a stable order.
     #[must_use]
     pub const fn all() -> [Self; 7] {
         [

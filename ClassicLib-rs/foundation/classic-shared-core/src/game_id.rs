@@ -3,13 +3,18 @@ use serde::{Deserialize, Serialize};
 /// Enumeration of supported game identifiers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum GameId {
+    /// Fallout 4.
     Fallout4,
+    /// Fallout 4 VR.
     Fallout4VR,
+    /// Skyrim Special Edition.
     Skyrim,
+    /// Starfield.
     Starfield,
 }
 
 impl GameId {
+    /// Return the stable string identifier used across CLASSIC surfaces.
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
@@ -20,6 +25,7 @@ impl GameId {
         }
     }
 
+    /// Return the default executable name for this game.
     #[must_use]
     pub const fn exe_name(&self) -> &'static str {
         match self {
@@ -30,11 +36,13 @@ impl GameId {
         }
     }
 
+    /// Report whether this game identifier represents a VR build.
     #[must_use]
     pub const fn is_vr(&self) -> bool {
         matches!(self, Self::Fallout4VR)
     }
 
+    /// Return all supported game identifiers in a stable order.
     #[must_use]
     pub const fn all() -> [Self; 4] {
         [

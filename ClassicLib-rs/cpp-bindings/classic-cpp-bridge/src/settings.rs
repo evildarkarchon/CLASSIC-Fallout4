@@ -34,8 +34,8 @@
 
 use classic_settings_core::validators::{self, CoercedValue, IssueSeverity, SettingType};
 use classic_settings_core::{
-    self as settings_core, YamlCacheStats, YamlFile as CoreYamlFile, YamlOperations,
-    SETTINGS_IGNORE_NONE, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
+    self as settings_core, SETTINGS_IGNORE_NONE, YamlCacheStats, YamlFile as CoreYamlFile,
+    YamlOperations, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
 };
 use std::path::Path;
 use yaml_rust2::Yaml;

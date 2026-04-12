@@ -10,7 +10,7 @@
 //! (the typed key/value singleton) — it is NOT this file (D-02 wording).
 
 use classic_version_registry_core::{
-    get_version_registry, Fallout4Version as CoreFallout4Version, GameVersion,
+    Fallout4Version as CoreFallout4Version, GameVersion, get_version_registry,
 };
 
 fn from_bridge_fallout4_version(v: ffi::Fallout4Version) -> CoreFallout4Version {

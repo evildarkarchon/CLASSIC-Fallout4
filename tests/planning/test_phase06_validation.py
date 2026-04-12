@@ -257,6 +257,7 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             cwd=REPO_ROOT,
             check=True,
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             text=True,
         )
         self.assertEqual(Path(locate_result.stdout.strip()), WORKSPACE_MANIFEST)
@@ -266,6 +267,7 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             cwd=REPO_ROOT,
             check=True,
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             text=True,
         )
         metadata = json.loads(metadata_result.stdout)

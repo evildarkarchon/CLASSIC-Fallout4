@@ -53,6 +53,7 @@ pub enum Fallout4Version {
 }
 
 impl Fallout4Version {
+    /// Return the canonical registry key for this Fallout 4 version variant.
     #[must_use]
     pub const fn registry_id(&self) -> &'static str {
         match self {
@@ -69,16 +70,19 @@ impl Fallout4Version {
         get_version_registry().get_by_id(self.registry_id())
     }
 
+    /// Report whether this variant represents Fallout 4 VR.
     #[must_use]
     pub const fn is_vr(&self) -> bool {
         matches!(self, Self::Vr)
     }
 
+    /// Report whether this variant is a non-VR Fallout 4 build.
     #[must_use]
     pub const fn is_standard(&self) -> bool {
         !self.is_vr()
     }
 
+    /// Return the default executable name for this version family.
     #[must_use]
     pub const fn exe_name(&self) -> &'static str {
         if self.is_vr() {
@@ -88,6 +92,7 @@ impl Fallout4Version {
         }
     }
 
+    /// Return the My Games documents folder name for this version family.
     #[must_use]
     pub const fn docs_folder_name(&self) -> &'static str {
         if self.is_vr() {
@@ -97,6 +102,7 @@ impl Fallout4Version {
         }
     }
 
+    /// Return the Steam app ID associated with this version family.
     #[must_use]
     pub const fn steam_app_id(&self) -> u32 {
         if self.is_vr() { 611660 } else { 377160 }
@@ -110,6 +116,7 @@ impl Fallout4Version {
             .unwrap_or_else(|| GameVersion::new(0, 0, 0, 0))
     }
 
+    /// Convert the registry-backed game version into semantic-version form.
     #[must_use]
     pub fn version_semver(&self) -> Version {
         let gv = self.game_version();
@@ -120,6 +127,7 @@ impl Fallout4Version {
         )
     }
 
+    /// Return the canonical script extender acronym for this variant.
     #[must_use]
     pub fn xse_acronym(&self) -> &'static str {
         self.get_version_info()
@@ -131,6 +139,7 @@ impl Fallout4Version {
             .unwrap_or(if self.is_vr() { "F4SEVR" } else { "F4SE" })
     }
 
+    /// Return the script extender acronym as an owned string.
     #[must_use]
     pub fn xse_acronym_string(&self) -> String {
         self.get_version_info()
@@ -145,6 +154,7 @@ impl Fallout4Version {
             })
     }
 
+    /// Return a human-readable display name for this version variant.
     #[must_use]
     pub fn display_name(&self) -> &'static str {
         self.get_version_info()
@@ -158,6 +168,7 @@ impl Fallout4Version {
             .unwrap_or("Unknown")
     }
 
+    /// Return the registry-provided display name as an owned string.
     #[must_use]
     pub fn display_name_string(&self) -> String {
         self.get_version_info()
@@ -165,6 +176,7 @@ impl Fallout4Version {
             .unwrap_or_else(|| "Unknown".to_string())
     }
 
+    /// Return the short registry-style code for this version variant.
     #[must_use]
     pub fn short_name(&self) -> &'static str {
         match self {
@@ -175,6 +187,7 @@ impl Fallout4Version {
         }
     }
 
+    /// Return the stable enum identifier for serialization and CLI usage.
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
@@ -185,6 +198,7 @@ impl Fallout4Version {
         }
     }
 
+    /// Return all supported Fallout 4 version variants in a stable order.
     #[must_use]
     pub const fn all() -> [Self; 4] {
         [
@@ -195,12 +209,14 @@ impl Fallout4Version {
         ]
     }
 
+    /// Return the address-library configuration for this version, if any.
     #[must_use]
     pub fn address_library(&self) -> Option<&'static AddressLibraryConfig> {
         self.get_version_info()
             .and_then(|info| info.address_library.as_ref())
     }
 
+    /// Return the script-extender configuration for this version, if any.
     #[must_use]
     pub fn xse_config(&self) -> Option<&'static XseConfig> {
         self.get_version_info().and_then(|info| info.xse.as_ref())

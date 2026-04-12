@@ -12,7 +12,6 @@
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
 use classic_config_core::{ClassicConfig, YamlDataCore};
-use classic_shared_core::GameId;
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::OrchestratorCore;
@@ -21,6 +20,7 @@ use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
+use classic_shared_core::GameId;
 use std::collections::{HashMap, HashSet};
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js, js_rules_to_core};

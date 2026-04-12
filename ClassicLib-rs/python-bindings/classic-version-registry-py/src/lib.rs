@@ -35,8 +35,8 @@
 
 use pyo3::prelude::*;
 
-mod matching;
 mod fallout4_version;
+mod matching;
 mod models;
 mod registry;
 mod version;
