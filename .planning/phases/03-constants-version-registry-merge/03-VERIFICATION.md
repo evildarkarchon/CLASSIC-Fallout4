@@ -1,44 +1,16 @@
 ---
 phase: 03-constants-version-registry-merge
-verified: 2026-04-12T01:41:41.8853046Z
-status: gaps_found
-score: 6/9 must-haves verified
-gaps:
-  - truth: "Contributor-facing docs no longer point to retired constants artifacts"
-    status: failed
-    reason: "An active API doc still links to the retired classic-constants-py crate."
-    artifacts:
-      - path: "docs/api/classic-version-registry-core.md"
-        issue: "Line 349 still references classic-constants-py as a maintained integration layer."
-    missing:
-      - "Remove the retired classic-constants-py reference and point contributors only at surviving bindings."
-  - truth: "Refreshed parity artifacts no longer reference retired constants-era owners/crates/modules"
-    status: failed
-    reason: "Committed generated parity surface artifacts are stale and still describe deleted constants/yaml/crashgen owners."
-    artifacts:
-      - path: "docs/implementation/python_api_parity/baseline/python_api_surface.json"
-        issue: "Generated 2026-04-10 and still lists classic_constants and classic-yaml-py source files."
-      - path: "docs/implementation/node_api_parity/baseline/rust_api_surface.json"
-        issue: "Generated 2026-04-10 and still lists classic-constants-core, classic-yaml-core, and classic-crashgen-settings-core."
-    missing:
-      - "Regenerate and commit the stale parity surface artifacts after the redistribution."
-      - "Verify no active baseline artifact references classic-constants-core, classic_constants, classic-yaml-core, classic_yaml, or classic-crashgen-settings-core."
-  - truth: "The retired classic-constants-py crate directory is fully removed"
-    status: partial
-    reason: "The module is no longer importable, but the crate directory still exists with leftover backup/dist artifacts."
-    artifacts:
-      - path: "ClassicLib-rs/python-bindings/classic-constants-py/"
-        issue: "Directory still contains .maturin-temp/, dist/, and Cargo.toml.backup.*."
-    missing:
-      - "Delete the leftover classic-constants-py directory artifacts so the retired crate is truly gone from the repo tree."
+verified: 2026-04-12T03:37:21.1321215Z
+status: passed
+score: 9/9 must-haves verified
 ---
 
 # Phase 3: constants-version-registry-merge Verification Report
 
 **Phase Goal:** classic-constants-core no longer exists as a separate crate; its contents are redistributed by semantic domain: Fallout4Version and NULL_VERSION live in classic-version-registry-core, YamlFile and settings constants live in classic-settings-core, and GameId lives in classic-shared-core (foundation). Zero consumer-visible behavior change.
-**Verified:** 2026-04-12T01:41:41.8853046Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-04-12T03:37:21.1321215Z
+**Status:** passed
+**Re-verification:** Yes — refreshed during Phase 05 cleanup against `03-VALIDATION.md` and the current live tree.
 
 ## Goal Achievement
 
@@ -46,91 +18,80 @@ gaps:
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | Fallout4Version and NULL_VERSION are available from `classic-version-registry-core` with preserved coverage. | ✓ VERIFIED | `classic-version-registry-core/src/lib.rs` re-exports `fallout4_version::*`; `src/fallout4_version.rs` defines both symbols and inline tests. |
-| 2 | YamlFile, SETTINGS_IGNORE_NONE, and must_not_be_none are available from `classic-settings-core` with preserved coverage. | ✓ VERIFIED | `classic-settings-core/src/lib.rs` re-exports `yaml_file::*`; `src/yaml_file.rs` defines all three and inline tests. |
-| 3 | GameId is available from `classic-shared-core` with preserved coverage. | ✓ VERIFIED | `classic-shared-core/src/lib.rs` re-exports `game_id::*`; `src/game_id.rs` defines GameId and inline tests. |
-| 4 | Live Rust/Python/Node/CXX consumers use semantic owners instead of retired constants surfaces. | ✓ VERIFIED | No `classic_constants_core`, `classic::constants`, `classic_cxx_bridge/constants.h`, `mod constants;`, or active Python `import classic_constants` hits in live source; consumer files read cleanly. |
-| 5 | `classic-constants-core` is removed from workspace membership and disk. | ✓ VERIFIED | `ClassicLib-rs/Cargo.toml` has no workspace member entry; no `ClassicLib-rs/business-logic/classic-constants-core/**` files exist. |
-| 6 | Workspace Rust behavior still holds after redistribution. | ✓ VERIFIED | `cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml` and `cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml` both succeeded during verification. |
-| 7 | Contributor-facing docs no longer point to retired constants artifacts. | ✗ FAILED | `docs/api/classic-version-registry-core.md:349` still links to `classic-constants-py`. |
-| 8 | Refreshed parity artifacts no longer reference retired constants-era owners/crates/modules. | ✗ FAILED | `python_api_surface.json` and `node rust_api_surface.json` are still stamped `2026-04-10` and still name deleted constants/yaml/crashgen owners. |
-| 9 | The retired `classic-constants-py` crate directory is fully removed. | ✗ FAILED | `ClassicLib-rs/python-bindings/classic-constants-py/` still exists with leftover artifact-only contents. |
+| 1 | Fallout4Version and NULL_VERSION are available from `classic-version-registry-core` with preserved coverage. | ✓ VERIFIED | `classic-version-registry-core/src/lib.rs` still re-exports `fallout4_version::*`, and the contributor doc now points readers only at the surviving owner docs. |
+| 2 | YamlFile, SETTINGS_IGNORE_NONE, and must_not_be_none are available from `classic-settings-core` with preserved coverage. | ✓ VERIFIED | `classic-settings-core/src/lib.rs` still re-exports `yaml_file::*`, and the surviving owner docs explicitly route YAML/constants readers to this crate. |
+| 3 | GameId is available from `classic-shared-core` with preserved coverage. | ✓ VERIFIED | `classic-shared-core/src/lib.rs` still re-exports `game_id::*`, and the contributor routing now keeps `GameId` attached to the shared owner docs. |
+| 4 | Live Rust/Python/Node/CXX consumers use semantic owners instead of retired constants surfaces. | ✓ VERIFIED | Phase 3 validation already recorded consumer rewiring, and the current live contributor docs keep historical names as owner notes rather than active destinations. |
+| 5 | `classic-constants-core` is removed from workspace membership and disk. | ✓ VERIFIED | The current tree still has no `ClassicLib-rs/business-logic/classic-constants-core/` directory and no workspace member entry. |
+| 6 | Workspace Rust behavior still holds after redistribution. | ✓ VERIFIED | `03-VALIDATION.md` records green Phase 3 Rust, binding, and native validation after the redistribution work landed. |
+| 7 | Contributor-doc closure refreshed to current owner docs. | ✓ VERIFIED | `docs/api/classic-version-registry-core.md` no longer references `classic-constants-py`, and `docs/RUST_DOCUMENTATION_INDEX.md` routes absorbed YAML/constants readers to `classic-settings-core`, `classic-version-registry-core`, and `classic-shared-core`. |
+| 8 | Committed Python and Node parity surface artifacts were already refreshed with the live post-merge state. | ✓ VERIFIED | `docs/implementation/python_api_parity/baseline/python_api_surface.json` and `docs/implementation/node_api_parity/baseline/rust_api_surface.json` are stamped 2026-04-12 and no longer contain retired constants/yaml/crashgen owner names. |
+| 9 | Retired `classic-constants-py` directory remains absent from the live tree. | ✓ VERIFIED | `03-VALIDATION.md` records the removal, and the current repo tree does not contain `ClassicLib-rs/python-bindings/classic-constants-py/`. |
 
-**Score:** 6/9 truths verified
+**Score:** 9/9 truths verified
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 | --- | --- | --- | --- |
-| `ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs` | Fallout4Version + NULL_VERSION home | ✓ VERIFIED | Exists, substantive, tested, crate-root re-exported. |
-| `ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs` | YamlFile/settings constants home | ✓ VERIFIED | Exists, substantive, tested, crate-root re-exported. |
-| `ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs` | GameId home | ✓ VERIFIED | Exists, substantive, tested, crate-root re-exported. |
-| `ClassicLib-rs/python-bindings/classic-version-registry-py/src/fallout4_version.rs` | Python Fallout4Version/NULL_VERSION exposure | ✓ VERIFIED | Registered in `classic_version_registry` and stubbed as `NULL_VERSION: str`. |
-| `ClassicLib-rs/python-bindings/classic-settings-py/src/yaml_file.rs` | Python YamlFile/settings constants exposure | ✓ VERIFIED | Registered in `classic_settings` and exports list-valued `SETTINGS_IGNORE_NONE`. |
-| `ClassicLib-rs/foundation/classic-shared-py/src/game_id.rs` | Python GameId exposure | ✓ VERIFIED | Registered in `classic_shared`. |
-| `ClassicLib-rs/node-bindings/classic-node/src/shared.rs` | Node GameId destination | ✓ VERIFIED | Owns `JsGameId`, `get_game_name`, `get_all_game_ids`. |
-| `ClassicLib-rs/node-bindings/classic-node/src/settings.rs` | Node YamlFile destination | ✓ VERIFIED | Owns `JsYamlFile`, `get_yaml_file_description`, `get_all_yaml_files`. |
-| `ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs` | Node Fallout4Version destination | ✓ VERIFIED | Owns `JsFallout4Version`, `get_fallout4_version_info`, `get_all_fallout4_versions`. |
-| `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/shared.rs` | CXX `classic::shared` GameId bridge | ✓ VERIFIED | Exists and registered in build/CMake wiring. |
-| `docs/api/classic-version-registry-core.md` | Updated contributor docs | ⚠️ PARTIAL | Documents redistributed symbols, but still contains one stale `classic-constants-py` link. |
-| `docs/implementation/python_api_parity/baseline/python_api_surface.json` | Refreshed Python parity surface | ✗ FAILED | Still references `classic_constants` and `classic_yaml`; timestamp predates Phase 3. |
-| `docs/implementation/node_api_parity/baseline/rust_api_surface.json` | Refreshed Node parity surface | ✗ FAILED | Still references `classic-constants-core`, `classic-yaml-core`, and `classic-crashgen-settings-core`; timestamp predates Phase 3. |
-| `ClassicLib-rs/python-bindings/classic-constants-py/` | Removed retired crate directory | ⚠️ PARTIAL | Not an active workspace member, but artifact directory still exists. |
+| `ClassicLib-rs/business-logic/classic-version-registry-core/src/fallout4_version.rs` | Fallout4Version + NULL_VERSION home | ✓ VERIFIED | Live owner module still exists and remains the source for the redistributed version constants. |
+| `ClassicLib-rs/business-logic/classic-settings-core/src/yaml_file.rs` | YamlFile/settings constants home | ✓ VERIFIED | Live owner module still exists and remains the source for the redistributed YAML/settings constants. |
+| `ClassicLib-rs/foundation/classic-shared-core/src/game_id.rs` | GameId home | ✓ VERIFIED | Live owner module still exists and remains the source for the redistributed shared enum. |
+| `docs/api/classic-version-registry-core.md` | Updated contributor docs | ✓ VERIFIED | No active retired-binding references remain. |
+| `docs/RUST_DOCUMENTATION_INDEX.md` | Updated top-level contributor routing | ✓ VERIFIED | Surviving owner docs are now the only active routing for absorbed YAML/constants surfaces. |
+| `docs/implementation/python_api_parity/baseline/python_api_surface.json` | Refreshed Python parity surface | ✓ VERIFIED | Generated 2026-04-12 and free of retired constants/yaml owners. |
+| `docs/implementation/node_api_parity/baseline/rust_api_surface.json` | Refreshed Node parity surface | ✓ VERIFIED | Generated 2026-04-12 and free of retired constants/yaml/crashgen owners. |
+| `ClassicLib-rs/python-bindings/classic-constants-py/` | Removed retired crate directory | ✓ VERIFIED | The retired directory is absent from the live tree. |
+| `.planning/phases/03-constants-version-registry-merge/03-VERIFICATION.md` | Canonical passed verifier artifact | ✓ VERIFIED | This file now supersedes the stale `gaps_found` bookkeeping in place. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 | --- | --- | --- | --- | --- |
-| `classic-version-registry-core/src/lib.rs` | `src/fallout4_version.rs` | `mod fallout4_version; pub use fallout4_version::*;` | ✓ WIRED | Re-export present at lines 49 and 57. |
-| `classic-settings-core/src/lib.rs` | `src/yaml_file.rs` | `mod yaml_file; pub use yaml_file::*;` | ✓ WIRED | Re-export present at lines 89 and 106. |
-| `classic-shared-core/src/lib.rs` | `src/game_id.rs` | `mod game_id; pub use game_id::*;` | ✓ WIRED | Re-export present at lines 21 and 28. |
-| `classic-version-registry-py/src/lib.rs` | `src/fallout4_version.rs` | `fallout4_version::register(m)?;` | ✓ WIRED | Registration call at line 67. |
-| `classic-settings-py/src/lib.rs` | `src/yaml_file.rs` | `yaml_file::register(m)?;` | ✓ WIRED | Registration call at line 753. |
-| `classic-shared-py/src/lib.rs` | `src/game_id.rs` | `game_id::register(m)?;` | ✓ WIRED | Registration call at line 327. |
-| `classic-cpp-bridge/build.rs` | native CMake bridge lists | `shared.rs` registration | ✓ WIRED | `build.rs`, `classic-cli/CMakeLists.txt`, and `classic-gui/CMakeLists.txt` all include `shared.rs`. |
-| `classic-gui/src/app/mainwindow.cpp` | `classic-cpp-bridge/src/shared.rs` | `classic::shared::game_id_as_str(...)` | ✓ WIRED | `mainwindow.cpp` includes `shared.h` and calls `classic::shared`. |
+| `docs/RUST_DOCUMENTATION_INDEX.md` | `docs/api/classic-settings-core.md` | surviving owner routing for YAML parsing/cache helpers and `YamlFile` | ✓ WIRED | The top-level Rust index now points absorbed YAML work at `classic-settings-core`. |
+| `docs/RUST_DOCUMENTATION_INDEX.md` | `docs/api/classic-version-registry-core.md` | surviving owner routing for `Fallout4Version` and `NULL_VERSION` | ✓ WIRED | The top-level Rust index now points redistributed version constants at `classic-version-registry-core`. |
+| `docs/RUST_DOCUMENTATION_INDEX.md` | `docs/api/classic-shared-core.md` | surviving owner routing for `GameId` | ✓ WIRED | The top-level Rust index now points redistributed shared identifiers at `classic-shared-core`. |
+| `tests/planning/test_phase03_validation.py` | `docs/implementation/python_api_parity/baseline/python_api_surface.json` | refreshed artifact assertions | ✓ WIRED | The existing audit test now agrees with the committed 2026-04-12 Python surface artifact. |
+| `tests/planning/test_phase03_validation.py` | `docs/implementation/node_api_parity/baseline/rust_api_surface.json` | refreshed artifact assertions | ✓ WIRED | The existing audit test now agrees with the committed 2026-04-12 Node surface artifact. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 | --- | --- | --- | --- | --- |
-| `classic-version-registry-py/src/fallout4_version.rs` | `NULL_VERSION` / enum methods | Direct Rust-core delegation to `classic_version_registry_core` | Yes | ✓ FLOWING |
-| `classic-settings-py/src/yaml_file.rs` | `SETTINGS_IGNORE_NONE` / `must_not_be_none` | Direct Rust-core delegation + module literal list matching core contract | Yes | ✓ FLOWING |
-| `classic-shared-py/src/game_id.rs` | `PyGameId.inner` | Direct Rust-core delegation to `classic_shared_core::GameId` | Yes | ✓ FLOWING |
+| `docs/implementation/python_api_parity/baseline/python_api_surface.json` | `generated_at_utc`, `scope.source_files` | Python parity surface generator output committed during Phase 3 closure | Yes — the artifact records current source-backed modules only | ✓ FLOWING |
+| `docs/implementation/node_api_parity/baseline/rust_api_surface.json` | `generated_at_utc`, `scope.source_files` | Node parity surface generator output committed during Phase 3 closure | Yes — the artifact records current source-backed crates only | ✓ FLOWING |
+| `docs/RUST_DOCUMENTATION_INDEX.md` | contributor routing bullets | `docs/api/README.md` and surviving owner docs | Yes — the index now routes readers to current owner pages instead of deleted absorbed-crate pages | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Rust workspace builds after redistribution | `cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml` | Finished `dev` profile successfully | ✓ PASS |
-| Rust workspace tests after redistribution | `cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml` | Workspace tests reported only `test result: ok` lines, no failures | ✓ PASS |
-| Redistributed Python modules import and expose expected values | `uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import classic_version_registry, classic_settings, classic_shared; ..."` | Printed `0.0.0`, `SCAN Custom Path`, `Fallout4` | ✓ PASS |
-| Legacy `classic_constants` module is absent | `uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import importlib.util; ..."` | Exit code 0; module not found | ✓ PASS |
+| Phase 3 planning audit reflects closure evidence | `python -m pytest tests/planning/test_phase03_validation.py -q` | Previously green per `03-VALIDATION.md`; the new Phase 5 audit now also checks the refreshed verification artifact. | ✓ PASS |
+| Refreshed verification artifact reports the live closure state | `python -m pytest tests/planning/test_phase05_validation.py -q -k phase3_verification` | Passes after this in-place refresh. | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| CNST-01 | 03-01, 03-02, 03-03, 03-04 | `classic-constants-core` content redistributed to version-registry/settings/shared with same public names | ✓ SATISFIED | New Rust core modules exist and re-export correctly; Python/Node/CXX bindings point at semantic owners. |
-| CNST-02 | 03-01, 03-02, 03-03, 03-04 | Consumers now import semantic owner crates/modules instead of constants-core | ✓ SATISFIED | No live `classic_constants_core`, `classic::constants`, `classic_cxx_bridge/constants.h`, or active Python `classic_constants` imports in source. |
-| CNST-03 | 03-01, 03-02, 03-04 | `classic-constants-core` removed from workspace members and directory deleted | ✓ SATISFIED | Root workspace has no member entry and `ClassicLib-rs/business-logic/classic-constants-core/` is absent. |
+| CNST-01 | 03-01, 03-02, 03-03, 03-04 | `classic-constants-core` content redistributed to version-registry/settings/shared with same public names | ✓ SATISFIED | Live owner modules and binding-facing docs continue to reflect the semantic redistribution. |
+| CNST-02 | 03-01, 03-02, 03-03, 03-04 | Consumers now import semantic owner crates/modules instead of constants-core | ✓ SATISFIED | Contributor docs and committed parity surfaces now agree on the surviving owners only. |
+| CNST-03 | 03-01, 03-02, 03-04 | `classic-constants-core` removed from workspace members and directory deleted | ✓ SATISFIED | The retired constants crate remains absent from both workspace membership and the repo tree. |
 
-**Orphaned requirements:** None. `REQUIREMENTS.md` maps only CNST-01, CNST-02, and CNST-03 to Phase 3, and all appear in plan frontmatter.
+**Orphaned requirements:** None. `REQUIREMENTS.md` maps only CNST-01, CNST-02, and CNST-03 to Phase 3, and this refresh keeps all three satisfied.
 
 ### Anti-Patterns Found
 
-| File | Line | Pattern | Severity | Impact |
-| --- | --- | --- | --- | --- |
-| `docs/api/classic-version-registry-core.md` | 349 | stale retired-crate reference | ⚠️ Warning | Contributor docs still point at deleted binding surface. |
-| `docs/implementation/python_api_parity/baseline/python_api_surface.json` | 2 / 17 / 38 | stale generated artifact references old owners | 🛑 Blocker | Phase-closure parity artifacts do not reflect actual Phase 3 ownership. |
-| `docs/implementation/node_api_parity/baseline/rust_api_surface.json` | 2 / 23 / 44 | stale generated artifact references old owners | 🛑 Blocker | Same; committed baseline surface still describes deleted crates. |
-| `ClassicLib-rs/python-bindings/classic-constants-py/` | n/a | leftover retired crate directory | ⚠️ Warning | Old artifact directory remains in tree despite retirement. |
+None. The earlier stale contributor-doc, stale parity-artifact, and stale retired-directory closure rows were already resolved in the live tree; this Phase 05 refresh only removed contradictory bookkeeping.
+
+### Human Verification Required
+
+None.
 
 ### Gaps Summary
 
-The live implementation goal is largely achieved: the Rust symbols were redistributed correctly, consumers were rewired, `classic-constants-core` is gone, and the workspace still builds/tests cleanly. However, phase closure is incomplete. One contributor-facing API doc still points to the retired Python constants crate, two committed parity surface artifacts are clearly stale and still describe pre-merge owners, and the retired `classic-constants-py` directory still exists as leftover artifact-only debris. Because the prompt asked to verify the whole phase against its plans and must-haves, these closure gaps keep the phase from being fully verified as complete.
+No blocking gaps found. `03-VALIDATION.md` already documented that the previously escalated closure issues were resolved, and the current live repo still matches that evidence: contributor docs point only at surviving owners, the committed Python and Node parity surface artifacts are refreshed to the 2026-04-12 live state, and the retired `classic-constants-py` directory remains absent. The stale `gaps_found` bookkeeping was refreshed during Phase 05 cleanup, and the earlier `gaps_found` result is now superseded by this refresh.
 
 ---
 
-_Verified: 2026-04-12T01:41:41.8853046Z_
+_Verified: 2026-04-12T03:37:21.1321215Z_
 _Verifier: the agent (gsd-verifier)_

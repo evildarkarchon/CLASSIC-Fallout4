@@ -53,6 +53,9 @@ class Phase05ValidationAuditTests(unittest.TestCase):
             "score: 9/9 must-haves verified",
             "**Status:** passed",
             "**Re-verification:** Yes",
+            "Contributor-doc closure refreshed to current owner docs",
+            "Committed Python and Node parity surface artifacts were already refreshed",
+            "Retired `classic-constants-py` directory remains absent from the live tree",
             "No blocking gaps found",
             "stale `gaps_found` bookkeeping was refreshed during Phase 05 cleanup",
         ]:
