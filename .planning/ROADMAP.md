@@ -118,7 +118,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Align active topology and API docs with the 16-crate closure state and verify-first parity wording
-- [ ] 04-02-PLAN.md — Run plain parity gates first, refresh only source-backed drift, and revalidate Node/Python runtime artifacts
+- [x] 04-02-PLAN.md — Run plain parity gates first, refresh only source-backed drift, and revalidate Node/Python runtime artifacts
 - [ ] 04-03-PLAN.md — Run the full closure suite and write the dedicated Phase 4 verification checklist artifact
 
 ## Progress

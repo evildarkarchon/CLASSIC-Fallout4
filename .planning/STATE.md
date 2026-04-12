@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-04-12T02:45:13.824Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-04-12T02:46:52.299Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 ## Current Position
 
 Phase: 04 (gate-validation-documentation) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03 P01 | 9 min | 2 tasks | 19 files |
 | Phase 03 P04 | 13 min | 2 tasks | 41 files |
 | Phase 04 P01 | 1 min | 2 tasks | 12 files |
+| Phase 04 P02 | 4 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Track Node version-core rust-only proxy rows with an explicit runtime-coverage selector after NULL_VERSION moved out of the retired constants owner.
 - [Phase 04]: Use bun run parity:gate as the canonical active-doc Node audit command; reserve parity:gate:update-baseline for intentional refreshes.
 - [Phase 04]: Keep retired crate names in active docs only as short historical notes attached to surviving owners.
+- [Phase 04]: Keep CXX, Python, and Node checked-in parity baselines unchanged when the first plain gate pass already shows zero drift.
+- [Phase 04]: Refresh Python stub validation evidence after Node runtime verification so Phase 4 closure uses current 16-crate binding counts.
 
 ### Pending Todos
 
@@ -100,7 +103,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T02:45:13.820Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-04-12T02:46:52.296Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 3`

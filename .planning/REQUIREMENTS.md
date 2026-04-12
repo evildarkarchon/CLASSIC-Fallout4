@@ -29,9 +29,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Parity & Validation
 
 - [ ] **GATE-01**: `cargo test --workspace` passes with no failures after all merges
-- [ ] **GATE-02**: CXX parity gate baseline regenerated and exits 0
-- [ ] **GATE-03**: Python parity gate exits 0 under the current one-tier parity contract with zero coverage gaps, registry mismatches, and stale tracked artifacts
-- [ ] **GATE-04**: Node parity gate exits 0
+- [x] **GATE-02**: CXX parity gate baseline regenerated and exits 0
+- [x] **GATE-03**: Python parity gate exits 0 under the current one-tier parity contract with zero coverage gaps, registry mismatches, and stale tracked artifacts
+- [x] **GATE-04**: Node parity gate exits 0
 - [x] **GATE-05**: API docs under `docs/api/` updated for merged crates (absorbed crate pages removed or consolidated, references updated)
 - [x] **GATE-06**: `CLAUDE.md` technology stack section updated to reflect 16 business-logic crates
 
@@ -66,9 +66,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CNST-02 | Phase 3 | Complete |
 | CNST-03 | Phase 3 | Complete |
 | GATE-01 | Phase 4 | Pending |
-| GATE-02 | Phase 4 | Pending |
-| GATE-03 | Phase 4 | Pending |
-| GATE-04 | Phase 4 | Pending |
+| GATE-02 | Phase 4 | Complete |
+| GATE-03 | Phase 4 | Complete |
+| GATE-04 | Phase 4 | Complete |
 | GATE-05 | Phase 4 | Complete |
 | GATE-06 | Phase 4 | Complete |
 
