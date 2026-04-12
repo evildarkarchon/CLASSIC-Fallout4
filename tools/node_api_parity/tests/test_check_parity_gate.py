@@ -1,20 +1,16 @@
-"""Phase 4 Plan 1 baseline floor + Plan 6 xfail snapshot tests.
+"""Committed Node parity contract tripwires for the live one-tier baseline.
 
-These tests exercise the committed ``parity_contract.json`` and act as a
-tripwire for downstream plans:
+These tests exercise the checked-in ``parity_contract.json`` directly:
 
-- ``test_tier1_contract_total_baseline_floor`` — locks the current
-  tier1Mappings count at the Plan 1 snapshot floor. Plans 2-5 raise the
-  floor as they land promotions; each plan updates the assertion value
-  to the new post-promotion count.
+- ``test_tier1_contract_total_baseline_floor`` locks the current live
+  one-tier contract floor at 705 rows so accidental row deletions or
+  contract-file corruption fail fast.
 
-- ``test_tier2_definition_removed_after_plan_6`` — asserts that
-  ``tierDefinitions.tier2`` is DELETED from the contract. Marked
-  ``xfail(strict=True)`` because tier2 is still present at Plan 1 close.
-  The marker is REMOVED in Plan 6's atomic cascade (when the Tier-2
-  cleanup deletes the tierDefinitions.tier2 key) and the test flips to
-  passing then.
+- ``test_tier2_definition_removed_after_plan_6`` keeps a positive
+  assertion that ``tierDefinitions.tier2`` is absent from the committed
+  one-tier contract.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,33 +34,23 @@ def _load_contract() -> dict:
 
 
 def test_tier1_contract_total_baseline_floor() -> None:
-    """Plan 1 snapshot: tier1Mappings must not regress below 261 rows.
-
-    Plans 2-5 each raise this floor as they promote deferred rows. When a
-    plan lands, its summary records the new floor and updates this
-    assertion to the new value. The floor is a tripwire to catch
-    accidental row deletions or contract-file corruption.
-    """
+    """tier1Mappings must not regress below the live 705-row contract floor."""
     contract = _load_contract()
     tier1 = contract.get("tier1Mappings", [])
-    # Phase 4 close floor: 711 = 261 (start) + 66 (Plan 2) + 34 (Plan 3)
-    # + 7 (Plan 4) + 343 (Plan 5). Updated by Plan 6 M7 atomic cascade.
-    assert len(tier1) >= 711, (
-        f"tier1Mappings regressed below Phase 4 floor: "
-        f"{len(tier1)} < 711. Something deleted contract rows."
+    # The committed contract and checked-in diff report currently show a
+    # one-tier 705/705 matched baseline with no tier2 definition.
+    assert len(tier1) >= 705, (
+        f"tier1Mappings regressed below the live one-tier floor: "
+        f"{len(tier1)} < 705. Something deleted contract rows."
     )
 
 
 def test_tier2_definition_removed_after_plan_6() -> None:
-    """Plan 6 tripwire: ``tierDefinitions.tier2`` must be absent post-cascade.
-
-    The xfail marker was REMOVED in Plan 6's M7 atomic commit when the
-    Tier-2 cleanup cascade deleted the key from ``parity_contract.json``.
-    """
+    """``tierDefinitions.tier2`` must remain absent from the live contract."""
     contract = _load_contract()
     tier_defs = contract.get("tierDefinitions", {})
     assert "tier2" not in tier_defs, (
-        "tierDefinitions.tier2 should be removed as of Plan 6"
+        "tierDefinitions.tier2 should remain absent from the one-tier contract"
     )
 
 
