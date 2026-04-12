@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Hybrid-tiered Node vs Rust parity contract for high-level APIs.",
+  "description": "Live one-tier 705-row Node vs Rust parity contract for high-level APIs.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
