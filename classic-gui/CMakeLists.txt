@@ -31,7 +31,7 @@ if(CMAKE_BUILD_TYPE)
 endif()
 
 corrosion_import_crate(
-    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../ClassicLib-rs/Cargo.toml
+    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../Cargo.toml
     CRATES classic-cpp-bridge
     PROFILE ${CLASSIC_RUST_PROFILE}
 )
