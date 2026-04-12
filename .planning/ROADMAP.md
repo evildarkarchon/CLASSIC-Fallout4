@@ -43,7 +43,12 @@ Plans:
   1. Contributor can find each relocated crate at its new repository-root-relative path with its internal directory layout preserved.
   2. Contributor can resolve all workspace members and local crate path dependencies after the move.
   3. Contributor does not need a second active workspace under `ClassicLib-rs/` to build or inspect crate relationships.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] `07-01-PLAN.md` — Bootstrap the relocation audit artifact and Phase 7 planning validation scaffold.
+- [ ] `07-02-PLAN.md` — Move the six Rust layer directories to repo root and rewire only broken member/path edges.
+- [ ] `07-03-PLAN.md` — Complete the relocation audit and prove `ClassicLib-rs` is no longer a live Rust workspace home.
 
 ### Phase 8: Wrapper and Parity Rewire
 **Goal**: Existing Rust-consuming wrappers, frontends, and parity gates continue to operate against the relocated workspace.
