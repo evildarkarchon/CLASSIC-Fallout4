@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-04-12T00:44:27.815Z"
+stopped_at: Completed 03-04-PLAN.md
+last_updated: "2026-04-12T01:24:58.121Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 9
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 ## Current Position
 
 Phase: 03 (constants-version-registry-merge) — EXECUTING
-Plan: 2 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P01 | 18 min | 4 tasks | 22 files |
 | Phase 02 P02 | 40min | 3 tasks | 24 files |
 | Phase 03 P01 | 9 min | 2 tasks | 19 files |
+| Phase 03 P04 | 13 min | 2 tasks | 41 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,9 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-01: *.bak files are gitignored (.gitignore line 47) so D-17's separate Chore commit for yamldata.rs.bak was mechanically impossible — resolved via filesystem delete without a git commit.
 - [Phase 03]: Wave 1 removes every live workspace Cargo edge to classic-constants-core before later binding source rewrites land.
 - [Phase 03]: classic-resource-core had no live constants usage, so its dependency was deleted instead of replaced.
+- [Phase 03]: Retire the standalone constants API doc and document Fallout4Version, YamlFile/settings constants, and GameId under their surviving owners.
+- [Phase 03]: Keep Python parity scanning both classic-shared-core and classic-shared-py so GameId redistribution and shared PyO3 wrappers both remain visible to the gate.
+- [Phase 03]: Track Node version-core rust-only proxy rows with an explicit runtime-coverage selector after NULL_VERSION moved out of the retired constants owner.
 
 ### Pending Todos
 
@@ -93,7 +97,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T00:44:27.811Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-04-12T01:24:35.289Z
+Stopped at: Completed 03-04-PLAN.md
 Resume file: None
 Next action: `/gsd:plan-phase 3`
