@@ -13,7 +13,7 @@
 use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
 use crate::report::ReportFragment;
-use classic_crashgen_settings_core::{
+use classic_config_core::{
     ConfigLayout, EvaluationContext, EvaluationOutcome, OutcomeKind, RuleReportBucket,
     RuleSeverity, evaluate_rules,
 };
@@ -627,7 +627,7 @@ impl SettingsValidator {
 mod tests {
     use super::*;
     use crate::crashgen_registry::{CheckId, CrashgenEntry};
-    use classic_crashgen_settings_core::{
+    use classic_config_core::{
         CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
         PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity,
         RuleTarget, TargetValueType,

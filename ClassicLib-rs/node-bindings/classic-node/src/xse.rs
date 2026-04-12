@@ -3,8 +3,8 @@
 //! Exposes XSE detection and version checking functions
 //! to JavaScript/TypeScript.
 
-use crate::constants::JsGameId;
-use classic_constants_core::GameId;
+use crate::shared::JsGameId;
+use classic_shared_core::GameId;
 use classic_xse_core::XseType;
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;

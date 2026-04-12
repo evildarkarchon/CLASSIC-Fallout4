@@ -251,8 +251,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 59,
-      "contractIdsHash": "e8a323336b6cc84fcce161284b5a0f984727a82970a10b7c8ac6f3195272a89d",
+      "contractCount": 89,
+      "contractIdsHash": "0a61b1aa58ac08acb5197ddad31e4159f4d4d0dae2709d616a8c14479bd5b208",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier1-smoke",
@@ -280,8 +280,8 @@
         "ownerModule": "shared",
         "tier": "tier1"
       },
-      "contractCount": 61,
-      "contractIdsHash": "c535a162a400bd935c8255425cb44dae07b738cf781fccddac414123a041b24f",
+      "contractCount": 69,
+      "contractIdsHash": "8b1478fba68df7b0dad1df1e7ede1fbc02c133063490b8e4fae661177a736b65",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py",
       "testCaseId": "classic-shared-smoke-suite",
@@ -371,21 +371,6 @@
       "testCaseId": "path-residuals-smoke"
     },
     {
-      "coverageId": "python-tier1-constants",
-      "classification": "runtime_verified",
-      "verificationMode": "direct_call",
-      "ownerModule": "constants",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "constants",
-        "tier": "tier1"
-      },
-      "contractCount": 46,
-      "contractIdsHash": "cfce5b356c3aaa7841cfd35b0f14352af336d83ad7dea0745ffa5d2920df8030",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "constants-residuals-smoke"
-    },
-    {
       "coverageId": "python-tier1-message",
       "classification": "runtime_verified",
       "verificationMode": "direct_call",
@@ -455,25 +440,10 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 28,
-      "contractIdsHash": "e3ebdf7fb76fe7099b94dec94676220cf1da874f4c95aa8422e1376dc189466e",
+      "contractCount": 67,
+      "contractIdsHash": "b684d577b3c108223c0c9a6c2e32da27f216bce6ff3ac7e0631e45ff486baada",
       "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "settings-residuals-smoke"
-    },
-    {
-      "coverageId": "python-tier1-yaml",
-      "classification": "runtime_verified",
-      "verificationMode": "direct_call",
-      "ownerModule": "yaml",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "yaml",
-        "tier": "tier1"
-      },
-      "contractCount": 31,
-      "contractIdsHash": "8423af086b9308df3d7fb8f27b4a691963ce40b6b3601c5de80c899bf7785e1f",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "yaml-residuals-smoke"
     },
     {
       "coverageId": "python-tier1-registry",

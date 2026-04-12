@@ -275,7 +275,7 @@ saved settings / frontend inputs
 This sketch stays close to the current public Rust surface and shows the split contributors usually need to keep in mind.
 
 ```rust,no_run
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use classic_path_core::{DocsPathFinder, GamePathFinder, validate_settings_paths};
 use classic_scangame_core::{GameVersion as ScanGameVersion, XseChecker};
 use classic_xse_core::{XseType, get_xse_info};

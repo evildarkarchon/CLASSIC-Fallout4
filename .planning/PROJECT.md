@@ -2,13 +2,31 @@
 
 ## Current State
 
-**Latest shipped milestone:** v9.1.0-bindings Full Bindings Parity (2026-04-10)
+**Latest shipped milestone:** `v9.1.0-consolidation Crate Consolidation` (2026-04-12)
 
-The codebase now has full bindings parity: every shared Rust crate is exposed at full fidelity through C++, Node, and Python with no Tier-2 deferrals, no narrowing, and parity gates that prevent future drift on all three surfaces. All three parity gates (CXX, Python, Node) are CI-enforced and exit 0 at 0 drift. Branch protection (CI-04) was user-deferred.
+**Status:** The Rust business-logic workspace is now consolidated to 16 crates, all three binding surfaces remain at full parity, and the milestone cleanup pass aligned docs, verification artifacts, and Node parity contract surfaces to the live one-tier baseline.
 
-**Previous milestone:** v9.1.0-bugfixes CLASSIC Codebase Health (2026-04-07) resolved every concern from the codebase audit: deprecated API removal, dead code elimination, FCX state hardening, bounded caches, hot-path caching, mmap safety, consistency sweep, workspace promotion, and Linux Proton docs-path wiring.
+**Current focus:** Plan the next milestone and create a fresh `.planning/REQUIREMENTS.md`.
 
-**Next milestone:** Not yet planned. Run `/gsd:new-milestone` to start the next cycle.
+## Next Milestone Goals
+
+- Define the next shipped scope with `/gsd-new-milestone`
+- Create a new milestone-scoped `.planning/REQUIREMENTS.md`
+- Decide which backlog items or new feature work should drive the next milestone
+
+<details>
+<summary>Archived milestone snapshot: v9.1.0-consolidation Crate Consolidation</summary>
+
+**Goal:** Reduce workspace granularity by merging 3 pairs of crates (19 -> 16), updating all binding surfaces and parity gates, with zero functional changes.
+
+**Delivered focus:**
+- Merge `classic-yaml-core` into `classic-settings-core`
+- Merge `classic-crashgen-settings-core` into `classic-config-core`
+- Redistribute constants ownership across `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core`
+- Update all binding crates for changed import paths
+- Keep all three parity gates green at zero drift
+
+</details>
 
 ## What This Is
 
@@ -16,7 +34,7 @@ The CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase: a Rust-
 
 ## Core Value
 
-Every concern identified in the codebase audit is resolved — no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
+The Rust workspace has minimal, well-bounded crates with no redundant boundaries — every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
 
 ## Requirements
 
@@ -26,7 +44,7 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ Single shared Tokio runtime (ONE RUNTIME RULE) — existing
 - ✓ C++, Python, and Node.js binding surfaces delegating to `-core` crates — existing
 - ✓ Windows-native C++ frontends (CLI + Qt GUI) via CXX bridge — existing
-- ✓ 19 business-logic `-core` crates with no PyO3 dependencies — existing
+- ✓ 16 business-logic `-core` crates with no PyO3 dependencies — v9.1.0-consolidation Phases 1-3 (started at 19, yaml-core merged in Phase 1 -> 18, crashgen-settings-core merged in Phase 2 -> 17, constants-core redistributed in Phase 3 -> 16)
 - ✓ Parity tooling for Node and Python bindings — existing
 - ✓ All deprecated API callers migrated with deprecation warnings — v9.1.0-bugfixes Phase 1
 - ✓ Phase 1 deprecated API migration closure evidence refreshed — v9.1.0-bugfixes Phase 9
@@ -50,8 +68,8 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ Replace per-call `LogParser::new` in C++ bridge with cached parser — v9.1.0-bugfixes Phase 5/10
 - ✓ Replace per-entry regex in `detect_mods_important` with AhoCorasick — v9.1.0-bugfixes Phase 5
 - ✓ Add before/after criterion benchmarks for performance improvements — v9.1.0-bugfixes Phase 5/6
-- ✓ Python Tier-1/Tier-2 collapsed: 1098 tier1Mappings enforced, `deferred_total == 0` — v9.1.0-bindings Phase 3
-- ✓ Node Tier-1/Tier-2 collapsed: all 109 deferred entries promoted to one enforced contract — v9.1.0-bindings Phase 4
+- ✓ Python Tier-1/Tier-2 collapsed into the current one-tier parity contract (historical v9.1.0-bindings note: the old `deferred_total == 0` target was achieved during Phase 3)
+- ✓ Node Tier-1/Tier-2 collapsed into one enforced contract with no deferred owners remaining — v9.1.0-bindings Phase 4
 - ✓ First-class C++ bridge parity gate with baseline + diff + CI enforcement — v9.1.0-bindings Phases 1+5
 - ✓ C++ bridge exposes full surface of every shared Rust crate (316 entries across 19 modules) — v9.1.0-bindings Phase 2
 - ✓ Node binding gains PE-version extraction parity — v9.1.0-bindings Phase 4
@@ -61,10 +79,15 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - ✓ `binding-parity-overview.md` rewritten as harmony-achieved reference — v9.1.0-bindings Phase 6
 - ✓ Tier-2 backlog/governance/manifest files deleted — v9.1.0-bindings Phase 6
 - ✓ Single source-of-truth parity policy doc added — v9.1.0-bindings Phase 6
+- ✓ Merge classic-yaml-core into classic-settings-core — v9.1.0-consolidation Phase 1
+- ✓ Merge classic-crashgen-settings-core into classic-config-core — v9.1.0-consolidation Phase 2
+- ✓ Redistribute constants ownership across version-registry-core, settings-core, and shared-core — v9.1.0-consolidation Phase 3
+- ✓ Update all binding crates for changed import paths — v9.1.0-consolidation Phases 1-3
+- ✓ All three parity gates pass at zero drift after consolidation, with closure evidence recorded in `04-VERIFICATION.md` — v9.1.0-consolidation Phase 4
 
 ### Active
 
-(None — next milestone not yet planned)
+- None until the next milestone is defined.
 
 ### Out of Scope
 
@@ -80,15 +103,17 @@ Every concern identified in the codebase audit is resolved — no silent legacy 
 - Three binding surfaces: C++ (CXX), Python (PyO3), Node (NAPI-RS) — all at full parity
 - Three CI-enforced parity gates prevent drift on all binding surfaces
 - CXX bridge surface: 316 entries across 19 modules
-- Python parity contract: 1098 tier1Mappings, deferred_total 0
-- Node parity contract: all entries enforced, deferred_total 0
+- Python parity contract: one enforced tier with zero drift and no stale tracked artifacts accepted at closure
+- Node parity contract: one enforced tier; verify with `bun run parity:gate` and refresh only with `bun run parity:gate:update-baseline` when drift is intentional
 - Codebase map from 2026-04-04 at `.planning/codebase/CONCERNS.md` — all actionable concerns resolved across v9.1.0-bugfixes and v9.1.0-bindings
+- v9.1.0-consolidation Phase 4 closed with green docs, parity, workspace, and native wrapper evidence in `.planning/phases/04-gate-validation-documentation/04-VERIFICATION.md`
+- v9.1.0-consolidation Phase 5 closed the remaining audit debt: top-level docs routing, Phase 3 verification bookkeeping, and Node parity contract artifacts now agree with the live 705-row one-tier baseline
 
 ## Constraints
 
 - **Platform**: Native C++ targets are Windows-only (MSVC x64); Rust workspace is cross-platform at source level
 - **Runtime**: Single shared Tokio runtime — no new runtimes
-- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `parity:gate:local` for Node, `check_parity_gate.py` for CXX)
+- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `bun run parity:gate` for Node, `check_parity_gate.py` for CXX); only use refresh commands when source-backed drift is intentional
 - **Testing**: Use PowerShell build wrappers for C++ tests, never raw ctest
 - **Parity**: One-tier policy — new public Rust APIs must be exposed in all three bindings before CI passes
 
@@ -126,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after v9.1.0-bindings milestone completion*
+*Last updated: 2026-04-12 after v9.1.0 milestone archival*

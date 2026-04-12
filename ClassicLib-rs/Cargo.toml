@@ -3,74 +3,53 @@ members = [
     # Foundation
     "foundation/classic-shared-core",
     "foundation/classic-shared-py",
-
     # Business Logic (Pure Rust - no PyO3)
-    "business-logic/classic-yaml-core",
     "business-logic/classic-database-core",
     "business-logic/classic-file-io-core",
-    "business-logic/classic-crashgen-settings-core",
     "business-logic/classic-scanlog-core",
     "business-logic/classic-config-core",
     "business-logic/classic-scangame-core",
-
     # Phase 1 - Core Infrastructure (Business Logic)
     "business-logic/classic-registry-core",
     "business-logic/classic-perf-core",
     "business-logic/classic-settings-core",
     "business-logic/classic-message-core",
-
     # Phase 2 - Path Management (Business Logic)
     "business-logic/classic-path-core",
-
-    # Phase 4 - Constants and Utilities (Business Logic)
-    "business-logic/classic-constants-core",
     "business-logic/classic-version-core",
     "business-logic/classic-resource-core",
     "business-logic/classic-xse-core",
     "business-logic/classic-web-core",
-
     # Phase 5 - Application Coordination (Business Logic)
     "business-logic/classic-update-core",
-
     # Version Registry (Game version detection and matching)
     "business-logic/classic-version-registry-core",
-
     # Python Bindings (PyO3 adapters)
-    "python-bindings/classic-yaml-py",
     "python-bindings/classic-database-py",
     "python-bindings/classic-file-io-py",
     "python-bindings/classic-scanlog-py",
     "python-bindings/classic-config-py",
     "python-bindings/classic-scangame-py",
-
     # Phase 1 - Core Infrastructure (Python Bindings)
     "python-bindings/classic-registry-py",
     "python-bindings/classic-perf-py",
     "python-bindings/classic-settings-py",
     "python-bindings/classic-message-py",
-
     # Phase 2 - Path Management (Python Bindings)
     "python-bindings/classic-path-py",
-
     # Phase 4 - Constants and Utilities (Python Bindings)
-    "python-bindings/classic-constants-py",
     "python-bindings/classic-version-py",
     "python-bindings/classic-resource-py",
     "python-bindings/classic-xse-py",
     "python-bindings/classic-web-py",
-
     # Phase 5 - Application Coordination (Python Bindings)
     "python-bindings/classic-update-py",
-
     # Version Registry (Python Bindings)
     "python-bindings/classic-version-registry-py",
-
     # Node.js/Bun Bindings (NAPI-RS adapters)
     "node-bindings/classic-node",
-
     # UI Applications
     "ui-applications/classic-tui",
-
     # C++ Bindings (CXX FFI adapters)
     "cpp-bindings/classic-cpp-bridge",
 ]
@@ -170,10 +149,6 @@ tracing-appender = "0.2"
 # C++ FFI (CXX)
 cxx = "1.0"
 cxx-build = "1.0"
-
-# GUI (Slint)
-slint = "1.15.0"
-slint-build = "1.15.0"
 
 # Platform-specific
 winreg = "0.52"

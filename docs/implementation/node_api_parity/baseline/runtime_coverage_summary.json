@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-10T10:03:05.144409+00:00",
+  "generated_at_utc": "2026-04-12T01:59:47.831885+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 737,
-    "runtime_verified_total": 737,
+    "tracked_surface_total": 731,
+    "runtime_verified_total": 731,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 711,
+    "tier1_contract_total": 705,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -22,16 +22,8 @@
       "total": 169
     },
     "config": {
-      "runtime_verified": 90,
-      "total": 90
-    },
-    "constants": {
-      "runtime_verified": 30,
-      "total": 30
-    },
-    "crashgen_settings": {
-      "runtime_verified": 21,
-      "total": 21
+      "runtime_verified": 111,
+      "total": 111
     },
     "database": {
       "runtime_verified": 14,
@@ -66,24 +58,24 @@
       "total": 95
     },
     "settings": {
-      "runtime_verified": 22,
-      "total": 22
+      "runtime_verified": 47,
+      "total": 47
     },
     "shared": {
-      "runtime_verified": 15,
-      "total": 15
+      "runtime_verified": 10,
+      "total": 10
     },
     "update": {
       "runtime_verified": 6,
       "total": 6
     },
     "version": {
-      "runtime_verified": 14,
-      "total": 14
+      "runtime_verified": 13,
+      "total": 13
     },
     "version_registry": {
-      "runtime_verified": 63,
-      "total": 63
+      "runtime_verified": 90,
+      "total": 90
     },
     "web": {
       "runtime_verified": 15,
@@ -92,10 +84,6 @@
     "xse": {
       "runtime_verified": 17,
       "total": 17
-    },
-    "yaml": {
-      "runtime_verified": 22,
-      "total": 22
     }
   },
   "trackedSurface": [
@@ -452,7 +440,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-create-yamldata-content",
@@ -471,7 +459,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-classic-config-class",
@@ -490,7 +478,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-create-default-config",
@@ -509,7 +497,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-clear-yaml-cache",
@@ -528,7 +516,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-enum",
@@ -547,7 +535,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-path",
@@ -566,7 +554,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-display-name",
@@ -585,7 +573,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-source-display-name-with-game",
@@ -604,7 +592,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-fileio-config-interface",
@@ -623,7 +611,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-path-config-interface",
@@ -642,7 +630,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-file-enum",
@@ -661,7 +649,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-all-yaml-files",
@@ -680,7 +668,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-yaml-file-description",
@@ -699,7 +687,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-default-cache-ttl-const",
@@ -718,7 +706,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-batch-cache-ttl-const",
@@ -737,7 +725,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-max-cache-ttl-const",
@@ -756,7 +744,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-default-cache-ttl",
@@ -775,7 +763,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-batch-cache-ttl",
@@ -794,7 +782,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-max-cache-ttl",
@@ -813,7 +801,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-generate-local-yaml",
@@ -832,7 +820,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-settings-cache-stats-interface",
@@ -851,7 +839,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-load-settings-sync",
@@ -870,7 +858,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-load-settings-async",
@@ -889,7 +877,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-cached",
@@ -908,7 +896,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-is-cached",
@@ -927,7 +915,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-invalidate-settings",
@@ -946,7 +934,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-clear-settings-cache",
@@ -965,7 +953,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-settings-cache-size",
@@ -984,7 +972,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-settings-cache-keys",
@@ -1003,7 +991,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-get-settings-cache-stats",
@@ -1022,7 +1010,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-reset-settings-cache-stats",
@@ -1041,7 +1029,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-validate-settings-path",
@@ -1060,7 +1048,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-validate-settings-paths",
@@ -1079,7 +1067,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-document-class",
@@ -1098,7 +1086,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-parse",
@@ -1117,7 +1105,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-stringify",
@@ -1136,7 +1124,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-load-file",
@@ -1155,7 +1143,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-value",
@@ -1174,7 +1162,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-string-value",
@@ -1193,7 +1181,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-vec-value",
@@ -1212,7 +1200,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-hashmap-value",
@@ -1231,7 +1219,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-save-file",
@@ -1250,7 +1238,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-set-setting",
@@ -1269,7 +1257,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-settings-batch",
@@ -1288,7 +1276,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-set-settings-batch",
@@ -1307,7 +1295,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-indexmap-value",
@@ -1326,7 +1314,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-hashmap-vec-value",
@@ -1345,7 +1333,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-clear-cache",
@@ -1364,7 +1352,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config-yaml-get-cache-stats",
@@ -1383,7 +1371,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:version-registry-get-by-id",
@@ -6213,7 +6201,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.CoreModEntry@rust",
@@ -6232,7 +6220,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.CoreModExclude@rust",
@@ -6251,7 +6239,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.CrashgenEntryRaw@rust",
@@ -6270,7 +6258,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.ModSolutionCriteria@rust",
@@ -6289,7 +6277,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.ModSolutionEntry@rust",
@@ -6308,7 +6296,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.SuspectErrorRule@rust",
@@ -6327,7 +6315,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.SuspectStackCountRule@rust",
@@ -6346,7 +6334,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.SuspectStackRule@rust",
@@ -6365,7 +6353,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.format_registry_game_version@rust",
@@ -6384,7 +6372,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.resolve_registry_version_info@rust",
@@ -6403,7 +6391,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL",
@@ -6422,7 +6410,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD",
@@ -6441,7 +6429,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.DEFAULT_QUERY_CACHE_CAPACITY",
@@ -6460,7 +6448,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.HashCacheStats",
@@ -6479,7 +6467,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.analysis.JsAnalysisConfig",
@@ -6498,7 +6486,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsConfigIssue",
@@ -6517,7 +6505,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.fcx.JsFcxConfigIssue",
@@ -6536,7 +6524,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsGameScanConfig",
@@ -6555,7 +6543,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsIntegrityConfig",
@@ -6574,7 +6562,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.path.JsPathDetectionResult",
@@ -6593,7 +6581,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsTomlConfigIssue",
@@ -6612,7 +6600,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.version_registry.JsXseConfig",
@@ -6631,7 +6619,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.scangame.JsEnbConfigResult",
@@ -6650,7 +6638,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.duplicate_detector.JsConfigDuplicateDetector",
@@ -6669,7 +6657,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.clearHashCache",
@@ -6688,7 +6676,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.duplicate_detector.detectConfigDuplicates",
@@ -6707,7 +6695,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.getDefaultCacheCleanupInterval",
@@ -6726,7 +6714,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.getDefaultCacheCleanupThreshold",
@@ -6745,7 +6733,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.caches.getDefaultQueryCacheCapacity",
@@ -6764,7 +6752,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.fcx.getFcxConfigIssues",
@@ -6783,7 +6771,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.getHashCacheStats",
@@ -6802,7 +6790,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.path.needsPathDetection",
@@ -6821,7 +6809,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:config.hash_cache.resetHashCacheStats",
@@ -6840,7 +6828,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:version-pe-extract",
@@ -6992,874 +6980,968 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
-      "trackedId": "contract:constants.Fallout4Version@rust",
+      "trackedId": "contract:version_registry.Fallout4Version@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.Fallout4Version@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.Fallout4Version@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "Fallout4Version@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.GameId@rust",
+      "trackedId": "contract:shared.GameId@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.GameId@rust",
-      "ownerModule": "constants",
+      "contractId": "shared.GameId@rust",
+      "ownerModule": "shared",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "GameId@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-shared",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "shared-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.NULL_VERSION@rust",
+      "trackedId": "contract:version_registry.NULL_VERSION@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.NULL_VERSION@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.NULL_VERSION@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "NULL_VERSION@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.SETTINGS_IGNORE_NONE@rust",
+      "trackedId": "contract:settings.SETTINGS_IGNORE_NONE@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.SETTINGS_IGNORE_NONE@rust",
-      "ownerModule": "constants",
+      "contractId": "settings.SETTINGS_IGNORE_NONE@rust",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "SETTINGS_IGNORE_NONE@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.YamlFile@rust",
+      "trackedId": "contract:settings.YamlFile@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.YamlFile@rust",
-      "ownerModule": "constants",
+      "contractId": "settings.YamlFile@rust",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "YamlFile@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.display_name@rust",
+      "trackedId": "contract:version_registry.display_name@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.display_name@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.display_name@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "display_name@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.display_name_string@rust",
+      "trackedId": "contract:version_registry.display_name_string@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.display_name_string@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.display_name_string@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "display_name_string@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.fn@rust",
+      "trackedId": "contract:version_registry.fn@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.fn@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.fn@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "fn@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.game_version@rust",
+      "trackedId": "contract:version_registry.game_version@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.game_version@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.game_version@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "game_version@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.get_version_info@rust",
+      "trackedId": "contract:version_registry.get_version_info@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.get_version_info@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.get_version_info@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_version_info@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.must_not_be_none@rust",
+      "trackedId": "contract:settings.must_not_be_none@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.must_not_be_none@rust",
-      "ownerModule": "constants",
+      "contractId": "settings.must_not_be_none@rust",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "must_not_be_none@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.short_name@rust",
+      "trackedId": "contract:version_registry.short_name@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.short_name@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.short_name@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "short_name@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.version_semver@rust",
+      "trackedId": "contract:version_registry.version_semver@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.version_semver@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.version_semver@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "version_semver@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.xse_acronym@rust",
+      "trackedId": "contract:version_registry.xse_acronym@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.xse_acronym@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.xse_acronym@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "xse_acronym@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.xse_acronym_string@rust",
+      "trackedId": "contract:version_registry.xse_acronym_string@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.xse_acronym_string@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.xse_acronym_string@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "xse_acronym_string@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
-      "trackedId": "contract:constants.xse_config@rust",
+      "trackedId": "contract:version_registry.xse_config@rust",
       "trackedType": "contract_row",
-      "contractId": "constants.xse_config@rust",
-      "ownerModule": "constants",
+      "contractId": "version_registry.xse_config@rust",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "xse_config@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-constants",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
       "trackedId": "contract:crashgen_settings.CheckRule@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.CheckRule@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "CheckRule@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.ConfigLayout@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.ConfigLayout@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "ConfigLayout@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.EvaluationContext@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.EvaluationContext@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "EvaluationContext@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.EvaluationOutcome@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.EvaluationOutcome@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "EvaluationOutcome@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.EvaluationResult@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.EvaluationResult@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "EvaluationResult@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.ExpectedValue@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.ExpectedValue@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "ExpectedValue@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.OutcomeKind@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.OutcomeKind@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "OutcomeKind@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.Predicate@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.Predicate@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "Predicate@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.PreflightAction@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.PreflightAction@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "PreflightAction@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.PreflightActionKind@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.PreflightActionKind@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "PreflightActionKind@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.PreflightRule@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.PreflightRule@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "PreflightRule@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleMessages@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleMessages@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleMessages@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleReportBucket@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleReportBucket@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleReportBucket@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleSeverity@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleSeverity@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleSeverity@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.RuleTarget@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.RuleTarget@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuleTarget@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.TargetValueType@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.TargetValueType@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "TargetValueType@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:crashgen_settings.parse@rust",
       "trackedType": "contract_row",
       "contractId": "crashgen_settings.parse@rust",
-      "ownerModule": "crashgen_settings",
+      "ownerModule": "config",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-crashgen-settings",
+      "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:database.BATCH_CACHE_TTL_SECS@rust",
@@ -10922,40 +11004,6 @@
       "notes": null
     },
     {
-      "trackedId": "contract:shared.AsyncBridge@rust",
-      "trackedType": "contract_row",
-      "contractId": "shared.AsyncBridge@rust",
-      "ownerModule": "shared",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "AsyncBridge@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-shared",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "shared-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:shared.BridgeError@rust",
-      "trackedType": "contract_row",
-      "contractId": "shared.BridgeError@rust",
-      "ownerModule": "shared",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "BridgeError@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-shared",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "shared-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
       "trackedId": "contract:shared.ClassicError@rust",
       "trackedType": "contract_row",
       "contractId": "shared.ClassicError@rust",
@@ -10990,23 +11038,6 @@
       "notes": null
     },
     {
-      "trackedId": "contract:shared.EventLoopDispatcher@rust",
-      "trackedType": "contract_row",
-      "contractId": "shared.EventLoopDispatcher@rust",
-      "ownerModule": "shared",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "EventLoopDispatcher@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-shared",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "shared-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
       "trackedId": "contract:shared.IntoClassicError@rust",
       "trackedType": "contract_row",
       "contractId": "shared.IntoClassicError@rust",
@@ -11032,40 +11063,6 @@
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "RuntimeConfig@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-shared",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "shared-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:shared.SlintDispatcher@rust",
-      "trackedType": "contract_row",
-      "contractId": "shared.SlintDispatcher@rust",
-      "ownerModule": "shared",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "SlintDispatcher@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-shared",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "shared-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:shared.async_bridge@rust",
-      "trackedType": "contract_row",
-      "contractId": "shared.async_bridge@rust",
-      "ownerModule": "shared",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "async_bridge@rust",
       "bindingIdentifier": null,
       "coverageId": "node-tier1-shared",
       "verificationMode": "workflow_smoke",
@@ -11151,23 +11148,6 @@
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "performance_core@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-shared",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "shared-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:shared.set_dispatcher@rust",
-      "trackedType": "contract_row",
-      "contractId": "shared.set_dispatcher@rust",
-      "ownerModule": "shared",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "set_dispatcher@rust",
       "bindingIdentifier": null,
       "coverageId": "node-tier1-shared",
       "verificationMode": "workflow_smoke",
@@ -11282,17 +11262,19 @@
       "trackedId": "contract:version.NULL_VERSION@rust",
       "trackedType": "contract_row",
       "contractId": "version.NULL_VERSION@rust",
-      "ownerModule": "version",
+      "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "NULL_VERSION@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-version",
+      "coverageId": "node-tier1-version-registry",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
       "notes": null
     },
     {
@@ -11308,9 +11290,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.VersionError@rust",
@@ -11325,9 +11309,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.VersionResult@rust",
@@ -11342,9 +11328,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.compare_versions@rust",
@@ -11359,9 +11347,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.extract_all_versions@rust",
@@ -11376,9 +11366,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.extract_version_from_filename@rust",
@@ -11393,9 +11385,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.extract_version_from_log@rust",
@@ -11410,9 +11404,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.format_version@rust",
@@ -11427,9 +11423,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.is_known_f4se_version@rust",
@@ -11444,9 +11442,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.is_known_fallout4_version@rust",
@@ -11461,9 +11461,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.parse_version@rust",
@@ -11478,9 +11480,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.pe_version@rust",
@@ -11495,9 +11499,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:version.try_parse_version@rust",
@@ -11512,9 +11518,11 @@
       "coverageId": "node-tier1-version",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     },
     {
       "trackedId": "contract:web.CLASSIC_VERSION@rust",
@@ -12064,16 +12072,16 @@
       "trackedId": "contract:yaml.YamlError@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.YamlError@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "YamlError@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12081,16 +12089,16 @@
       "trackedId": "contract:yaml.YamlOperations@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.YamlOperations@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "YamlOperations@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12098,16 +12106,16 @@
       "trackedId": "contract:yaml.cache_stats@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.cache_stats@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "cache_stats@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12115,16 +12123,16 @@
       "trackedId": "contract:yaml.clear_cache@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.clear_cache@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "clear_cache@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12132,16 +12140,16 @@
       "trackedId": "contract:yaml.dump_yaml@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.dump_yaml@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "dump_yaml@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12149,16 +12157,16 @@
       "trackedId": "contract:yaml.get_cache_stats@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_cache_stats@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_cache_stats@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12166,16 +12174,16 @@
       "trackedId": "contract:yaml.get_hashmap_value@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_hashmap_value@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_hashmap_value@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12183,16 +12191,16 @@
       "trackedId": "contract:yaml.get_indexmap_value@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_indexmap_value@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_indexmap_value@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12200,16 +12208,16 @@
       "trackedId": "contract:yaml.get_setting@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_setting@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_setting@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12217,16 +12225,16 @@
       "trackedId": "contract:yaml.get_settings_batch@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_settings_batch@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_settings_batch@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12234,16 +12242,16 @@
       "trackedId": "contract:yaml.get_string_value@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_string_value@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_string_value@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12251,16 +12259,16 @@
       "trackedId": "contract:yaml.get_vec_value@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.get_vec_value@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "get_vec_value@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12268,16 +12276,16 @@
       "trackedId": "contract:yaml.is_cache_enabled@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.is_cache_enabled@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "is_cache_enabled@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12285,16 +12293,16 @@
       "trackedId": "contract:yaml.load_yaml_file@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.load_yaml_file@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "load_yaml_file@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12302,16 +12310,16 @@
       "trackedId": "contract:yaml.load_yaml_files_batch@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.load_yaml_files_batch@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "load_yaml_files_batch@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12319,16 +12327,16 @@
       "trackedId": "contract:yaml.merge_keys@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.merge_keys@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "merge_keys@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12336,16 +12344,16 @@
       "trackedId": "contract:yaml.new@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.new@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "new@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12353,16 +12361,16 @@
       "trackedId": "contract:yaml.parse_yaml@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.parse_yaml@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "parse_yaml@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12370,16 +12378,16 @@
       "trackedId": "contract:yaml.reset_cache_stats@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.reset_cache_stats@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "reset_cache_stats@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12387,16 +12395,16 @@
       "trackedId": "contract:yaml.save_yaml_file@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.save_yaml_file@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "save_yaml_file@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12404,16 +12412,16 @@
       "trackedId": "contract:yaml.set_cache_enabled@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.set_cache_enabled@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "set_cache_enabled@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12421,16 +12429,16 @@
       "trackedId": "contract:yaml.set_setting@rust",
       "trackedType": "contract_row",
       "contractId": "yaml.set_setting@rust",
-      "ownerModule": "yaml",
+      "ownerModule": "settings",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "set_setting@rust",
       "bindingIdentifier": null,
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-settings",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
+      "testCaseId": "settings-tier1-parity",
       "fixtureRefs": [],
       "notes": null
     },
@@ -12485,7 +12493,7 @@
       "fixtureRefs": [
         "configSourceCases"
       ],
-      "notes": null
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "contract:aux.JsModSolutionCriteria",

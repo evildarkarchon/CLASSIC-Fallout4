@@ -39,7 +39,7 @@ Do not use this crate for:
 - owning a Tokio runtime
 - deep schema validation or business-rule enforcement for scan/config workflows
 
-Those higher-level concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core), and binding crates that wrap this cache for JS or Python consumers.
+Those higher-level concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), and binding crates that wrap this cache for JS or Python consumers.
 
 ---
 
@@ -52,6 +52,9 @@ This crate exposes most of its API from the crate root and one public module.
 - `SettingsError`, `Result<T>` - crate error type and alias
 - `SettingsSource` - distinguishes path-backed and label-backed parse sources
 - `Yaml` - re-export of `yaml_rust2::Yaml`
+- `YamlFile` - type-safe identifiers for CLASSIC YAML/config files
+- `SETTINGS_IGNORE_NONE` - settings keys that must not be stored as `None`
+- `must_not_be_none()` - convenience membership check over `SETTINGS_IGNORE_NONE`
 - loader functions:
   - `parse_yaml_content(source, content)`
   - `merge_yaml_documents(source, docs)`
@@ -107,6 +110,50 @@ Helpers and conversions:
 - `label() -> Option<&str>` returns the label only for `Label`
 - `From<PathBuf>`, `From<&Path>`, `From<String>`, and `From<&str>` are implemented
 - `Display` prints the filesystem path or label text used in error messages
+
+## `YamlFile`
+
+`YamlFile` is the contributor-facing enum for CLASSIC YAML file roles.
+
+Variants:
+
+- `Main`
+- `Settings`
+- `Ignore`
+- `Game`
+- `GameLocal`
+- `Test`
+- `Cache`
+
+Important methods and traits:
+
+- `as_str() -> &'static str`
+- `description() -> &'static str`
+- `all() -> [YamlFile; 7]`
+- `Display`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
+
+Contributor note:
+
+- this enum labels file roles only; it does not build real paths
+- it moved here from the retired constants crate because the enum is part of the settings domain rather than the version domain
+
+## `SETTINGS_IGNORE_NONE` and `must_not_be_none()`
+
+`SETTINGS_IGNORE_NONE` is the shared slice of settings keys that must not be persisted as `None`.
+
+Current keys:
+
+- `SCAN Custom Path`
+- `MODS Folder Path`
+- `INI Folder Path`
+- `Root_Folder_Game`
+- `Root_Folder_Docs`
+
+`must_not_be_none(key) -> bool` performs a simple membership check against that slice.
+
+Contributor note:
+
+- the helper is intentionally lightweight; higher-level validation and persistence rules still live in callers such as [`classic-config-core`](classic-config-core.md)
 
 ## `SettingsError`
 
@@ -173,7 +220,9 @@ These functions read or normalize YAML without touching the cache.
 
 Source-observed note:
 
-- unlike `classic-yaml-core`, the raw loader functions do not reduce input to the first document; multi-document YAML remains a `Vec<Yaml>` until a caller explicitly merges it
+- the raw loader functions do not reduce input to the first document; multi-document YAML remains a `Vec<Yaml>` until a caller explicitly merges it
+
+  (This is a notable contrast with the historical ``yaml-core`` single-doc behavior that was absorbed into this crate during Phase 1 of the v9.1.0 consolidation milestone.)
 
 ## Cache API
 
@@ -272,7 +321,7 @@ Important cache boundary:
 - this cache does not automatically consult disk freshness, file mtimes, or file content hashes
 - if a source file changes, callers must explicitly reload or invalidate the cache entry
 
-That is the main behavioral difference from the file-backed cache in [`classic-yaml-core`](../../docs/api/classic-yaml-core.md).
+Unlike the legacy `YamlOperations` file-backed cache (see [YAML Operations](#yaml-operations) below), this settings cache is key-based rather than path-based, and it does not consult mtime for freshness.
 
 ---
 
@@ -411,7 +460,6 @@ Related CLASSIC crates and consumers:
 
 - [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/settings.rs) - exposes the cache, loaders, and stats to JavaScript/TypeScript
 - [`classic-settings-py`](../../ClassicLib-rs/python-bindings/classic-settings-py/src/lib.rs) - exposes the same surface plus validator helpers to Python
-- [`classic-yaml-core`](../../docs/api/classic-yaml-core.md) - neighboring YAML utility crate with a different cache model based on file paths and mtimes
 - [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level typed config loader; use it when raw `Yaml` documents are not enough
 - [`classic-shared-core`](../../docs/api/classic-shared-core.md) - repo-wide shared Tokio runtime policy this crate is expected to follow
 
@@ -472,3 +520,201 @@ If you extend this crate, update this document when you change:
 - sync vs async loading semantics
 - `SettingsError` variant usage
 - validator rules for accepted settings structure or scalar coercion
+
+---
+
+## YAML Operations
+
+This section documents the `YamlOperations` surface and the path-backed YAML file cache that were absorbed into `classic-settings-core` during Phase 1 of the v9.1.0 consolidation milestone (see `.planning/phases/01-yaml-settings-merge/`). Before the merge these lived in a separate ``yaml-core`` crate; that crate no longer exists and all its symbols are now re-exported from the `classic-settings-core` crate root.
+
+### Purpose
+
+`YamlOperations` is the contributor-facing integration type for the older path-backed YAML file-cache model. Use it when you need:
+
+- synchronous YAML parsing and serialization with `yaml_rust2::Yaml`
+- dot-path value extraction and mutation helpers over parsed YAML
+- a global file-backed YAML cache with hit/miss statistics and mtime-based invalidation
+- YAML merge-key (`<<`) resolution for parsed documents
+
+The `YamlOperations` cache is distinct from the `Arc<Vec<Yaml>>` settings cache documented above — it is path-keyed, mtime-aware, and has a fixed capacity of `128` entries (vs. the settings cache's `64`).
+
+### `YamlOperations`
+
+Construction and cache control:
+
+- `YamlOperations::new()`
+- `YamlOperations::with_config(format_config)`
+- `set_cache_enabled(enabled)`
+- `is_cache_enabled() -> bool`
+- `clear_cache()`
+- `get_cache_stats() -> HashMap<String, usize>`
+
+Parsing and file I/O:
+
+- `parse_yaml(content) -> Result<Yaml, YamlError>`
+- `dump_yaml(yaml) -> Result<String, YamlError>`
+- `load_yaml_file(path) -> Result<Yaml, YamlError>`
+- `save_yaml_file(path, yaml) -> Result<(), YamlError>`
+- `load_yaml_files_batch(paths) -> HashMap<String, Yaml>`
+
+Generic nested access helpers:
+
+- `get_setting(yaml, key_path) -> Option<Yaml>`
+- `set_setting(yaml, key_path, value) -> Result<Yaml, YamlError>`
+- `get_settings_batch(yaml, key_paths) -> HashMap<String, Yaml>`
+- `set_settings_batch(yaml, settings) -> Result<Yaml, YamlError>`
+
+Typed extraction helpers:
+
+- `get_string_value(data, key_path, default) -> String`
+- `get_vec_value(data, key_path) -> Vec<String>`
+- `get_hashmap_value(data, key_path) -> HashMap<String, String>`
+- `get_indexmap_value(data, key_path) -> IndexMap<String, String>`
+- `get_hashmap_vec_value(data, key_path) -> HashMap<String, Vec<String>>`
+- `get_indexmap_vec_value(data, key_path) -> IndexMap<String, Vec<String>>`
+
+Behavior worth knowing:
+
+- `parse_yaml()` and `load_yaml_file()` always return only the first YAML document from multi-document input (unlike the `load_yaml_*` loader helpers earlier in this document, which preserve all documents).
+- Dot-path traversal only walks `Yaml::Hash` nodes. Array indexing is not supported.
+- `get_setting()` clones and returns the final `Yaml` value.
+- `set_setting()` creates missing intermediate hashes and will replace a non-hash intermediate node with a new hash to complete the requested path.
+- Typed extraction helpers are intentionally lossy: they silently drop non-string items and type mismatches instead of raising errors.
+
+### `YamlFormatConfig`
+
+Formatting preferences stored on a `YamlOperations` instance.
+
+Fields: `preserve_quotes`, `width`, `indent_mapping`, `indent_sequence`, `indent_offset`.
+
+Source-observed limitation: the current implementation stores `format_config` but `dump_yaml()` does not consult it; serialization still uses a plain `YamlEmitter`.
+
+### `YamlCacheStats`, `yaml_cache_stats()`, `reset_yaml_cache_stats()`
+
+The yaml-file cache has its own observability surface, distinct from the settings cache:
+
+- `YamlCacheStats` — struct with `hits`, `misses`, `hit_rate`, `size`, `capacity`
+- `yaml_cache_stats() -> YamlCacheStats` — process-global counters plus current size and capacity
+- `reset_yaml_cache_stats()` — resets hit/miss counters only; does not clear cached entries
+- `clear_global_yaml_cache()` — removes all cached YAML documents
+
+Notes:
+
+- Counters are global across all `YamlOperations` instances.
+- `capacity` is fixed at `128` entries for the process-global YAML cache (vs. `64` for the settings cache).
+- The D-03 rename in Phase 1 was chosen to keep the two caches unambiguously distinct: `yaml_cache_stats` / `YamlCacheStats` for the path-keyed yaml file cache, and `cache_stats` / `CacheStats` (above) for the key-based settings cache.
+
+### `YamlError`
+
+Variants:
+
+- `ParseError(String)`
+- `SerializeError(String)`
+- `IoError(std::io::Error)`
+- `EmptyDocument`
+- `InvalidValue(String)`
+- `UnresolvedAlias`
+- `InvalidKeyPath(String)`
+- `TypeConversionError(String)`
+
+Notes:
+
+- `parse_yaml()` and `load_yaml_file()` return `ParseError` for YAML syntax failures and `EmptyDocument` when parsing succeeds but no document exists.
+- `set_setting()` and `set_settings_batch()` can return `InvalidKeyPath` for empty or whitespace-only paths.
+- `merge_keys()` returns `InvalidValue` when `<<` does not point to a mapping or a sequence of mappings.
+
+### `merge_keys(yaml)`
+
+Resolves YAML merge-key (`<<`) usage after parsing. Semantics:
+
+- `<<` value may be a single mapping or a sequence of mappings
+- merge resolution is recursive, including nested merged mappings and arrays containing merged mappings
+- explicitly present keys in the current mapping win over merged keys
+- when merging multiple mappings from a sequence, earlier mappings win because later inserts do not overwrite existing keys
+- the `<<` key is removed from the final result
+
+`YamlOperations::parse_yaml()` does not apply merge-key resolution automatically; it is opt-in via `merge_keys()`.
+
+### YAML Loading And Cache Flow
+
+For the path-backed cache, the source-visible file-loading flow is:
+
+1. Construct or reuse a `YamlOperations` value.
+2. Call `load_yaml_file(path)`.
+3. If per-instance caching is enabled, check the global bounded `YAML_CACHE` by exact `PathBuf` key.
+4. If a cached entry exists and the file's current modification time is not newer than the cached timestamp, increment the hit counter and return a clone.
+5. Otherwise remove any stale cached entry, increment the miss counter, read the file synchronously with `std::fs::read_to_string`, parse with `YamlLoader`, keep only the first document, and insert the fresh parsed result.
+6. Callers optionally inspect cache state through `yaml_cache_stats()` or clear state with `clear_global_yaml_cache()`.
+
+Write flow for `save_yaml_file(path, yaml)`:
+
+1. Serialize with `dump_yaml()`.
+2. Write to `path.with_extension("yaml.tmp")`.
+3. Rename onto the target path.
+4. Remove the target path from the global cache if caching is enabled for that instance.
+
+The backing store is `quick_cache::sync::Cache<PathBuf, CachedYaml>`. The cache is process-global, shared by all `YamlOperations` instances. Cache invalidation is mtime-based and path-spelling is NOT canonicalized before caching.
+
+### Usage Example
+
+```rust
+use classic_settings_core::{YamlOperations, merge_keys};
+
+let ops = YamlOperations::new();
+
+let yaml = ops.parse_yaml(
+    r#"
+defaults: &defaults
+  crashgen: Buffout 4
+  ignore:
+    - foo
+    - bar
+
+profile:
+  <<: *defaults
+  crashgen: Buffout 4 NG
+"#,
+)?;
+
+let merged = merge_keys(yaml)?;
+
+assert_eq!(
+    ops.get_string_value(&merged, "profile.crashgen", ""),
+    "Buffout 4 NG"
+);
+
+assert_eq!(ops.get_vec_value(&merged, "profile.ignore"), vec!["foo", "bar"]);
+
+# Ok::<(), classic_settings_core::YamlError>(())
+```
+
+### C++ Bridge Surface
+
+The C++ bridge module `classic::settings` (formerly `classic::yaml`; renamed during Phase 1 Plan 2 of the v9.1.0 merge) exposes both the YAML operations surface AND the new settings-core cache ops and validators (the D-09 expansion). Contributors targeting C++ callers should consult [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) for the full entry point list. A brief summary:
+
+- `yaml_ops_*` — path-backed YAML cache operations (parse, load, save, get_setting, cache_stats)
+- `settings_load_sync`, `settings_load_async_blocking`, `settings_load_batch_sync`, `settings_load_batch_async_blocking` — cache-populating loaders that return document counts (the full `Arc<Vec<Yaml>>` does not cross the CXX boundary)
+- `settings_cache_stats`, `settings_cache_size`, `settings_cache_keys`, `settings_is_cached`, `settings_invalidate`, `settings_clear_cache`, `settings_reset_cache_stats` — key-based settings cache observability
+- `settings_validate_structure`, `settings_validate_value`, `settings_coerce_value` — validator helpers mirroring the Python surface
+- Shared structs: `SettingsCacheStats`, `SettingsValidationIssue`, `SettingsCoercedValue`, `YamlCacheStatsDto`
+
+Two type-system exceptions apply at the CXX boundary (bridge-internal design notes):
+
+- `get_cached()` returning `Option<Arc<Vec<Yaml>>>` cannot cross CXX; callers fall back to `yaml_ops_*` for parsed docs.
+- `load_settings_*()` returns only a `u32` doc count instead of the `Arc<Vec<Yaml>>`.
+
+### Contributor Notes For The Absorbed YAML Surface
+
+- The public YAML API is root-level on `classic-settings-core`; adding or removing items in `src/lib.rs` materially changes the crate surface.
+- `YamlOperations::with_config()` currently stores formatting preferences but the serializer does not visibly honor them.
+- `load_yaml_files_batch()` iterates sequentially and silently skips failures.
+- Dot-path access is hash-only; contributors should not assume support for YAML arrays in path segments.
+- Merge-key resolution is opt-in through `merge_keys()` and is not part of normal parse/load calls.
+- The yaml-file cache behavior is global and mtime-based; tests or callers that depend on fresh reads should clear the cache explicitly.
+
+Update this section when you change:
+
+- the yaml-file cache invalidation or observability behavior
+- typed extraction semantics or lossy fallback rules
+- merge-key handling
+- the C++ bridge surface for `classic::settings`

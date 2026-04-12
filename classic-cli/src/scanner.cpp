@@ -17,7 +17,7 @@
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/scanner.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -99,11 +99,11 @@ static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDi
     fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
 
     try {
-        auto yaml = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*yaml, local_yaml.string());
+        auto yaml = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*yaml, local_yaml.string());
 
         std::string key_path = "Game_Info.Docs_Folder_XSE";
-        auto xse_path = classic::yaml::yaml_ops_get_string(*yaml, key_path, "");
+        auto xse_path = classic::settings::yaml_ops_get_string(*yaml, key_path, "");
         return std::string(xse_path.data(), xse_path.size());
     } catch (const rust::Error&) {
         return "";

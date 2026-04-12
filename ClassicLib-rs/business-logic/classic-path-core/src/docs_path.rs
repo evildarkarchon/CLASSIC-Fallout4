@@ -119,8 +119,8 @@ impl DocsPathFinder {
     /// * `app_id` - The Steam application ID for the game whose Proton
     ///   documents prefix should be searched (for Fallout 4 this is
     ///   `377160`; use
-    ///   `classic_constants_core::Fallout4Version::Original.steam_app_id()`
-    ///   in callers that already depend on `classic-constants-core` to
+    ///   `classic_version_registry_core::Fallout4Version::Original.steam_app_id()`
+    ///   in callers that already depend on `classic-version-registry-core` to
     ///   avoid duplicating the literal).
     ///
     /// # Returns

@@ -3,8 +3,8 @@
 //! Exposes URL validation, user agent generation, mod site constants,
 //! and URL building utilities to JavaScript/TypeScript.
 
-use crate::constants::JsGameId;
-use classic_constants_core::GameId;
+use crate::shared::JsGameId;
+use classic_shared_core::GameId;
 use classic_web_core::ModSite;
 use napi::bindgen_prelude::*;
 

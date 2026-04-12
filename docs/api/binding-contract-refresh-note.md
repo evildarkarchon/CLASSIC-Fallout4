@@ -27,7 +27,7 @@ The goal is practical maintenance: decide when to refresh only one surface's con
 The current documented gates are per surface, not one shared gate.
 
 - **C++ (CXX)**: the parity gate is `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`. Baseline: `tools/cxx_api_parity/cxx_baseline_surface.json`. Contributor docs: [`cxx-parity-gate.md`](cxx-parity-gate.md).
-- **Node**: the parity workflow requires regenerated, fresh [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts), plus `bun run parity:gate:local`, `bun run test:bun`, `bun run test:node`, and `bun run dts:freshness:check` for accepted work and release gating.
+- **Node**: the parity workflow is verify-first — run `bun run parity:gate`, refresh with `bun run parity:gate:update-baseline` only when the drift is intentional and source-backed, rerun `bun run parity:gate`, then finish with `bun run test:bun`, `bun run test:node`, and `bun run dts:freshness:check`.
 - **Python**: the parity workflow requires parity checks, stub validation, and Python smoke tests, with `.pyi` naming/signature finalized for all APIs.
 
 So today:
@@ -120,7 +120,9 @@ When Node `index.d.ts` changes, the important checks are:
 
 ```powershell
 # From ClassicLib-rs/node-bindings/classic-node
-bun run parity:gate:local
+bun run parity:gate
+bun run parity:gate:update-baseline   # only if the plain gate shows intentional source-backed drift
+bun run parity:gate
 bun run test:bun
 bun run test:node
 bun run dts:freshness:check

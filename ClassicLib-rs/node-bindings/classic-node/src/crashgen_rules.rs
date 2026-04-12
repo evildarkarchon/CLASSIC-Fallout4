@@ -1,4 +1,4 @@
-use classic_crashgen_settings_core::{
+use classic_config_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
     PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
     TargetValueType,

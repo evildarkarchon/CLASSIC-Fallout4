@@ -16,7 +16,7 @@
 #include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 #include "rust/cxx.h"
 
 #include <cstdlib>
@@ -147,9 +147,9 @@ int main(int argc, char* argv[])
     }
 
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
-        auto version = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
+        auto version = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
         if (version.empty()) {
             classic::message::log_startup_binding_contract_failed(
                 "classic-gui.startup", "CLASSIC_Info.version", "config_invalid",

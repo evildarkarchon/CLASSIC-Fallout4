@@ -302,7 +302,7 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 ///
 /// ```rust,ignore
 /// use classic_registry_core::{register, get_game_version, Keys};
-/// use classic_constants_core::Fallout4Version;
+/// use classic_version_registry_core::Fallout4Version;
 ///
 /// register(Keys::GAME_VERSION, Fallout4Version::Vr);
 /// let version = get_game_version::<Fallout4Version>();

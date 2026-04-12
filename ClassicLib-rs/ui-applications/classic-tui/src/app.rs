@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use classic_config_core::{ClassicConfig, YamlSource, resolve_registry_version_info};
-use classic_constants_core::Fallout4Version;
 use classic_file_io_core::BackupManager;
 use classic_file_io_core::BackupType;
 use classic_file_io_core::LogCollector;
@@ -12,6 +11,7 @@ use classic_path_core::{DocsPathFinder, validate_custom_scan_path};
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use classic_shared_core::get_runtime;
 use classic_update_core::GithubClient;
+use classic_version_registry_core::Fallout4Version;
 use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::Rect;
@@ -1462,7 +1462,7 @@ fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
 
     let relative_docs = resolve_selected_docs_relative_path(config);
     // Opt in to Fallout 4's Steam/Proton documents lookup on Linux.
-    // The canonical 377160 literal lives in classic_constants_core.
+    // The canonical 377160 literal lives in classic_version_registry_core.
     let finder = DocsPathFinder::new(&relative_docs)
         .with_steam_app_id(Fallout4Version::Original.steam_app_id());
     finder

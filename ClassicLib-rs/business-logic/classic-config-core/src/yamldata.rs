@@ -6,16 +6,16 @@
 //! 2. Parallel loading of multiple YAML files with Tokio
 //! 3. Efficient memory representation
 
-use classic_crashgen_settings_core::{
+use crate::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
     PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
     TargetValueType,
 };
+use classic_settings_core::YamlOperations;
 use classic_settings_core::{SettingsError, merge_yaml_documents, parse_yaml_content};
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
-use classic_yaml_core::YamlOperations;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use yaml_rust2::Yaml;

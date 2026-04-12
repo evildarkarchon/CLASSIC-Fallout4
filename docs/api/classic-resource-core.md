@@ -281,7 +281,7 @@ Important direct dependencies:
 
 Declared dependency with no visible use in current `src/lib.rs`:
 
-- `classic-constants-core`
+- none after Phase 3 cleanup
 
 Related CLASSIC crates and wrappers:
 
@@ -338,7 +338,7 @@ If the caller needs stricter directory validation before enumeration, validate t
 - `enumerate_resources()` is best-effort because `WalkDir` entry errors are dropped
 - `count_resources_by_type()` omits zero-count categories and inherits the same best-effort traversal behavior
 - `validate_resource()` validates file existence/readability only; it does not verify supported type or file format integrity
-- `ArchiveError` and the `classic-constants-core` dependency are present in the public/dependency surface, but the current source does not expose real archive-management behavior or visible constants usage
+- `ArchiveError` is present in the public/dependency surface, but the current source does not expose real archive-management behavior
 - the crate-level docs mention BA2 archive support and path resolution, but current contributor-visible APIs are narrower than that description
 
 If you extend this crate, update this document when you change:

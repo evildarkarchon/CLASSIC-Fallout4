@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-04-10T10:03:05.139905+00:00",
+  "generated_at_utc": "2026-04-12T01:59:47.828231+00:00",
   "summary": {
-    "tier1_contract_total": 711,
-    "tier1_matched": 711,
+    "tier1_contract_total": 705,
+    "tier1_matched": 705,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -4808,9 +4808,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.Fallout4Version@rust",
+      "id": "version_registry.Fallout4Version@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "Fallout4Version@rust",
       "node_export": null,
@@ -4821,9 +4821,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.GameId@rust",
+      "id": "shared.GameId@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "shared",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "GameId@rust",
       "node_export": null,
@@ -4834,9 +4834,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.NULL_VERSION@rust",
+      "id": "version_registry.NULL_VERSION@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "NULL_VERSION@rust",
       "node_export": null,
@@ -4847,9 +4847,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.SETTINGS_IGNORE_NONE@rust",
+      "id": "settings.SETTINGS_IGNORE_NONE@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "SETTINGS_IGNORE_NONE@rust",
       "node_export": null,
@@ -4860,9 +4860,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.YamlFile@rust",
+      "id": "settings.YamlFile@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "YamlFile@rust",
       "node_export": null,
@@ -4873,9 +4873,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.display_name@rust",
+      "id": "version_registry.display_name@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "display_name@rust",
       "node_export": null,
@@ -4886,9 +4886,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.display_name_string@rust",
+      "id": "version_registry.display_name_string@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "display_name_string@rust",
       "node_export": null,
@@ -4899,9 +4899,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4912,9 +4912,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4925,9 +4925,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4938,9 +4938,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4951,9 +4951,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4964,9 +4964,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4977,9 +4977,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -4990,9 +4990,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5003,9 +5003,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5016,9 +5016,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5029,9 +5029,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5042,9 +5042,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5055,9 +5055,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5068,9 +5068,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5081,9 +5081,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "fn@rust",
       "node_export": null,
@@ -5094,9 +5094,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.game_version@rust",
+      "id": "version_registry.game_version@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "game_version@rust",
       "node_export": null,
@@ -5107,9 +5107,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.get_version_info@rust",
+      "id": "version_registry.get_version_info@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_version_info@rust",
       "node_export": null,
@@ -5120,9 +5120,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.must_not_be_none@rust",
+      "id": "settings.must_not_be_none@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "must_not_be_none@rust",
       "node_export": null,
@@ -5133,9 +5133,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.short_name@rust",
+      "id": "version_registry.short_name@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "short_name@rust",
       "node_export": null,
@@ -5146,9 +5146,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.version_semver@rust",
+      "id": "version_registry.version_semver@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "version_semver@rust",
       "node_export": null,
@@ -5159,9 +5159,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.xse_acronym@rust",
+      "id": "version_registry.xse_acronym@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "xse_acronym@rust",
       "node_export": null,
@@ -5172,9 +5172,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.xse_acronym_string@rust",
+      "id": "version_registry.xse_acronym_string@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "xse_acronym_string@rust",
       "node_export": null,
@@ -5185,9 +5185,9 @@
       "actual_node_arity": null
     },
     {
-      "id": "constants.xse_config@rust",
+      "id": "version_registry.xse_config@rust",
       "tier": "tier1",
-      "owner_module": "constants",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "xse_config@rust",
       "node_export": null,
@@ -5200,8 +5200,8 @@
     {
       "id": "crashgen_settings.CheckRule@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "CheckRule@rust",
       "node_export": null,
       "status": "matched",
@@ -5213,8 +5213,8 @@
     {
       "id": "crashgen_settings.ConfigLayout@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "ConfigLayout@rust",
       "node_export": null,
       "status": "matched",
@@ -5226,8 +5226,8 @@
     {
       "id": "crashgen_settings.EvaluationContext@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "EvaluationContext@rust",
       "node_export": null,
       "status": "matched",
@@ -5239,8 +5239,8 @@
     {
       "id": "crashgen_settings.EvaluationOutcome@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "EvaluationOutcome@rust",
       "node_export": null,
       "status": "matched",
@@ -5252,8 +5252,8 @@
     {
       "id": "crashgen_settings.EvaluationResult@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "EvaluationResult@rust",
       "node_export": null,
       "status": "matched",
@@ -5265,8 +5265,8 @@
     {
       "id": "crashgen_settings.ExpectedValue@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "ExpectedValue@rust",
       "node_export": null,
       "status": "matched",
@@ -5278,8 +5278,8 @@
     {
       "id": "crashgen_settings.OutcomeKind@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "OutcomeKind@rust",
       "node_export": null,
       "status": "matched",
@@ -5291,8 +5291,8 @@
     {
       "id": "crashgen_settings.Predicate@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "Predicate@rust",
       "node_export": null,
       "status": "matched",
@@ -5304,8 +5304,8 @@
     {
       "id": "crashgen_settings.PreflightAction@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "PreflightAction@rust",
       "node_export": null,
       "status": "matched",
@@ -5317,8 +5317,8 @@
     {
       "id": "crashgen_settings.PreflightActionKind@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "PreflightActionKind@rust",
       "node_export": null,
       "status": "matched",
@@ -5330,8 +5330,8 @@
     {
       "id": "crashgen_settings.PreflightRule@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "PreflightRule@rust",
       "node_export": null,
       "status": "matched",
@@ -5343,8 +5343,8 @@
     {
       "id": "crashgen_settings.RuleMessages@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "RuleMessages@rust",
       "node_export": null,
       "status": "matched",
@@ -5356,8 +5356,8 @@
     {
       "id": "crashgen_settings.RuleReportBucket@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "RuleReportBucket@rust",
       "node_export": null,
       "status": "matched",
@@ -5369,8 +5369,8 @@
     {
       "id": "crashgen_settings.RuleSeverity@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "RuleSeverity@rust",
       "node_export": null,
       "status": "matched",
@@ -5382,8 +5382,8 @@
     {
       "id": "crashgen_settings.RuleTarget@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "RuleTarget@rust",
       "node_export": null,
       "status": "matched",
@@ -5395,8 +5395,8 @@
     {
       "id": "crashgen_settings.TargetValueType@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "TargetValueType@rust",
       "node_export": null,
       "status": "matched",
@@ -5408,8 +5408,8 @@
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "parse@rust",
       "node_export": null,
       "status": "matched",
@@ -5421,8 +5421,8 @@
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "parse@rust",
       "node_export": null,
       "status": "matched",
@@ -5434,8 +5434,8 @@
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "parse@rust",
       "node_export": null,
       "status": "matched",
@@ -5447,8 +5447,8 @@
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "parse@rust",
       "node_export": null,
       "status": "matched",
@@ -5460,8 +5460,8 @@
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "owner_module": "crashgen_settings",
-      "squad": "Squad B (version-registry/aux)",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
       "rust_symbol": "parse@rust",
       "node_export": null,
       "status": "matched",
@@ -7811,32 +7811,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "shared.AsyncBridge@rust",
-      "tier": "tier1",
-      "owner_module": "shared",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "AsyncBridge@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "shared.BridgeError@rust",
-      "tier": "tier1",
-      "owner_module": "shared",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "BridgeError@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "shared.ClassicError@rust",
       "tier": "tier1",
       "owner_module": "shared",
@@ -7863,19 +7837,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "shared.EventLoopDispatcher@rust",
-      "tier": "tier1",
-      "owner_module": "shared",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "EventLoopDispatcher@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "shared.IntoClassicError@rust",
       "tier": "tier1",
       "owner_module": "shared",
@@ -7894,32 +7855,6 @@
       "owner_module": "shared",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "RuntimeConfig@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "shared.SlintDispatcher@rust",
-      "tier": "tier1",
-      "owner_module": "shared",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "SlintDispatcher@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "shared.async_bridge@rust",
-      "tier": "tier1",
-      "owner_module": "shared",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "async_bridge@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,
@@ -7985,19 +7920,6 @@
       "owner_module": "shared",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "performance_core@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "shared.set_dispatcher@rust",
-      "tier": "tier1",
-      "owner_module": "shared",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "set_dispatcher@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,
@@ -8086,7 +8008,7 @@
     {
       "id": "version.NULL_VERSION@rust",
       "tier": "tier1",
-      "owner_module": "version",
+      "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "NULL_VERSION@rust",
       "node_export": null,
@@ -8684,7 +8606,7 @@
     {
       "id": "yaml.YamlError@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "YamlError@rust",
       "node_export": null,
@@ -8697,7 +8619,7 @@
     {
       "id": "yaml.YamlOperations@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "YamlOperations@rust",
       "node_export": null,
@@ -8710,7 +8632,7 @@
     {
       "id": "yaml.cache_stats@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "cache_stats@rust",
       "node_export": null,
@@ -8723,7 +8645,7 @@
     {
       "id": "yaml.clear_cache@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "clear_cache@rust",
       "node_export": null,
@@ -8736,7 +8658,7 @@
     {
       "id": "yaml.dump_yaml@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "dump_yaml@rust",
       "node_export": null,
@@ -8749,7 +8671,7 @@
     {
       "id": "yaml.get_cache_stats@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_cache_stats@rust",
       "node_export": null,
@@ -8762,7 +8684,7 @@
     {
       "id": "yaml.get_hashmap_value@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_hashmap_value@rust",
       "node_export": null,
@@ -8775,7 +8697,7 @@
     {
       "id": "yaml.get_indexmap_value@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_indexmap_value@rust",
       "node_export": null,
@@ -8788,7 +8710,7 @@
     {
       "id": "yaml.get_setting@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_setting@rust",
       "node_export": null,
@@ -8801,7 +8723,7 @@
     {
       "id": "yaml.get_settings_batch@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_settings_batch@rust",
       "node_export": null,
@@ -8814,7 +8736,7 @@
     {
       "id": "yaml.get_string_value@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_string_value@rust",
       "node_export": null,
@@ -8827,7 +8749,7 @@
     {
       "id": "yaml.get_vec_value@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_vec_value@rust",
       "node_export": null,
@@ -8840,7 +8762,7 @@
     {
       "id": "yaml.is_cache_enabled@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "is_cache_enabled@rust",
       "node_export": null,
@@ -8853,7 +8775,7 @@
     {
       "id": "yaml.load_yaml_file@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "load_yaml_file@rust",
       "node_export": null,
@@ -8866,7 +8788,7 @@
     {
       "id": "yaml.load_yaml_files_batch@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "load_yaml_files_batch@rust",
       "node_export": null,
@@ -8879,7 +8801,7 @@
     {
       "id": "yaml.merge_keys@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "merge_keys@rust",
       "node_export": null,
@@ -8892,7 +8814,7 @@
     {
       "id": "yaml.new@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "new@rust",
       "node_export": null,
@@ -8905,7 +8827,7 @@
     {
       "id": "yaml.parse_yaml@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "parse_yaml@rust",
       "node_export": null,
@@ -8918,7 +8840,7 @@
     {
       "id": "yaml.reset_cache_stats@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "reset_cache_stats@rust",
       "node_export": null,
@@ -8931,7 +8853,7 @@
     {
       "id": "yaml.save_yaml_file@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "save_yaml_file@rust",
       "node_export": null,
@@ -8944,7 +8866,7 @@
     {
       "id": "yaml.set_cache_enabled@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "set_cache_enabled@rust",
       "node_export": null,
@@ -8957,7 +8879,7 @@
     {
       "id": "yaml.set_setting@rust",
       "tier": "tier1",
-      "owner_module": "yaml",
+      "owner_module": "settings",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "set_setting@rust",
       "node_export": null,

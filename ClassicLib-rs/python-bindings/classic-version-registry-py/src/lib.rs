@@ -36,6 +36,7 @@
 use pyo3::prelude::*;
 
 mod matching;
+mod fallout4_version;
 mod models;
 mod registry;
 mod version;
@@ -63,6 +64,7 @@ fn classic_version_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__debug_registered__", true)?;
 
     // Register all components
+    fallout4_version::register(m)?;
     version::register(m)?;
     models::register(m)?;
     matching::register(m)?;

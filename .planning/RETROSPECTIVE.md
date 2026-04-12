@@ -118,6 +118,52 @@
 
 ---
 
+## Milestone: v9.1.0-consolidation — Crate Consolidation
+
+**Shipped:** 2026-04-12
+**Phases:** 5 | **Plans:** 16 | **Tasks:** 38
+
+### What Was Built
+
+- **YAML/settings consolidation (Phase 1):** `classic-yaml-core` was absorbed into `classic-settings-core`, all bindings/consumers were migrated, and the parity generators were upgraded to scan Rust sub-modules so the merged surface remained visible to the gates.
+- **Crashgen/config consolidation (Phase 2):** `classic-crashgen-settings-core` was absorbed into `classic-config-core`, all downstream Rust/Python/Node consumers moved to the new owner, and docs/parity ownership were reparented without drift.
+- **Constants redistribution (Phase 3):** `classic-constants-core` was split into semantic owners across version-registry, settings, and shared, with matching Rust, Python, Node, CXX, GUI, docs, and parity updates.
+- **Closure proof (Phase 4):** Workspace tests, CLI/GUI wrapper validation, and plain CXX/Python/Node parity reruns were all recorded in a single Phase 4 verification artifact.
+- **Audit cleanup (Phase 5):** Top-level docs routing, Phase 3 verification bookkeeping, and every Node parity contract artifact were reconciled to the live one-tier 705-row baseline with persistent planning-audit and tripwire guards.
+
+### What Worked
+
+- **Owner-reparent reuse across phases:** The parity contract owner-merge helper from Phase 1 carried cleanly into later merges and kept parity metadata edits deterministic.
+- **Single-source verification artifacts:** Refreshing parent verification artifacts in place kept closure evidence understandable and let the milestone audit reason over one canonical verifier per phase.
+- **Audit-driven cleanup plans:** Phase 5 showed that narrow cleanup plans plus deterministic planning tests are an effective way to close documentation and contract drift without reopening already-correct runtime code.
+
+### What Was Inefficient
+
+- **Planning-state drift lasted longer than implementation drift.** The code and parity gates were green before ROADMAP/VALIDATION bookkeeping fully caught up, which forced extra cleanup work late in the milestone.
+- **Node parity contract narrative drift happened in layers.** The markdown contract, then the JSON contract description, each lagged behind the already-correct runtime/report truth, which created multiple tiny follow-up plans.
+- **Milestone archive scaffolding was only partial.** `gsd-tools milestone complete` copied the files, but the active roadmap and archive surfaces still needed manual cleanup to become true shipped-state records.
+
+### Patterns Established
+
+- **Planning audits should assert real filesystem and artifact truths, not just copied text fragments.** Phase 5 only closed cleanly once the tests checked on-disk absence and contract wording directly.
+- **Human-readable and machine-readable parity contracts both need executable anti-drift checks.** Narrative drift is cheap to introduce and easy to miss unless both surfaces are guarded.
+- **Milestone completion still needs a manual archive-quality pass.** Auto-archival is useful for bootstrapping, but shipped planning artifacts need human cleanup for roadmap collapse, project evolution, and archive readability.
+
+### Key Lessons
+
+1. **Bookkeeping debt compounds if left behind after phase verification.** The late Phase 5 work was almost entirely cleanup of planning/docs artifacts that could have been closed immediately after earlier verifier passes.
+2. **Treat parity contract prose as part of the product surface.** Once parity policy becomes one-tier, every checked-in narrative artifact has to move with it or the next audit will surface contradictions.
+3. **Milestone archives should be written as shipped records, not raw snapshots.** A copied roadmap that still says "in progress" is not a trustworthy historical artifact.
+4. **Phase-cleanup work benefits from tiny, verifier-sourced plans.** Each Phase 5 gap plan stayed small, measurable, and easy to validate because it mapped one verifier finding to one concrete artifact set.
+
+### Cost Observations
+
+- Model mix: not tracked for this milestone (no per-session token telemetry)
+- Sessions: ~3 days of execution and cleanup (2026-04-10 to 2026-04-12)
+- Notable: Most post-Phase-4 work was artifact reconciliation, not runtime debugging. The expensive part was context switching across docs, audits, validation, and contract surfaces rather than implementing new code paths.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -129,6 +175,7 @@
 | v8.3.0 Performance & Polish (2026-02-05) | unknown | 7 | Criterion benchmark infrastructure + GIL release audit |
 | v9.1.0-bugfixes CLASSIC Codebase Health (2026-04-07) | ~4 days | 11 (8 + 3 gap closure) | Three-source verification audit pattern; gap-closure phases refresh parent verification in place |
 | v9.1.0-bindings Full Bindings Parity (2026-04-10) | ~4 days | 7 | Wave-based promotion pattern; @rust-suffix proxy rows; M7 atomic cascade; source-only CXX gate; triple-gate CI canary |
+| v9.1.0-consolidation Crate Consolidation (2026-04-12) | ~3 days | 5 | Semantic crate consolidation plus audit-driven cleanup plans and parity-contract anti-drift guards |
 
 ### Cumulative Quality
 
@@ -139,6 +186,7 @@
 | v8.3.0 Performance & Polish | 77+ Criterion benchmarks | — | Flamegraph, py-spy, dhat, DashMap instrumentation |
 | v9.1.0-bugfixes CLASSIC Codebase Health | added Phase 5/6 benchmark groups + Phase 6 mmap parity test + tests/planning artifact regression | — | `dts:freshness:check`, three-source audit matrix |
 | v9.1.0-bindings Full Bindings Parity | CXX gate 316-entry baseline + Python 1098 tier1 rows + Node 109 promoted entries + triple-gate canary | — | CXX parity gate, promotion audit trail, `binding-parity-policy.md`, `error-contract.md` |
+| v9.1.0-consolidation Crate Consolidation | 5 passed phase verifiers + 4/4 integration flows + Phase 5 planning audits/tripwires | — | semantic-owner parity routing, milestone cleanup audit guards, machine/human contract anti-drift checks |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -149,3 +197,4 @@
 5. **Plan scaffolds diverge from live state — verify row counts before execution.** v9.1.0-bindings Phases 3/4 needed inventory-first corrections in nearly every plan because estimates drifted from live baseline counts. Future binding-promotion plans should require a live-count verification step.
 6. **Cross-AI review pays for itself on FFI-boundary plans.** CXX bridge plans encode domain-specific constraints (shared enum rules, Files lists, Path-taking signatures) that internal plan checkers miss. Verified in v9.1.0-bindings Phase 2.
 7. **Governance file deletion is irreversible — always create an audit trail first.** The 18K-line promotion audit trail from v9.1.0-bindings Phase 6 is the only queryable record of which entries came from which governance file.
+8. **Audit cleanup needs executable drift guards.** v9.1.0-consolidation Phase 5 only stayed closed once filesystem absence, markdown policy, and JSON contract wording were all guarded by tests instead of trusted as static prose.

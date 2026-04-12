@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Hybrid-tiered Node vs Rust parity contract for high-level APIs.",
+  "description": "Live one-tier 705-row Node vs Rust parity contract for high-level APIs.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -3128,7 +3128,7 @@
       "id": "version-registry-crashgen-settings-rules",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "CrashgenSettingsRules",
       "nodeExport": "JsCrashgenSettingsRules",
       "nodeKind": "interface"
@@ -3160,410 +3160,410 @@
       "rustKind": "reexport"
     },
     {
-      "id": "constants.Fallout4Version@rust",
+      "id": "version_registry.Fallout4Version@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "Fallout4Version@rust",
       "rustKind": "enum"
     },
     {
-      "id": "constants.GameId@rust",
+      "id": "shared.GameId@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "GameId@rust",
       "rustKind": "enum"
     },
     {
-      "id": "constants.NULL_VERSION@rust",
+      "id": "version_registry.NULL_VERSION@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-version-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "NULL_VERSION@rust",
       "rustKind": "reexport"
     },
     {
-      "id": "constants.SETTINGS_IGNORE_NONE@rust",
+      "id": "settings.SETTINGS_IGNORE_NONE@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "SETTINGS_IGNORE_NONE@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.YamlFile@rust",
+      "id": "settings.YamlFile@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "YamlFile@rust",
       "rustKind": "enum"
     },
     {
-      "id": "constants.display_name@rust",
+      "id": "version_registry.display_name@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "display_name@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.display_name_string@rust",
+      "id": "version_registry.display_name_string@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "display_name_string@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.fn@rust",
+      "id": "version_registry.fn@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "fn@rust",
       "rustKind": "const"
     },
     {
-      "id": "constants.game_version@rust",
+      "id": "version_registry.game_version@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "game_version@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.get_version_info@rust",
+      "id": "version_registry.get_version_info@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "get_version_info@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.must_not_be_none@rust",
+      "id": "settings.must_not_be_none@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "must_not_be_none@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.short_name@rust",
+      "id": "version_registry.short_name@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "short_name@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.version_semver@rust",
+      "id": "version_registry.version_semver@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "version_semver@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.xse_acronym@rust",
+      "id": "version_registry.xse_acronym@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "xse_acronym@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.xse_acronym_string@rust",
+      "id": "version_registry.xse_acronym_string@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "xse_acronym_string@rust",
       "rustKind": "function"
     },
     {
-      "id": "constants.xse_config@rust",
+      "id": "version_registry.xse_config@rust",
       "tier": "tier1",
-      "ownerModule": "constants",
-      "rustCrate": "classic-constants-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "xse_config@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.CheckRule@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "CheckRule@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.ConfigLayout@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "ConfigLayout@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.EvaluationContext@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "EvaluationContext@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.EvaluationOutcome@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "EvaluationOutcome@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.EvaluationResult@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "EvaluationResult@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.ExpectedValue@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "ExpectedValue@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.OutcomeKind@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "OutcomeKind@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.Predicate@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "Predicate@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.PreflightAction@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightAction@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.PreflightActionKind@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightActionKind@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.PreflightRule@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightRule@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.RuleMessages@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleMessages@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.RuleReportBucket@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleReportBucket@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.RuleSeverity@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleSeverity@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.RuleTarget@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleTarget@rust",
       "rustKind": "struct"
     },
     {
       "id": "crashgen_settings.TargetValueType@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "TargetValueType@rust",
       "rustKind": "enum"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
     {
       "id": "crashgen_settings.parse@rust",
       "tier": "tier1",
-      "ownerModule": "crashgen_settings",
-      "rustCrate": "classic-crashgen-settings-core",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
     },
@@ -4875,7 +4875,7 @@
       "id": "settings.cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "cache_stats@rust",
       "rustKind": "function"
     },
@@ -4883,7 +4883,7 @@
       "id": "settings.clear_cache@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "clear_cache@rust",
       "rustKind": "function"
     },
@@ -4995,7 +4995,7 @@
       "id": "settings.reset_cache_stats@rust",
       "tier": "tier1",
       "ownerModule": "settings",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "reset_cache_stats@rust",
       "rustKind": "function"
     },
@@ -5006,22 +5006,6 @@
       "rustCrate": "classic-settings-core",
       "rustSymbol": "validators@rust",
       "rustKind": "module"
-    },
-    {
-      "id": "shared.AsyncBridge@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "AsyncBridge@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "shared.BridgeError@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "BridgeError@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "shared.ClassicError@rust",
@@ -5040,14 +5024,6 @@
       "rustKind": "reexport"
     },
     {
-      "id": "shared.EventLoopDispatcher@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "EventLoopDispatcher@rust",
-      "rustKind": "reexport"
-    },
-    {
       "id": "shared.IntoClassicError@rust",
       "tier": "tier1",
       "ownerModule": "shared",
@@ -5062,22 +5038,6 @@
       "rustCrate": "classic-shared-core",
       "rustSymbol": "RuntimeConfig@rust",
       "rustKind": "struct"
-    },
-    {
-      "id": "shared.SlintDispatcher@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "SlintDispatcher@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "shared.async_bridge@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "async_bridge@rust",
-      "rustKind": "module"
     },
     {
       "id": "shared.cpu_optimized@rust",
@@ -5118,14 +5078,6 @@
       "rustCrate": "classic-shared-core",
       "rustSymbol": "performance_core@rust",
       "rustKind": "module"
-    },
-    {
-      "id": "shared.set_dispatcher@rust",
-      "tier": "tier1",
-      "ownerModule": "shared",
-      "rustCrate": "classic-shared-core",
-      "rustSymbol": "set_dispatcher@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "update.GithubAsset@rust",
@@ -5178,8 +5130,8 @@
     {
       "id": "version.NULL_VERSION@rust",
       "tier": "tier1",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "NULL_VERSION@rust",
       "rustKind": "reexport"
     },
@@ -5523,7 +5475,7 @@
       "id": "xse.new@rust",
       "tier": "tier1",
       "ownerModule": "xse",
-      "rustCrate": "classic-yaml-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "new@rust",
       "rustKind": "function"
     },
@@ -5546,176 +5498,176 @@
     {
       "id": "yaml.YamlError@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "YamlError@rust",
       "rustKind": "enum"
     },
     {
       "id": "yaml.YamlOperations@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "YamlOperations@rust",
       "rustKind": "struct"
     },
     {
       "id": "yaml.cache_stats@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "cache_stats@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.clear_cache@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "clear_cache@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.dump_yaml@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "dump_yaml@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_cache_stats@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_cache_stats@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_hashmap_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_hashmap_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_indexmap_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_indexmap_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_setting@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_setting@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_settings_batch@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_settings_batch@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_string_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_string_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.get_vec_value@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "get_vec_value@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.is_cache_enabled@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "is_cache_enabled@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.load_yaml_file@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "load_yaml_file@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.load_yaml_files_batch@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "load_yaml_files_batch@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.merge_keys@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "merge_keys@rust",
       "rustKind": "reexport"
     },
     {
       "id": "yaml.new@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "new@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.parse_yaml@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "parse_yaml@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.reset_cache_stats@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "reset_cache_stats@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.save_yaml_file@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "save_yaml_file@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.set_cache_enabled@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "set_cache_enabled@rust",
       "rustKind": "function"
     },
     {
       "id": "yaml.set_setting@rust",
       "tier": "tier1",
-      "ownerModule": "yaml",
-      "rustCrate": "classic-yaml-core",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "set_setting@rust",
       "rustKind": "function"
     },
@@ -5723,7 +5675,7 @@
       "id": "aux.JsCheckRule",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "CheckRule",
       "nodeExport": "JsCheckRule",
       "nodeKind": "interface"
@@ -5732,7 +5684,7 @@
       "id": "aux.JsExpectedValue",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "ExpectedValue",
       "nodeExport": "JsExpectedValue",
       "nodeKind": "interface"
@@ -5768,7 +5720,7 @@
       "id": "aux.JsPreflightAction",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightAction",
       "nodeExport": "JsPreflightAction",
       "nodeKind": "interface"
@@ -5777,7 +5729,7 @@
       "id": "aux.JsPreflightRule",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "PreflightRule",
       "nodeExport": "JsPreflightRule",
       "nodeKind": "interface"
@@ -5786,7 +5738,7 @@
       "id": "aux.JsRuleMessages",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleMessages",
       "nodeExport": "JsRuleMessages",
       "nodeKind": "interface"
@@ -5795,7 +5747,7 @@
       "id": "aux.JsRuleTarget",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustCrate": "classic-crashgen-settings-core",
+      "rustCrate": "classic-config-core",
       "rustSymbol": "RuleTarget",
       "nodeExport": "JsRuleTarget",
       "nodeKind": "interface"

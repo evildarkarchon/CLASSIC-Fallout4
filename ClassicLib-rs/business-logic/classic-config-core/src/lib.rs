@@ -11,7 +11,10 @@
 //! All async operations use `classic_shared_core::get_runtime().block_on()`.
 
 pub mod config;
+pub mod crashgen_rules;
 pub mod yamldata;
+
+pub use crashgen_rules::*;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
 pub use yamldata::{
@@ -23,5 +26,5 @@ pub use yamldata::{
 // Re-export get_runtime from classic-shared-core for convenience
 pub use classic_shared_core::get_runtime;
 
-// Re-export YAML cache management from classic-yaml-core for testing
-pub use classic_yaml_core::clear_global_yaml_cache;
+// Re-export YAML cache management from classic-settings-core for testing
+pub use classic_settings_core::clear_global_yaml_cache;

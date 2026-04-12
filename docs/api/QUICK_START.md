@@ -96,7 +96,10 @@ From [`ClassicLib-rs/node-bindings/classic-node/`](../../ClassicLib-rs/node-bind
 bun install
 bun run build
 bun run cli -- --version
-bun run parity:gate:local
+bun run parity:gate
+# only if the plain gate reports intentional source-backed drift
+bun run parity:gate:update-baseline
+bun run parity:gate
 bun run test:bun
 bun run test:node
 ```

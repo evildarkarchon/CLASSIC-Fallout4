@@ -36,17 +36,13 @@ xxhash-rust = { workspace = true }
 # Logging
 log = { workspace = true }
 
-# Optional UI bridge (Slint event-loop dispatcher)
-slint = { workspace = true, optional = true }
-tokio-util = { workspace = true, optional = true }
-
-[features]
-# Enable AsyncBridge with Slint event-loop dispatch support
-gui-bridge = ["slint", "tokio-util"]
+# Serialization
+serde = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 serial_test = "3.2"
+serde_json = { workspace = true }
 
 [[bench]]
 name = "string_benchmarks"

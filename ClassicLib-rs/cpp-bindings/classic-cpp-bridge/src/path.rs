@@ -26,16 +26,16 @@
 //! - Fallout4-specific detection: `detect_fallout4_game_path`,
 //!   `resolve_fallout4_exe_name`, `detect_fallout4_docs_path`
 
-use classic_constants_core::Fallout4Version;
 use classic_path_core::{
-    BackupManager, DocsPathFinder, DocumentsChecker, GamePathFinder,
-    IniCheckResult as CoreIniCheckResult, is_restricted_path as core_is_restricted_path,
-    is_valid_path as core_is_valid_path, parse_xse_log as core_parse_xse_log,
+    is_restricted_path as core_is_restricted_path, is_valid_path as core_is_valid_path,
+    parse_xse_log as core_parse_xse_log,
     validate_custom_scan_path as core_validate_custom_scan_path,
     validate_is_directory as core_validate_is_directory, validate_is_file as core_validate_is_file,
     validate_path_exists as core_validate_path_exists,
-    validate_required_files as core_validate_required_files,
+    validate_required_files as core_validate_required_files, BackupManager, DocsPathFinder,
+    DocumentsChecker, GamePathFinder, IniCheckResult as CoreIniCheckResult,
 };
+use classic_version_registry_core::Fallout4Version;
 use std::path::Path;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ fn detect_fallout4_docs_path(cached_path: &str, selected_game_version: &str) -> 
         .map(|info| format!(r"My Games\{}", info.docs_name))
         .unwrap_or_else(|| r"My Games\Fallout4".to_string());
     // Opt in to Fallout 4's Steam/Proton documents lookup on Linux.
-    // The canonical 377160 literal lives in classic_constants_core.
+    // The canonical 377160 literal now lives in classic_version_registry_core.
     let finder =
         DocsPathFinder::new(relative).with_steam_app_id(Fallout4Version::Original.steam_app_id());
 

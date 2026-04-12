@@ -21,7 +21,7 @@ Use this crate when you need to:
 - extract a host/domain from a parsed HTTP or HTTPS URL
 - construct a URL from a trusted base plus a relative path or query parameters
 - generate the shared CLASSIC user-agent string used by wrapper crates
-- map a [`GameId`](../../ClassicLib-rs/business-logic/classic-constants-core) to a small set of well-known mod-site URLs
+- map a [`GameId`](../../ClassicLib-rs/foundation/classic-shared-core) to a small set of well-known mod-site URLs
 
 Do not use this crate for:
 
@@ -181,7 +181,7 @@ Important methods:
 
 - `base_url(self) -> &'static str`
 - `name(self) -> &'static str`
-- `game_url(self, game_id: classic_constants_core::GameId) -> String`
+- `game_url(self, game_id: classic_shared_core::GameId) -> String`
 
 ### `base_url()`
 
@@ -201,7 +201,7 @@ Display-like mappings in current source:
 
 ### `game_url()`
 
-`game_url()` is where this crate collaborates directly with [`classic-constants-core`](../../ClassicLib-rs/business-logic/classic-constants-core): it accepts a `GameId` and maps it to a site-specific URL.
+`game_url()` is where this crate collaborates directly with [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core): it accepts a `GameId` and maps it to a site-specific URL.
 
 Current `GameId` slug mapping used for Nexus Mods:
 
@@ -297,13 +297,13 @@ Important direct dependencies:
 - `url` - parsing, joining, host extraction, and query construction
 - `thiserror` - `WebError` derive and display messages
 - `serde` - `ModSite` serialization/deserialization
-- [`classic-constants-core`](../../ClassicLib-rs/business-logic/classic-constants-core) - provides `GameId` used by `ModSite::game_url()`
+- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - provides `GameId` used by `ModSite::game_url()`
 
 Related crates in this repository:
 
 - [`ClassicLib-rs/python-bindings/classic-web-py`](../../ClassicLib-rs/python-bindings/classic-web-py) - Python wrapper over this crate's public surface
 - [`ClassicLib-rs/node-bindings/classic-node/src/web.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/web.rs) - Node/N-API wrapper over this crate's public surface
-- [`classic-constants-core`](../../ClassicLib-rs/business-logic/classic-constants-core) - upstream enum definitions for supported games
+- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - upstream enum definitions for supported games
 
 Current collaboration pattern in the repo:
 
@@ -318,7 +318,7 @@ Current collaboration pattern in the repo:
 This example stays within the real public API: choose a site for a supported game, extend the URL, and validate the result before reuse.
 
 ```rust
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use classic_web_core::{
     ModSite,
     build_url_with_query,

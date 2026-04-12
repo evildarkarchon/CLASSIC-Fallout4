@@ -10,7 +10,7 @@
 //! - Respects the ONE RUNTIME RULE via `classic_shared_core::get_runtime()`
 //!
 //! ## Modules
-//! - **Wave 1** (Core Infrastructure): shared, constants, version, message
+//! - **Wave 1** (Core Infrastructure): shared, version, message
 //! - **Wave 2** (Complete Existing): yaml, scanlog
 //! - **Wave 3** (File I/O & Data): fileio, database, settings, config
 //! - **Wave 4** (Game Analysis): scangame, path, xse, version_registry
@@ -20,7 +20,6 @@
 extern crate napi_derive;
 
 // Wave 1: Core Infrastructure
-mod constants;
 mod crashgen_rules;
 mod logging_contract;
 mod message;
@@ -29,7 +28,6 @@ mod version;
 
 // Wave 2: Complete Existing Modules
 mod scanlog;
-mod yaml;
 
 // Wave 3: File I/O & Data
 mod config;

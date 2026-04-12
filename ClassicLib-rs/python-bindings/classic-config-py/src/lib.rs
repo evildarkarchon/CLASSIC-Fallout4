@@ -80,11 +80,11 @@
 //! ```
 
 use classic_config_core::{
+    CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
+};
+use classic_config_core::{
     ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, ModSolutionCriteria,
     PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
-};
-use classic_crashgen_settings_core::{
-    CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
 };
 use classic_settings_core::SettingsError;
 use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};
@@ -111,9 +111,9 @@ fn predicate_to_pydict(py: Python<'_>, predicate: &Predicate) -> PyResult<Py<PyD
         }
         Predicate::ConfigLayoutIs(layout) => {
             let layout_str = match layout {
-                classic_crashgen_settings_core::ConfigLayout::Og => "og",
-                classic_crashgen_settings_core::ConfigLayout::Vr => "vr",
-                classic_crashgen_settings_core::ConfigLayout::Unknown => "unknown",
+                classic_config_core::ConfigLayout::Og => "og",
+                classic_config_core::ConfigLayout::Vr => "vr",
+                classic_config_core::ConfigLayout::Unknown => "unknown",
             };
             out.set_item("config_layout_is", layout_str)?;
         }
@@ -147,11 +147,11 @@ fn preflight_rule_to_pydict(py: Python<'_>, rule: &PreflightRule) -> PyResult<Py
     out.set_item("when", predicate_to_pydict(py, &rule.when)?)?;
     let action = PyDict::new(py);
     let kind = match rule.action.kind {
-        classic_crashgen_settings_core::PreflightActionKind::NoticeAndSkipRemaining => {
+        classic_config_core::PreflightActionKind::NoticeAndSkipRemaining => {
             "notice_and_skip_remaining"
         }
-        classic_crashgen_settings_core::PreflightActionKind::Notice => "notice",
-        classic_crashgen_settings_core::PreflightActionKind::Issue => "issue",
+        classic_config_core::PreflightActionKind::Notice => "notice",
+        classic_config_core::PreflightActionKind::Issue => "issue",
     };
     action.set_item("kind", kind)?;
     action.set_item("severity", severity_to_str(rule.action.severity))?;

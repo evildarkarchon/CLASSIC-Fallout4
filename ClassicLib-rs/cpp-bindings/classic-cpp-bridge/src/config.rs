@@ -679,7 +679,7 @@ CLASSIC_Ignore_Fallout4: []
         )
         .expect("save_local_yaml_paths should succeed");
 
-        let yaml = classic_yaml_core::YamlOperations::new()
+        let yaml = classic_settings_core::YamlOperations::new()
             .load_yaml_file(&local_yaml_path)
             .expect("load local yaml");
         assert_eq!(

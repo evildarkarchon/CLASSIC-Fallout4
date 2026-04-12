@@ -290,7 +290,7 @@ Related CLASSIC crates and wrappers:
 - [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs) - exposes CXX-friendly string/bool/i32 registry accessors on top of this crate
 - [`classic-registry-py`](../../ClassicLib-rs/python-bindings/classic-registry-py/src/lib.rs) - stores Python objects through a wrapper type so Python code can share registry entries
 - [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs) - uses `serde_json::Value` plus fallbacks to common Rust scalar types when reading registry values from Node
-- [`classic-constants-core`](../../ClassicLib-rs/business-logic/classic-constants-core) - documents that `classic-registry-core` stores active Fallout 4 version state, but this registry crate itself remains generic
+- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - documents the `Fallout4Version` type that many callers store in this generic registry
 
 The collaboration pattern is consistent across those wrappers: each binding layer chooses a concrete storage type that fits its ABI, then uses the same string keys to share process-wide state.
 

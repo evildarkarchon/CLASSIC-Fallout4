@@ -7,12 +7,58 @@ use napi::bindgen_prelude::*;
 use std::collections::{BTreeSet, HashMap};
 
 use classic_version_registry_core::{
-    GameVersion, MatchConfidence, get_version_registry as core_get_version_registry,
+    get_version_registry as core_get_version_registry, Fallout4Version, GameVersion,
+    MatchConfidence,
 };
 
 /// Convert any Display error to a napi::Error
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
+}
+
+/// Fallout 4 version variants exposed to JavaScript as string literals.
+#[napi(string_enum)]
+pub enum JsFallout4Version {
+    /// Original pre-Next-Gen version (1.10.163)
+    Original,
+    /// Next-Gen update version (1.10.984)
+    NextGen,
+    /// Anniversary Edition version (1.11.137+)
+    AnniversaryEdition,
+    /// Virtual Reality version (1.2.72)
+    #[napi(value = "VR")]
+    Vr,
+}
+
+/// Version metadata for a Fallout 4 variant.
+#[napi(object)]
+pub struct Fallout4VersionInfo {
+    /// Human-readable display name
+    pub name: String,
+    /// Steam App ID
+    pub steam_id: u32,
+    /// Whether this is a VR variant
+    pub is_vr: bool,
+    /// Game executable filename
+    pub exe_name: String,
+}
+
+fn js_to_core_fo4_version(v: &JsFallout4Version) -> Fallout4Version {
+    match v {
+        JsFallout4Version::Original => Fallout4Version::Original,
+        JsFallout4Version::NextGen => Fallout4Version::NextGen,
+        JsFallout4Version::AnniversaryEdition => Fallout4Version::AnniversaryEdition,
+        JsFallout4Version::Vr => Fallout4Version::Vr,
+    }
+}
+
+fn core_to_js_fo4_version(v: &Fallout4Version) -> JsFallout4Version {
+    match v {
+        Fallout4Version::Original => JsFallout4Version::Original,
+        Fallout4Version::NextGen => JsFallout4Version::NextGen,
+        Fallout4Version::AnniversaryEdition => JsFallout4Version::AnniversaryEdition,
+        Fallout4Version::Vr => JsFallout4Version::Vr,
+    }
 }
 
 // ============================================================================
@@ -256,6 +302,29 @@ fn log_level_to_string(log_level: &classic_version_registry_core::LogLevel) -> S
 pub fn get_version_by_id(id: String) -> Option<JsVersionInfo> {
     let registry = core_get_version_registry();
     registry.get_by_id(&id).map(core_version_info_to_js)
+}
+
+/// Get version metadata for a Fallout 4 variant.
+///
+/// Returns an object with `name`, `steamId`, `isVr`, and `exeName` fields.
+#[napi]
+pub fn get_fallout4_version_info(version: JsFallout4Version) -> Fallout4VersionInfo {
+    let core_version = js_to_core_fo4_version(&version);
+    Fallout4VersionInfo {
+        name: core_version.display_name().to_string(),
+        steam_id: core_version.steam_app_id(),
+        is_vr: core_version.is_vr(),
+        exe_name: core_version.exe_name().to_string(),
+    }
+}
+
+/// Get all Fallout 4 version variants.
+#[napi]
+pub fn get_all_fallout4_versions() -> Vec<JsFallout4Version> {
+    Fallout4Version::all()
+        .iter()
+        .map(core_to_js_fo4_version)
+        .collect()
 }
 
 /// Get version info by exact version string.

@@ -15,7 +15,6 @@ crate-type = ["cdylib", "rlib"]  # Both for Python and Rust usage
 # Business logic (pure Rust)
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
-classic-crashgen-settings-core = { path = "../../business-logic/classic-crashgen-settings-core" }
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 
 # Foundation

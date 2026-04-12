@@ -21,7 +21,12 @@ pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
 # Core settings cache business logic
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 
-# YAML parsing (needed for validate_settings_structure to parse raw strings)
+# Shared PyO3 helpers (PathLike, define_exceptions!, register_exceptions!, without_gil)
+# — mandatory dependency after folding in classic-yaml-py (plan 01-02 D-05/D-06)
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
+# YAML parsing (needed for validate_settings_structure to parse raw strings,
+# and for the YamlOperations <-> Python conversion helpers folded in from yaml-py)
 yaml-rust2 = { workspace = true }
 
 [lints.rust]

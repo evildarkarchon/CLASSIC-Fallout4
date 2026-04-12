@@ -5,7 +5,7 @@
 #include "workers/scanworker.h"
 
 #include "classic_cxx_bridge/files.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 #include "rust/cxx.h"
 
 #include <QCoreApplication>
@@ -27,16 +27,16 @@ QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& ga
     const QString localYamlPath = QDir(yamlData).filePath(QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
 
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
 
-        const QString xsePath = cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
+        const QString xsePath = cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
         if (!xsePath.isEmpty()) {
             return xsePath;
         }
 
         const QString docsRoot =
-            cleanDirectoryPath(classic::yaml::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
+            cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
         if (!docsRoot.isEmpty()) {
             return QDir(docsRoot).filePath(QStringLiteral("F4SE"));
         }

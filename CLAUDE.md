@@ -29,7 +29,8 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationT
 
 ```
 bun install && bun run build
-bun run parity:gate:local
+bun run parity:gate
+bun run parity:gate:update-baseline   # only when intentional source-backed drift must refresh the baseline
 bun run test:bun && bun run test:node
 ```
 
@@ -68,17 +69,17 @@ For module-specific instructions (e.g., `ClassicLib-rs/CLAUDE.md`, `classic-cli/
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**CLASSIC Codebase Health Milestone**
+**CLASSIC Crate Consolidation Milestone**
 
-A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase. Addresses all concerns surfaced during codebase mapping: tech debt removal, performance optimization, fragility hardening, security improvements, test coverage gaps, scaling limits, and missing binding features. The goal is a healthier, more maintainable codebase with no dead code, no silent legacy fallbacks, and consistent behavior across all binding surfaces (C++, Python, Node).
+The active milestone closes with a surviving 16-crate Rust business-logic workspace after the Phase 1 yaml/settings merge, Phase 2 crashgen/config merge, and Phase 3 constants redistribution. The Rust core, C++ bridge, Node bindings, and Python bindings all stay aligned against that post-merge topology with zero parity drift.
 
-**Core Value:** Every concern identified in the codebase audit is resolved — no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
+**Core Value:** The Rust workspace keeps minimal, well-bounded crates with no redundant boundaries, while all three binding surfaces stay in full parity with zero drift.
 
 ### Constraints
 
 - **Platform**: Native C++ targets are Windows-only (MSVC x64); Rust workspace is cross-platform at source level
 - **Runtime**: Single shared Tokio runtime — no new runtimes
-- **Bindings**: All binding changes must pass existing parity gates (`check_parity_gate.py` for Python, `parity:gate:local` for Node)
+- **Bindings**: All binding changes must pass the existing parity gates (`check_parity_gate.py` for Python and CXX, `bun run parity:gate` for Node; use `bun run parity:gate:update-baseline` only for intentional refreshes)
 - **Testing**: Use PowerShell build wrappers for C++ tests, never raw ctest
 - **Backwards compat**: Python FormID legacy map format gets deprecation warning first, not immediate removal
 <!-- GSD:project-end -->
@@ -94,6 +95,7 @@ A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setu
 ## Runtime
 - Windows-only native targets (MSVC x64); Rust workspace is cross-platform at source level but CI is Windows-only
 - Single shared Tokio async runtime — one runtime rule enforced project-wide (`classic-shared-core`)
+- The active Rust business-logic workspace now consists of 16 pure Rust crates after the yaml/settings merge, crashgen/config merge, and constants redistribution
 - Cargo (Rust workspace) — lockfile present at `ClassicLib-rs/Cargo.lock`
 - Bun (Node bindings) — lockfile present at `ClassicLib-rs/node-bindings/classic-node/bun.lockb`
 - uv (Python bindings) — venv at `ClassicLib-rs/python-bindings/.venv`
@@ -278,18 +280,18 @@ A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setu
 - Used by: every `-core` crate and every binding crate
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 19 pure Rust crates (see Crate Inventory below); no PyO3 dependencies
+- Contains: 16 pure Rust crates after the v9.1.0 consolidation work. ``yaml-core`` was absorbed into `classic-settings-core` in Phase 1, `classic-crashgen-settings-core` was absorbed into `classic-config-core` in Phase 2, and Phase 3 redistributed the retired constants crate across version-registry, settings, and shared.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 - Purpose: Expose Rust APIs to C++ via CXX FFI as a static library
 - Location: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
-- Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `yaml`, `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
+- Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `settings` (renamed from `yaml` in v9.1.0 Phase 1 and expanded with the D-09 settings-core cache ops and validators), `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
 - Depends on: all business-logic `-core` crates
 - Used by: `classic-cli/`, `classic-gui/`
 - Note: Windows-only (`#[cfg(windows)]` on all modules)
 - Purpose: Expose all `-core` APIs to Python via PyO3
 - Location: `ClassicLib-rs/python-bindings/`
-- Contains: 19 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`)
+- Contains: 17 crates mirroring the active Rust API owners (including `classic-shared-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1, and Phase 3 retired `classic-constants-py` by redistributing its wrappers into `classic-version-registry-py`, `classic-settings-py`, and `classic-shared-py`.
 - Depends on: corresponding `-core` crates + `foundation/classic-shared-py`
 - Used by: Python consumers; parity checked against Node bindings
 - Purpose: Expose all `-core` APIs to JavaScript/TypeScript via NAPI-RS

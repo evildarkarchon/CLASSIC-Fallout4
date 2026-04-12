@@ -31,14 +31,15 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 86,
-      "contractIdsHash": "caa0872bd3cb2417a7268ca285be40ce3c79d735f61e07e7b14c4078be98d167",
+      "contractCount": 107,
+      "contractIdsHash": "5979e7195066a913fd0e5e84f3eccd8fa335d994b09aa2c66d6a093f77a6e399",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
       "fixtureRefs": [
         "configSourceCases"
-      ]
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "coverageId": "node-tier1-version-registry",
@@ -49,8 +50,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 63,
-      "contractIdsHash": "4557a62a88102440b38e82beb51d4bd06f06e4dc5a2b81217fa620eae6a0449e",
+      "contractCount": 90,
+      "contractIdsHash": "c39fd2710c3a5600ae169d5431bf45c85f4e9bbd165c9bfe68dfa800d2562aed",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",
@@ -189,38 +190,6 @@
       "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     },
     {
-      "coverageId": "node-tier1-constants",
-      "classification": "runtime_verified",
-      "ownerModule": "constants",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "constants",
-        "tier": "tier1"
-      },
-      "contractCount": 30,
-      "contractIdsHash": "71f302477e6d1476d488c5d9df556a519a8c005e29712063f83955b7fa446970",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "constants-tier1-parity",
-      "fixtureRefs": []
-    },
-    {
-      "coverageId": "node-tier1-crashgen-settings",
-      "classification": "runtime_verified",
-      "ownerModule": "crashgen_settings",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "crashgen_settings",
-        "tier": "tier1"
-      },
-      "contractCount": 21,
-      "contractIdsHash": "9a8e9bbe4e846229f9b6698e73b6b65e8fe250868107c618ce8d381bee3a512d",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "crashgen-settings-tier1-parity",
-      "fixtureRefs": []
-    },
-    {
       "coverageId": "node-tier1-database",
       "classification": "runtime_verified",
       "ownerModule": "database",
@@ -341,8 +310,8 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 22,
-      "contractIdsHash": "24dc1501145175cea03f9bcbbd4e20ba551a856b01b5f686295db4f3428e6c6f",
+      "contractCount": 47,
+      "contractIdsHash": "2eb14033161d5a5fcc9422e4819f243e806ca890283e9a1f75e6c20edbadbf53",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "settings-tier1-parity",
@@ -357,8 +326,8 @@
         "ownerModule": "shared",
         "tier": "tier1"
       },
-      "contractCount": 15,
-      "contractIdsHash": "a3b7d35076a34e08da9a7874b33e7ed099a038c9bcf579d380f775864bf0b1dc",
+      "contractCount": 10,
+      "contractIdsHash": "bfa1ae2cc924496cd18147af3df554ce405813af2a183f1bf509e59467929b59",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "shared-tier1-parity",
@@ -378,22 +347,6 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "update-tier1-parity",
-      "fixtureRefs": []
-    },
-    {
-      "coverageId": "node-tier1-version",
-      "classification": "runtime_verified",
-      "ownerModule": "version",
-      "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "version",
-        "tier": "tier1"
-      },
-      "contractCount": 14,
-      "contractIdsHash": "8e913cf6db39f1b7e26002d264cb2b1e61be0afcdaadc6ecfd223f90bc461531",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-tier1-parity",
       "fixtureRefs": []
     },
     {
@@ -429,20 +382,23 @@
       "fixtureRefs": []
     },
     {
-      "coverageId": "node-tier1-yaml",
+      "coverageId": "node-tier1-version",
       "classification": "runtime_verified",
-      "ownerModule": "yaml",
+      "ownerModule": "version",
       "tier": "tier1",
       "contractSelector": {
-        "ownerModule": "yaml",
+        "ownerModule": "version",
         "tier": "tier1"
       },
-      "contractCount": 22,
-      "contractIdsHash": "3a9a9e21da34ac3d08b47cc2f642560a0d3427945e99772a31a9a81394cf4fce",
+      "contractCount": 13,
+      "contractIdsHash": "2a15a7f43ed86992b20f02983b8b652892bf1d3a2150167258e77fcd6fb86266",
       "verificationMode": "workflow_smoke",
       "testSuite": "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "yaml-tier1-parity",
-      "fixtureRefs": []
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
     }
   ]
 }

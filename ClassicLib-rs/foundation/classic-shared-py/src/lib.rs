@@ -27,6 +27,7 @@ use std::path::{Path, PathBuf};
 // Module declarations
 pub mod error_convert;
 pub mod exceptions;
+pub mod game_id;
 pub mod indexmap_utils;
 pub mod path;
 pub mod path_py;
@@ -323,6 +324,7 @@ pub fn is_runtime_healthy() -> bool {
 #[pymodule]
 fn classic_shared(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add utility classes
+    game_id::register(m)?;
     m.add_class::<PyStringProcessor>()?;
     m.add_class::<PyPathHandler>()?;
     m.add_class::<PyRustPerformanceMonitor>()?;

@@ -11,8 +11,7 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 
 [dependencies]
-# Constants and utilities
-classic-constants-core = { path = "../classic-constants-core" }
+# Path utilities
 classic-path-core = { path = "../classic-path-core" }
 
 # Error handling

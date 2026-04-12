@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 202,
-    "current_total": 202,
-    "matched": 202,
+    "contract_total": 333,
+    "current_total": 333,
+    "matched": 333,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -313,6 +313,14 @@
       "reason": "-"
     },
     {
+      "id": "97cec77a8d2e2e96",
+      "rustSymbol": "yaml_data_suspects_error_rules",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "2a710d36e6fa02c3",
       "rustSymbol": "yaml_data_suspects_error_values",
       "kind": "function",
@@ -321,8 +329,24 @@
       "reason": "-"
     },
     {
+      "id": "f24e4f874c362e59",
+      "rustSymbol": "yaml_data_suspects_stack_count_rules_for_id",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "c91ae72d650f0c51",
       "rustSymbol": "yaml_data_suspects_stack_keys",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0c519624cdf61bab",
+      "rustSymbol": "yaml_data_suspects_stack_rules_metadata",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -363,6 +387,30 @@
     {
       "id": "5be115198cf789f5",
       "rustSymbol": "CacheStats",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "326a5464aeff0639",
+      "rustSymbol": "SuspectErrorRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2462f4275406f47c",
+      "rustSymbol": "SuspectStackCountRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ed8cd7216e09c113",
+      "rustSymbol": "SuspectStackRuleMetadataDto",
       "kind": "struct",
       "bridgeModule": "config",
       "status": "matched",
@@ -425,8 +473,24 @@
       "reason": "-"
     },
     {
+      "id": "830b80633d19d947",
+      "rustSymbol": "db_pool_get_entries_batch_typed",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9429287d2a83b2c4",
       "rustSymbol": "db_pool_get_entry",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d9af7a7e92f0b398",
+      "rustSymbol": "db_pool_get_entry_typed",
       "kind": "function",
       "bridgeModule": "database",
       "status": "matched",
@@ -460,6 +524,14 @@
       "id": "dddc8330ff698837",
       "rustSymbol": "DbPool",
       "kind": "opaque",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "866877a98c3624dc",
+      "rustSymbol": "FormIdEntryDto",
+      "kind": "struct",
       "bridgeModule": "database",
       "status": "matched",
       "reason": "-"
@@ -929,6 +1001,166 @@
       "reason": "-"
     },
     {
+      "id": "12499068ea3118fb",
+      "rustSymbol": "backup_create_timestamped",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "31c8949e2bfdacaf",
+      "rustSymbol": "backup_list_existing",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "26c83f9c366e11ce",
+      "rustSymbol": "check_restricted_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "616cd4e4697c377e",
+      "rustSymbol": "detect_fallout4_docs_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bf56cb23a9a4c33b",
+      "rustSymbol": "detect_fallout4_game_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "250ec3783388f0b4",
+      "rustSymbol": "docs_checker_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ba316345b137172b",
+      "rustSymbol": "docs_checker_validate_ini_file",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ba8eea7df3e21c2f",
+      "rustSymbol": "find_game_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3e7173a2014af233",
+      "rustSymbol": "is_restricted_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "18b69f0fbebc68bc",
+      "rustSymbol": "is_valid_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b1292e6711b8c02f",
+      "rustSymbol": "parse_xse_log",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "67cdcd293768260c",
+      "rustSymbol": "path_validate_custom_scan",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "05e39e517d1d52d7",
+      "rustSymbol": "path_validate_exists",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "cda253fce9192d69",
+      "rustSymbol": "path_validate_is_directory",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "92a0085674e7c6c0",
+      "rustSymbol": "path_validate_is_file",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "cff13ceeb2ccbf58",
+      "rustSymbol": "path_validate_required_files",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2cd440ef71f6e18d",
+      "rustSymbol": "resolve_fallout4_exe_name",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5318454026bb9a08",
+      "rustSymbol": "validate_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0e07d936b2a180bb",
+      "rustSymbol": "IniCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d3107ca39007d3a7",
+      "rustSymbol": "mirroring",
+      "kind": "struct",
+      "bridgeModule": "path",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "1e32a6af317a1a05",
       "rustSymbol": "perf_clear_metrics",
       "kind": "function",
@@ -1105,6 +1337,166 @@
       "reason": "-"
     },
     {
+      "id": "7fcf8be2f8d9060d",
+      "rustSymbol": "CheckType",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d085560129c0184c",
+      "rustSymbol": "EnbConfigResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "730a860079a4d20b",
+      "rustSymbol": "EnbResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d0636e436245da31",
+      "rustSymbol": "IssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8ebe0b5d73b2d5a5",
+      "rustSymbol": "TomlIssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8cec4e60e88b3126",
+      "rustSymbol": "WryeSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c2d88f97e660941f",
+      "rustSymbol": "ba2_get_snd_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "69804ddb991c9894",
+      "rustSymbol": "ba2_get_tex_dims_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "063d86c932c21210",
+      "rustSymbol": "ba2_get_tex_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d0ad6e52f88a788d",
+      "rustSymbol": "ba2_get_xse_files_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6f8055797c607b03",
+      "rustSymbol": "ba2_scan_archive_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5fdd2c76ec1d62d2",
+      "rustSymbol": "crashgen_checker_check",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "74f4720eb2c3d9d1",
+      "rustSymbol": "crashgen_checker_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a0b7b74ca9eb8e4a",
+      "rustSymbol": "crashgen_orchestrator_check_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f79d6ed4a4843260",
+      "rustSymbol": "crashgen_orchestrator_get_installed_plugins",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "eec34db48beaf639",
+      "rustSymbol": "crashgen_orchestrator_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3579592d25c9540d",
+      "rustSymbol": "enb_checker_validate",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "67d52d0e3e5715b7",
+      "rustSymbol": "ini_validator_detect_all_issues_for_root",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dad771a5ac5d7783",
+      "rustSymbol": "ini_validator_validate_inis",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "164f9907a9bad5e6",
+      "rustSymbol": "integrity_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "faed7cbf67f0de2e",
       "rustSymbol": "needs_path_detection",
       "kind": "function",
@@ -1121,6 +1513,70 @@
       "reason": "-"
     },
     {
+      "id": "ee8ced5b5e4028bb",
+      "rustSymbol": "scangame_run_setup_structured",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ce2b902774c4ab1d",
+      "rustSymbol": "wrye_parse_html_rows",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ba593c60f4921ab7",
+      "rustSymbol": "Ba2IssuesSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f99d4f29385dda09",
+      "rustSymbol": "CrashgenCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1403d85def1ae0ef",
+      "rustSymbol": "CrashgenReportSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bf1aa3d058515301",
+      "rustSymbol": "EnbValidationResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8fd138371890a42d",
+      "rustSymbol": "IniConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ec3568d08ff543ed",
+      "rustSymbol": "IntegrityCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9affeedbb97074de",
       "rustSymbol": "PathDetectionNeeds",
       "kind": "struct",
@@ -1129,8 +1585,32 @@
       "reason": "-"
     },
     {
+      "id": "93d509b3d522de30",
+      "rustSymbol": "ScanGameSetupDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "cf8a6ea758229521",
       "rustSymbol": "SetupCheckResult",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "61815dc13da0e187",
+      "rustSymbol": "TomlConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "45d754712dfa50dc",
+      "rustSymbol": "WryeIssueRowDto",
       "kind": "struct",
       "bridgeModule": "scangame",
       "status": "matched",
@@ -1179,6 +1659,14 @@
     {
       "id": "eedb43b80d8bd4a9",
       "rustSymbol": "fcx_reset_global_state",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d7282dc5d5df26ac",
+      "rustSymbol": "get_fcx_config_issues",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1329,6 +1817,14 @@
       "reason": "-"
     },
     {
+      "id": "0ea85cd7a4b6a5fb",
+      "rustSymbol": "FcxIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "668e1b029522e8b3",
       "rustSymbol": "PapyrusStatsDto",
       "kind": "struct",
@@ -1341,6 +1837,350 @@
       "rustSymbol": "ScanResult",
       "kind": "struct",
       "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "944ab5475ec76ef8",
+      "rustSymbol": "YamlFile",
+      "kind": "enum",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "471dfac358240ff7",
+      "rustSymbol": "must_not_be_none_key",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0b5a4ad5368e8a02",
+      "rustSymbol": "settings_cache_keys",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8157906174d19c79",
+      "rustSymbol": "settings_cache_size",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a514d3953ef4f930",
+      "rustSymbol": "settings_cache_stats",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "311251adf834665c",
+      "rustSymbol": "settings_clear_cache",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e31a74d851e93942",
+      "rustSymbol": "settings_coerce_value",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b303f68008e43f3e",
+      "rustSymbol": "settings_ignore_none_contains",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4564cea4680b2678",
+      "rustSymbol": "settings_invalidate",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8ae656d87f7c75d9",
+      "rustSymbol": "settings_is_cached",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ae510a6e96cf2b0e",
+      "rustSymbol": "settings_load_async_blocking",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "84fee06859b0a2af",
+      "rustSymbol": "settings_load_batch_async_blocking",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ccf2092ef6a7af97",
+      "rustSymbol": "settings_load_batch_sync",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8a23d6d46fbc41e8",
+      "rustSymbol": "settings_load_sync",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "914acb0d0c76351f",
+      "rustSymbol": "settings_reset_cache_stats",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5907231f4215f1a4",
+      "rustSymbol": "settings_validate_structure",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "727754cf675669f7",
+      "rustSymbol": "settings_validate_value",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "867131bd442e6121",
+      "rustSymbol": "yaml_file_as_str",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "580f6717bd5ba7bb",
+      "rustSymbol": "yaml_file_description",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6d0d03498a2bb1b0",
+      "rustSymbol": "yaml_ops_cache_size",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "219c62a477ca8380",
+      "rustSymbol": "yaml_ops_cache_stats",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5896777bf0f69809",
+      "rustSymbol": "yaml_ops_clear_cache",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dbdde37b38282be1",
+      "rustSymbol": "yaml_ops_dump",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c269a555b9dde1d8",
+      "rustSymbol": "yaml_ops_get_setting_value",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b2f3b4c4f10970ef",
+      "rustSymbol": "yaml_ops_get_string",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5decd278e9b58daf",
+      "rustSymbol": "yaml_ops_get_vec",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "96ca042960ccb2c9",
+      "rustSymbol": "yaml_ops_has_document",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f457a8a59811bca3",
+      "rustSymbol": "yaml_ops_load_file",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3e9ed67ac8950a25",
+      "rustSymbol": "yaml_ops_new",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3ebf1fc5db56922e",
+      "rustSymbol": "yaml_ops_parse",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "94a2e92d425a7c4b",
+      "rustSymbol": "yaml_ops_save_file",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4138a9eeef265811",
+      "rustSymbol": "yaml_ops_set_bool_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1794e03a2a355763",
+      "rustSymbol": "yaml_ops_set_integer_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1949aadb1704dc02",
+      "rustSymbol": "yaml_ops_set_string_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "377caa356b71e76d",
+      "rustSymbol": "yaml_ops_set_vec_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4c363ee3786a32b3",
+      "rustSymbol": "YamlOps",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "310d1c205c55a783",
+      "rustSymbol": "SettingsCacheStats",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f78d79a6ed011c75",
+      "rustSymbol": "SettingsCoercedValue",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "17a8395468c3cef5",
+      "rustSymbol": "SettingsValidationIssue",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2aebfbea63f0f869",
+      "rustSymbol": "YamlCacheStatsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "24c217dbe9791c8b",
+      "rustSymbol": "YamlValue",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d04a85fb7225176b",
+      "rustSymbol": "GameId",
+      "kind": "enum",
+      "bridgeModule": "shared",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e5c87d8b488cc983",
+      "rustSymbol": "game_id_as_str",
+      "kind": "function",
+      "bridgeModule": "shared",
       "status": "matched",
       "reason": "-"
     },
@@ -1473,154 +2313,362 @@
       "reason": "-"
     },
     {
-      "id": "981bdd021e6e927f",
-      "rustSymbol": "yaml_ops_cache_size",
+      "id": "b44331b1502123ea",
+      "rustSymbol": "Fallout4Version",
+      "kind": "enum",
+      "bridgeModule": "version_registry",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5dae9f5dc26da915",
+      "rustSymbol": "fallout4_version_as_str",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "e423b9842d46091c",
-      "rustSymbol": "yaml_ops_cache_stats",
+      "id": "3a21b9406bb4c3cf",
+      "rustSymbol": "fallout4_version_docs_folder_name",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "0a705fed10c06ff8",
-      "rustSymbol": "yaml_ops_clear_cache",
+      "id": "3dfc84f544e66a6b",
+      "rustSymbol": "fallout4_version_exe_name",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "4e22f23ae0d8563f",
-      "rustSymbol": "yaml_ops_dump",
+      "id": "48a6955582f0fca2",
+      "rustSymbol": "fallout4_version_is_standard",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "b1596baa6db11734",
-      "rustSymbol": "yaml_ops_get_setting_value",
+      "id": "e8b952340bdccfbf",
+      "rustSymbol": "fallout4_version_is_vr",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "7392fedce63920d8",
-      "rustSymbol": "yaml_ops_get_string",
+      "id": "6ae0917b1c2a9661",
+      "rustSymbol": "fallout4_version_registry_id",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "1609d5a61957bd35",
-      "rustSymbol": "yaml_ops_get_vec",
+      "id": "9c9e99ae498e0e45",
+      "rustSymbol": "fallout4_version_steam_app_id",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "0947fd94c1b93d48",
-      "rustSymbol": "yaml_ops_has_document",
+      "id": "76de962f36a6993c",
+      "rustSymbol": "is_null_version",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "c752d32d4c97a32f",
-      "rustSymbol": "yaml_ops_load_file",
+      "id": "9d82340dd1a34d6b",
+      "rustSymbol": "parse_game_version",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "66d6a068a36d6388",
-      "rustSymbol": "yaml_ops_new",
+      "id": "c982b74740f8ee3d",
+      "rustSymbol": "version_registry_get_all_count",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "86ad82a55b555b3f",
-      "rustSymbol": "yaml_ops_parse",
+      "id": "3837aef1f9dcf5d3",
+      "rustSymbol": "version_registry_get_all_for_game",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "2ad517f0593b06ad",
-      "rustSymbol": "yaml_ops_save_file",
+      "id": "adebe347a211dda5",
+      "rustSymbol": "version_registry_get_all_ids",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "01268eaa986eef0a",
-      "rustSymbol": "yaml_ops_set_bool_setting",
+      "id": "931c3651f7130049",
+      "rustSymbol": "version_registry_get_by_id",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "5398d2c4d0b25cdc",
-      "rustSymbol": "yaml_ops_set_integer_setting",
+      "id": "a2cca2c61a1dfd3a",
+      "rustSymbol": "version_registry_get_crashgen_config",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "73701018d3695e7d",
-      "rustSymbol": "yaml_ops_set_string_setting",
+      "id": "768bf40c78fc5667",
+      "rustSymbol": "version_registry_get_crashgen_configs",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "26d4ba5c561a7aa5",
-      "rustSymbol": "yaml_ops_set_vec_setting",
+      "id": "c9980a87fd7f20d4",
+      "rustSymbol": "version_registry_get_xse_config",
       "kind": "function",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "2a170c94152047d7",
-      "rustSymbol": "YamlOps",
-      "kind": "opaque",
-      "bridgeModule": "yaml",
+      "id": "647471140dada0d8",
+      "rustSymbol": "version_registry_match_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "812b4f37ec6b63dd",
-      "rustSymbol": "CacheStats",
+      "id": "a3896f08d956320e",
+      "rustSymbol": "CrashgenConfigDto",
       "kind": "struct",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "b4a33d14f7fb9d34",
-      "rustSymbol": "YamlValue",
+      "id": "69f123ef2717bdbe",
+      "rustSymbol": "GameVersionDto",
       "kind": "struct",
-      "bridgeModule": "yaml",
+      "bridgeModule": "version_registry",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "008b083968da62f2",
+      "rustSymbol": "MatchResultDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "aa5ac3996d1f24e9",
+      "rustSymbol": "VersionInfoDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6e53840a0f9ef5b7",
+      "rustSymbol": "XseConfigDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "56c2a9c53f62ef8b",
+      "rustSymbol": "ModSite",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7aefe345782399f3",
+      "rustSymbol": "WebGameId",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b9ec3ba45bfbad24",
+      "rustSymbol": "extract_domain_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0950f5414356da6a",
+      "rustSymbol": "is_valid_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7d9536f46f7a602a",
+      "rustSymbol": "mod_site_base_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0474e9d9d4c830e0",
+      "rustSymbol": "mod_site_game_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1c07ae6197b62a4e",
+      "rustSymbol": "mod_site_name",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "18ea0cfdb5e17d7f",
+      "rustSymbol": "validate_url_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e2dce70adc9aba7a",
+      "rustSymbol": "web_build_url_with_query",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "746d496c15af12af",
+      "rustSymbol": "web_get_user_agent",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5920a39e7197ac87",
+      "rustSymbol": "web_get_user_agent_with_suffix",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3f5f11c3df34c621",
+      "rustSymbol": "web_join_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7c4723bac8969140",
+      "rustSymbol": "XseType",
+      "kind": "enum",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2396a15798a0b0b7",
+      "rustSymbol": "detect_xse_version",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ecd913c0bf62192f",
+      "rustSymbol": "detect_xse_version_string",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "622499dfe357e2f2",
+      "rustSymbol": "is_xse_installed",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "866ec46b5dbb24ca",
+      "rustSymbol": "is_xse_installed_check",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fed1f3c1692a2596",
+      "rustSymbol": "xse_get_dll_prefix",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d7059d6d8a7ad764",
+      "rustSymbol": "xse_get_info",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fc1c537a29272570",
+      "rustSymbol": "xse_get_loader_name",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "faedc73b20514c24",
+      "rustSymbol": "xse_get_type_from_game_id",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3fea903f299b7e61",
+      "rustSymbol": "XseInfoDto",
+      "kind": "struct",
+      "bridgeModule": "xse",
       "status": "matched",
       "reason": "-"
     }

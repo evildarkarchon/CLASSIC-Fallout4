@@ -18,7 +18,7 @@
 
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/update.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 #include "rust/cxx.h"
 
 
@@ -254,11 +254,11 @@ void SettingsDialog::loadSettings()
 
     QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         // General - Game Version
-        auto gameVersion = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
+        auto gameVersion = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
         QString gv = classic::toQString(gameVersion);
         if (gv == QStringLiteral("Original"))
             m_comboGameVersion->setCurrentIndex(1);
@@ -273,7 +273,7 @@ void SettingsDialog::loadSettings()
 
         // Scanning booleans
         auto getBool = [&](const char* key) -> bool {
-            auto val = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            auto val = classic::settings::yaml_ops_get_setting_value(*ops, key);
             return val.value_type == "bool" && val.value == "true";
         };
 
@@ -284,7 +284,7 @@ void SettingsDialog::loadSettings()
         m_chkAutoSwitchAfterScan->setChecked(getBool("CLASSIC_Settings.Auto Switch After Scan"));
 
         // Max Concurrent Scans
-        auto maxScans = classic::yaml::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Max Concurrent Scans");
+        auto maxScans = classic::settings::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Max Concurrent Scans");
         if (maxScans.value_type == "integer") {
             bool ok = false;
             int val = QString::fromStdString(std::string(maxScans.value)).toInt(&ok);
@@ -293,12 +293,12 @@ void SettingsDialog::loadSettings()
         }
 
         // Paths - Game Folder + INI Folder
-        auto gameFolder = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
+        auto gameFolder = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
         if (!gameFolder.empty() && m_editGameFolder) {
             m_editGameFolder->setText(classic::toQString(gameFolder));
         }
 
-        auto iniFolder = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
+        auto iniFolder = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
         if (!iniFolder.empty()) {
             m_editIniFolder->setText(classic::toQString(iniFolder));
         }
@@ -306,7 +306,7 @@ void SettingsDialog::loadSettings()
         // FormID Databases (game-specific key)
         auto game = classic::registry::registry_get_game();
         std::string dbKey = "CLASSIC_Settings.FormID Databases." + std::string(game);
-        auto dbs = classic::yaml::yaml_ops_get_vec(*ops, dbKey);
+        auto dbs = classic::settings::yaml_ops_get_vec(*ops, dbKey);
         m_listFormIdDbs->clear();
         for (const auto& db : dbs) {
             m_listFormIdDbs->addItem(classic::toQString(db));
@@ -330,37 +330,37 @@ void SettingsDialog::saveSettings()
 
     QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
         // General - Game Version
         static const char* gameVersionStrings[] = {"auto", "Original", "NextGen", "AnniversaryEdition", "VR"};
         int idx = m_comboGameVersion->currentIndex();
         if (idx >= 0 && idx <= 4) {
-            classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Version", gameVersionStrings[idx]);
+            classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Version", gameVersionStrings[idx]);
         }
 
         // Scanning booleans
-        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.FCX Mode", m_chkFcxMode->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Simplify Logs",
+        classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.FCX Mode", m_chkFcxMode->isChecked());
+        classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Simplify Logs",
                                                  m_chkSimplifyLogs->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Show FormID Values",
+        classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Show FormID Values",
                                                  m_chkShowFormIdValues->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Move Unsolved Logs",
+        classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Move Unsolved Logs",
                                                  m_chkMoveUnsolvedLogs->isChecked());
-        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Auto Switch After Scan",
+        classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Auto Switch After Scan",
                                                  m_chkAutoSwitchAfterScan->isChecked());
 
         // Max Concurrent Scans
-        classic::yaml::yaml_ops_set_integer_setting(*ops, "CLASSIC_Settings.Max Concurrent Scans",
+        classic::settings::yaml_ops_set_integer_setting(*ops, "CLASSIC_Settings.Max Concurrent Scans",
                                                     static_cast<int64_t>(m_spinMaxConcurrentScans->value()));
 
         // Paths - Game Folder + INI Folder
         auto gameText = m_editGameFolder ? QDir::cleanPath(m_editGameFolder->text().trimmed()) : QString();
-        classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
+        classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
                                                    std::string(gameText.toUtf8().constData()));
 
-        auto gameExePath = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
+        auto gameExePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
         QString exePath = gameExePath.empty() ? QString() : QDir::cleanPath(classic::toQString(gameExePath).trimmed());
 
         bool shouldResetExePath = false;
@@ -377,12 +377,12 @@ void SettingsDialog::saveSettings()
 
         if (shouldResetExePath) {
             const QString defaultExe = QDir::cleanPath(gameText + QStringLiteral("/Fallout4.exe"));
-            classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
+            classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
                                                        std::string(defaultExe.toUtf8().constData()));
         }
 
         auto iniText = m_editIniFolder->text();
-        classic::yaml::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
+        classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
                                                    std::string(iniText.toUtf8().constData()));
 
         // FormID Databases (game-specific key)
@@ -393,13 +393,13 @@ void SettingsDialog::saveSettings()
             auto text = m_listFormIdDbs->item(i)->text();
             dbVec.push_back(rust::String(std::string(text.toUtf8().constData())));
         }
-        classic::yaml::yaml_ops_set_vec_setting(*ops, dbKey, std::move(dbVec));
+        classic::settings::yaml_ops_set_vec_setting(*ops, dbKey, std::move(dbVec));
 
         // Updates
-        classic::yaml::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Update Check", m_chkUpdateCheck->isChecked());
+        classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Update Check", m_chkUpdateCheck->isChecked());
 
         // Save to disk
-        classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
     } catch (const std::exception& e) {
         QMessageBox::warning(this, QStringLiteral("Settings Error"),
