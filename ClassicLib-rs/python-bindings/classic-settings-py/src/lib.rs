@@ -18,6 +18,8 @@ use pyo3::types::{PyDict, PyList};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+mod yaml_file;
+
 // ============================================================================
 // Exception hierarchy (folded in from classic-yaml-py — D-06)
 // ============================================================================
@@ -748,6 +750,7 @@ fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // YAML operations class (folded in from classic-yaml-py)
     m.add_class::<PyYamlOperations>()?;
+    yaml_file::register(m)?;
 
     // Module-level YAML helpers (folded in from classic-yaml-py)
     m.add_function(wrap_pyfunction!(clear_global_yaml_cache, m)?)?;

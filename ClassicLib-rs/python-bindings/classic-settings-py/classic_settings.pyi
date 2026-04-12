@@ -36,6 +36,7 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 __version__: str
+SETTINGS_IGNORE_NONE: list[str]
 
 # ----------------------------------------------------------------------------
 # YAML exception hierarchy (folded in from classic-yaml-py per plan 01-02 D-06)
@@ -72,6 +73,23 @@ class SettingsCacheStats(TypedDict):
     size: int
     capacity: int
 
+class YamlFile:
+    Main: YamlFile
+    Settings: YamlFile
+    Ignore: YamlFile
+    Game: YamlFile
+    GameLocal: YamlFile
+    Test: YamlFile
+    Cache: YamlFile
+
+    def as_str(self) -> str: ...
+    def description(self) -> str: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __hash__(self) -> int: ...
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
+
+def must_not_be_none(key: str) -> bool: ...
 def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings synchronously.
 
@@ -380,7 +398,6 @@ def coerce_setting_value(value: str, target_type: str) -> Any:
         3.14
 
     """
-
 
 # ============================================================================
 # YAML operations (folded in from classic-yaml-py per plan 01-02 D-05/D-06)
