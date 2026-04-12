@@ -263,7 +263,7 @@ The main source-visible flows are:
 ## Documents-path flow
 
 1. Construct `DocsPathFinder` with a game-relative documents suffix such as `My Games\\Fallout4`.
-2. Optionally call `.with_steam_app_id(app_id)` to opt in to a Steam/Proton documents path lookup on Linux (for Fallout 4, pass `377160` or use `Fallout4Version::Original.steam_app_id()` from `classic-constants-core`).
+2. Optionally call `.with_steam_app_id(app_id)` to opt in to a Steam/Proton documents path lookup on Linux (for Fallout 4, pass `377160` or use `Fallout4Version::Original.steam_app_id()` from `classic-version-registry-core`).
 3. Call `find_docs_path(cached_path)`.
 4. The crate tries the cached path first.
 5. It then falls back to:

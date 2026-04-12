@@ -25,7 +25,7 @@
 **Business Logic (-core crates):**
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 17 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core` (19 -> 18). **v9.1.0 Phase 2 merge:** the former `classic-crashgen-settings-core` crate was absorbed into `classic-config-core` (rule model now at `classic_config_core::crashgen_rules::*`), 18 -> 17.
+- Contains: 16 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core` (19 -> 18). **v9.1.0 Phase 2 merge:** the former `classic-crashgen-settings-core` crate was absorbed into `classic-config-core` (18 -> 17). **Phase 3 redistribution:** the former constants surface moved into `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core` (17 -> 16).
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 

@@ -87,7 +87,7 @@ Important methods and traits:
 Behavior worth knowing:
 
 - `FromStr` is case-insensitive because it uppercases the input before matching
-- `from_game_id()` maps `GameId::Skyrim` to `SKSE64`; there is no separate `GameId` variant for classic Skyrim or Skyrim VR in `classic-constants-core`
+- `from_game_id()` maps `GameId::Skyrim` to `SKSE64`; there is no separate `GameId` variant for classic Skyrim or Skyrim VR in `classic-shared-core`
 - loader and DLL naming are hardcoded by enum variant, for example `F4SE -> f4se_loader.exe` and `f4se_`
 
 ## `XseInfo`
@@ -235,7 +235,7 @@ Contributor note:
 
 Important direct dependencies:
 
-- `classic-constants-core` - provides `GameId` for `XseType::from_game_id()`
+- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()`
 - `classic-version-core` - provides the re-exported version parsing/comparison helpers used by `detect_xse_version()`
 - `classic-path-core` - currently visible only through `XseError::PathError`
 - `semver` - `XseInfo.version` and `detect_xse_version()` return type
@@ -257,7 +257,7 @@ Related CLASSIC crates and consumers:
 This example follows the real public API and shows the common contributor pattern: derive the XSE family from a game, check presence, then request the combined info payload.
 
 ```rust
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use classic_xse_core::{XseType, get_xse_info, is_xse_installed};
 use std::path::Path;
 

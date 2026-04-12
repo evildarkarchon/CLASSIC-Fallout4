@@ -47,6 +47,8 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 
 ## Version and matching types
 
+- `NULL_VERSION` - semver `0.0.0` sentinel used by consumers that need a null/invalid version marker
+- `Fallout4Version` - contributor-facing Fallout 4 version-family enum backed by Version Registry lookups
 - `GameVersion` - 4-component game version type used throughout the crate
 - `VersionMatcher` - explicit matcher wrapper over a `VersionRegistry`
 - `MatchResult` - result payload for a version match attempt
@@ -68,6 +70,56 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 ---
 
 ## Public API Surface
+
+## `NULL_VERSION`
+
+`NULL_VERSION` is a plain root-level `semver::Version` constant with value `0.0.0`.
+
+Contributor note:
+
+- it is a sentinel only; it does not change registry behavior on its own
+- downstream crates such as [`classic-version-core`](classic-version-core.md) re-export it directly from this crate now that the dedicated constants crate is gone
+
+## `Fallout4Version`
+
+`Fallout4Version` is the crate's contributor-facing enum for Fallout 4 release families.
+
+Variants:
+
+- `Original`
+- `NextGen`
+- `AnniversaryEdition`
+- `Vr`
+
+Important methods and traits:
+
+- `registry_id() -> &'static str`
+- `get_version_info() -> Option<&'static VersionInfo>`
+- `is_vr() -> bool`
+- `is_standard() -> bool`
+- `exe_name() -> &'static str`
+- `docs_folder_name() -> &'static str`
+- `steam_app_id() -> u32`
+- `game_version() -> GameVersion`
+- `version_semver() -> semver::Version`
+- `xse_acronym() -> &'static str`
+- `xse_acronym_string() -> String`
+- `display_name() -> &'static str`
+- `display_name_string() -> String`
+- `short_name() -> &'static str`
+- `as_str() -> &'static str`
+- `all() -> [Fallout4Version; 4]`
+- `address_library() -> Option<&'static AddressLibraryConfig>`
+- `xse_config() -> Option<&'static XseConfig>`
+- `Serialize`, `Deserialize`, `Default`, `Display`, `FromStr`, `Clone`, `Copy`, `Hash`
+
+Behavior worth knowing:
+
+- `get_version_info()` delegates to `get_version_registry().get_by_id(...)`
+- `game_version()`, `address_library()`, and `xse_config()` all depend on a registry entry being available
+- `exe_name()`, `docs_folder_name()`, and `steam_app_id()` are still convenience mappings derived from VR/non-VR status rather than registry YAML
+- `version_semver()` drops the fourth game-version component because `semver::Version` is three-part
+- `FromStr` accepts the contributor-facing aliases `og`, `ng`, `ae`, `vr`, `auto`, and the documented version-string shortcuts
 
 ## `GameVersion`
 

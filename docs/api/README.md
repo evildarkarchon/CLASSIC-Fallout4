@@ -13,8 +13,7 @@ Use this directory in this order:
 5. [`classic-message-core.md`](classic-message-core.md) - shared message DTOs, routing enums, and startup/log formatting helpers
 6. [`classic-settings-core.md`](classic-settings-core.md) - shared YAML stream parse/merge helpers, settings cache and sync/async loaders, plus the absorbed `YamlOperations` path-backed cache, merge-key resolver, and validator surface
 7. [`classic-version-registry-core.md`](classic-version-registry-core.md) - version registry and OG/NG/AE/VR selection metadata
-8. [`classic-constants-core.md`](classic-constants-core.md) - shared game/version/YAML identifiers and small convenience enums
-9. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers
+8. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers plus direct Version Registry re-exports
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer
 11. [`classic-update-core.md`](classic-update-core.md) - async GitHub release/update-check client and DTO layer
 12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
@@ -48,8 +47,9 @@ That order matches the current layering in `ClassicLib-rs/business-logic/`:
 - `classic-registry-core` provides process-wide typed singleton storage and key helpers for callers that share state across boundaries
 - `classic-message-core` provides shared message DTOs, routing enums, and structured/startup logging helpers used by bindings and bridge code
 - `classic-settings-core` provides shared YAML stream parsing/merge helpers, raw settings loading, a sync/async cache layer keyed by caller-chosen strings, AND the absorbed path-backed `YamlOperations` file cache with mtime-based invalidation (merged from the former ``yaml-core`` crate during the v9.1.0 Phase 1 consolidation)
-- `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers
-- `classic-constants-core` provides small shared enums/constants that higher layers use to label games, YAML files, and Fallout 4 mode selections
+- `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers, and now owns the contributor-facing `Fallout4Version` / `NULL_VERSION` surface that used to live in the retired constants crate
+- `classic-shared-core` also owns the shared `GameId` enum used across bridge, web, and setup flows
+- `classic-settings-core` also owns `YamlFile`, `SETTINGS_IGNORE_NONE`, and `must_not_be_none()` alongside its YAML/cache helpers
 - `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime

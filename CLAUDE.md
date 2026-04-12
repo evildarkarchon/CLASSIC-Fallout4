@@ -68,11 +68,11 @@ For module-specific instructions (e.g., `ClassicLib-rs/CLAUDE.md`, `classic-cli/
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**CLASSIC Codebase Health Milestone**
+**CLASSIC Crate Consolidation Milestone**
 
-A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) codebase. Addresses all concerns surfaced during codebase mapping: tech debt removal, performance optimization, fragility hardening, security improvements, test coverage gaps, scaling limits, and missing binding features. The goal is a healthier, more maintainable codebase with no dead code, no silent legacy fallbacks, and consistent behavior across all binding surfaces (C++, Python, Node).
+The active milestone reduces workspace granularity by merging or redistributing redundant crates while keeping the Rust core, C++ bridge, Node bindings, and Python bindings in parity. Phase 3 specifically redistributes the retired constants surface across `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core` with zero behavioral drift.
 
-**Core Value:** Every concern identified in the codebase audit is resolved — no silent legacy paths, no dead code, no unbounded caches, and all binding surfaces expose consistent, complete APIs.
+**Core Value:** The Rust workspace keeps minimal, well-bounded crates with no redundant boundaries, while all three binding surfaces stay in full parity with zero drift.
 
 ### Constraints
 
@@ -278,7 +278,7 @@ A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setu
 - Used by: every `-core` crate and every binding crate
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
 - Location: `ClassicLib-rs/business-logic/`
-- Contains: 17 pure Rust crates (see Crate Inventory below); no PyO3 dependencies. **v9.1.0 Phase 1 merge:** ``yaml-core`` was absorbed into `classic-settings-core`, reducing the business-logic crate count from 19 to 18; **v9.1.0 Phase 2 merge:** the former `classic-crashgen-settings-core` crate was absorbed into `classic-config-core` (its rule model now lives at `classic_config_core::crashgen_rules::*`), further reducing the count from 18 to 17.
+- Contains: 16 pure Rust crates after the v9.1.0 consolidation work. ``yaml-core`` was absorbed into `classic-settings-core` in Phase 1, `classic-crashgen-settings-core` was absorbed into `classic-config-core` in Phase 2, and Phase 3 redistributed the retired constants crate across version-registry, settings, and shared.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 - Purpose: Expose Rust APIs to C++ via CXX FFI as a static library
@@ -289,7 +289,7 @@ A comprehensive cleanup milestone for the CLASSIC (Crash Log Auto Scanner & Setu
 - Note: Windows-only (`#[cfg(windows)]` on all modules)
 - Purpose: Expose all `-core` APIs to Python via PyO3
 - Location: `ClassicLib-rs/python-bindings/`
-- Contains: 18 crates mirroring each business-logic crate (e.g., `classic-scanlog-py`, `classic-config-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1; its `YamlOperations` surface is now part of `classic-settings-py`.
+- Contains: 17 crates mirroring the active Rust API owners (including `classic-shared-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1, and Phase 3 retired `classic-constants-py` by redistributing its wrappers into `classic-version-registry-py`, `classic-settings-py`, and `classic-shared-py`.
 - Depends on: corresponding `-core` crates + `foundation/classic-shared-py`
 - Used by: Python consumers; parity checked against Node bindings
 - Purpose: Expose all `-core` APIs to JavaScript/TypeScript via NAPI-RS

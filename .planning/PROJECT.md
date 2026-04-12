@@ -7,7 +7,7 @@
 **Target features:**
 - Merge `classic-yaml-core` into `classic-settings-core` (unify YAML loading/caching)
 - Merge `classic-crashgen-settings-core` into `classic-config-core` (absorb single-consumer rule model)
-- Redistribute `classic-constants-core` across `classic-version-registry-core` (Fallout4Version, NULL_VERSION), `classic-settings-core` (YamlFile, settings constants), and `classic-shared-core` (GameId) by semantic domain
+- Redistribute constants ownership across `classic-version-registry-core` (Fallout4Version, NULL_VERSION), `classic-settings-core` (YamlFile, settings constants), and `classic-shared-core` (GameId) by semantic domain
 - Update all binding crates (C++, Node, Python) for changed import paths
 - All three parity gates (CXX, Python, Node) pass at zero drift after consolidation
 
@@ -27,7 +27,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Single shared Tokio runtime (ONE RUNTIME RULE) — existing
 - ✓ C++, Python, and Node.js binding surfaces delegating to `-core` crates — existing
 - ✓ Windows-native C++ frontends (CLI + Qt GUI) via CXX bridge — existing
-- ✓ 17 business-logic `-core` crates with no PyO3 dependencies — v9.1.0-consolidation Phases 1 and 2 (started at 19, yaml-core merged in Phase 1 -> 18, crashgen-settings-core merged in Phase 2 -> 17)
+- ✓ 16 business-logic `-core` crates with no PyO3 dependencies — v9.1.0-consolidation Phases 1-3 (started at 19, yaml-core merged in Phase 1 -> 18, crashgen-settings-core merged in Phase 2 -> 17, constants-core redistributed in Phase 3 -> 16)
 - ✓ Parity tooling for Node and Python bindings — existing
 - ✓ All deprecated API callers migrated with deprecation warnings — v9.1.0-bugfixes Phase 1
 - ✓ Phase 1 deprecated API migration closure evidence refreshed — v9.1.0-bugfixes Phase 9
@@ -67,7 +67,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 
 ### Active
 
-- [ ] Redistribute classic-constants-core across version-registry-core, settings-core, and shared-core
+- [ ] Redistribute constants ownership across version-registry-core, settings-core, and shared-core
 - [ ] Update all binding crates for changed import paths
 - [ ] All three parity gates pass at zero drift after consolidation
 

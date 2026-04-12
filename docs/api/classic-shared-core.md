@@ -45,6 +45,7 @@ This crate exposes both root-level items and public modules.
 - `get_runtime() -> &'static tokio::runtime::Runtime` - the shared runtime entry point used across CLASSIC
 - `RuntimeConfig` - runtime builder configuration helper used internally and available for advanced callers building their own `tokio::runtime::Builder`
 - `ClassicError`, `ClassicResult`, `IntoClassicError` - re-exported common error API from `errors`
+- `GameId` - shared supported-game enum used across setup, web, registry-state, and binding-facing flows
 
 ## Public modules
 
@@ -89,6 +90,35 @@ Important layout note: `path_core`, `performance_core`, and `strings_core` are p
 ## Public API Surface
 
 ## Shared runtime API
+
+## `GameId`
+
+`GameId` is the shared game-identity enum used across the workspace.
+
+Variants:
+
+- `Fallout4`
+- `Fallout4VR`
+- `Skyrim`
+- `Starfield`
+
+Important methods and traits:
+
+- `as_str() -> &'static str`
+- `exe_name() -> &'static str`
+- `is_vr() -> bool`
+- `all() -> [GameId; 4]`
+- `Display`, `FromStr`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
+
+Behavior worth knowing:
+
+- `exe_name()` hardcodes the expected executable per supported game
+- `is_vr()` is only true for `Fallout4VR`
+- `FromStr` is exact and case-sensitive; it accepts only the variant names shown above
+
+Contributor note:
+
+- `GameId` moved into the foundation layer during Phase 3 so setup, path, web, XSE, bridge, and binding layers can share game identity without depending on a retired constants crate
 
 ## `get_runtime()`
 

@@ -52,6 +52,9 @@ This crate exposes most of its API from the crate root and one public module.
 - `SettingsError`, `Result<T>` - crate error type and alias
 - `SettingsSource` - distinguishes path-backed and label-backed parse sources
 - `Yaml` - re-export of `yaml_rust2::Yaml`
+- `YamlFile` - type-safe identifiers for CLASSIC YAML/config files
+- `SETTINGS_IGNORE_NONE` - settings keys that must not be stored as `None`
+- `must_not_be_none()` - convenience membership check over `SETTINGS_IGNORE_NONE`
 - loader functions:
   - `parse_yaml_content(source, content)`
   - `merge_yaml_documents(source, docs)`
@@ -107,6 +110,50 @@ Helpers and conversions:
 - `label() -> Option<&str>` returns the label only for `Label`
 - `From<PathBuf>`, `From<&Path>`, `From<String>`, and `From<&str>` are implemented
 - `Display` prints the filesystem path or label text used in error messages
+
+## `YamlFile`
+
+`YamlFile` is the contributor-facing enum for CLASSIC YAML file roles.
+
+Variants:
+
+- `Main`
+- `Settings`
+- `Ignore`
+- `Game`
+- `GameLocal`
+- `Test`
+- `Cache`
+
+Important methods and traits:
+
+- `as_str() -> &'static str`
+- `description() -> &'static str`
+- `all() -> [YamlFile; 7]`
+- `Display`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
+
+Contributor note:
+
+- this enum labels file roles only; it does not build real paths
+- it moved here from the retired constants crate because the enum is part of the settings domain rather than the version domain
+
+## `SETTINGS_IGNORE_NONE` and `must_not_be_none()`
+
+`SETTINGS_IGNORE_NONE` is the shared slice of settings keys that must not be persisted as `None`.
+
+Current keys:
+
+- `SCAN Custom Path`
+- `MODS Folder Path`
+- `INI Folder Path`
+- `Root_Folder_Game`
+- `Root_Folder_Docs`
+
+`must_not_be_none(key) -> bool` performs a simple membership check against that slice.
+
+Contributor note:
+
+- the helper is intentionally lightweight; higher-level validation and persistence rules still live in callers such as [`classic-config-core`](classic-config-core.md)
 
 ## `SettingsError`
 

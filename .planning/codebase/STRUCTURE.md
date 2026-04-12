@@ -32,7 +32,6 @@ CLASSIC-Fallout4/                        # Repo root
 │   ├── business-logic/                  # Pure Rust domain crates
 │   │   ├── classic-settings-core/         # Absorbed `yaml-core` in v9.1.0 Phase 1
 │   │   ├── classic-config-core/
-│   │   ├── classic-constants-core/
 │   │   ├── classic-version-core/
 │   │   ├── classic-version-registry-core/
 │   │   ├── classic-registry-core/
@@ -106,7 +105,7 @@ CLASSIC-Fallout4/                        # Repo root
 
 **`ClassicLib-rs/business-logic/`:**
 - Purpose: All domain logic; never import PyO3 here
-- Contains: 19 pure Rust `-core` crates; each has its own `src/` and `tests/` subdirectories
+- Contains: 16 pure Rust `-core` crates after the v9.1.0 consolidation milestone's Phase 1-3 merges/redistribution; each has its own `src/` and `tests/` subdirectories
 - Key files: `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs` (primary analysis engine), `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs` (config loading)
 
 **`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`:**
