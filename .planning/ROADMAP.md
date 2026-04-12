@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v9.1.0-consolidation Crate Consolidation** — Phases 1-4 (in progress)
+- 🚧 **v9.1.0-consolidation Crate Consolidation** — Phases 1-5 (in progress)
 - ✅ **v9.1.0-bindings Full Bindings Parity** — Phases 1-7 (shipped 2026-04-10) — see [`milestones/v9.1.0-bindings-ROADMAP.md`](./milestones/v9.1.0-bindings-ROADMAP.md)
 - ✅ **v9.1.0-bugfixes CLASSIC Codebase Health** — Phases 1-11 (shipped 2026-04-07) — see [`milestones/v9.1.0-bugfixes-ROADMAP.md`](./milestones/v9.1.0-bugfixes-ROADMAP.md)
 - ✅ **v8.3.0 Performance & Polish** — Phases 12-18 (shipped 2026-02-05) — see [`milestones/v8.3.0-ROADMAP.md`](./milestones/v8.3.0-ROADMAP.md)
@@ -13,13 +13,14 @@
 ### v9.1.0-consolidation Crate Consolidation
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3, 4): Planned milestone work
+- Integer phases (1, 2, 3, 4, 5): Planned milestone work
 - Decimal phases (e.g., 2.1): Urgent insertions (marked with INSERTED)
 
 - [ ] **Phase 1: YAML -> Settings Merge** - Absorb classic-yaml-core into classic-settings-core, update all consumers and bindings
 - [ ] **Phase 2: Crashgen -> Config Merge** - Absorb classic-crashgen-settings-core into classic-config-core, update all consumers
 - [ ] **Phase 3: Constants Redistribution** - Redistribute classic-constants-core across three target crates by semantic domain (version-registry-core, settings-core, shared-core), update all consumers across the workspace
 - [ ] **Phase 4: Gate Validation & Documentation** - All parity gates green, workspace tests pass, documentation reflects 16-crate topology
+- [ ] **Phase 5: Milestone Cleanup** - Close non-blocking audit debt from the consolidation milestone (stale docs index links, stale Phase 3 verification bookkeeping, stale Node parity floor tripwire)
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>
@@ -121,10 +122,24 @@ Plans:
 - [x] 04-02-PLAN.md — Run plain parity gates first, refresh only source-backed drift, and revalidate Node/Python runtime artifacts
 - [x] 04-03-PLAN.md — Run the full closure suite and write the dedicated Phase 4 verification checklist artifact
 
+### Phase 5: Milestone Cleanup
+**Goal**: Close the remaining non-blocking audit debt from the consolidation milestone so documentation navigation, verification bookkeeping, and parity-tripwire tracking all match the live codebase
+**Depends on**: Phase 4 (closure evidence must exist before cleanup)
+**Requirements**: (none -- audit cleanup phase; no unsatisfied milestone requirements)
+**Gap Closure**: Closes tech debt from `.planning/v9.1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `docs/RUST_DOCUMENTATION_INDEX.md` no longer links to deleted absorbed-crate pages and instead routes contributors to surviving owner docs
+  2. `.planning/phases/03-constants-version-registry-merge/03-VERIFICATION.md` is refreshed or superseded so its reported status matches the current live tree and `03-VALIDATION.md`
+  3. `tools/node_api_parity/tests/test_check_parity_gate.py` and `.planning/phases/02-crashgen-config-merge/deferred-items.md` agree on the intended Node tier-1 contract floor after consolidation
+**Plans**: 1 plan
+
+Plans:
+- [ ] 05-01-PLAN.md — Close the consolidation milestone cleanup debt (docs index links, Phase 3 verification bookkeeping, Node parity floor tripwire)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -132,3 +147,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 2. Crashgen -> Config Merge | 0/TBD | Not started | - |
 | 3. Constants Redistribution | 4/4 | Complete   | 2026-04-12 |
 | 4. Gate Validation & Documentation | 3/3 | Complete   | 2026-04-12 |
+| 5. Milestone Cleanup | 0/1 | Pending | - |
