@@ -1,17 +1,32 @@
 # CLASSIC
 
-## Current Milestone: v9.1.0-consolidation Crate Consolidation
+## Current State
 
-**Goal:** Reduce workspace granularity by merging 3 pairs of crates (19 → 16), updating all binding surfaces and parity gates, with zero functional changes.
+**Latest shipped milestone:** `v9.1.0-consolidation Crate Consolidation` (2026-04-12)
 
-**Status:** Phase 5 complete — remaining consolidation audit debt is closed, and the docs, verification artifacts, and Node parity contract surfaces now match the live one-tier baseline.
+**Status:** The Rust business-logic workspace is now consolidated to 16 crates, all three binding surfaces remain at full parity, and the milestone cleanup pass aligned docs, verification artifacts, and Node parity contract surfaces to the live one-tier baseline.
 
-**Target features:**
-- Merge `classic-yaml-core` into `classic-settings-core` (unify YAML loading/caching)
-- Merge `classic-crashgen-settings-core` into `classic-config-core` (absorb single-consumer rule model)
-- Redistribute constants ownership across `classic-version-registry-core` (Fallout4Version, NULL_VERSION), `classic-settings-core` (YamlFile, settings constants), and `classic-shared-core` (GameId) by semantic domain
-- Update all binding crates (C++, Node, Python) for changed import paths
-- All three parity gates (CXX, Python, Node) pass at zero drift after consolidation
+**Current focus:** Plan the next milestone and create a fresh `.planning/REQUIREMENTS.md`.
+
+## Next Milestone Goals
+
+- Define the next shipped scope with `/gsd-new-milestone`
+- Create a new milestone-scoped `.planning/REQUIREMENTS.md`
+- Decide which backlog items or new feature work should drive the next milestone
+
+<details>
+<summary>Archived milestone snapshot: v9.1.0-consolidation Crate Consolidation</summary>
+
+**Goal:** Reduce workspace granularity by merging 3 pairs of crates (19 -> 16), updating all binding surfaces and parity gates, with zero functional changes.
+
+**Delivered focus:**
+- Merge `classic-yaml-core` into `classic-settings-core`
+- Merge `classic-crashgen-settings-core` into `classic-config-core`
+- Redistribute constants ownership across `classic-version-registry-core`, `classic-settings-core`, and `classic-shared-core`
+- Update all binding crates for changed import paths
+- Keep all three parity gates green at zero drift
+
+</details>
 
 ## What This Is
 
@@ -72,7 +87,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 
 ### Active
 
-- None for the active v9.1.0-consolidation milestone scope.
+- None until the next milestone is defined.
 
 ### Out of Scope
 
@@ -136,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 after Phase 5 milestone cleanup closure*
+*Last updated: 2026-04-12 after v9.1.0 milestone archival*

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 05 complete
-last_updated: "2026-04-12T04:19:25.666Z"
+status: planning
+stopped_at: Milestone v9.1.0 archived
+last_updated: "2026-04-12T04:38:48.477Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Milestone v9.1.0 phase execution complete
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 05 (milestone-cleanup) — COMPLETE
-Plan: 4 of 4
-Status: Verification passed — no incomplete plans remain
+Phase: None
+Plan: None
+Status: Milestone v9.1.0 archived — ready for next milestone definition
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -120,6 +120,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-12T04:15:16.866Z
-Stopped at: Phase 05 complete
+Stopped at: Milestone v9.1.0 archived
 Resume file: None
-Next action: `/gsd-audit-milestone`
+Next action: `/gsd-new-milestone`

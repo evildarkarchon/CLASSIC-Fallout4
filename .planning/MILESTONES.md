@@ -1,5 +1,32 @@
 # Project Milestones: CLASSIC
 
+## v9.1.0 Crate Consolidation (Shipped: 2026-04-12)
+
+**Delivered:** Consolidated the Rust workspace from 19 to 16 business-logic crates while preserving C++/Python/Node parity, green workspace/native validation, and aligned documentation for the surviving owners.
+
+**Phases completed:** 5 phases, 16 plans, 38 tasks
+
+**Stats:**
+
+- 237 files changed
+- 64,721 insertions / 25,574 deletions
+- 3 days from first execution commit to ship
+- Audit: `.planning/milestones/v9.1.0-MILESTONE-AUDIT.md`
+
+**Git range:** `3276fd20` -> `fe4a2ba6`
+
+**Key accomplishments:**
+
+- Merged `classic-yaml-core` into `classic-settings-core`, migrated all bindings and consumers, and taught the parity generators to scan Rust sub-modules so the merged surface stays visible to the gates.
+- Merged `classic-crashgen-settings-core` into `classic-config-core`, consolidated its docs into `classic-config-core.md`, and reparented Node parity ownership without introducing drift.
+- Redistributed `classic-constants-core` into semantic owners across Rust, Python, Node, CXX, GUI, docs, and refreshed parity artifacts.
+- Closed Phase 4 with green workspace tests, CLI/GUI wrapper validation, and plain CXX/Python/Node parity reruns recorded in a single verification artifact.
+- Closed milestone cleanup debt by aligning top-level docs routing, Phase 3 verification bookkeeping, and all Node parity contract artifacts to the live one-tier 705-row baseline with durable audit and tripwire checks.
+
+**What's next:** Define the next milestone and create a fresh `.planning/REQUIREMENTS.md` with `/gsd-new-milestone`.
+
+---
+
 ## v9.1.0-bindings Full Bindings Parity (Shipped: 2026-04-10)
 
 **Delivered:** Full binding parity across C++, Node, and Python with drift-preventing parity gates on all three surfaces. Every shared Rust crate is now exposed at full fidelity through all three bindings with zero Tier-2 deferrals.
