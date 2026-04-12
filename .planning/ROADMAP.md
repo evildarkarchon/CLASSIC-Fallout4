@@ -131,10 +131,11 @@ Plans:
   1. `docs/RUST_DOCUMENTATION_INDEX.md` no longer links to deleted absorbed-crate pages and instead routes contributors to surviving owner docs
   2. `.planning/phases/03-constants-version-registry-merge/03-VERIFICATION.md` is refreshed or superseded so its reported status matches the current live tree and `03-VALIDATION.md`
   3. `tools/node_api_parity/tests/test_check_parity_gate.py` and `.planning/phases/02-crashgen-config-merge/deferred-items.md` agree on the intended Node tier-1 contract floor after consolidation
-**Plans**: 1 plan
+**Plans**: 2 plans
 
 Plans:
 - [x] 05-01-PLAN.md — Close the consolidation milestone cleanup debt (docs index links, Phase 3 verification bookkeeping, Node parity floor tripwire)
+- [ ] 05-02-PLAN.md — Close the remaining live-tree/audit gap behind the refreshed Phase 3 verification artifact
 
 ## Progress
 
@@ -147,4 +148,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Crashgen -> Config Merge | 0/TBD | Not started | - |
 | 3. Constants Redistribution | 4/4 | Complete   | 2026-04-12 |
 | 4. Gate Validation & Documentation | 3/3 | Complete   | 2026-04-12 |
-| 5. Milestone Cleanup | 1/1 | Complete | 2026-04-12 |
+| 5. Milestone Cleanup | 1/2 | In Progress |  |
