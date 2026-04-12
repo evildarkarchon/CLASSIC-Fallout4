@@ -1,7 +1,7 @@
 ---
 phase: 3
 reviewers: [gemini, claude, codex]
-reviewed_at: 2026-04-11T16:45:41.3719018-07:00
+reviewed_at: 2026-04-11T17:22:36.3266045-07:00
 plans_reviewed: [03-01-PLAN.md, 03-02-PLAN.md, 03-03-PLAN.md, 03-04-PLAN.md]
 ---
 
@@ -10,278 +10,287 @@ plans_reviewed: [03-01-PLAN.md, 03-02-PLAN.md, 03-03-PLAN.md, 03-04-PLAN.md]
 ## Gemini Review
 
 ### Summary
-The four subplans correctly distribute the structural work across the Rust core (03-01), Python bindings (03-02), Node/CXX bindings (03-03), and parity/doc closure (03-04), faithfully following the three-target redistribution strategy established in the Phase 3 Context. The integration of the CXX `classic::shared` namespace (with the 5-place registration rule) and the comprehensive updates across the workspace are accurately mapped out. However, there is a critical sequence flaw inherited from the Context document: `classic-constants-core` is slated for full deletion in 03-01, but the test migration for its contents is deferred until 03-04.
+The revised plan set cleanly fixes the previous high-risk sequencing failures. `03-01` now updates binding `Cargo.toml` manifests before deleting `classic-constants-core`, moves inline tests before source deletion, and the previously missed GUI/CXX and test-file consumers are explicitly covered.
 
 ### Strengths
-- **Thorough Dependency Management**: Correctly maps the `classic-constants-core` symbol split (`Fallout4Version`, `YamlFile`, `GameId`) to their respective destinations.
-- **Strict Registration**: Reuses the 5-place registration checklist for the new `classic-cpp-bridge/src/shared.rs` CXX module, ensuring the build scripts and CMake headers won't silently drop the module.
-- **Binding Accuracy**: The carve-up of Python and Node constants into semantic modules aligns perfectly with the Rust layer changes without leaving legacy compatibility buckets.
-- **Appropriate Tooling Usage**: Delegates the `index.d.ts` update to the NAPI-RS build step instead of hand-editing, avoiding type signature drift.
+- `03-01` now rewrites workspace `Cargo.toml` dependencies before deleting the source crate.
+- Inline tests are migrated in `03-01` Task 1 while the source still exists.
+- `03-02` explicitly covers `#[pyclass(module = ...)]` retagging and Python-facing `NULL_VERSION`.
+- `03-03` now includes `classic-gui/src/app/mainwindow.cpp` and `constants.spec.ts`.
+- `03-04` uses a safer parity order: clean target maps, verify scan, reparent, regenerate.
 
 ### Concerns
-- **HIGH: Orphaned/Deleted Test Coverage**: 03-01-PLAN deletes `classic-constants-core` and its directory, but 03-04-PLAN Task 1 is scheduled to split the old `classic-constants-core/src/lib.rs` test coverage. By the time 03-04 executes, the source file containing the tests will be gone.
-- **MEDIUM: Redundant Test Updates**: Both 03-02-PLAN Task 2 and 03-04-PLAN Task 1 include `test_promoted_residuals_smoke.py`, which risks duplicate or conflicting changes.
-- **LOW: Parity Helper Limitations**: 03-04-PLAN Task 3 references the Phase 1 helper pattern for owner reparenting, but this is a 1-to-3 split rather than a 1-to-1 merge.
+- **LOW**: The parity generator scripts may still contain dead `SQUAD_BY_OWNER["constants"]` metadata even after target/owner map cleanup.
+- **LOW**: Incremental GUI/CMake builds may need a clean reconfigure when generated headers change from `constants.h` to `shared.h`.
+- **LOW**: `03-01` should explicitly verify new target-crate dependencies such as `semver` and `serde` while moving the Rust slices.
 
 ### Suggestions
-- Move test migration into 03-01-PLAN so tests travel with the code before source deletion.
-- Remove `test_promoted_residuals_smoke.py` from 03-04 to avoid duplicate migration work.
-- Clarify that parity ownership reparenting may need a one-off split-aware helper instead of blindly reusing a 1-to-1 merge helper.
+- Explicitly remove the dead `constants` squad-owner metadata from both parity generator scripts.
+- Be ready to force a CMake reconfigure if `build_gui.ps1` misses generated-header churn.
+- Double-check dependency additions in the three Rust destination crates during execution.
 
 ### Risk Assessment
-**HIGH**. The sequence flaw around test deletion is the main risk. Fixing the task alignment lowers overall risk significantly.
+**LOW**. Gemini considers the previous HIGH/MEDIUM-HIGH issues fully mitigated and the replanned set ready for execution.
 
 ---
 
 ## the agent Review
 
-# Phase 3: Constants Redistribution — Cross-AI Plan Review
+### Resolution Check
 
-## Two Critical Cross-Plan Issues
+| Prior finding | Severity | Status | Where addressed |
+|---|---|---|---|
+| Crate deletion before binding Cargo migrations | HIGH | Resolved | `03-01` Task 2 now sweeps all workspace Cargo manifests first |
+| Test migration after source deletion | HIGH | Resolved | `03-01` Task 1 now moves tests with the code |
+| Missing `#[pyclass(module = ...)]` retagging | MEDIUM | Resolved | `03-02` Task 1 plus `__module__` verification |
+| GUI consumer missing from scope | HIGH | Resolved | `03-03` Task 2 includes `classic-gui/src/app/mainwindow.cpp` |
+| `constants.spec.ts` not handled | HIGH | Partially resolved | `03-03` mentions it, but keep-vs-split is still left open |
 
-### 1. Crate Deletion Timing (HIGH)
+### 03-01-PLAN.md
 
-03-01 Task 2 deletes `classic-constants-core` from the workspace. But multiple binding crates still have it in their `Cargo.toml`:
-- `classic-scanlog-py/Cargo.toml` (updated in 03-02)
-- `classic-node/Cargo.toml` (updated in 03-03)
-- `classic-cpp-bridge/Cargo.toml` (updated in 03-03)
+**Summary**
+Strong two-task structure that fixes the prior structural issues. The plan is now self-consistent and can pass its own verification without waiting on later waves.
 
-**This creates a broken workspace between 03-01 and 03-02/03-03** — `cargo build --workspace` will fail.
+**Strengths**
+- Tests moved into Task 1 with the code.
+- Binding-crate `Cargo.toml` swaps are now included before deletion.
+- `classic-resource-core` is explicitly inspected instead of assuming a replacement dependency.
+- Structural verification asserts no `Cargo.toml` still references `classic-constants-core`.
+- Doc-only references in `classic-registry-core` and `classic-path-core` are included.
 
-**Fix:** Expand 03-01 Task 2 to update all `Cargo.toml` dependency references workspace-wide, not just the 5 Rust core consumers. Binding crate `Cargo.toml` dependency swaps happen in 03-01; 03-02/03-03 only handle source file content moves and registrations.
+**Concerns**
+- **MEDIUM**: Updating `classic-constants-py/Cargo.toml` in `03-01` may be wasted work if the crate is deleted immediately in `03-02`, unless the intermediate workspace must compile.
+- **MEDIUM**: There is still no intermediate `cargo check --workspace` at the end of Task 1 to catch doctest/import fallout before Task 2.
+- **LOW**: `phf` propagation vs removal remains executor discretion and should be checked explicitly.
+- **LOW**: `classic-config-core` should still be covered by the workspace Cargo sweep because Phase 2 may have carried dependencies forward.
 
-### 2. Test Migration Timing (HIGH)
+**Suggestions**
+- Add `classic-config-core/Cargo.toml` to the explicit grep/sweep list or confirm the workspace sweep covers it.
+- Consider a fast `cargo check --workspace` after Task 1.
+- Make the `classic-constants-py/Cargo.toml` update conditional on the need for a green intermediate state.
 
-03-04 Task 1 says to split the old `classic-constants-core/src/lib.rs` test coverage. But that file is deleted in 03-01 Task 2. By the time 03-04 executes, the source tests are gone from disk.
+**Risk Assessment**
+**LOW-MEDIUM**. Structurally sound, with only execution-level cleanup questions left.
 
-**Fix:** Move test migration into 03-01 Task 1. Add `#[cfg(test)] mod tests { ... }` blocks to `fallout4_version.rs`, `yaml_file.rs`, and `game_id.rs` during the initial redistribution.
+### 03-02-PLAN.md
 
-## 03-01-PLAN.md — Rust Core Redistribution
+**Summary**
+Well-shaped Python split plan with the key PyO3 fixes now explicit. Rebuilding `classic_scanlog` closes the stale-artifact risk called out previously.
 
-**Summary:** Well-structured with the proven move-then-sweep pattern, but consumer enumeration is incomplete.
+**Strengths**
+- `#[pyclass(module = ...)]` retagging is now explicit and verified.
+- Python-facing `NULL_VERSION` is now tracked deliberately.
+- `classic_scanlog` rebuild is part of verification.
+- `test_promoted_residuals_smoke.py` is owned here rather than duplicated in `03-04`.
+- Stub validation remains part of Task 1 verification.
 
-**Strengths:**
-- Clean two-task structure matching Phase 1/2 precedent.
-- Correctly references all locked decisions D-02 through D-14.
-- Includes doc-comment-only references (`classic-registry-core` / `keys.rs`).
-- Verification targets both moved crates and consumers separately.
+**Concerns**
+- **MEDIUM**: `rebuild_rust.ps1` argument format still needs confirmation so the scripted rebuild targets are correct.
+- **MEDIUM**: The plan should be explicit about whether `SETTINGS_IGNORE_NONE` is exposed as a literal list or delegated from `classic-settings-core`.
+- **LOW**: A negative import check for `classic_constants` would make stale-artifact cleanup more explicit.
 
-**Concerns:**
-- **HIGH** — Missing binding crate `Cargo.toml` updates.
-- **HIGH** — `classic-config-core` not verified as a consumer; Phase 2 may have carried a constants dependency forward.
-- **MEDIUM** — `classic-path-core/src/docs_path.rs` is listed in frontmatter but absent from Task 2's `<files>` and action text.
-- **MEDIUM** — `phf` dependency question is unresolved.
-- **LOW** — No intermediate `cargo build --workspace` between Task 1 and Task 2.
+**Suggestions**
+- Verify the rebuild script’s target naming before execution.
+- Add a negative `import classic_constants` assertion after deletion.
+- Clarify the intended exposure mechanism for `SETTINGS_IGNORE_NONE`.
 
-**Suggestions:**
-- Add all binding crate `Cargo.toml` dependency swaps to Task 2.
-- Grep for `classic-constants-core` and `classic_constants_core` across all `Cargo.toml` and `.rs` files as the first action in Task 2.
-- Resolve `phf` usage explicitly before moving code.
-- Move test code from 03-04 into Task 1.
+**Risk Assessment**
+**LOW-MEDIUM**. The big Python risks are fixed; the remaining issues are mechanical.
 
-**Risk:** MEDIUM, or HIGH if the cross-plan issues remain.
+### 03-03-PLAN.md
 
-## 03-02-PLAN.md — Python Binding Carve
+**Summary**
+The replanned Node+CXX work now covers the missing production GUI consumer and both native wrapper builds. The biggest remaining issue is that `constants.spec.ts` still leaves some executor discretion.
 
-**Summary:** Well-scoped with established PyO3 patterns, but it has a subtle correctness issue with `#[pyclass(module)]` attributes.
+**Strengths**
+- `mainwindow.cpp` is explicitly included.
+- Five-place CXX registration is clearly called out.
+- Both CLI and GUI wrappers are in verification.
+- Node verification runs from the correct package directory.
+- Type-name collision checks in bridge destinations are now expected.
 
-**Strengths:**
-- Clean separation between creating the new surface and migrating consumers.
-- Correctly identifies `classic-scanlog-py` as a consumer.
-- Explicit `.pyi` updates alongside Rust wrapper moves.
-- Rejects a compatibility shim, aligned with locked decisions.
+**Concerns**
+- **MEDIUM**: `constants.spec.ts` still says “either keep or split,” which leaves avoidable decision overhead in the most mechanically complex plan.
+- **MEDIUM**: `build_gui.ps1` runs without `-Test`, so GUI validation is build-only unless no test coverage exists.
+- **LOW**: A quick structural check proving `classic::constants` and `constants.h` are gone would tighten the plan further.
 
-**Concerns:**
-- **HIGH** — `#[pyclass(module = "classic_constants")]` must be retagged to the new module names (`classic_settings`, `classic_shared`, `classic_version_registry`).
-- **MEDIUM** — `NULL_VERSION` is not explicitly tracked in the dispersal checklist.
-- **MEDIUM** — Verification scripts should be checked for hardcoded `classic_constants` assumptions.
-- **LOW** — Verify dependency wiring for the new `YamlFile` wrapper.
+**Suggestions**
+- Commit to keeping `constants.spec.ts` as the regression suite if root exports are unchanged.
+- Use `-Test` for GUI validation if relevant tests exist.
+- Add a structural sweep over active C++ files for `classic::constants` and `classic_cxx_bridge/constants.h`.
 
-**Suggestions:**
-- Add an explicit instruction to rename `#[pyclass(module = ...)]` attributes.
-- Track `NULL_VERSION` and `SETTINGS_IGNORE_NONE` as module-level constants.
-- Add a runtime module-name check for the moved Python classes.
+**Risk Assessment**
+**MEDIUM**. The critical GUI/CXX gap is fixed, but one execution choice remains too open-ended.
 
-**Risk:** MEDIUM.
+### 03-04-PLAN.md
 
-## 03-03-PLAN.md — Node + CXX Bridge Dispersal
+**Summary**
+This is now a much stronger closeout plan. The parity ordering is correct, duplicate smoke-test ownership is removed, and active docs/parity inputs are covered together.
 
-**Summary:** This is the most mechanically complex plan. The CXX five-place registration is well-covered, but there is a test migration gap and a namespace/type-collision check that should be explicit.
+**Strengths**
+- Correct ordering: clean maps, verify scan, reparent, regenerate.
+- Explicitly avoids re-editing `test_promoted_residuals_smoke.py` here.
+- Broad doc verification covers all main active files.
+- Allows a split-aware alternative when the Phase 1 parity helper does not fit a 1-to-3 redistribution.
 
-**Strengths:**
-- Explicitly carries forward the five-place CXX registration lesson.
-- Identifies all three CXX consumer files needing import swaps.
-- Correctly leaves `index.d.ts` regeneration to the normal Node build.
-- Uses the right dependency on 03-01.
+**Concerns**
+- **MEDIUM**: Generator/gate failures may still be hard to attribute if regeneration and gate checking stay bundled.
+- **MEDIUM**: The exact symbol-to-owner mapping for parity reparenting should be made deterministic before edits.
+- **LOW**: `runtime_coverage_registry.json` ownership updates are in scope but not called out explicitly in the action text.
 
-**Concerns:**
-- **HIGH** — `constants.spec.ts` is listed in `files_modified` but not addressed in Task 1 action text.
-- **MEDIUM** — CXX bridge type names should be pre-checked for conflicts in existing bridge blocks.
-- **MEDIUM** — `Cargo.toml` delta should be explicit if dependency swaps stay in this plan.
-- **LOW** — Clarify whether `include/classic_cxx_bridge/` is fully regenerated from `build.rs`.
+**Suggestions**
+- Build the symbol-to-owner routing table first.
+- Consider splitting generator execution from final gate checks for clearer failure attribution.
+- Mention runtime coverage registry reparenting explicitly.
 
-**Suggestions:**
-- Explicitly migrate or defer `constants.spec.ts` with rationale.
-- Pre-check for conflicting CXX type names.
-- If dependency-swap timing is fixed in 03-01, remove the `Cargo.toml` dependency edits from this plan.
+**Risk Assessment**
+**LOW-MEDIUM**. The plan is well-ordered now; remaining concerns are mechanical and tractable.
 
-**Risk:** MEDIUM-HIGH.
+### Overall Assessment
 
-## 03-04-PLAN.md — Tests, Docs, Parity Gates
-
-**Summary:** Broad but sensible closeout scope. The parity and doc work are well-defined, but test timing and generator sequencing need tightening.
-
-**Strengths:**
-- Correctly regenerates all three parity gates.
-- Explicitly requires verifying the Phase 1 submodule-scan fix.
-- Covers the main active doc sweep targets.
-- Uses the right wave dependency ordering.
-
-**Concerns:**
-- **HIGH** — Test migration timing problem described above.
-- **HIGH** — Generator target maps still reference `classic-constants-core`; task ordering must ensure maps are edited before regeneration.
-- **MEDIUM** — Doc verification grep exclusion for `binding-parity-overview.md` may be too broad.
-- **MEDIUM** — `classic-shared-core.md` placement for `GameId` should be explicit.
-- **LOW** — Verify the exact parity gate CLI flags.
-
-**Suggestions:**
-- If tests move to 03-01, simplify 03-04 Task 1 accordingly.
-- Reorder Task 3 to: edit maps, verify submodule scan, regenerate, run gates.
-- Verify parity gate CLI flags before execution.
-
-**Risk:** HIGH as written, LOW if the task-ordering issues are fixed.
-
-## Overall Risk Assessment
-
-**MEDIUM-HIGH as written.** The two structural issues are:
-1. Crate deletion before all binding `Cargo.toml` files are migrated.
-2. Test migration after the source crate is already deleted.
-
-With both fixes, the plan set drops to LOW-MEDIUM risk because it otherwise follows the Phase 1/2 pattern closely.
+**LOW-MEDIUM as replanned.** The original structural failures are resolved. Remaining concerns are execution-level edge cases: `constants.spec.ts` ambiguity, a couple of verification gaps, and deterministic parity reparenting details.
 
 ---
 
 ## Codex Review
 
-The plan set is close, but two issues make it unsafe as written: `03-01` tries to remove `classic-constants-core` before later waves have migrated all binding crates off it, and `03-03` misses an actual GUI consumer of `classic::constants`.
-
-**03-01-PLAN.md**
+### 03-01-PLAN.md
 
 **Summary**
-Strong Rust-side decomposition and consumer sweep. The main flaw is sequencing: it deletes `classic-constants-core` and then asks for a full workspace build even though later plans still own live dependencies on that crate.
+Codex agrees this is the right place to do the semantic Rust move, move tests early, and treat deletion as a dependency-cleanup problem. The main remaining weakness is that wave 1 still knowingly leaves later-wave binding source consumers unresolved.
 
 **Strengths**
-- Correct semantic split for `Fallout4Version`, `YamlFile`, and `GameId`.
-- Explicitly handles the convenience re-export removal in `classic-version-core`.
-- Includes dead-dependency inspection for `classic-resource-core`.
-- Uses destination-crate tests plus a broader build step.
+- Correct semantic redistribution.
+- Tests and doctests move before deletion.
+- Convenience re-exports are removed instead of recreated.
+- Cargo manifests are swept early enough to delete the crate.
+- Verification uses targeted tests for the three new Rust homes.
 
 **Concerns**
-- `HIGH` The verification step `cargo build --workspace` is not compatible with the wave breakdown. After `03-01`, live crates still depend on `classic-constants-core`: `classic-node/Cargo.toml`, `classic-cpp-bridge/Cargo.toml`, and `classic-scanlog-py/Cargo.toml`.
-- `MEDIUM` The moved source file contains many doctest examples using `classic_constants_core::*`; the plan relies on `cargo test` to catch that, but does not call the rewrites out explicitly.
+- **HIGH**: Wave 1 still leaves Python/Node/CXX source consumers unresolved until wave 2, so the intermediate state is intentionally non-green.
+- **MEDIUM**: `classic-resource-core` only appears as a `Cargo.toml` edit; if D-12 finds actual source usage, the plan does not yet declare the source files to touch.
+- **MEDIUM**: Verification proves `Cargo.toml` cleanup, but there is no active-path structural sweep for remaining `classic_constants_core::...` Rust imports.
+- **LOW**: The blame-preservation fallback should be tolerated explicitly if Git rename detection does not cooperate.
 
 **Suggestions**
-- Make 03-01 verification Rust-slice only, or move crate deletion until 03-02 and 03-03 have migrated all remaining dependents.
-- Add an explicit checklist to rewrite doctest and import examples during the move.
+- Document that wave 1 may intentionally leave the workspace non-buildable until wave 2 lands.
+- Add an `rg`-style structural sweep over active Rust paths for `classic_constants_core`.
+- Either declare conditional `classic-resource-core/src/**` ownership or require proof the dependency is dead.
+- Record accepted blame-preservation fallback in the task output, not just the commit guidance.
 
 **Risk Assessment**
-`HIGH` because the plan's own verification cannot pass with the current wave boundaries.
+**MEDIUM**. Correct design, but the wave boundary remains fragile.
 
-**03-02-PLAN.md**
+### 03-02-PLAN.md
 
 **Summary**
-Good semantic carve for Python, with the right target crates and no compatibility shim. The weak point is verification: it changes `classic-scanlog-py` but never explicitly rebuilds that module.
+Codex sees the Python split as mostly correct, with remaining ambiguity around `NULL_VERSION` and stale generated/install artifacts.
 
 **Strengths**
-- Correct three-way split across `classic-version-registry-py`, `classic-settings-py`, and `classic-shared-py`.
-- Explicitly deletes `classic-constants-py` instead of keeping a forwarding layer.
-- Includes stub validation and smoke-test updates.
+- Clean semantic split across the three target Python modules.
+- Correctly retags `#[pyclass(module = ...)]`.
+- Rebuilds `classic_scanlog` in addition to the destination modules.
+- Moves the smoke test in the same plan.
+- Deletes the legacy crate instead of leaving an alias.
 
 **Concerns**
-- `HIGH` Task 2 edits `classic-scanlog-py`, but the verify step does not rebuild `classic_scanlog`, which can hide a broken Rust extension behind stale artifacts.
-- `MEDIUM` The source wrappers are annotated with `#[pyclass(module = "classic_constants", ...)]`; the plan should explicitly require retagging those module names and their doc examples.
+- **MEDIUM**: The plan says preserve `NULL_VERSION` “if currently exposed,” but the success criteria assume it is exposed, which could cause parity drift.
+- **MEDIUM**: `dist-rust` or other generated Python artifacts are not called out explicitly.
+- **MEDIUM**: Consumer coverage may be too narrow if other active Python imports still reference `classic_constants`.
+- **LOW**: A stale installed `classic_constants` module could mask failures unless cleanup is explicit.
 
 **Suggestions**
-- Rebuild `classic_scanlog` in Task 2 verification, not just the three destination modules.
-- Explicitly call out `#[pyclass(module = ...)]`, `#[pymodule]`, and doctest/example rewrites as part of the carve.
-- Add a targeted import smoke that loads all four affected Python modules in one run.
+- Lock the exact `NULL_VERSION` Python contract now.
+- Add a sweep for `import classic_constants` / `from classic_constants` across active Python paths.
+- Include generated-artifact cleanup or make it part of the rebuild flow.
+- Add a negative import assertion after deletion.
 
 **Risk Assessment**
-`MEDIUM` because the implementation shape is good, but the current verify steps are too narrow.
+**MEDIUM**. Mostly complete, but packaging/stub drift still needs guardrails.
 
-**03-03-PLAN.md**
+### 03-03-PLAN.md
 
 **Summary**
-The Node/CXX redistribution is conceptually right, and the five-place CXX registration note is exactly the right lesson to carry forward. The serious miss is that the plan forgets a live GUI consumer of `classic::constants`.
+Codex still sees this as the most fragile plan. The semantic direction is right and the GUI consumer is finally in scope, but the CXX registration picture still feels under-specified relative to the locked five-place rule.
 
 **Strengths**
-- Correctly removes the `constants` bucket from both Node and CXX.
-- Preserves stable public symbol names while moving ownership.
-- Explicitly includes the CXX registration sites and dependency rewiring.
+- Node and CXX are treated as thin semantic mirrors of the Rust redistribution.
+- `classic::constants` is explicitly retired.
+- `mainwindow.cpp` is included as a real production consumer.
+- Native wrapper scripts are used for validation.
+- `constants.spec.ts` is at least acknowledged.
 
 **Concerns**
-- `HIGH` The GUI still includes and uses the retired bridge surface in `classic-gui/src/app/mainwindow.cpp`, but that file is not in `files_modified`, so the plan does not complete the C++ migration.
-- `MEDIUM` Task 2 edits both `classic-cli/CMakeLists.txt` and `classic-gui/CMakeLists.txt`, but only verifies `classic-cli/build_cli.ps1 -Test`.
-- `LOW` The Node verify commands should make the working directory explicit.
+- **HIGH**: `include/classic_cxx_bridge/` and `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/Cargo.toml` are not in `files_modified`, which may make the five-place registration story incomplete if those are source-controlled touchpoints.
+- **HIGH**: The plan should prove there are no remaining active uses of `classic::constants` or `classic_cxx_bridge/constants.h` anywhere, not just in `mainwindow.cpp`.
+- **MEDIUM**: Node test handling is still ambiguous because “keep or split” is not a single execution target.
+- **MEDIUM**: GUI verification is build-only rather than test-backed.
 
 **Suggestions**
-- Add `classic-gui/src/app/mainwindow.cpp` to the plan and migrate its include/namespace usage off `constants.h` / `classic::constants`.
-- Verify both native wrappers, or at least run a GUI build after changing `classic-gui/CMakeLists.txt`.
-- Make the Node working directory explicit in the verify block.
+- Make the five registration sites concrete, either by adding the missing touchpoints or documenting which are generated-only.
+- Add a repo-wide structural sweep for `classic::constants`, `classic_cxx_bridge/constants.h`, and `mod constants;`.
+- Decide now whether `constants.spec.ts` survives or is split.
+- Consider `build_gui.ps1 -Test` if runtime coverage is available.
 
 **Risk Assessment**
-`HIGH` because there is a known native consumer the plan does not touch.
+**HIGH**. Codex remains most concerned about silent CXX registration and consumer-sweep failures.
 
-**03-04-PLAN.md**
+### 03-04-PLAN.md
 
 **Summary**
-This is a solid closeout plan: tests, docs, and parity are in the right final wave. The gaps are mostly around verification coverage rather than scope definition.
+Codex sees this as a good docs/parity closure plan, but not yet a full phase-closure plan because the strongest workspace-level Rust proof is still missing.
 
 **Strengths**
-- Treats parity regeneration as first-class work instead of an afterthought.
-- Rehomes Rust tests into the destination crates.
-- Includes the main active API docs and parity artifacts.
+- Docs and parity closure are separated cleanly.
+- Target-map cleanup happens before baseline regeneration.
+- Obsolete API docs are redistributed to the correct owners.
+- All three parity systems remain in final verification.
+- Active-file sweeps reduce stale-name drift.
 
 **Concerns**
-- `MEDIUM` The docs verification grep only scans `docs/api` and `.planning/codebase`, but the task also claims updates to `CLAUDE.md` and `.planning/PROJECT.md`.
-- `MEDIUM` `bun run parity:gate:local` needs to run from the Node package directory.
-- `LOW` There is no explicit final structural assertion that active files no longer reference `classic-constants-core` / `classic_constants` outside approved historical/archive paths.
+- **HIGH**: There is still no final `cargo build --workspace` and `cargo test --workspace`, even though the phase success criteria require them.
+- **HIGH**: Node baseline regeneration is not explicit; `bun run parity:gate:local` may validate rather than regenerate.
+- **MEDIUM**: Active-doc scope may still be incomplete versus D-29, especially `AGENTS.md` and possibly roadmap/requirements context.
+- **MEDIUM**: The stale-reference sweep may miss old names inside modified parity artifacts and fixtures.
 
 **Suggestions**
-- Expand doc verification to include `CLAUDE.md`, `.planning/PROJECT.md`, and other active non-archived docs.
-- State the Node parity working directory explicitly.
-- Add one final repo-wide search over live paths to prove the old crate/module names are gone.
+- Add final workspace-level Rust validation in `03-04`.
+- Make the Node baseline refresh command explicit before the Node gate.
+- State clearly whether prerequisite docs already covered roadmap/requirements updates, and add `AGENTS.md` if still in active scope.
+- Expand stale-reference sweeps to all modified parity artifacts and fixtures.
 
 **Risk Assessment**
-`MEDIUM` because the closeout scope is right, but the verification net should be wider.
+**HIGH**. Codex still sees closure risk because the final end-to-end Rust and Node proofs are not explicit enough.
 
-**Overall**
-`HIGH` as written. The architecture and task partitioning are strong, but `03-01` is not self-consistent with its own workspace-build gate, and `03-03` misses a real C++ frontend consumer. Fix those two points and the plan set becomes workable.
+### Overall Assessment
+
+Codex considers the plan set directionally strong but still exposed at the wave-boundary and final-closure levels. The main unresolved issues are the intentionally broken intermediate state, CXX registration/sweep completeness, and missing explicit final workspace Rust validation.
 
 ---
 
 ## Consensus Summary
 
-The reviewers agree the phase architecture is directionally correct: the three-way semantic redistribution is sound, the binding splits match the Rust ownership model, and the CXX `classic::shared` addition is handled with the right five-place registration mindset. The main problems are execution-order and completeness gaps, not plan intent.
+This second review round is much stronger than the first. All three reviewers agree the replanned set fixed the original structural failures: test migration is now early, binding `Cargo.toml` cleanup happens before deleting the Rust source crate, Python module retagging is explicit, the GUI consumer is in scope, and parity work is more safely ordered.
 
 ### Agreed Strengths
-- The semantic split of `Fallout4Version`, `YamlFile`, and `GameId` is correct.
-- Binding work is partitioned sensibly across Python, Node, and CXX without retaining compatibility buckets.
-- The plan correctly treats CXX registration and parity regeneration as first-class work.
+- The previous HIGH-severity sequencing bugs in `03-01` are fixed.
+- Python retagging, `classic_scanlog` rebuilds, and smoke-test ownership are now explicit in `03-02`.
+- `03-03` now includes the missing GUI consumer and treats CXX registration as first-class work.
+- `03-04` now uses a better parity regeneration order and no longer duplicates Python smoke ownership.
 
 ### Agreed Concerns
-- **Highest priority:** 03-01 deletes `classic-constants-core` too early. Multiple later-wave binding crates still depend on it in `Cargo.toml`, so the workspace build step cannot pass as written.
-- **High priority:** Test migration is scheduled too late. Moving tests in 03-04 after deleting the source crate in 03-01 risks losing or orphaning `classic-constants-core` coverage.
-- **Medium priority:** Python moved wrappers need explicit `#[pyclass(module = ...)]` retagging and related module-name/doc updates.
+- **Top concern:** `03-03` still needs tighter execution specificity around Node/CXX closure. Both Claude and Codex want the `constants.spec.ts` decision nailed down, and Codex additionally wants a stronger proof that all active `classic::constants` / `constants.h` uses are gone.
+- **Second concern:** `03-04` still needs stronger closure proof. Codex explicitly wants final `cargo build --workspace` and `cargo test --workspace`, plus a clearly explicit Node baseline regeneration path. Claude also wants parity ownership updates to be more deterministic.
+- **Third concern:** There are still a few `03-01`/`03-02` execution details to tighten: `classic-config-core` and active-path Rust sweeps, exact `NULL_VERSION` and `SETTINGS_IGNORE_NONE` Python behavior, negative `classic_constants` import checks, and rebuild-script argument certainty.
 
 ### Divergent Views
-- Codex uniquely flagged a likely missing GUI consumer in `classic-gui/src/app/mainwindow.cpp` that still uses the retired CXX constants surface.
-- the agent uniquely flagged missing treatment of `classic-node/__test__/constants.spec.ts`, a possible carried-forward `classic-config-core` consumer, and incomplete 03-04 generator-task ordering.
-- Gemini uniquely flagged duplicate ownership of `test_promoted_residuals_smoke.py` across 03-02 and 03-04, plus the risk that a Phase 1 one-to-one parity helper is a poor fit for a one-to-three split.
+- **Gemini** is now comfortable calling the plan set **LOW risk** overall and only flags minor metadata/CMake cleanup issues.
+- **Claude** rates the replan **LOW-MEDIUM risk** and sees only execution-level cleanup work left.
+- **Codex** remains the strictest reviewer and still rates the overall set **HIGH risk** because of the intentionally broken intermediate state, possible under-scoped CXX registration/sweeps, and missing explicit final workspace Rust validation.
 
 ### Recommended Replan Inputs
-1. Move all workspace-wide dependency swaps needed for crate deletion into 03-01 before removing `classic-constants-core`.
-2. Move constants test migration into 03-01 alongside the initial code carve.
-3. Update 03-02 to explicitly retag `#[pyclass(module = ...)]`, track `NULL_VERSION`, and rebuild `classic-scanlog-py` in verification.
-4. Update 03-03 to cover `classic-gui/src/app/mainwindow.cpp` if Codex's finding is confirmed, and explicitly handle `constants.spec.ts`.
-5. Tighten 03-04 verification ordering and widen final live-reference checks across active docs and parity tooling.
+1. In `03-03`, choose one `constants.spec.ts` strategy now and add an active-path sweep for `classic::constants`, `classic_cxx_bridge/constants.h`, and `mod constants;`.
+2. In `03-03`, confirm whether `include/classic_cxx_bridge/` and `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/Cargo.toml` are generated-only or should be explicit `files_modified` touchpoints.
+3. In `03-04`, add final `cargo build --workspace` and `cargo test --workspace`, and make the Node baseline regeneration command explicit before the Node parity gate.
+4. In `03-01`, add an active Rust-path sweep for remaining `classic_constants_core` imports and explicitly cover `classic-config-core` in the Cargo scan.
+5. In `03-02`, lock the exact Python `NULL_VERSION` contract, clarify `SETTINGS_IGNORE_NONE` exposure, and add a negative `classic_constants` import check plus any needed stale-artifact cleanup.
