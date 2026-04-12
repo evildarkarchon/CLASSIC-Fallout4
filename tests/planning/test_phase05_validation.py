@@ -20,6 +20,9 @@ NODE_PARITY_GATE_TEST = (
 NODE_PARITY_CONTRACT = (
     REPO_ROOT / "docs/implementation/node_api_parity/baseline/parity_contract.json"
 )
+NODE_PARITY_CONTRACT_MARKDOWN = (
+    REPO_ROOT / "docs/implementation/node_api_parity/baseline/parity_contract.md"
+)
 NODE_PARITY_DIFF_REPORT = (
     REPO_ROOT / "docs/implementation/node_api_parity/baseline/parity_diff_report.md"
 )
@@ -70,6 +73,7 @@ class Phase05ValidationAuditTests(unittest.TestCase):
     def test_node_floor_reconciliation_matches_the_live_one_tier_contract(self) -> None:
         gate_test = read_text(NODE_PARITY_GATE_TEST)
         deferred_items = read_text(PHASE2_DEFERRED_ITEMS)
+        contract_markdown = read_text(NODE_PARITY_CONTRACT_MARKDOWN)
         diff_report = read_text(NODE_PARITY_DIFF_REPORT)
         contract = json.loads(read_text(NODE_PARITY_CONTRACT))
 
@@ -81,6 +85,15 @@ class Phase05ValidationAuditTests(unittest.TestCase):
         self.assertNotIn("711", gate_test)
         self.assertIn("resolved during Phase 05 cleanup", deferred_items)
         self.assertIn("live one-tier contract floor is 705", deferred_items)
+        self.assertIn("one-tier", contract_markdown)
+        self.assertIn("705", contract_markdown)
+        self.assertIn("parity_contract.json", contract_markdown)
+        self.assertIn("parity_diff_report.md", contract_markdown)
+        self.assertIn(
+            "tools/node_api_parity/tests/test_check_parity_gate.py", contract_markdown
+        )
+        self.assertNotIn("hybrid-tiered", contract_markdown)
+        self.assertNotIn("Tier 2 (defer-capable)", contract_markdown)
 
 
 if __name__ == "__main__":
