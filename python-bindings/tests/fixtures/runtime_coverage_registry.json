@@ -14,7 +14,7 @@
       "contractCount": 43,
       "contractIdsHash": "90a8f039181858fd8aeb5af9e0ab2d9f1b1a2256fcfe31800a2bf6f5ed04eee0",
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "config-tier1-smoke",
       "fixtureRefs": [
         "PARITY_MAIN_YAML",
@@ -43,7 +43,7 @@
         "classic_config.set_application_dir"
       ],
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_config_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_config_smoke.py",
       "testCaseId": "config-plan06-promoted-smoke",
       "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
     },
@@ -59,7 +59,7 @@
       "contractCount": 251,
       "contractIdsHash": "8012b970e781c186ee9504799d989beed1095afe60032f2143ca601cbba8b62f",
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
       "fixtureRefs": [
         "PARITY_MAIN_YAML",
@@ -94,7 +94,7 @@
         "classic_scanlog.contains_plugin"
       ],
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave1_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_wave1_smoke.py",
       "testCaseId": "scanlog-wave1-promoted-smoke",
       "notes": "Per-class smoke tests for the 7 promoted #[pyclass] wrappers + grouped free functions added in Phase 3 Plan 02. Constructor signatures from 03-02-CONSTRUCTOR-INVENTORY.md."
     },
@@ -142,7 +142,7 @@
         "classic_scanlog.GpuVendor"
       ],
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
       "testCaseId": "scanlog-wave2-promoted-smoke",
       "notes": "Per-class smoke tests for the 7 Wave 2 #[pyclass] wrappers + grouped mod_detector free functions + typed FcxResetError exception class added in Phase 3 Plan 03. Constructor signatures from 03-03-CONSTRUCTOR-INVENTORY.md. GLOBAL_FCX_HANDLER excluded per R9. FCX global state reset between tests via the autouse conftest.py fixture."
     },
@@ -185,7 +185,7 @@
         "classic_scanlog.check_crashgen_version_status"
       ],
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
       "testCaseId": "scanlog-wave3a-promoted-smoke",
       "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04. Covers orchestrator/papyrus/version sub-modules (the only sub-modules with PyO3 wrappers); crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. Report sub-module is deferred to Plan 05."
     },
@@ -238,7 +238,7 @@
         "classic_scanlog.ParallelReportProcessor.combine_fragments"
       ],
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_scanlog_report_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_report_smoke.py",
       "testCaseId": "scanlog-wave3b-promoted-smoke",
       "notes": "Per-class smoke tests for Wave 3b report sub-module added in Phase 3 Plan 05. Covers all 5 PyO3 report wrappers (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor). ParallelReportProcessor is a pure -py convenience class paired with ReportComposer -core proxy per Wave 3a precedent. Constructor signatures from 03-05-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface asserts StringPool/ReportFragment/ReportComposer/ReportGenerator/report module marker exist in -core surface."
     },
@@ -254,7 +254,7 @@
       "contractCount": 89,
       "contractIdsHash": "0a61b1aa58ac08acb5197ddad31e4159f4d4d0dae2709d616a8c14479bd5b208",
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier1-smoke",
       "fixtureRefs": []
     },
@@ -268,7 +268,7 @@
         "classic_config.YamlData.warn_outdated"
       ],
       "verificationMode": "field_inspection",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "config-tier2-smoke"
     },
     {
@@ -283,7 +283,7 @@
       "contractCount": 69,
       "contractIdsHash": "8b1478fba68df7b0dad1df1e7ede1fbc02c133063490b8e4fae661177a736b65",
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_classic_shared_smoke.py",
+      "testSuite": "python-bindings/tests/test_classic_shared_smoke.py",
       "testCaseId": "classic-shared-smoke-suite",
       "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 \u2014 tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
     },
@@ -299,7 +299,7 @@
       "contractCount": 95,
       "contractIdsHash": "4bb08d07639ba26f99842fe935cbf20088bb72ad05ba2c954b6dc1296ead465d",
       "verificationMode": "workflow_smoke",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_file_io_aux_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_file_io_aux_smoke.py",
       "testCaseId": "classic-file-io-promoted-smoke",
       "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] \u2014 all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
     },
@@ -336,7 +336,7 @@
         "classic_version_registry.MatchConfidence.is_high_confidence"
       ],
       "verificationMode": "direct_call",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_version_registry_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_version_registry_smoke.py",
       "testCaseId": "version-registry-plan07-promoted-smoke",
       "fixtureRefs": []
     },
@@ -352,7 +352,7 @@
       },
       "contractCount": 172,
       "contractIdsHash": "9a2359a3aba879bf6d113ea41e89f369b399dcaf6211ef1eaebf656513af031c",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke"
     },
     {
@@ -367,7 +367,7 @@
       },
       "contractCount": 72,
       "contractIdsHash": "b38945a95f98447f1651736dfba82ab06b0d0eee8a22a6ac5a5413fdccd286fa",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "path-residuals-smoke"
     },
     {
@@ -382,7 +382,7 @@
       },
       "contractCount": 46,
       "contractIdsHash": "7697bca357a98b64d6ae5f3fde5471067033738c53b41ab6bc1ed6bed4da980a",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "message-residuals-smoke"
     },
     {
@@ -397,7 +397,7 @@
       },
       "contractCount": 44,
       "contractIdsHash": "5cc9a223e7f0758a9295722d9e758829dd81b5f4178f6b43d528767184b314a5",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke"
     },
     {
@@ -412,7 +412,7 @@
       },
       "contractCount": 36,
       "contractIdsHash": "35c75f90d701dafcbbc2bc7a144cd8d54a617f5f45cb9ecee94019df0ab4d39e",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "resource-residuals-smoke"
     },
     {
@@ -427,7 +427,7 @@
       },
       "contractCount": 36,
       "contractIdsHash": "140099c34d2148b8fe047e883d54731fdd27f6a97671190cc160cd0dd96b4d30",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "xse-residuals-smoke"
     },
     {
@@ -442,7 +442,7 @@
       },
       "contractCount": 67,
       "contractIdsHash": "b684d577b3c108223c0c9a6c2e32da27f216bce6ff3ac7e0631e45ff486baada",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "settings-residuals-smoke"
     },
     {
@@ -457,7 +457,7 @@
       },
       "contractCount": 20,
       "contractIdsHash": "ea1cd78a10bd6405d6c2588809898adf17873ad8bc7514a7ca5c55fe3c66068d",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "registry-residuals-smoke"
     },
     {
@@ -472,7 +472,7 @@
       },
       "contractCount": 23,
       "contractIdsHash": "f0813870fa267200890c8532e34ef29eedb8611a4e18e1e7612912fc0698d2a5",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "web-residuals-smoke"
     },
     {
@@ -487,7 +487,7 @@
       },
       "contractCount": 15,
       "contractIdsHash": "81a3f22383497f2ee83857afff467d6c2ab07e7bf339ba30c19642c442922d51",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "version-residuals-smoke"
     },
     {
@@ -502,7 +502,7 @@
       },
       "contractCount": 10,
       "contractIdsHash": "787637e8ae3e680f66699f2f5f69e578a6c5646d61eb3c96cae25736c0ac7181",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "perf-residuals-smoke"
     },
     {
@@ -517,7 +517,7 @@
       },
       "contractCount": 10,
       "contractIdsHash": "b22849974bb596d0bead117814580140d5d6b13f7cd0744baf7b87c432dbcfbc",
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "update-residuals-smoke"
     },
     {
@@ -535,7 +535,7 @@
         "scanlog.parser.PatternMatcher.has_match",
         "scanlog.version.CrashgenVersion.to_tuple"
       ],
-      "testSuite": "ClassicLib-rs/python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scanlog-method-residuals"
     }
   ]

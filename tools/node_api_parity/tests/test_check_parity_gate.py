@@ -77,3 +77,25 @@ def test_parity_contract_file_exists() -> None:
     assert PARITY_CONTRACT.is_file(), (
         f"parity_contract.json not found at {PARITY_CONTRACT}"
     )
+
+
+def test_node_gate_defaults_use_repo_root_paths() -> None:
+    source = (
+        REPO_ROOT / "tools" / "node_api_parity" / "check_parity_gate.py"
+    ).read_text(encoding="utf-8")
+    assert 'default="node-bindings/classic-node/index.d.ts"' in source
+    assert 'default="node-bindings/classic-node/parity-artifacts"' in source
+    assert (
+        'default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json"'
+        in source
+    )
+    assert "ClassicLib-rs/node-bindings/classic-node" not in source
+
+
+def test_dts_freshness_defaults_use_repo_root_paths() -> None:
+    source = (
+        REPO_ROOT / "tools" / "node_api_parity" / "check_dts_freshness.py"
+    ).read_text(encoding="utf-8")
+    assert 'default="node-bindings/classic-node"' in source
+    assert 'default="node-bindings/classic-node/parity-artifacts"' in source
+    assert "ClassicLib-rs/node-bindings/classic-node" not in source

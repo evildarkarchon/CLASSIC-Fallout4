@@ -86,7 +86,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = $PSScriptRoot
 $WorkspaceRootManifest = Join-Path $ProjectRoot "Cargo.toml"
 $UseUv = [bool](Get-Command uv -ErrorAction SilentlyContinue)
-$PythonBindingsRoot = Join-Path $ProjectRoot "ClassicLib-rs/python-bindings"
+$PythonBindingsRoot = Join-Path $ProjectRoot "python-bindings"
 $PythonBindingsVenv = Join-Path $PythonBindingsRoot ".venv"
 $PythonBindingsPython = Join-Path $PythonBindingsVenv "Scripts/python.exe"
 
@@ -221,8 +221,8 @@ function Get-PythonRustModules {
     $rustModules = @()
 
     $searchPaths = @(
-        (Join-Path $ProjectRoot "ClassicLib-rs/foundation"),
-        (Join-Path $ProjectRoot "ClassicLib-rs/python-bindings")
+        (Join-Path $ProjectRoot "foundation"),
+        (Join-Path $ProjectRoot "python-bindings")
     )
 
     foreach ($path in $searchPaths) {
@@ -239,7 +239,7 @@ function Get-PythonRustModules {
 
     # Sort modules (foundation first, then alphabetical)
     $rustModules = @($rustModules | Sort-Object {
-            if ($_.Dir -match "ClassicLib-rs[\\/]foundation") { "0_" + $_.WheelName } else { "1_" + $_.WheelName }
+            if ($_.Dir -match "[\\/]foundation([\\/]|$)") { "0_" + $_.WheelName } else { "1_" + $_.WheelName }
         })
 
     # Filter modules if arguments provided
@@ -282,7 +282,7 @@ function Remove-PythonInstalledArtifacts {
         return
     }
 
-    Write-Host "🗑️  Removing old Python binding artifacts from ClassicLib-rs/python-bindings/.venv..." -ForegroundColor Cyan
+    Write-Host "🗑️  Removing old Python binding artifacts from python-bindings/.venv..." -ForegroundColor Cyan
     foreach ($module in $RustModules) {
         Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.pyd") -ErrorAction SilentlyContinue
         Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.dll") -ErrorAction SilentlyContinue
@@ -302,7 +302,7 @@ function Invoke-PythonBindingsRebuild {
     Write-Host "Using Python bindings virtual environment at $PythonBindingsVenv" -ForegroundColor Cyan
 
     if (-not (Test-Path $PythonBindingsPython)) {
-        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv venv ClassicLib-rs/python-bindings/.venv' and install dependencies into that interpreter."
+        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv venv python-bindings/.venv' and install dependencies into that interpreter."
         exit 1
     }
 
@@ -320,7 +320,7 @@ function Invoke-PythonBindingsRebuild {
 
     if ($CleanBuild) {
         Write-Host "🧹 Cleaning old Rust build artifacts..." -ForegroundColor Cyan
-        Push-Location (Join-Path $ProjectRoot "ClassicLib-rs")
+        Push-Location $ProjectRoot
         try {
             & cargo clean
             Assert-LastExitCode -CommandLabel "cargo clean"
@@ -496,7 +496,7 @@ function Invoke-NodeBindingsRebuild {
         [switch]$DebugBuild
     )
 
-    $nodeDir = Join-Path $ProjectRoot "ClassicLib-rs/node-bindings/classic-node"
+    $nodeDir = Join-Path $ProjectRoot "node-bindings/classic-node"
     if (-not (Test-Path $nodeDir)) {
         Write-Error "Node bindings directory not found: $nodeDir"
         exit 1

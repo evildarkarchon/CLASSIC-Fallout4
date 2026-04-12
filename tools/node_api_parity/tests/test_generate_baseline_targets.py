@@ -99,6 +99,22 @@ def test_every_target_crate_lib_rs_path_exists() -> None:
     )
 
 
+def test_node_target_paths_use_repo_root_layout_only() -> None:
+    for rel in gb.RUST_TARGET_CRATES.values():
+        assert not rel.startswith("ClassicLib-rs/"), rel
+
+    source = (REPO_ROOT / "node-bindings" / "classic-node" / "package.json").read_text(
+        encoding="utf-8"
+    )
+    for expected in (
+        "../../tools/node_api_parity/check_parity_gate.py --repo-root ../..",
+        "../../tools/node_api_parity/check_dts_freshness.py --repo-root ../.. --check-only",
+        "../../tools/enter_vs_dev_shell.ps1",
+    ):
+        assert expected in source
+    assert "../../../tools/" not in source
+
+
 def test_every_target_crate_parses_non_empty_symbols() -> None:
     """Per-crate parse_rust_surface() non-empty assertion.
 

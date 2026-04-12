@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::io::stderr;
 
@@ -6,15 +7,20 @@ use crossterm::cursor::{Hide, Show};
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
 use crossterm::terminal::{
-    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use directories::ProjectDirs;
-use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
 use tracing_appender::non_blocking::WorkerGuard;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
+
+    if let Some(exit_code) = handle_cli_probe() {
+        return exit_code;
+    }
+
     let _log_guard = init_logging();
     let _ = classic_shared_core::get_runtime();
 
@@ -42,6 +48,26 @@ fn main() -> color_eyre::Result<()> {
     )?;
 
     result
+}
+
+fn handle_cli_probe() -> Option<color_eyre::Result<()>> {
+    for argument in env::args().skip(1) {
+        match argument.as_str() {
+            "--version" | "-V" => {
+                println!("classic-tui {}", env!("CARGO_PKG_VERSION"));
+                return Some(Ok(()));
+            }
+            "--help" | "-h" => {
+                println!("classic-tui {}", env!("CARGO_PKG_VERSION"));
+                println!("Usage: cargo run -p classic-tui -- [--help] [--version]");
+                println!("Launches the CLASSIC terminal UI when no probe flag is provided.");
+                return Some(Ok(()));
+            }
+            _ => {}
+        }
+    }
+
+    None
 }
 
 fn init_logging() -> Option<WorkerGuard> {

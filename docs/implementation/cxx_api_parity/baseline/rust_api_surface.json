@@ -1,12 +1,12 @@
 {
-  "generated_at_utc": "2026-04-12T01:16:39Z",
+  "generated_at_utc": "2026-04-12T23:04:42Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
       "rustSymbol": "reset_settings_cache_stats",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -18,7 +18,7 @@
       "rustSymbol": "save_local_yaml_paths",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -43,7 +43,7 @@
       "rustSymbol": "settings_cache_clear",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -55,7 +55,7 @@
       "rustSymbol": "settings_cache_size",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -67,7 +67,7 @@
       "rustSymbol": "settings_cache_stats",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -79,7 +79,7 @@
       "rustSymbol": "yaml_data_autoscan_text",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -96,7 +96,7 @@
       "rustSymbol": "yaml_data_classic_game_hints",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -113,7 +113,7 @@
       "rustSymbol": "yaml_data_classic_records_list",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -130,7 +130,7 @@
       "rustSymbol": "yaml_data_classic_version",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -147,7 +147,7 @@
       "rustSymbol": "yaml_data_classic_version_date",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -164,7 +164,7 @@
       "rustSymbol": "yaml_data_crashgen_ignore_og",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -181,7 +181,7 @@
       "rustSymbol": "yaml_data_crashgen_latest_og",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -198,7 +198,7 @@
       "rustSymbol": "yaml_data_crashgen_name_field",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -215,7 +215,7 @@
       "rustSymbol": "yaml_data_game_ignore_plugins",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -232,7 +232,7 @@
       "rustSymbol": "yaml_data_game_ignore_records",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -249,7 +249,7 @@
       "rustSymbol": "yaml_data_game_root_name_field",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -266,7 +266,7 @@
       "rustSymbol": "yaml_data_game_version",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -283,7 +283,7 @@
       "rustSymbol": "yaml_data_get_crashgen_ignore",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -300,7 +300,7 @@
       "rustSymbol": "yaml_data_get_crashgen_name",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -317,7 +317,7 @@
       "rustSymbol": "yaml_data_get_game_root_name",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -334,7 +334,7 @@
       "rustSymbol": "yaml_data_ignore_list",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -351,7 +351,7 @@
       "rustSymbol": "yaml_data_load",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -380,7 +380,7 @@
       "rustSymbol": "yaml_data_mods_conf_count",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -397,7 +397,7 @@
       "rustSymbol": "yaml_data_mods_conf_descriptions",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -414,7 +414,7 @@
       "rustSymbol": "yaml_data_mods_conf_fixes",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -431,7 +431,7 @@
       "rustSymbol": "yaml_data_mods_conf_links",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -448,7 +448,7 @@
       "rustSymbol": "yaml_data_mods_conf_mod_a",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -465,7 +465,7 @@
       "rustSymbol": "yaml_data_mods_conf_mod_b",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -482,7 +482,7 @@
       "rustSymbol": "yaml_data_mods_conf_name_a",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -499,7 +499,7 @@
       "rustSymbol": "yaml_data_mods_conf_name_b",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -516,7 +516,7 @@
       "rustSymbol": "yaml_data_mods_core_count",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -533,7 +533,7 @@
       "rustSymbol": "yaml_data_mods_core_gpus",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -550,7 +550,7 @@
       "rustSymbol": "yaml_data_mods_core_keys",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -567,7 +567,7 @@
       "rustSymbol": "yaml_data_mods_core_names",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -584,7 +584,7 @@
       "rustSymbol": "yaml_data_mods_core_values",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -601,7 +601,7 @@
       "rustSymbol": "yaml_data_mods_freq_entries",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -618,7 +618,7 @@
       "rustSymbol": "yaml_data_mods_solu_entries",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -635,7 +635,7 @@
       "rustSymbol": "yaml_data_suspects_error_keys",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -652,7 +652,7 @@
       "rustSymbol": "yaml_data_suspects_error_rules",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -669,7 +669,7 @@
       "rustSymbol": "yaml_data_suspects_error_values",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -686,7 +686,7 @@
       "rustSymbol": "yaml_data_suspects_stack_count_rules_for_id",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -707,7 +707,7 @@
       "rustSymbol": "yaml_data_suspects_stack_keys",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -724,7 +724,7 @@
       "rustSymbol": "yaml_data_suspects_stack_rules_metadata",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -741,7 +741,7 @@
       "rustSymbol": "yaml_data_warn_noplugins",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -758,7 +758,7 @@
       "rustSymbol": "yaml_data_warn_outdated",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -775,7 +775,7 @@
       "rustSymbol": "yaml_data_xse_acronym",
       "kind": "function",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -792,7 +792,7 @@
       "rustSymbol": "YamlData",
       "kind": "opaque",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -800,7 +800,7 @@
       "rustSymbol": "CacheStats",
       "kind": "struct",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -830,7 +830,7 @@
       "rustSymbol": "SuspectErrorRuleDto",
       "kind": "struct",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -856,7 +856,7 @@
       "rustSymbol": "SuspectStackCountRuleDto",
       "kind": "struct",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -874,7 +874,7 @@
       "rustSymbol": "SuspectStackRuleMetadataDto",
       "kind": "struct",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -912,7 +912,7 @@
       "rustSymbol": "YamlDataModSolutionCriteria",
       "kind": "struct",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -930,7 +930,7 @@
       "rustSymbol": "YamlDataModSolutionEntry",
       "kind": "struct",
       "bridgeModule": "config",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -960,7 +960,7 @@
       "rustSymbol": "db_pool_cache_size",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -977,7 +977,7 @@
       "rustSymbol": "db_pool_clear_cache",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -998,7 +998,7 @@
       "rustSymbol": "db_pool_close",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1015,7 +1015,7 @@
       "rustSymbol": "db_pool_game_table",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1032,7 +1032,7 @@
       "rustSymbol": "db_pool_get_entries_batch",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1057,7 +1057,7 @@
       "rustSymbol": "db_pool_get_entries_batch_typed",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1082,7 +1082,7 @@
       "rustSymbol": "db_pool_get_entry",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1107,7 +1107,7 @@
       "rustSymbol": "db_pool_get_entry_typed",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1132,7 +1132,7 @@
       "rustSymbol": "db_pool_initialize",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1153,7 +1153,7 @@
       "rustSymbol": "db_pool_is_available",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1170,7 +1170,7 @@
       "rustSymbol": "db_pool_new",
       "kind": "function",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1195,7 +1195,7 @@
       "rustSymbol": "DbPool",
       "kind": "opaque",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -1203,7 +1203,7 @@
       "rustSymbol": "FormIdEntryDto",
       "kind": "struct",
       "bridgeModule": "database",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -1229,7 +1229,7 @@
       "rustSymbol": "backup_manager_create",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1250,7 +1250,7 @@
       "rustSymbol": "backup_manager_exists",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1271,7 +1271,7 @@
       "rustSymbol": "backup_manager_new",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1288,7 +1288,7 @@
       "rustSymbol": "backup_manager_remove",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1309,7 +1309,7 @@
       "rustSymbol": "backup_manager_restore",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1330,7 +1330,7 @@
       "rustSymbol": "calculate_file_similarity",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1351,7 +1351,7 @@
       "rustSymbol": "discover_report_files",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1368,7 +1368,7 @@
       "rustSymbol": "game_files_backup",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1393,7 +1393,7 @@
       "rustSymbol": "game_files_manager_new",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1414,7 +1414,7 @@
       "rustSymbol": "game_files_remove",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1439,7 +1439,7 @@
       "rustSymbol": "game_files_restore",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1464,7 +1464,7 @@
       "rustSymbol": "hash_cache_clear",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -1476,7 +1476,7 @@
       "rustSymbol": "hash_cache_size",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -1488,7 +1488,7 @@
       "rustSymbol": "hash_cache_stats",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -1500,7 +1500,7 @@
       "rustSymbol": "log_collector_collect_all",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1517,7 +1517,7 @@
       "rustSymbol": "log_collector_collect_crash_logs",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1534,7 +1534,7 @@
       "rustSymbol": "log_collector_new",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1559,7 +1559,7 @@
       "rustSymbol": "read_file_with_encoding",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1576,7 +1576,7 @@
       "rustSymbol": "read_report_file",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1593,7 +1593,7 @@
       "rustSymbol": "reset_hash_cache_stats",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -1605,7 +1605,7 @@
       "rustSymbol": "resolve_targeted_inputs",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1622,7 +1622,7 @@
       "rustSymbol": "write_autoscan_report",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1643,7 +1643,7 @@
       "rustSymbol": "write_file_string",
       "kind": "function",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1664,7 +1664,7 @@
       "rustSymbol": "CxxBackupManager",
       "kind": "opaque",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -1672,7 +1672,7 @@
       "rustSymbol": "CxxGameFilesManager",
       "kind": "opaque",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -1680,7 +1680,7 @@
       "rustSymbol": "CxxLogCollector",
       "kind": "opaque",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -1688,7 +1688,7 @@
       "rustSymbol": "CacheStats",
       "kind": "struct",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -1718,7 +1718,7 @@
       "rustSymbol": "TargetedResolutionDto",
       "kind": "struct",
       "bridgeModule": "files",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -1740,7 +1740,7 @@
       "rustSymbol": "check_restricted_path",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1757,7 +1757,7 @@
       "rustSymbol": "detect_xse_version_string",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1778,7 +1778,7 @@
       "rustSymbol": "extract_pe_version_string",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1795,7 +1795,7 @@
       "rustSymbol": "find_game_path",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1832,7 +1832,7 @@
       "rustSymbol": "is_xse_installed_check",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1853,7 +1853,7 @@
       "rustSymbol": "parse_game_version",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1870,7 +1870,7 @@
       "rustSymbol": "validate_path",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1887,7 +1887,7 @@
       "rustSymbol": "version_registry_get_all_count",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -1899,7 +1899,7 @@
       "rustSymbol": "version_registry_get_all_ids",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -1911,7 +1911,7 @@
       "rustSymbol": "version_registry_get_by_id",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1928,7 +1928,7 @@
       "rustSymbol": "version_registry_get_crashgen_config",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1949,7 +1949,7 @@
       "rustSymbol": "version_registry_get_crashgen_configs",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1966,7 +1966,7 @@
       "rustSymbol": "version_registry_get_xse_config",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -1983,7 +1983,7 @@
       "rustSymbol": "version_registry_match_version",
       "kind": "function",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2008,7 +2008,7 @@
       "rustSymbol": "CrashgenConfigDto",
       "kind": "struct",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2042,7 +2042,7 @@
       "rustSymbol": "GameVersionDto",
       "kind": "struct",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2072,7 +2072,7 @@
       "rustSymbol": "MatchResultDto",
       "kind": "struct",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2098,7 +2098,7 @@
       "rustSymbol": "VersionInfoDto",
       "kind": "struct",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2140,7 +2140,7 @@
       "rustSymbol": "XseConfigDto",
       "kind": "struct",
       "bridgeModule": "game",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/game.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2174,7 +2174,7 @@
       "rustSymbol": "markdown_to_html",
       "kind": "function",
       "bridgeModule": "markdown",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/markdown.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/markdown.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2191,7 +2191,7 @@
       "rustSymbol": "normalize_markdown",
       "kind": "function",
       "bridgeModule": "markdown",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/markdown.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/markdown.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2208,7 +2208,7 @@
       "rustSymbol": "init_logging",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -2220,7 +2220,7 @@
       "rustSymbol": "log_debug",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2237,7 +2237,7 @@
       "rustSymbol": "log_error",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2254,7 +2254,7 @@
       "rustSymbol": "log_info",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2271,7 +2271,7 @@
       "rustSymbol": "log_startup_acceleration_status",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2300,7 +2300,7 @@
       "rustSymbol": "log_startup_binding_contract_failed",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2337,7 +2337,7 @@
       "rustSymbol": "log_startup_binding_contract_validated",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2362,7 +2362,7 @@
       "rustSymbol": "log_trace",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2379,7 +2379,7 @@
       "rustSymbol": "log_warning",
       "kind": "function",
       "bridgeModule": "message",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/message.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2396,7 +2396,7 @@
       "rustSymbol": "backup_create_timestamped",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2417,7 +2417,7 @@
       "rustSymbol": "backup_list_existing",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2438,7 +2438,7 @@
       "rustSymbol": "check_restricted_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2455,7 +2455,7 @@
       "rustSymbol": "detect_fallout4_docs_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2476,7 +2476,7 @@
       "rustSymbol": "detect_fallout4_game_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2497,7 +2497,7 @@
       "rustSymbol": "docs_checker_run_all_checks",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2518,7 +2518,7 @@
       "rustSymbol": "docs_checker_validate_ini_file",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2543,7 +2543,7 @@
       "rustSymbol": "find_game_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2580,7 +2580,7 @@
       "rustSymbol": "is_restricted_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2597,7 +2597,7 @@
       "rustSymbol": "is_valid_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2614,7 +2614,7 @@
       "rustSymbol": "parse_xse_log",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2631,7 +2631,7 @@
       "rustSymbol": "path_validate_custom_scan",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2648,7 +2648,7 @@
       "rustSymbol": "path_validate_exists",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2665,7 +2665,7 @@
       "rustSymbol": "path_validate_is_directory",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2682,7 +2682,7 @@
       "rustSymbol": "path_validate_is_file",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2699,7 +2699,7 @@
       "rustSymbol": "path_validate_required_files",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2720,7 +2720,7 @@
       "rustSymbol": "resolve_fallout4_exe_name",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2737,7 +2737,7 @@
       "rustSymbol": "validate_path",
       "kind": "function",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2754,7 +2754,7 @@
       "rustSymbol": "IniCheckResultDto",
       "kind": "struct",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2788,7 +2788,7 @@
       "rustSymbol": "mirroring",
       "kind": "struct",
       "bridgeModule": "path",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -2822,7 +2822,7 @@
       "rustSymbol": "perf_clear_metrics",
       "kind": "function",
       "bridgeModule": "perf",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/perf.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -2834,7 +2834,7 @@
       "rustSymbol": "perf_get_operation_average",
       "kind": "function",
       "bridgeModule": "perf",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/perf.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2851,7 +2851,7 @@
       "rustSymbol": "perf_get_operation_count",
       "kind": "function",
       "bridgeModule": "perf",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/perf.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2868,7 +2868,7 @@
       "rustSymbol": "perf_get_summary",
       "kind": "function",
       "bridgeModule": "perf",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/perf.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -2880,7 +2880,7 @@
       "rustSymbol": "perf_record_timing",
       "kind": "function",
       "bridgeModule": "perf",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/perf.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2901,7 +2901,7 @@
       "rustSymbol": "registry_clear_all",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -2913,7 +2913,7 @@
       "rustSymbol": "registry_get_bool",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2930,7 +2930,7 @@
       "rustSymbol": "registry_get_game",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -2942,7 +2942,7 @@
       "rustSymbol": "registry_get_i32",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2959,7 +2959,7 @@
       "rustSymbol": "registry_get_string",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -2976,7 +2976,7 @@
       "rustSymbol": "registry_is_gui_mode",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -2988,7 +2988,7 @@
       "rustSymbol": "registry_is_registered",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3005,7 +3005,7 @@
       "rustSymbol": "registry_key_game",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -3017,7 +3017,7 @@
       "rustSymbol": "registry_key_is_gui_mode",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -3029,7 +3029,7 @@
       "rustSymbol": "registry_set_bool",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3050,7 +3050,7 @@
       "rustSymbol": "registry_set_game",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3067,7 +3067,7 @@
       "rustSymbol": "registry_set_i32",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3088,7 +3088,7 @@
       "rustSymbol": "registry_set_string",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3109,7 +3109,7 @@
       "rustSymbol": "registry_unregister",
       "kind": "function",
       "bridgeModule": "registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3126,7 +3126,7 @@
       "rustSymbol": "init_runtime",
       "kind": "function",
       "bridgeModule": "runtime",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/runtime.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/runtime.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -3138,7 +3138,7 @@
       "rustSymbol": "is_runtime_active",
       "kind": "function",
       "bridgeModule": "runtime",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/runtime.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/runtime.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -3150,7 +3150,7 @@
       "rustSymbol": "shutdown_runtime",
       "kind": "function",
       "bridgeModule": "runtime",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/runtime.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/runtime.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -3162,7 +3162,7 @@
       "rustSymbol": "CheckType",
       "kind": "enum",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "variants": [
         "ExecutableVersion",
@@ -3174,7 +3174,7 @@
       "rustSymbol": "EnbConfigResult",
       "kind": "enum",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Valid",
@@ -3187,7 +3187,7 @@
       "rustSymbol": "EnbResult",
       "kind": "enum",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Present",
@@ -3200,7 +3200,7 @@
       "rustSymbol": "IssueSeverity",
       "kind": "enum",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Error",
@@ -3213,7 +3213,7 @@
       "rustSymbol": "TomlIssueSeverity",
       "kind": "enum",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Info",
@@ -3226,7 +3226,7 @@
       "rustSymbol": "WryeSeverity",
       "kind": "enum",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Info",
@@ -3239,7 +3239,7 @@
       "rustSymbol": "ba2_get_snd_frmt_for_archive",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3256,7 +3256,7 @@
       "rustSymbol": "ba2_get_tex_dims_for_archive",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3273,7 +3273,7 @@
       "rustSymbol": "ba2_get_tex_frmt_for_archive",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3290,7 +3290,7 @@
       "rustSymbol": "ba2_get_xse_files_for_archive",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3307,7 +3307,7 @@
       "rustSymbol": "ba2_scan_archive_summary",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3324,7 +3324,7 @@
       "rustSymbol": "crashgen_checker_check",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3345,7 +3345,7 @@
       "rustSymbol": "crashgen_checker_get_issues",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3366,7 +3366,7 @@
       "rustSymbol": "crashgen_orchestrator_check_summary",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3387,7 +3387,7 @@
       "rustSymbol": "crashgen_orchestrator_get_installed_plugins",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3408,7 +3408,7 @@
       "rustSymbol": "crashgen_orchestrator_get_issues",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3429,7 +3429,7 @@
       "rustSymbol": "enb_checker_validate",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3446,7 +3446,7 @@
       "rustSymbol": "ini_validator_detect_all_issues_for_root",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3467,7 +3467,7 @@
       "rustSymbol": "ini_validator_validate_inis",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3488,7 +3488,7 @@
       "rustSymbol": "integrity_run_all_checks",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3513,7 +3513,7 @@
       "rustSymbol": "needs_path_detection",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3534,7 +3534,7 @@
       "rustSymbol": "run_setup_checks",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3563,7 +3563,7 @@
       "rustSymbol": "scangame_run_setup_structured",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3596,7 +3596,7 @@
       "rustSymbol": "wrye_parse_html_rows",
       "kind": "function",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3621,7 +3621,7 @@
       "rustSymbol": "Ba2IssuesSummaryDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3655,7 +3655,7 @@
       "rustSymbol": "CrashgenCheckResultDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3673,7 +3673,7 @@
       "rustSymbol": "CrashgenReportSummaryDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3707,7 +3707,7 @@
       "rustSymbol": "EnbValidationResultDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3725,7 +3725,7 @@
       "rustSymbol": "IniConfigIssueDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3763,7 +3763,7 @@
       "rustSymbol": "IntegrityCheckResultDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3785,7 +3785,7 @@
       "rustSymbol": "PathDetectionNeeds",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3803,7 +3803,7 @@
       "rustSymbol": "ScanGameSetupDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3825,7 +3825,7 @@
       "rustSymbol": "SetupCheckResult",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3847,7 +3847,7 @@
       "rustSymbol": "TomlConfigIssueDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3885,7 +3885,7 @@
       "rustSymbol": "WryeIssueRowDto",
       "kind": "struct",
       "bridgeModule": "scangame",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -3919,7 +3919,7 @@
       "rustSymbol": "BatchProgressEventKind",
       "kind": "enum",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Queued",
@@ -3934,7 +3934,7 @@
       "rustSymbol": "BatchProgressPhase",
       "kind": "enum",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Setup",
@@ -3948,7 +3948,7 @@
       "rustSymbol": "build_full_scan_config",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -3989,7 +3989,7 @@
       "rustSymbol": "detect_crash_pattern",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4006,7 +4006,7 @@
       "rustSymbol": "detect_vr_log",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4023,7 +4023,7 @@
       "rustSymbol": "fcx_reset_global_state",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4035,7 +4035,7 @@
       "rustSymbol": "get_fcx_config_issues",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4047,7 +4047,7 @@
       "rustSymbol": "on_batch_progress",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "C++",
       "signature": {
         "args": [
@@ -4068,7 +4068,7 @@
       "rustSymbol": "orchestrator_new",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4085,7 +4085,7 @@
       "rustSymbol": "orchestrator_new_minimal",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4114,7 +4114,7 @@
       "rustSymbol": "orchestrator_process_log",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4135,7 +4135,7 @@
       "rustSymbol": "orchestrator_process_logs_batch",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4160,7 +4160,7 @@
       "rustSymbol": "orchestrator_process_logs_batch_with_progress",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4189,7 +4189,7 @@
       "rustSymbol": "papyrus_analyze_full",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4206,7 +4206,7 @@
       "rustSymbol": "papyrus_analyzer_new",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4223,7 +4223,7 @@
       "rustSymbol": "papyrus_check_updates",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4240,7 +4240,7 @@
       "rustSymbol": "papyrus_log_exists",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4257,7 +4257,7 @@
       "rustSymbol": "papyrus_reset",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4274,7 +4274,7 @@
       "rustSymbol": "papyrus_start_monitoring",
       "kind": "function",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4291,7 +4291,7 @@
       "rustSymbol": "CxxPapyrusAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -4299,7 +4299,7 @@
       "rustSymbol": "FullScanConfig",
       "kind": "opaque",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -4307,7 +4307,7 @@
       "rustSymbol": "Orchestrator",
       "kind": "opaque",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -4315,7 +4315,7 @@
       "rustSymbol": "ScanBatchProgressCallback",
       "kind": "opaque",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "C++"
     },
     {
@@ -4323,7 +4323,7 @@
       "rustSymbol": "BatchProgressEvent",
       "kind": "struct",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -4361,7 +4361,7 @@
       "rustSymbol": "BatchScanResult",
       "kind": "struct",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -4415,7 +4415,7 @@
       "rustSymbol": "FcxIssueDto",
       "kind": "struct",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -4457,7 +4457,7 @@
       "rustSymbol": "PapyrusStatsDto",
       "kind": "struct",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -4491,7 +4491,7 @@
       "rustSymbol": "ScanResult",
       "kind": "struct",
       "bridgeModule": "scanner",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -4533,7 +4533,7 @@
       "rustSymbol": "YamlFile",
       "kind": "enum",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Main",
@@ -4550,7 +4550,7 @@
       "rustSymbol": "must_not_be_none_key",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4567,7 +4567,7 @@
       "rustSymbol": "settings_cache_keys",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4579,7 +4579,7 @@
       "rustSymbol": "settings_cache_size",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4591,7 +4591,7 @@
       "rustSymbol": "settings_cache_stats",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4603,7 +4603,7 @@
       "rustSymbol": "settings_clear_cache",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4615,7 +4615,7 @@
       "rustSymbol": "settings_coerce_value",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4636,7 +4636,7 @@
       "rustSymbol": "settings_ignore_none_contains",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4653,7 +4653,7 @@
       "rustSymbol": "settings_invalidate",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4670,7 +4670,7 @@
       "rustSymbol": "settings_is_cached",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4687,7 +4687,7 @@
       "rustSymbol": "settings_load_async_blocking",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4708,7 +4708,7 @@
       "rustSymbol": "settings_load_batch_async_blocking",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4725,7 +4725,7 @@
       "rustSymbol": "settings_load_batch_sync",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4742,7 +4742,7 @@
       "rustSymbol": "settings_load_sync",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4763,7 +4763,7 @@
       "rustSymbol": "settings_reset_cache_stats",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -4775,7 +4775,7 @@
       "rustSymbol": "settings_validate_structure",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4792,7 +4792,7 @@
       "rustSymbol": "settings_validate_value",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4813,7 +4813,7 @@
       "rustSymbol": "yaml_file_as_str",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4830,7 +4830,7 @@
       "rustSymbol": "yaml_file_description",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4847,7 +4847,7 @@
       "rustSymbol": "yaml_ops_cache_size",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4864,7 +4864,7 @@
       "rustSymbol": "yaml_ops_cache_stats",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4881,7 +4881,7 @@
       "rustSymbol": "yaml_ops_clear_cache",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4898,7 +4898,7 @@
       "rustSymbol": "yaml_ops_dump",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4915,7 +4915,7 @@
       "rustSymbol": "yaml_ops_get_setting_value",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4936,7 +4936,7 @@
       "rustSymbol": "yaml_ops_get_string",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4961,7 +4961,7 @@
       "rustSymbol": "yaml_ops_get_vec",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4982,7 +4982,7 @@
       "rustSymbol": "yaml_ops_has_document",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -4999,7 +4999,7 @@
       "rustSymbol": "yaml_ops_load_file",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5020,7 +5020,7 @@
       "rustSymbol": "yaml_ops_new",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -5032,7 +5032,7 @@
       "rustSymbol": "yaml_ops_parse",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5053,7 +5053,7 @@
       "rustSymbol": "yaml_ops_save_file",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5074,7 +5074,7 @@
       "rustSymbol": "yaml_ops_set_bool_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5099,7 +5099,7 @@
       "rustSymbol": "yaml_ops_set_integer_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5124,7 +5124,7 @@
       "rustSymbol": "yaml_ops_set_string_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5149,7 +5149,7 @@
       "rustSymbol": "yaml_ops_set_vec_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5174,7 +5174,7 @@
       "rustSymbol": "YamlOps",
       "kind": "opaque",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -5182,7 +5182,7 @@
       "rustSymbol": "SettingsCacheStats",
       "kind": "struct",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5212,7 +5212,7 @@
       "rustSymbol": "SettingsCoercedValue",
       "kind": "struct",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5242,7 +5242,7 @@
       "rustSymbol": "SettingsValidationIssue",
       "kind": "struct",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5260,7 +5260,7 @@
       "rustSymbol": "YamlCacheStatsDto",
       "kind": "struct",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5290,7 +5290,7 @@
       "rustSymbol": "YamlValue",
       "kind": "struct",
       "bridgeModule": "settings",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5312,7 +5312,7 @@
       "rustSymbol": "GameId",
       "kind": "enum",
       "bridgeModule": "shared",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/shared.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/shared.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Fallout4",
@@ -5326,7 +5326,7 @@
       "rustSymbol": "game_id_as_str",
       "kind": "function",
       "bridgeModule": "shared",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/shared.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/shared.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5343,7 +5343,7 @@
       "rustSymbol": "string_map_contains",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5364,7 +5364,7 @@
       "rustSymbol": "string_map_get",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5385,7 +5385,7 @@
       "rustSymbol": "string_map_is_empty",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5402,7 +5402,7 @@
       "rustSymbol": "string_map_keys",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5419,7 +5419,7 @@
       "rustSymbol": "string_map_len",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5436,7 +5436,7 @@
       "rustSymbol": "string_map_values",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5453,7 +5453,7 @@
       "rustSymbol": "string_vec_map_contains",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5474,7 +5474,7 @@
       "rustSymbol": "string_vec_map_get",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5495,7 +5495,7 @@
       "rustSymbol": "string_vec_map_is_empty",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5512,7 +5512,7 @@
       "rustSymbol": "string_vec_map_keys",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5529,7 +5529,7 @@
       "rustSymbol": "string_vec_map_len",
       "kind": "function",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5546,7 +5546,7 @@
       "rustSymbol": "StringMap",
       "kind": "opaque",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -5554,7 +5554,7 @@
       "rustSymbol": "StringVecMap",
       "kind": "opaque",
       "bridgeModule": "types",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/types.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
       "blockOrigin": "Rust"
     },
     {
@@ -5562,7 +5562,7 @@
       "rustSymbol": "github_check_for_updates",
       "kind": "function",
       "bridgeModule": "update",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5587,7 +5587,7 @@
       "rustSymbol": "github_has_update",
       "kind": "function",
       "bridgeModule": "update",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5608,7 +5608,7 @@
       "rustSymbol": "UpdateCheckResult",
       "kind": "struct",
       "bridgeModule": "update",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5634,7 +5634,7 @@
       "rustSymbol": "Fallout4Version",
       "kind": "enum",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Original",
@@ -5648,7 +5648,7 @@
       "rustSymbol": "fallout4_version_as_str",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5665,7 +5665,7 @@
       "rustSymbol": "fallout4_version_docs_folder_name",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5682,7 +5682,7 @@
       "rustSymbol": "fallout4_version_exe_name",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5699,7 +5699,7 @@
       "rustSymbol": "fallout4_version_is_standard",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5716,7 +5716,7 @@
       "rustSymbol": "fallout4_version_is_vr",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5733,7 +5733,7 @@
       "rustSymbol": "fallout4_version_registry_id",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5750,7 +5750,7 @@
       "rustSymbol": "fallout4_version_steam_app_id",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5767,7 +5767,7 @@
       "rustSymbol": "is_null_version",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5792,7 +5792,7 @@
       "rustSymbol": "parse_game_version",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5809,7 +5809,7 @@
       "rustSymbol": "version_registry_get_all_count",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -5821,7 +5821,7 @@
       "rustSymbol": "version_registry_get_all_for_game",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5842,7 +5842,7 @@
       "rustSymbol": "version_registry_get_all_ids",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -5854,7 +5854,7 @@
       "rustSymbol": "version_registry_get_by_id",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5871,7 +5871,7 @@
       "rustSymbol": "version_registry_get_crashgen_config",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5892,7 +5892,7 @@
       "rustSymbol": "version_registry_get_crashgen_configs",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5909,7 +5909,7 @@
       "rustSymbol": "version_registry_get_xse_config",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5926,7 +5926,7 @@
       "rustSymbol": "version_registry_match_version",
       "kind": "function",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -5951,7 +5951,7 @@
       "rustSymbol": "CrashgenConfigDto",
       "kind": "struct",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -5985,7 +5985,7 @@
       "rustSymbol": "GameVersionDto",
       "kind": "struct",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -6015,7 +6015,7 @@
       "rustSymbol": "MatchResultDto",
       "kind": "struct",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -6041,7 +6041,7 @@
       "rustSymbol": "VersionInfoDto",
       "kind": "struct",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -6083,7 +6083,7 @@
       "rustSymbol": "XseConfigDto",
       "kind": "struct",
       "bridgeModule": "version_registry",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/version_registry.rs",
       "blockOrigin": "Rust",
       "fields": [
         {
@@ -6117,7 +6117,7 @@
       "rustSymbol": "ModSite",
       "kind": "enum",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "variants": [
         "NexusMods",
@@ -6130,7 +6130,7 @@
       "rustSymbol": "WebGameId",
       "kind": "enum",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "variants": [
         "Fallout4",
@@ -6144,7 +6144,7 @@
       "rustSymbol": "extract_domain_string",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6161,7 +6161,7 @@
       "rustSymbol": "is_valid_url",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6178,7 +6178,7 @@
       "rustSymbol": "mod_site_base_url",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6195,7 +6195,7 @@
       "rustSymbol": "mod_site_game_url",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6216,7 +6216,7 @@
       "rustSymbol": "mod_site_name",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6233,7 +6233,7 @@
       "rustSymbol": "validate_url_string",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6250,7 +6250,7 @@
       "rustSymbol": "web_build_url_with_query",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6275,7 +6275,7 @@
       "rustSymbol": "web_get_user_agent",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [],
@@ -6287,7 +6287,7 @@
       "rustSymbol": "web_get_user_agent_with_suffix",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6304,7 +6304,7 @@
       "rustSymbol": "web_join_url",
       "kind": "function",
       "bridgeModule": "web",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/web.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/web.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6325,7 +6325,7 @@
       "rustSymbol": "XseType",
       "kind": "enum",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "variants": [
         "F4SE",
@@ -6341,7 +6341,7 @@
       "rustSymbol": "detect_xse_version",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6362,7 +6362,7 @@
       "rustSymbol": "detect_xse_version_string",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6383,7 +6383,7 @@
       "rustSymbol": "is_xse_installed",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6404,7 +6404,7 @@
       "rustSymbol": "is_xse_installed_check",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6425,7 +6425,7 @@
       "rustSymbol": "xse_get_dll_prefix",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6442,7 +6442,7 @@
       "rustSymbol": "xse_get_info",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6463,7 +6463,7 @@
       "rustSymbol": "xse_get_loader_name",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6480,7 +6480,7 @@
       "rustSymbol": "xse_get_type_from_game_id",
       "kind": "function",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "signature": {
         "args": [
@@ -6497,7 +6497,7 @@
       "rustSymbol": "XseInfoDto",
       "kind": "struct",
       "bridgeModule": "xse",
-      "sourceFile": "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
       "blockOrigin": "Rust",
       "fields": [
         {

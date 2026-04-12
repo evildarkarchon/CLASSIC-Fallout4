@@ -10,7 +10,7 @@ corresponding Rust implementation by checking for:
 
 Usage:
     python validate_stubs.py                            # Validate all crates from repo root
-    python validate_stubs.py --rust-dir ClassicLib-rs   # Explicit transitional legacy path
+    python validate_stubs.py --rust-dir .               # Explicit repo-root input
     python validate_stubs.py --verbose                  # Show detailed output
     python validate_stubs.py --fix                      # Auto-fix simple issues (future)
 """
@@ -28,25 +28,25 @@ LEGACY_WORKSPACE_DIR = SCRIPT_DIR / "ClassicLib-rs"
 
 
 def normalize_rust_dir(rust_dir: Path) -> Path:
-    """Normalize repo-root and legacy rust-dir inputs to the live workspace tree.
-
-    Phase 6 promotes this script to repo root while the actual crate tree still lives
-    under ``ClassicLib-rs``. Accept both the repo root and the legacy workspace path
-    so existing callers keep working during the transition.
-    """
+    """Resolve the repo root and reject legacy ClassicLib-rs inputs."""
 
     resolved = rust_dir.resolve()
-    candidates = [resolved, resolved / "ClassicLib-rs"]
+    if resolved == LEGACY_WORKSPACE_DIR or resolved.name == "ClassicLib-rs":
+        replacement = (
+            resolved.parent if resolved.name == "ClassicLib-rs" else SCRIPT_DIR
+        )
+        raise FileNotFoundError(
+            "Legacy rust-dir 'ClassicLib-rs' is no longer supported. "
+            f"Use repo root '{replacement}' so python-bindings resolves at "
+            f"'{replacement / 'python-bindings'}'."
+        )
 
-    for candidate in candidates:
-        if (candidate / "python-bindings").exists():
-            return candidate
+    if (resolved / "python-bindings").exists():
+        return resolved
 
-    candidate_text = ", ".join(
-        str(candidate / "python-bindings") for candidate in candidates
-    )
     raise FileNotFoundError(
-        "python-bindings directory not found. Checked: " + candidate_text
+        "python-bindings directory not found at "
+        f"'{resolved / 'python-bindings'}'. Use the repository root as --rust-dir."
     )
 
 
@@ -445,8 +445,8 @@ def main() -> None:
         type=Path,
         default=SCRIPT_DIR,
         help=(
-            "Workspace root to validate. Defaults to the repo root; during Phase 6 "
-            "both the repo root and ./ClassicLib-rs normalize to the live bindings tree."
+            "Workspace root to validate. Defaults to the repo root. Legacy "
+            "ClassicLib-rs paths now fail fast; use the repository root instead."
         ),
     )
     parser.add_argument(

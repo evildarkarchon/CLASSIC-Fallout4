@@ -277,17 +277,17 @@ def main() -> int:
     )
     parser.add_argument(
         "--index-dts",
-        default="ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+        default="node-bindings/classic-node/index.d.ts",
         help="Path to Node index.d.ts, relative to repo root.",
     )
     parser.add_argument(
         "--output-dir",
-        default="ClassicLib-rs/node-bindings/classic-node/parity-artifacts",
+        default="node-bindings/classic-node/parity-artifacts",
         help="Directory for generated gate artifacts, relative to repo root.",
     )
     parser.add_argument(
         "--runtime-registry",
-        default="ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
+        default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
         help="Path to the Node runtime coverage registry JSON, relative to repo root.",
     )
     parser.add_argument(

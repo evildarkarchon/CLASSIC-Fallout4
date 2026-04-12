@@ -24,6 +24,7 @@ All output is deterministic (Pitfall 8 / Parser Determinism Guarantees):
     - Struct field / enum variant lists preserve source order (NOT sorted)
     - JSON key insertion order fixed by constructing dicts the same way every time
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,7 +50,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 # ---- build.rs parser (D-07) ----
 
-_BRIDGES_RE = re.compile(r'cxx_build::bridges\s*\(\s*\[(.*?)\]\s*\)', re.DOTALL)
+_BRIDGES_RE = re.compile(r"cxx_build::bridges\s*\(\s*\[(.*?)\]\s*\)", re.DOTALL)
 _QUOTED_STR_RE = re.compile(r'"([^"]+)"')
 
 
@@ -101,20 +102,20 @@ def extract_ffi_block(source: str) -> tuple[str | None, str]:
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                return source[open_brace + 1:i], namespace
+                return source[open_brace + 1 : i], namespace
     return None, namespace
 
 
 # ---- item parsers ----
 
 # Strip #[...] attribute lines (Pitfall 5) before regex-scanning for struct/enum names.
-_ATTR_LINE_RE = re.compile(r'^[ \t]*#\[[^\]]*\][ \t]*\r?\n', re.MULTILINE)
+_ATTR_LINE_RE = re.compile(r"^[ \t]*#\[[^\]]*\][ \t]*\r?\n", re.MULTILINE)
 
 # Inline comment stripping helpers (used before struct/enum body scans)
-_LINE_COMMENT_RE = re.compile(r'//[^\n]*')
-_BLOCK_COMMENT_RE = re.compile(r'/\*.*?\*/', re.DOTALL)
+_LINE_COMMENT_RE = re.compile(r"//[^\n]*")
+_BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 
-_OPAQUE_TYPE_RE = re.compile(r'\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*;')
+_OPAQUE_TYPE_RE = re.compile(r"\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*;")
 
 # extern blocks -- track positions for block-origin attribution
 _EXTERN_RUST_RE = re.compile(r'extern\s+"Rust"\s*\{')
@@ -123,14 +124,14 @@ _EXTERN_CPP_RE = re.compile(r'unsafe\s+extern\s+"C\+\+"\s*\{')
 # Inside an extern block, parse functions. Multi-line signatures supported via DOTALL.
 # Function form: `fn name(args) -> RetType;` or `fn name(args);`
 _FUNCTION_RE = re.compile(
-    r'\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(?:->\s*([^;{]+?))?\s*;',
+    r"\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*?)\)\s*(?:->\s*([^;{]+?))?\s*;",
     re.DOTALL,
 )
 _INCLUDE_MACRO_RE = re.compile(r'include!\s*\(\s*"[^"]*"\s*\)\s*;')
 
 
 def _normalize_ws(s: str) -> str:
-    return re.sub(r'\s+', ' ', s).strip()
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def _make_id(rust_symbol: str, kind: str, bridge_module: str) -> str:
@@ -162,7 +163,9 @@ def _split_top_level_commas(text: str) -> list[str]:
     return parts
 
 
-def _parse_function_signature(params_text: str, return_text: str | None) -> dict[str, Any]:
+def _parse_function_signature(
+    params_text: str, return_text: str | None
+) -> dict[str, Any]:
     """Build the signature dict from raw parameter and return-type text.
 
     Params are split on top-level commas (the simple split is safe because CXX bridge
@@ -231,7 +234,7 @@ def _parse_enum_variants(body: str) -> list[str]:
         if name_part.startswith("#"):
             continue
         # Variant names are simple identifiers; reject anything with special chars.
-        if re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name_part):
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", name_part):
             variants.append(name_part)
     return variants
 
@@ -282,7 +285,7 @@ def _find_top_level_blocks(
                 return True
         return False
 
-    keyword_re = re.compile(rf'\b{keyword}\s+([A-Za-z_][A-Za-z0-9_]*)\b')
+    keyword_re = re.compile(rf"\b{keyword}\s+([A-Za-z_][A-Za-z0-9_]*)\b")
     results: list[tuple[str, int, int]] = []
     for m in keyword_re.finditer(ffi_body):
         if _inside_extern(m.start()):
@@ -333,29 +336,33 @@ def _parse_ffi_body(
     for name, body_start, body_end in _find_top_level_blocks(ffi_clean, "struct"):
         body = ffi_clean[body_start:body_end]
         fields = _parse_struct_fields(body)
-        rows.append({
-            "id": _make_id(name, "struct", bridge_module),
-            "rustSymbol": name,
-            "kind": "struct",
-            "bridgeModule": bridge_module,
-            "sourceFile": source_file,
-            "blockOrigin": "Rust",
-            "fields": fields,
-        })
+        rows.append(
+            {
+                "id": _make_id(name, "struct", bridge_module),
+                "rustSymbol": name,
+                "kind": "struct",
+                "bridgeModule": bridge_module,
+                "sourceFile": source_file,
+                "blockOrigin": "Rust",
+                "fields": fields,
+            }
+        )
 
     # --- Enums (top-level in ffi body, NOT inside extern blocks) ---
     for name, body_start, body_end in _find_top_level_blocks(ffi_clean, "enum"):
         body = ffi_clean[body_start:body_end]
         variants = _parse_enum_variants(body)
-        rows.append({
-            "id": _make_id(name, "enum", bridge_module),
-            "rustSymbol": name,
-            "kind": "enum",
-            "bridgeModule": bridge_module,
-            "sourceFile": source_file,
-            "blockOrigin": "Rust",
-            "variants": variants,
-        })
+        rows.append(
+            {
+                "id": _make_id(name, "enum", bridge_module),
+                "rustSymbol": name,
+                "kind": "enum",
+                "bridgeModule": bridge_module,
+                "sourceFile": source_file,
+                "blockOrigin": "Rust",
+                "variants": variants,
+            }
+        )
 
     # --- Extern blocks (opaque types + functions) ---
     # Use the ORIGINAL ffi_body for extern block extraction so positions stay accurate
@@ -370,14 +377,16 @@ def _parse_ffi_body(
         # Opaque types (`type Foo;`)
         for match in _OPAQUE_TYPE_RE.finditer(block_text):
             name = match.group(1)
-            rows.append({
-                "id": _make_id(name, "opaque", bridge_module),
-                "rustSymbol": name,
-                "kind": "opaque",
-                "bridgeModule": bridge_module,
-                "sourceFile": source_file,
-                "blockOrigin": origin,
-            })
+            rows.append(
+                {
+                    "id": _make_id(name, "opaque", bridge_module),
+                    "rustSymbol": name,
+                    "kind": "opaque",
+                    "bridgeModule": bridge_module,
+                    "sourceFile": source_file,
+                    "blockOrigin": origin,
+                }
+            )
 
         # Functions
         # Remove opaque-type declarations before the function scan so the function regex
@@ -388,15 +397,17 @@ def _parse_ffi_body(
             params_text = match.group(2)
             return_text = match.group(3)
             signature = _parse_function_signature(params_text, return_text)
-            rows.append({
-                "id": _make_id(fn_name, "function", bridge_module),
-                "rustSymbol": fn_name,
-                "kind": "function",
-                "bridgeModule": bridge_module,
-                "sourceFile": source_file,
-                "blockOrigin": origin,
-                "signature": signature,
-            })
+            rows.append(
+                {
+                    "id": _make_id(fn_name, "function", bridge_module),
+                    "rustSymbol": fn_name,
+                    "kind": "function",
+                    "bridgeModule": bridge_module,
+                    "sourceFile": source_file,
+                    "blockOrigin": origin,
+                    "signature": signature,
+                }
+            )
 
     return rows
 
@@ -406,7 +417,7 @@ def _parse_ffi_body(
 
 def parse_cxx_bridge_surface(
     repo_root: Path,
-    bridge_crate_rel: str = "ClassicLib-rs/cpp-bindings/classic-cpp-bridge",
+    bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge",
 ) -> dict[str, Any]:
     """Parse every bridge file listed in build.rs and return a deterministic payload."""
     repo_root = Path(repo_root)
@@ -500,23 +511,27 @@ def generate_diff_report(
         }
         if row_id not in current_rows:
             missing_from_current += 1
-            contract_results.append({
-                **base,
-                "status": "missing_from_current",
-                "reason": (
-                    f"Symbol `{c_row['rustSymbol']}` in baseline but not in "
-                    f"current bridge source for module `{c_row['bridgeModule']}`"
-                ),
-            })
+            contract_results.append(
+                {
+                    **base,
+                    "status": "missing_from_current",
+                    "reason": (
+                        f"Symbol `{c_row['rustSymbol']}` in baseline but not in "
+                        f"current bridge source for module `{c_row['bridgeModule']}`"
+                    ),
+                }
+            )
             continue
         cur_row = current_rows[row_id]
         if _normalize_row_for_compare(c_row) != _normalize_row_for_compare(cur_row):
             signature_mismatch += 1
-            contract_results.append({
-                **base,
-                "status": "signature_mismatch",
-                "reason": "Signature/fields/variants differ from baseline",
-            })
+            contract_results.append(
+                {
+                    **base,
+                    "status": "signature_mismatch",
+                    "reason": "Signature/fields/variants differ from baseline",
+                }
+            )
             continue
         matched_count += 1
         contract_results.append({**base, "status": "matched", "reason": "-"})
@@ -525,13 +540,15 @@ def generate_diff_report(
     for row_id, cur_row in current_rows.items():
         if row_id in contract_rows:
             continue
-        new_entries.append({
-            "id": row_id,
-            "rustSymbol": cur_row["rustSymbol"],
-            "kind": cur_row["kind"],
-            "bridgeModule": cur_row["bridgeModule"],
-            "status": "missing_from_contract",
-        })
+        new_entries.append(
+            {
+                "id": row_id,
+                "rustSymbol": cur_row["rustSymbol"],
+                "kind": cur_row["kind"],
+                "bridgeModule": cur_row["bridgeModule"],
+                "status": "missing_from_contract",
+            }
+        )
 
     missing_from_contract = len(new_entries)
 
@@ -579,12 +596,14 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
         return "\n".join(lines)
 
     if failing:
-        lines.extend((
-            "## Contract Drift",
-            "",
-            "| ID | Bridge Module | Rust Symbol | Kind | Status | Reason |",
-            "|---|---|---|---|---|---|",
-        ))
+        lines.extend(
+            (
+                "## Contract Drift",
+                "",
+                "| ID | Bridge Module | Rust Symbol | Kind | Status | Reason |",
+                "|---|---|---|---|---|---|",
+            )
+        )
         for row in failing:
             lines.append(
                 f"| `{row['id']}` | `{row['bridgeModule']}` | `{row['rustSymbol']}` | "
@@ -593,12 +612,14 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
         lines.append("")
 
     if new_entries:
-        lines.extend((
-            "## New Entries (in bridge source, not in baseline)",
-            "",
-            "| ID | Bridge Module | Rust Symbol | Kind |",
-            "|---|---|---|---|",
-        ))
+        lines.extend(
+            (
+                "## New Entries (in bridge source, not in baseline)",
+                "",
+                "| ID | Bridge Module | Rust Symbol | Kind |",
+                "|---|---|---|---|",
+            )
+        )
         for row in new_entries:
             lines.append(
                 f"| `{row['id']}` | `{row['bridgeModule']}` | "
@@ -623,7 +644,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default="ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts",
+        default="cpp-bindings/classic-cpp-bridge/parity-artifacts",
         help="Directory for generated artifacts, relative to repo root.",
     )
     parser.add_argument(
@@ -635,8 +656,8 @@ def main() -> int:
         "--write-baseline",
         action="store_true",
         help="Also write parity_contract.json to --baseline-output-dir "
-             "(used by the initial bootstrap; normal operation is "
-             "check_parity_gate.py --update-baseline).",
+        "(used by the initial bootstrap; normal operation is "
+        "check_parity_gate.py --update-baseline).",
     )
     args = parser.parse_args()
 
@@ -663,7 +684,8 @@ def main() -> int:
         diff = generate_diff_report(contract, surface)
         write_json(baseline_output_dir / "cxx_diff_report.json", diff)
         (baseline_output_dir / "cxx_diff_report.md").write_text(
-            render_diff_markdown(diff) + "\n", encoding="utf-8",
+            render_diff_markdown(diff) + "\n",
+            encoding="utf-8",
         )
         # Gate report will be written by check_parity_gate.py; the bootstrap
         # writes a placeholder that check_parity_gate.py can overwrite.

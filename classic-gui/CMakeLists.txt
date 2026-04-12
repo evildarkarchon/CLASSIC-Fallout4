@@ -64,7 +64,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
 )
 
 target_include_directories(classic_cxx_bridge PUBLIC
-    "${CMAKE_SOURCE_DIR}/../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include"
+    "${CMAKE_SOURCE_DIR}/../cpp-bindings/classic-cpp-bridge/include"
 )
 
 add_subdirectory(src)

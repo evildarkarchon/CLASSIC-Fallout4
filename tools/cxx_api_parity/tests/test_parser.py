@@ -2,6 +2,7 @@
 
 RED phase: these tests will fail until Task 2 implements the parser.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -38,7 +39,7 @@ class TestParseExternRust:
         crate = tmp_path / "bridge"
         (crate / "src").mkdir(parents=True)
         (crate / "build.rs").write_text(
-            '#[cfg(windows)]\nfn main() {\n'
+            "#[cfg(windows)]\nfn main() {\n"
             '    cxx_build::bridges(["src/simple.rs"])\n'
             '        .compile("x");\n}\n',
             encoding="utf-8",
@@ -199,7 +200,7 @@ class TestParseBuildRs:
     def test_build_rs_missing_bridges(self):
         """CXXG-01 / D-07: parser MUST raise on missing cxx_build::bridges() — no hardcoded fallback."""
         with pytest.raises(ValueError, match="cxx_build::bridges"):
-            parse_build_rs_file_list("fn main() { println!(\"noop\"); }\n")
+            parse_build_rs_file_list('fn main() { println!("noop"); }\n')
 
 
 class TestDeterminism:
@@ -208,7 +209,7 @@ class TestDeterminism:
         crate = tmp_path / "bridge"
         (crate / "src").mkdir(parents=True)
         (crate / "build.rs").write_text(
-            'fn main() { cxx_build::bridges(['
+            "fn main() { cxx_build::bridges(["
             '"src/simple.rs","src/struct_ffi.rs","src/enum_ffi.rs",'
             '"src/opaque_ffi.rs","src/mixed_ffi.rs"'
             ']).compile("x"); }\n',
@@ -250,7 +251,9 @@ class TestDeterminism:
 
 
 class TestMixedFfiInventory:
-    def test_parse_mixed_ffi_complete_inventory(self, fixture_dir: Path, tmp_path: Path):
+    def test_parse_mixed_ffi_complete_inventory(
+        self, fixture_dir: Path, tmp_path: Path
+    ):
         """CXXG-01: mixed_ffi.rs produces exactly the hand-counted 7 rows."""
         crate = tmp_path / "bridge"
         (crate / "src").mkdir(parents=True)
@@ -273,11 +276,30 @@ class TestMixedFfiInventory:
 
         symbols = {r["rustSymbol"] for r in mixed_rows}
         assert symbols == {
-            "BatchProgressEventKind",       # enum
-            "BatchProgressEvent",           # struct
-            "ScanProgressCallback",         # C++ opaque
-            "on_progress",                  # C++ fn
-            "MixedOrchestrator",            # Rust opaque
-            "orchestrator_new",             # Rust fn
-            "orchestrator_run",             # Rust fn
+            "BatchProgressEventKind",  # enum
+            "BatchProgressEvent",  # struct
+            "ScanProgressCallback",  # C++ opaque
+            "on_progress",  # C++ fn
+            "MixedOrchestrator",  # Rust opaque
+            "orchestrator_new",  # Rust fn
+            "orchestrator_run",  # Rust fn
         }
+
+
+def test_cxx_parser_rejects_legacy_bridge_root(tmp_path: Path):
+    bridge = tmp_path / "cpp-bindings" / "classic-cpp-bridge"
+    (bridge / "src").mkdir(parents=True)
+    (bridge / "build.rs").write_text(
+        'fn main() { cxx_build::bridges(["src/simple.rs"]).compile("x"); }\n',
+        encoding="utf-8",
+    )
+    (bridge / "src" / "simple.rs").write_text(
+        '#[cxx::bridge]\nmod ffi { extern "Rust" { fn hello() -> bool; } }\n',
+        encoding="utf-8",
+    )
+
+    payload = parse_cxx_bridge_surface(tmp_path)
+    assert payload["entries"][0]["sourceFile"].startswith(
+        "cpp-bindings/classic-cpp-bridge/"
+    )
+    assert "ClassicLib-rs/cpp-bindings" not in payload["entries"][0]["sourceFile"]

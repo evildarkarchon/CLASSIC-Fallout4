@@ -24,26 +24,26 @@ from binding_parity_runtime_coverage import (
 
 RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
-    "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-    "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-    "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
-    "classic-file-io-core": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
-    "classic-path-core": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
-    "classic-settings-core": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
-    "classic-message-core": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
-    "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
-    "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
-    "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+    "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
+    "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
+    "classic-file-io-core": "business-logic/classic-file-io-core/src/lib.rs",
+    "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
+    "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs",
+    "classic-message-core": "business-logic/classic-message-core/src/lib.rs",
+    "classic-perf-core": "business-logic/classic-perf-core/src/lib.rs",
+    "classic-registry-core": "business-logic/classic-registry-core/src/lib.rs",
+    "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
     # Phase 4 Plan 1 expansion — matches Phase 3's set.
     # (yaml-core was absorbed into settings-core in v9.1.0 Phase 1.
     # The former crashgen rules crate was absorbed into classic-config-core
     # in v9.1.0 Phase 2 — rule model now lives in config-core::crashgen_rules.)
-    "classic-version-core": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-    "classic-web-core": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
-    "classic-update-core": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
-    "classic-xse-core": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
-    "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
-    "classic-scangame-core": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
+    "classic-version-core": "business-logic/classic-version-core/src/lib.rs",
+    "classic-web-core": "business-logic/classic-web-core/src/lib.rs",
+    "classic-update-core": "business-logic/classic-update-core/src/lib.rs",
+    "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
+    "classic-database-core": "business-logic/classic-database-core/src/lib.rs",
+    "classic-scangame-core": "business-logic/classic-scangame-core/src/lib.rs",
 }
 
 # Phase 4 Plan 1 A5: distinct owner labels matching Phase 3 — do NOT collapse
@@ -869,7 +869,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--index-dts",
-        default="ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+        default="node-bindings/classic-node/index.d.ts",
         help="Path to Node index.d.ts, relative to repo root.",
     )
     parser.add_argument(
@@ -879,7 +879,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--runtime-registry",
-        default="ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
+        default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
         help="Path to the Node runtime coverage registry JSON, relative to repo root.",
     )
     args = parser.parse_args()

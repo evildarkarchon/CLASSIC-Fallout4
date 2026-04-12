@@ -65,7 +65,7 @@ def validate_contract_rust_symbols(
                 "'{rust_symbol}' which is not in the parsed Rust surface "
                 "for crate '{crate}'. Add 'pub use "
                 "<sub_module>::{rust_symbol};' to "
-                "'ClassicLib-rs/business-logic/{crate}/src/lib.rs' (or the "
+                "'business-logic/{crate}/src/lib.rs' (or the "
                 "appropriate foundation/-py lib.rs for classic_shared) "
                 "before promoting this row.".format(
                     id=mapping["id"],
@@ -178,12 +178,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default="ClassicLib-rs/python-bindings/parity-artifacts",
+        default="python-bindings/parity-artifacts",
         help="Directory for generated gate artifacts, relative to repo root.",
     )
     parser.add_argument(
         "--runtime-registry",
-        default="ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        default="python-bindings/tests/fixtures/runtime_coverage_registry.json",
         help="Path to the Python runtime coverage registry JSON, relative to repo root.",
     )
     parser.add_argument(

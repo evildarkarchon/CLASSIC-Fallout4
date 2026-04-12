@@ -24,27 +24,27 @@ from binding_parity_runtime_coverage import (
 
 RUST_TARGET_CRATES: dict[str, str] = {
     # Existing 3 (preserved for stability)
-    "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-    "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-    "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+    "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
+    "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
     # Phase 3 additions -- 14 additional business-logic crates (the former yaml-core was absorbed into settings-core in v9.1.0 Phase 1)
-    "classic-database-core": "ClassicLib-rs/business-logic/classic-database-core/src/lib.rs",
-    "classic-file-io-core": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
-    "classic-scangame-core": "ClassicLib-rs/business-logic/classic-scangame-core/src/lib.rs",
-    "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
-    "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
-    "classic-settings-core": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
-    "classic-message-core": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
-    "classic-path-core": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
-    "classic-version-core": "ClassicLib-rs/business-logic/classic-version-core/src/lib.rs",
-    "classic-resource-core": "ClassicLib-rs/business-logic/classic-resource-core/src/lib.rs",
-    "classic-xse-core": "ClassicLib-rs/business-logic/classic-xse-core/src/lib.rs",
-    "classic-web-core": "ClassicLib-rs/business-logic/classic-web-core/src/lib.rs",
-    "classic-update-core": "ClassicLib-rs/business-logic/classic-update-core/src/lib.rs",
+    "classic-database-core": "business-logic/classic-database-core/src/lib.rs",
+    "classic-file-io-core": "business-logic/classic-file-io-core/src/lib.rs",
+    "classic-scangame-core": "business-logic/classic-scangame-core/src/lib.rs",
+    "classic-registry-core": "business-logic/classic-registry-core/src/lib.rs",
+    "classic-perf-core": "business-logic/classic-perf-core/src/lib.rs",
+    "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs",
+    "classic-message-core": "business-logic/classic-message-core/src/lib.rs",
+    "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
+    "classic-version-core": "business-logic/classic-version-core/src/lib.rs",
+    "classic-resource-core": "business-logic/classic-resource-core/src/lib.rs",
+    "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
+    "classic-web-core": "business-logic/classic-web-core/src/lib.rs",
+    "classic-update-core": "business-logic/classic-update-core/src/lib.rs",
     # Foundation crates (Phase 3 adds GameId in shared-core while parity still
     # tracks Python-visible wrappers from classic-shared-py).
-    "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
-    "classic-shared-py": "ClassicLib-rs/foundation/classic-shared-py/src/lib.rs",
+    "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
+    "classic-shared-py": "foundation/classic-shared-py/src/lib.rs",
     # NOTE: classic-crashgen-settings-core is INTENTIONALLY EXCLUDED -- its symbols
     # flow through classic-config-py / classic-scanlog-py / classic-scangame-py
     # wrappers (see .planning/phases/03-python-tier-collapse/03-RESEARCH.md A5).
@@ -72,23 +72,23 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
 }
 
 PYTHON_TARGET_MODULES: dict[str, str] = {
-    "classic_scanlog": "ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-    "classic_config": "ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi",
-    "classic_version_registry": "ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi",
-    "classic_database": "ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi",
-    "classic_file_io": "ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi",
-    "classic_scangame": "ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi",
-    "classic_registry": "ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi",
-    "classic_perf": "ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi",
-    "classic_settings": "ClassicLib-rs/python-bindings/classic-settings-py/classic_settings.pyi",
-    "classic_message": "ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi",
-    "classic_path": "ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi",
-    "classic_version": "ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi",
-    "classic_resource": "ClassicLib-rs/python-bindings/classic-resource-py/classic_resource.pyi",
-    "classic_xse": "ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi",
-    "classic_web": "ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi",
-    "classic_update": "ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi",
-    "classic_shared": "ClassicLib-rs/foundation/classic-shared-py/classic_shared.pyi",
+    "classic_scanlog": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+    "classic_config": "python-bindings/classic-config-py/classic_config.pyi",
+    "classic_version_registry": "python-bindings/classic-version-registry-py/classic_version_registry.pyi",
+    "classic_database": "python-bindings/classic-database-py/classic_database.pyi",
+    "classic_file_io": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+    "classic_scangame": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+    "classic_registry": "python-bindings/classic-registry-py/classic_registry.pyi",
+    "classic_perf": "python-bindings/classic-perf-py/classic_perf.pyi",
+    "classic_settings": "python-bindings/classic-settings-py/classic_settings.pyi",
+    "classic_message": "python-bindings/classic-message-py/classic_message.pyi",
+    "classic_path": "python-bindings/classic-path-py/classic_path.pyi",
+    "classic_version": "python-bindings/classic-version-py/classic_version.pyi",
+    "classic_resource": "python-bindings/classic-resource-py/classic_resource.pyi",
+    "classic_xse": "python-bindings/classic-xse-py/classic_xse.pyi",
+    "classic_web": "python-bindings/classic-web-py/classic_web.pyi",
+    "classic_update": "python-bindings/classic-update-py/classic_update.pyi",
+    "classic_shared": "foundation/classic-shared-py/classic_shared.pyi",
 }
 
 PYTHON_OWNER_BY_MODULE: dict[str, str] = {
@@ -960,7 +960,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--runtime-registry",
-        default="ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        default="python-bindings/tests/fixtures/runtime_coverage_registry.json",
         help="Path to the Python runtime coverage registry JSON, relative to repo root.",
     )
     args = parser.parse_args()
