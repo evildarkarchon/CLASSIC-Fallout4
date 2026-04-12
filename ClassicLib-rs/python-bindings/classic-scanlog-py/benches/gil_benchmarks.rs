@@ -17,12 +17,12 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-scanlog-py
 //! ```
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
 use std::hint::black_box;
 
 // Import shared benchmark configuration from workspace benches/common/
-#[path = "../../../benches/common/mod.rs"]
+#[path = "../../../../benches/common/mod.rs"]
 mod common;
 
 /// Generate realistic crash log lines for benchmarking

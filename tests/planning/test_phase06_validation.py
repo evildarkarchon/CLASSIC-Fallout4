@@ -23,6 +23,20 @@ BENCH_COMMON_DIR = REPO_ROOT / "benches/common"
 LEGACY_BENCHMARK_CONFIG = REPO_ROOT / "ClassicLib-rs/benchmark-config.yaml"
 LEGACY_CRITERION_CONFIG = REPO_ROOT / "ClassicLib-rs/criterion.toml"
 LEGACY_BENCH_COMMON_DIR = REPO_ROOT / "ClassicLib-rs/benches/common"
+BENCHMARK_INCLUDE_FILES = [
+    REPO_ROOT
+    / "ClassicLib-rs/business-logic/classic-settings-core/benches/yaml_benchmarks.rs",
+    REPO_ROOT
+    / "ClassicLib-rs/business-logic/classic-scanlog-core/benches/scanlog_benchmarks.rs",
+    REPO_ROOT
+    / "ClassicLib-rs/business-logic/classic-file-io-core/benches/file_io_benchmarks.rs",
+    REPO_ROOT
+    / "ClassicLib-rs/business-logic/classic-database-core/benches/database_benchmarks.rs",
+    REPO_ROOT
+    / "ClassicLib-rs/python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs",
+    REPO_ROOT
+    / "ClassicLib-rs/python-bindings/classic-file-io-py/benches/gil_benchmarks.rs",
+]
 
 
 def read_text(path: Path) -> str:
@@ -176,6 +190,12 @@ class Phase06ValidationAuditTests(unittest.TestCase):
                 "overrides:",
             ],
         )
+
+        for path in BENCHMARK_INCLUDE_FILES:
+            text = read_text(path)
+            with self.subTest(path=str(path)):
+                self.assertIn("../../../../benches/common/", text)
+                self.assertNotIn('#[path = "../../../benches/common/', text)
 
     @unittest.skip("Phase 6 Wave 3 pending")
     def test_repo_root_workflows(self) -> None:
