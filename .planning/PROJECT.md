@@ -4,7 +4,7 @@
 
 **Goal:** Reduce workspace granularity by merging 3 pairs of crates (19 → 16), updating all binding surfaces and parity gates, with zero functional changes.
 
-**Status:** Phase 4 complete — docs, parity gates, workspace tests, and native wrapper validation are green.
+**Status:** Phase 5 complete — remaining consolidation audit debt is closed, and the docs, verification artifacts, and Node parity contract surfaces now match the live one-tier baseline.
 
 **Target features:**
 - Merge `classic-yaml-core` into `classic-settings-core` (unify YAML loading/caching)
@@ -92,6 +92,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - Node parity contract: one enforced tier; verify with `bun run parity:gate` and refresh only with `bun run parity:gate:update-baseline` when drift is intentional
 - Codebase map from 2026-04-04 at `.planning/codebase/CONCERNS.md` — all actionable concerns resolved across v9.1.0-bugfixes and v9.1.0-bindings
 - v9.1.0-consolidation Phase 4 closed with green docs, parity, workspace, and native wrapper evidence in `.planning/phases/04-gate-validation-documentation/04-VERIFICATION.md`
+- v9.1.0-consolidation Phase 5 closed the remaining audit debt: top-level docs routing, Phase 3 verification bookkeeping, and Node parity contract artifacts now agree with the live 705-row one-tier baseline
 
 ## Constraints
 
@@ -135,4 +136,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 after Phase 4 closure verification*
+*Last updated: 2026-04-12 after Phase 5 milestone cleanup closure*
