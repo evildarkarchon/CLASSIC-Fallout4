@@ -4,9 +4,9 @@
 
 **Latest shipped milestone:** `v9.1.0-consolidation Crate Consolidation` (2026-04-12)
 
-**Status:** The Rust business-logic workspace is now consolidated to 16 crates, all three binding surfaces remain at full parity, and the milestone cleanup pass aligned docs, verification artifacts, and Node parity contract surfaces to the live one-tier baseline.
+**Status:** The Rust business-logic workspace remains consolidated to 16 crates, the repository root is now the single live Cargo workspace shell, and active CI, docs, helper scripts, parity checks, and native wrapper entrypoints validate against that repo-root contract.
 
-**Current focus:** Define and execute milestone `v9.1.0-root` to relocate the Rust workspace from `ClassicLib-rs/` to the repository root.
+**Current focus:** Phase 6 is complete; next focus is Phase 7 crate relocation and path rewiring for milestone `v9.1.0-root`.
 
 ## Current Milestone: `v9.1.0-root` Move Crates to Project Root
 
@@ -88,10 +88,10 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Redistribute constants ownership across version-registry-core, settings-core, and shared-core — v9.1.0-consolidation Phase 3
 - ✓ Update all binding crates for changed import paths — v9.1.0-consolidation Phases 1-3
 - ✓ All three parity gates pass at zero drift after consolidation, with closure evidence recorded in `04-VERIFICATION.md` — v9.1.0-consolidation Phase 4
+- ✓ Repository root is the only live Cargo workspace entrypoint, with repo-root `cargo fmt --all`, `cargo clippy --workspace`, and `cargo test --workspace` flows verified — v9.1.0-root Phase 6
 
 ### Active
 
-- [ ] Cargo workspace runs from the repository root while preserving the existing crate layout
 - [ ] Every crate currently under `ClassicLib-rs/` is relocated without changing intended ownership boundaries
 - [ ] Docs, skills, and agent context files reference the new root-level workspace paths
 - [ ] Existing wrapper, parity, and frontend workflows still work against the relocated workspace
@@ -159,4 +159,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after milestone v9.1.0-root start*
+*Last updated: 2026-04-12 after Phase 6 completion*
