@@ -114,7 +114,12 @@ Plans:
   3. Python parity gate exits 0 with `deferred_total == 0` after import path updates for merged crates
   4. Node parity gate exits 0 after any needed import path updates for merged crates
   5. API docs under `docs/api/` are updated: absorbed crate pages (yaml-core, crashgen-settings-core, constants-core) are consolidated into their target crate pages, and all cross-references point to the surviving crates
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Align active topology and API docs with the 16-crate closure state and verify-first parity wording
+- [ ] 04-02-PLAN.md — Run plain parity gates first, refresh only source-backed drift, and revalidate Node/Python runtime artifacts
+- [ ] 04-03-PLAN.md — Run the full closure suite and write the dedicated Phase 4 verification checklist artifact
 
 ## Progress
 
