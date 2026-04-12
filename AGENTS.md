@@ -33,6 +33,7 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a C++ plus Rust ap
 
 ## Quick Notes
 
+- The canonical Cargo workspace shell now lives at repo root (`Cargo.toml`, `.cargo/config.toml`, and `Cargo.lock`); the crate tree remains under `ClassicLib-rs/` until later migration work.
 - Native C++ targets are Windows-focused and MSVC-based.
 - When running Rust or C++ MSVC-targeted commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it, so Git's `usr/bin/link.exe` does not override the Visual Studio linker.
 - Python bindings remain for other potential projects and should be kept in sync with Rust core logic.

@@ -27,6 +27,22 @@ BENCH_COMMON_DIR = REPO_ROOT / "benches/common"
 LEGACY_BENCHMARK_CONFIG = REPO_ROOT / "ClassicLib-rs/benchmark-config.yaml"
 LEGACY_CRITERION_CONFIG = REPO_ROOT / "ClassicLib-rs/criterion.toml"
 LEGACY_BENCH_COMMON_DIR = REPO_ROOT / "ClassicLib-rs/benches/common"
+README_FILE = REPO_ROOT / "README.md"
+AGENTS_FILE = REPO_ROOT / "AGENTS.md"
+CLAUDE_FILE = REPO_ROOT / "CLAUDE.md"
+DOCS_README_FILE = REPO_ROOT / "docs/README.md"
+QUICK_START_FILE = REPO_ROOT / "docs/api/QUICK_START.md"
+CI_CHECK_SKILL = REPO_ROOT / ".claude/skills/ci-check/SKILL.md"
+CLASSIC_PROJECT_GUIDE_FILES = [
+    REPO_ROOT / ".claude/skills/classic-project-guide/SKILL.md",
+    REPO_ROOT / ".claude/skills/classic-project-guide/references/repo-guide.md",
+    REPO_ROOT / ".agents/skills/classic-project-guide/SKILL.md",
+    REPO_ROOT / ".agents/skills/classic-project-guide/references/repo-guide.md",
+    REPO_ROOT / ".opencode/skills/classic-project-guide/SKILL.md",
+    REPO_ROOT / ".opencode/skills/classic-project-guide/references/repo-guide.md",
+    REPO_ROOT / ".agent/skills/classic-project-guide/SKILL.md",
+    REPO_ROOT / ".agent/skills/classic-project-guide/references/repo-guide.md",
+]
 BENCHMARK_INCLUDE_FILES = [
     REPO_ROOT
     / "ClassicLib-rs/business-logic/classic-settings-core/benches/yaml_benchmarks.rs",
@@ -288,13 +304,63 @@ class Phase06ValidationAuditTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, text)
 
-    @unittest.skip("Phase 6 Wave 3 pending")
     def test_readme_sync(self) -> None:
-        pass
+        for path in [README_FILE, DOCS_README_FILE, QUICK_START_FILE]:
+            text = read_text(path)
+            with self.subTest(path=str(path)):
+                self.assertNotIn("ClassicLib-rs/Cargo.toml", text)
 
-    @unittest.skip("Phase 6 Wave 3 pending")
+        assert_contains_all(
+            self,
+            read_text(README_FILE),
+            [
+                "cargo build --workspace",
+                "cargo test --workspace",
+                "cargo fmt --all -- --check",
+                "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+            ],
+        )
+        assert_contains_all(
+            self,
+            read_text(QUICK_START_FILE),
+            [
+                "cargo test --workspace",
+                "cargo fmt --all -- --check",
+                "cargo build --workspace",
+            ],
+        )
+
     def test_agents_sync(self) -> None:
-        pass
+        for path in [
+            AGENTS_FILE,
+            CLAUDE_FILE,
+            CI_CHECK_SKILL,
+            *CLASSIC_PROJECT_GUIDE_FILES,
+        ]:
+            text = read_text(path)
+            with self.subTest(path=str(path)):
+                self.assertNotIn("ClassicLib-rs/Cargo.toml", text)
+
+        assert_contains_all(
+            self,
+            read_text(AGENTS_FILE),
+            [
+                "The canonical Cargo workspace shell now lives at repo root",
+                "Cargo.toml",
+                ".cargo/config.toml",
+                "Cargo.lock",
+            ],
+        )
+        assert_contains_all(
+            self,
+            read_text(CLAUDE_FILE),
+            [
+                "cargo build --workspace",
+                "cargo test --workspace",
+                "cargo fmt --all -- --check",
+                "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+            ],
+        )
 
 
 if __name__ == "__main__":

@@ -68,11 +68,11 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ### Rust tests and quality checks
 
 ```powershell
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ---
@@ -80,8 +80,8 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 ## 5) Rust workspace development
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace
+cargo build --workspace --release
 ```
 
 Core domain work belongs under [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic).

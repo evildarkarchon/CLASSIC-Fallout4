@@ -10,10 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Rust (from repo root)
 
 ```
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo build --workspace
+cargo test --workspace
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ### C++ (always use PowerShell wrappers, never raw ctest)
@@ -45,7 +45,7 @@ uv run pytest ClassicLib-rs/python-bindings/tests -q
 ### Formatting (pre-commit minimum)
 
 ```
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml
+cargo fmt --all
 uv run ruff format .
 ```
 
@@ -96,7 +96,7 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - Windows-only native targets (MSVC x64); Rust workspace is cross-platform at source level but CI is Windows-only
 - Single shared Tokio async runtime — one runtime rule enforced project-wide (`classic-shared-core`)
 - The active Rust business-logic workspace now consists of 16 pure Rust crates after the yaml/settings merge, crashgen/config merge, and constants redistribution
-- Cargo (Rust workspace) — lockfile present at `ClassicLib-rs/Cargo.lock`
+- Cargo (Rust workspace) — lockfile present at `Cargo.lock`
 - Bun (Node bindings) — lockfile present at `ClassicLib-rs/node-bindings/classic-node/bun.lockb`
 - uv (Python bindings) — venv at `ClassicLib-rs/python-bindings/.venv`
 - vcpkg (C++ dependencies) — managed per-component via `classic-cli/vcpkg.json` and `classic-gui/vcpkg.json`
@@ -149,8 +149,8 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - `VCPKG_ROOT` env var required for C++ builds
 - `GITHUB_TOKEN` optional env var (loaded via `dotenvy` from `.env`) to raise GitHub API rate limit for update checks
 - No `.env` file committed — must be created locally for token auth
-- `ClassicLib-rs/Cargo.toml` — Rust workspace root
-- `ClassicLib-rs/.cargo/config.toml` — cargo aliases (flame, profile-build)
+- `Cargo.toml` — Rust workspace root
+- `.cargo/config.toml` — cargo aliases (flame, profile-build)
 - `classic-cli/CMakeLists.txt` + `classic-cli/CMakePresets.json` — CLI build
 - `classic-gui/CMakeLists.txt` + `classic-gui/CMakePresets.json` — GUI build
 - `ClassicLib-rs/node-bindings/classic-node/tsconfig.json` — TypeScript (CommonJS, ES2022 target, outDir `dist/`)
@@ -192,9 +192,9 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - TypeScript: `SCREAMING_SNAKE_CASE` (e.g., `BATCH_CACHE_TTL`, `THIS_SUITE`)
 - Python module names: `classic_config`, `classic_scanlog`, `classic_version_registry` (underscore, not hyphen)
 ## Code Style
-- Tool: `rustfmt` via `cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml`
+- Tool: `rustfmt` via `cargo fmt --all`
 - No standalone `rustfmt.toml` detected; default rustfmt settings apply
-- Workspace lints enforced in `ClassicLib-rs/Cargo.toml`:
+- Workspace lints enforced in `Cargo.toml`:
 - Tool: clang-format, config at `classic-cli/.clang-format` and `classic-gui/.clang-format`
 - `ColumnLimit: 120`, `IndentWidth: 4`, `UseTab: Never`
 - Braces: K&R / Attach style (same line for everything)

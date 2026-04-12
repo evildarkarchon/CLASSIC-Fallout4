@@ -35,7 +35,7 @@ Load `references/repo-guide.md` selectively.
 ## Match Validation To The Touched Surface
 
 - For `classic-cli/` or `classic-gui/`, use the repo PowerShell wrapper scripts from the reference guide for build, install, package, clean rebuild, and all C++ test flows, including targeted runs via `-CTestName` and `-IntegrationTestName`.
-- For Rust workspace changes, expect `cargo fmt`, `cargo clippy`, and the relevant `cargo test` commands from `ClassicLib-rs/Cargo.toml`.
+- For Rust workspace changes, expect `cargo fmt`, `cargo clippy`, and the relevant `cargo test` commands from the repo-root workspace.
 - For Node binding changes, treat parity artifacts and binding tests as part of the same change and use the local parity gate plus Bun and Node test commands from the reference guide.
 - For Python binding changes, use `ClassicLib-rs/python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, rebuild, and pytest steps from the reference guide.
 - For Linux or cloud validation, prefer portable Rust-only subsets when native Windows-focused surfaces are not practical to build.
