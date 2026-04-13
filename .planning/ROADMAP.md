@@ -77,7 +77,13 @@ Plans:
   1. Contributor can run CI and path-sensitive build or packaging jobs against the new repository-root layout.
   2. Contributor can verify the relocation from a clean state with regenerated path-bearing artifacts.
   3. Contributor can see that successful validation does not depend on stale caches, stale outputs, or leftover `ClassicLib-rs` artifacts.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] `09-01-PLAN.md` — Bootstrap the Phase 9 clean-validation audit and stronger targeted-clean harness.
+- [ ] `09-02-PLAN.md` — Refresh Rust, native C++, and benchmark workflow path contracts plus GUI package proof invariants.
+- [ ] `09-03-PLAN.md` — Refresh Python and Node PR workflow path contracts and lock the allowed artifact scope.
+- [ ] `09-04-PLAN.md` — Regenerate only the owned path-bearing artifacts and finish the clean-state + GUI package proof.
 
 ### Phase 10: Docs, Guidance, and Tripwires
 **Goal**: Active documentation and agent guidance teach the new workspace layout and help prevent `ClassicLib-rs` workspace-root regressions.
