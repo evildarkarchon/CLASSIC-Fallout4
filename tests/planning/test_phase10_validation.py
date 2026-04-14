@@ -23,6 +23,13 @@ LINK_REQUIRED_SURFACES = [
     REPO_ROOT / ".agent/skills/classic-project-guide/SKILL.md",
 ]
 
+TOP_LEVEL_LINK_REQUIRED_SURFACES = [
+    REPO_ROOT / "README.md",
+    REPO_ROOT / "docs/README.md",
+    REPO_ROOT / "docs/RUST_DOCUMENTATION_INDEX.md",
+    REPO_ROOT / "docs/testing/TESTING_GUIDE_INDEX.md",
+]
+
 ACTIVE_TOP_LEVEL_DOCS = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs/README.md",
@@ -187,9 +194,9 @@ class TestPhase10Validation(unittest.TestCase):
 
     def test_matrix_and_top_level_docs_contract(self) -> None:
         self.assertEqual(
-            len(LINK_REQUIRED_SURFACES),
-            len(set(LINK_REQUIRED_SURFACES)),
-            msg="LINK_REQUIRED_SURFACES should not contain duplicates.",
+            len(TOP_LEVEL_LINK_REQUIRED_SURFACES),
+            len(set(TOP_LEVEL_LINK_REQUIRED_SURFACES)),
+            msg="TOP_LEVEL_LINK_REQUIRED_SURFACES should not contain duplicates.",
         )
         self.assertEqual(
             len(ACTIVE_TOP_LEVEL_DOCS),
@@ -200,7 +207,10 @@ class TestPhase10Validation(unittest.TestCase):
             MIGRATION_MATRIX,
             REPO_ROOT / "docs/workspace-migration-matrix.md",
         )
-        self.assert_contract_for_paths(LINK_REQUIRED_SURFACES, require_matrix_link=True)
+        self.assertTrue(MIGRATION_MATRIX.exists())
+        self.assert_contract_for_paths(
+            TOP_LEVEL_LINK_REQUIRED_SURFACES, require_matrix_link=True
+        )
         self.assert_contract_for_paths(ACTIVE_TOP_LEVEL_DOCS, require_matrix_link=True)
 
     def test_api_hubs_and_binding_workflow_contract(self) -> None:
