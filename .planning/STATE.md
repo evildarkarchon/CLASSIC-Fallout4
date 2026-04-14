@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-04-14T02:50:05.263Z"
+stopped_at: Completed 10-07-PLAN.md
+last_updated: "2026-04-14T02:51:07.375Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 27
-  completed_plans: 20
+  completed_plans: 21
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 (docs-guidance-and-tripwires) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Status: Ready to execute
 Last activity: 2026-04-14
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 10 P00 | 3min | 2 tasks | 2 files |
 | Phase 10 P01 | 11 min | 2 tasks | 6 files |
 | Phase 10 P03 | 5min | 1 tasks | 5 files |
+| Phase 10 P07 | 12min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Limit the current verification selector to the plan-owned top-level doc surfaces so later Phase 10 plans can extend coverage without blocking this plan.
 - [Phase 10]: Keep deep API reference pages focused on repo-root source links and treat old ClassicLib-rs locations as historical context only.
 - [Phase 10]: Use root-level crate, binding, and UI paths directly in plan-owned API guides instead of duplicating migration routing.
+- [Phase 10]: Keep AGENTS.md policy text intact while swapping live location examples to the repo-root layer directories.
+- [Phase 10]: Route always-on agent entrypoints to docs/workspace-migration-matrix.md instead of duplicating old-to-new translations.
 
 ### Pending Todos
 
@@ -141,7 +144,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T02:50:05.260Z
-Stopped at: Completed 10-03-PLAN.md
+Last session: 2026-04-14T02:51:07.371Z
+Stopped at: Completed 10-07-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 08 wrapper/parity rewiring
