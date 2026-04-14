@@ -1,6 +1,6 @@
 # `classic-scanlog-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-scanlog-core/`](../../ClassicLib-rs/business-logic/classic-scanlog-core).
+Contributor-facing API documentation for [`business-logic/classic-scanlog-core/`](../../business-logic/classic-scanlog-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - exposing FFI or binding-specific wrapper types
 - front-end presentation logic
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-shared-core`](../../foundation/classic-shared-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -46,7 +46,7 @@ Top-level scan pipeline and the main integration surface.
 - `AnalysisResult` - result payload for one analyzed log
 - `OrchestratorCore` - async scan runner and report writer
 - `ScanProgressPhase` - coarse phase callbacks for progress reporting
-- `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core)
+- `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core)
 - `resolve_batch_concurrency()` - public helper for the same batch-concurrency policy used by `process_logs_batch()`
 
 ### `parser`
@@ -126,7 +126,7 @@ Important constructors/helpers:
 
 Contributor notes:
 
-- `build_analysis_config_from_yaml()` is the canonical bridge from [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core).
+- `build_analysis_config_from_yaml()` is the canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core).
 - Version Registry data is preferred when available; YAML values are used as compatibility fallback.
 - OG/VR selection is resolved before scan-time settings validation from `selected_game_version` plus Version Registry data.
 - VR mode is still tracked internally and is not exposed as a public field; `game_version_vr` carries the VR version string when registry data provides one.
@@ -338,11 +338,11 @@ Binding expectation:
 
 The main contributor-facing pipeline looks like this:
 
-1. Load YAML/config data with [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core).
+1. Load YAML/config data with [`classic-config-core`](../../business-logic/classic-config-core).
 2. Convert `YamlDataCore` into `AnalysisConfig` with `build_analysis_config_from_yaml()`.
 3. Construct `OrchestratorCore::new(config)`.
-4. Optionally attach a [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core) `DatabasePool` for FormID value lookups.
-5. `process_log()` reads the file with [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
+4. Optionally attach a [`classic-database-core`](../../business-logic/classic-database-core) `DatabasePool` for FormID value lookups.
+5. `process_log()` reads the file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
 6. `LogParser::parse_all_sections_arc()` builds named sections.
 7. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
 8. Analysis passes run over the prepared data:
@@ -395,7 +395,7 @@ This crate exposes async APIs but does not create its own runtime.
 
 - Async entry points include `OrchestratorCore::async_enter()`, `async_exit()`, `process_log()`, `process_log_with_progress()`, `process_logs_batch()`, `load_loadorder_async()`, `write_reports_batch()`, and `FormIDAnalyzerCore::formid_match()`.
 - The crate depends on `tokio` and `futures`, but the source does not construct a Tokio runtime in production code.
-- In CLASSIC, higher layers are expected to use the shared runtime model from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) rather than introducing a second runtime.
+- In CLASSIC, higher layers are expected to use the shared runtime model from [`classic-shared-core`](../../foundation/classic-shared-core) rather than introducing a second runtime.
 
 Internal concurrency/performance patterns visible in the source:
 
@@ -424,12 +424,12 @@ Notes:
 
 ## Related Crates And Integration Points
 
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
-- [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
-- [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared runtime policy used by higher layers in this repo
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - binding layers that should stay aligned with this crate's public behavior
+- [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
+- [`classic-database-core`](../../business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
+- [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy used by higher layers in this repo
+- [`classic-node`](../../node-bindings/classic-node) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - binding layers that should stay aligned with this crate's public behavior
 
 In practice, `classic-scanlog-core` is the downstream analysis layer that turns config/YAML data into scan results and autoscan reports.
 
@@ -437,7 +437,7 @@ In practice, `classic-scanlog-core` is the downstream analysis layer that turns 
 
 ## Usage Example
 
-This example follows the intended contributor flow: load YAML with [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), build an `AnalysisConfig`, and process a log with `OrchestratorCore`.
+This example follows the intended contributor flow: load YAML with [`classic-config-core`](../../business-logic/classic-config-core), build an `AnalysisConfig`, and process a log with `OrchestratorCore`.
 
 ```rust
 use classic_config_core::YamlDataCore;
