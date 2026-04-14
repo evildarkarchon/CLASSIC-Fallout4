@@ -4,9 +4,9 @@
 
 **Latest shipped milestone:** `v9.1.0-consolidation Crate Consolidation` (2026-04-12)
 
-**Status:** The Rust crate tree lives under repo-root layer directories, the repository root remains the single live Cargo workspace shell, and active docs, skills, and agent context files now teach the repo-root contract with regression tripwires in place.
+**Status:** The Rust crate tree lives under repo-root layer directories, the repository root remains the single live Cargo workspace shell, and the moved-crate proof now has current Phase 7 verification evidence plus aligned planning closure.
 
-**Current focus:** Phase 10 is complete; repo-root guidance and migration tripwires are now aligned across contributor docs, agent entrypoints, and codebase maps.
+**Current focus:** Phase 11 is complete; the remaining work shifts to Phase 12 integration replay and verification closure.
 
 ## Current Milestone: `v9.1.0-root` Move Crates to Project Root
 
@@ -89,12 +89,12 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 - ✓ Update all binding crates for changed import paths — v9.1.0-consolidation Phases 1-3
 - ✓ All three parity gates pass at zero drift after consolidation, with closure evidence recorded in `04-VERIFICATION.md` — v9.1.0-consolidation Phase 4
 - ✓ Repository root is the only live Cargo workspace entrypoint, with repo-root `cargo fmt --all`, `cargo clippy --workspace`, and `cargo test --workspace` flows verified — v9.1.0-root Phase 6
+- ✓ Every crate previously under `ClassicLib-rs/` is relocated at repo-root paths with preserved structure, and the proof is replayable through `07-VERIFICATION.md` — v9.1.0-root Phase 7/11 (validated in Phase 11: relocation-proof-and-verification-closure)
 - ✓ Active docs, skills, and agent context files route contributors through repo-root paths and the shared migration matrix instead of `ClassicLib-rs/` operational guidance — v9.1.0-root Phase 10
 - ✓ Validation-critical docs, scripts, and tests now have explicit tripwires against active `ClassicLib-rs` workspace-root regressions — v9.1.0-root Phase 10
 
 ### Active
 
-- [ ] Every crate currently under `ClassicLib-rs/` is relocated without changing intended ownership boundaries
 - [ ] Existing wrapper, parity, and frontend workflows still work against the relocated workspace
 
 ### Out of Scope
@@ -160,4 +160,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after Phase 10 completion*
+*Last updated: 2026-04-14 after Phase 11 completion*
