@@ -109,11 +109,10 @@ J:\CLASSIC-Fallout4\cpp-bindings\classic-cpp-bridge\Cargo.toml
 
 ## Legacy ClassicLib-rs Residue
 
-The remaining `ClassicLib-rs/` directory is residue only. It no longer contains workspace member manifests or Rust source files.
+The current `ClassicLib-rs/` directory contents are residue only. This inventory is non-authoritative and intentionally limited to the live entries still present on disk; it does not imply any remaining workspace ownership.
 
 | Residue | Why it is non-authoritative |
 | --- | --- |
-| `.cargo/` | Empty legacy directory; no `config.toml`, manifest, or Rust source remains. |
 | `.gitignore` | Git housekeeping only; not consumed by Cargo workspace resolution. |
 | `.idea/` | Local IDE metadata only. |
 | `CLASSIC_Settings.yaml` | Runtime/user data, not part of the Rust build graph. |
