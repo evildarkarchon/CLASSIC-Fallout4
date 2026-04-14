@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 @docs/api/README.md
+@docs/workspace-migration-matrix.md
 
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**CLASSIC Crate Consolidation Milestone**
+**CLASSIC Repo-Root Workspace Migration Milestone**
 
-The active milestone closes with a surviving 16-crate Rust business-logic workspace after the Phase 1 yaml/settings merge, Phase 2 crashgen/config merge, and Phase 3 constants redistribution. The Rust core, C++ bridge, Node bindings, and Python bindings all stay aligned against that post-merge topology with zero parity drift.
+The active milestone keeps the Rust core, C++ bridge, Node bindings, and Python bindings aligned after moving the live workspace to the repository root. Repo-root layer directories (`foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/`) are now the operational contract, with migration lookups centralized in `docs/workspace-migration-matrix.md`.
 
 **Core Value:** The Rust workspace keeps minimal, well-bounded crates with no redundant boundaries, while all three binding surfaces stay in full parity with zero drift.
 
@@ -27,26 +28,26 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 ## Technology Stack
 
 ## Languages
-- Rust (edition 2024, MSRV 1.85.0) - All business logic, bindings, and TUI (`ClassicLib-rs/`)
+- Rust (edition 2024, MSRV 1.85.0) - All business logic, shared runtime, bindings, and TUI (`foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, `ui-applications/`)
 - C++20 - CLI and Qt GUI frontends (`classic-cli/`, `classic-gui/`)
-- TypeScript 5.8 - Node.js binding CLI wrapper (`ClassicLib-rs/node-bindings/classic-node/cli/`)
-- Python 3.12 - Python binding adapters and parity/tooling scripts (`ClassicLib-rs/python-bindings/`, `tools/`)
+- TypeScript 5.8 - Node.js binding CLI wrapper (`node-bindings/classic-node/cli/`)
+- Python 3.12 - Python binding adapters and parity/tooling scripts (`python-bindings/`, `tools/`)
 ## Runtime
 - Windows-only native targets (MSVC x64); Rust workspace is cross-platform at source level but CI is Windows-only
 - Single shared Tokio async runtime — one runtime rule enforced project-wide (`classic-shared-core`)
 - The active Rust business-logic workspace now consists of 16 pure Rust crates after the yaml/settings merge, crashgen/config merge, and constants redistribution
 - Cargo (Rust workspace) — lockfile present at `Cargo.lock`
-- Bun (Node bindings) — lockfile present at `ClassicLib-rs/node-bindings/classic-node/bun.lockb`
-- uv (Python bindings) — venv at `ClassicLib-rs/python-bindings/.venv`
+- Bun (Node bindings) — lockfile present at `node-bindings/classic-node/bun.lockb`
+- uv (Python bindings) — venv at `python-bindings/.venv`
 - vcpkg (C++ dependencies) — managed per-component via `classic-cli/vcpkg.json` and `classic-gui/vcpkg.json`
 ## Frameworks
 - tokio 1.49.0 — shared runtime, async I/O, task scheduling (`workspace dependency`)
 - Qt 6 (qtbase with network, testlib, widgets, thread) — C++ desktop GUI (`classic-gui/`)
 - Slint 1.15.0 — optional Rust GUI bridge (feature-gated `gui-bridge` in `classic-shared-core`)
-- Ratatui 0.30 + crossterm 0.28 — terminal UI (`ClassicLib-rs/ui-applications/classic-tui/`)
-- PyO3 0.27.2 (abi3-py312) — Python extension modules (`ClassicLib-rs/python-bindings/`)
-- NAPI-RS 3 (napi9) — Node.js/Bun native addon (`ClassicLib-rs/node-bindings/classic-node/`)
-- CXX 1.0 — C++ FFI bridge (`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`)
+- Ratatui 0.30 + crossterm 0.28 — terminal UI (`ui-applications/classic-tui/`)
+- PyO3 0.27.2 (abi3-py312) — Python extension modules (`python-bindings/`)
+- NAPI-RS 3 (napi9) — Node.js/Bun native addon (`node-bindings/classic-node/`)
+- CXX 1.0 — C++ FFI bridge (`cpp-bindings/classic-cpp-bridge/`)
 - Corrosion v0.6.1 — Cargo-into-CMake integration for C++ frontends (fetched at CMake configure time)
 - Maturin — Python wheel builder for PyO3 crates
 - CLI11 — CLI argument parsing (`classic-cli/`)
@@ -92,7 +93,7 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - `.cargo/config.toml` — cargo aliases (flame, profile-build)
 - `classic-cli/CMakeLists.txt` + `classic-cli/CMakePresets.json` — CLI build
 - `classic-gui/CMakeLists.txt` + `classic-gui/CMakePresets.json` — GUI build
-- `ClassicLib-rs/node-bindings/classic-node/tsconfig.json` — TypeScript (CommonJS, ES2022 target, outDir `dist/`)
+- `node-bindings/classic-node/tsconfig.json` — TypeScript (CommonJS, ES2022 target, outDir `dist/`)
 - `pyrightconfig.json` — Python type checking config at repo root
 - `release`: opt-level=3, lto=thin, codegen-units=1, strip=true
 - `release-with-debug`: inherits release, debug=true (for profiling)
@@ -206,38 +207,38 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 ## Architecture
 
 ## Pattern Overview
-- All business logic lives in pure Rust `*-core` crates under `ClassicLib-rs/business-logic/`
+- All business logic lives in pure Rust `*-core` crates under `business-logic/`
 - A single shared Tokio runtime (the ONE RUNTIME RULE) is process-wide and owned by `classic-shared-core`
 - C++, Python, and Node.js surfaces are thin adapters that delegate entirely to `-core` crates
 - Native C++ frontends (GUI and CLI) access Rust through CXX FFI via `classic-cpp-bridge`
 - No business logic is re-implemented in binding layers; all meaningful behavior lives in Rust
 ## Layers
 - Purpose: Process-wide shared runtime, error types, path helpers, performance primitives, string utilities
-- Location: `ClassicLib-rs/foundation/`
+- Location: `foundation/`
 - Contains: `classic-shared-core` (Rust runtime via `LazyLock<Runtime>`, errors, path/string helpers), `classic-shared-py` (PyO3 utility adapters)
 - Depends on: nothing within this codebase
 - Used by: every `-core` crate and every binding crate
 - Purpose: All domain logic — crash log parsing, config loading, file I/O, game scan, version detection, database, update, messaging
-- Location: `ClassicLib-rs/business-logic/`
+- Location: `business-logic/`
 - Contains: 16 pure Rust crates after the v9.1.0 consolidation work. ``yaml-core`` was absorbed into `classic-settings-core` in Phase 1, `classic-crashgen-settings-core` was absorbed into `classic-config-core` in Phase 2, and Phase 3 redistributed the retired constants crate across version-registry, settings, and shared.
 - Depends on: `foundation/classic-shared-core`
 - Used by: `classic-cpp-bridge`, all `-py` binding crates, `classic-node`, `classic-tui`
 - Purpose: Expose Rust APIs to C++ via CXX FFI as a static library
-- Location: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
+- Location: `cpp-bindings/classic-cpp-bridge/`
 - Contains: 14 bridge modules mirroring the `-core` domains (`scanner`, `game`, `files`, `config`, `database`, `scangame`, `settings` (renamed from `yaml` in v9.1.0 Phase 1 and expanded with the D-09 settings-core cache ops and validators), `registry`, `runtime`, `message`, `perf`, `path`, `update`, `markdown`); CXX-generated headers in `include/classic_cxx_bridge/`
 - Depends on: all business-logic `-core` crates
 - Used by: `classic-cli/`, `classic-gui/`
 - Note: Windows-only (`#[cfg(windows)]` on all modules)
 - Purpose: Expose all `-core` APIs to Python via PyO3
-- Location: `ClassicLib-rs/python-bindings/`
+- Location: `python-bindings/`
 - Contains: 17 crates mirroring the active Rust API owners (including `classic-shared-py`). The former `classic-yaml-py` was deleted in v9.1.0 Phase 1, and Phase 3 retired `classic-constants-py` by redistributing its wrappers into `classic-version-registry-py`, `classic-settings-py`, and `classic-shared-py`.
 - Depends on: corresponding `-core` crates + `foundation/classic-shared-py`
 - Used by: Python consumers; parity checked against Node bindings
 - Purpose: Expose all `-core` APIs to JavaScript/TypeScript via NAPI-RS
-- Location: `ClassicLib-rs/node-bindings/classic-node/`
+- Location: `node-bindings/classic-node/`
 - Contains: Single crate with 20 modules, organized in 5 implementation waves
 - Depends on: all business-logic `-core` crates
-- Used by: Node/Bun consumers; CLI wrapper at `ClassicLib-rs/node-bindings/classic-node/cli/`
+- Used by: Node/Bun consumers; CLI wrapper at `node-bindings/classic-node/cli/`
 - Purpose: Command-line crash log scanner
 - Location: `classic-cli/`
 - Contains: `main.cpp`, `scanner.cpp`, `cli_args.cpp`, `progress.cpp`, `report_writer.cpp`, `thread_pool.cpp`
@@ -249,7 +250,7 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - Depends on: `classic-cpp-bridge` (via CXX headers)
 - Used by: end users via Qt desktop GUI
 - Purpose: Terminal UI application (Ratatui-based)
-- Location: `ClassicLib-rs/ui-applications/classic-tui/`
+- Location: `ui-applications/classic-tui/`
 - Contains: `app.rs`, `state.rs`, `tabs/` (main, results, backup, articles), `widgets/`, `ui.rs`, `theme.rs`
 - Depends on: `-core` crates directly (no bridge needed)
 - Used by: terminal users
@@ -259,25 +260,25 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - Settings are cached by caller-chosen string keys in `classic-settings-core`
 ## Key Abstractions
 - Purpose: Coordinates the full crash log analysis pipeline
-- Examples: `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs`
+- Examples: `business-logic/classic-scanlog-core/src/orchestrator.rs`
 - Pattern: Takes `AnalysisConfig` + optional `DatabasePool`, produces `AnalysisResult`; progress emitted via `ScanProgressPhase` enum
 - Purpose: Coordinates concurrent game-installation integrity checks
-- Examples: `ClassicLib-rs/business-logic/classic-scangame-core/src/orchestrator.rs`
+- Examples: `business-logic/classic-scangame-core/src/orchestrator.rs`
 - Pattern: Spawns `tokio::JoinSet` sub-tasks; individual task failure does not abort entire scan
 - Purpose: Loaded, merged YAML configuration for one game variant
-- Examples: `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs`
+- Examples: `business-logic/classic-config-core/src/yamldata.rs`
 - Pattern: Consumed as `Arc<YamlDataCore>` throughout analysis crates; structured ordered sequences (`IndexMap`) for `Mods_FREQ` and `Mods_SOLU`
 - Purpose: Single source of truth for Fallout 4 game version metadata (OG/NG/AE/VR)
-- Examples: `ClassicLib-rs/business-logic/classic-version-registry-core/src/registry.rs`
+- Examples: `business-logic/classic-version-registry-core/src/registry.rs`
 - Pattern: Thread-safe `OnceLock` singleton; all version queries go through `get_version_registry()`
 - Purpose: Process-wide typed singleton store for cross-crate runtime state
-- Examples: `ClassicLib-rs/business-logic/classic-registry-core/src/registry.rs`
+- Examples: `business-logic/classic-registry-core/src/registry.rs`
 - Pattern: `DashMap<&'static str, Arc<dyn Any + Send + Sync>>`; predefined key constants in `Keys` struct
 - Purpose: Async SQLite connection pool for FormID lookups
-- Examples: `ClassicLib-rs/business-logic/classic-database-core/src/pool_sqlx.rs`
+- Examples: `business-logic/classic-database-core/src/pool_sqlx.rs`
 - Pattern: sqlx pool in WAL mode; TTL-based LRU query cache; batch query optimization
 - Purpose: Wrap Rust async APIs as synchronous C++ functions using `block_on()`
-- Examples: `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`, `game.rs`, `files.rs`
+- Examples: `cpp-bindings/classic-cpp-bridge/src/scanner.rs`, `game.rs`, `files.rs`
 - Pattern: Opaque Rust types + shared DTOs; all async calls use `classic_shared_core::get_runtime().block_on()`
 ## Entry Points
 - Location: `classic-gui/src/main.cpp`
@@ -286,10 +287,10 @@ The active milestone closes with a surviving 16-crate Rust business-logic worksp
 - Location: `classic-cli/src/main.cpp`
 - Triggers: Command-line invocation
 - Responsibilities: Parse CLI args, call `run_scan(args)` which drives the CXX bridge scan pipeline
-- Location: `ClassicLib-rs/ui-applications/classic-tui/src/main.rs`
+- Location: `ui-applications/classic-tui/src/main.rs`
 - Triggers: Binary execution
 - Responsibilities: Initialize logging, touch shared runtime, start Ratatui terminal loop via `App::new().run()`
-- Location: `ClassicLib-rs/node-bindings/classic-node/cli/main.ts`
+- Location: `node-bindings/classic-node/cli/main.ts`
 - Triggers: `bun`/`node` invocation
 - Responsibilities: Parse args, call NAPI-RS scan functions, write results
 ## Error Handling

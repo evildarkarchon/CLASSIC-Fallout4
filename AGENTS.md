@@ -13,16 +13,22 @@ If your environment does not support project skills, read the reference file dir
 
 ## Project Overview
 
-CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a C++ plus Rust application:
+CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a repo-root Cargo workspace with native frontends and thin binding layers:
 
+- `foundation/` - shared runtime, utilities, and cross-cutting Rust support crates
+- `business-logic/` - Rust core logic crates
+- `cpp-bindings/classic-cpp-bridge/` - C++ bridge to Rust
+- `node-bindings/classic-node/` - Node/Bun binding package
+- `python-bindings/` - Python binding crates, tooling, and binding-local virtualenv
+- `ui-applications/classic-tui/` - Rust TUI application
 - `classic-cli/` - C++20 CLI frontend
 - `classic-gui/` - Qt 6 C++20 GUI frontend
-- `ClassicLib-rs/` - Rust workspace for core logic and bindings
-- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/` - C++ bridge to Rust
+
+For old-to-new path and command translations, see `docs/workspace-migration-matrix.md`.
 
 ## Always-On Repository Rules
 
-1. Prioritize active work in `classic-cli/`, `classic-gui/`, and `ClassicLib-rs/`.
+1. Prioritize active work in `classic-cli/`, `classic-gui/`, `foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/`.
 2. Keep all business logic in Rust. Put shared behavior, state transitions, data mutation, persistence rules, and validation in Rust core crates unless the task is explicitly interface-only.
 3. Keep non-interface layers thin. C++, Python, Node, and other binding/UI surfaces should act as wrappers over Rust APIs rather than reimplementing logic, unless the performance cost of FFI bridging is demonstrated to be too high for that specific path.
 4. Maintain a single shared Tokio runtime from Rust core runtime facilities; do not introduce independent runtimes.
@@ -33,9 +39,9 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a C++ plus Rust ap
 
 ## Quick Notes
 
-- The canonical Cargo workspace shell now lives at repo root (`Cargo.toml`, `.cargo/config.toml`, and `Cargo.lock`); the crate tree remains under `ClassicLib-rs/` until later migration work.
+- The canonical Cargo workspace shell lives at repo root (`Cargo.toml`, `.cargo/config.toml`, and `Cargo.lock`), and the live Rust crate tree now uses the repo-root layer directories (`foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/`).
 - Native C++ targets are Windows-focused and MSVC-based.
 - When running Rust or C++ MSVC-targeted commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it, so Git's `usr/bin/link.exe` does not override the Visual Studio linker.
-- Python bindings remain for other potential projects and should be kept in sync with Rust core logic.
-- Node bindings should be kept in sync with Rust core logic.
+- Python bindings under `python-bindings/` should stay in sync with Rust core logic.
+- Node bindings under `node-bindings/classic-node/` should stay in sync with Rust core logic.
 - Use the project skill whenever you need repo-specific commands, parity checklists, CI context, or architecture-routing guidance.
