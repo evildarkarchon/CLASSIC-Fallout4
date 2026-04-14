@@ -161,7 +161,7 @@ That last point matters for callers: `get_xse_info()` is fail-soft for version d
 
 ## Re-exported version helpers
 
-The crate re-exports three helpers from [`classic-version-core`](../../ClassicLib-rs/business-logic/classic-version-core):
+The crate re-exports three helpers from [`classic-version-core`](../../business-logic/classic-version-core):
 
 - `parse_version()`
 - `try_parse_version()`
