@@ -1,6 +1,6 @@
 # `classic-update-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-update-core/`](../../ClassicLib-rs/business-logic/classic-update-core).
+Contributor-facing API documentation for [`business-logic/classic-update-core/`](../../business-logic/classic-update-core).
 
 Crate metadata:
 
@@ -64,7 +64,7 @@ This crate exposes two public modules plus a small root-level convenience surfac
 Contributor note:
 
 - there are no public traits in this crate today
-- almost all contributor-relevant behavior lives in [`src/github.rs`](../../ClassicLib-rs/business-logic/classic-update-core/src/github.rs)
+- almost all contributor-relevant behavior lives in [`src/github.rs`](../../business-logic/classic-update-core/src/github.rs)
 
 ---
 
@@ -237,7 +237,7 @@ This crate's public API supports a short update-check pipeline.
 3. Inspect the returned `GithubRelease` fields such as `tag_name`, `body`, and `assets`.
 4. Call `has_update(current_version, &release.tag_name)` if the caller wants a semver-based update decision.
 
-This is the exact pattern used by the TUI in [`ClassicLib-rs/ui-applications/classic-tui/src/app.rs:661`](../../ClassicLib-rs/ui-applications/classic-tui/src/app.rs:661).
+This is the exact pattern used by the TUI in [`ui-applications/classic-tui/src/app.rs:661`](../../ui-applications/classic-tui/src/app.rs#L661).
 
 ## Flow B: release listing with caller-side policy
 
@@ -311,9 +311,9 @@ This crate is async, but runtime ownership stays outside the crate.
 
 In-repo runtime patterns:
 
-- the TUI spawns update checks with `classic_shared_core::get_runtime().spawn(...)` in [`ClassicLib-rs/ui-applications/classic-tui/src/app.rs:672`](../../ClassicLib-rs/ui-applications/classic-tui/src/app.rs:672)
-- the C++ bridge blocks on `get_latest_release()` with the shared runtime in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs:33`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs:33)
-- the Node bindings clone the shared runtime handle and spawn async update work in [`ClassicLib-rs/node-bindings/classic-node/src/update.rs:220`](../../ClassicLib-rs/node-bindings/classic-node/src/update.rs:220)
+- the TUI spawns update checks with `classic_shared_core::get_runtime().spawn(...)` in [`ui-applications/classic-tui/src/app.rs:672`](../../ui-applications/classic-tui/src/app.rs#L672)
+- the C++ bridge blocks on `get_latest_release()` with the shared runtime in [`cpp-bindings/classic-cpp-bridge/src/update.rs:33`](../../cpp-bindings/classic-cpp-bridge/src/update.rs#L33)
+- the Node bindings clone the shared runtime handle and spawn async update work in [`node-bindings/classic-node/src/update.rs:220`](../../node-bindings/classic-node/src/update.rs#L220)
 
 Contributor note:
 
@@ -337,10 +337,10 @@ Related CLASSIC crates and consumers:
 
 - [`classic-shared-core`](classic-shared-core.md) - shared Tokio runtime policy used by callers of this crate
 - [`classic-version-core`](classic-version-core.md) - alternative version helper crate with intentionally different, more lenient parsing rules
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs) - narrower frontend-oriented bridge over latest-release check + comparison
-- [`ClassicLib-rs/node-bindings/classic-node/src/update.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/update.rs) - fuller binding layer preserving `GithubClient` and DTOs
-- [`ClassicLib-rs/python-bindings/classic-update-py/src/github.rs`](../../ClassicLib-rs/python-bindings/classic-update-py/src/github.rs) - Python wrapper over the same client model
-- [`ClassicLib-rs/ui-applications/classic-tui/src/app.rs`](../../ClassicLib-rs/ui-applications/classic-tui/src/app.rs) - direct in-repo UI consumer
+- [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) - narrower frontend-oriented bridge over latest-release check + comparison
+- [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) - fuller binding layer preserving `GithubClient` and DTOs
+- [`python-bindings/classic-update-py/src/github.rs`](../../python-bindings/classic-update-py/src/github.rs) - Python wrapper over the same client model
+- [`ui-applications/classic-tui/src/app.rs`](../../ui-applications/classic-tui/src/app.rs) - direct in-repo UI consumer
 
 ---
 
@@ -387,8 +387,8 @@ If you only need a yes/no version comparison, `has_update()` is synchronous and 
 
 If you extend this crate, update this document when you change:
 
-- root-level re-exports in [`ClassicLib-rs/business-logic/classic-update-core/src/lib.rs`](../../ClassicLib-rs/business-logic/classic-update-core/src/lib.rs)
-- GitHub endpoint choices, request headers, or auth behavior in [`ClassicLib-rs/business-logic/classic-update-core/src/github.rs`](../../ClassicLib-rs/business-logic/classic-update-core/src/github.rs)
+- root-level re-exports in [`business-logic/classic-update-core/src/lib.rs`](../../business-logic/classic-update-core/src/lib.rs)
+- GitHub endpoint choices, request headers, or auth behavior in [`business-logic/classic-update-core/src/github.rs`](../../business-logic/classic-update-core/src/github.rs)
 - semver parsing rules or `has_update()` comparison behavior
 - how `UpdateError` variants are mapped from network, JSON, or rate-limit failures
 - whether the crate begins owning download, install, checksum, or runtime responsibilities
