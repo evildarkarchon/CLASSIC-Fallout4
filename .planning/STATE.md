@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-07-PLAN.md
-last_updated: "2026-04-14T02:51:07.375Z"
+stopped_at: Completed 10-05-PLAN.md
+last_updated: "2026-04-14T02:52:13.040Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 27
-  completed_plans: 21
+  completed_plans: 23
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 (docs-guidance-and-tripwires) — EXECUTING
-Plan: 5 of 10
+Plan: 7 of 10
 Status: Ready to execute
 Last activity: 2026-04-14
 
@@ -64,6 +64,8 @@ Progress: [██████████] 100%
 | Phase 10 P01 | 11 min | 2 tasks | 6 files |
 | Phase 10 P03 | 5min | 1 tasks | 5 files |
 | Phase 10 P07 | 12min | 2 tasks | 6 files |
+| Phase 10-docs-guidance-and-tripwires P06 | 1 min | 2 tasks | 7 files |
+| Phase 10 P05 | 15 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -126,6 +128,10 @@ Recent decisions affecting current work:
 - [Phase 10]: Use root-level crate, binding, and UI paths directly in plan-owned API guides instead of duplicating migration routing.
 - [Phase 10]: Keep AGENTS.md policy text intact while swapping live location examples to the repo-root layer directories.
 - [Phase 10]: Route always-on agent entrypoints to docs/workspace-migration-matrix.md instead of duplicating old-to-new translations.
+- [Phase 10-docs-guidance-and-tripwires]: Updated the remaining runtime-group D API docs to repo-root crate and bridge paths instead of ClassicLib-rs workspace-root links.
+- [Phase 10-docs-guidance-and-tripwires]: Kept historical rename and absorbed-crate notes only as labeled history, not live operational guidance.
+- [Phase 10]: Keep workflow narratives intact and only rewrite active source, binding, and artifact locations to the repo-root tree.
+- [Phase 10]: Treat the final stale classic-xse-core link as an inline doc bugfix and correct it in a follow-up fix commit rather than reopening task scope.
 
 ### Pending Todos
 
@@ -144,7 +150,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T02:51:07.371Z
-Stopped at: Completed 10-07-PLAN.md
+Last session: 2026-04-14T02:52:13.036Z
+Stopped at: Completed 10-05-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 08 wrapper/parity rewiring
