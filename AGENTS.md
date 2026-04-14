@@ -39,7 +39,7 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 
 ## Quick Notes
 
-- The canonical Cargo workspace shell lives at repo root (`Cargo.toml`, `.cargo/config.toml`, and `Cargo.lock`), and the live Rust crate tree now uses the repo-root layer directories (`foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/`).
+- The canonical Cargo workspace shell now lives at repo root (`Cargo.toml`, `.cargo/config.toml`, and `Cargo.lock`), and the live Rust crate tree now uses the repo-root layer directories (`foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/`).
 - Native C++ targets are Windows-focused and MSVC-based.
 - When running Rust or C++ MSVC-targeted commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it, so Git's `usr/bin/link.exe` does not override the Visual Studio linker.
 - Python bindings under `python-bindings/` should stay in sync with Rust core logic.

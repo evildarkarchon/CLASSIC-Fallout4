@@ -22,6 +22,13 @@ The active milestone keeps the Rust core, C++ bridge, Node bindings, and Python 
 - **Bindings**: All binding changes must pass the existing parity gates (`check_parity_gate.py` for Python and CXX, `bun run parity:gate` for Node; use `bun run parity:gate:update-baseline` only for intentional refreshes)
 - **Testing**: Use PowerShell build wrappers for C++ tests, never raw ctest
 - **Backwards compat**: Python FormID legacy map format gets deprecation warning first, not immediate removal
+
+### Canonical Cargo Commands
+
+- `cargo build --workspace`
+- `cargo test --workspace`
+- `cargo fmt --all -- --check`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:codebase/STACK.md -->

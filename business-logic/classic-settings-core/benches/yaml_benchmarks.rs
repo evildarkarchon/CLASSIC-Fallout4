@@ -17,7 +17,7 @@
 //! cargo bench --bench yaml_benchmarks -- --test
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use yaml_rust2::{Yaml, YamlLoader};
 
 // Import shared benchmark configuration from workspace benches/common/

@@ -11,6 +11,7 @@ corresponding Rust implementation by checking for:
 Usage:
     python validate_stubs.py                            # Validate all crates from repo root
     python validate_stubs.py --rust-dir .               # Explicit repo-root input
+    python validate_stubs.py --rust-dir ClassicLib-rs   # Legacy input normalized to repo root
     python validate_stubs.py --verbose                  # Show detailed output
     python validate_stubs.py --fix                      # Auto-fix simple issues (future)
 """
@@ -28,18 +29,11 @@ LEGACY_WORKSPACE_DIR = SCRIPT_DIR / "ClassicLib-rs"
 
 
 def normalize_rust_dir(rust_dir: Path) -> Path:
-    """Resolve the repo root and reject legacy ClassicLib-rs inputs."""
+    """Resolve the repo root, normalizing legacy ClassicLib-rs inputs."""
 
     resolved = rust_dir.resolve()
     if resolved == LEGACY_WORKSPACE_DIR or resolved.name == "ClassicLib-rs":
-        replacement = (
-            resolved.parent if resolved.name == "ClassicLib-rs" else SCRIPT_DIR
-        )
-        raise FileNotFoundError(
-            "Legacy rust-dir 'ClassicLib-rs' is no longer supported. "
-            f"Use repo root '{replacement}' so python-bindings resolves at "
-            f"'{replacement / 'python-bindings'}'."
-        )
+        return resolved.parent if resolved.name == "ClassicLib-rs" else SCRIPT_DIR
 
     if (resolved / "python-bindings").exists():
         return resolved
@@ -446,7 +440,7 @@ def main() -> None:
         default=SCRIPT_DIR,
         help=(
             "Workspace root to validate. Defaults to the repo root. Legacy "
-            "ClassicLib-rs paths now fail fast; use the repository root instead."
+            "ClassicLib-rs inputs normalize to the repository root."
         ),
     )
     parser.add_argument(

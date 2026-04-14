@@ -17,7 +17,7 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-scanlog-py
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::hint::black_box;
 

@@ -151,7 +151,19 @@ ALLOWED_HISTORICAL_LINE_PREFIXES = [
     "**Migration note:**",
 ]
 
-ALLOWED_SPECIAL_CASE_LINES: dict[Path, set[str]] = {}
+ALLOWED_SPECIAL_CASE_LINES: dict[Path, set[str]] = {
+    REPO_ROOT / "tests/powershell/phase10_guidance_tripwires.test.ps1": {
+        '"ClassicLib-rs/Cargo.toml"',
+        '"--manifest-path ClassicLib-rs/Cargo.toml"',
+        '"ClassicLib-rs/python-bindings/.venv"',
+        '"ClassicLib-rs/node-bindings/classic-node"',
+        '"working-directory: ClassicLib-rs"',
+    },
+    REPO_ROOT / "tests/powershell/rebuild_rust.general_target.test.ps1": {
+        "if ($scriptText -match 'uv venv ClassicLib-rs/python-bindings/.venv') {",
+        'throw "Expected wrapper guidance to teach repo-root python-bindings/.venv, not ClassicLib-rs/python-bindings/.venv."',
+    },
+}
 
 
 def read_text(path: Path) -> str:
