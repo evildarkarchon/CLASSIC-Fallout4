@@ -105,6 +105,8 @@ ACTIVE_CODEBASE_MAPS = [
     REPO_ROOT / ".planning/codebase/TESTING.md",
     REPO_ROOT / ".planning/codebase/ARCHITECTURE.md",
     REPO_ROOT / ".planning/codebase/STACK.md",
+    REPO_ROOT / ".planning/codebase/INTEGRATIONS.md",
+    REPO_ROOT / ".planning/codebase/CONCERNS.md",
 ]
 
 SCOPED_SWEEP_SURFACES = [
