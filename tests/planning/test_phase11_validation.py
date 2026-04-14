@@ -6,10 +6,29 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PHASE8_VERIFICATION = (
-    REPO_ROOT / ".planning/phases/08-workspace-and-infrastructure/08-VERIFICATION.md"
-)
+PHASE7_DIR = REPO_ROOT / ".planning/phases/07-crate-relocation-and-path-rewire"
+RELOCATION_AUDIT = PHASE7_DIR / "07-RELOCATION-AUDIT.md"
+VERIFICATION_REPORT = PHASE7_DIR / "07-VERIFICATION.md"
 REQUIREMENTS = REPO_ROOT / ".planning/REQUIREMENTS.md"
+MILESTONE_AUDIT = REPO_ROOT / ".planning/v9.1.0-MILESTONE-AUDIT.md"
+LEGACY_ROOT = REPO_ROOT / "ClassicLib-rs"
+
+REQUIRED_VERIFICATION_SECTIONS = [
+    "## Goal Achievement",
+    "### Observable Truths",
+    "### Required Artifacts",
+    "### Key Link Verification",
+    "### Behavioral Spot-Checks",
+    "### Requirements Coverage",
+    "### Gaps Summary",
+]
+
+SUMMARY_ONLY_FRAGMENTS = [
+    "07-03-SUMMARY.md",
+    "see summary",
+    "same as above",
+    "summary-only",
+]
 
 
 def read_text(path: Path) -> str:
@@ -23,9 +42,17 @@ def extract_frontmatter(text: str) -> str:
     return match.group(1)
 
 
-def extract_requirement_direct_proof(text: str, requirement_id: str) -> str:
+def extract_table_row(text: str, first_cell: str) -> str:
+    pattern = re.compile(rf"^\| {re.escape(first_cell)} \| .*?$", re.MULTILINE)
+    match = pattern.search(text)
+    if not match:
+        raise AssertionError(f"missing markdown table row for {first_cell}")
+    return match.group(0)
+
+
+def extract_requirement_evidence(text: str, requirement_id: str) -> str:
     pattern = re.compile(
-        rf"^\| {re.escape(requirement_id)} \| .*? \| SATISFIED \| (.*?) \|$",
+        rf"^\| {re.escape(requirement_id)} \| .*? \| .*? \| (.*?) \|$",
         re.MULTILINE,
     )
     match = pattern.search(text)
@@ -34,126 +61,89 @@ def extract_requirement_direct_proof(text: str, requirement_id: str) -> str:
     return match.group(1)
 
 
+def audit_residue_rows(text: str) -> list[str]:
+    in_section = False
+    rows: list[str] = []
+    for line in text.splitlines():
+        if line == "## Legacy ClassicLib-rs Residue":
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section and line.startswith("| `"):
+            rows.append(line.strip())
+    return rows
+
+
+def legacy_residue_inventory() -> list[str]:
+    return sorted(
+        f"{entry.name}/" if entry.is_dir() else entry.name
+        for entry in LEGACY_ROOT.iterdir()
+    )
+
+
 class Phase11ValidationAuditTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.phase8_verification = read_text(PHASE8_VERIFICATION)
-        self.requirements = read_text(REQUIREMENTS)
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.relocation_audit = read_text(RELOCATION_AUDIT)
+        cls.requirements = read_text(REQUIREMENTS)
+        cls.milestone_audit = read_text(MILESTONE_AUDIT)
+        cls.live_residue = legacy_residue_inventory()
 
-    def test_phase8_verification_is_authoritative_initial_artifact(self) -> None:
-        frontmatter = extract_frontmatter(self.phase8_verification)
-
-        self.assertIn("phase: 08-workspace-and-infrastructure", frontmatter)
-        self.assertNotIn("re_verification:", frontmatter)
-        self.assertIn(
-            "# Phase 08: Workspace and Infrastructure Verification Report",
-            self.phase8_verification,
-        )
-
-        required_sections = [
-            "## Goal Achievement",
-            "### Observable Truths",
-            "## Required Artifacts",
-            "## Key Link Verification",
-            "## Behavioral Spot-Checks",
-            "## Requirements Coverage",
-            "## Anti-Patterns Found",
-            "## Human Verification Required",
-            "## Gaps Summary",
-        ]
-        for section in required_sections:
-            with self.subTest(section=section):
-                self.assertIn(section, self.phase8_verification)
-
-    def test_phase8_verification_covers_all_phase11_requirements_with_direct_proof(
+    def test_phase7_audit_uses_live_residue_inventory_without_stale_cargo_entry(
         self,
     ) -> None:
-        expected_direct_proof_fragments = {
-            "INFRA-01": [
-                "ClassicLib-rs/Cargo.toml",
-                "classic-path-core/Cargo.toml",
-                "cargo check -p classic-path-core --manifest-path ClassicLib-rs/Cargo.toml",
+        self.assertIn("## Legacy ClassicLib-rs Residue", self.relocation_audit)
+        self.assertNotIn("| `.cargo/` |", self.relocation_audit)
+
+        expected_rows = [f"| `{entry}` |" for entry in self.live_residue]
+        actual_rows = audit_residue_rows(self.relocation_audit)
+
+        self.assertEqual(sorted(expected_rows), sorted(actual_rows))
+
+    def test_phase7_verification_report_has_frontmatter_and_current_section_shape(
+        self,
+    ) -> None:
+        verification_text = read_text(VERIFICATION_REPORT)
+        frontmatter = extract_frontmatter(verification_text)
+
+        self.assertIn("phase: 07-crate-relocation-and-path-rewire", frontmatter)
+        self.assertIn("status:", frontmatter)
+        self.assertIn(
+            "# Phase 7: Crate Relocation and Path Rewire Verification Report",
+            verification_text,
+        )
+
+        for section in REQUIRED_VERIFICATION_SECTIONS:
+            with self.subTest(section=section):
+                self.assertIn(section, verification_text)
+
+    def test_move_requirements_use_direct_phase7_evidence_in_verification(self) -> None:
+        verification_text = read_text(VERIFICATION_REPORT)
+
+        expected_fragments = {
+            "MOVE-01": [
+                "07-RELOCATION-AUDIT.md",
+                "Old to New Crate Mapping",
+                "foundation/classic-shared-core",
             ],
-            "INFRA-02": [
-                "ClassicLib-rs/Cargo.toml",
-                "classic-constants-core/Cargo.toml",
-                "cargo check -p classic-constants-core --manifest-path ClassicLib-rs/Cargo.toml",
-            ],
-            "INFRA-03": [
-                "classic-path-core/src/docs_path.rs",
-                "focused Proton test command passes",
-            ],
-            "INFRA-04": [
-                "classic-shared-core/Cargo.toml",
-                "docs/api/classic-shared-core.md",
-                "cargo test -p classic-shared-core --features gui-bridge --manifest-path ClassicLib-rs/Cargo.toml",
-            ],
-            "INFRA-05": [
-                "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-                "tools/node_api_parity/check_dts_freshness.py",
-                ".github/workflows/ci-typescript.yml",
-                "bun run parity:gate:local && bun run test:bun && bun run test:node && bun run dts:freshness:check",
-            ],
-            "TEST-03": [
-                "classic-path-core/tests/linux_proton_docs_path.rs",
-                "focused and full crate test commands",
+            "MOVE-02": [
+                "07-RELOCATION-AUDIT.md",
+                "cargo metadata --format-version 1 --no-deps",
+                "workspace_root=J:\\CLASSIC-Fallout4",
             ],
         }
 
-        for requirement_id, fragments in expected_direct_proof_fragments.items():
-            direct_proof = extract_requirement_direct_proof(
-                self.phase8_verification, requirement_id
-            )
+        for requirement_id, fragments in expected_fragments.items():
+            evidence = extract_requirement_evidence(verification_text, requirement_id)
             with self.subTest(requirement_id=requirement_id):
                 for fragment in fragments:
-                    self.assertIn(fragment, direct_proof)
+                    self.assertIn(fragment, evidence)
+                for forbidden in SUMMARY_ONLY_FRAGMENTS:
+                    self.assertNotIn(forbidden.lower(), evidence.lower())
 
-    def test_infra03_and_test03_stay_separate_requirement_rows(self) -> None:
-        infra_03_proof = extract_requirement_direct_proof(
-            self.phase8_verification, "INFRA-03"
-        )
-        test_03_proof = extract_requirement_direct_proof(
-            self.phase8_verification, "TEST-03"
-        )
-
-        self.assertNotEqual(infra_03_proof, test_03_proof)
-
-        for proof in (infra_03_proof, test_03_proof):
-            self.assertNotIn("see summary", proof.lower())
-            self.assertNotIn("same as above", proof.lower())
-
-        self.assertIn("classic-path-core/src/docs_path.rs", infra_03_proof)
-        self.assertIn(
-            "classic-path-core/tests/linux_proton_docs_path.rs", test_03_proof
-        )
-
-    def test_infra05_keeps_full_node_governance_evidence_bundle(self) -> None:
-        required_bundle_fragments = [
-            "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
-            "ClassicLib-rs/node-bindings/classic-node/.gitignore",
-            "ClassicLib-rs/node-bindings/classic-node/package.json",
-            "tools/node_api_parity/check_dts_freshness.py",
-            ".github/workflows/ci-typescript.yml",
-            "bun run parity:gate:local",
-            "bun run test:bun",
-            "bun run test:node",
-            "bun run dts:freshness:check",
-        ]
-
-        for fragment in required_bundle_fragments:
-            with self.subTest(fragment=fragment):
-                self.assertIn(fragment, self.phase8_verification)
-
-    def test_requirements_keep_phase11_workspace_closure_checked_and_complete(
-        self,
-    ) -> None:
-        for requirement_id in [
-            "INFRA-01",
-            "INFRA-02",
-            "INFRA-03",
-            "INFRA-04",
-            "INFRA-05",
-            "TEST-03",
-        ]:
+    def test_requirements_mark_move_requirements_complete_in_phase11(self) -> None:
+        for requirement_id in ["MOVE-01", "MOVE-02"]:
             with self.subTest(requirement_id=requirement_id):
                 self.assertRegex(
                     self.requirements,
@@ -163,6 +153,24 @@ class Phase11ValidationAuditTests(unittest.TestCase):
                     self.requirements,
                     rf"\| {re.escape(requirement_id)} \| Phase 11 \| Complete \|",
                 )
+
+    def test_milestone_audit_no_longer_reports_the_stale_phase7_gap(self) -> None:
+        stale_gap_fragments = [
+            "07-VERIFICATION.md is missing",
+            "test_phase07_validation.py:50-60",
+            "ClassicLib-rs/.cargo residue",
+            "The checked-in relocation proof is stale and no longer rerunnable cleanly.",
+        ]
+
+        for fragment in stale_gap_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertNotIn(fragment, self.milestone_audit)
+
+        for requirement_id in ["MOVE-01", "MOVE-02"]:
+            row = extract_table_row(self.milestone_audit, requirement_id)
+            with self.subTest(requirement_id=requirement_id):
+                self.assertNotIn("Unsatisfied (orphaned)", row)
+                self.assertNotIn("missing", row)
 
 
 if __name__ == "__main__":
