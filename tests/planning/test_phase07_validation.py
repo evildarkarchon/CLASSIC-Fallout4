@@ -48,7 +48,6 @@ REPRESENTATIVE_MANIFESTS = {
     },
 }
 EXPECTED_RESIDUE = [
-    ".cargo/",
     ".gitignore",
     ".idea/",
     "CLASSIC_Settings.yaml",
