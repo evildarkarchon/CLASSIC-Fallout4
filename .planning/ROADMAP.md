@@ -93,7 +93,16 @@ Plans:
   1. Contributor can follow active docs, skills, and agent context files without being sent to `ClassicLib-rs/` as the live workspace root.
   2. Contributor can use migration notes or a verification matrix to translate old `ClassicLib-rs` workflows into repo-root workflows.
   3. Contributor gets automated regression protection against newly introduced active `ClassicLib-rs` workspace-root references in validation-critical docs, scripts, or tests.
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+- [ ] `10-01-PLAN.md` — Create the shared workspace migration matrix and repoint top-level contributor entry docs to repo-root guidance.
+- [ ] `10-02-PLAN.md` — Refresh the active API index, quick-start, and binding maintenance note to route through the matrix and root-level paths.
+- [ ] `10-03-PLAN.md` — Update `AGENTS.md` and all classic-project-guide entrypoint mirrors to the repo-root contract.
+- [ ] `10-04-PLAN.md` — Refresh the mirrored classic-project-guide repo-guide references with repo-root architecture, command, and parity-path guidance.
+- [ ] `10-05-PLAN.md` — Update the operational codebase maps (`STRUCTURE`, `STACK`, `ARCHITECTURE`, `INTEGRATIONS`) to the moved workspace tree.
+- [ ] `10-06-PLAN.md` — Update the conventions/testing/concerns codebase maps to repo-root examples and moved live-tree paths.
+- [ ] `10-07-PLAN.md` — Add the Phase 10 must-read audit and scoped stale-path tripwires for active docs, guidance, scripts, and tests.
 
 ## Progress
 
@@ -103,7 +112,7 @@ Plans:
 | 7. Crate Relocation and Path Rewire | 3/3 | Complete | 2026-04-12 |
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
-| 10. Docs, Guidance, and Tripwires | 0/TBD | Not started | - |
+| 10. Docs, Guidance, and Tripwires | 0/7 | Not started | - |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>
