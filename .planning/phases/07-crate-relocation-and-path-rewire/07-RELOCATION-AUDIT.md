@@ -109,16 +109,16 @@ J:\CLASSIC-Fallout4\cpp-bindings\classic-cpp-bridge\Cargo.toml
 
 ## Legacy ClassicLib-rs Residue
 
-The current `ClassicLib-rs/` directory contents are residue only. This inventory is non-authoritative and intentionally limited to the live entries still present on disk; it does not imply any remaining workspace ownership.
+The current `ClassicLib-rs/` directory contents are residue only. This inventory is non-authoritative and intentionally limited to the live entries still present on disk; it does not imply any remaining workspace ownership. All listed entries are outside the active Cargo workspace graph.
 
-| Residue | Why it is non-authoritative |
-| --- | --- |
-| `.gitignore` | Git housekeeping only; not consumed by Cargo workspace resolution. |
-| `.idea/` | Local IDE metadata only. |
-| `CLASSIC_Settings.yaml` | Runtime/user data, not part of the Rust build graph. |
-| `clippy_full_report.txt` | Historical report artifact only. |
-| `clippy_report.txt` | Historical report artifact only. |
-| `coverage_report.ps1` | Legacy helper script outside the live Cargo graph. |
-| `coverage_summary.ps1` | Legacy helper script outside the live Cargo graph. |
-| `Crash Logs/` | User/runtime data only. |
-| `target/` | Stale generated build output, including generated `.rs` files under build caches; not used as proof for Phase 7 closure. |
+| Residue |
+| --- |
+| `.gitignore` |
+| `.idea/` |
+| `CLASSIC_Settings.yaml` |
+| `clippy_full_report.txt` |
+| `clippy_report.txt` |
+| `coverage_report.ps1` |
+| `coverage_summary.ps1` |
+| `Crash Logs/` |
+| `target/` |
