@@ -150,6 +150,8 @@ Use a bindings-local virtual environment at `python-bindings/.venv`; do not rely
 
 Use this when Rust APIs exposed through Node bindings change.
 
+For the maintained binding-workflow narrative, pair this checklist with `docs/api/binding-contract-refresh-note.md` and `docs/api/node-python-contract-map.md`.
+
 Trigger paths usually include:
 
 - `business-logic/classic-scanlog-core/src/lib.rs`
@@ -184,6 +186,8 @@ Release gate:
 ## Python API Parity Workflow
 
 Use this when Rust APIs exposed through Python bindings change.
+
+For the maintained binding-workflow narrative, pair this checklist with `docs/api/binding-contract-refresh-note.md` and `docs/api/node-python-contract-map.md`.
 
 Trigger paths usually include:
 
