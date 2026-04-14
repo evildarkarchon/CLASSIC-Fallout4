@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-04-14T02:54:17.546Z"
+stopped_at: Completed 10-09-PLAN.md
+last_updated: "2026-04-14T02:56:54.951Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 (docs-guidance-and-tripwires) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
 Last activity: 2026-04-14
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 10 P05 | 15 min | 2 tasks | 6 files |
 | Phase 10 P04 | 4m 5s | 2 tasks | 6 files |
 | Phase 10 P02 | 20 min | 2 tasks | 8 files |
+| Phase 10 P09 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -138,6 +139,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Keep absorbed-crate notes only when clearly marked historical so contributors are not taught stale operational paths.
 - [Phase 10]: Keep migration guidance centralized by linking active API and binding docs back to docs/workspace-migration-matrix.md.
 - [Phase 10]: Teach Node parity through the package-local bun workflow while keeping Python and CXX parity commands repo-root-first.
+- [Phase 10]: Treat all seven active .planning/codebase/*.md files as one audited guidance surface in test_phase10_validation.py.
+- [Phase 10]: Keep ClassicLib-rs mentions in codebase maps residue-only, never as live workspace-root instructions.
 
 ### Pending Todos
 
@@ -156,7 +159,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T02:54:17.542Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-04-14T02:56:54.947Z
+Stopped at: Completed 10-09-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 08 wrapper/parity rewiring
