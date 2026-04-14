@@ -8,10 +8,15 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 
 - **GUI:** `classic-gui/` (Qt 6, C++)
 - **CLI:** `classic-cli/` (C++)
-- **Business logic:** `ClassicLib-rs/` (Rust workspace)
-- **C++ ↔ Rust bridge:** `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
+- **Rust workspace shell:** repository root (`Cargo.toml`, `Cargo.lock`, `.cargo/config.toml`)
+- **Shared/runtime crates:** `foundation/`
+- **Business logic crates:** `business-logic/`
+- **C++ ↔ Rust bridge:** `cpp-bindings/classic-cpp-bridge/`
+- **Node bindings:** `node-bindings/classic-node/`
+- **Python bindings:** `python-bindings/`
+- **Rust TUI app:** `ui-applications/classic-tui/`
 
-Maintained Python integration bindings exist under **`ClassicLib-rs/python-bindings/`** for integration scenarios.
+See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old-to-new command, path, and artifact translations.
 
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
@@ -98,7 +103,7 @@ git submodule update --init --recursive
 
 ## Development quick reference
 
-### Rust workspace (`ClassicLib-rs/`)
+### Rust workspace (repo root)
 
 ```powershell
 cargo build --workspace
@@ -106,6 +111,20 @@ cargo test --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
+
+### Binding parity quick reference
+
+```powershell
+# From node-bindings/classic-node
+bun run parity:gate
+
+# From repo root
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+python validate_stubs.py --rust-dir .
+```
+
+Need the full old-to-new mapping? Start with the [Workspace Migration Matrix](docs/workspace-migration-matrix.md).
 
 ### C++ apps
 
@@ -137,7 +156,12 @@ GitHub Actions workflows:
 
 - `classic-cli/` — C++ command-line scanner
 - `classic-gui/` — C++ Qt 6 desktop GUI
-- `ClassicLib-rs/` — Rust business logic + bindings
+- `foundation/` — shared runtime and support crates
+- `business-logic/` — Rust business logic crates
+- `cpp-bindings/classic-cpp-bridge/` — C++ bridge into Rust
+- `node-bindings/classic-node/` — Node/Bun bindings
+- `python-bindings/` — Python bindings and parity artifacts
+- `ui-applications/classic-tui/` — Rust TUI app
 - `CLASSIC Data/` — runtime data, databases, help, graphics
 
 ---
@@ -145,6 +169,8 @@ GitHub Actions workflows:
 ## Contributing
 
 1. Keep C++ changes in `classic-cli/` or `classic-gui/` focused and testable.
-2. Keep core logic in Rust crates under `ClassicLib-rs/business-logic/`.
+2. Keep core logic in Rust crates under `business-logic/`.
 3. Run relevant C++/Rust checks before opening a PR.
 4. Keep docs aligned with architecture changes (especially this README and `AGENTS.md`).
+
+> Migration note: older docs may still mention `ClassicLib-rs/...`; treat those as historical only and use the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for the live repo-root contract.
