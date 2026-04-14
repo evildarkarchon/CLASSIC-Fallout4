@@ -2,10 +2,10 @@
 
 Contributor-facing workflow notes for setup and install validation across:
 
-- [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core)
-- [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core)
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core)
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core)
+- [`classic-path-core`](../../business-logic/classic-path-core)
+- [`classic-xse-core`](../../business-logic/classic-xse-core)
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core)
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core)
 
 This page documents the current source-backed split of responsibilities for setup-time validation work in CLASSIC.
 
@@ -402,8 +402,8 @@ When setup/install validation behaves unexpectedly, debug in this order:
 
 For active bridge entry points, current contributors usually end up in:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
 
 Those files make the current split especially visible because they expose path detection, registry lookups, XSE probing, and setup checks as separate bridge surfaces.
