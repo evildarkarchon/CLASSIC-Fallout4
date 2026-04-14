@@ -1,6 +1,6 @@
 # `classic-settings-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-settings-core/`](../../ClassicLib-rs/business-logic/classic-settings-core).
+Contributor-facing API documentation for [`business-logic/classic-settings-core/`](../../business-logic/classic-settings-core).
 
 Crate metadata:
 
@@ -39,7 +39,7 @@ Do not use this crate for:
 - owning a Tokio runtime
 - deep schema validation or business-rule enforcement for scan/config workflows
 
-Those higher-level concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), and binding crates that wrap this cache for JS or Python consumers.
+Those higher-level concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), and binding crates that wrap this cache for JS or Python consumers.
 
 ---
 
@@ -437,7 +437,7 @@ This crate exposes both sync and async APIs, but it does not create a Tokio runt
 
 Repo-level runtime note:
 
-- `Cargo.toml` and crate docs say this crate follows the shared-runtime rule from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core)
+- `Cargo.toml` and crate docs say this crate follows the shared-runtime rule from [`classic-shared-core`](../../foundation/classic-shared-core)
 - the current `src/` files do not directly call `classic_shared_core::get_runtime()`
 - in practice, callers and bindings are expected to run async APIs on the shared runtime rather than creating a new one
 
@@ -458,8 +458,8 @@ Important direct dependencies visible in current behavior:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/settings.rs) - exposes the cache, loaders, and stats to JavaScript/TypeScript
-- [`classic-settings-py`](../../ClassicLib-rs/python-bindings/classic-settings-py/src/lib.rs) - exposes the same surface plus validator helpers to Python
+- [`classic-node`](../../node-bindings/classic-node/src/settings.rs) - exposes the cache, loaders, and stats to JavaScript/TypeScript
+- [`classic-settings-py`](../../python-bindings/classic-settings-py/src/lib.rs) - exposes the same surface plus validator helpers to Python
 - [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level typed config loader; use it when raw `Yaml` documents are not enough
 - [`classic-shared-core`](../../docs/api/classic-shared-core.md) - repo-wide shared Tokio runtime policy this crate is expected to follow
 
