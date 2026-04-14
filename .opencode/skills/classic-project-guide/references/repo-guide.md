@@ -13,26 +13,28 @@ Use this reference when a task needs repository-specific details that are too bu
 
 ## Architecture Map
 
-CLASSIC is now a C++ plus Rust application.
+CLASSIC is a repo-root Cargo workspace with C++ frontends and a Rust core.
 
 - `classic-cli/` - C++20 CLI frontend.
 - `classic-gui/` - Qt 6 C++20 desktop GUI.
-- `ClassicLib-rs/` - Rust workspace for business logic and shared runtime facilities.
-- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/` - C++ bridge into Rust.
-- `ClassicLib-rs/node-bindings/` - active Node.js and Bun binding surface.
-- `ClassicLib-rs/python-bindings/` - retained for legacy and deprecation support.
+- `foundation/` - shared runtime and utility crates such as `classic-shared-core`.
+- `business-logic/` - domain crates, usually named `*-core`.
+- `cpp-bindings/classic-cpp-bridge/` - C++ bridge into Rust.
+- `node-bindings/classic-node/` - active Node.js and Bun binding surface.
+- `python-bindings/` - active Python binding tree and binding-local tooling.
+- `ui-applications/classic-tui/` - Rust TUI application crates.
 - `deprecated/` - archived Python-era implementation; do not add new product features here unless the task explicitly targets migration or legacy maintenance.
 
-Rust workspace layout:
+Repo-root workspace layout:
 
-1. `ClassicLib-rs/foundation/`
+1. `foundation/`
    - Shared runtime and utility crates such as `classic-shared-core`.
-2. `ClassicLib-rs/business-logic/`
+2. `business-logic/`
    - Domain crates, usually named `*-core`.
    - Crash scanning, YAML and config handling, file I/O, version registry, update logic, and related core behavior belong here.
-3. `ClassicLib-rs/cpp-bindings/`, `ClassicLib-rs/node-bindings/`, `ClassicLib-rs/python-bindings/`
+3. `cpp-bindings/classic-cpp-bridge/`, `node-bindings/classic-node/`, `python-bindings/`
    - Language and platform bindings.
-4. `ClassicLib-rs/ui-applications/`
+4. `ui-applications/classic-tui/`
    - Rust TUI application crates.
 
 Placement guidance:
@@ -109,29 +111,30 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 ### Node bindings
 
-Run these from `ClassicLib-rs/node-bindings/classic-node`.
+Run these from `node-bindings/classic-node`.
 
 ```powershell
 bun install
 bun run build
 bun run cli -- --version
-bun run parity:gate:local
+bun run parity:gate
 bun run test:bun
 bun run test:node
+bun run dts:freshness:check
 ```
 
 ### Python bindings
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+uv venv python-bindings/.venv
+uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
-Use a bindings-local virtual environment at `ClassicLib-rs/python-bindings/.venv`; do not rely on a repo-root `.venv` for Python binding smoke tests.
+Use a bindings-local virtual environment at `python-bindings/.venv`; do not rely on a repo-root `.venv` for Python binding smoke tests.
 
 ## Repo Conventions and Constraints
 
@@ -149,26 +152,29 @@ Use this when Rust APIs exposed through Node bindings change.
 
 Trigger paths usually include:
 
-- `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`
-- `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`
-- `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
-- `ClassicLib-rs/node-bindings/classic-node/src/`
-- `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
+- `business-logic/classic-scanlog-core/src/lib.rs`
+- `business-logic/classic-config-core/src/lib.rs`
+- `business-logic/classic-version-registry-core/src/lib.rs`
+- `node-bindings/classic-node/src/`
+- `node-bindings/classic-node/index.d.ts`
 
 Required follow-up in the same change:
 
-1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/node_api_parity/governance/tier2_backlog_and_governance.md`.
-2. If an API is promoted to Tier-1, update `docs/implementation/node_api_parity/baseline/parity_contract.json`.
-3. Update `ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` for new runtime-verified or deferred surfaces.
-4. Refresh and commit:
-   - `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
-   - `docs/implementation/node_api_parity/baseline/runtime_coverage_summary.json`
-   - `docs/implementation/node_api_parity/baseline/runtime_coverage_summary.md`
-   - `docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json`
-5. Run:
-   - `bun run parity:gate:local`
+1. Update `docs/implementation/node_api_parity/baseline/parity_contract.json` when the tracked public Node surface intentionally changes.
+2. Update `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
+3. Refresh and commit the affected artifacts, typically:
+   - `node-bindings/classic-node/index.d.ts`
+   - `node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`
+   - `node-bindings/classic-node/parity-artifacts/parity_diff_report.md`
+   - `node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`
+4. Run from `node-bindings/classic-node`:
+   - `bun run parity:gate`
+   - `bun run parity:gate:update-baseline` only when the plain gate shows intentional source-backed drift
+   - `bun run parity:gate`
    - `bun run test:bun`
    - `bun run test:node`
+   - `bun run dts:freshness:check`
+5. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
 6. Make sure `ci-typescript.yml` parity jobs pass before merge.
 
 Release gate:
@@ -181,29 +187,30 @@ Use this when Rust APIs exposed through Python bindings change.
 
 Trigger paths usually include:
 
-- `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`
-- `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`
-- `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
-- `ClassicLib-rs/python-bindings/*-py/src/`
-- `ClassicLib-rs/python-bindings/*-py/*.pyi`
+- `business-logic/classic-scanlog-core/src/lib.rs`
+- `business-logic/classic-config-core/src/lib.rs`
+- `business-logic/classic-version-registry-core/src/lib.rs`
+- `python-bindings/*-py/src/`
+- `python-bindings/*-py/*.pyi`
 
 Required follow-up in the same change:
 
-1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/python_api_parity/governance/tier2_backlog_and_governance.md`.
-2. If an API is promoted to Tier-1, update `docs/implementation/python_api_parity/baseline/parity_contract.json`.
-3. Update `ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json` for new runtime-verified or deferred surfaces.
-4. Refresh and commit:
-   - `docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json`
-   - `docs/implementation/python_api_parity/baseline/runtime_coverage_summary.md`
-   - `docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json`
-   - `docs/implementation/python_api_parity/governance/tier2_wave_manifest.json`
-5. Run:
-   - `uv venv ClassicLib-rs/python-bindings/.venv`
-   - `uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt`
+1. Update `docs/implementation/python_api_parity/baseline/parity_contract.json` when the tracked public Python surface intentionally changes.
+2. Update `python-bindings/tests/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
+3. Refresh and commit the affected artifacts, typically:
+   - `python-bindings/parity-artifacts/tier1_gate_report.md`
+   - `python-bindings/parity-artifacts/parity_diff_report.md`
+   - `python-bindings/parity-artifacts/runtime_coverage_summary.md`
+   - `python-bindings/parity-artifacts/stub_validation_report.json`
+   - the touched `python-bindings/*-py/*.pyi` files
+4. Run:
+   - `uv venv python-bindings/.venv`
+   - `uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt`
    - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
-   - `python validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
+   - `python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
    - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry`
-   - `uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q`
+   - `uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q`
+5. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
 6. Make sure `ci-python-bindings.yml` jobs pass before merge.
 
 ## CI and Platform Notes
