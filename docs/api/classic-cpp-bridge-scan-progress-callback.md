@@ -2,8 +2,8 @@
 
 Contributor-facing documentation for the current batch scan progress callback contract declared and used by:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h)
+- [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs)
+- [`cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h)
 
 This page documents the callback behavior visible in source today for the active Rust/C++ scan path.
 
@@ -33,7 +33,7 @@ For the broader `classic::scanner` entry points, see [`classic-cpp-bridge-data-e
 
 ## C++ declaration
 
-The callback interface itself is declared in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h):
+The callback interface itself is declared in [`cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h):
 
 ```cpp
 class ScanBatchProgressCallback {
@@ -43,11 +43,11 @@ public:
 };
 ```
 
-The header forward-declares `BatchProgressEvent`; the concrete shared DTO and enums are declared in the Rust CXX bridge in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs).
+The header forward-declares `BatchProgressEvent`; the concrete shared DTO and enums are declared in the Rust CXX bridge in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
 ## Rust declaration and use
 
-The bridge-local batch callback contract is defined inside the `#[cxx::bridge(namespace = "classic::scanner")]` module in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs).
+The bridge-local batch callback contract is defined inside the `#[cxx::bridge(namespace = "classic::scanner")]` module in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
 The main consumer is `orchestrator_process_logs_batch_with_progress(...)`, which:
 
@@ -88,7 +88,7 @@ The bridge declares four phases:
 
 ## `BatchProgressEvent`
 
-Current shared DTO shape from [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs):
+Current shared DTO shape from [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs):
 
 ```cpp
 struct BatchProgressEvent {
@@ -122,7 +122,7 @@ Practical contributor note:
 
 ## Per-log lifecycle the bridge is trying to preserve
 
-The bridge has an explicit event ranking helper in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs) and tests that assert monotonic successful and failed lifecycles.
+The bridge has an explicit event ranking helper in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) and tests that assert monotonic successful and failed lifecycles.
 
 For one log, the intended lifecycle is:
 
@@ -271,6 +271,6 @@ These are current behavior notes, not a future callback design.
 ## Contributor Rule Of Thumb
 
 - If you are changing only scan phases in `classic-scanlog-core`, check whether the bridge enum mapping and this page still match.
-- If you change `BatchProgressEvent`, `BatchProgressEventKind`, or `BatchProgressPhase` in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs), update this page and any active C++ consumers in the same change.
+- If you change `BatchProgressEvent`, `BatchProgressEventKind`, or `BatchProgressPhase` in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs), update this page and any active C++ consumers in the same change.
 - If frontend progress looks unstable, inspect Rust diagnostics first, then the Qt-side rank and aggregation model.
 - If you need stronger guarantees than the current source provides, document them only after the bridge and tests make them real.

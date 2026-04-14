@@ -2,11 +2,11 @@
 
 Contributor-facing documentation for the active C++ bridge entry points in:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/settings.rs) (renamed from `yaml.rs` during v9.1.0 Phase 1 Plan 2)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) (renamed from `yaml.rs` during v9.1.0 Phase 1 Plan 2)
+- [`cpp-bindings/classic-cpp-bridge/src/config.rs`](../../cpp-bindings/classic-cpp-bridge/src/config.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/files.rs`](../../cpp-bindings/classic-cpp-bridge/src/files.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs)
 
 This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for YAML operations, config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
 
