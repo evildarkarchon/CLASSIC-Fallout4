@@ -342,3 +342,4 @@ build-*/
 opencode.json
 .claude/worktrees
 .claude/worktrees
+*.pfx
