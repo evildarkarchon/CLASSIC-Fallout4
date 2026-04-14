@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -130,16 +131,34 @@ class Phase06ValidationAuditTests(unittest.TestCase):
                 "python validate_stubs.py",
                 "--rust-dir ClassicLib-rs",
                 "repo root",
-                "ClassicLib-rs",
+                "Unsupported legacy input",
             ],
         )
 
         module = load_module(STUB_VALIDATOR, "phase06_validate_stubs")
         expected_workspace = REPO_ROOT
         self.assertEqual(module.normalize_rust_dir(REPO_ROOT), expected_workspace)
-        self.assertEqual(
-            module.normalize_rust_dir(REPO_ROOT / "ClassicLib-rs"),
-            expected_workspace,
+        with self.assertRaisesRegex(FileNotFoundError, "ClassicLib-rs"):
+            module.normalize_rust_dir(REPO_ROOT / "ClassicLib-rs")
+
+    def test_stub_validator_rejects_legacy_workspace_argument(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(STUB_VALIDATOR),
+                "--rust-dir",
+                "ClassicLib-rs",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "Legacy rust-dir 'ClassicLib-rs' is no longer supported",
+            result.stdout + result.stderr,
         )
 
     def test_rebuild_script(self) -> None:
