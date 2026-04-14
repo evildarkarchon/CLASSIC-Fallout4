@@ -27,8 +27,8 @@ Requirements for milestone `v9.1.0-root`. Each requirement maps to exactly one r
 
 ### Docs and Guidance
 
-- [ ] **DOCS-01**: Contributor can follow active docs, skills, and agent context files without being routed to `ClassicLib-rs/` as the live workspace root
-- [ ] **DOCS-02**: Contributor can use milestone migration notes or a verification matrix to map the old workspace-root workflows to the new repository-root workflows
+- [x] **DOCS-01**: Contributor can follow active docs, skills, and agent context files without being routed to `ClassicLib-rs/` as the live workspace root
+- [x] **DOCS-02**: Contributor can use milestone migration notes or a verification matrix to map the old workspace-root workflows to the new repository-root workflows
 - [x] **DOCS-03**: Contributor gets regression protection against newly introduced active `ClassicLib-rs/` workspace-root references in validation-critical docs, scripts, or tests
 
 ## Future Requirements
@@ -59,8 +59,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INTG-02 | Phase 8 | Pending |
 | INTG-03 | Phase 9 | Pending |
 | INTG-04 | Phase 9 | Pending |
-| DOCS-01 | Phase 10 | Pending |
-| DOCS-02 | Phase 10 | Pending |
+| DOCS-01 | Phase 10 | Complete |
+| DOCS-02 | Phase 10 | Complete |
 | DOCS-03 | Phase 10 | Complete |
 
 **Coverage:**
