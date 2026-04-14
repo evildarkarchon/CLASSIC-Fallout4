@@ -118,7 +118,12 @@ Plans:
   1. Contributor can rerun the Phase 7 relocation audit without false failures from stale `ClassicLib-rs` residue expectations.
   2. Contributor can see current evidence that relocated crates remain at repo-root paths with working local dependency resolution.
   3. Contributor can inspect `07-VERIFICATION.md` and see `MOVE-01` and `MOVE-02` satisfied against the current repo state.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] `11-01-PLAN.md` — Replace the obsolete Phase 11 audit with a current closure scaffold for `07-VERIFICATION.md` and moved-crate proof.
+- [ ] `11-02-PLAN.md` — Refresh the stale Phase 7 relocation audit and planning test to the live `ClassicLib-rs` residue inventory.
+- [ ] `11-03-PLAN.md` — Create `07-VERIFICATION.md` with direct `MOVE-01`/`MOVE-02` evidence and sync planning status files.
 
 ### Phase 12: Integration Replay and Verification Closure
 **Goal**: The remaining integration proof surfaces are replayable and the orphaned wrapper, parity, CI, and clean-state requirements are closed with current verification evidence.
@@ -141,7 +146,7 @@ Plans:
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
-| 11. Relocation Proof and Verification Closure | 0/TBD | Not started | - |
+| 11. Relocation Proof and Verification Closure | 1/3 | In Progress|  |
 | 12. Integration Replay and Verification Closure | 0/TBD | Not started | - |
 
 <details>
