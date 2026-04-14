@@ -9,9 +9,11 @@ Use this skill only when the task depends on CLASSIC-specific repository policy 
 
 Classify the request before editing or recommending commands.
 
-- Put shared product behavior in `ClassicLib-rs/`, especially business logic, validation, persistence rules, runtime facilities, and binding-facing behavior.
+- Put shared product behavior in the repo-root Rust layers, especially `foundation/` and `business-logic/`, for validation, persistence rules, runtime facilities, and binding-facing behavior.
 - Keep `classic-cli/` and `classic-gui/` focused on native frontend and integration concerns.
-- Keep `ClassicLib-rs/node-bindings/` and `ClassicLib-rs/python-bindings/` aligned with Rust APIs instead of reimplementing logic.
+- Keep `cpp-bindings/classic-cpp-bridge/`, `node-bindings/classic-node/`, `python-bindings/`, and `ui-applications/classic-tui/` aligned with Rust APIs instead of reimplementing logic.
+
+For legacy-to-live path and command translation, use `docs/workspace-migration-matrix.md`.
 
 ## Read Only What You Need
 
@@ -37,7 +39,7 @@ Load `references/repo-guide.md` selectively.
 - For `classic-cli/` or `classic-gui/`, use the repo PowerShell wrapper scripts from the reference guide for build, install, package, clean rebuild, and all C++ test flows, including targeted runs via `-CTestName` and `-IntegrationTestName`.
 - For Rust workspace changes, expect `cargo fmt`, `cargo clippy`, and the relevant `cargo test` commands from the repo-root workspace.
 - For Node binding changes, treat parity artifacts and binding tests as part of the same change and use the local parity gate plus Bun and Node test commands from the reference guide.
-- For Python binding changes, use `ClassicLib-rs/python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, rebuild, and pytest steps from the reference guide.
+- For Python binding changes, use `python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, rebuild, and pytest steps from the reference guide.
 - For Linux or cloud validation, prefer portable Rust-only subsets when native Windows-focused surfaces are not practical to build.
 
 ## State Repo-Specific Follow-Up Explicitly
