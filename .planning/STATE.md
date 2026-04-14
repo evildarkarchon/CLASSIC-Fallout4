@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: executing
+status: completed
 stopped_at: Completed 11-03-PLAN.md
-last_updated: "2026-04-14T00:00:00Z"
+last_updated: "2026-04-14T13:16:52.932Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 7
@@ -73,6 +73,7 @@ Progress: [██████████] 100%
 | Phase 11 P01 | 2 min | 1 tasks | 5 files |
 | Phase 11 P02 | 7 min | 2 tasks | 2 files |
 | Phase 11 P03 | pending summary | 2 tasks | pending |
+| Phase 11 P03 | 6 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -152,6 +153,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Keep the 37-row Phase 7 crate mapping and cargo-root proof intact while refreshing only the stale legacy residue inventory.
 - [Phase 11]: Treat the live ClassicLib-rs directory listing as the source of truth for the checked-in residue table and its pytest expectations.
 - [Phase 11]: Use `07-VERIFICATION.md` as the canonical moved-crate requirement artifact and keep milestone/planning metadata aligned to that verifier.
+- [Phase 11]: Keep 07-VERIFICATION.md as the canonical moved-crate requirement artifact instead of spreading MOVE evidence across summaries.
+- [Phase 11]: Update the milestone audit in the same plan so Phase 7 closure no longer appears stale after verification is restored.
 
 ### Pending Todos
 
@@ -170,7 +173,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T00:00:00Z
+Last session: 2026-04-14T13:16:52.928Z
 Stopped at: Completed 11-03-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 12 integration replay and verification closure

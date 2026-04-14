@@ -146,7 +146,7 @@ Plans:
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
-| 11. Relocation Proof and Verification Closure | 3/3 | Complete | 2026-04-14 |
+| 11. Relocation Proof and Verification Closure | 3/3 | Complete   | 2026-04-14 |
 | 12. Integration Replay and Verification Closure | 0/TBD | Not started | - |
 
 <details>
