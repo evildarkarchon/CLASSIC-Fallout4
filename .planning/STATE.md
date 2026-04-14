@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-04-14T02:43:11.023Z"
+stopped_at: Completed 10-03-PLAN.md
+last_updated: "2026-04-14T02:50:05.263Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 27
-  completed_plans: 19
+  completed_plans: 20
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 (docs-guidance-and-tripwires) — EXECUTING
-Plan: 3 of 10
+Plan: 4 of 10
 Status: Ready to execute
 Last activity: 2026-04-14
 
@@ -62,6 +62,7 @@ Progress: [██████████] 100%
 | Phase 07 P03 | session | 2 tasks | 6 files |
 | Phase 10 P00 | 3min | 2 tasks | 2 files |
 | Phase 10 P01 | 11 min | 2 tasks | 6 files |
+| Phase 10 P03 | 5min | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Parse wrapper scripts before applying stale-path assertions so guidance tripwires fail on syntax drift as well as forbidden phrases.
 - [Phase 10]: Keep old-to-new command, path, and artifact translations centralized in one matrix page instead of duplicating them across entry docs.
 - [Phase 10]: Limit the current verification selector to the plan-owned top-level doc surfaces so later Phase 10 plans can extend coverage without blocking this plan.
+- [Phase 10]: Keep deep API reference pages focused on repo-root source links and treat old ClassicLib-rs locations as historical context only.
+- [Phase 10]: Use root-level crate, binding, and UI paths directly in plan-owned API guides instead of duplicating migration routing.
 
 ### Pending Todos
 
@@ -138,7 +141,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T02:43:11.020Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-04-14T02:50:05.260Z
+Stopped at: Completed 10-03-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 08 wrapper/parity rewiring
