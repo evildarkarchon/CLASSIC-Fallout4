@@ -14,11 +14,13 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 Use this note when a change touches public binding contracts under:
 
-- [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts)
-- `ClassicLib-rs/python-bindings/*-py/*.pyi`
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/)
+- [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts)
+- `python-bindings/*-py/*.pyi`
+- [`cpp-bindings/classic-cpp-bridge/src/`](../../cpp-bindings/classic-cpp-bridge/src/)
 
 The goal is practical maintenance: decide when to refresh only one surface's contract, or multiple surfaces in the same change.
+
+If you are translating an older `ClassicLib-rs/...` instruction, use the shared [`workspace migration matrix`](../workspace-migration-matrix.md) instead of copying legacy paths into new guidance.
 
 ---
 
@@ -47,8 +49,8 @@ Refresh the CXX baseline when the C++ bridge surface changes.
 
 Typical triggers:
 
-- changes in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/) wrapper modules
-- changes in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs) (bridge source list)
+- changes in [`cpp-bindings/classic-cpp-bridge/src/`](../../cpp-bindings/classic-cpp-bridge/src/) wrapper modules
+- changes in [`cpp-bindings/classic-cpp-bridge/build.rs`](../../cpp-bindings/classic-cpp-bridge/build.rs) (bridge source list)
 - public Rust API changes in business-logic `-core` crates that the bridge exposes
 
 The C++ refresh workflow:
@@ -64,13 +66,13 @@ See [`cxx-parity-gate.md`](cxx-parity-gate.md) for full details.
 
 ## When To Refresh Node `index.d.ts`
 
-Refresh [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts) when the public Node export surface changes.
+Refresh [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts) when the public Node export surface changes.
 
 Treat it as a tracked generated artifact: contributors should review the committed snapshot first, and any public Node export change should refresh and commit `index.d.ts` in the same change rather than leaving freshness to CI later.
 
 Typical triggers already documented in the repo include:
 
-- changes in [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/)
+- changes in [`node-bindings/classic-node/src/`](../../node-bindings/classic-node/src/)
 - regeneration of `index.d.ts` itself
 - public Rust API changes in business-logic `-core` crates that the Node bindings expose
 
@@ -84,8 +86,8 @@ Refresh the affected `classic_*.pyi` files when the public Python module contrac
 
 Typical documented triggers include:
 
-- changes in `ClassicLib-rs/python-bindings/*-py/src/`
-- changes in `ClassicLib-rs/python-bindings/*-py/*.pyi`
+- changes in `python-bindings/*-py/src/`
+- changes in `python-bindings/*-py/*.pyi`
 - public Rust API changes in business-logic `-core` crates that the Python bindings expose
 
 In practice, refresh the matching `.pyi` file when a Python export name, callable signature, return type, or raised-exception contract changes.
@@ -119,7 +121,7 @@ python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 When Node `index.d.ts` changes, the important checks are:
 
 ```powershell
-# From ClassicLib-rs/node-bindings/classic-node
+# From node-bindings/classic-node
 bun run parity:gate
 bun run parity:gate:update-baseline   # only if the plain gate shows intentional source-backed drift
 bun run parity:gate
@@ -130,27 +132,27 @@ bun run dts:freshness:check
 
 Relevant Node artifacts/checks:
 
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md)
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/parity_diff_report.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/parity_diff_report.md)
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md)
+- [`node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../node-bindings/classic-node/parity-artifacts/tier1_gate_report.md)
+- [`node-bindings/classic-node/parity-artifacts/parity_diff_report.md`](../../node-bindings/classic-node/parity-artifacts/parity_diff_report.md)
+- [`node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md)
 
 When Python `.pyi` files change, the important checks are:
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+uv venv python-bindings/.venv
+uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 Relevant Python artifacts/checks:
 
-- [`ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md)
-- [`ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.md)
-- [`ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md)
-- [`ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json`](../../ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json)
+- [`python-bindings/parity-artifacts/tier1_gate_report.md`](../../python-bindings/parity-artifacts/tier1_gate_report.md)
+- [`python-bindings/parity-artifacts/parity_diff_report.md`](../../python-bindings/parity-artifacts/parity_diff_report.md)
+- [`python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../python-bindings/parity-artifacts/runtime_coverage_summary.md)
+- [`python-bindings/parity-artifacts/stub_validation_report.json`](../../python-bindings/parity-artifacts/stub_validation_report.json)
 
 If multiple surfaces refresh in one change, run all relevant workflows.
 

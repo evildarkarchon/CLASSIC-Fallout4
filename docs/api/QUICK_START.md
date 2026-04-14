@@ -84,13 +84,15 @@ cargo build --workspace
 cargo build --workspace --release
 ```
 
-Core domain work belongs under [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic).
+Core domain work belongs under [`business-logic/`](../../business-logic).
+
+If you are translating older instructions that still mention `ClassicLib-rs/...`, use the shared [`workspace migration matrix`](../workspace-migration-matrix.md) instead of guessing the repo-root replacement.
 
 ---
 
 ## 6) Node bindings workflow (only when touching Node surface)
 
-From [`ClassicLib-rs/node-bindings/classic-node/`](../../ClassicLib-rs/node-bindings/classic-node):
+From [`node-bindings/classic-node/`](../../node-bindings/classic-node):
 
 ```powershell
 bun install
@@ -117,7 +119,7 @@ bun run test:node
 
 ## 8) Scope boundary: maintained vs deprecated Python
 
-- Maintained Python scope: bindings under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+- Maintained Python scope: bindings under [`python-bindings/`](../../python-bindings)
 - Deprecated runtime scope: Python entrypoints/orchestration under [`deprecated/`](../../deprecated)
 
 Do not treat legacy Python runtime paths as the default contributor flow unless the task is explicitly migration/legacy support.

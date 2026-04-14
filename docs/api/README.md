@@ -42,7 +42,9 @@ Use this directory in this order:
 33. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
 34. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
-That order matches the current layering in `ClassicLib-rs/business-logic/`:
+Need a path translation? Start with the shared [`workspace migration matrix`](../workspace-migration-matrix.md), then return here for the active API pages.
+
+That order matches the current repo-root layering across `foundation/`, `business-logic/`, and the binding surfaces:
 
 - `classic-shared-core` provides the shared Tokio runtime plus common error, path, performance, and string helpers
 - `classic-perf-core` provides process-wide timing buckets, scoped timers, and summary computation for lightweight metrics collection

@@ -4,6 +4,8 @@ Documents the per-binding error shape conventions for Rust error types as they c
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
+Need an old-to-new path translation first? Use the shared [`workspace migration matrix`](../workspace-migration-matrix.md).
+
 ---
 
 ## Scope
@@ -20,11 +22,11 @@ Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected b
 
 **Pattern:** `rust::Error` exceptions for hard failures, empty-string sentinels for fail-soft returns.
 
-**Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.
+**Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.
 
 **Example 2 -- DTO with `found: false`:** `db_pool_get_entry_typed()` in the same file returns a `FormIdEntryDto` with `found: false` for lookup misses. The DTO has fields `{formid, plugin, value, found}` where `found` is a `bool`. C++ callers check `dto.found` before using `dto.value`.
 
-**Example 3 -- propagated `rust::Error`:** Functions like `orchestrator_process_log()` in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs) propagate `rust::Error` for infrastructure failures (runtime not initialized, config not loaded). The scan entry points are `orchestrator_process_log`, `orchestrator_process_logs_batch`, and `orchestrator_process_logs_batch_with_progress`.
+**Example 3 -- propagated `rust::Error`:** Functions like `orchestrator_process_log()` in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) propagate `rust::Error` for infrastructure failures (runtime not initialized, config not loaded). The scan entry points are `orchestrator_process_log`, `orchestrator_process_logs_batch`, and `orchestrator_process_logs_batch_with_progress`.
 
 ---
 
@@ -32,7 +34,7 @@ Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected b
 
 **Pattern:** `napi::Error` with a `code` field matching the Rust error variant name (e.g., `"InvalidArg"`, `"ParseError"`).
 
-**Example 1:** `config_error_to_napi_err()` in [`ClassicLib-rs/node-bindings/classic-node/src/config.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
+**Example 1:** `config_error_to_napi_err()` in [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
 
 **Example 2:** `settings_error_to_napi_err()` in the same file converts `SettingsError` variants with codes like `"NotFound"`, `"YamlError"`, etc.
 
@@ -46,9 +48,9 @@ Tests verify both `error.message` and `error.code` to ensure the structured erro
 
 **Pattern:** Typed Python exception classes (e.g., `RustConfigParseError`, `RustConfigIOError`) with message inspection.
 
-**Example 1:** `config_error_to_pyerr()` in [`ClassicLib-rs/python-bindings/classic-config-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-config-py/src/lib.rs) maps each `ConfigError` variant to a specific Python exception class.
+**Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs) maps each `ConfigError` variant to a specific Python exception class.
 
-**Example 2:** [`ClassicLib-rs/foundation/classic-shared-py/src/lib.rs`](../../ClassicLib-rs/foundation/classic-shared-py/src/lib.rs) provides `define_exceptions!` and `register_exceptions!` macros plus the `ToPyErr` trait and `ResultExt` extension for consistent exception wiring across all Python binding crates.
+**Example 2:** [`foundation/classic-shared-py/src/lib.rs`](../../foundation/classic-shared-py/src/lib.rs) provides `define_exceptions!` and `register_exceptions!` macros plus the `ToPyErr` trait and `ResultExt` extension for consistent exception wiring across all Python binding crates.
 
 **Example 3:** Tests use `pytest.raises(RustConfigParseError)` with message inspection to verify both the exception type and the error context.
 
@@ -80,7 +82,7 @@ No dedicated error-conversion helper functions. Each bridge function uses `block
 - `settings_error_to_napi_err()` -- converts `SettingsError` variants
 - `runtime_to_napi_err()` -- wraps `anyhow::Error` with automatic downcast
 
-Source: [`ClassicLib-rs/node-bindings/classic-node/src/config.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/config.rs)
+Source: [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs)
 
 ### Python
 
@@ -90,6 +92,6 @@ Source: [`ClassicLib-rs/node-bindings/classic-node/src/config.rs`](../../Classic
 - `ResultExt` -- extension trait for converting `Result<T, E>` to `PyResult<T>`
 - `without_gil` -- GIL release helper for blocking operations
 
-Source: [`ClassicLib-rs/foundation/classic-shared-py/src/lib.rs`](../../ClassicLib-rs/foundation/classic-shared-py/src/lib.rs)
+Source: [`foundation/classic-shared-py/src/lib.rs`](../../foundation/classic-shared-py/src/lib.rs)
 
-Per-module converters like `config_error_to_pyerr()` live alongside each binding crate: [`ClassicLib-rs/python-bindings/classic-config-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-config-py/src/lib.rs)
+Per-module converters like `config_error_to_pyerr()` live alongside each binding crate: [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs)
