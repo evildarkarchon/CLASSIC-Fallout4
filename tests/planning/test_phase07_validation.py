@@ -12,6 +12,12 @@ PHASE_DIR = REPO_ROOT / ".planning/phases/07-crate-relocation-and-path-rewire"
 RELOCATION_AUDIT = PHASE_DIR / "07-RELOCATION-AUDIT.md"
 WORKSPACE_MANIFEST = REPO_ROOT / "Cargo.toml"
 LEGACY_ROOT = REPO_ROOT / "ClassicLib-rs"
+CRITERION_CONFIG = REPO_ROOT / "criterion.toml"
+BENCHMARK_CONFIG = REPO_ROOT / "benchmark-config.yaml"
+BENCH_COMMON_DIR = REPO_ROOT / "benches/common"
+LEGACY_CRITERION_CONFIG = REPO_ROOT / "ClassicLib-rs/criterion.toml"
+LEGACY_BENCHMARK_CONFIG = REPO_ROOT / "ClassicLib-rs/benchmark-config.yaml"
+LEGACY_BENCH_COMMON_DIR = REPO_ROOT / "ClassicLib-rs/benches/common"
 MOVED_LAYER_DIRS = [
     REPO_ROOT / "foundation",
     REPO_ROOT / "business-logic",
@@ -52,6 +58,14 @@ EXPECTED_RESIDUE = [
     "coverage_summary.ps1",
     "Crash Logs/",
     "target/",
+]
+BENCHMARK_INCLUDE_FILES = [
+    REPO_ROOT / "business-logic/classic-settings-core/benches/yaml_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-scanlog-core/benches/scanlog_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-file-io-core/benches/file_io_benchmarks.rs",
+    REPO_ROOT / "business-logic/classic-database-core/benches/database_benchmarks.rs",
+    REPO_ROOT / "python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs",
+    REPO_ROOT / "python-bindings/classic-file-io-py/benches/gil_benchmarks.rs",
 ]
 
 
@@ -161,6 +175,66 @@ class Phase07ValidationAuditTests(unittest.TestCase):
         for residue in EXPECTED_RESIDUE:
             with self.subTest(residue=residue):
                 self.assertIn(f"| `{residue}` |", text)
+
+    def test_relocation_audit_mapping_matches_workspace_exactly(self) -> None:
+        members = workspace_members()
+        text = read_text(RELOCATION_AUDIT)
+
+        actual_rows = sorted(
+            line.strip()
+            for line in text.splitlines()
+            if line.startswith("| ClassicLib-rs/")
+        )
+        expected_rows = sorted(
+            f"| ClassicLib-rs/{member} | {member} | Moved intact |"
+            for member in members
+        )
+
+        self.assertEqual(expected_rows, actual_rows)
+
+    def test_legacy_residue_inventory_matches_disk(self) -> None:
+        actual_residue = sorted(
+            f"{entry.name}/" if entry.is_dir() else entry.name
+            for entry in LEGACY_ROOT.iterdir()
+        )
+
+        self.assertEqual(sorted(EXPECTED_RESIDUE), actual_residue)
+
+    def test_benchmark_include_path_fallout_rewired(self) -> None:
+        self.assertTrue(CRITERION_CONFIG.exists())
+        self.assertTrue(BENCHMARK_CONFIG.exists())
+        self.assertTrue((BENCH_COMMON_DIR / "mod.rs").exists())
+        self.assertTrue((BENCH_COMMON_DIR / "config.rs").exists())
+        self.assertFalse(LEGACY_CRITERION_CONFIG.exists())
+        self.assertFalse(LEGACY_BENCHMARK_CONFIG.exists())
+        self.assertFalse((LEGACY_BENCH_COMMON_DIR / "mod.rs").exists())
+        self.assertFalse((LEGACY_BENCH_COMMON_DIR / "config.rs").exists())
+
+        assert_contains_all(
+            self,
+            read_text(CRITERION_CONFIG),
+            [
+                'criterion_home = "./target/criterion"',
+                "[output]",
+                "verbose = true",
+            ],
+        )
+        assert_contains_all(
+            self,
+            read_text(BENCHMARK_CONFIG),
+            [
+                "defaults:",
+                "warning_threshold: 5",
+                "failure_threshold: 10",
+                "overrides:",
+            ],
+        )
+
+        for path in BENCHMARK_INCLUDE_FILES:
+            text = read_text(path)
+            with self.subTest(path=str(path.relative_to(REPO_ROOT))):
+                self.assertIn("../../../benches/common/", text)
+                self.assertNotIn("../../../../benches/common/", text)
 
     def test_cargo_root_detection(self) -> None:
         locate_result = subprocess.run(

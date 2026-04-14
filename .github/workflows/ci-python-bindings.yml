@@ -27,14 +27,14 @@ jobs:
         run: python tools/python_api_parity/check_parity_gate.py --repo-root .
 
       - name: Run Python stub validation gate
-        run: python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+        run: python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: python-parity-diagnostics
-          path: ClassicLib-rs/python-bindings/parity-artifacts/
+          path: python-bindings/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 
@@ -58,7 +58,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          cache-dependency-glob: ClassicLib-rs/python-bindings/requirements-ci.txt
+          cache-dependency-glob: python-bindings/requirements-ci.txt
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -79,23 +79,23 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          path: target
+          key: ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-python-
 
       - name: Create Python bindings virtual environment
-        run: uv venv ClassicLib-rs/python-bindings/.venv
+        run: uv venv python-bindings/.venv
 
       - name: Install Python build and test dependencies
-        run: uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+        run: uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
 
-      # `maturin` is intentionally installed into `ClassicLib-rs/python-bindings/.venv`.
+      # `maturin` is intentionally installed into `python-bindings/.venv`.
       # `rebuild_rust.ps1` targets that interpreter explicitly for Python binding builds.
       - name: Build and install required Python bindings
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 
       - name: Run Python bindings smoke tests
-        run: uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+        run: uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q

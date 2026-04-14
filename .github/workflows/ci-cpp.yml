@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: cxx-parity-diagnostics
-          path: ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/
+          path: cpp-bindings/classic-cpp-bridge/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 
@@ -74,8 +74,8 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          path: target
+          key: ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-cpp-cli-
@@ -146,8 +146,8 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          path: target
+          key: ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-cpp-gui-

@@ -65,7 +65,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
@@ -110,7 +110,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
@@ -155,7 +155,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: target
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-test-
