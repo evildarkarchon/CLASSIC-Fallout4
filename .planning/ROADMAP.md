@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v9.1.0-root Move Crates to Project Root** — Phases 6-10 (planned)
+- 🚧 **v9.1.0-root Move Crates to Project Root** — Phases 6-12 (planned)
 - ✅ **v9.1.0-consolidation Crate Consolidation** — Phases 1-5 (shipped 2026-04-12) — see [`milestones/v9.1.0-ROADMAP.md`](./milestones/v9.1.0-ROADMAP.md)
 - ✅ **v9.1.0-bindings Full Bindings Parity** — Phases 1-7 (shipped 2026-04-10) — see [`milestones/v9.1.0-bindings-ROADMAP.md`](./milestones/v9.1.0-bindings-ROADMAP.md)
 - ✅ **v9.1.0-bugfixes CLASSIC Codebase Health** — Phases 1-11 (shipped 2026-04-07) — see [`milestones/v9.1.0-bugfixes-ROADMAP.md`](./milestones/v9.1.0-bugfixes-ROADMAP.md)
@@ -16,6 +16,8 @@
 - [ ] **Phase 8: Wrapper and Parity Rewire** - Existing wrappers, frontends, and parity gates keep working against the relocated workspace.
 - [ ] **Phase 9: Clean Validation and CI Refresh** - Clean-state validation, CI, and path-bearing artifacts prove the new layout is durable.
 - [ ] **Phase 10: Docs, Guidance, and Tripwires** - Active docs and agent guidance point at the new root layout and guard against regressions.
+- [ ] **Phase 11: Relocation Proof and Verification Closure** - Refresh stale relocation proof surfaces and close the moved-crate verification gap.
+- [ ] **Phase 12: Integration Replay and Verification Closure** - Restore replayable integration proof and close the remaining wrapper, parity, CI, and clean-state verification gaps.
 
 ## Phase Details
 
@@ -107,6 +109,29 @@ Plans:
 - [ ] `10-08-PLAN.md` — Refresh the mirrored classic-project-guide repo-guide references with repo-root architecture, command, and parity-path guidance.
 - [ ] `10-09-PLAN.md` — Update all active `.planning/codebase/*.md` maps to repo-root examples, commands, and live-tree paths.
 
+### Phase 11: Relocation Proof and Verification Closure
+**Goal**: The moved-crate proof surfaces match the current repo state and Phase 7 has a rerunnable verification record.
+**Depends on**: Phase 10
+**Requirements**: MOVE-01, MOVE-02
+**Gap Closure**: Closes the orphaned moved-crate requirements and the stale Phase 7 relocation-proof integration gap from `v9.1.0-MILESTONE-AUDIT.md`.
+**Success Criteria** (what must be TRUE):
+  1. Contributor can rerun the Phase 7 relocation audit without false failures from stale `ClassicLib-rs` residue expectations.
+  2. Contributor can see current evidence that relocated crates remain at repo-root paths with working local dependency resolution.
+  3. Contributor can inspect `07-VERIFICATION.md` and see `MOVE-01` and `MOVE-02` satisfied against the current repo state.
+**Plans**: TBD
+
+### Phase 12: Integration Replay and Verification Closure
+**Goal**: The remaining integration proof surfaces are replayable and the orphaned wrapper, parity, CI, and clean-state requirements are closed with current verification evidence.
+**Depends on**: Phase 11
+**Requirements**: INTG-01, INTG-02, INTG-03, INTG-04
+**Gap Closure**: Closes the orphaned integration requirements and the clean-state Python wrapper replay flow gap from `v9.1.0-MILESTONE-AUDIT.md`.
+**Success Criteria** (what must be TRUE):
+  1. Contributor can rerun the clean-state proof without leaving the Python rebuild wrapper unusable afterward.
+  2. Contributor can see machine-checkable completion metadata for the Phase 8 and Phase 9 integration closure artifacts.
+  3. Contributor can inspect `08-VERIFICATION.md` and `09-VERIFICATION.md` for current wrapper, parity, CI, and clean-state proof coverage.
+  4. Milestone integration requirements no longer appear as orphaned in milestone audit coverage.
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -116,6 +141,8 @@ Plans:
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
+| 11. Relocation Proof and Verification Closure | 0/TBD | Not started | - |
+| 12. Integration Replay and Verification Closure | 0/TBD | Not started | - |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>

@@ -15,8 +15,8 @@ Requirements for milestone `v9.1.0-root`. Each requirement maps to exactly one r
 
 ### Crate Relocation
 
-- [x] **MOVE-01**: Contributor can find every crate previously under `ClassicLib-rs/` at its new repository-root-relative location with each crate's internal directory structure preserved
-- [x] **MOVE-02**: Contributor can resolve all workspace members and local crate path dependencies after the relocation without keeping a second active workspace under `ClassicLib-rs/`
+- [ ] **MOVE-01**: Contributor can find every crate previously under `ClassicLib-rs/` at its new repository-root-relative location with each crate's internal directory structure preserved
+- [ ] **MOVE-02**: Contributor can resolve all workspace members and local crate path dependencies after the relocation without keeping a second active workspace under `ClassicLib-rs/`
 
 ### Integrations
 
@@ -53,12 +53,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | ROOT-01 | Phase 6 | Complete |
 | ROOT-02 | Phase 6 | Complete |
-| MOVE-01 | Phase 7 | Complete |
-| MOVE-02 | Phase 7 | Complete |
-| INTG-01 | Phase 8 | Pending |
-| INTG-02 | Phase 8 | Pending |
-| INTG-03 | Phase 9 | Pending |
-| INTG-04 | Phase 9 | Pending |
+| MOVE-01 | Phase 11 | Pending |
+| MOVE-02 | Phase 11 | Pending |
+| INTG-01 | Phase 12 | Pending |
+| INTG-02 | Phase 12 | Pending |
+| INTG-03 | Phase 12 | Pending |
+| INTG-04 | Phase 12 | Pending |
 | DOCS-01 | Phase 10 | Complete |
 | DOCS-02 | Phase 10 | Complete |
 | DOCS-03 | Phase 10 | Complete |
@@ -70,4 +70,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-12 after Phase 7 completion*
+*Last updated: 2026-04-14 after milestone gap planning*
