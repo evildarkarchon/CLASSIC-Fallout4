@@ -16,7 +16,7 @@
 - [ ] **Phase 8: Wrapper and Parity Rewire** - Existing wrappers, frontends, and parity gates keep working against the relocated workspace.
 - [ ] **Phase 9: Clean Validation and CI Refresh** - Clean-state validation, CI, and path-bearing artifacts prove the new layout is durable.
 - [ ] **Phase 10: Docs, Guidance, and Tripwires** - Active docs and agent guidance point at the new root layout and guard against regressions.
-- [ ] **Phase 11: Relocation Proof and Verification Closure** - Refresh stale relocation proof surfaces and close the moved-crate verification gap.
+- [x] **Phase 11: Relocation Proof and Verification Closure** - Refresh stale relocation proof surfaces and close the moved-crate verification gap.
 - [ ] **Phase 12: Integration Replay and Verification Closure** - Restore replayable integration proof and close the remaining wrapper, parity, CI, and clean-state verification gaps.
 
 ## Phase Details
@@ -121,9 +121,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] `11-01-PLAN.md` — Replace the obsolete Phase 11 audit with a current closure scaffold for `07-VERIFICATION.md` and moved-crate proof.
-- [ ] `11-02-PLAN.md` — Refresh the stale Phase 7 relocation audit and planning test to the live `ClassicLib-rs` residue inventory.
-- [ ] `11-03-PLAN.md` — Create `07-VERIFICATION.md` with direct `MOVE-01`/`MOVE-02` evidence and sync planning status files.
+- [x] `11-01-PLAN.md` — Replace the obsolete Phase 11 audit with a current closure scaffold for `07-VERIFICATION.md` and moved-crate proof.
+- [x] `11-02-PLAN.md` — Refresh the stale Phase 7 relocation audit and planning test to the live `ClassicLib-rs` residue inventory.
+- [x] `11-03-PLAN.md` — Create `07-VERIFICATION.md` with direct `MOVE-01`/`MOVE-02` evidence and sync planning status files.
 
 ### Phase 12: Integration Replay and Verification Closure
 **Goal**: The remaining integration proof surfaces are replayable and the orphaned wrapper, parity, CI, and clean-state requirements are closed with current verification evidence.
@@ -146,7 +146,7 @@ Plans:
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
-| 11. Relocation Proof and Verification Closure | 2/3 | In Progress|  |
+| 11. Relocation Proof and Verification Closure | 3/3 | Complete | 2026-04-14 |
 | 12. Integration Replay and Verification Closure | 0/TBD | Not started | - |
 
 <details>

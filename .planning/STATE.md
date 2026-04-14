@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-04-14T13:08:33.582Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-04-14T00:00:00Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 30
-  completed_plans: 29
+  completed_plans: 30
   percent: 100
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 11 — relocation-proof-and-verification-closure
+**Current focus:** Phase 12 — integration-replay-and-verification-closure
 
 ## Current Position
 
-Phase: 11 (relocation-proof-and-verification-closure) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
+Phase: 12 (integration-replay-and-verification-closure) — READY
+Plan: 1 of TBD
+Status: Phase 11 complete; Phase 12 is the next focus
 Last activity: 2026-04-14
 
 Progress: [██████████] 100%
@@ -49,8 +49,8 @@ Progress: [██████████] 100%
 
 **Recent Trend:**
 
-- Last 5 plans: `06-02`, `06-03`, `07-01`, `07-02`, `07-03`
-- Trend: Phase 6 and Phase 7 are complete; next work shifts to Phase 8 integration rewiring.
+- Last 5 plans: `10-08`, `10-09`, `11-01`, `11-02`, `11-03`
+- Trend: Phase 10 and Phase 11 are complete; next work shifts to Phase 12 integration verification closure.
 
 *Updated after each plan completion*
 | Phase 06 P00 | 0min | 1 tasks | 2 files |
@@ -72,6 +72,7 @@ Progress: [██████████] 100%
 | Phase 10-docs-guidance-and-tripwires P08 | 15 min | 2 tasks | 5 files |
 | Phase 11 P01 | 2 min | 1 tasks | 5 files |
 | Phase 11 P02 | 7 min | 2 tasks | 2 files |
+| Phase 11 P03 | pending summary | 2 tasks | pending |
 
 ## Accumulated Context
 
@@ -150,6 +151,7 @@ Recent decisions affecting current work:
 - [Phase 11]: Make Phase 11 prove direct MOVE-01/MOVE-02 evidence and the missing 07-VERIFICATION artifact through deterministic file-backed tests.
 - [Phase 11]: Keep the 37-row Phase 7 crate mapping and cargo-root proof intact while refreshing only the stale legacy residue inventory.
 - [Phase 11]: Treat the live ClassicLib-rs directory listing as the source of truth for the checked-in residue table and its pytest expectations.
+- [Phase 11]: Use `07-VERIFICATION.md` as the canonical moved-crate requirement artifact and keep milestone/planning metadata aligned to that verifier.
 
 ### Pending Todos
 
@@ -168,7 +170,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T13:08:33.578Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-04-14T00:00:00Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
-Next action: Plan or execute Phase 08 wrapper/parity rewiring
+Next action: Plan or execute Phase 12 integration replay and verification closure
