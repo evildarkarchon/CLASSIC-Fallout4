@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-05-PLAN.md
-last_updated: "2026-04-14T02:52:13.040Z"
+stopped_at: Completed 10-07-PLAN.md
+last_updated: "2026-04-14T02:53:33.330Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 27
-  completed_plans: 23
+  completed_plans: 24
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 (docs-guidance-and-tripwires) — EXECUTING
-Plan: 7 of 10
+Plan: 8 of 10
 Status: Ready to execute
 Last activity: 2026-04-14
 
@@ -66,6 +66,7 @@ Progress: [██████████] 100%
 | Phase 10 P07 | 12min | 2 tasks | 6 files |
 | Phase 10-docs-guidance-and-tripwires P06 | 1 min | 2 tasks | 7 files |
 | Phase 10 P05 | 15 min | 2 tasks | 6 files |
+| Phase 10 P04 | 4m 5s | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,8 @@ Recent decisions affecting current work:
 - [Phase 10-docs-guidance-and-tripwires]: Kept historical rename and absorbed-crate notes only as labeled history, not live operational guidance.
 - [Phase 10]: Keep workflow narratives intact and only rewrite active source, binding, and artifact locations to the repo-root tree.
 - [Phase 10]: Treat the final stale classic-xse-core link as an inline doc bugfix and correct it in a follow-up fix commit rather than reopening task scope.
+- [Phase 10]: Use repo-root relative links throughout active API reference pages because Phase 7 made root-level layer directories authoritative.
+- [Phase 10]: Keep absorbed-crate notes only when clearly marked historical so contributors are not taught stale operational paths.
 
 ### Pending Todos
 
@@ -150,7 +153,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T02:52:13.036Z
-Stopped at: Completed 10-05-PLAN.md
+Last session: 2026-04-14T02:53:33.326Z
+Stopped at: Completed 10-07-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 08 wrapper/parity rewiring
