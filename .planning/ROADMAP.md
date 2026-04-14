@@ -115,7 +115,7 @@ Plans:
 | 7. Crate Relocation and Path Rewire | 3/3 | Complete | 2026-04-12 |
 | 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
-| 10. Docs, Guidance, and Tripwires | 0/10 | Not started | - |
+| 10. Docs, Guidance, and Tripwires | 1/10 | In Progress|  |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>

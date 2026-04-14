@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 10 context gathered
-last_updated: "2026-04-14T01:35:17.504Z"
-last_activity: 2026-04-12
+status: executing
+stopped_at: Completed 10-00-PLAN.md
+last_updated: "2026-04-14T02:40:43.531Z"
+last_activity: 2026-04-14
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 27
+  completed_plans: 18
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 08 — wrapper-and-parity-rewire
+**Current focus:** Phase 10 — docs-guidance-and-tripwires
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-04-12
+Phase: 10 (docs-guidance-and-tripwires) — EXECUTING
+Plan: 2 of 10
+Status: Ready to execute
+Last activity: 2026-04-14
 
 Progress: [██████████] 100%
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 07 P01 | session | 2 tasks | 2 files |
 | Phase 07 P02 | session | 2 tasks | 10+ files |
 | Phase 07 P03 | session | 2 tasks | 6 files |
+| Phase 10 P00 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase 07]: Preserve crate-manifest `path =` relationships where the moved layer geometry keeps them valid; only rebase repo-relative include/helper paths proven broken by the move.
 - [Phase 07]: Treat remaining `ClassicLib-rs` residue as non-authoritative only; no live `Cargo.toml` files or owned Rust sources remain there outside legacy `target/` output.
 - [Phase 07]: Use the checked-in relocation audit plus Cargo root/member proof as the Phase 7 closure contract.
+- [Phase 10]: Use named Phase 10 audit groups so later plans can target stable tests without renaming validation hooks.
+- [Phase 10]: Scope stale-path enforcement to explicit active-surface allowlists plus line-based historical markers instead of a repo-wide ClassicLib-rs ban.
+- [Phase 10]: Parse wrapper scripts before applying stale-path assertions so guidance tripwires fail on syntax drift as well as forbidden phrases.
 
 ### Pending Todos
 
@@ -131,7 +135,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T01:35:17.500Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-docs-guidance-and-tripwires/10-CONTEXT.md
+Last session: 2026-04-14T02:40:43.528Z
+Stopped at: Completed 10-00-PLAN.md
+Resume file: None
 Next action: Plan or execute Phase 08 wrapper/parity rewiring
