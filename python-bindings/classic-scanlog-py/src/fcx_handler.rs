@@ -80,7 +80,7 @@ fn format_detected_issues(issues: &[ConfigIssue]) -> String {
 }
 
 /// Python wrapper for ConfigIssue
-#[pyclass(name = "ConfigIssue")]
+#[pyclass(name = "ConfigIssue", from_py_object)]
 #[derive(Clone)]
 pub struct PyConfigIssue {
     inner: ConfigIssue,

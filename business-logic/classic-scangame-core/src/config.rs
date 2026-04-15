@@ -252,7 +252,7 @@ fn calculate_file_hash(path: &Path) -> Result<String> {
         hasher.update(&buffer[..bytes_read]);
     }
 
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(crate::encode_hex(hasher.finalize().as_ref()))
 }
 
 /// Calculate text similarity between two files using Levenshtein distance

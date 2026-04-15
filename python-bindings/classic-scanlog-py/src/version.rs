@@ -4,7 +4,7 @@ use classic_scanlog_core::version as core;
 use pyo3::prelude::*;
 
 /// Parsed crash generator version components exposed to Python.
-#[pyclass(name = "CrashgenVersion")]
+#[pyclass(name = "CrashgenVersion", from_py_object)]
 #[derive(Clone)]
 pub struct PyCrashgenVersion {
     inner: core::CrashgenVersion,
@@ -73,7 +73,7 @@ impl PyCrashgenVersion {
 }
 
 /// Crashgen version validation status exposed to Python.
-#[pyclass(name = "CrashgenVersionStatus")]
+#[pyclass(name = "CrashgenVersionStatus", from_py_object)]
 #[derive(Clone)]
 pub struct PyCrashgenVersionStatus {
     inner: core::CrashgenVersionStatus,

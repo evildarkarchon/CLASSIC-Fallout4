@@ -33,7 +33,7 @@ use pyo3::prelude::*;
 ///     if header.is_bc_compressed() and not header.has_valid_bc_dimensions():
 ///         print("Error: Invalid BC compression dimensions")
 /// ```
-#[pyclass(name = "DDSHeader")]
+#[pyclass(name = "DDSHeader", from_py_object)]
 #[derive(Clone)]
 pub struct PyDDSHeader {
     inner: DDSHeader,

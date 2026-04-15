@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 /// Python wrapper for IssueSeverity
-#[pyclass(name = "IssueSeverity")]
+#[pyclass(name = "IssueSeverity", from_py_object)]
 #[derive(Clone)]
 pub enum PyIssueSeverity {
     /// Informational issue
@@ -19,7 +19,7 @@ pub enum PyIssueSeverity {
 }
 
 /// Python wrapper for ConfigIssue
-#[pyclass(name = "ConfigIssue")]
+#[pyclass(name = "ConfigIssue", from_py_object)]
 #[derive(Clone)]
 pub struct PyConfigIssue {
     /// Path to the configuration file

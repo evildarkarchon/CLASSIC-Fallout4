@@ -338,7 +338,7 @@ fn calculate_sha256_file(path: &Path) -> Result<String, IntegrityError> {
     }
 
     let result = hasher.finalize();
-    Ok(format!("{:x}", result))
+    Ok(crate::encode_hex(result.as_ref()))
 }
 
 #[cfg(test)]

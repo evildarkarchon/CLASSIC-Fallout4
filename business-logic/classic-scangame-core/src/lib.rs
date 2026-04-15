@@ -13,6 +13,8 @@
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
 //! For Python bindings, see `classic-scangame-py`.
 
+use std::fmt::Write as _;
+
 // Module declarations - will be implemented in Phase 3B-3C
 pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
 pub mod enb; // ENB detection (Phase 7) - IMPLEMENTED
@@ -64,3 +66,11 @@ pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseErro
 
 /// Version of the classic-scangame-core crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub(crate) fn encode_hex(bytes: &[u8]) -> String {
+    let mut hex = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        write!(&mut hex, "{byte:02x}").expect("writing to String cannot fail");
+    }
+    hex
+}

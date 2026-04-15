@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Python wrapper for BA2Issues
-#[pyclass(name = "BA2Issues")]
+#[pyclass(name = "BA2Issues", from_py_object)]
 #[derive(Clone)]
 pub struct PyBA2Issues {
     /// Texture dimension issues (odd-numbered dimensions)

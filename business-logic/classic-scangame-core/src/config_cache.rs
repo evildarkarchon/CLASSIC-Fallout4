@@ -396,12 +396,12 @@ impl ConfigFileCache {
 /// Uses `chardetng` for encoding detection and `encoding_rs` for decoding.
 /// Falls back to UTF-8 with lossy conversion if detection fails.
 fn decode_with_detection(bytes: &[u8]) -> (String, String) {
-    use chardetng::EncodingDetector;
+    use chardetng::{EncodingDetector, Iso2022JpDetection, Utf8Detection};
 
-    let mut detector = EncodingDetector::new();
+    let mut detector = EncodingDetector::new(Iso2022JpDetection::Deny);
     detector.feed(bytes, true);
 
-    let encoding = detector.guess(None, true);
+    let encoding = detector.guess(None, Utf8Detection::Allow);
     let (decoded, _, _) = encoding.decode(bytes);
 
     (decoded.into_owned(), encoding.name().to_string())
@@ -417,7 +417,7 @@ fn compute_file_hash(path: &Path) -> String {
 
     let mut hasher = Sha256::new();
     hasher.update(&bytes);
-    format!("{:x}", hasher.finalize())
+    crate::encode_hex(hasher.finalize().as_ref())
 }
 
 /// Read a TOML file value (for crash generator config checking)

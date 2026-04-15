@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Resource type enumeration for Python.
-#[pyclass(module = "classic_resource", name = "ResourceType")]
+#[pyclass(module = "classic_resource", name = "ResourceType", from_py_object)]
 #[derive(Clone)]
 pub struct PyResourceType {
     inner: classic_resource_core::ResourceType,
@@ -161,7 +161,7 @@ impl PyResourceType {
 }
 
 /// Resource file information.
-#[pyclass(module = "classic_resource", name = "ResourceInfo")]
+#[pyclass(module = "classic_resource", name = "ResourceInfo", from_py_object)]
 #[derive(Clone)]
 pub struct PyResourceInfo {
     inner: classic_resource_core::ResourceInfo,

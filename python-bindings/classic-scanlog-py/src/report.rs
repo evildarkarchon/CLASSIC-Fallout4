@@ -6,7 +6,7 @@ use pyo3::exceptions::PyDeprecationWarning;
 use pyo3::prelude::*;
 
 /// Python wrapper for StringPool
-#[pyclass(name = "StringPool")]
+#[pyclass(name = "StringPool", from_py_object)]
 #[derive(Clone)]
 pub struct PyStringPool {
     inner: StringPool,
@@ -52,7 +52,7 @@ impl PyStringPool {
 }
 
 /// Python wrapper for ReportFragment
-#[pyclass(name = "ReportFragment")]
+#[pyclass(name = "ReportFragment", from_py_object)]
 #[derive(Clone)]
 pub struct PyReportFragment {
     inner: ReportFragment,

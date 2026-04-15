@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Python wrapper for EnbResult
-#[pyclass(name = "EnbResult")]
+#[pyclass(name = "EnbResult", from_py_object)]
 #[derive(Clone, Debug)]
 pub enum PyEnbResult {
     /// ENB fully installed
@@ -20,7 +20,7 @@ pub enum PyEnbResult {
 }
 
 /// Python wrapper for EnbConfigResult
-#[pyclass(name = "EnbConfigResult")]
+#[pyclass(name = "EnbConfigResult", from_py_object)]
 #[derive(Clone, Debug)]
 pub enum PyEnbConfigResult {
     /// Config valid and readable
@@ -32,7 +32,7 @@ pub enum PyEnbConfigResult {
 }
 
 /// Python wrapper for EnbValidationResult
-#[pyclass(name = "EnbValidationResult")]
+#[pyclass(name = "EnbValidationResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyEnbValidationResult {
     /// Whether ENB binaries are present

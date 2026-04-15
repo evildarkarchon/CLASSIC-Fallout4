@@ -20,7 +20,7 @@ use crate::ini::{PyConfigIssue, PyIssueSeverity};
 use crate::xse::PyGameVersion;
 
 /// Python wrapper for CheckResult
-#[pyclass(name = "CheckResult")]
+#[pyclass(name = "CheckResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyCheckResult {
     /// Name of the check
@@ -43,7 +43,7 @@ impl PyCheckResult {
 }
 
 /// Python wrapper for GameScanResult
-#[pyclass(name = "GameScanResult")]
+#[pyclass(name = "GameScanResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyGameScanResult {
     /// Formatted report text from all checks
@@ -78,7 +78,7 @@ impl PyGameScanResult {
 }
 
 /// Python wrapper for ModScanResult
-#[pyclass(name = "ModScanResult")]
+#[pyclass(name = "ModScanResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyModScanResult {
     /// Formatted report text
@@ -121,7 +121,7 @@ impl PyModScanResult {
 ///     ... )
 ///     >>> orchestrator = GameScanOrchestrator(config)
 ///     >>> result = orchestrator.run_game_checks()
-#[pyclass(name = "GameScanConfig")]
+#[pyclass(name = "GameScanConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyGameScanConfig {
     inner: GameScanConfig,

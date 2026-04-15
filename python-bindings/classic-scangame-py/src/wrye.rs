@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 use std::collections::HashMap;
 
 /// Python wrapper for WryeSeverity
-#[pyclass(name = "WryeSeverity")]
+#[pyclass(name = "WryeSeverity", from_py_object)]
 #[derive(Clone)]
 pub enum PyWryeSeverity {
     /// Informational notice
@@ -17,7 +17,7 @@ pub enum PyWryeSeverity {
 }
 
 /// Python wrapper for WryeIssue
-#[pyclass(name = "WryeIssue")]
+#[pyclass(name = "WryeIssue", from_py_object)]
 #[derive(Clone)]
 pub struct PyWryeIssue {
     /// Section title from the report

@@ -6,7 +6,7 @@ use pyo3::types::PyList;
 use std::path::PathBuf;
 
 /// Python wrapper for DuplicateGroup
-#[pyclass(name = "DuplicateGroup")]
+#[pyclass(name = "DuplicateGroup", from_py_object)]
 #[derive(Clone)]
 pub struct PyDuplicateGroup {
     /// Original file path

@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Python wrapper for GameVersion
-#[pyclass(name = "GameVersion")]
+#[pyclass(name = "GameVersion", from_py_object)]
 #[derive(Clone, Debug)]
 pub enum PyGameVersion {
     /// Null/unknown game version
@@ -21,7 +21,7 @@ pub enum PyGameVersion {
 }
 
 /// Python wrapper for ValidationResult
-#[pyclass(name = "ValidationResult")]
+#[pyclass(name = "ValidationResult", from_py_object)]
 #[derive(Clone)]
 pub enum PyValidationResult {
     /// XSE plugin version matches game version
@@ -37,7 +37,7 @@ pub enum PyValidationResult {
 }
 
 /// Python wrapper for AddressLibInfo
-#[pyclass(name = "AddressLibInfo")]
+#[pyclass(name = "AddressLibInfo", from_py_object)]
 #[derive(Clone)]
 pub struct PyAddressLibInfo {
     /// Version constant

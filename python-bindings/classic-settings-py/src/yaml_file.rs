@@ -8,7 +8,7 @@ const SETTINGS_IGNORE_NONE_LIST: [&str; 5] = [
     "Root_Folder_Docs",
 ];
 
-#[pyclass(module = "classic_settings", name = "YamlFile")]
+#[pyclass(module = "classic_settings", name = "YamlFile", from_py_object)]
 #[derive(Clone)]
 pub struct PyYamlFile {
     inner: classic_settings_core::YamlFile,

@@ -36,6 +36,7 @@ use crate::error::FileIOError;
 use quick_cache::sync::Cache;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
+use std::fmt::Write as _;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
@@ -157,7 +158,7 @@ impl FileHasher {
         }
 
         let result = hasher.finalize();
-        Ok(format!("{:x}", result))
+        Ok(encode_hex(result.as_ref()))
     }
 
     /// Calculate SHA256 hashes for multiple files in parallel.
@@ -308,6 +309,14 @@ impl FileHasher {
     pub fn cache_size() -> usize {
         Self::cache_stats().size
     }
+}
+
+fn encode_hex(bytes: &[u8]) -> String {
+    let mut hex = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        write!(&mut hex, "{byte:02x}").expect("writing to String cannot fail");
+    }
+    hex
 }
 
 #[cfg(test)]

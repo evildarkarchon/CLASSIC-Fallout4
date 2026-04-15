@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Python wrapper for LogErrorEntry
-#[pyclass(name = "LogErrorEntry")]
+#[pyclass(name = "LogErrorEntry", from_py_object)]
 #[derive(Clone)]
 pub struct PyLogErrorEntry {
     /// Path to the log file

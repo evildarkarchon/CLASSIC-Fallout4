@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// XSE type enumeration for Python.
-#[pyclass(module = "classic_xse", name = "XseType")]
+#[pyclass(module = "classic_xse", name = "XseType", from_py_object)]
 #[derive(Clone)]
 pub struct PyXseType {
     inner: classic_xse_core::XseType,
@@ -123,7 +123,7 @@ impl PyXseType {
 }
 
 /// XSE installation information for Python.
-#[pyclass(module = "classic_xse", name = "XseInfo")]
+#[pyclass(module = "classic_xse", name = "XseInfo", from_py_object)]
 #[derive(Clone)]
 pub struct PyXseInfo {
     inner: classic_xse_core::XseInfo,

@@ -22,7 +22,7 @@ use crate::models::PyVersionInfo;
 ///     'exact'
 ///     >>> result.confidence == MatchConfidence.EXACT
 ///     True
-#[pyclass(name = "MatchConfidence")]
+#[pyclass(name = "MatchConfidence", from_py_object)]
 #[derive(Clone)]
 pub struct PyMatchConfidence {
     inner: core::MatchConfidence,
@@ -126,7 +126,7 @@ impl PyMatchConfidence {
 ///     True
 ///     >>> result.version_info.id
 ///     'FO4_OG'
-#[pyclass(name = "MatchResult")]
+#[pyclass(name = "MatchResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyMatchResult {
     inner: core::MatchResult,

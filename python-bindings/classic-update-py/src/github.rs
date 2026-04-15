@@ -24,7 +24,7 @@ use pyo3::prelude::*;
 ///     >>> release = await client.get_latest_release()
 ///     >>> print(f"Version: {release.tag_name}")
 ///     >>> print(f"Notes: {release.body}")
-#[pyclass(name = "GithubRelease")]
+#[pyclass(name = "GithubRelease", from_py_object)]
 #[derive(Clone)]
 pub struct PyGithubRelease {
     inner: core::GithubRelease,
@@ -125,7 +125,7 @@ impl PyGithubRelease {
 ///     >>> for asset in release.assets:
 ///     ...     print(f"{asset.name} ({asset.size} bytes)")
 ///     ...     print(f"  Download: {asset.browser_download_url}")
-#[pyclass(name = "GithubAsset")]
+#[pyclass(name = "GithubAsset", from_py_object)]
 #[derive(Clone)]
 pub struct PyGithubAsset {
     inner: core::GithubAsset,

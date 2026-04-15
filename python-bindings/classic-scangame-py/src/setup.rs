@@ -25,7 +25,7 @@ use std::path::PathBuf;
 ///     ...     game_name="Fallout4",
 ///     ... )
 ///     >>> results = run_setup_checks(config)
-#[pyclass(name = "SetupCheckConfig")]
+#[pyclass(name = "SetupCheckConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PySetupCheckConfig {
     inner: SetupCheckConfig,
@@ -80,7 +80,7 @@ impl PySetupCheckConfig {
 /// Python wrapper for SetupCheckResults
 ///
 /// Contains results from all combined setup checks.
-#[pyclass(name = "SetupCheckResults")]
+#[pyclass(name = "SetupCheckResults", from_py_object)]
 #[derive(Clone)]
 pub struct PySetupCheckResults {
     /// Results from game integrity checks

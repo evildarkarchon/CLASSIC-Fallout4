@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use crate::crashgen_rules::parse_settings_rules;
 
 /// Python wrapper for TomlIssueSeverity
-#[pyclass(name = "TomlIssueSeverity")]
+#[pyclass(name = "TomlIssueSeverity", from_py_object)]
 #[derive(Clone)]
 pub enum PyTomlIssueSeverity {
     /// Informational issue
@@ -20,7 +20,7 @@ pub enum PyTomlIssueSeverity {
 }
 
 /// Python wrapper for TomlConfigIssue
-#[pyclass(name = "TomlConfigIssue")]
+#[pyclass(name = "TomlConfigIssue", from_py_object)]
 #[derive(Clone)]
 pub struct PyTomlConfigIssue {
     /// Path to the TOML configuration file

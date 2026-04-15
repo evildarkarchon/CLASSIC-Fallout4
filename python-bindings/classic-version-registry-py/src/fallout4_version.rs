@@ -1,6 +1,10 @@
 use pyo3::prelude::*;
 
-#[pyclass(module = "classic_version_registry", name = "Fallout4Version")]
+#[pyclass(
+    module = "classic_version_registry",
+    name = "Fallout4Version",
+    from_py_object
+)]
 #[derive(Clone)]
 pub struct PyFallout4Version {
     inner: classic_version_registry_core::Fallout4Version,

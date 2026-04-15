@@ -28,7 +28,7 @@ mod logging;
 ///     >>> msg_type = classic_message.MessageType.INFO
 ///     >>> print(msg_type.name())
 ///     Info
-#[pyclass(eq, eq_int)]
+#[pyclass(eq, eq_int, from_py_object)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MessageType {
     /// Informational message.
@@ -125,7 +125,7 @@ impl MessageType {
 ///     >>> target = classic_message.MessageTarget.GUI
 ///     >>> print(target.should_display_in_gui())
 ///     True
-#[pyclass(eq, eq_int)]
+#[pyclass(eq, eq_int, from_py_object)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MessageTarget {
     /// Show in both GUI and CLI.
@@ -239,7 +239,7 @@ impl MessageTarget {
 ///     >>> msg = msg.with_title("Greeting")
 ///     >>> print(msg.title())
 ///     Greeting
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Clone)]
 pub struct Message {
     inner: core::Message,

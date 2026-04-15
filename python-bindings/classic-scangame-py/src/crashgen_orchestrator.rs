@@ -11,7 +11,7 @@ use crate::toml_check::PyTomlIssueSeverity;
 use classic_scangame_core::TomlIssueSeverity;
 
 /// Python wrapper for CrashgenReport
-#[pyclass(name = "CrashgenReport")]
+#[pyclass(name = "CrashgenReport", from_py_object)]
 #[derive(Clone)]
 pub struct PyCrashgenReport {
     /// Formatted message string

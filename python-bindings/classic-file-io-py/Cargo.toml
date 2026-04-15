@@ -13,13 +13,13 @@ classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 pyo3 = { workspace = true }
-pyo3-async-runtimes = { version = "0.27.0", features = ["tokio-runtime"] }
+pyo3-async-runtimes = { version = "0.28.0", features = ["tokio-runtime"] }
 tokio = { workspace = true, features = ["fs", "io-util", "sync"] }
 log = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-criterion = "0.5"
+criterion = "0.8.2"
 
 [[bench]]
 name = "gil_benchmarks"

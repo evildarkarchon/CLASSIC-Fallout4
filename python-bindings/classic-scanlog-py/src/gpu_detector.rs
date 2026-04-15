@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// Python wrapper for GpuVendor enum
 ///
 /// Represents GPU vendor/manufacturer (AMD, Nvidia, Intel, or Unknown)
-#[pyclass(name = "GpuVendor")]
+#[pyclass(name = "GpuVendor", from_py_object)]
 #[derive(Clone)]
 pub struct PyGpuVendor {
     /// Inner Rust GpuVendor instance
@@ -46,7 +46,7 @@ impl PyGpuVendor {
 ///
 /// Contains detected GPU information including primary/secondary GPUs,
 /// manufacturer, and potential rival GPU vendor.
-#[pyclass(name = "GpuInfo")]
+#[pyclass(name = "GpuInfo", from_py_object)]
 #[derive(Clone)]
 pub struct PyGpuInfo {
     /// Inner Rust GpuInfo instance

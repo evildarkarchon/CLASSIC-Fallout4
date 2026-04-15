@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Python wrapper for UnpackedIssues
-#[pyclass(name = "UnpackedIssues")]
+#[pyclass(name = "UnpackedIssues", from_py_object)]
 #[derive(Clone)]
 pub struct PyUnpackedIssues {
     /// Animation data directories detected

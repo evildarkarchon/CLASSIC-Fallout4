@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 /// Python wrapper for VsyncEntry
-#[pyclass(name = "VsyncEntry")]
+#[pyclass(name = "VsyncEntry", from_py_object)]
 #[derive(Clone)]
 pub struct PyVsyncEntry {
     /// Path to the config file
@@ -31,7 +31,7 @@ impl PyVsyncEntry {
 }
 
 /// Python wrapper for DuplicateEntry
-#[pyclass(name = "DuplicateEntry")]
+#[pyclass(name = "DuplicateEntry", from_py_object)]
 #[derive(Clone)]
 pub struct PyDuplicateEntry {
     /// Lowercase filename
@@ -55,7 +55,7 @@ impl PyDuplicateEntry {
 }
 
 /// Python wrapper for ModIniScanResult
-#[pyclass(name = "ModIniScanResult")]
+#[pyclass(name = "ModIniScanResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyModIniScanResult {
     /// Formatted report message

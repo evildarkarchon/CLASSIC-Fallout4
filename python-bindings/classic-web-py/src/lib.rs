@@ -7,7 +7,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 /// Mod site enumeration for Python.
-#[pyclass(module = "classic_web", name = "ModSite")]
+#[pyclass(module = "classic_web", name = "ModSite", from_py_object)]
 #[derive(Clone)]
 pub struct PyModSite {
     inner: classic_web_core::ModSite,

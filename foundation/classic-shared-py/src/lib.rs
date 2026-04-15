@@ -251,7 +251,7 @@ pub fn resolve_python_entry_dir(py: Python<'_>) -> Option<PathBuf> {
 /// Runtime statistics from Tokio
 ///
 /// Provides visibility into the Tokio runtime state for diagnostics and monitoring.
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 #[derive(Clone)]
 pub struct RuntimeStats {
     /// Number of worker threads in the runtime

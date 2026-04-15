@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 /// Python wrapper around [`classic_shared_core::GameId`].
-#[pyclass(module = "classic_shared", name = "GameId")]
+#[pyclass(module = "classic_shared", name = "GameId", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyGameId {
     inner: classic_shared_core::GameId,

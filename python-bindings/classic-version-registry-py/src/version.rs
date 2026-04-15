@@ -20,7 +20,7 @@ use pyo3::prelude::*;
 ///     1 10 163 0
 ///     >>> print(v)
 ///     1.10.163.0
-#[pyclass(name = "GameVersion")]
+#[pyclass(name = "GameVersion", from_py_object)]
 #[derive(Clone)]
 pub struct PyGameVersion {
     pub(crate) inner: core::GameVersion,

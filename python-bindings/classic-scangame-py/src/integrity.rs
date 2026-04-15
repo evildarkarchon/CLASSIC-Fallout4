@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 use std::path::PathBuf;
 
 /// Python wrapper for CheckType
-#[pyclass(name = "CheckType")]
+#[pyclass(name = "CheckType", from_py_object)]
 #[derive(Clone)]
 pub struct PyCheckType {
     inner: CheckType,

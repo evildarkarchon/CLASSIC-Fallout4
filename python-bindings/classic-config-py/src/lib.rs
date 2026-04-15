@@ -274,7 +274,7 @@ fn option_pathbuf_to_string(path: &Option<PathBuf>) -> Option<String> {
 }
 
 /// Python wrapper for runtime path configuration settings.
-#[pyclass(name = "PathConfig")]
+#[pyclass(name = "PathConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyPathConfig {
     inner: CorePathConfig,
@@ -367,7 +367,7 @@ impl PyPathConfig {
 }
 
 /// Python enum-like wrapper for YAML source identifiers.
-#[pyclass(name = "YamlSource")]
+#[pyclass(name = "YamlSource", from_py_object)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PyYamlSource {
     inner: CoreYamlSource,
@@ -477,7 +477,7 @@ impl PyYamlSource {
 }
 
 /// Python wrapper for the runtime CLASSIC configuration model.
-#[pyclass(name = "ClassicConfig")]
+#[pyclass(name = "ClassicConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyClassicConfig {
     inner: CoreClassicConfig,

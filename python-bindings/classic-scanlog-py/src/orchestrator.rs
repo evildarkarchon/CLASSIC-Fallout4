@@ -440,7 +440,7 @@ fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> PyResult<YamlDataCore>
 /// # The orchestrator checks this between logs
 /// results = orchestrator.process_logs_batch(paths, cancellation_token=token)
 /// ```
-#[pyclass(name = "CancellationToken")]
+#[pyclass(name = "CancellationToken", from_py_object)]
 #[derive(Clone)]
 pub struct PyCancellationToken {
     inner: Arc<AtomicBool>,
@@ -491,7 +491,7 @@ impl Default for PyCancellationToken {
 ///
 /// Provides Python bindings for the Rust AnalysisConfig struct,
 /// which configures crash log analysis parameters for a specific game.
-#[pyclass(name = "AnalysisConfig")]
+#[pyclass(name = "AnalysisConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyAnalysisConfig {
     /// Inner Rust AnalysisConfig instance
@@ -1078,7 +1078,7 @@ impl PyAnalysisConfig {
 ///
 /// Contains the results of analyzing a crash log, including the generated report,
 /// statistics, and any errors encountered during processing.
-#[pyclass(name = "AnalysisResult")]
+#[pyclass(name = "AnalysisResult", from_py_object)]
 #[derive(Clone)]
 pub struct PyAnalysisResult {
     /// Inner Rust AnalysisResult instance

@@ -21,7 +21,7 @@ use std::collections::HashMap;
 ///     average: Average time per sample in seconds
 ///     min: Minimum time in seconds
 ///     max: Maximum time in seconds
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Clone, Debug)]
 pub struct MetricsSummary {
     /// Number of samples recorded

@@ -14,7 +14,7 @@ use pyo3::prelude::*;
 ///     >>> og = registry.get_by_id("FO4_OG")
 ///     >>> print(og.address_library.filename)
 ///     version-1-10-163-0.bin
-#[pyclass(name = "AddressLibraryConfig")]
+#[pyclass(name = "AddressLibraryConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyAddressLibraryConfig {
     inner: core::AddressLibraryConfig,
@@ -70,7 +70,7 @@ impl PyAddressLibraryConfig {
 ///     F4SE
 ///     >>> for name, hash_val in og.xse.script_hashes:
 ///     ...     print(f"{name}: {hash_val}")
-#[pyclass(name = "XseConfig")]
+#[pyclass(name = "XseConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyXseConfig {
     inner: core::XseConfig,
@@ -139,7 +139,7 @@ impl PyXseConfig {
 ///     >>> og = registry.get_by_id("FO4_OG")
 ///     >>> if og.compatible_range:
 ///     ...     print(og.compatible_range.min_version)
-#[pyclass(name = "CompatibleRange")]
+#[pyclass(name = "CompatibleRange", from_py_object)]
 #[derive(Clone)]
 pub struct PyCompatibleRange {
     inner: core::CompatibleRange,
@@ -204,7 +204,7 @@ impl PyCompatibleRange {
 ///     >>> configs = registry.get_crashgen_configs("FO4_OG")
 ///     >>> for c in configs:
 ///     ...     print(f"{c.name} v{c.version}")
-#[pyclass(name = "CrashgenConfig")]
+#[pyclass(name = "CrashgenConfig", from_py_object)]
 #[derive(Clone)]
 pub struct PyCrashgenConfig {
     inner: core::CrashgenConfig,
@@ -299,7 +299,7 @@ impl PyCrashgenConfig {
 ///     >>> handling = registry.unknown_version_handling
 ///     >>> print(handling.strategy)
 ///     nearest_match
-#[pyclass(name = "UnknownVersionHandling")]
+#[pyclass(name = "UnknownVersionHandling", from_py_object)]
 #[derive(Clone)]
 pub struct PyUnknownVersionHandling {
     inner: core::UnknownVersionHandling,
@@ -384,7 +384,7 @@ impl PyUnknownVersionHandling {
 ///     Fallout 4 Original
 ///     >>> print(og.version)
 ///     1.10.163.0
-#[pyclass(name = "VersionInfo")]
+#[pyclass(name = "VersionInfo", from_py_object)]
 #[derive(Clone)]
 pub struct PyVersionInfo {
     inner: core::VersionInfo,

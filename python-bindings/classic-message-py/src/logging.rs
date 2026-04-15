@@ -19,7 +19,7 @@ use pyo3::prelude::*;
 ///
 /// Thread Safety:
 ///     The Logger is thread-safe and can be shared across multiple Python threads.
-#[pyclass(name = "Logger")]
+#[pyclass(name = "Logger", from_py_object)]
 #[derive(Clone)]
 pub struct PyLogger {
     inner: core::Logger,
