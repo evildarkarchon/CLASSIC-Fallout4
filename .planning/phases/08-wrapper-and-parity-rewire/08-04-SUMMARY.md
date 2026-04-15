@@ -1,3 +1,9 @@
+---
+phase: 08-wrapper-and-parity-rewire
+plan: "04"
+requirements-completed: [INTG-02]
+---
+
 # 08-04 Summary
 
 - Corrected `node-bindings/classic-node` package script depth to `../../tools/...` with `--repo-root ../..`.

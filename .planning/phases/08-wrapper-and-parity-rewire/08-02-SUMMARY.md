@@ -1,3 +1,9 @@
+---
+phase: 08-wrapper-and-parity-rewire
+plan: "02"
+requirements-completed: [INTG-01]
+---
+
 # 08-02 Summary
 
 - Updated CLI and GUI CMake bridge include paths to repo-root `cpp-bindings/classic-cpp-bridge/include`.

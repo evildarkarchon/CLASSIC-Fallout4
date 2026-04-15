@@ -1,3 +1,9 @@
+---
+phase: 08-wrapper-and-parity-rewire
+plan: "06"
+requirements-completed: [INTG-01, INTG-02]
+---
+
 # 08-06 Summary
 
 - Added `tests/planning/test_phase08_validation.py` as the phase-level wrapper/native/parity audit.

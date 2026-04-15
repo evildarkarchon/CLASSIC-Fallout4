@@ -1,3 +1,9 @@
+---
+phase: 08-wrapper-and-parity-rewire
+plan: "01"
+requirements-completed: [INTG-01]
+---
+
 # 08-01 Summary
 
 - Rewired `rebuild_rust.ps1` Python/Node defaults to repo-root binding paths.

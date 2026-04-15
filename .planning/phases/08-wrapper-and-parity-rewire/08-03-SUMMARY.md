@@ -1,3 +1,9 @@
+---
+phase: 08-wrapper-and-parity-rewire
+plan: "03"
+requirements-completed: [INTG-02]
+---
+
 # 08-03 Summary
 
 - Cut Python stub/parity tooling defaults to repo-root `python-bindings/` and `foundation/` paths.
