@@ -4,19 +4,28 @@
 
 **Latest shipped milestone:** `v9.1.0-root Move Crates to Project Root` (2026-04-15)
 
-**Status:** The Rust crate tree lives under repo-root layer directories, the repository root is the single live Cargo workspace shell, and the wrapper, parity, CI, package, and clean-state proof surfaces now have current Phase 8/9 verification evidence with aligned planning closure.
+**Status:** The Rust crate tree now lives under repo-root layer directories, the repository root is the single live Cargo workspace shell, and wrapper, parity, CI, package, and clean-state proof surfaces all have current verification closure artifacts.
 
-**Current focus:** `v9.1.0-root` is closed; next work should start from the next milestone definition.
+**Current focus:** No active milestone. Define the next milestone and create a fresh `.planning/REQUIREMENTS.md` and roadmap.
 
-## Current Milestone: `v9.1.0-root` Move Crates to Project Root
+## Next Milestone Goals
+
+- Define the next milestone scope, requirements, and roadmap with `/gsd-new-milestone`.
+- Decide whether to pay down accepted `v9.1.0-root` debt first: non-active doc cleanup outside the Phase 10 audited surface and the missing `12-VALIDATION.md` contract.
+- Keep the next milestone grounded in the repo-root workspace contract and the current parity/verification closure state.
+
+<details>
+<summary>Archived milestone snapshot: v9.1.0-root Move Crates to Project Root</summary>
 
 **Goal:** Move the Rust workspace out of `ClassicLib-rs/` by relocating all crates currently under that directory to the repository root so Cargo work happens from the project root.
 
-**Target features:**
+**Delivered focus:**
 - Move every Rust crate currently under `ClassicLib-rs/` to the repo root
 - Preserve each crate's existing internal directory structure during the move
 - Update docs, skills, and agent context files that currently point at `ClassicLib-rs/`
 - Keep existing build, parity, and frontend wrapper workflows working after the relocation
+
+</details>
 
 <details>
 <summary>Archived milestone snapshot: v9.1.0-consolidation Crate Consolidation</summary>
@@ -96,7 +105,7 @@ The Rust workspace has minimal, well-bounded crates with no redundant boundaries
 
 ### Active
 
-None - milestone validation and closure requirements are complete.
+None - create a fresh `.planning/REQUIREMENTS.md` for the next milestone with `/gsd-new-milestone`.
 
 ### Out of Scope
 
@@ -118,6 +127,8 @@ None - milestone validation and closure requirements are complete.
 - v9.1.0-consolidation Phase 4 closed with green docs, parity, workspace, and native wrapper evidence in `.planning/phases/04-gate-validation-documentation/04-VERIFICATION.md`
 - v9.1.0-consolidation Phase 5 closed the remaining audit debt: top-level docs routing, Phase 3 verification bookkeeping, and Node parity contract artifacts now agree with the live 705-row one-tier baseline
 - The repo-root workspace migration milestone now includes active docs, skills, and codebase-map guidance that point to the moved tree and a shared migration matrix for old-to-new workflow translation
+- The repo-root workspace currently resolves 37 members from `Cargo.toml`, with canonical closure evidence recorded in `07-VERIFICATION.md`, `08-VERIFICATION.md`, and `09-VERIFICATION.md`
+- Accepted residual debt from `v9.1.0-root`: non-active historical docs still contain some legacy `ClassicLib-rs` references, and `12-VALIDATION.md` is still missing
 
 ## Constraints
 
@@ -142,6 +153,11 @@ None - milestone validation and closure requirements are complete.
 | In-place verification refresh for gap-closure phases | Parent phase verification stays the single source of truth | ✓ v9.1.0-bugfixes Phase 9/10/11 |
 | Full bindings parity: collapse Tier-1/Tier-2 and add C++ gate | Tier-2 deferral was tactical; user goal is harmony with drift prevention | ✓ v9.1.0-bindings Phases 1-6 |
 | Delete (not empty) Tier-2 governance files | Active files would leak back into discussions | ✓ v9.1.0-bindings Phase 6 |
+| Treat `v9.1.0-root` as a workspace-location migration only | Avoid mixing path relocation with crate-graph or API redesign risk | ✓ v9.1.0-root planning |
+| Keep the repository root as the single live Cargo workspace entrypoint | One canonical command surface avoids dual-workspace drift and stale guidance | ✓ v9.1.0-root Phase 6 |
+| Move layer directories intact and only rebase broken repo-relative paths | Minimal relocation changes reduce cutover risk while preserving crate-local structure | ✓ v9.1.0-root Phase 7 |
+| Centralize old-to-new workflow translation in `docs/workspace-migration-matrix.md` | One canonical migration reference reduces duplicated path guidance and regression risk | ✓ v9.1.0-root Phase 10 |
+| Use `07-VERIFICATION.md`, `08-VERIFICATION.md`, and `09-VERIFICATION.md` as canonical closure artifacts | Direct evidence tables are more durable than summary-only traceability | ✓ v9.1.0-root Phases 11-12 |
 
 ## Evolution
 
@@ -161,4 +177,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 after Phase 12 integration verification closure*
+*Last updated: 2026-04-15 after archiving v9.1.0-root*
