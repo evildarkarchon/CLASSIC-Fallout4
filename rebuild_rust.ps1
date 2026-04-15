@@ -212,6 +212,50 @@ function Invoke-MaturinBuildWithRetry {
     return $false
 }
 
+function Invoke-CommandWithTransientLinkerRetry {
+    param (
+        [string[]]$Command,
+        [string]$CommandLabel,
+        [int]$MaxAttempts = 3
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        $previousNativeCommandPreference = $PSNativeCommandUseErrorActionPreference
+        $outputText = @()
+        $exitCode = 1
+        $commandName = $Command[0]
+        $commandArgs = if ($Command.Count -gt 1) { $Command[1..($Command.Count - 1)] } else { @() }
+
+        try {
+            $PSNativeCommandUseErrorActionPreference = $false
+            & $commandName @commandArgs 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+            $exitCode = $LASTEXITCODE
+        }
+        finally {
+            $PSNativeCommandUseErrorActionPreference = $previousNativeCommandPreference
+        }
+
+        if ($exitCode -in @(-1073741510, 3221225786)) {
+            throw [System.OperationCanceledException]::new("Build interrupted by Ctrl+C.")
+        }
+
+        if ($exitCode -eq 0) {
+            return $true
+        }
+
+        $combinedOutput = (@($outputText | ForEach-Object { "$_" }) | Out-String)
+        if ((-not (Test-IsTransientLinkerLock -Text $combinedOutput)) -or $attempt -eq $MaxAttempts) {
+            return $false
+        }
+
+        $sleepSeconds = [int][Math]::Pow(2, $attempt)
+        Write-Warning "Detected transient Windows linker file lock while running $CommandLabel (attempt $attempt/$MaxAttempts). Retrying in $sleepSeconds second(s)..."
+        Start-Sleep -Seconds $sleepSeconds
+    }
+
+    return $false
+}
+
 function Get-PythonRustModules {
     param (
         [string[]]$CrateFilters
@@ -525,13 +569,17 @@ function Invoke-NodeBindingsRebuild {
 
         if ($DebugBuild) {
             Write-Host "🔨 Building classic-node (debug)..." -ForegroundColor Cyan
-            & bun run build:debug
-            Assert-LastExitCode -CommandLabel "bun run build:debug"
+            if (-not (Invoke-CommandWithTransientLinkerRetry -Command @("bun", "run", "build:debug") -CommandLabel "bun run build:debug")) {
+                Write-Error "bun run build:debug failed after retry attempts."
+                exit 1
+            }
         }
         else {
             Write-Host "🔨 Building classic-node (release)..." -ForegroundColor Cyan
-            & bun run build
-            Assert-LastExitCode -CommandLabel "bun run build"
+            if (-not (Invoke-CommandWithTransientLinkerRetry -Command @("bun", "run", "build") -CommandLabel "bun run build")) {
+                Write-Error "bun run build failed after retry attempts."
+                exit 1
+            }
         }
 
         Write-Host "Build complete!" -ForegroundColor Green

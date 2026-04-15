@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections import Counter
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -10,6 +11,46 @@ import unittest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+PHASE08_DIR = REPO_ROOT / ".planning" / "phases" / "08-wrapper-and-parity-rewire"
+PHASE08_VERIFICATION = PHASE08_DIR / "08-VERIFICATION.md"
+
+REQUIRED_VERIFICATION_SECTIONS = [
+    "## Goal Achievement",
+    "### Observable Truths",
+    "### Required Artifacts",
+    "### Key Link Verification",
+    "### Behavioral Spot-Checks",
+    "### Requirements Coverage",
+    "### Gaps Summary",
+]
+
+PHASE08_SUMMARY_REQUIREMENTS = {
+    "08-01-SUMMARY.md": ["INTG-01"],
+    "08-02-SUMMARY.md": ["INTG-01"],
+    "08-03-SUMMARY.md": ["INTG-02"],
+    "08-04-SUMMARY.md": ["INTG-02"],
+    "08-05-SUMMARY.md": ["INTG-02"],
+    "08-06-SUMMARY.md": ["INTG-01", "INTG-02"],
+}
+
+
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def extract_frontmatter(text: str) -> str:
+    match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+    if not match:
+        raise AssertionError("expected markdown frontmatter")
+    return match.group(1)
+
+
+def extract_table_row(text: str, first_cell: str) -> str:
+    pattern = re.compile(rf"^\| {re.escape(first_cell)} \| .*?$", re.MULTILINE)
+    match = pattern.search(text)
+    if not match:
+        raise AssertionError(f"missing markdown table row for {first_cell}")
+    return match.group(0)
 
 
 class TestPhase08Validation(unittest.TestCase):
@@ -48,6 +89,50 @@ class TestPhase08Validation(unittest.TestCase):
 
     def load_json(self, *parts: str) -> dict:
         return json.loads((REPO_ROOT.joinpath(*parts)).read_text(encoding="utf-8"))
+
+    def test_phase8_summaries_expose_requirements_completed_metadata(self) -> None:
+        for summary_name, requirement_ids in PHASE08_SUMMARY_REQUIREMENTS.items():
+            text = read_text(PHASE08_DIR / summary_name)
+            frontmatter = extract_frontmatter(text)
+            plan = summary_name.split("-")[1]
+
+            with self.subTest(summary=summary_name):
+                self.assertIn("phase: 08-wrapper-and-parity-rewire", frontmatter)
+                self.assertRegex(frontmatter, rf"(?m)^plan:\s*['\"]?{plan}['\"]?$")
+                self.assertIn("requirements-completed:", frontmatter)
+                for requirement_id in requirement_ids:
+                    self.assertIn(requirement_id, frontmatter)
+
+    def test_phase8_verification_report_has_direct_intg_evidence(self) -> None:
+        verification_text = read_text(PHASE08_VERIFICATION)
+        frontmatter = extract_frontmatter(verification_text)
+
+        self.assertIn("phase: 08-wrapper-and-parity-rewire", frontmatter)
+        self.assertIn(
+            "# Phase 8: Wrapper and Parity Rewire Verification Report",
+            verification_text,
+        )
+        for section in REQUIRED_VERIFICATION_SECTIONS:
+            with self.subTest(section=section):
+                self.assertIn(section, verification_text)
+
+        intg1_row = extract_table_row(verification_text, "INTG-01")
+        for fragment in (
+            "rebuild_rust.ps1",
+            "classic-cli/build_cli.ps1 -Test",
+            "classic-gui/build_gui.ps1 -Test",
+            "cargo run -p classic-tui -- --version",
+        ):
+            self.assertIn(fragment, intg1_row)
+
+        intg2_row = extract_table_row(verification_text, "INTG-02")
+        for fragment in (
+            "python tools/python_api_parity/check_parity_gate.py --repo-root .",
+            "bun run parity:gate",
+            "bun run dts:freshness:check",
+            "python tools/cxx_api_parity/check_parity_gate.py --repo-root .",
+        ):
+            self.assertIn(fragment, intg2_row)
 
     def test_wrapper_paths_are_repo_root_only(self) -> None:
         rebuild_rust = (REPO_ROOT / "rebuild_rust.ps1").read_text(encoding="utf-8")
