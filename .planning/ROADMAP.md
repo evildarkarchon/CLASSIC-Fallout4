@@ -135,7 +135,12 @@ Plans:
   2. Contributor can see machine-checkable completion metadata for the Phase 8 and Phase 9 integration closure artifacts.
   3. Contributor can inspect `08-VERIFICATION.md` and `09-VERIFICATION.md` for current wrapper, parity, CI, and clean-state proof coverage.
   4. Milestone integration requirements no longer appear as orphaned in milestone audit coverage.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] `12-01-PLAN.md` — Repair the Phase 9 clean replay harness so `.venv` is recreated and the Python rebuild wrapper remains usable after proof.
+- [ ] `12-02-PLAN.md` — Write `08-VERIFICATION.md` and backfill Phase 8 summary requirement metadata for wrapper/parity closure.
+- [ ] `12-03-PLAN.md` — Write `09-VERIFICATION.md`, backfill Phase 9 summary requirement metadata, and sync milestone closure metadata.
 
 ## Progress
 
@@ -147,7 +152,7 @@ Plans:
 | 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
 | 11. Relocation Proof and Verification Closure | 3/3 | Complete    | 2026-04-14 |
-| 12. Integration Replay and Verification Closure | 0/TBD | Not started | - |
+| 12. Integration Replay and Verification Closure | 1/3 | In Progress|  |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>

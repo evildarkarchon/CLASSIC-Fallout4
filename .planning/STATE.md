@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 11-03-PLAN.md
-last_updated: "2026-04-14T13:23:45.612Z"
-last_activity: 2026-04-14
+status: executing
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-04-15T02:33:18.658Z"
+last_activity: 2026-04-15
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 30
-  completed_plans: 30
+  total_plans: 33
+  completed_plans: 31
   percent: 100
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
-Status: Phase 11 complete; Phase 12 is the next focus
-Last activity: 2026-04-14
+Phase: 12 (integration-replay-and-verification-closure) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-15
 
 Progress: [██████████] 100%
 
@@ -74,6 +74,7 @@ Progress: [██████████] 100%
 | Phase 11 P02 | 7 min | 2 tasks | 2 files |
 | Phase 11 P03 | pending summary | 2 tasks | pending |
 | Phase 11 P03 | 6 min | 2 tasks | 7 files |
+| Phase 12 P01 | 1h 15m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Use `07-VERIFICATION.md` as the canonical moved-crate requirement artifact and keep milestone/planning metadata aligned to that verifier.
 - [Phase 11]: Keep 07-VERIFICATION.md as the canonical moved-crate requirement artifact instead of spreading MOVE evidence across summaries.
 - [Phase 11]: Update the milestone audit in the same plan so Phase 7 closure no longer appears stale after verification is restored.
+- [Phase 12]: Keep rebuild_rust.ps1 fail-fast on missing python-bindings/.venv and recreate the bindings-local environment inside the clean proof harness instead.
+- [Phase 12]: Run the clean proof with an isolated temporary CARGO_TARGET_DIR plus retryable cleanup so wrapper replay proof survives locked local target output without recreating ClassicLib-rs residue.
 
 ### Pending Todos
 
@@ -173,7 +176,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-14T13:16:52.928Z
-Stopped at: Completed 11-03-PLAN.md
+Last session: 2026-04-15T02:33:18.654Z
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
 Next action: Plan or execute Phase 12 integration replay and verification closure
