@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v9.1.0-root Move Crates to Project Root** — Phases 6-12 (planned)
+- ✅ **v9.1.0-root Move Crates to Project Root** — Phases 6-12 (shipped 2026-04-15)
 - ✅ **v9.1.0-consolidation Crate Consolidation** — Phases 1-5 (shipped 2026-04-12) — see [`milestones/v9.1.0-ROADMAP.md`](./milestones/v9.1.0-ROADMAP.md)
 - ✅ **v9.1.0-bindings Full Bindings Parity** — Phases 1-7 (shipped 2026-04-10) — see [`milestones/v9.1.0-bindings-ROADMAP.md`](./milestones/v9.1.0-bindings-ROADMAP.md)
 - ✅ **v9.1.0-bugfixes CLASSIC Codebase Health** — Phases 1-11 (shipped 2026-04-07) — see [`milestones/v9.1.0-bugfixes-ROADMAP.md`](./milestones/v9.1.0-bugfixes-ROADMAP.md)
@@ -13,11 +13,11 @@
 
 - [x] **Phase 6: Repo-Root Workspace Cutover** - Repository root becomes the only canonical Cargo workspace entrypoint.
 - [x] **Phase 7: Crate Relocation and Path Rewire** - All crates move out of `ClassicLib-rs/` intact and still resolve as one workspace.
-- [ ] **Phase 8: Wrapper and Parity Rewire** - Existing wrappers, frontends, and parity gates keep working against the relocated workspace.
-- [ ] **Phase 9: Clean Validation and CI Refresh** - Clean-state validation, CI, and path-bearing artifacts prove the new layout is durable.
+- [x] **Phase 8: Wrapper and Parity Rewire** - Existing wrappers, frontends, and parity gates keep working against the relocated workspace.
+- [x] **Phase 9: Clean Validation and CI Refresh** - Clean-state validation, CI, and path-bearing artifacts prove the new layout is durable.
 - [ ] **Phase 10: Docs, Guidance, and Tripwires** - Active docs and agent guidance point at the new root layout and guard against regressions.
 - [x] **Phase 11: Relocation Proof and Verification Closure** - Refresh stale relocation proof surfaces and close the moved-crate verification gap.
-- [ ] **Phase 12: Integration Replay and Verification Closure** - Restore replayable integration proof and close the remaining wrapper, parity, CI, and clean-state verification gaps.
+- [x] **Phase 12: Integration Replay and Verification Closure** - Restore replayable integration proof and close the remaining wrapper, parity, CI, and clean-state verification gaps.
 
 ## Phase Details
 
@@ -138,9 +138,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] `12-01-PLAN.md` — Repair the Phase 9 clean replay harness so `.venv` is recreated and the Python rebuild wrapper remains usable after proof.
-- [ ] `12-02-PLAN.md` — Write `08-VERIFICATION.md` and backfill Phase 8 summary requirement metadata for wrapper/parity closure.
-- [ ] `12-03-PLAN.md` — Write `09-VERIFICATION.md`, backfill Phase 9 summary requirement metadata, and sync milestone closure metadata.
+- [x] `12-01-PLAN.md` — Repair the Phase 9 clean replay harness so `.venv` is recreated and the Python rebuild wrapper remains usable after proof.
+- [x] `12-02-PLAN.md` — Write `08-VERIFICATION.md` and backfill Phase 8 summary requirement metadata for wrapper/parity closure.
+- [x] `12-03-PLAN.md` — Write `09-VERIFICATION.md`, backfill Phase 9 summary requirement metadata, and sync milestone closure metadata.
 
 ## Progress
 
@@ -148,11 +148,11 @@ Plans:
 |-------|----------------|--------|-----------|
 | 6. Repo-Root Workspace Cutover | 4/4 | Complete | 2026-04-12 |
 | 7. Crate Relocation and Path Rewire | 3/3 | Complete | 2026-04-12 |
-| 8. Wrapper and Parity Rewire | 0/TBD | Not started | - |
-| 9. Clean Validation and CI Refresh | 0/TBD | Not started | - |
+| 8. Wrapper and Parity Rewire | 6/6 | Complete | 2026-04-15 |
+| 9. Clean Validation and CI Refresh | 4/4 | Complete | 2026-04-15 |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
 | 11. Relocation Proof and Verification Closure | 3/3 | Complete    | 2026-04-14 |
-| 12. Integration Replay and Verification Closure | 2/3 | In Progress|  |
+| 12. Integration Replay and Verification Closure | 3/3 | Complete | 2026-04-15 |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>

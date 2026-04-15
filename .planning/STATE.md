@@ -4,8 +4,8 @@ milestone: v9.1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-04-15T03:27:32.337Z"
-last_activity: 2026-04-15
+last_updated: "2026-04-15T03:32:38.855Z"
+last_activity: 2026-04-15 -- Phase 12 execution started
 progress:
   total_phases: 7
   completed_phases: 6
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** The Rust workspace has minimal, well-bounded crates with no redundant boundaries -- every crate earns its compilation unit, and all binding surfaces remain at full parity with zero drift.
-**Current focus:** Phase 12 — integration-replay-and-verification-closure
+**Current focus:** Milestone closure complete; ready to start the next milestone.
 
 ## Current Position
 
-Phase: 12 (integration-replay-and-verification-closure) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
-Last activity: 2026-04-15
+Phase: 12 (integration-replay-and-verification-closure) — COMPLETE
+Plan: 3 of 3
+Status: Phase 12 closure recorded; summary and final state sync pending
+Last activity: 2026-04-15 -- Phase 12 integration verification closure recorded
 
 Progress: [██████████] 100%
 
@@ -50,7 +50,7 @@ Progress: [██████████] 100%
 **Recent Trend:**
 
 - Last 5 plans: `10-08`, `10-09`, `11-01`, `11-02`, `11-03`
-- Trend: Phase 10 and Phase 11 are complete; next work shifts to Phase 12 integration verification closure.
+- Trend: Phase 12 closure work is complete; next work can move to milestone completion or the next planned milestone.
 
 *Updated after each plan completion*
 | Phase 06 P00 | 0min | 1 tasks | 2 files |
@@ -161,6 +161,8 @@ Recent decisions affecting current work:
 - [Phase 12]: Run the clean proof with an isolated temporary CARGO_TARGET_DIR plus retryable cleanup so wrapper replay proof survives locked local target output without recreating ClassicLib-rs residue.
 - [Phase 12]: Repair Phase 8 traceability in place by adding frontmatter only, preserving original summary prose.
 - [Phase 12]: Use the Phase 10 verification-report contract as the canonical structure for 08-VERIFICATION.md.
+- [Phase 12]: Repair Phase 9 traceability in place by adding frontmatter only, preserving original summary prose.
+- [Phase 12]: Use direct workflow, package, and clean-proof artifacts in `09-VERIFICATION.md` instead of summary-only shorthand.
 
 ### Pending Todos
 
@@ -182,4 +184,4 @@ None yet.
 Last session: 2026-04-15T03:27:32.332Z
 Stopped at: Completed 12-02-PLAN.md
 Resume file: None
-Next action: Plan or execute Phase 12 integration replay and verification closure
+Next action: Complete milestone wrap-up or define the next milestone

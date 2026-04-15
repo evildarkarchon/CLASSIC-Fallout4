@@ -22,7 +22,7 @@ Requirements for milestone `v9.1.0-root`. Each requirement maps to exactly one r
 
 - [x] **INTG-01**: Contributor can run the existing Rust-consuming wrapper entrypoints after relocation, including repo rebuild scripts and native CLI/GUI/TUI integration flows
 - [x] **INTG-02**: Contributor can run the Python, Node, and CXX parity gates against the relocated workspace without path drift or parity-contract changes
-- [ ] **INTG-03**: Contributor can run CI and path-sensitive build or packaging jobs against the relocated workspace using the new repository-root layout
+- [x] **INTG-03**: Contributor can run CI and path-sensitive build or packaging jobs against the relocated workspace using the new repository-root layout
 - [x] **INTG-04**: Contributor can verify the relocation from a clean state with regenerated path-bearing artifacts instead of relying on stale caches or outputs
 
 ### Docs and Guidance
@@ -57,7 +57,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MOVE-02 | Phase 11 | Complete |
 | INTG-01 | Phase 12 | Complete |
 | INTG-02 | Phase 12 | Complete |
-| INTG-03 | Phase 12 | Pending |
+| INTG-03 | Phase 12 | Complete |
 | INTG-04 | Phase 12 | Complete |
 | DOCS-01 | Phase 10 | Complete |
 | DOCS-02 | Phase 10 | Complete |
@@ -70,4 +70,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-14 after Phase 11 relocation-proof closure*
+*Last updated: 2026-04-15 after Phase 12 integration verification closure*
