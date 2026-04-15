@@ -117,7 +117,7 @@ void MarkdownViewer::applyContentStylesheet()
 
     if (css.isEmpty()) {
         css = QStringLiteral(
-            "body { font-family: 'Segoe UI'; font-size: 13px; color: #e0e0e0; }"
+            "body { font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', sans-serif; font-size: 13px; color: #e0e0e0; }"
             "h1 { font-size: 22px; font-weight: bold; color: #e0e0e0; }"
             "h2 { font-size: 18px; font-weight: bold; color: #e0e0e0; }"
             "h3 { font-size: 15px; font-weight: bold; color: #e0e0e0; }"
