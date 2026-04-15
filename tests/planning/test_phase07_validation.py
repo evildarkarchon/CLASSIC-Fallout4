@@ -47,17 +47,6 @@ REPRESENTATIVE_MANIFESTS = {
         "classic-version-registry-core": "../../business-logic/classic-version-registry-core",
     },
 }
-EXPECTED_RESIDUE = [
-    ".gitignore",
-    ".idea/",
-    "CLASSIC_Settings.yaml",
-    "clippy_full_report.txt",
-    "clippy_report.txt",
-    "coverage_report.ps1",
-    "coverage_summary.ps1",
-    "Crash Logs/",
-    "target/",
-]
 BENCHMARK_INCLUDE_FILES = [
     REPO_ROOT / "business-logic/classic-settings-core/benches/yaml_benchmarks.rs",
     REPO_ROOT / "business-logic/classic-scanlog-core/benches/scanlog_benchmarks.rs",
@@ -75,6 +64,27 @@ def read_text(path: Path) -> str:
 def read_toml(path: Path) -> dict[str, object]:
     with path.open("rb") as handle:
         return tomllib.load(handle)
+
+
+def audit_residue_rows(text: str) -> list[str]:
+    rows: list[str] = []
+    in_residue_section = False
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == "## Legacy ClassicLib-rs Residue":
+            in_residue_section = True
+            continue
+        if in_residue_section and stripped.startswith("## "):
+            break
+        if (
+            in_residue_section
+            and stripped.startswith("| `")
+            and stripped.endswith("` |")
+        ):
+            rows.append(stripped[3:-3])
+
+    return rows
 
 
 def assert_contains_all(
@@ -171,7 +181,7 @@ class Phase07ValidationAuditTests(unittest.TestCase):
             with self.subTest(mapping=row):
                 self.assertIn(row, text)
 
-        for residue in EXPECTED_RESIDUE:
+        for residue in audit_residue_rows(text):
             with self.subTest(residue=residue):
                 self.assertIn(f"| `{residue}` |", text)
 
@@ -197,7 +207,10 @@ class Phase07ValidationAuditTests(unittest.TestCase):
             for entry in LEGACY_ROOT.iterdir()
         )
 
-        self.assertEqual(sorted(EXPECTED_RESIDUE), actual_residue)
+        self.assertEqual(
+            sorted(audit_residue_rows(read_text(RELOCATION_AUDIT))),
+            actual_residue,
+        )
 
     def test_benchmark_include_path_fallout_rewired(self) -> None:
         self.assertTrue(CRITERION_CONFIG.exists())

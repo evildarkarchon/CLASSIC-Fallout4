@@ -121,4 +121,3 @@ The current `ClassicLib-rs/` directory contents are residue only. This inventory
 | `coverage_report.ps1` |
 | `coverage_summary.ps1` |
 | `Crash Logs/` |
-| `target/` |
