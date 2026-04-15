@@ -152,7 +152,7 @@ Plans:
 | 9. Clean Validation and CI Refresh | 4/4 | Complete | 2026-04-15 |
 | 10. Docs, Guidance, and Tripwires | 10/10 | Complete    | 2026-04-14 |
 | 11. Relocation Proof and Verification Closure | 3/3 | Complete    | 2026-04-14 |
-| 12. Integration Replay and Verification Closure | 3/3 | Complete   | 2026-04-15 |
+| 12. Integration Replay and Verification Closure | 3/3 | Complete    | 2026-04-15 |
 
 <details>
 <summary>✅ v9.1.0-bindings Full Bindings Parity (Phases 1-7) — SHIPPED 2026-04-10</summary>
