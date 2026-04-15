@@ -7,9 +7,11 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 $LegacyTarget = Join-Path $RepoRoot "ClassicLib-rs/target"
 $LegacyTargetBackup = Join-Path $RepoRoot "ClassicLib-rs/target.phase9-backup"
 $NodeBindingsRoot = Join-Path $RepoRoot "node-bindings/classic-node"
+$ProofCargoTarget = Join-Path $RepoRoot "target.phase09-proof"
 
 $CleanupTargets = @(
     (Join-Path $RepoRoot "target"),
+    $ProofCargoTarget,
     (Join-Path $RepoRoot "python-bindings/.venv"),
     (Join-Path $RepoRoot "node-bindings/classic-node/node_modules"),
     (Join-Path $RepoRoot "node-bindings/classic-node/dist"),
@@ -21,8 +23,12 @@ $CleanupTargets = @(
 $ProofSteps = @(
     @{ Command = "cargo locate-project --workspace --message-format plain"; WorkingDirectory = $RepoRoot },
     @{ Command = "cargo metadata --format-version 1 --no-deps"; WorkingDirectory = $RepoRoot },
+    @{ Command = "uv venv python-bindings/.venv"; WorkingDirectory = $RepoRoot },
+    @{ Command = "uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt"; WorkingDirectory = $RepoRoot },
     @{ Command = "python tools/python_api_parity/check_parity_gate.py --repo-root ."; WorkingDirectory = $RepoRoot },
     @{ Command = "python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings"; WorkingDirectory = $RepoRoot },
+    # Prove the repo-root Python wrapper remains usable after clean-state bootstrap and wrapper replay.
+    @{ Command = "pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python -BuildOnly"; WorkingDirectory = $RepoRoot },
     @{ Command = "bun install"; WorkingDirectory = $NodeBindingsRoot },
     @{ Command = "bun run build"; WorkingDirectory = $NodeBindingsRoot },
     @{ Command = "bun run parity:gate"; WorkingDirectory = $NodeBindingsRoot },
@@ -31,6 +37,9 @@ $ProofSteps = @(
     @{ Command = "pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package"; WorkingDirectory = $RepoRoot },
     @{ Command = "python -m pytest tests/planning/test_phase09_validation.py -q"; WorkingDirectory = $RepoRoot }
 )
+
+$FilesystemRetryCount = 30
+$FilesystemRetryDelaySeconds = 2
 
 function Convert-ToRepoRelativePath {
     param([string]$Path)
@@ -73,7 +82,45 @@ function Remove-GeneratedPath {
 
     $relativePath = Convert-ToRepoRelativePath $Path
     if ($PSCmdlet.ShouldProcess($relativePath, "Remove generated output")) {
-        Remove-Item -Path $Path -Recurse -Force
+        Invoke-WithFilesystemRetry -Action "remove $relativePath" -ScriptBlock {
+            Remove-Item -Path $Path -Recurse -Force
+        }
+    }
+}
+
+function Remove-GeneratedPathWithLockFallback {
+    param([string]$Path)
+
+    try {
+        Remove-GeneratedPath -Path $Path
+    }
+    catch {
+        $relativePath = Convert-ToRepoRelativePath $Path
+        Write-Warning "Continuing clean proof with isolated CARGO_TARGET_DIR because '$relativePath' is locked by another process: $($_.Exception.Message)"
+    }
+}
+
+function Invoke-WithFilesystemRetry {
+    param(
+        [string]$Action,
+        [scriptblock]$ScriptBlock
+    )
+
+    $attempt = 0
+    while ($true) {
+        try {
+            & $ScriptBlock
+            return
+        }
+        catch {
+            $attempt += 1
+            if ($attempt -ge $FilesystemRetryCount) {
+                throw
+            }
+
+            Write-Warning "Retrying filesystem action '$Action' after transient lock ($attempt/$FilesystemRetryCount): $($_.Exception.Message)"
+            Start-Sleep -Seconds $FilesystemRetryDelaySeconds
+        }
     }
 }
 
@@ -126,6 +173,15 @@ function Invoke-RepoCommand {
     }
 }
 
+if ((Test-Path $LegacyTargetBackup) -and -not (Test-Path $LegacyTarget)) {
+    $relativeBackupTarget = Convert-ToRepoRelativePath $LegacyTargetBackup
+    if ($PSCmdlet.ShouldProcess($relativeBackupTarget, "Restore stale pre-run legacy target backup")) {
+        Invoke-WithFilesystemRetry -Action "restore stale $relativeBackupTarget" -ScriptBlock {
+            Rename-Item -Path $LegacyTargetBackup -NewName ([System.IO.Path]::GetFileName($LegacyTarget))
+        }
+    }
+}
+
 if (Test-Path $LegacyTargetBackup) {
     throw "Refusing to overwrite existing backup target directory: $LegacyTargetBackup"
 }
@@ -134,16 +190,24 @@ $RenamedLegacyTarget = $false
 $PreProofLegacyState = @(Get-LegacyGeneratedSnapshot)
 
 try {
+    $OriginalCargoTargetDir = $env:CARGO_TARGET_DIR
+    $OriginalCargoBuildJobs = $env:CARGO_BUILD_JOBS
+    $env:CARGO_TARGET_DIR = $ProofCargoTarget
+    $env:CARGO_BUILD_JOBS = "1"
+
     if (Test-Path $LegacyTarget) {
         $relativeLegacyTarget = Convert-ToRepoRelativePath $LegacyTarget
         $relativeBackupTarget = Convert-ToRepoRelativePath $LegacyTargetBackup
         if ($PSCmdlet.ShouldProcess($relativeLegacyTarget, "Quarantine to $relativeBackupTarget")) {
-            Rename-Item -Path $LegacyTarget -NewName ([System.IO.Path]::GetFileName($LegacyTargetBackup))
+            Invoke-WithFilesystemRetry -Action "quarantine $relativeLegacyTarget" -ScriptBlock {
+                Rename-Item -Path $LegacyTarget -NewName ([System.IO.Path]::GetFileName($LegacyTargetBackup))
+            }
             $RenamedLegacyTarget = $true
         }
     }
 
-    foreach ($cleanupTarget in $CleanupTargets) {
+    Remove-GeneratedPathWithLockFallback -Path (Join-Path $RepoRoot "target")
+    foreach ($cleanupTarget in $CleanupTargets | Where-Object { $_ -ne (Join-Path $RepoRoot "target") }) {
         Remove-GeneratedPath -Path $cleanupTarget
     }
 
@@ -163,10 +227,30 @@ try {
     }
 }
 finally {
+    if (Test-Path $ProofCargoTarget) {
+        Remove-GeneratedPathWithLockFallback -Path $ProofCargoTarget
+    }
+
+    if ($null -eq $OriginalCargoTargetDir) {
+        Remove-Item Env:CARGO_TARGET_DIR -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:CARGO_TARGET_DIR = $OriginalCargoTargetDir
+    }
+
+    if ($null -eq $OriginalCargoBuildJobs) {
+        Remove-Item Env:CARGO_BUILD_JOBS -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:CARGO_BUILD_JOBS = $OriginalCargoBuildJobs
+    }
+
     if ($RenamedLegacyTarget -and (Test-Path $LegacyTargetBackup)) {
         $relativeBackupTarget = Convert-ToRepoRelativePath $LegacyTargetBackup
         if ($PSCmdlet.ShouldProcess($relativeBackupTarget, "Restore quarantined legacy target")) {
-            Rename-Item -Path $LegacyTargetBackup -NewName ([System.IO.Path]::GetFileName($LegacyTarget))
+            Invoke-WithFilesystemRetry -Action "restore $relativeBackupTarget" -ScriptBlock {
+                Rename-Item -Path $LegacyTargetBackup -NewName ([System.IO.Path]::GetFileName($LegacyTarget))
+            }
         }
     }
 }
