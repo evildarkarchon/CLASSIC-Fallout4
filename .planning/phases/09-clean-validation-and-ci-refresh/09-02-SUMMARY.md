@@ -1,3 +1,9 @@
+---
+phase: 09-clean-validation-and-ci-refresh
+plan: "02"
+requirements-completed: [INTG-03]
+---
+
 # 09-02 Summary
 
 - Refreshed `ci-rust.yml`, `ci-cpp.yml`, and `benchmarks.yml` to use repo-root cache and Rust source hash inputs.

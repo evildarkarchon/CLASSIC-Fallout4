@@ -1,3 +1,9 @@
+---
+phase: 09-clean-validation-and-ci-refresh
+plan: "03"
+requirements-completed: [INTG-03]
+---
+
 # 09-03 Summary
 
 - Refreshed `ci-python-bindings.yml` to use repo-root `validate_stubs.py`, `python-bindings/.venv`, `target`, and `python-bindings/parity-artifacts/` paths.

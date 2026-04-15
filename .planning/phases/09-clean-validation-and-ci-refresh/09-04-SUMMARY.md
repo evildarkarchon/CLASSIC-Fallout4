@@ -1,3 +1,9 @@
+---
+phase: 09-clean-validation-and-ci-refresh
+plan: "04"
+requirements-completed: [INTG-03, INTG-04]
+---
+
 # 09-04 Summary
 
 - Finalized `tests/planning/phase09_clean_run.ps1` as the end-to-end fresh-state proof harness and fixed the empty-snapshot residue check edge case.
