@@ -116,6 +116,22 @@ class TestPhase09Validation(unittest.TestCase):
             audit_text,
         )
 
+    def test_clean_replay_bootstraps_python_venv_and_wrapper(self) -> None:
+        audit_text = self.read_text(AUDIT_PATH)
+        harness_text = self.read_text(HARNESS_PATH)
+
+        required_fragments = (
+            "uv venv python-bindings/.venv",
+            "uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt",
+            "pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python -BuildOnly",
+            "wrapper replay",
+        )
+
+        for fragment in required_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, audit_text)
+                self.assertIn(fragment, harness_text)
+
     def test_rust_cpp_benchmark_workflows(self) -> None:
         audit_text = self.read_text(AUDIT_PATH)
         ci_rust_text = self.read_text(CI_RUST_PATH)
@@ -203,7 +219,10 @@ class TestPhase09Validation(unittest.TestCase):
 
         for required_text in (
             "cargo locate-project --workspace --message-format plain",
+            "uv venv python-bindings/.venv",
+            "uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt",
             "python validate_stubs.py --rust-dir .",
+            "pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python -BuildOnly",
             "bun run dts:freshness:check",
             "classic-gui/build_gui.ps1 -Package",
             "python -m pytest tests/planning/test_phase09_validation.py -q",
@@ -214,8 +233,11 @@ class TestPhase09Validation(unittest.TestCase):
         proof_order = [
             "cargo locate-project --workspace --message-format plain",
             "cargo metadata --format-version 1 --no-deps",
+            "uv venv python-bindings/.venv",
+            "uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt",
             "python tools/python_api_parity/check_parity_gate.py --repo-root .",
             "python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings",
+            "pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python -BuildOnly",
             "bun install",
             "bun run build",
             "bun run parity:gate",
