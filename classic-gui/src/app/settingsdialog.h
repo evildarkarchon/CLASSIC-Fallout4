@@ -1,14 +1,14 @@
 #pragma once
 
-#include <QDialog>
-#include <QTabWidget>
-#include <QComboBox>
 #include <QCheckBox>
-#include <QSpinBox>
+#include <QComboBox>
+#include <QDialog>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
-#include <QLabel>
+#include <QSpinBox>
+#include <QTabWidget>
 
 class SignalHub;
 
@@ -16,9 +16,7 @@ class SettingsDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit SettingsDialog(const QString& dataDir,
-                           SignalHub* signalHub,
-                           QWidget* parent = nullptr);
+    explicit SettingsDialog(const QString& dataDir, SignalHub* signalHub, QWidget* parent = nullptr);
 
 private:
     void setupUi();

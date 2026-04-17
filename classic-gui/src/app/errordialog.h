@@ -2,16 +2,14 @@
 
 #include <QDialog>
 #include <QLabel>
-#include <QTextEdit>
 #include <QPushButton>
+#include <QTextEdit>
 
 class ErrorDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ErrorDialog(const QString& message,
-                        const QString& details = QString(),
-                        QWidget* parent = nullptr);
+    explicit ErrorDialog(const QString& message, const QString& details = QString(), QWidget* parent = nullptr);
 
 private slots:
     void copyDetails();

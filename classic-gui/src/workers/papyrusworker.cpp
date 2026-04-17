@@ -4,8 +4,8 @@
 #include <QDebug>
 #include <QTimer>
 
-#include "rust/cxx.h"
 #include "classic_cxx_bridge/scanner.h"
+#include "rust/cxx.h"
 
 PapyrusWorker::PapyrusWorker(QObject* parent)
     : QObject(parent)
@@ -19,15 +19,13 @@ void PapyrusWorker::start(const QString& logPath)
         // rust::Box<CxxPapyrusAnalyzer> is move-only; we release() it into
         // a raw pointer so we can store it as a member without exposing
         // the CXX-generated type in the header.
-        auto analyzer = classic::scanner::papyrus_analyzer_new(
-            classic::toRustString(logPath));
+        auto analyzer = classic::scanner::papyrus_analyzer_new(classic::toRustString(logPath));
         m_analyzer = analyzer.into_raw();
 
         // Check log exists before starting
         auto* rawAnalyzer = static_cast<classic::scanner::CxxPapyrusAnalyzer*>(m_analyzer);
         if (!classic::scanner::papyrus_log_exists(*rawAnalyzer)) {
-            emit monitoringError(
-                QStringLiteral("Papyrus log file not found: ") + logPath);
+            emit monitoringError(QStringLiteral("Papyrus log file not found: ") + logPath);
             return;
         }
 
@@ -75,14 +73,8 @@ void PapyrusWorker::onPollTimer()
         auto* rawAnalyzer = static_cast<classic::scanner::CxxPapyrusAnalyzer*>(m_analyzer);
         auto stats = classic::scanner::papyrus_check_updates(*rawAnalyzer);
 
-        emit statsUpdated(
-            stats.dumps,
-            stats.stacks,
-            stats.warnings,
-            stats.errors,
-            stats.lines_processed,
-            stats.dumps_stacks_ratio
-        );
+        emit statsUpdated(stats.dumps, stats.stacks, stats.warnings, stats.errors, stats.lines_processed,
+                          stats.dumps_stacks_ratio);
     } catch (const rust::Error& e) {
         emit monitoringError(QString::fromUtf8(e.what()));
     } catch (const std::exception& e) {

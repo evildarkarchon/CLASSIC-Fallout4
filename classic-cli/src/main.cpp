@@ -1,8 +1,8 @@
 #include "cli_args.h"
 #include "scanner.h"
 
-#include "rust/cxx.h"
 #include "classic_cxx_bridge/config.h"
+#include "rust/cxx.h"
 
 #include <fmt/core.h>
 
@@ -55,10 +55,10 @@ int main(int argc, char* argv[]) {
     if (args.game_version != "auto") {
         mode_suffix += " " + args.game_version;
     }
-    if (args.fcx_mode)     mode_suffix += " [FCX]";
+    if (args.fcx_mode)
+        mode_suffix += " [FCX]";
 
-    fmt::print("CLASSIC v9.0.0 - Crash Log Scanner ({}{})\n\n",
-        args.game, mode_suffix);
+    fmt::print("CLASSIC v9.0.0 - Crash Log Scanner ({}{})\n\n", args.game, mode_suffix);
 
     // Run the scan pipeline
     return run_scan(args);

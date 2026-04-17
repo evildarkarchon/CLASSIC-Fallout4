@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QWidget>
 #include <QLabel>
 #include <QString>
+#include <QWidget>
 
 class ReportMetadataWidget : public QWidget {
     Q_OBJECT

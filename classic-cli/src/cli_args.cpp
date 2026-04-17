@@ -4,7 +4,6 @@
 #include <fmt/core.h>
 #include <thread>
 
-
 uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count) {
     auto recommended = std::max(cpu_count, 4u) - 2u;
     return std::min(recommended, 32u);
@@ -46,8 +45,7 @@ CliArgs parse_args(int argc, char* argv[]) {
 
     app.add_flag("--version", args.version_flag, "Print version and exit");
 
-    app.add_option("input_paths", args.input_paths,
-                   "Crash log files or directories to scan (targeted mode)");
+    app.add_option("input_paths", args.input_paths, "Crash log files or directories to scan (targeted mode)");
 
     try {
         app.parse(argc, argv);

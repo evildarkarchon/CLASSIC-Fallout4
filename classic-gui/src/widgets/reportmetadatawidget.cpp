@@ -1,8 +1,8 @@
 #include "widgets/reportmetadatawidget.h"
 
-#include <QHBoxLayout>
 #include <QFont>
 #include <QFrame>
+#include <QHBoxLayout>
 #include <QRegularExpression>
 
 // ── Construction ───────────────────────────────────────────────────
@@ -37,8 +37,7 @@ void ReportMetadataWidget::setupUi()
 
 // ── Public interface ──────────────────────────────────────────────
 
-void ReportMetadataWidget::setMetadata(const QString& date,
-                                       const QString& fileSize)
+void ReportMetadataWidget::setMetadata(const QString& date, const QString& fileSize)
 {
     m_dateLabel->setText(QStringLiteral("<b>Date:</b> ") + date);
     m_sizeLabel->setText(QStringLiteral("<b>Size:</b> ") + fileSize);
@@ -55,8 +54,7 @@ void ReportMetadataWidget::clear()
 QString ReportMetadataWidget::extractDate(const QString& filename)
 {
     // Match crash-YYYY-MM-DD-HH-MM-SS or similar timestamp in filename
-    static const QRegularExpression re(
-        QStringLiteral(R"((\d{4}-\d{2}-\d{2})-(\d{2}-\d{2}-\d{2}))"));
+    static const QRegularExpression re(QStringLiteral(R"((\d{4}-\d{2}-\d{2})-(\d{2}-\d{2}-\d{2}))"));
 
     auto match = re.match(filename);
     if (!match.hasMatch()) {
@@ -74,10 +72,7 @@ QString ReportMetadataWidget::formatFileSize(qint64 bytes)
         return QString::number(bytes) + QStringLiteral(" B");
     }
     if (bytes < 1024 * 1024) {
-        return QString::number(static_cast<double>(bytes) / 1024.0, 'f', 1)
-               + QStringLiteral(" KB");
+        return QString::number(static_cast<double>(bytes) / 1024.0, 'f', 1) + QStringLiteral(" KB");
     }
-    return QString::number(static_cast<double>(bytes) / (1024.0 * 1024.0), 'f', 1)
-           + QStringLiteral(" MB");
+    return QString::number(static_cast<double>(bytes) / (1024.0 * 1024.0), 'f', 1) + QStringLiteral(" MB");
 }
-

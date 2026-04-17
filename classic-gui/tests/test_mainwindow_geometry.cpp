@@ -140,12 +140,13 @@ void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
         return sourceText.mid(start, end - start);
     };
 
-    const QString crashScanProgressBody =
-        extractFunctionBody(QStringLiteral("onCrashScanProgress(float percent, const QString& status, int completed, int total)"));
-    QVERIFY2(!crashScanProgressBody.isEmpty(),
-             "Could not locate MainWindow::onCrashScanProgress(float percent, const QString& status, int completed, int total)");
+    const QString crashScanProgressBody = extractFunctionBody(
+        QStringLiteral("onCrashScanProgress(float percent, const QString& status, int completed, int total)"));
+    QVERIFY2(!crashScanProgressBody.isEmpty(), "Could not locate MainWindow::onCrashScanProgress(float percent, const "
+                                               "QString& status, int completed, int total)");
 
-    const QString scanProgressBody = extractFunctionBody(QStringLiteral("onScanProgress(float percent, const QString& status)"));
+    const QString scanProgressBody =
+        extractFunctionBody(QStringLiteral("onScanProgress(float percent, const QString& status)"));
     QVERIFY2(!scanProgressBody.isEmpty(),
              "Could not locate MainWindow::onScanProgress(float percent, const QString& status)");
 

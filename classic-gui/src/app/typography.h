@@ -26,4 +26,4 @@ void registerBundledFonts(const std::string& correlationId);
 /// and PreferVerticalHinting hinting preference via QApplication::setFont.
 void installDefaultFont();
 
-}  // namespace classic::gui
+} // namespace classic::gui

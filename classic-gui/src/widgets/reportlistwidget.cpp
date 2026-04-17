@@ -1,10 +1,10 @@
 #include "widgets/reportlistwidget.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QFileInfo>
-#include <QRegularExpression>
 #include <algorithm>
+#include <QFileInfo>
+#include <QHBoxLayout>
+#include <QRegularExpression>
+#include <QVBoxLayout>
 
 // ── Construction ───────────────────────────────────────────────────
 
@@ -54,21 +54,16 @@ void ReportListWidget::setupUi()
     }
 
     // Connections
-    connect(m_searchBar, &QLineEdit::textChanged,
-            this, &ReportListWidget::onSearchTextChanged);
-    connect(m_listWidget, &QListWidget::itemSelectionChanged,
-            this, &ReportListWidget::onItemSelectionChanged);
-    connect(m_btnRefresh, &QPushButton::clicked,
-            this, &ReportListWidget::refreshRequested);
+    connect(m_searchBar, &QLineEdit::textChanged, this, &ReportListWidget::onSearchTextChanged);
+    connect(m_listWidget, &QListWidget::itemSelectionChanged, this, &ReportListWidget::onItemSelectionChanged);
+    connect(m_btnRefresh, &QPushButton::clicked, this, &ReportListWidget::refreshRequested);
     connect(m_btnDelete, &QPushButton::clicked, this, [this]() {
         QString path = currentReportPath();
         if (!path.isEmpty()) {
             emit deleteRequested(path);
         }
     });
-    connect(m_btnOpenFolder, &QPushButton::clicked, this, [this]() {
-        emit openFolderRequested(currentReportPath());
-    });
+    connect(m_btnOpenFolder, &QPushButton::clicked, this, [this]() { emit openFolderRequested(currentReportPath()); });
 }
 
 // ── Public interface ──────────────────────────────────────────────
@@ -79,9 +74,7 @@ void ReportListWidget::setReports(const QStringList& reportPaths)
 
     // Sort newest first by filename (crash-YYYY-MM-DD-HH-MM-SS sorts lexicographically)
     std::sort(m_reportPaths.begin(), m_reportPaths.end(),
-              [](const QString& a, const QString& b) {
-                  return QFileInfo(a).fileName() > QFileInfo(b).fileName();
-              });
+              [](const QString& a, const QString& b) { return QFileInfo(a).fileName() > QFileInfo(b).fileName(); });
 
     rebuildListItems(m_searchBar->text());
 }
@@ -120,14 +113,15 @@ void ReportListWidget::onItemSelectionChanged()
 
 void ReportListWidget::rebuildListItems(const QString& filter)
 {
+    const QString selectedPath = currentReportPath();
     m_listWidget->clear();
+    QListWidgetItem* selectedItem = nullptr;
 
     for (const auto& path : m_reportPaths) {
         QString filename = QFileInfo(path).fileName();
 
         // Apply filter
-        if (!filter.isEmpty()
-            && !filename.contains(filter, Qt::CaseInsensitive)) {
+        if (!filter.isEmpty() && !filename.contains(filter, Qt::CaseInsensitive)) {
             continue;
         }
 
@@ -141,14 +135,21 @@ void ReportListWidget::rebuildListItems(const QString& filter)
         }
 
         m_listWidget->addItem(item);
+
+        if (!selectedPath.isEmpty() && item->data(Qt::UserRole).toString() == selectedPath) {
+            selectedItem = item;
+        }
+    }
+
+    if (selectedItem) {
+        m_listWidget->setCurrentItem(selectedItem);
     }
 }
 
 QString ReportListWidget::extractTimestamp(const QString& filename)
 {
     // Match crash-YYYY-MM-DD-HH-MM-SS pattern
-    static const QRegularExpression re(
-        QStringLiteral(R"((\d{4}-\d{2}-\d{2})-(\d{2}-\d{2}-\d{2}))"));
+    static const QRegularExpression re(QStringLiteral(R"((\d{4}-\d{2}-\d{2})-(\d{2}-\d{2}-\d{2}))"));
 
     auto match = re.match(filename);
     if (!match.hasMatch()) {

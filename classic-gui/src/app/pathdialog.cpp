@@ -1,20 +1,18 @@
 #include "pathdialog.h"
 
-#include <QVBoxLayout>
+#include <QDir>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QPushButton>
-#include <QFileDialog>
-#include <QDir>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QVBoxLayout>
 
 #include "classic_cxx_bridge/game.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/xse.h"
 
-ManualPathDialog::ManualPathDialog(bool needsGamePath,
-                                   bool needsDocsPath,
-                                   QWidget* parent)
+ManualPathDialog::ManualPathDialog(bool needsGamePath, bool needsDocsPath, QWidget* parent)
     : QDialog(parent)
     , m_needsGamePath(needsGamePath)
     , m_needsDocsPath(needsDocsPath)
@@ -28,9 +26,8 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
     mainLayout->setSpacing(12);
 
     // Explanation header
-    auto* headerLabel = new QLabel(
-        QStringLiteral("CLASSIC could not automatically detect some required paths.\n"
-                       "Please provide the following:"));
+    auto* headerLabel = new QLabel(QStringLiteral("CLASSIC could not automatically detect some required paths.\n"
+                                                  "Please provide the following:"));
     headerLabel->setWordWrap(true);
     mainLayout->addWidget(headerLabel);
 
@@ -44,10 +41,8 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
         // filename using the new typed classic::xse namespace.
         try {
             auto loader_rust = classic::xse::xse_get_loader_name(classic::xse::XseType::F4SE);
-            QString loader_name = QString::fromUtf8(loader_rust.data(),
-                                                    static_cast<int>(loader_rust.size()));
-            auto* xseHint = new QLabel(
-                QStringLiteral("The game folder should contain: %1").arg(loader_name));
+            QString loader_name = QString::fromUtf8(loader_rust.data(), static_cast<int>(loader_rust.size()));
+            auto* xseHint = new QLabel(QStringLiteral("The game folder should contain: %1").arg(loader_name));
             xseHint->setProperty("class", QStringLiteral("hintLabel"));
             mainLayout->addWidget(xseHint);
         } catch (...) {
@@ -62,8 +57,7 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
 
         auto* btnBrowse = new QPushButton(QStringLiteral("Browse"));
         btnBrowse->setFixedWidth(80);
-        connect(btnBrowse, &QPushButton::clicked,
-                this, &ManualPathDialog::onBrowseGamePath);
+        connect(btnBrowse, &QPushButton::clicked, this, &ManualPathDialog::onBrowseGamePath);
         rowLayout->addWidget(btnBrowse);
 
         mainLayout->addLayout(rowLayout);
@@ -77,14 +71,12 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
 
         auto* rowLayout = new QHBoxLayout();
         m_editDocsPath = new QLineEdit();
-        m_editDocsPath->setPlaceholderText(
-            QStringLiteral("e.g. C:/Users/You/Documents/My Games/Fallout4"));
+        m_editDocsPath->setPlaceholderText(QStringLiteral("e.g. C:/Users/You/Documents/My Games/Fallout4"));
         rowLayout->addWidget(m_editDocsPath);
 
         auto* btnBrowse = new QPushButton(QStringLiteral("Browse"));
         btnBrowse->setFixedWidth(80);
-        connect(btnBrowse, &QPushButton::clicked,
-                this, &ManualPathDialog::onBrowseDocsPath);
+        connect(btnBrowse, &QPushButton::clicked, this, &ManualPathDialog::onBrowseDocsPath);
         rowLayout->addWidget(btnBrowse);
 
         mainLayout->addLayout(rowLayout);
@@ -120,10 +112,7 @@ QString ManualPathDialog::docsPath() const
 
 void ManualPathDialog::onBrowseGamePath()
 {
-    QString dir = QFileDialog::getExistingDirectory(
-        this,
-        QStringLiteral("Select Game Folder"),
-        m_editGamePath->text());
+    QString dir = QFileDialog::getExistingDirectory(this, QStringLiteral("Select Game Folder"), m_editGamePath->text());
     if (!dir.isEmpty()) {
         m_editGamePath->setText(dir);
     }
@@ -131,10 +120,8 @@ void ManualPathDialog::onBrowseGamePath()
 
 void ManualPathDialog::onBrowseDocsPath()
 {
-    QString dir = QFileDialog::getExistingDirectory(
-        this,
-        QStringLiteral("Select Documents / INI Folder"),
-        m_editDocsPath->text());
+    QString dir = QFileDialog::getExistingDirectory(this, QStringLiteral("Select Documents / INI Folder"),
+                                                    m_editDocsPath->text());
     if (!dir.isEmpty()) {
         m_editDocsPath->setText(dir);
     }
@@ -145,18 +132,15 @@ void ManualPathDialog::validateAndAccept()
     if (m_needsGamePath) {
         const QString gamePath = m_editGamePath ? m_editGamePath->text().trimmed() : QString();
         if (gamePath.isEmpty() || !QDir(gamePath).exists()) {
-            QMessageBox::warning(
-                this,
-                QStringLiteral("Invalid Game Folder"),
-                QStringLiteral("Please select a valid existing game folder path."));
+            QMessageBox::warning(this, QStringLiteral("Invalid Game Folder"),
+                                 QStringLiteral("Please select a valid existing game folder path."));
             return;
         }
 
         try {
             if (classic::path::check_restricted_path(std::string(gamePath.toUtf8().constData()))) {
                 QMessageBox::warning(
-                    this,
-                    QStringLiteral("Invalid Game Folder"),
+                    this, QStringLiteral("Invalid Game Folder"),
                     QStringLiteral("The selected game folder is in a restricted Windows system location."
                                    "\n\nPlease choose your actual game install folder."));
                 return;
@@ -169,10 +153,8 @@ void ManualPathDialog::validateAndAccept()
     if (m_needsDocsPath) {
         const QString docsPath = m_editDocsPath ? m_editDocsPath->text().trimmed() : QString();
         if (docsPath.isEmpty() || !QDir(docsPath).exists()) {
-            QMessageBox::warning(
-                this,
-                QStringLiteral("Invalid Documents / INI Folder"),
-                QStringLiteral("Please select a valid existing Documents / INI folder path."));
+            QMessageBox::warning(this, QStringLiteral("Invalid Documents / INI Folder"),
+                                 QStringLiteral("Please select a valid existing Documents / INI folder path."));
             return;
         }
     }
