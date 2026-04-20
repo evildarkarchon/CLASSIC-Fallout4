@@ -4,6 +4,7 @@ const PARSER_RS: &str = include_str!("../src/parser.rs");
 const VERSION_RS: &str = include_str!("../src/version.rs");
 const PLUGIN_ANALYZER_RS: &str = include_str!("../src/plugin_analyzer.rs");
 const SETTINGS_VALIDATOR_RS: &str = include_str!("../src/settings_validator.rs");
+const SETTINGS_VALIDATOR_TESTS_RS: &str = include_str!("../src/settings_validator_tests.rs");
 
 #[test]
 fn parser_and_version_dead_symbols_do_not_reappear() {
@@ -50,7 +51,8 @@ fn plugin_analyzer_and_settings_validator_dead_fallbacks_do_not_reappear() {
         "scan_all_settings_bucketed should keep returning an empty Vec when settings_rules are absent"
     );
     assert!(
-        SETTINGS_VALIDATOR_RS.contains("test_production_configs_never_hit_legacy_fallback"),
-        "settings_validator.rs should keep the invariant test proving production configs never need the legacy fallback"
+        SETTINGS_VALIDATOR_RS.contains("test_production_configs_never_hit_legacy_fallback")
+            || SETTINGS_VALIDATOR_TESTS_RS.contains("test_production_configs_never_hit_legacy_fallback"),
+        "settings_validator should keep the invariant test proving production configs never need the legacy fallback (inline or sibling _tests.rs)"
     );
 }
