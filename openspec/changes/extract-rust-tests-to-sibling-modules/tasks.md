@@ -12,11 +12,11 @@
 
 ## 3. Reference Conversion (classic-perf-core)
 
-- [ ] 3.1 Pick `business-logic/classic-perf-core` as the reference crate. For each source file with `#[cfg(test)] mod tests { ... }` (`src/lib.rs`, `src/metrics.rs`, `src/timer.rs`), create a sibling `<stem>_tests.rs` containing the verbatim block body (including `use super::*;` and any test-only helpers from inside the block).
-- [ ] 3.2 In each parent file, replace the entire former `#[cfg(test)] mod tests { ... }` block with the single line `#[cfg(test)] #[path = "<stem>_tests.rs"] mod tests;`.
-- [ ] 3.3 Run `cargo test -p classic-perf-core` and confirm the pass count matches the value captured in 1.2.
-- [ ] 3.4 Run `cargo fmt --all -- --check` and `cargo clippy -p classic-perf-core --all-targets --all-features -- -D warnings`. Fix any formatting drift in the new sibling files only (do not reformat unrelated code).
-- [ ] 3.5 Commit as a single self-contained per-crate commit; include "before: N tests, after: N tests, all pass" in the commit body so reviewers can verify at a glance.
+- [x] 3.1 Pick `business-logic/classic-perf-core` as the reference crate. For each source file with `#[cfg(test)] mod tests { ... }` (`src/lib.rs`, `src/metrics.rs`, `src/timer.rs`), create a sibling `<stem>_tests.rs` containing the verbatim block body (including `use super::*;` and any test-only helpers from inside the block).
+- [x] 3.2 In each parent file, replace the entire former `#[cfg(test)] mod tests { ... }` block with the single line `#[cfg(test)] #[path = "<stem>_tests.rs"] mod tests;`.
+- [x] 3.3 Run `cargo test -p classic-perf-core` and confirm the pass count matches the value captured in 1.2. *(16 passed unit-tests after conversion; matches baseline 16.)*
+- [x] 3.4 Run `cargo fmt --all -- --check` and `cargo clippy -p classic-perf-core --all-targets --all-features -- -D warnings`. Fix any formatting drift in the new sibling files only (do not reformat unrelated code). *(classic-perf-core files are fmt-clean; pre-existing fmt drift exists in unrelated crates `classic-file-io-core`, `classic-update-core`, `classic-cpp-bridge` and is NOT modified here. `cargo clippy -p classic-perf-core --all-targets --all-features -- -D warnings` passed.)*
+- [x] 3.5 Commit as a single self-contained per-crate commit; include "before: N tests, after: N tests, all pass" in the commit body so reviewers can verify at a glance.
 
 ## 4. Convert foundation/ Crates
 
