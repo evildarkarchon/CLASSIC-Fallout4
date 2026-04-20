@@ -211,8 +211,7 @@ fn test_scan_named_records_with_crashgen_name_override_uses_effective_name() {
     );
 
     let callstack = vec!["ActorBase_Player reference".to_string()];
-    let (report, _matches) =
-        scanner.scan_named_records_with_crashgen_name(&callstack, "Addictol");
+    let (report, _matches) = scanner.scan_named_records_with_crashgen_name(&callstack, "Addictol");
     let output = report.join("");
 
     assert!(output.contains("caught by Addictol"));
@@ -237,8 +236,7 @@ fn test_extract_records_empty() {
 
 #[test]
 fn test_extract_records_simple() {
-    let scanner =
-        RecordScanner::new(vec!["Weapon".to_string()], vec![], "Buffout 4".to_string());
+    let scanner = RecordScanner::new(vec!["Weapon".to_string()], vec![], "Buffout 4".to_string());
 
     let callstack = vec!["Weapon_Pistol reference".to_string()];
 
@@ -248,8 +246,7 @@ fn test_extract_records_simple() {
 
 #[test]
 fn test_extract_records_rsp_format() {
-    let scanner =
-        RecordScanner::new(vec!["Weapon".to_string()], vec![], "Buffout 4".to_string());
+    let scanner = RecordScanner::new(vec!["Weapon".to_string()], vec![], "Buffout 4".to_string());
 
     // Line must be long enough for RSP offset (30 chars)
     let callstack = vec!["[RSP+50] 0x12345678 0xABCD Weapon_Pistol".to_string()];

@@ -11,7 +11,6 @@ use tempfile::{NamedTempFile, tempdir};
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_parse_yaml() {
     let ops = YamlOperations::new();
@@ -25,7 +24,6 @@ fn test_parse_yaml() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_dump_yaml() {
     let ops = YamlOperations::new();
@@ -45,7 +43,6 @@ fn test_dump_yaml() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_setting() {
     let ops = YamlOperations::new();
@@ -62,7 +59,6 @@ fn test_get_setting() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_setting() {
     let ops = YamlOperations::new();
@@ -80,7 +76,6 @@ fn test_set_setting() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_settings_batch() {
     let ops = YamlOperations::new();
@@ -105,7 +100,6 @@ fn test_get_settings_batch() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_settings_batch() {
     let ops = YamlOperations::new();
@@ -142,7 +136,6 @@ fn test_set_settings_batch() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_load_yaml_file_success() {
     // Clear cache before test
@@ -176,7 +169,6 @@ settings:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_load_yaml_file_not_found() {
     let ops = YamlOperations::new();
@@ -190,7 +182,6 @@ fn test_load_yaml_file_not_found() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_save_yaml_file_success() {
     // Clear cache before test
@@ -216,7 +207,6 @@ fn test_save_yaml_file_success() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_save_yaml_file_atomic_write() {
     // Clear cache before test
@@ -241,7 +231,6 @@ fn test_save_yaml_file_atomic_write() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_load_save_roundtrip() {
     // Clear cache before test
@@ -284,7 +273,6 @@ nested:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_load_yaml_files_batch() {
     // Clear cache before test
@@ -304,7 +292,6 @@ fn test_load_yaml_files_batch() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_load_yaml_files_batch_with_missing() {
     // Clear cache before test
@@ -328,7 +315,6 @@ fn test_load_yaml_files_batch_with_missing() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_hit_on_second_load() {
     clear_global_yaml_cache();
@@ -354,7 +340,6 @@ fn test_cache_hit_on_second_load() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_invalidation_on_file_modify() {
     // Clear cache before test
@@ -393,7 +378,6 @@ fn test_cache_invalidation_on_file_modify() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_disabled_always_reads() {
     clear_global_yaml_cache();
@@ -423,7 +407,6 @@ fn test_cache_disabled_always_reads() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_stats_empty() {
     clear_global_yaml_cache();
@@ -436,7 +419,6 @@ fn test_cache_stats_empty() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_stats_after_load() {
     clear_global_yaml_cache();
@@ -462,7 +444,6 @@ fn test_cache_stats_after_load() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_clear_cache() {
     // Clear cache at start to prevent pollution from other serial tests
@@ -492,7 +473,6 @@ fn test_clear_cache() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_clear_global_yaml_cache_function() {
     // Clear cache at start to prevent pollution from other serial tests
@@ -516,7 +496,6 @@ fn test_clear_global_yaml_cache_function() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_enabled_toggle() {
     let mut ops = YamlOperations::new();
@@ -538,7 +517,6 @@ fn test_cache_enabled_toggle() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_string_value_nested() {
     let ops = YamlOperations::new();
@@ -558,7 +536,6 @@ game:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_string_value_default() {
     let ops = YamlOperations::new();
@@ -570,7 +547,6 @@ fn test_get_string_value_default() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_string_value_non_string() {
     let ops = YamlOperations::new();
@@ -594,7 +570,6 @@ values:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_string_value_top_level() {
     let ops = YamlOperations::new();
@@ -606,7 +581,6 @@ fn test_get_string_value_top_level() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_vec_value_returns_strings() {
     let ops = YamlOperations::new();
@@ -627,7 +601,6 @@ game:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_vec_value_empty() {
     let ops = YamlOperations::new();
@@ -639,7 +612,6 @@ fn test_get_vec_value_empty() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_vec_value_missing_key() {
     let ops = YamlOperations::new();
@@ -651,7 +623,6 @@ fn test_get_vec_value_missing_key() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_vec_value_filters_non_strings() {
     let ops = YamlOperations::new();
@@ -672,7 +643,6 @@ mixed:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_vec_value_not_array() {
     let ops = YamlOperations::new();
@@ -684,7 +654,6 @@ fn test_get_vec_value_not_array() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_value_returns_map() {
     let ops = YamlOperations::new();
@@ -705,7 +674,6 @@ game:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_value_empty() {
     let ops = YamlOperations::new();
@@ -717,7 +685,6 @@ fn test_get_hashmap_value_empty() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_value_missing_key() {
     let ops = YamlOperations::new();
@@ -729,7 +696,6 @@ fn test_get_hashmap_value_missing_key() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_value_filters_non_strings() {
     let ops = YamlOperations::new();
@@ -753,7 +719,6 @@ mixed_map:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_value_not_map() {
     let ops = YamlOperations::new();
@@ -769,7 +734,6 @@ fn test_get_hashmap_value_not_map() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_concurrent_cache_access() {
     // Clear cache before test
@@ -798,7 +762,6 @@ fn test_concurrent_cache_access() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_concurrent_cache_reads() {
     let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
@@ -847,7 +810,6 @@ fn test_concurrent_cache_reads() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_concurrent_parse_operations() {
     let ops = Arc::new(YamlOperations::new());
@@ -876,7 +838,6 @@ fn test_concurrent_parse_operations() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_parse_empty_content() {
     let ops = YamlOperations::new();
@@ -890,7 +851,6 @@ fn test_parse_empty_content() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_parse_invalid_yaml() {
     let ops = YamlOperations::new();
@@ -906,7 +866,6 @@ fn test_parse_invalid_yaml() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_setting_empty_key_path() {
     let ops = YamlOperations::new();
@@ -921,7 +880,6 @@ fn test_set_setting_empty_key_path() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_setting_whitespace_key_path() {
     let ops = YamlOperations::new();
@@ -936,7 +894,6 @@ fn test_set_setting_whitespace_key_path() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_setting_missing_key() {
     let ops = YamlOperations::new();
@@ -948,7 +905,6 @@ fn test_get_setting_missing_key() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_setting_partial_path() {
     let ops = YamlOperations::new();
@@ -965,7 +921,6 @@ outer:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_settings_batch_with_missing_keys() {
     let ops = YamlOperations::new();
@@ -985,7 +940,6 @@ fn test_get_settings_batch_with_missing_keys() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_yaml_operations_default_trait() {
     let ops1 = YamlOperations::new();
@@ -995,7 +949,6 @@ fn test_yaml_operations_default_trait() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_nested_setting_creation() {
     let ops = YamlOperations::new();
@@ -1011,7 +964,6 @@ fn test_nested_setting_creation() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_deep_nesting() {
     let ops = YamlOperations::new();
@@ -1030,7 +982,6 @@ level1:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_parse_multi_document_returns_first() {
     let ops = YamlOperations::new();
@@ -1051,7 +1002,6 @@ second: doc2
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_yaml_with_special_characters() {
     let ops = YamlOperations::new();
@@ -1078,7 +1028,6 @@ special:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_yaml_with_anchors_and_aliases() {
     let ops = YamlOperations::new();
@@ -1111,7 +1060,6 @@ defaults: &defaults
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_setting_overwrites_non_hash() {
     let ops = YamlOperations::new();
@@ -1128,7 +1076,6 @@ fn test_set_setting_overwrites_non_hash() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_yaml_integer_types() {
     let ops = YamlOperations::new();
@@ -1155,7 +1102,6 @@ numbers:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_yaml_float_types() {
     let ops = YamlOperations::new();
@@ -1174,7 +1120,6 @@ floats:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_yaml_null_values() {
     let ops = YamlOperations::new();
@@ -1194,7 +1139,6 @@ nulls:
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_returns_ordered_map() {
     let ops = YamlOperations::new();
@@ -1223,7 +1167,6 @@ game:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_empty_map() {
     let ops = YamlOperations::new();
@@ -1235,7 +1178,6 @@ fn test_get_indexmap_value_empty_map() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_missing_key() {
     let ops = YamlOperations::new();
@@ -1247,7 +1189,6 @@ fn test_get_indexmap_value_missing_key() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_not_a_map() {
     let ops = YamlOperations::new();
@@ -1259,7 +1200,6 @@ fn test_get_indexmap_value_not_a_map() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_filters_non_string_pairs() {
     let ops = YamlOperations::new();
@@ -1283,7 +1223,6 @@ mixed:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_nested_path() {
     let ops = YamlOperations::new();
@@ -1301,7 +1240,6 @@ outer:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_indexmap_value_path_through_non_hash() {
     let ops = YamlOperations::new();
@@ -1321,7 +1259,6 @@ items:
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_with_arrays() {
     let ops = YamlOperations::new();
@@ -1354,7 +1291,6 @@ Crashlog_Stack_Check:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_with_single_strings() {
     let ops = YamlOperations::new();
@@ -1380,7 +1316,6 @@ patterns:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_mixed() {
     let ops = YamlOperations::new();
@@ -1402,7 +1337,6 @@ checks:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_missing_key() {
     let ops = YamlOperations::new();
@@ -1414,7 +1348,6 @@ fn test_get_hashmap_vec_value_missing_key() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_not_a_map() {
     let ops = YamlOperations::new();
@@ -1426,7 +1359,6 @@ fn test_get_hashmap_vec_value_not_a_map() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_filters_non_string_arrays() {
     let ops = YamlOperations::new();
@@ -1446,7 +1378,6 @@ data:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_nested_path() {
     let ops = YamlOperations::new();
@@ -1468,7 +1399,6 @@ outer:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_hashmap_vec_value_path_through_non_hash() {
     let ops = YamlOperations::new();
@@ -1488,7 +1418,6 @@ list:
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_stats_function() {
     clear_global_yaml_cache();
@@ -1515,7 +1444,6 @@ fn test_cache_stats_function() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_stats_after_operations() {
     clear_global_yaml_cache();
@@ -1547,7 +1475,6 @@ fn test_cache_stats_after_operations() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_reset_cache_stats_function() {
     clear_global_yaml_cache();
@@ -1578,7 +1505,6 @@ fn test_reset_cache_stats_function() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_cache_size_is_bounded_without_assuming_evicted_key() {
     clear_global_yaml_cache();
@@ -1608,7 +1534,6 @@ fn test_cache_size_is_bounded_without_assuming_evicted_key() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_setting_creates_intermediate_path() {
     let ops = YamlOperations::new();
@@ -1636,7 +1561,6 @@ fn test_set_setting_creates_intermediate_path() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_set_settings_batch_with_empty_key_path_fails() {
     let ops = YamlOperations::new();
@@ -1653,7 +1577,6 @@ fn test_set_settings_batch_with_empty_key_path_fails() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_string_value_from_array_root() {
     let ops = YamlOperations::new();
@@ -1669,7 +1592,6 @@ fn test_get_string_value_from_array_root() {
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_get_vec_value_from_non_hash_intermediate() {
     let ops = YamlOperations::new();
@@ -1688,7 +1610,6 @@ outer: "string_not_hash"
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_dump_yaml_with_nested_structure() {
     let ops = YamlOperations::new();
@@ -1709,7 +1630,6 @@ root:
 }
 
 #[test]
-
 #[serial_test::serial]
 fn test_dump_yaml_scalar() {
     let ops = YamlOperations::new();
@@ -1723,7 +1643,6 @@ fn test_dump_yaml_scalar() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_save_yaml_file_with_cache_disabled() {
     clear_global_yaml_cache();
@@ -1751,7 +1670,6 @@ fn test_save_yaml_file_with_cache_disabled() {
 // ============================================================================
 
 #[test]
-
 #[serial_test::serial]
 fn test_load_yaml_file_with_cache_disabled_no_cache_entry() {
     clear_global_yaml_cache();

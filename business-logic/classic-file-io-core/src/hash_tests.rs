@@ -135,8 +135,7 @@ fn test_large_file_chunked_reading() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 #[serial]
-fn test_hash_cache_stats_reset_preserves_cache_entries()
--> Result<(), Box<dyn std::error::Error>> {
+fn test_hash_cache_stats_reset_preserves_cache_entries() -> Result<(), Box<dyn std::error::Error>> {
     FileHasher::clear_cache();
     FileHasher::reset_cache_stats();
 

@@ -63,8 +63,7 @@ fn test_fcx_reset_global_state_clears_dirty_state() {
 #[test]
 #[serial_test::serial]
 fn test_orchestrator_process_log_resets_fcx_before_scan_start() {
-    let orchestrator =
-        orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
+    let orchestrator = orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
     seed_dirty_fcx_state();
 
     let result = orchestrator_process_log(&orchestrator, "missing.log");
@@ -75,12 +74,10 @@ fn test_orchestrator_process_log_resets_fcx_before_scan_start() {
 #[test]
 #[serial_test::serial]
 fn test_orchestrator_process_logs_batch_resets_fcx_before_scan_start() {
-    let orchestrator =
-        orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
+    let orchestrator = orchestrator_new_minimal("Fallout4", "auto", "Buffout 4", "F4SE").unwrap();
     seed_dirty_fcx_state();
 
-    let results =
-        orchestrator_process_logs_batch(&orchestrator, &["missing.log".to_string()], 1);
+    let results = orchestrator_process_logs_batch(&orchestrator, &["missing.log".to_string()], 1);
     assert_eq!(results.len(), 1);
     assert!(!results[0].success);
     assert_clean_fcx_state();
@@ -377,10 +374,7 @@ fn test_drain_ready_progress_events_flushes_phase_emitted_during_result_poll() {
     impl Stream for ResultAfterPhaseStream {
         type Item = BatchTaskResult;
 
-        fn poll_next(
-            mut self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Option<Self::Item>> {
+        fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
             if self.emitted {
                 return Poll::Ready(None);
             }
@@ -451,10 +445,7 @@ fn test_drain_ready_progress_events_flushes_phase_scheduled_for_next_tick() {
     impl Stream for ResultBeforeScheduledPhaseStream {
         type Item = BatchTaskResult;
 
-        fn poll_next(
-            mut self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Option<Self::Item>> {
+        fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
             if self.emitted {
                 return Poll::Ready(None);
             }
@@ -496,12 +487,9 @@ fn test_drain_ready_progress_events_flushes_phase_scheduled_for_next_tick() {
                     progress_tx: progress_tx.clone(),
                 };
 
-                let update = next_batch_update(
-                    &mut pending_progress_events,
-                    &mut progress_rx,
-                    &mut tasks,
-                )
-                .await;
+                let update =
+                    next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                        .await;
                 assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
 
                 let drained =
@@ -537,10 +525,7 @@ fn test_drain_ready_progress_events_flushes_phase_scheduled_after_multiple_yield
     impl Stream for ResultBeforeDelayedPhaseStream {
         type Item = BatchTaskResult;
 
-        fn poll_next(
-            mut self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Option<Self::Item>> {
+        fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
             if self.emitted {
                 return Poll::Ready(None);
             }
@@ -584,12 +569,9 @@ fn test_drain_ready_progress_events_flushes_phase_scheduled_after_multiple_yield
                     progress_tx: progress_tx.clone(),
                 };
 
-                let update = next_batch_update(
-                    &mut pending_progress_events,
-                    &mut progress_rx,
-                    &mut tasks,
-                )
-                .await;
+                let update =
+                    next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                        .await;
                 assert!(matches!(update, BatchUpdate::Result((0, _, _, _))));
 
                 let drained =
@@ -624,10 +606,7 @@ fn test_drain_ready_progress_events_emits_other_logs_without_rebuffering() {
     impl Stream for ResultAfterCrossLogPhasesStream {
         type Item = BatchTaskResult;
 
-        fn poll_next(
-            mut self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Option<Self::Item>> {
+        fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
             if self.emitted {
                 return Poll::Ready(None);
             }

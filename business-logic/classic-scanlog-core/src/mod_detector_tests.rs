@@ -700,9 +700,7 @@ fn test_detect_mods_important_fixture_entries_keep_gpu_exclude_and_not_installed
 
     assert!(output.contains("❓ NVIDIA High Resolution DLC is installed"));
     assert!(!output.contains("Skipped Entry"));
-    assert!(
-        output.contains("❌ Engine Fixes is not installed! Highly recommended for stability.")
-    );
+    assert!(output.contains("❌ Engine Fixes is not installed! Highly recommended for stability."));
     assert!(output.contains("Link: https://example.com/mod"));
 }
 
@@ -869,8 +867,7 @@ fn test_detect_mods_important_exclude_when_plugin_any() {
     let xse_modules: HashSet<String> = HashSet::new();
 
     let result =
-        detect_mods_important(&entries, &plugins_without_folon, Some("amd"), &xse_modules)
-            .unwrap();
+        detect_mods_important(&entries, &plugins_without_folon, Some("amd"), &xse_modules).unwrap();
     assert!(
         !result.is_empty(),
         "Entry should be shown when exclusion plugin is absent"
@@ -880,8 +877,7 @@ fn test_detect_mods_important_exclude_when_plugin_any() {
     plugins_with_folon.insert("LondonWorldspace.esm".to_string(), "01".to_string());
 
     let result =
-        detect_mods_important(&entries, &plugins_with_folon, Some("amd"), &xse_modules)
-            .unwrap();
+        detect_mods_important(&entries, &plugins_with_folon, Some("amd"), &xse_modules).unwrap();
     assert!(
         result.is_empty(),
         "Entry should be skipped when exclusion plugin is present"
@@ -928,8 +924,7 @@ fn test_detect_mods_important_gpu_not_rival_shows_installed() {
     let xse_modules: HashSet<String> = HashSet::new();
 
     // User has NVIDIA, mod is for nvidia -> shows installed
-    let result =
-        detect_mods_important(&entries, &plugins, Some("nvidia"), &xse_modules).unwrap();
+    let result = detect_mods_important(&entries, &plugins, Some("nvidia"), &xse_modules).unwrap();
     let output = result.join("");
     assert!(output.contains("✔️"));
     assert!(output.contains("installed"));

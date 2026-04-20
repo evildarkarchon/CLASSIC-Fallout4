@@ -471,8 +471,7 @@ fn test_choose_settings_write_path_prefers_existing_app_dir_file() {
     let existing_path = app_dir.join(DEFAULT_CONFIG_FILENAME);
     std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
     let existing = vec![existing_path.clone()];
-    let chosen =
-        choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
+    let chosen = choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
 
     assert_eq!(chosen, Some(existing_path));
 }
@@ -488,8 +487,7 @@ fn test_choose_settings_write_path_ignores_existing_user_dir_file_when_app_has_n
     let existing_path = user_dir.join("CLASSIC Settings.yaml");
     std::fs::write(&existing_path, "fcx_mode: true\n").unwrap();
     let existing = vec![existing_path.clone()];
-    let chosen =
-        choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
+    let chosen = choose_settings_write_path(&existing, Some(&app_dir), Some(&user_dir)).unwrap();
 
     assert_eq!(chosen, Some(app_dir.join(DEFAULT_CONFIG_FILENAME)));
 }
@@ -578,8 +576,7 @@ fn test_resolve_settings_path_uses_compatibility_fallback_when_no_dirs_are_avail
 }
 
 #[test]
-fn test_resolve_settings_write_path_does_not_use_compatibility_fallback_when_dirs_are_available()
- {
+fn test_resolve_settings_write_path_does_not_use_compatibility_fallback_when_dirs_are_available() {
     let app_dir = PathBuf::from("C:/ClassicApp");
 
     let path = resolve_settings_write_path(Some(&app_dir), None);
@@ -645,7 +642,7 @@ fn test_resolve_cache_path_prefers_user_config_dir() {
 
 #[test]
 fn test_resolve_cache_path_prefers_application_dir_compatibility_fallback_without_user_config_dir()
- {
+{
     let app_dir = PathBuf::from("C:/ClassicApp");
 
     assert_eq!(

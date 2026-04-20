@@ -4,8 +4,7 @@ use tempfile::TempDir;
 
 #[test]
 fn test_game_path_finder_new() {
-    let finder =
-        GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
+    let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
 
     assert_eq!(finder.game_exe(), "Fallout4.exe");
     assert_eq!(finder.xse_loader(), Some("f4se_loader.exe"));
@@ -30,8 +29,7 @@ fn test_validate_game_path_success() {
     fs::write(game_dir.join("Fallout4.exe"), "mock exe").unwrap();
     fs::write(game_dir.join("f4se_loader.exe"), "mock loader").unwrap();
 
-    let finder =
-        GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
+    let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
 
     let result = finder.validate_game_path(game_dir);
     assert!(result.is_ok());
@@ -62,8 +60,7 @@ fn test_validate_game_path_missing_loader() {
     // Create only the game exe, not the loader
     fs::write(game_dir.join("Fallout4.exe"), "mock exe").unwrap();
 
-    let finder =
-        GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
+    let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"), "Fallout4", false);
 
     let result = finder.validate_game_path(game_dir);
     assert!(result.is_err());

@@ -274,7 +274,6 @@ fn test_crashgen_orchestrator_get_issues_nonexistent_returns_empty() {
 #[test]
 fn test_crashgen_orchestrator_get_installed_plugins_nonexistent_returns_empty() {
     assert!(
-        crashgen_orchestrator_get_installed_plugins("nonexistent\\plugins", "Buffout4")
-            .is_empty()
+        crashgen_orchestrator_get_installed_plugins("nonexistent\\plugins", "Buffout4").is_empty()
     );
 }

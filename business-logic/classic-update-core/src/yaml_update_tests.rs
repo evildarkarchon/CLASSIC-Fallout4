@@ -290,8 +290,7 @@ fn enrich_installed_fills_from_cache_when_none() {
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
-    let enriched =
-        enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
+    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
     let entry = enriched.get("CLASSIC Main.yaml").unwrap();
     assert_eq!(
         entry.installed,
@@ -319,8 +318,7 @@ fn enrich_installed_falls_back_to_bundled_when_cache_missing() {
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
-    let enriched =
-        enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
+    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
     let entry = enriched.get("CLASSIC Main.yaml").unwrap();
     assert_eq!(entry.installed, Some(SchemaVersion::new(1, 0)));
 }
@@ -367,8 +365,7 @@ fn enrich_installed_clean_install_classified_as_up_to_date() {
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
-    let enriched =
-        enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
+    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
     let manifest = YamlManifest {
         manifest_version: 1,
         release_tag: "yaml-data-v2026.04.17".into(),
@@ -569,8 +566,7 @@ fn enrich_installed_skips_incompatible_cache_and_uses_bundled() {
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
-    let enriched =
-        enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
+    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
     let entry = enriched.get("CLASSIC Main.yaml").unwrap();
     assert_eq!(
         entry.installed,
@@ -602,8 +598,7 @@ fn enrich_installed_incompatible_cache_does_not_suppress_real_update() {
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
-    let enriched =
-        enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
+    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
     let manifest = YamlManifest {
         manifest_version: 1,
         release_tag: "yaml-data-v2026.04.18".into(),
@@ -647,8 +642,7 @@ fn resolve_cache_installed_reads_prev_when_canonical_missing() {
     .unwrap();
 
     let compat = SchemaCompat::new(1, 0);
-    let (v, sha) =
-        resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).unwrap();
+    let (v, sha) = resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).unwrap();
     assert_eq!(v, SchemaVersion::new(1, 0));
     assert_eq!(sha.len(), 64);
 }
@@ -693,9 +687,7 @@ fn resolve_cache_installed_skips_incompatible_prev() {
     .unwrap();
 
     let compat = SchemaCompat::new(1, 0);
-    assert!(
-        resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).is_none()
-    );
+    assert!(resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).is_none());
 }
 
 /// Regression for Codex adversarial review finding: update detection must
@@ -741,13 +733,15 @@ fn classify_detects_same_schema_content_churn_as_update_available() {
 
     let status = classify_manifest(manifest, &enriched).unwrap();
     match status {
-        YamlUpdateStatus::UpdateAvailable { compatible_files, .. } => {
+        YamlUpdateStatus::UpdateAvailable {
+            compatible_files, ..
+        } => {
             assert_eq!(compatible_files.len(), 1);
             assert_eq!(compatible_files[0].schema_version, "1.0");
         }
-        other => panic!(
-            "same-schema content churn must classify as UpdateAvailable, got {other:?}"
-        ),
+        other => {
+            panic!("same-schema content churn must classify as UpdateAvailable, got {other:?}")
+        }
     }
 }
 

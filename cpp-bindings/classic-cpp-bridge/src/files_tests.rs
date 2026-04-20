@@ -22,8 +22,7 @@ fn test_file_similarity_identical() {
     std::fs::write(&file1, "hello world").unwrap();
     std::fs::write(&file2, "hello world").unwrap();
 
-    let sim =
-        calculate_file_similarity(file1.to_str().unwrap(), file2.to_str().unwrap()).unwrap();
+    let sim = calculate_file_similarity(file1.to_str().unwrap(), file2.to_str().unwrap()).unwrap();
     assert!((sim - 1.0).abs() < f64::EPSILON);
 }
 

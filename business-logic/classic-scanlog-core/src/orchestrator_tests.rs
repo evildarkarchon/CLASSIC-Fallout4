@@ -3,8 +3,7 @@ use classic_shared_core::get_runtime;
 use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
-const FIXTURE_LOG_LARGE: &str =
-    include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
+const FIXTURE_LOG_LARGE: &str = include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
 
 fn make_fixture_orchestrator() -> OrchestratorCore {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
@@ -88,15 +87,8 @@ fn build_orchestrator_with_structured_mods_solu(mods_solu_yaml: &str) -> Orchest
         "auto".to_string(),
     )
     .expect("structured Mods_SOLU yaml should load");
-    let config = build_analysis_config_from_yaml(
-        &yaml,
-        "Fallout4",
-        "auto",
-        false,
-        false,
-        false,
-        Vec::new(),
-    );
+    let config =
+        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
 
     OrchestratorCore::new(config).expect("orchestrator should build")
 }
@@ -137,15 +129,8 @@ fn structured_mods_solu_log(plugins: &[(&str, &str)]) -> String {
 fn build_analysis_config_does_not_double_prefix_classic_version() {
     let yaml = make_yaml_data("CLASSIC v9.0.0");
 
-    let config = build_analysis_config_from_yaml(
-        &yaml,
-        "Fallout4",
-        "auto",
-        false,
-        false,
-        false,
-        Vec::new(),
-    );
+    let config =
+        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
 
     assert_eq!(config.classic_version, "CLASSIC v9.0.0");
 }
@@ -178,15 +163,8 @@ fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing()
         },
     );
 
-    let config = build_analysis_config_from_yaml(
-        &yaml,
-        "Fallout4",
-        "auto",
-        false,
-        false,
-        false,
-        Vec::new(),
-    );
+    let config =
+        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
 
     assert_eq!(config.crashgen_name, "Buffout 4");
     assert!(!config.crashgen_latest.is_empty());
@@ -275,15 +253,8 @@ fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
     let mut yaml = make_yaml_data("CLASSIC v9.0.0");
     yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
 
-    let config = build_analysis_config_from_yaml(
-        &yaml,
-        "Fallout4",
-        "auto",
-        false,
-        false,
-        false,
-        Vec::new(),
-    );
+    let config =
+        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
     let orchestrator = OrchestratorCore::new(config).unwrap();
     let analyzer = orchestrator.plugin_analyzer.as_ref().unwrap();
 
@@ -449,8 +420,7 @@ fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
         RuleReportBucket, RuleSeverity,
     };
 
-    let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> =
-        HashMap::new();
+    let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> = HashMap::new();
     raw_registry.insert(
         "Buffout 4".to_string(),
         classic_config_core::CrashgenEntryRaw {
@@ -507,10 +477,8 @@ fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
         .resolve_effective_crashgen_name("Addictol v1.0.0 Feb 16 2026 08:02:06", &xse_modules);
     assert_eq!(effective_name, "Addictol");
 
-    let validator = OrchestratorCore::settings_validator_for_crashgen(
-        &orchestrator.config,
-        &effective_name,
-    );
+    let validator =
+        OrchestratorCore::settings_validator_for_crashgen(&orchestrator.config, &effective_name);
     let fragments = validator
         .scan_all_settings(
             &HashMap::new(),
@@ -543,8 +511,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
         RuleReportBucket, RuleSeverity,
     };
 
-    let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> =
-        HashMap::new();
+    let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> = HashMap::new();
     raw_registry.insert(
         "Buffout 4".to_string(),
         classic_config_core::CrashgenEntryRaw {
@@ -630,7 +597,8 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
     let report_text = result.report_lines.join("");
 
     let status_line = "✅ *You have a valid version of Addictol!*";
-    let compatibility_notice = "**# ⚠️ NOTICE : Addictol and Buffout 4 are incompatible, remove one to avoid crashes. #**";
+    let compatibility_notice =
+        "**# ⚠️ NOTICE : Addictol and Buffout 4 are incompatible, remove one to avoid crashes. #**";
     let suspect_header = "### Checking for Known Crash Messages, Errors and Suspects";
 
     assert!(result.success);
@@ -873,15 +841,8 @@ fn process_log_ignores_legacy_mods_opc2_yaml_entries() {
         "auto".to_string(),
     )
     .expect("yaml fixture should load");
-    let config = build_analysis_config_from_yaml(
-        &yaml,
-        "Fallout4",
-        "auto",
-        false,
-        false,
-        false,
-        Vec::new(),
-    );
+    let config =
+        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
     let orchestrator = OrchestratorCore::new(config).expect("orchestrator should build");
 
     let log_contents = [
@@ -912,9 +873,11 @@ fn process_log_ignores_legacy_mods_opc2_yaml_entries() {
     let report_text = result.report_lines.join("");
 
     assert!(result.success);
-    assert!(!report_text.contains(
-        "### Checking For Mods That Are Outdated, Redundant, or Have Community Patches"
-    ));
+    assert!(
+        !report_text.contains(
+            "### Checking For Mods That Are Outdated, Redundant, or Have Community Patches"
+        )
+    );
 }
 
 #[test]
@@ -932,11 +895,9 @@ fn process_log_renders_structured_mods_solu_any_matches() {
         "      It causes crashes and stutter.\n"
     ));
     let log_contents = structured_mods_solu_log(&[("01", "DLCUltraHighResolution.esp")]);
-    let processed_lines = orchestrator.reformat_crash_data_inline(
-        &log_contents.lines().map(str::to_string).collect::<Vec<_>>(),
-    );
-    let context =
-        ScanAnalysisContext::from_processed_lines(&orchestrator.parser, processed_lines);
+    let processed_lines = orchestrator
+        .reformat_crash_data_inline(&log_contents.lines().map(str::to_string).collect::<Vec<_>>());
+    let context = ScanAnalysisContext::from_processed_lines(&orchestrator.parser, processed_lines);
     assert!(
         !context.plugin_lines.is_empty(),
         "plugin segment should not be empty"

@@ -337,9 +337,7 @@ fn concurrent_installs_preserve_known_good_prev() {
     // holding bytes from an in-progress rename, which would fail here.
     let prev_bytes = read_file(&prev);
     assert!(
-        prev_bytes == b"ORIGINAL"
-            || prev_bytes == b"PAYLOAD-A"
-            || prev_bytes == b"PAYLOAD-B",
+        prev_bytes == b"ORIGINAL" || prev_bytes == b"PAYLOAD-A" || prev_bytes == b"PAYLOAD-B",
         "`.prev` must contain a known installed version, not interleaved garbage. Got: {:?}",
         String::from_utf8_lossy(&prev_bytes)
     );
@@ -395,10 +393,7 @@ fn concurrent_install_and_rollback_serialize_cleanly() {
     let result_install = handle_install.join().unwrap();
     let result_rollback = handle_rollback.join().unwrap();
 
-    assert!(
-        result_install.is_ok(),
-        "install failed: {result_install:?}"
-    );
+    assert!(result_install.is_ok(), "install failed: {result_install:?}");
     assert!(
         result_rollback.is_ok(),
         "rollback failed: {result_rollback:?}"

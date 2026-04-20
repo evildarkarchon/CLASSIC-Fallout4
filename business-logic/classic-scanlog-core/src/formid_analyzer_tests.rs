@@ -8,8 +8,7 @@ async fn create_formid_test_database(
     table_name: &str,
     entries: &[(&str, &str, &str)],
 ) -> (NamedTempFile, PathBuf) {
-    let temp_file =
-        NamedTempFile::with_suffix(".db").expect("failed to create temp sqlite file");
+    let temp_file = NamedTempFile::with_suffix(".db").expect("failed to create temp sqlite file");
     let db_path = temp_file.path().to_path_buf();
     let conn_str = format!("sqlite://{}?mode=rwc", db_path.display());
 

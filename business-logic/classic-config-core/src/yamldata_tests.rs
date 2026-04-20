@@ -1024,12 +1024,9 @@ async fn test_load_from_yaml_files_success() {
     // Use the 2-element API (root_dir, data_dir)
     let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_ok(), "Load failed: {:?}", result.err());
     let config = result.unwrap();
@@ -1062,12 +1059,9 @@ async fn test_load_from_yaml_files_with_three_dirs() {
     // Use the 3-element API
     let yaml_dirs = vec![main_dir, game_dir, ignore_dir];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_ok(), "Load failed: {:?}", result.err());
     let config = result.unwrap();
@@ -1079,12 +1073,9 @@ async fn test_load_from_yaml_files_invalid_dir_count() {
     // Provide only 1 directory (invalid)
     let yaml_dirs = vec![PathBuf::from("/some/path")];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -1101,12 +1092,9 @@ async fn test_load_from_yaml_files_invalid_four_dirs() {
         PathBuf::from("/d"),
     ];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -1133,12 +1121,9 @@ async fn test_load_from_yaml_files_missing_main_file() {
 
     let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -1161,12 +1146,9 @@ async fn test_load_from_yaml_files_missing_game_file() {
 
     let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -1189,12 +1171,9 @@ async fn test_load_from_yaml_files_missing_ignore_file() {
 
     let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -1229,12 +1208,9 @@ CLASSIC_Ignore_TestGame:
 
     let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "TestGame".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "TestGame".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_ok());
     let config = result.unwrap();
@@ -1265,12 +1241,9 @@ async fn test_load_from_yaml_files_game_info_loading() {
 
     let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-    let result = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        "auto".to_string(),
-    )
-    .await;
+    let result =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
+            .await;
 
     assert!(result.is_ok());
     let config = result.unwrap();

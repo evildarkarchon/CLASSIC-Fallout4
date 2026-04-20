@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn test_integration_message_with_formatting() {
-    let msg = Message::new("Success! ✅", MessageType::Success)
-        .with_details("Operation completed 🎉");
+    let msg =
+        Message::new("Success! ✅", MessageType::Success).with_details("Operation completed 🎉");
 
     // Format for logging
     let log_text = format_log_message(msg.content(), msg.details());
@@ -20,8 +20,7 @@ fn test_integration_message_with_formatting() {
 #[test]
 fn test_integration_message_routing() {
     let gui_msg = Message::with_target("GUI message", MessageType::Info, MessageTarget::Gui);
-    let cli_msg =
-        Message::with_target("CLI message", MessageType::Info, MessageTarget::Console);
+    let cli_msg = Message::with_target("CLI message", MessageType::Info, MessageTarget::Console);
     let all_msg = Message::new("All message", MessageType::Info);
 
     assert!(gui_msg.target().should_display_in_gui());

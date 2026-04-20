@@ -69,8 +69,7 @@ fn test_url_error_from_url() {
 
 #[test]
 fn test_json_error_from_serde() {
-    let json_err: serde_json::Error =
-        serde_json::from_str::<String>("invalid json").unwrap_err();
+    let json_err: serde_json::Error = serde_json::from_str::<String>("invalid json").unwrap_err();
     let err: UpdateError = json_err.into();
 
     let display = format!("{}", err);

@@ -52,7 +52,8 @@ fn plugin_analyzer_and_settings_validator_dead_fallbacks_do_not_reappear() {
     );
     assert!(
         SETTINGS_VALIDATOR_RS.contains("test_production_configs_never_hit_legacy_fallback")
-            || SETTINGS_VALIDATOR_TESTS_RS.contains("test_production_configs_never_hit_legacy_fallback"),
+            || SETTINGS_VALIDATOR_TESTS_RS
+                .contains("test_production_configs_never_hit_legacy_fallback"),
         "settings_validator should keep the invariant test proving production configs never need the legacy fallback (inline or sibling _tests.rs)"
     );
 }

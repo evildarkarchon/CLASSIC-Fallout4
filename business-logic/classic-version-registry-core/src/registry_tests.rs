@@ -101,8 +101,7 @@ fn test_match_version_exact() {
 fn test_get_address_library_filename() {
     let registry = create_test_registry();
 
-    let filename =
-        registry.get_address_library_filename(&GameVersion::new(1, 10, 163, 0), false);
+    let filename = registry.get_address_library_filename(&GameVersion::new(1, 10, 163, 0), false);
 
     assert_eq!(filename, Some("version-1-10-163-0.bin".to_string()));
 }

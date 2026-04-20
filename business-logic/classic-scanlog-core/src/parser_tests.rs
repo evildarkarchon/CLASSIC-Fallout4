@@ -423,7 +423,8 @@ fn test_parse_crash_header_detects_addictol_version_line() {
     let lines = vec![
         "Fallout 4 v1.11.191".to_string(),
         "Addictol v1.0.0 Feb 16 2026 08:02:06".to_string(),
-        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7380973B8 Fallout4.exe+21773B8".to_string(),
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7380973B8 Fallout4.exe+21773B8"
+            .to_string(),
     ];
 
     let header = parser.parse_crash_header(&lines).unwrap();
@@ -439,7 +440,8 @@ fn test_parse_crash_header_tolerates_leading_quote_noise() {
     let lines = vec![
         "`Fallout 4 v1.11.191".to_string(),
         "\"Addictol v1.0.0 Feb 16 2026 08:02:06".to_string(),
-        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7380973B8 Fallout4.exe+21773B8".to_string(),
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7380973B8 Fallout4.exe+21773B8"
+            .to_string(),
     ];
 
     let header = parser.parse_crash_header(&lines).unwrap();

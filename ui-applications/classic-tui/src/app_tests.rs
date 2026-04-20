@@ -158,8 +158,7 @@ fn poll_results_refreshes_when_snapshot_changes() {
 #[test]
 fn resolve_xse_folder_uses_docs_root_for_fo4() {
     let mut app = App::new_for_testing();
-    app.config.paths.docs_root =
-        Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
+    app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
     app.config.game_version = "auto".to_string();
 
     let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");

@@ -93,8 +93,7 @@ async fn test_generate_all_files() {
     let generator = FileGenerator::new(config);
 
     // Generate all files
-    let (ignore_generated, local_generated) =
-        generator.generate_all_files_async().await.unwrap();
+    let (ignore_generated, local_generated) = generator.generate_all_files_async().await.unwrap();
 
     assert!(ignore_generated, "Ignore file should be generated");
     assert!(local_generated, "Local YAML should be generated");
@@ -104,8 +103,7 @@ async fn test_generate_all_files() {
     assert!(PathBuf::from("CLASSIC Data/CLASSIC TestGame Local.yaml").exists());
 
     // Second generation should return false for both
-    let (ignore_generated, local_generated) =
-        generator.generate_all_files_async().await.unwrap();
+    let (ignore_generated, local_generated) = generator.generate_all_files_async().await.unwrap();
 
     assert!(!ignore_generated, "Ignore file should not be regenerated");
     assert!(!local_generated, "Local YAML should not be regenerated");

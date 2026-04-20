@@ -501,8 +501,7 @@ async fn test_single_and_batch_cache_hit_miss_parity() {
     let entries = [("PARITY01", "ParityCase.esp", "Parity Value")];
     let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
 
-    let single_pool =
-        DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+    let single_pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
     single_pool.initialize(vec![db_path.clone()]).await.unwrap();
     assert_eq!(
         single_pool
@@ -524,8 +523,7 @@ async fn test_single_and_batch_cache_hit_miss_parity() {
     assert_eq!(single_stats.cache_hits, 1);
     single_pool.close().await.unwrap();
 
-    let batch_pool =
-        DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+    let batch_pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
     batch_pool.initialize(vec![db_path]).await.unwrap();
 
     let first_batch = batch_pool
@@ -686,16 +684,14 @@ fn test_cache_eviction_deterministic_oldest_first() {
             .contains_key(&CacheKey::new("TestTable", "00000001", "plugin.esp")),
         "Oldest key should be evicted first"
     );
-    assert!(pool.query_cache.contains_key(&CacheKey::new(
-        "TestTable",
-        "00000002",
-        "plugin.esp"
-    )));
-    assert!(pool.query_cache.contains_key(&CacheKey::new(
-        "TestTable",
-        "00000003",
-        "plugin.esp"
-    )));
+    assert!(
+        pool.query_cache
+            .contains_key(&CacheKey::new("TestTable", "00000002", "plugin.esp"))
+    );
+    assert!(
+        pool.query_cache
+            .contains_key(&CacheKey::new("TestTable", "00000003", "plugin.esp"))
+    );
 
     let stats = pool.get_stats().unwrap();
     assert_eq!(stats.cache_evictions, 1, "Should record one eviction");
@@ -1300,10 +1296,8 @@ fn test_ttl_constants() {
     const _: () = assert!(DEFAULT_QUERY_CACHE_CAPACITY < MAX_QUERY_CACHE_CAPACITY);
     const _: () = assert!(MIN_CACHE_CLEANUP_OP_THRESHOLD < DEFAULT_CACHE_CLEANUP_OP_THRESHOLD);
     const _: () = assert!(DEFAULT_CACHE_CLEANUP_OP_THRESHOLD < MAX_CACHE_CLEANUP_OP_THRESHOLD);
-    const _: () =
-        assert!(MIN_CACHE_CLEANUP_INTERVAL_SECS < DEFAULT_CACHE_CLEANUP_INTERVAL_SECS);
-    const _: () =
-        assert!(DEFAULT_CACHE_CLEANUP_INTERVAL_SECS < MAX_CACHE_CLEANUP_INTERVAL_SECS);
+    const _: () = assert!(MIN_CACHE_CLEANUP_INTERVAL_SECS < DEFAULT_CACHE_CLEANUP_INTERVAL_SECS);
+    const _: () = assert!(DEFAULT_CACHE_CLEANUP_INTERVAL_SECS < MAX_CACHE_CLEANUP_INTERVAL_SECS);
 }
 
 #[test]

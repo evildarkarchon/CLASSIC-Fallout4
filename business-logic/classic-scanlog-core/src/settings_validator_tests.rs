@@ -2,8 +2,8 @@ use super::*;
 use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use classic_config_core::{
     CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity,
-    RuleTarget, TargetValueType,
+    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
+    TargetValueType,
 };
 
 fn make_buffout_entry() -> CrashgenEntry {
@@ -126,8 +126,7 @@ fn test_both_entries_run_check_disabled_settings() {
     crashgen.insert("SomeSetting".to_string(), "false".to_string());
 
     // Buffout with ignore list: SomeSetting not in ignore list → should flag
-    let buffout_validator =
-        SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
+    let buffout_validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
     let buffout_result = buffout_validator
         .check_disabled_settings(&crashgen)
         .unwrap();
@@ -137,8 +136,7 @@ fn test_both_entries_run_check_disabled_settings() {
     );
 
     // Addictol with empty ignore list: should also flag
-    let addictol_validator =
-        SettingsValidator::new("Addictol".to_string(), make_addictol_entry());
+    let addictol_validator = SettingsValidator::new("Addictol".to_string(), make_addictol_entry());
     let addictol_result = addictol_validator
         .check_disabled_settings(&crashgen)
         .unwrap();

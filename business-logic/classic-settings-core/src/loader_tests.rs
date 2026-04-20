@@ -102,8 +102,7 @@ fn test_merge_yaml_documents_empty_stream_is_error() {
 
 #[test]
 fn test_merge_yaml_documents_rejects_non_mapping_documents() {
-    let docs =
-        parse_yaml_content("memory://settings.yaml", "key: value\n---\n- item\n").unwrap();
+    let docs = parse_yaml_content("memory://settings.yaml", "key: value\n---\n- item\n").unwrap();
 
     let err = merge_yaml_documents("memory://settings.yaml", &docs).unwrap_err();
 
