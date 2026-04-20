@@ -56,10 +56,19 @@
 
 pub mod error;
 pub mod github;
+pub mod yaml_update;
 
 // Re-export key types for convenience
 pub use error::{Result, UpdateError};
 pub use github::{GithubAsset, GithubClient, GithubRelease};
+pub use yaml_update::{
+    ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME,
+    FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome,
+    SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport,
+    YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update,
+    classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update,
+    validate_manifest,
+};
 
 /// Version of the classic-update-core crate.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

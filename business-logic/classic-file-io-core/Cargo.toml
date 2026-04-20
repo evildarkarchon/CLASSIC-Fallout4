@@ -38,6 +38,11 @@ regex = { workspace = true }
 # Hashing
 sha2 = "0.10"
 
+# Cross-process file locking for atomic install / rollback serialization.
+# `fs4` is an actively-maintained fork of `fs2`; we pick it for the `fs_std`
+# feature that adds `lock_exclusive` / `try_lock_exclusive` to std::fs::File.
+fs4 = { version = "0.12", features = ["sync"] }
+
 # Error handling
 anyhow = { workspace = true }
 thiserror = { workspace = true }

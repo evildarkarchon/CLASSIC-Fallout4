@@ -19,7 +19,7 @@ from .fixtures.tier1_parity_fixtures import (
 )
 
 
-THIS_SUITE = "ClassicLib-rs/python-bindings/tests/test_tier1_parity_smoke.py"
+THIS_SUITE = "python-bindings/tests/test_tier1_parity_smoke.py"
 
 
 def test_imports_and_versions() -> None:
@@ -186,10 +186,9 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
         classic_scanlog.extract_formids_batch([["Form ID: FF001234"]]), list
     )
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[2]
     log_path = (
         repo_root
-        / "ClassicLib-rs"
         / "business-logic"
         / "classic-scanlog-core"
         / "benches"
@@ -529,10 +528,9 @@ def test_parse_segments_parallel_deprecation_warning() -> None:
     import classic_scanlog
 
     parser = classic_scanlog.LogParser()
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[2]
     log_path = (
         repo_root
-        / "ClassicLib-rs"
         / "business-logic"
         / "classic-scanlog-core"
         / "benches"

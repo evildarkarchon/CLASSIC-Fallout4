@@ -15,6 +15,7 @@
 //! - SHA256 file hashing with caching
 //! - Configuration file generation (Phase 5)
 
+pub mod atomic_install;
 pub mod backup;
 pub mod core;
 pub mod dds;
@@ -26,6 +27,9 @@ pub mod hash;
 pub mod log_collection;
 pub mod similarity;
 
+pub use atomic_install::{
+    InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal,
+};
 pub use backup::{BackupInfo, BackupManager, BackupType};
 pub use core::FileIOCore;
 pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};

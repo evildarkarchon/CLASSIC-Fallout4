@@ -47,6 +47,73 @@ pub enum UpdateError {
     /// Generic update error
     #[error("Update error: {0}")]
     Generic(String),
+
+    /// A fetched manifest is structurally invalid (missing required field,
+    /// empty `files` array, malformed sub-field, etc.).
+    ///
+    /// Produced by `yaml_update::fetch_yaml_manifest` when the manifest
+    /// deserializes but fails post-parse validation.
+    #[error("manifest invalid: {reason}")]
+    ManifestInvalid {
+        /// Human-readable diagnostic identifying the offending field or shape.
+        reason: String,
+    },
+
+    /// The fetched manifest carries a `manifest_version` the client does not
+    /// know how to parse. The client declares its `MAX_MANIFEST_VERSION`
+    /// constant in `yaml_update`; newer servers emitting a higher version
+    /// number must stay backward-compatible or the client refuses the manifest.
+    #[error("manifest_version {found} not supported (max supported: {max_supported})")]
+    ManifestUnsupportedVersion {
+        /// The `manifest_version` the server sent.
+        found: u32,
+        /// The highest `manifest_version` this client can parse.
+        max_supported: u32,
+    },
+
+    /// SHA-256 of a downloaded file disagrees with the manifest-declared
+    /// value. Produced by `yaml_update::apply_yaml_update` when
+    /// `install_atomic` returns `FileIOError::ChecksumMismatch`; surfaced as
+    /// an update-layer error so GUI/CLI callers can pattern-match without
+    /// reaching into the file-io crate's error taxonomy.
+    #[error("SHA-256 mismatch for {file}: expected {expected}, got {actual}")]
+    ChecksumMismatch {
+        /// Manifest-declared file name (e.g. `CLASSIC Main.yaml`).
+        file: String,
+        /// Hex-encoded digest the manifest claimed.
+        expected: String,
+        /// Hex-encoded digest we actually computed from the downloaded bytes.
+        actual: String,
+    },
+
+    /// The user set `Update Check: false` but still invoked apply. The
+    /// caller (bridge, binding, CLI) must surface this as a user-visible
+    /// message and not retry silently. No HTTP was issued.
+    ///
+    /// Produced by `yaml_update::apply_yaml_update_with_decision` when the
+    /// passed `UpdateCheckConfig` is disabled. Apply deliberately refuses
+    /// to run without an explicit enabled flag — the check-time decision
+    /// alone is not enough, because the user may toggle the setting off
+    /// between review and apply.
+    #[error("update check is disabled; apply refused")]
+    UpdateCheckDisabled,
+
+    /// The reviewed decision no longer matches the live manifest. The
+    /// user approved release `approved`, but the manifest we just fetched
+    /// is tagged `manifest`. Installing anyway would replace files the
+    /// user never reviewed. No files were installed.
+    ///
+    /// Produced by `yaml_update::apply_yaml_update_with_decision` when
+    /// `YamlManifest::release_tag` differs from
+    /// `ApprovedUpdate::release_tag`. The GUI / CLI should prompt the
+    /// user to re-check and re-review.
+    #[error("approved release `{approved}` does not match current manifest release `{manifest}`; re-check required")]
+    DecisionStale {
+        /// Release tag the user approved at review time.
+        approved: String,
+        /// Release tag the freshly-fetched manifest actually advertises.
+        manifest: String,
+    },
 }
 
 /// Result type alias for update operations.

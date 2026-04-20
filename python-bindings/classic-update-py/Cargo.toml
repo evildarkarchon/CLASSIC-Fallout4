@@ -14,6 +14,10 @@ crate-type = ["cdylib", "rlib"]  # cdylib for Python, rlib for Rust consumers
 [dependencies]
 # Core business logic (pure Rust - NO PyO3)
 classic-update-core = { path = "../../business-logic/classic-update-core" }
+# YAML-update DTO inputs need SchemaCompat/SchemaVersion
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+# YAML-update orchestrator runs via the shared runtime
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 # PyO3 for Python bindings
 pyo3 = { workspace = true }

@@ -21,6 +21,10 @@ classic-registry-core = { path = "../classic-registry-core" }
 classic-settings-core = { path = "../classic-settings-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
+# Path resolution (yaml cache directory) and atomic install / rollback
+classic-path-core = { path = "../classic-path-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }
 

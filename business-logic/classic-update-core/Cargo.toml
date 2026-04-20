@@ -17,6 +17,11 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # proper semver with pre-release support (e.g., 8.0.0-beta.1), while
 # classic-version-core is designed for lenient game version parsing.
 
+# YAML update delivery dependencies
+classic-settings-core = { path = "../classic-settings-core" }
+classic-path-core = { path = "../classic-path-core" }
+classic-file-io-core = { path = "../classic-file-io-core" }
+
 # Async runtime
 tokio = { workspace = true, features = ["full"] }
 futures = { workspace = true }
@@ -47,6 +52,13 @@ url = "2.5"
 [dev-dependencies]
 tempfile = { workspace = true }
 mockito = "1.5"  # HTTP mocking for tests
+tokio = { workspace = true, features = ["full", "test-util"] }
+# Integration tests in tests/yaml_update_tests.rs need direct
+# classic-settings-core access to build SchemaCompat/SchemaVersion fixtures.
+classic-settings-core = { path = "../classic-settings-core" }
+# Integration tests use FileHasher to compute bundled-file sha256 that must
+# match the mocked manifest.json for the UpToDate branch assertion.
+classic-file-io-core = { path = "../classic-file-io-core" }
 
 [lints.rust]
 deprecated = "deny"

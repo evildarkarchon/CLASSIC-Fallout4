@@ -129,6 +129,17 @@ impl GithubClient {
     /// Environment variable name for GitHub token.
     const GITHUB_TOKEN_ENV: &'static str = "GITHUB_TOKEN";
 
+    /// Page size for `/releases` pagination. GitHub caps this at 100; we
+    /// pick the max so the common case (a handful of `yaml-data-v*` tags
+    /// interleaved with binary releases) finishes in a single request.
+    const RELEASES_PER_PAGE: u32 = 100;
+
+    /// Upper bound on pages walked by `get_all_releases`. With
+    /// `RELEASES_PER_PAGE = 100`, this caps the fetch at 1,000 releases —
+    /// well beyond this repo's actual history — while keeping a
+    /// pathological or malicious response from looping indefinitely.
+    const MAX_RELEASES_PAGES: u32 = 10;
+
     /// Creates a new GitHub client for the specified repository.
     ///
     /// Automatically loads environment variables from a `.env` file if present,
@@ -213,6 +224,50 @@ impl GithubClient {
         })
     }
 
+    /// Creates a client with an explicit API base URL and token, intended for
+    /// unit tests that mock the GitHub API (e.g. via `mockito::Server`).
+    ///
+    /// Production code should prefer [`GithubClient::new`] or
+    /// [`GithubClient::with_token`]; this constructor exists only so tests can
+    /// redirect the API-fallback leg of `fetch_yaml_manifest` without
+    /// otherwise reimplementing the client.
+    pub fn with_base_url(
+        owner: impl Into<String>,
+        repo: impl Into<String>,
+        base_url: impl Into<String>,
+        token: Option<String>,
+    ) -> Result<Self> {
+        let client = Client::builder()
+            .timeout(Self::API_TIMEOUT)
+            .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
+            .build()?;
+
+        Ok(Self {
+            owner: owner.into(),
+            repo: repo.into(),
+            client,
+            base_url: base_url.into(),
+            token: token.filter(|t| !t.is_empty()),
+        })
+    }
+
+    /// Returns the underlying `reqwest::Client` so sibling modules (namely
+    /// `yaml_update`) can issue GETs against arbitrary URLs (e.g. GitHub
+    /// Pages or release-asset CDN URLs) through the same connection-pooled
+    /// client with the same user agent and timeout.
+    pub(crate) fn http_client(&self) -> &Client {
+        &self.client
+    }
+
+    /// Returns the (optional) authentication token the client was built with.
+    /// Used by the YAML-update fetch path to reuse the same opportunistic
+    /// `Authorization: Bearer` header applied by [`build_request`] — without
+    /// ever synthesizing a token that wasn't already present in the process
+    /// environment.
+    pub(crate) fn token(&self) -> Option<&str> {
+        self.token.as_deref()
+    }
+
     /// Builds a request with optional authentication headers.
     fn build_request(&self, url: &str) -> reqwest::RequestBuilder {
         let mut request = self.client.get(url);
@@ -287,6 +342,22 @@ impl GithubClient {
     ///
     /// Returns a vector of releases, sorted by publication date (newest first).
     ///
+    /// # Pagination
+    ///
+    /// GitHub's `/releases` endpoint paginates at 30 items per page by
+    /// default (configurable up to 100). This method requests
+    /// `per_page = RELEASES_PER_PAGE` and walks pages until the API returns
+    /// a short page (fewer items than requested) or until
+    /// `MAX_RELEASES_PAGES` have been fetched, whichever comes first. The
+    /// cap exists so a pathological or malicious response can't turn this
+    /// into an unbounded request loop.
+    ///
+    /// This matters for the YAML-data fallback path
+    /// (`fetch_from_releases_api`), which filters for `yaml-data-v*` tags
+    /// that are interleaved with binary releases. Without pagination, the
+    /// newest YAML release can fall off the first page as history grows
+    /// and a Pages-blocked client would spuriously report `NotFound`.
+    ///
     /// # Errors
     ///
     /// - `UpdateError::HttpError` if the HTTP request or JSON deserialization fails
@@ -312,35 +383,55 @@ impl GithubClient {
         include_prereleases: bool,
         include_drafts: bool,
     ) -> Result<Vec<GithubRelease>> {
-        let url = format!(
+        let base_path = format!(
             "{}/repos/{}/{}/releases",
             self.base_url, self.owner, self.repo
         );
 
-        let response = self
-            .build_request(&url)
-            .send()
-            .await
-            .map_err(UpdateError::HttpError)?;
+        let mut all: Vec<GithubRelease> = Vec::new();
+        for page in 1..=Self::MAX_RELEASES_PAGES {
+            let url = format!(
+                "{}?per_page={}&page={}",
+                base_path,
+                Self::RELEASES_PER_PAGE,
+                page
+            );
 
-        match response.status() {
-            reqwest::StatusCode::OK => {
-                let mut releases: Vec<GithubRelease> =
-                    response.json().await.map_err(UpdateError::HttpError)?;
+            let response = self
+                .build_request(&url)
+                .send()
+                .await
+                .map_err(UpdateError::HttpError)?;
 
-                // Filter based on preferences
-                releases.retain(|r| {
-                    (include_prereleases || !r.prerelease) && (include_drafts || !r.draft)
-                });
+            let page_releases: Vec<GithubRelease> = match response.status() {
+                reqwest::StatusCode::OK => response.json().await.map_err(UpdateError::HttpError)?,
+                reqwest::StatusCode::FORBIDDEN => {
+                    return Err(UpdateError::RateLimitExceeded(None));
+                }
+                status => {
+                    return Err(UpdateError::GithubError(format!(
+                        "API returned status {}",
+                        status
+                    )));
+                }
+            };
 
-                Ok(releases)
+            let page_len = page_releases.len();
+            all.extend(page_releases);
+
+            // A short page (or an empty page) means we've seen the tail;
+            // no need to ask for another one. This correctly handles both
+            // the "fewer than per_page on the last page" case and the
+            // "page beyond the last has zero items" case.
+            if page_len < Self::RELEASES_PER_PAGE as usize {
+                break;
             }
-            reqwest::StatusCode::FORBIDDEN => Err(UpdateError::RateLimitExceeded(None)),
-            status => Err(UpdateError::GithubError(format!(
-                "API returned status {}",
-                status
-            ))),
         }
+
+        // Filter based on preferences
+        all.retain(|r| (include_prereleases || !r.prerelease) && (include_drafts || !r.draft));
+
+        Ok(all)
     }
 
     /// Checks if a newer version is available compared to the current version.

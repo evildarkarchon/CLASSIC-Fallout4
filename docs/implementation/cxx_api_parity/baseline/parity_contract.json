@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-12T23:04:42Z",
+  "generated_at_utc": "2026-04-19T13:35:38Z",
   "schema_version": 1,
   "entries": [
     {
@@ -5605,6 +5605,97 @@
       }
     },
     {
+      "id": "0eeee967af4cfa2d",
+      "rustSymbol": "yaml_apply_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "pages_url",
+            "type": "&str"
+          },
+          {
+            "name": "tag_prefix",
+            "type": "&str"
+          },
+          {
+            "name": "entries",
+            "type": "&Vec<YamlClientSchemaEntryDto>"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "approved_release_tag",
+            "type": "&str"
+          },
+          {
+            "name": "approved_file_names",
+            "type": "&Vec<String>"
+          },
+          {
+            "name": "bundled_yaml_dir",
+            "type": "&str"
+          }
+        ],
+        "returnType": "YamlUpdateReportDto"
+      }
+    },
+    {
+      "id": "ce26959df3d010dd",
+      "rustSymbol": "yaml_check_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "pages_url",
+            "type": "&str"
+          },
+          {
+            "name": "tag_prefix",
+            "type": "&str"
+          },
+          {
+            "name": "entries",
+            "type": "&Vec<YamlClientSchemaEntryDto>"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "bundled_yaml_dir",
+            "type": "&str"
+          }
+        ],
+        "returnType": "YamlUpdateStatusDto"
+      }
+    },
+    {
+      "id": "9b1acfc60be56622",
+      "rustSymbol": "yaml_rollback_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "file_name",
+            "type": "&str"
+          }
+        ],
+        "returnType": "YamlRollbackOutcomeDto"
+      }
+    },
+    {
       "id": "fdf05d86cfb41258",
       "rustSymbol": "UpdateCheckResult",
       "kind": "struct",
@@ -5622,6 +5713,186 @@
         },
         {
           "name": "release_notes",
+          "type": "String"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "8aef2c1cfc7c97cf",
+      "rustSymbol": "YamlClientSchemaEntryDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "accepted_major",
+          "type": "u32"
+        },
+        {
+          "name": "accepted_minimum_minor",
+          "type": "u32"
+        },
+        {
+          "name": "has_installed",
+          "type": "bool"
+        },
+        {
+          "name": "installed_major",
+          "type": "u32"
+        },
+        {
+          "name": "installed_minor",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "c7d8aa1ee5aed27e",
+      "rustSymbol": "YamlRollbackOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "rolled_back",
+          "type": "bool"
+        },
+        {
+          "name": "file_name",
+          "type": "String"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "ee8abce557bf4560",
+      "rustSymbol": "YamlUpdateFileDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "schema_version",
+          "type": "String"
+        },
+        {
+          "name": "sha256",
+          "type": "String"
+        },
+        {
+          "name": "size_bytes",
+          "type": "u64"
+        },
+        {
+          "name": "download_url",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "c77712b2140e1ebe",
+      "rustSymbol": "YamlUpdateFileOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "installed",
+          "type": "bool"
+        },
+        {
+          "name": "schema_version",
+          "type": "String"
+        },
+        {
+          "name": "created_prev",
+          "type": "bool"
+        },
+        {
+          "name": "failure_reason",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "7d9f8579b4faec8a",
+      "rustSymbol": "YamlUpdateReportDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "installed",
+          "type": "Vec<YamlUpdateFileOutcomeDto>"
+        },
+        {
+          "name": "failed",
+          "type": "Vec<YamlUpdateFileOutcomeDto>"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "10e249f28357e5aa",
+      "rustSymbol": "YamlUpdateStatusDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "tag",
+          "type": "u32"
+        },
+        {
+          "name": "release_tag",
+          "type": "String"
+        },
+        {
+          "name": "published_at",
+          "type": "String"
+        },
+        {
+          "name": "compatible_files",
+          "type": "Vec<YamlUpdateFileDto>"
+        },
+        {
+          "name": "incompatible_files",
+          "type": "Vec<YamlUpdateFileDto>"
+        },
+        {
+          "name": "incompatible_reasons",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "unknown_reason",
           "type": "String"
         },
         {

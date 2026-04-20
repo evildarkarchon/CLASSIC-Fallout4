@@ -29,6 +29,16 @@ jobs:
       - name: Run Python stub validation gate
         run: python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 
+      # Drift guard: checked-in YAML `schema_version` headers vs the
+      # `client_schemas::*` constants in classic-config-core. Fails when a
+      # shippable YAML file's header would be refused at load time by the
+      # current client binary — i.e., the two sides of the contract drifted.
+      - name: Install ruamel.yaml for drift guards
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
+      - name: Run YAML schema-version drift guard
+        run: python tools/schema_version_gate.py --repo-root .
+
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v6

@@ -14,10 +14,9 @@ def _import_classic_scanlog():
     if "classic_scanlog" in sys.modules:
         return sys.modules["classic_scanlog"]
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = Path(__file__).resolve().parents[2]
     manifest_path = (
         repo_root
-        / "ClassicLib-rs"
         / "python-bindings"
         / "classic-scanlog-py"
         / "Cargo.toml"
@@ -35,7 +34,7 @@ def _import_classic_scanlog():
         cwd=repo_root,
     )
 
-    target_dir = repo_root / "ClassicLib-rs" / "target" / "debug"
+    target_dir = repo_root / "target" / "debug"
     deps_dir = target_dir / "deps"
     dll_path = target_dir / "classic_scanlog.dll"
     pyd_path = target_dir / "classic_scanlog.pyd"

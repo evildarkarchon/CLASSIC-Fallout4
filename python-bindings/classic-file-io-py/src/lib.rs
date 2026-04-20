@@ -161,6 +161,16 @@ pub fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
         FileIOError::InvalidPath(s) => {
             RustFileIOParseError::new_err(format!("Invalid path: {}", s))
         }
+        FileIOError::ChecksumMismatch {
+            path,
+            expected,
+            actual,
+        } => RustFileIOParseError::new_err(format!(
+            "SHA-256 mismatch for {}: expected {}, got {}",
+            path.display(),
+            expected,
+            actual
+        )),
 
         // Generic errors map to base RustFileIOError
         FileIOError::JoinError(e) => RustFileIOError::new_err(format!("Task error: {}", e)),

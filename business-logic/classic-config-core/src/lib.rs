@@ -10,13 +10,19 @@
 //! This crate uses the shared global Tokio runtime from classic-shared-core.
 //! All async operations use `classic_shared_core::get_runtime().block_on()`.
 
+pub mod client_schemas;
 pub mod config;
 pub mod crashgen_rules;
+pub mod shippable;
 pub mod yamldata;
 
 pub use crashgen_rules::*;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
+pub use shippable::{
+    CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError,
+    load_shippable_yaml, load_shippable_yaml_with_env,
+};
 pub use yamldata::{
     ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry,
     ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule,

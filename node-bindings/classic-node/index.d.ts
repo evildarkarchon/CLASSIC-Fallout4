@@ -1306,6 +1306,23 @@ export declare class YamlDocument {
  */
 export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
 
+/**
+ * Fetch + download + atomically install the files the user approved at
+ * check time.
+ *
+ * `bundledYamlDir` is the install-tree `CLASSIC Data/databases` path used
+ * to resolve the currently-installed bytes when `entries` leave
+ * `installed` unset. Node hosts should pass it (e.g. derived from
+ * `__dirname`), because the core fallback probes `current_exe()`, which
+ * resolves to `node.exe`/`bun.exe` and cannot find the package-local
+ * YAML. Pass `null` or undefined to keep the `current_exe()` fallback
+ * (only useful when the native binding happens to live next to
+ * `CLASSIC Data/`).
+ *
+ * @throws when the whole batch fails (e.g. manifest fetch error, cache dir unreachable).
+ */
+export declare function applyYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, approvedReleaseTag: string, approvedFileNames: Array<string>, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateReport>
+
 /** Extended cache TTL for batch log scanning (1800 seconds / 30 minutes). */
 export const BATCH_CACHE_TTL: number
 
@@ -1437,6 +1454,32 @@ export declare function checkWritePermissions(path: string): void
  * @returns Formatted validation message.
  */
 export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string
+
+/**
+ * Check for a YAML data update.
+ *
+ * Drives the Pages-first manifest fetch with anonymous API fallback, then
+ * classifies the manifest against `entries`. When `enabled` is `false`,
+ * returns `{ tag: "disabled" }` immediately without any HTTP call.
+ *
+ * @param pagesUrl        Absolute HTTPS URL of the Pages manifest (normally
+ *                        `https://<owner>.github.io/<repo>/yaml-data/manifest-latest.json`).
+ * @param tagPrefix       Release-tag prefix for the anonymous API fallback
+ *                        (e.g. `"yaml-data-v"`).
+ * @param entries         Per-file accepted-range + currently-installed schema
+ *                        the client knows about.
+ * @param enabled         `false` → short-circuit with `tag: "disabled"`.
+ * @param bundledYamlDir  Install-tree directory containing the bundled
+ *                        shippable YAML files (`CLASSIC Data/databases`).
+ *                        Node callers should pass the package-local path
+ *                        (e.g. `path.join(__dirname, "CLASSIC Data", "databases")`)
+ *                        so clean installs whose bundled bytes already
+ *                        match the manifest are classified as `upToDate`.
+ *                        `null` / omitted falls back to probing `current_exe()`,
+ *                        which yields the wrong path under `node.exe`/`bun.exe`.
+ * @throws on network failure that even the fallback can't recover from.
+ */
+export declare function checkYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateStatus>
 
 /** Clear all recorded performance metrics. */
 export declare function clearAllMetrics(): void
@@ -3318,6 +3361,31 @@ export declare const enum JsXseType {
   Sfse = 'SFSE'
 }
 
+/**
+ * One entry in the per-file schema set that gates `checkYamlUpdate` /
+ * `applyYamlUpdate`. Callers build one of these per shippable file
+ * (e.g. "CLASSIC Main.yaml") with the client-accepted MAJOR.MINOR range
+ * and (optionally) the currently-installed MAJOR.MINOR version.
+ */
+export interface JsYamlClientSchemaEntry {
+  /** Canonical file name (e.g. `"CLASSIC Main.yaml"`). */
+  name: string
+  /** MAJOR the client is built to parse. */
+  acceptedMajor: number
+  /** Minimum MINOR the client still supports at `acceptedMajor`. */
+  acceptedMinimumMinor: number
+  /**
+   * When `true`, `installedMajor` / `installedMinor` are treated as the
+   * currently-installed schema version. When `false`, the client treats
+   * every compatible manifest entry as "newer".
+   */
+  hasInstalled: boolean
+  /** MAJOR currently installed (ignored when `hasInstalled` is false). */
+  installedMajor: number
+  /** MINOR currently installed (ignored when `hasInstalled` is false). */
+  installedMinor: number
+}
+
 /** YAML configuration file identifiers exposed to JavaScript. */
 export declare const enum JsYamlFile {
   /** CLASSIC Data/databases/CLASSIC Main.yaml */
@@ -3342,6 +3410,28 @@ export declare const enum JsYamlFile {
  * Provides paths and display names for the various YAML configuration files
  * used by CLASSIC.
  */
+/**
+ * One rejection entry inside `JsYamlUpdateStatus`. Parallels the
+ * `incompatibleFiles` list.
+ */
+export interface JsYamlRejectedFile {
+  /** The file the client couldn't accept. */
+  file: JsYamlUpdateFile
+  /** Short, human-readable reason. */
+  reason: string
+}
+
+/**
+ * Result of `rollbackYamlUpdate`. `rolledBack === false` with no exception
+ * means `NoPreviousVersion` (the file has no `.prev` sibling).
+ */
+export interface JsYamlRollbackOutcome {
+  /** `true` when the `.prev` copy is now the canonical cache entry. */
+  rolledBack: boolean
+  /** The file that was queried / rolled back. */
+  fileName: string
+}
+
 export declare const enum JsYamlSource {
   /** Main database: CLASSIC Data/databases/CLASSIC Main.yaml */
   Main = 'Main',
@@ -3357,6 +3447,72 @@ export declare const enum JsYamlSource {
   Test = 'Test',
   /** Cache: user config dir/CLASSIC/cache.yaml */
   Cache = 'Cache'
+}
+
+/**
+ * One file entry inside `JsYamlUpdateStatus` or `JsYamlUpdateReport`.
+ *
+ * Mirrors `YamlManifestFile` in `classic-update-core`, with the optional
+ * `min_client_schema` / `max_client_schema` dropped because JS consumers
+ * don't read them today.
+ */
+export interface JsYamlUpdateFile {
+  /** Canonical file name. */
+  name: string
+  /** `MAJOR.MINOR` string from the manifest. */
+  schemaVersion: string
+  /** Hex-encoded SHA-256 of the file bytes. */
+  sha256: string
+  /** Size in bytes. */
+  sizeBytes: number
+  /** Absolute HTTPS URL of the release asset. */
+  downloadUrl: string
+}
+
+/**
+ * Per-file install outcome inside `JsYamlUpdateReport`. When
+ * `installed === true`, `schemaVersion` + `createdPrev` are populated.
+ * When `installed === false`, `failureReason` is populated.
+ */
+export interface JsYamlUpdateFileOutcome {
+  /** Canonical file name. */
+  name: string
+  /** `true` for `Installed`, `false` for `Failed`. */
+  installed: boolean
+  /** Schema version installed (empty when `installed` is false). */
+  schemaVersion: string
+  /** Whether a `.prev` sibling was created (ignored when failed). */
+  createdPrev: boolean
+  /** Short reason when failed (empty on success). */
+  failureReason: string
+}
+
+/** Aggregate result of `applyYamlUpdate`. */
+export interface JsYamlUpdateReport {
+  /** Files that were installed atomically. */
+  installed: Array<JsYamlUpdateFileOutcome>
+  /** Files that were skipped or failed. */
+  failed: Array<JsYamlUpdateFileOutcome>
+}
+
+/**
+ * Discriminated status DTO returned by `checkYamlUpdate`. Inspect `tag`
+ * first — its value is one of: `"disabled"`, `"updateAvailable"`,
+ * `"upToDate"`, or `"unknown"`.
+ */
+export interface JsYamlUpdateStatus {
+  /** Discriminator. */
+  tag: string
+  /** Manifest's `release_tag`, populated for `updateAvailable` / `upToDate`. */
+  releaseTag: string
+  /** Manifest's `published_at`, populated for `updateAvailable` / `upToDate`. */
+  publishedAt: string
+  /** Files the client can install (compatible + newer). `updateAvailable` only. */
+  compatibleFiles: Array<JsYamlUpdateFile>
+  /** Files the client rejected, each paired with its reason. `updateAvailable` only. */
+  incompatibleFiles: Array<JsYamlRejectedFile>
+  /** Reason for `"unknown"` (e.g. `"manifest_version 2 not supported"`). */
+  unknownReason: string
 }
 
 /**
@@ -3701,6 +3857,8 @@ export interface ResourceInfo {
  * log error scanning, Wrye Bash analysis, and mod INI scanning
  * as concurrent tasks.
  */
+export declare function rollbackYamlUpdate(fileName: string): JsYamlRollbackOutcome
+
 export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>
 
 /**

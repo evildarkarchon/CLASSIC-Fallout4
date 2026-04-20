@@ -68,6 +68,7 @@ add_executable(classic-cli
     src/progress.cpp
     src/thread_pool.cpp
     src/report_writer.cpp
+    src/yaml_update.cpp
 )
 
 target_include_directories(classic-cli PRIVATE src/)
@@ -121,8 +122,12 @@ set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 include(CPack)
 
 # ── Unit Tests (Catch2) ──────────────────────────────────────────────
-# Only built when Catch2 is available. These tests cover components
-# that don't depend on the Rust CXX bridge (ThreadPool, Progress, CliArgs).
+# Only built when Catch2 is available. Two test executables:
+#   - classic-cli-tests: bridge-free unit tests for ThreadPool / Progress /
+#     CliArgs. Fast to build, no Rust link dependency.
+#   - classic-cli-bridge-tests: tests that exercise the Rust CXX bridge FFI
+#     (e.g. the yaml-update-delivery entry points). Links against
+#     classic_cxx_bridge.
 find_package(Catch2 3 CONFIG QUIET)
 if(Catch2_FOUND)
     enable_testing()
@@ -153,6 +158,24 @@ if(Catch2_FOUND)
     include(CTest)
     include(Catch)
     catch_discover_tests(classic-cli-tests)
+
+    # Bridge-linked tests: one entry per FFI surface that warrants a C++
+    # round-trip check. Added for the yaml-update-delivery change so C++
+    # consumers prove the discriminated DTO shape at compile AND run time.
+    add_executable(classic-cli-bridge-tests
+        tests/test_yaml_update.cpp
+    )
+
+    target_link_libraries(classic-cli-bridge-tests PRIVATE
+        Catch2::Catch2WithMain
+        classic_cxx_bridge
+    )
+
+    if(MSVC)
+        target_compile_options(classic-cli-bridge-tests PRIVATE /utf-8 /W4)
+    endif()
+
+    catch_discover_tests(classic-cli-bridge-tests)
 
     message(STATUS "Catch2 found -- unit tests enabled")
 else()

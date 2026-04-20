@@ -43,6 +43,8 @@ qt_add_executable(ClassicGui WIN32
     workers/papyrusworker.cpp
     workers/updateworker.h
     workers/updateworker.cpp
+    workers/yamlupdateworker.h
+    workers/yamlupdateworker.cpp
 
     # Widgets (reusable UI components)
     widgets/reportlistwidget.h

@@ -54,6 +54,23 @@ pub enum FileIOError {
         /// Underlying I/O error
         source: std::io::Error,
     },
+
+    /// SHA-256 integrity check failed during an atomic install.
+    ///
+    /// The `expected` value comes from the authoritative source (e.g., a
+    /// release manifest) and `actual` is the digest computed from the
+    /// downloaded bytes. `path` is the temporary file whose content failed
+    /// verification; it is deleted before this error is returned so callers
+    /// never see a tainted file on disk.
+    #[error("SHA-256 mismatch for {path}: expected {expected}, got {actual}")]
+    ChecksumMismatch {
+        /// Path to the source file whose content failed verification.
+        path: std::path::PathBuf,
+        /// Manifest-declared (expected) digest.
+        expected: String,
+        /// Digest actually computed from file bytes.
+        actual: String,
+    },
 }
 
 /// Result type alias for file I/O operations

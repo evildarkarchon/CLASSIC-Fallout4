@@ -7,11 +7,10 @@ import json
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOL_PATH = REPO_ROOT / "tools" / "binding_parity_runtime_coverage.py"
 PYTHON_RUNTIME_REGISTRY = (
     REPO_ROOT
-    / "ClassicLib-rs"
     / "python-bindings"
     / "tests"
     / "fixtures"

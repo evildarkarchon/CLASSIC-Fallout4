@@ -682,6 +682,8 @@ name = "classic-config-core"
 version = "9.0.0"
 dependencies = [
  "anyhow",
+ "classic-file-io-core",
+ "classic-path-core",
  "classic-registry-core",
  "classic-settings-core",
  "classic-shared-core",
@@ -789,6 +791,7 @@ dependencies = [
  "dashmap",
  "ddsfile",
  "encoding_rs",
+ "fs4",
  "futures",
  "glob",
  "log",
@@ -1181,6 +1184,9 @@ name = "classic-update-core"
 version = "9.0.0"
 dependencies = [
  "anyhow",
+ "classic-file-io-core",
+ "classic-path-core",
+ "classic-settings-core",
  "classic-shared-core",
  "dotenvy",
  "futures",
@@ -1200,6 +1206,8 @@ dependencies = [
 name = "classic-update-py"
 version = "9.0.0"
 dependencies = [
+ "classic-settings-core",
+ "classic-shared-core",
  "classic-update-core",
  "pyo3",
  "pyo3-async-runtimes",
@@ -2401,6 +2409,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "fs4"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c29c30684418547d476f0b48e84f4821639119c483b1eccd566c8cd0cd05f521"
+dependencies = [
+ "rustix 0.38.44",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

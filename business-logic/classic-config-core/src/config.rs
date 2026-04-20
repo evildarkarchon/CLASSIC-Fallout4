@@ -329,6 +329,16 @@ impl YamlSource {
     /// # }
     /// ```
     pub async fn load(&self, game: &str) -> Result<Yaml> {
+        // Shippable sources (Main, per-game database) must go through the
+        // cache-aware loader so that YAML updates delivered via the
+        // yaml-update-delivery flow are actually consumed at runtime. Reading
+        // the bundled install-tree copy directly would let `check_yaml_update`
+        // report "Installed" while the app kept loading the pre-update bytes.
+        // See `shippable::load_shippable_yaml` for the precedence rules.
+        if let Some(loaded) = load_via_shippable(self, game).await? {
+            return Ok(loaded);
+        }
+
         let path = self.path(game);
         let display = if game.is_empty() {
             self.display_name().to_string()
@@ -340,6 +350,34 @@ impl YamlSource {
             .await
             .with_context(|| format!("Failed to load {}: {}", display, path.display()))
     }
+}
+
+/// Route `YamlSource::Main` and per-game databases through
+/// [`load_shippable_yaml`] when a matching client schema range is declared;
+/// return `Ok(None)` for sources that are not cache-eligible so the caller
+/// falls through to the direct bundled load.
+async fn load_via_shippable(source: &YamlSource, game: &str) -> Result<Option<Yaml>> {
+    use crate::client_schemas::{GAME_FALLOUT4_YAML, MAIN_YAML};
+    use crate::shippable::{ShippableFile, load_shippable_yaml};
+
+    let (file, compat, display) = match source {
+        YamlSource::Main => (
+            ShippableFile::main(),
+            &MAIN_YAML,
+            "Main Database".to_string(),
+        ),
+        YamlSource::Game if game == "Fallout4" => (
+            ShippableFile::game(game),
+            &GAME_FALLOUT4_YAML,
+            format!("{} Database", game),
+        ),
+        _ => return Ok(None),
+    };
+
+    load_shippable_yaml(file, compat)
+        .await
+        .map(|loaded| Some(loaded.yaml))
+        .with_context(|| format!("Failed to load {} (shippable)", display))
 }
 
 /// Unified configuration structure for CLI and TUI applications
@@ -881,6 +919,50 @@ mod tests {
     fn parse_yaml_document(yaml_str: &str) -> Yaml {
         let docs = parse_yaml_content("memory://config.rs", yaml_str).unwrap();
         merge_yaml_documents("memory://config.rs", &docs).unwrap()
+    }
+
+    #[test]
+    #[serial]
+    fn yamlsource_main_load_routes_through_shippable_loader() {
+        // Regression for the Codex adversarial review finding:
+        // `YamlSource::Main.load` used to read the bundled path directly,
+        // bypassing the yaml-update-delivery cache. This test locks the CWD,
+        // writes a bundled copy whose `CLASSIC_Info.version` is distinct from
+        // any checked-in fixture, and confirms that calling the public
+        // `YamlSource::Main.load` surfaces that content. The routing is the
+        // load-time half of the update contract — without it, an installed
+        // update can never become the loaded document regardless of what the
+        // cache directory contains.
+        //
+        // Written as a sync test with a local `block_on` so the process-wide
+        // CWD mutex is never held across an await point (`clippy::await_holding_lock`).
+        let _guard = current_dir_lock().lock().unwrap();
+        let original_dir = std::env::current_dir().unwrap();
+        let work_dir = tempdir().unwrap();
+        let bundled_dir = work_dir.path().join("CLASSIC Data").join("databases");
+        std::fs::create_dir_all(&bundled_dir).unwrap();
+        let bundled_payload = concat!(
+            "schema_version: \"1.0\"\n",
+            "CLASSIC_Info:\n",
+            "  version: shippable-routing-regression\n",
+        );
+        std::fs::write(bundled_dir.join("CLASSIC Main.yaml"), bundled_payload).unwrap();
+
+        classic_settings_core::clear_global_yaml_cache();
+        std::env::set_current_dir(work_dir.path()).unwrap();
+
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let result = runtime.block_on(async { YamlSource::Main.load("").await });
+
+        std::env::set_current_dir(original_dir).unwrap();
+
+        let yaml = result.expect("shippable load must succeed for compatible bundled copy");
+        assert_eq!(
+            yaml["CLASSIC_Info"]["version"].as_str(),
+            Some("shippable-routing-regression"),
+            "YamlSource::Main.load must surface the bundled document that the \
+             shippable loader resolved, proving the cache-aware wiring is live",
+        );
     }
 
     #[test]

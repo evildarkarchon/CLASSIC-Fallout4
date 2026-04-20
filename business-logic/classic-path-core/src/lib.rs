@@ -57,6 +57,7 @@ mod checker;
 mod docs_path;
 mod game_path;
 mod ini_parser;
+mod yaml_cache;
 
 pub use backup::{BackupManager, XseVersion};
 pub use checker::{DocumentsChecker, IniCheckResult};
@@ -88,6 +89,9 @@ pub use validator::{
     validate_required_files,
     validate_settings_path,
     validate_settings_paths,
+};
+pub use yaml_cache::{
+    ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env,
 };
 
 // Re-export platform utilities

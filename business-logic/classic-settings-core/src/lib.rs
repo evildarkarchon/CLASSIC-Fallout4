@@ -85,6 +85,7 @@
 mod cache;
 mod error;
 mod loader;
+mod schema_version;
 pub mod validators;
 mod yaml_file;
 
@@ -102,6 +103,10 @@ pub use error::{Result, SettingsError, SettingsSource};
 pub use loader::{
     load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async,
     load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content,
+};
+pub use schema_version::{
+    Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion,
+    YamlSchemaError, extract_schema_version, schema_compat_check,
 };
 pub use yaml_file::*;
 
