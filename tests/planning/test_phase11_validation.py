@@ -6,11 +6,19 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+PLANNING_ROOT = REPO_ROOT / ".planning"
+MILESTONES_DIR = PLANNING_ROOT / "milestones"
 PHASE7_DIR = REPO_ROOT / ".planning/phases/07-crate-relocation-and-path-rewire"
 RELOCATION_AUDIT = PHASE7_DIR / "07-RELOCATION-AUDIT.md"
 VERIFICATION_REPORT = PHASE7_DIR / "07-VERIFICATION.md"
-REQUIREMENTS = REPO_ROOT / ".planning/REQUIREMENTS.md"
-MILESTONE_AUDIT = REPO_ROOT / ".planning/v9.1.0-MILESTONE-AUDIT.md"
+REQUIREMENTS = MILESTONES_DIR / "v9.1.0-root-REQUIREMENTS.md"
+if not REQUIREMENTS.exists():
+    REQUIREMENTS = PLANNING_ROOT / "REQUIREMENTS.md"
+
+MILESTONE_AUDIT = MILESTONES_DIR / "v9.1.0-root-MILESTONE-AUDIT.md"
+if not MILESTONE_AUDIT.exists():
+    MILESTONE_AUDIT = PLANNING_ROOT / "v9.1.0-MILESTONE-AUDIT.md"
+
 LEGACY_ROOT = REPO_ROOT / "ClassicLib-rs"
 
 REQUIRED_VERIFICATION_SECTIONS = [
@@ -76,6 +84,9 @@ def audit_residue_rows(text: str) -> list[str]:
 
 
 def legacy_residue_inventory() -> list[str]:
+    if not LEGACY_ROOT.is_dir():
+        return []
+
     return sorted(
         f"{entry.name}/" if entry.is_dir() else entry.name
         for entry in LEGACY_ROOT.iterdir()
@@ -99,7 +110,10 @@ class Phase11ValidationAuditTests(unittest.TestCase):
         expected_rows = [f"| `{entry}` |" for entry in self.live_residue]
         actual_rows = audit_residue_rows(self.relocation_audit)
 
-        self.assertEqual(sorted(expected_rows), sorted(actual_rows))
+        if LEGACY_ROOT.is_dir():
+            self.assertEqual(sorted(expected_rows), sorted(actual_rows))
+        else:
+            self.assertEqual([], actual_rows)
 
     def test_phase7_verification_report_has_frontmatter_and_current_section_shape(
         self,

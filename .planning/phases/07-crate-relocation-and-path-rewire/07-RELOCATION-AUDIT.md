@@ -113,11 +113,8 @@ The current `ClassicLib-rs/` directory contents are residue only. This inventory
 
 | Residue |
 | --- |
-| `.gitignore` |
 | `.idea/` |
 | `CLASSIC_Settings.yaml` |
 | `clippy_full_report.txt` |
 | `clippy_report.txt` |
-| `coverage_report.ps1` |
-| `coverage_summary.ps1` |
 | `Crash Logs/` |
