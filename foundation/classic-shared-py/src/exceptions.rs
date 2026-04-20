@@ -110,7 +110,5 @@ macro_rules! register_exceptions {
 }
 
 #[cfg(test)]
-mod tests {
-    // Tests would require a full PyO3 test environment
-    // The macros are tested implicitly by the consuming crates
-}
+#[path = "exceptions_tests.rs"]
+mod tests;

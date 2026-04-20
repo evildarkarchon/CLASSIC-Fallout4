@@ -164,7 +164,5 @@ macro_rules! impl_to_pyerr {
 }
 
 #[cfg(test)]
-mod tests {
-    // The traits are tested implicitly by the consuming crates
-    // since they require actual PyO3 exception types to work
-}
+#[path = "error_convert_tests.rs"]
+mod tests;
