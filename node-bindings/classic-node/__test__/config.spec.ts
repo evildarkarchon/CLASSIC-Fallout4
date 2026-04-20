@@ -21,7 +21,7 @@ import {
 import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
 
 const THIS_SUITE =
-  "ClassicLib-rs/node-bindings/classic-node/__test__/config.spec.ts";
+  "node-bindings/classic-node/__test__/config.spec.ts";
 
 // ============================================================================
 // Test Fixtures

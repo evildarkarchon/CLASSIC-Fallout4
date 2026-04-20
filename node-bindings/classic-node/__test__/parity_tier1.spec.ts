@@ -100,7 +100,7 @@ import {
 import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
 
 const THIS_SUITE =
-  "ClassicLib-rs/node-bindings/classic-node/__test__/parity_tier1.spec.ts";
+  "node-bindings/classic-node/__test__/parity_tier1.spec.ts";
 const activeCoverageCases = new Set(
   getRuntimeCoverageEntries(THIS_SUITE)
     .map((entry) => entry.testCaseId)
