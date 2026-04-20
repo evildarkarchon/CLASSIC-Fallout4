@@ -36,6 +36,7 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 6. Never write to `NUL` or `nul` as if it were a file path on Windows.
 7. Consult `docs/api/README.md` before changing public Rust, bridge, GUI-consumer, or binding-facing APIs; if an API-breaking or contract-shaping change occurs, update the affected pages under `docs/api/` in the same change.
 8. Never run C++ tests by invoking test binaries or raw `ctest` directly; use `classic-cli/build_cli.ps1 -Test` or `classic-gui/build_gui.ps1 -Test`, with `-CTestName` or `-IntegrationTestName` when you need a subset.
+9. Never run Python binding tests against an unbuilt virtualenv. Before `pytest python-bindings/tests`, run `./rebuild_rust.ps1 -Target python` to maturin-build and install every `-py` crate into `python-bindings/.venv/`, then invoke pytest via `uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q`. Skipping the rebuild yields `ModuleNotFoundError` at collection time; `uv run --python <venv>/Scripts/python.exe` pins the interpreter so a stale global `VIRTUAL_ENV` cannot redirect pytest to the wrong Python.
 
 ## Quick Notes
 
@@ -43,5 +44,6 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 - Native C++ targets are Windows-focused and MSVC-based.
 - When running Rust or C++ MSVC-targeted commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it, so Git's `usr/bin/link.exe` does not override the Visual Studio linker.
 - Python bindings under `python-bindings/` should stay in sync with Rust core logic.
+- Before any cargo command that touches pyo3 (workspace builds/tests, `rebuild_rust.ps1 -Target python`, the Python parity gate), set `$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"` for the current shell. `.cargo/config.toml` intentionally omits a global pin (a `[env]` entry would leak to non-Windows targets and break Linux/macOS builds); contributors set it per-shell. A stale global `VIRTUAL_ENV` — pointing at a removed or moved Python install — will otherwise win and fail pyo3-build-config with "The system cannot find the file specified".
 - Node bindings under `node-bindings/classic-node/` should stay in sync with Rust core logic.
 - Use the project skill whenever you need repo-specific commands, parity checklists, CI context, or architecture-routing guidance.
