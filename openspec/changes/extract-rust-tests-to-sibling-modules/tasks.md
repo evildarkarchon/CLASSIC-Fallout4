@@ -1,14 +1,14 @@
 ## 1. Setup and Convention Lock-In
 
-- [ ] 1.1 Confirm baseline `cargo test --workspace` passes locally and capture the total test count (one number) so post-conversion runs can compare.
-- [ ] 1.2 Capture per-crate pre-conversion test counts via `cargo test -p <crate> -- --list` for every Rust crate in `foundation/`, `business-logic/`, `cpp-bindings/classic-cpp-bridge/`, `node-bindings/classic-node/`, `python-bindings/`, and `ui-applications/classic-tui/`. Store the counts in a scratch file (gitignored) keyed by crate name; this file is the per-crate verification reference for tasks 4–10.
-- [ ] 1.3 Confirm CXX, Node, and Python parity gates are green before any conversion lands (`python tools/cxx_api_parity/check_parity_gate.py --repo-root .`, `bun run parity:gate` from `node-bindings/classic-node/`, `python tools/python_api_parity/check_parity_gate.py --repo-root .`).
+- [x] 1.1 Confirm baseline `cargo test --workspace` passes locally and capture the total test count (one number) so post-conversion runs can compare.
+- [x] 1.2 Capture per-crate pre-conversion test counts via `cargo test -p <crate> -- --list` for every Rust crate in `foundation/`, `business-logic/`, `cpp-bindings/classic-cpp-bridge/`, `node-bindings/classic-node/`, `python-bindings/`, and `ui-applications/classic-tui/`. Store the counts in a scratch file (gitignored) keyed by crate name; this file is the per-crate verification reference for tasks 4–10.
+- [x] 1.3 Confirm CXX, Node, and Python parity gates are green before any conversion lands (`python tools/cxx_api_parity/check_parity_gate.py --repo-root .`, `bun run parity:gate` from `node-bindings/classic-node/`, `python tools/python_api_parity/check_parity_gate.py --repo-root .`).
 
 ## 2. Update Scaffolding So New Crates Use the Sibling Layout
 
-- [ ] 2.1 Update `.agents/skills/rust-crate/` (skill entrypoint + any template files it references) so generated `src/lib.rs` emits `#[cfg(test)] #[path = "lib_tests.rs"] mod tests;` and writes a sibling `src/lib_tests.rs` containing `use super::*;` plus one trivial smoke test, matching what the current template emits but in the new file.
-- [ ] 2.2 Smoke-check the updated skill by running it against a throwaway crate name in a scratch directory; confirm the generated layout matches the spec's "scaffolds sibling test files" scenarios. Discard the throwaway crate.
-- [ ] 2.3 Update any contributor docs that demonstrate the old inline `mod tests` pattern (if any references exist in the active doc set) to show the new sibling form.
+- [x] 2.1 Update `.agents/skills/rust-crate/` (skill entrypoint + any template files it references) so generated `src/lib.rs` emits `#[cfg(test)] #[path = "lib_tests.rs"] mod tests;` and writes a sibling `src/lib_tests.rs` containing `use super::*;` plus one trivial smoke test, matching what the current template emits but in the new file. *(Note: the `rust-crate` skill actually lives at `.claude/skills/rust-crate/SKILL.md`, `.gemini/skills/rust-crate/SKILL.md`, and `.kilocode/skills/rust-crate/SKILL.md` — all three byte-identical. Edit applied to all three mirrors.)*
+- [x] 2.2 Smoke-check the updated skill by running it against a throwaway crate name in a scratch directory; confirm the generated layout matches the spec's "scaffolds sibling test files" scenarios. Discard the throwaway crate. *(The `rust-crate` skill is markdown guidance rather than an executable generator; verification is a text-search confirming the skill now shows `#[cfg(test)] #[path = "lib_tests.rs"] mod tests;` with a sibling `src/lib_tests.rs` block containing `use super::*;` plus a trivial smoke test in both its Step 1.3 and Step 4.1 examples.)*
+- [x] 2.3 Update any contributor docs that demonstrate the old inline `mod tests` pattern (if any references exist in the active doc set) to show the new sibling form. *(Updated: `docs/rust/pyo3_quick_reference.md`, `docs/development/cache_patterns.md`, `.claude/skills/tdd-classic/SKILL.md` (2 examples), `.gemini/skills/tdd/SKILL.md` (2 examples). Historical .planning/ docs left untouched per "active doc set" scoping.)*
 
 ## 3. Reference Conversion (classic-perf-core)
 

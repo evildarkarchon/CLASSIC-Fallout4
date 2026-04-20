@@ -48,32 +48,40 @@ With passing tests as a safety net:
 
 ## Rust Testing Patterns (Primary)
 
-### Unit Tests (In-Module)
+### Unit Tests (Sibling File)
 
-Place unit tests in `#[cfg(test)]` module within source files:
+Unit tests live in a sibling `<stem>_tests.rs` file colocated with the module
+under test. See `openspec/specs/rust-test-module-layout/spec.md` for the
+workspace-wide rule.
+
+In `src/parser.rs`:
 
 ```rust
-// src/parser.rs
 pub fn parse_formid(hex: &str) -> Result<FormID, ParseError> {
     // implementation
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+#[path = "parser_tests.rs"]
+mod tests;
+```
 
-    #[test]
-    fn parse_formid_valid_hex() {
-        let result = parse_formid("0A001234").unwrap();
-        assert_eq!(result.plugin_index, 0x0A);
-        assert_eq!(result.local_id, 0x001234);
-    }
+In the sibling `src/parser_tests.rs`:
 
-    #[test]
-    fn parse_formid_invalid_hex_returns_error() {
-        let result = parse_formid("ZZZZZZZZ");
-        assert!(result.is_err());
-    }
+```rust
+use super::*;
+
+#[test]
+fn parse_formid_valid_hex() {
+    let result = parse_formid("0A001234").unwrap();
+    assert_eq!(result.plugin_index, 0x0A);
+    assert_eq!(result.local_id, 0x001234);
+}
+
+#[test]
+fn parse_formid_invalid_hex_returns_error() {
+    let result = parse_formid("ZZZZZZZZ");
+    assert!(result.is_err());
 }
 ```
 
@@ -111,25 +119,32 @@ mod concurrent_access {
 
 Use `#[tokio::test]` for async tests. Remember the ONE RUNTIME RULE -- in tests, `#[tokio::test]` creates its own runtime, which is fine for isolated test execution:
 
+In the parent source file (e.g. `src/io.rs`):
+
 ```rust
 #[cfg(test)]
-mod tests {
-    use super::*;
+#[path = "io_tests.rs"]
+mod tests;
+```
 
-    #[tokio::test]
-    async fn async_file_read_returns_content() {
-        let result = read_file_async("test_fixture.txt").await.unwrap();
-        assert!(!result.is_empty());
-    }
+In the sibling `src/io_tests.rs`:
 
-    #[tokio::test]
-    async fn concurrent_tasks_complete_without_deadlock() {
-        let handles: Vec<_> = (0..10)
-            .map(|_| tokio::spawn(async { do_work().await }))
-            .collect();
-        for h in handles {
-            h.await.unwrap();
-        }
+```rust
+use super::*;
+
+#[tokio::test]
+async fn async_file_read_returns_content() {
+    let result = read_file_async("test_fixture.txt").await.unwrap();
+    assert!(!result.is_empty());
+}
+
+#[tokio::test]
+async fn concurrent_tasks_complete_without_deadlock() {
+    let handles: Vec<_> = (0..10)
+        .map(|_| tokio::spawn(async { do_work().await }))
+        .collect();
+    for h in handles {
+        h.await.unwrap();
     }
 }
 ```
