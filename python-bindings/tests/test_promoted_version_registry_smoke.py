@@ -33,7 +33,7 @@ import pytest
 import classic_version_registry
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 RUST_API_SURFACE = (
     REPO_ROOT
     / "docs"

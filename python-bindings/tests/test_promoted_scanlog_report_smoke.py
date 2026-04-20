@@ -407,7 +407,7 @@ def test_rust_only_symbols_in_core_surface() -> None:
     import json
     from pathlib import Path
 
-    repo_root = Path(__file__).parent.parent.parent.parent
+    repo_root = Path(__file__).parent.parent.parent
     baseline_path = (
         repo_root
         / "docs/implementation/python_api_parity/baseline/rust_api_surface.json"

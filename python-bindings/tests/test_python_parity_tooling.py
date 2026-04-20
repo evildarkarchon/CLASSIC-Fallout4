@@ -7,7 +7,7 @@ import importlib.util
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATE_BASELINE_PATH = (
     REPO_ROOT / "tools" / "python_api_parity" / "generate_baseline.py"
 )
