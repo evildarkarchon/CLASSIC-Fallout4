@@ -4,8 +4,10 @@
     Sets the version number for all CLASSIC Rust crates and the main YAML database file.
 
 .DESCRIPTION
-    This script updates the version number across all Cargo.toml files in the rust directory
-    and in the CLASSIC Data/databases/CLASSIC Main.yaml file.
+    This script updates the version number across all Cargo.toml files in the
+    Rust layer directories (foundation/, business-logic/, cpp-bindings/,
+    node-bindings/, python-bindings/, ui-applications/) and in the
+    CLASSIC Data/databases/CLASSIC Main.yaml file.
 
 .PARAMETER Version
     The new version number in semantic versioning format (e.g., "8.1.0", "8.2.0-beta.1").
@@ -67,8 +69,10 @@ SYNTAX
     .\set_version.ps1 -Help
 
 DESCRIPTION
-    This script updates the version number across all Cargo.toml files in the rust directory
-    and in the CLASSIC Data/databases/CLASSIC Main.yaml file.
+    This script updates the version number across all Cargo.toml files in the
+    Rust layer directories (foundation/, business-logic/, cpp-bindings/,
+    node-bindings/, python-bindings/, ui-applications/) and in the
+    CLASSIC Data/databases/CLASSIC Main.yaml file.
 
 PARAMETERS
     -Version <string>
@@ -133,7 +137,16 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = if ($ScriptDir) { $ScriptDir } else { "." }
 
 # Paths relative to root directory
-$RustDir = Join-Path $RootDir "rust"
+# Rust crates live under repo-root layer directories after the ClassicLib-rs
+# migration; see docs/workspace-migration-matrix.md.
+$RustLayerDirs = @(
+    (Join-Path $RootDir "foundation"),
+    (Join-Path $RootDir "business-logic"),
+    (Join-Path $RootDir "cpp-bindings"),
+    (Join-Path $RootDir "node-bindings"),
+    (Join-Path $RootDir "python-bindings"),
+    (Join-Path $RootDir "ui-applications")
+)
 $YamlFile = Join-Path $RootDir "CLASSIC Data" "databases" "CLASSIC Main.yaml"
 $BackupDir = Join-Path $RootDir "version_backups"
 
@@ -335,10 +348,19 @@ Write-Info "Is Prerelease: $IsPrerelease"
 Write-Info "Working Directory: $(Resolve-Path $RootDir)"
 Write-Host ""
 
-# Validate paths
-if (-not (Test-Path $RustDir)) {
-    Write-ErrorCustom "Rust directory not found: $RustDir"
+# Validate paths: at least one Rust layer directory must exist
+$ExistingRustLayerDirs = @($RustLayerDirs | Where-Object { Test-Path $_ })
+if ($ExistingRustLayerDirs.Count -eq 0) {
+    Write-ErrorCustom "No Rust layer directories found. Expected one or more of:"
+    foreach ($Dir in $RustLayerDirs) {
+        Write-ErrorCustom "  $Dir"
+    }
     exit 1
+}
+
+$MissingRustLayerDirs = @($RustLayerDirs | Where-Object { -not (Test-Path $_) })
+foreach ($Dir in $MissingRustLayerDirs) {
+    Write-WarningCustom "Rust layer directory not found (skipping): $Dir"
 }
 
 # Track statistics
@@ -357,10 +379,19 @@ Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Info "Scanning for Cargo.toml files..."
 Write-Host ""
 
-$CargoFiles = Get-CargoTomlFiles -Directory $RustDir
+$CargoFiles = @()
+foreach ($Dir in $ExistingRustLayerDirs) {
+    $LayerFiles = Get-CargoTomlFiles -Directory $Dir
+    if ($LayerFiles.Count -gt 0) {
+        $CargoFiles += $LayerFiles
+    }
+}
 
 if ($CargoFiles.Count -eq 0) {
-    Write-WarningCustom "No Cargo.toml files found in: $RustDir"
+    Write-WarningCustom "No Cargo.toml files found in Rust layer directories:"
+    foreach ($Dir in $ExistingRustLayerDirs) {
+        Write-WarningCustom "  $Dir"
+    }
 }
 else {
     Write-Info "Found $($CargoFiles.Count) Cargo.toml file(s)"

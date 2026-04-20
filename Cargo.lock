@@ -679,7 +679,7 @@ checksum = "b94f61472cee1439c0b966b47e3aca9ae07e45d070759512cd390ea2bebc6675"
 
 [[package]]
 name = "classic-config-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-file-io-core",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "classic-config-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-config-core",
@@ -717,7 +717,7 @@ dependencies = [
 
 [[package]]
 name = "classic-cpp-bridge"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-config-core",
  "classic-database-core",
@@ -752,7 +752,7 @@ dependencies = [
 
 [[package]]
 name = "classic-database-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-shared-core",
@@ -770,7 +770,7 @@ dependencies = [
 
 [[package]]
 name = "classic-database-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-database-core",
  "classic-shared-core",
@@ -782,7 +782,7 @@ dependencies = [
 
 [[package]]
 name = "classic-file-io-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -812,7 +812,7 @@ dependencies = [
 
 [[package]]
 name = "classic-file-io-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-file-io-core",
  "classic-shared-core",
@@ -827,7 +827,7 @@ dependencies = [
 
 [[package]]
 name = "classic-message-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "log",
  "serde",
@@ -836,7 +836,7 @@ dependencies = [
 
 [[package]]
 name = "classic-message-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-message-core",
  "log",
@@ -845,7 +845,7 @@ dependencies = [
 
 [[package]]
 name = "classic-node"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-config-core",
@@ -881,7 +881,7 @@ dependencies = [
 
 [[package]]
 name = "classic-path-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "configparser",
@@ -898,7 +898,7 @@ dependencies = [
 
 [[package]]
 name = "classic-path-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-path-core",
  "pyo3",
@@ -906,7 +906,7 @@ dependencies = [
 
 [[package]]
 name = "classic-perf-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "dashmap",
  "serde",
@@ -918,7 +918,7 @@ dependencies = [
 
 [[package]]
 name = "classic-perf-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-perf-core",
  "pyo3",
@@ -926,7 +926,7 @@ dependencies = [
 
 [[package]]
 name = "classic-registry-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "dashmap",
  "serde",
@@ -938,7 +938,7 @@ dependencies = [
 
 [[package]]
 name = "classic-registry-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-registry-core",
  "pyo3",
@@ -946,7 +946,7 @@ dependencies = [
 
 [[package]]
 name = "classic-resource-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-path-core",
@@ -958,7 +958,7 @@ dependencies = [
 
 [[package]]
 name = "classic-resource-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-resource-core",
  "pyo3",
@@ -966,7 +966,7 @@ dependencies = [
 
 [[package]]
 name = "classic-scangame-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -1008,7 +1008,7 @@ dependencies = [
 
 [[package]]
 name = "classic-scangame-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-config-core",
@@ -1022,7 +1022,7 @@ dependencies = [
 
 [[package]]
 name = "classic-scanlog-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -1062,7 +1062,7 @@ dependencies = [
 
 [[package]]
 name = "classic-scanlog-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-config-core",
@@ -1084,7 +1084,7 @@ dependencies = [
 
 [[package]]
 name = "classic-settings-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-perf-core",
@@ -1107,7 +1107,7 @@ dependencies = [
 
 [[package]]
 name = "classic-settings-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-settings-core",
  "classic-shared-py",
@@ -1118,7 +1118,7 @@ dependencies = [
 
 [[package]]
 name = "classic-shared-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "criterion 0.8.2",
@@ -1141,7 +1141,7 @@ dependencies = [
 
 [[package]]
 name = "classic-shared-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-shared-core",
  "indexmap",
@@ -1151,7 +1151,7 @@ dependencies = [
 
 [[package]]
 name = "classic-tui"
-version = "0.1.0"
+version = "9.1.0"
 dependencies = [
  "arboard",
  "classic-config-core",
@@ -1181,7 +1181,7 @@ dependencies = [
 
 [[package]]
 name = "classic-update-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-file-io-core",
@@ -1204,7 +1204,7 @@ dependencies = [
 
 [[package]]
 name = "classic-update-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-settings-core",
  "classic-shared-core",
@@ -1216,7 +1216,7 @@ dependencies = [
 
 [[package]]
 name = "classic-version-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-version-registry-core",
@@ -1229,7 +1229,7 @@ dependencies = [
 
 [[package]]
 name = "classic-version-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-version-core",
  "pyo3",
@@ -1238,7 +1238,7 @@ dependencies = [
 
 [[package]]
 name = "classic-version-registry-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-settings-core",
  "classic-shared-core",
@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "classic-version-registry-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-version-registry-core",
  "pyo3",
@@ -1260,7 +1260,7 @@ dependencies = [
 
 [[package]]
 name = "classic-web-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-shared-core",
@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "classic-web-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-web-core",
@@ -1281,7 +1281,7 @@ dependencies = [
 
 [[package]]
 name = "classic-xse-core"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-path-core",
@@ -1295,7 +1295,7 @@ dependencies = [
 
 [[package]]
 name = "classic-xse-py"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "classic-xse-core",
  "pyo3",
