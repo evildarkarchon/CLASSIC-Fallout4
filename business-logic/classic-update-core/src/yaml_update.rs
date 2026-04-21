@@ -421,7 +421,7 @@ impl ApprovedUpdate {
     }
 }
 
-fn approved_file_sha_map<'a>(approved: &'a ApprovedUpdate) -> Result<HashMap<&'a str, &'a str>> {
+fn approved_file_sha_map(approved: &ApprovedUpdate) -> Result<HashMap<&str, &str>> {
     if approved.file_names.len() != approved.file_sha256.len() {
         return Err(UpdateError::Generic(format!(
             "approved decision malformed: {} file names but {} file digests",
