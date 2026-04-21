@@ -803,7 +803,8 @@ async fn fetch_from_releases_api(client: &GithubClient, tag_prefix: &str) -> Res
 ///
 /// A valid cache file name MUST be:
 /// - non-empty and not equal to `.` or `..`,
-/// - free of path separators (`/` or `\`) and embedded NUL bytes,
+/// - free of path separators (`/` or `\`), `:` stream separators, and
+///   embedded NUL bytes,
 /// - not end with a space or `.`, because Win32 trims those suffixes during
 ///   path resolution and aliases them to the unsuffixed on-disk file,
 /// - relative, not absolute (rejects `C:\x`, `\\server\share\x`, `/x`),
@@ -814,6 +815,10 @@ async fn fetch_from_releases_api(client: &GithubClient, tag_prefix: &str) -> Res
 ///   so install/rollback joins cannot be redirected at the kernel level to
 ///   a device path regardless of which OS the client runs on.
 ///
+/// Windows also treats `name:stream` as an NTFS alternate data stream
+/// reference rather than a plain file name, so `:` is rejected even though it
+/// is not a path separator.
+///
 /// This is the single choke point that stops a compromised manifest or a
 /// stray binding caller from turning a cache-dir join into a filesystem
 /// escape. It is called at manifest validation (so bad data is refused at
@@ -823,7 +828,10 @@ fn is_valid_cache_file_name(name: &str) -> bool {
     if name.is_empty() || name == "." || name == ".." {
         return false;
     }
-    if name.bytes().any(|b| b == b'/' || b == b'\\' || b == 0) {
+    if name
+        .bytes()
+        .any(|b| b == b'/' || b == b'\\' || b == b':' || b == 0)
+    {
         return false;
     }
     if name.ends_with(' ') || name.ends_with('.') {

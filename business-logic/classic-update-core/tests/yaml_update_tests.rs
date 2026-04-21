@@ -1318,6 +1318,19 @@ fn validate_rejects_absolute_file_name() {
     assert!(matches!(err, UpdateError::ManifestInvalid { .. }));
 }
 
+#[test]
+fn validate_rejects_windows_ads_file_name() {
+    let mut m = valid_manifest();
+    m.files[0].name = "CLASSIC Main.yaml:alt".into();
+    let err = validate_manifest(&m, "owner", "repo").unwrap_err();
+    match err {
+        UpdateError::ManifestInvalid { reason } => {
+            assert!(reason.contains("basename"), "got: {reason}");
+        }
+        other => panic!("expected ManifestInvalid, got {other:?}"),
+    }
+}
+
 /// `rollback_yaml_update` is a direct binding entry point, so a traversal
 /// string reaching it bypasses `validate_manifest`. The function itself
 /// must refuse. Same adversarial-review root cause.

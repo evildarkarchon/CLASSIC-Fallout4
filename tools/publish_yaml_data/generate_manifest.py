@@ -45,6 +45,15 @@ CURRENT_MANIFEST_VERSION = 1
 # malformed ranges rather than writing them verbatim into manifest.json,
 # where they would turn every client into a runtime-rejection.
 _SCHEMA_VERSION_RE = re.compile(r"^\d+\.\d+$")
+_ASCII_UPPER_TO_LOWER = str.maketrans(
+    {chr(code): chr(code + 32) for code in range(ord("A"), ord("Z") + 1)}
+)
+
+
+def _windows_normalized_cache_file_key(name: str) -> str:
+    """Mirror validate.py's Windows cache-basename collision key."""
+
+    return name.rstrip(" .").translate(_ASCII_UPPER_TO_LOWER)
 
 
 def _parse_schema_point(value: str) -> tuple[int, int]:
@@ -66,11 +75,10 @@ def load_ranges(schema_ranges_path: Path) -> list[dict[str, str]]:
     with schema_ranges_path.open("r", encoding="utf-8") as f:
         doc = _YAML.load(f)
     if not isinstance(doc, dict) or not isinstance(doc.get("files"), list):
-        raise SystemExit(
-            f"FAIL: {schema_ranges_path} has no top-level 'files' list"
-        )
+        raise SystemExit(f"FAIL: {schema_ranges_path} has no top-level 'files' list")
     required = {"name", "min_client_schema", "max_client_schema"}
     out: list[dict[str, str]] = []
+    normalized_names: set[str] = set()
     for entry in doc["files"]:
         if not isinstance(entry, dict):
             raise SystemExit(f"FAIL: ranges entry is not a mapping: {entry!r}")
@@ -81,6 +89,13 @@ def load_ranges(schema_ranges_path: Path) -> list[dict[str, str]]:
             )
 
         name = str(entry["name"])
+        normalized_name = _windows_normalized_cache_file_key(name)
+        if normalized_name in normalized_names:
+            raise SystemExit(
+                f"FAIL: {schema_ranges_path} contains duplicate entry for "
+                f"{name!r}; each file must appear at most once"
+            )
+        normalized_names.add(normalized_name)
         for field in ("min_client_schema", "max_client_schema"):
             value = entry[field]
             if not isinstance(value, str):
@@ -114,8 +129,7 @@ def read_schema_version(yaml_path: Path) -> str:
     value = doc.get("schema_version") if isinstance(doc, dict) else None
     if not isinstance(value, str):
         raise SystemExit(
-            f"FAIL: {yaml_path} has no string schema_version "
-            "(run validate.py first)"
+            f"FAIL: {yaml_path} has no string schema_version (run validate.py first)"
         )
     return value
 
@@ -146,8 +160,12 @@ def build_download_url(repo: str, tag: str, asset_name: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--tag", required=True, help="Release tag, e.g. yaml-data-v2026.04.17")
-    parser.add_argument("--repo", required=True, help='"<owner>/<repo>" (github.repository)')
+    parser.add_argument(
+        "--tag", required=True, help="Release tag, e.g. yaml-data-v2026.04.17"
+    )
+    parser.add_argument(
+        "--repo", required=True, help='"<owner>/<repo>" (github.repository)'
+    )
     parser.add_argument("--databases-dir", type=Path, required=True)
     parser.add_argument(
         "--schema-ranges",
@@ -173,8 +191,8 @@ def main() -> int:
     staging.mkdir(parents=True, exist_ok=True)
 
     entries = load_ranges(schema_ranges_path)
-    published_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace(
-        "+00:00", "Z"
+    published_at = (
+        datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     )
 
     manifest_files: list[dict[str, object]] = []

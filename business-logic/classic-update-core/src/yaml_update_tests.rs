@@ -135,6 +135,16 @@ fn validate_cache_name_rejects_embedded_nul() {
 }
 
 #[test]
+fn validate_cache_name_rejects_windows_alternate_data_stream_forms() {
+    for name in ["CLASSIC Main.yaml:alt", "foo:bar.yaml"] {
+        assert!(
+            !is_valid_cache_file_name(name),
+            "NTFS stream names must be rejected: {name}"
+        );
+    }
+}
+
+#[test]
 fn validate_cache_name_rejects_trailing_dot_or_space() {
     for name in [
         "CLASSIC Main.yaml.",

@@ -34,6 +34,20 @@ from ruamel.yaml import YAML, YAMLError
 _YAML = YAML(typ="safe", pure=True)
 
 SCHEMA_VERSION_RE = re.compile(r"^\d+\.\d+$")
+_ASCII_UPPER_TO_LOWER = str.maketrans(
+    {chr(code): chr(code + 32) for code in range(ord("A"), ord("Z") + 1)}
+)
+
+
+def windows_normalized_cache_file_key(name: str) -> str:
+    """Mirror the client-side Windows cache-basename collision key.
+
+    Windows treats trailing spaces/dots as insignificant during path lookup
+    and compares file names case-insensitively. Keep this helper ASCII-only so
+    it matches Rust's ``to_ascii_lowercase()`` exactly.
+    """
+
+    return name.rstrip(" .").translate(_ASCII_UPPER_TO_LOWER)
 
 
 def _parse_schema_point(value: str) -> tuple[int, int]:
@@ -91,25 +105,26 @@ def load_shippable_names(schema_ranges_path: Path) -> set[str]:
     with schema_ranges_path.open("r", encoding="utf-8") as f:
         doc = _YAML.load(f)
     if not isinstance(doc, dict) or "files" not in doc:
-        raise SystemExit(
-            f"FAIL: {schema_ranges_path} has no top-level 'files' list"
-        )
-    # Reject duplicate `files[].name` entries here so the published manifest
-    # can never list two rows for the same target. Client-side
-    # `validate_manifest` rejects the same shape, but guarding at publish time
-    # keeps a mis-edited ranges file from reaching a release at all.
+        raise SystemExit(f"FAIL: {schema_ranges_path} has no top-level 'files' list")
+    # Reject duplicate `files[].name` entries by the same Windows path
+    # identity the client uses at runtime. This keeps publish-time acceptance
+    # aligned with `validate_manifest` so a release cannot succeed with names
+    # that the client later refuses as duplicates.
     names: set[str] = set()
+    normalized_names: set[str] = set()
     for entry in doc["files"]:
         if not isinstance(entry, dict) or "name" not in entry:
             raise SystemExit(
                 f"FAIL: {schema_ranges_path} entry missing 'name': {entry!r}"
             )
         name = str(entry["name"])
-        if name in names:
+        normalized_name = windows_normalized_cache_file_key(name)
+        if normalized_name in normalized_names:
             raise SystemExit(
                 f"FAIL: {schema_ranges_path} contains duplicate entry for "
                 f"{name!r}; each file must appear at most once"
             )
+        normalized_names.add(normalized_name)
         names.add(name)
 
         min_raw = _validate_range_field(schema_ranges_path, entry, "min_client_schema")
