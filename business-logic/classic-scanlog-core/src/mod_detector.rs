@@ -547,27 +547,40 @@ fn important_matcher_tokens(entries: &[CoreModEntry]) -> Vec<String> {
         .collect()
 }
 
-fn compile_cached_important_matcher(matcher_tokens: &[String]) -> Result<Arc<AhoCorasick>> {
+fn compile_cached_important_matcher_with_cache(
+    cache: &Cache<u64, Arc<AhoCorasick>>,
+    compile_counter: &AtomicU64,
+    matcher_tokens: &[String],
+) -> Result<Arc<AhoCorasick>> {
     let cache_key = hash_normalized_matcher_tokens(matcher_tokens);
-    if let Some(cached) = IMPORTANT_MATCHER_CACHE.get(&cache_key) {
-        return Ok(cached);
-    }
+    cache.get_or_insert_with(&cache_key, || {
+        let compiled = Arc::new(
+            AhoCorasick::builder()
+                .match_kind(MatchKind::LeftmostLongest)
+                .build(matcher_tokens)
+                .map_err(|e| ScanLogError::InvalidInput(format!("Aho-Corasick error: {}", e)))?,
+        );
 
-    let compiled = Arc::new(
-        AhoCorasick::builder()
-            .match_kind(MatchKind::LeftmostLongest)
-            .build(matcher_tokens)
-            .map_err(|e| ScanLogError::InvalidInput(format!("Aho-Corasick error: {}", e)))?,
-    );
-
-    IMPORTANT_MATCHER_COMPILES.fetch_add(1, Ordering::Relaxed);
-    IMPORTANT_MATCHER_CACHE.insert(cache_key, compiled.clone());
-    Ok(compiled)
+        compile_counter.fetch_add(1, Ordering::Relaxed);
+        Ok(compiled)
+    })
 }
 
 fn get_important_matcher(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
+    get_important_matcher_with_cache(
+        entries,
+        &IMPORTANT_MATCHER_CACHE,
+        &IMPORTANT_MATCHER_COMPILES,
+    )
+}
+
+fn get_important_matcher_with_cache(
+    entries: &[CoreModEntry],
+    cache: &Cache<u64, Arc<AhoCorasick>>,
+    compile_counter: &AtomicU64,
+) -> Result<Arc<AhoCorasick>> {
     let matcher_tokens = important_matcher_tokens(entries);
-    compile_cached_important_matcher(&matcher_tokens)
+    compile_cached_important_matcher_with_cache(cache, compile_counter, &matcher_tokens)
 }
 
 fn important_match_ids(matcher: &AhoCorasick, haystack: &str) -> HashSet<usize> {
@@ -960,66 +973,72 @@ fn compile_cached_matcher(
     matcher_tokens: &[String],
     compile_counter: &AtomicU64,
 ) -> Result<Arc<Regex>> {
-    if let Some(cached) = cache.get(&cache_key) {
-        return Ok(cached);
-    }
+    cache.get_or_insert_with(&cache_key, || {
+        let pattern = format!(
+            "(?i){}",
+            matcher_tokens
+                .iter()
+                .map(|mod_name| regex::escape(mod_name))
+                .collect::<Vec<_>>()
+                .join("|")
+        );
+        let compiled = Arc::new(
+            Regex::new(&pattern)
+                .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
+        );
 
-    let pattern = format!(
-        "(?i){}",
-        matcher_tokens
-            .iter()
-            .map(|mod_name| regex::escape(mod_name))
-            .collect::<Vec<_>>()
-            .join("|")
-    );
-    let compiled = Arc::new(
-        Regex::new(&pattern)
-            .map_err(|e| ScanLogError::InvalidInput(format!("Regex error: {}", e)))?,
-    );
-
-    compile_counter.fetch_add(1, Ordering::Relaxed);
-    cache.insert(cache_key, compiled.clone());
-    Ok(compiled)
+        compile_counter.fetch_add(1, Ordering::Relaxed);
+        Ok(compiled)
+    })
 }
 
 fn get_single_matcher(
     yaml_dict: &IndexMap<String, String>,
 ) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    get_single_matcher_with_cache(yaml_dict, &SINGLE_MATCHER_CACHE, &SINGLE_MATCHER_COMPILES)
+}
+
+fn get_single_matcher_with_cache(
+    yaml_dict: &IndexMap<String, String>,
+    cache: &Cache<u64, Arc<Regex>>,
+    compile_counter: &AtomicU64,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
     let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
     let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
     let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
-    let matcher = compile_cached_matcher(
-        &SINGLE_MATCHER_CACHE,
-        cache_key,
-        &matcher_tokens,
-        &SINGLE_MATCHER_COMPILES,
-    )?;
+    let matcher = compile_cached_matcher(cache, cache_key, &matcher_tokens, compile_counter)?;
     Ok((yaml_dict_lower, matcher))
 }
 
 fn get_double_matcher(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
+    get_double_matcher_with_cache(entries, &DOUBLE_MATCHER_CACHE, &DOUBLE_MATCHER_COMPILES)
+}
+
+fn get_double_matcher_with_cache(
+    entries: &[ModConflictEntry],
+    cache: &Cache<u64, Arc<Regex>>,
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
     let matcher_tokens = sorted_double_matcher_tokens(entries);
     let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
-    compile_cached_matcher(
-        &DOUBLE_MATCHER_CACHE,
-        cache_key,
-        &matcher_tokens,
-        &DOUBLE_MATCHER_COMPILES,
-    )
+    compile_cached_matcher(cache, cache_key, &matcher_tokens, compile_counter)
 }
 
 fn get_batch_matcher(
     yaml_dict: &IndexMap<String, String>,
 ) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
+    get_batch_matcher_with_cache(yaml_dict, &BATCH_MATCHER_CACHE, &BATCH_MATCHER_COMPILES)
+}
+
+fn get_batch_matcher_with_cache(
+    yaml_dict: &IndexMap<String, String>,
+    cache: &Cache<u64, Arc<Regex>>,
+    compile_counter: &AtomicU64,
+) -> Result<(IndexMap<String, String>, Arc<Regex>)> {
     let yaml_dict_lower = build_normalized_single_matcher_inputs(yaml_dict);
     let matcher_tokens = sorted_single_matcher_tokens(&yaml_dict_lower);
     let cache_key = hash_normalized_matcher_tokens(&matcher_tokens);
-    let matcher = compile_cached_matcher(
-        &BATCH_MATCHER_CACHE,
-        cache_key,
-        &matcher_tokens,
-        &BATCH_MATCHER_COMPILES,
-    )?;
+    let matcher = compile_cached_matcher(cache, cache_key, &matcher_tokens, compile_counter)?;
     Ok((yaml_dict_lower, matcher))
 }
 

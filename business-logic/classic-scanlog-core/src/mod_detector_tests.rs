@@ -1,64 +1,78 @@
 use super::*;
 use crate::{LogParser, plugin_analyzer::PluginAnalyzer, segment_key};
 use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
-use serial_test::serial;
+use quick_cache::sync::Cache;
 use std::sync::Arc as StdArc;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const IMPORTANT_MODS_FIXTURE_LOG: &str =
     include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
 
-fn reset_matcher_caches_for_tests() {
-    SINGLE_MATCHER_CACHE.clear();
-    DOUBLE_MATCHER_CACHE.clear();
-    BATCH_MATCHER_CACHE.clear();
-    IMPORTANT_MATCHER_CACHE.clear();
-    SINGLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
-    DOUBLE_MATCHER_COMPILES.store(0, Ordering::Relaxed);
-    BATCH_MATCHER_COMPILES.store(0, Ordering::Relaxed);
-    IMPORTANT_MATCHER_COMPILES.store(0, Ordering::Relaxed);
+fn regex_matcher_cache_for_tests() -> Cache<u64, Arc<Regex>> {
+    Cache::new(64)
 }
 
-fn single_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
-    let (_, matcher) = get_single_matcher(yaml_dict)?;
+fn important_matcher_cache_for_tests() -> Cache<u64, Arc<AhoCorasick>> {
+    Cache::new(64)
+}
+
+fn compile_counter_for_tests() -> AtomicU64 {
+    AtomicU64::new(0)
+}
+
+fn single_matcher_for_tests(
+    yaml_dict: &IndexMap<String, String>,
+    cache: &Cache<u64, Arc<Regex>>,
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
+    let (_, matcher) = get_single_matcher_with_cache(yaml_dict, cache, compile_counter)?;
     Ok(matcher)
 }
 
-fn double_matcher_for_tests(entries: &[ModConflictEntry]) -> Result<Arc<Regex>> {
-    get_double_matcher(entries)
+fn double_matcher_for_tests(
+    entries: &[ModConflictEntry],
+    cache: &Cache<u64, Arc<Regex>>,
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
+    get_double_matcher_with_cache(entries, cache, compile_counter)
 }
 
-fn batch_matcher_for_tests(yaml_dict: &IndexMap<String, String>) -> Result<Arc<Regex>> {
-    let (_, matcher) = get_batch_matcher(yaml_dict)?;
+fn batch_matcher_for_tests(
+    yaml_dict: &IndexMap<String, String>,
+    cache: &Cache<u64, Arc<Regex>>,
+    compile_counter: &AtomicU64,
+) -> Result<Arc<Regex>> {
+    let (_, matcher) = get_batch_matcher_with_cache(yaml_dict, cache, compile_counter)?;
     Ok(matcher)
 }
 
-fn single_cache_size_for_tests() -> usize {
-    SINGLE_MATCHER_CACHE.len()
+fn single_cache_size_for_tests(cache: &Cache<u64, Arc<Regex>>) -> usize {
+    cache.len()
 }
 
-fn single_cache_capacity_for_tests() -> usize {
-    SINGLE_MATCHER_CACHE.capacity() as usize
+fn single_cache_capacity_for_tests(cache: &Cache<u64, Arc<Regex>>) -> usize {
+    cache.capacity() as usize
 }
 
-fn single_compile_count_for_tests() -> u64 {
-    SINGLE_MATCHER_COMPILES.load(Ordering::Relaxed)
+fn single_compile_count_for_tests(compile_counter: &AtomicU64) -> u64 {
+    compile_counter.load(Ordering::Relaxed)
 }
 
-fn double_compile_count_for_tests() -> u64 {
-    DOUBLE_MATCHER_COMPILES.load(Ordering::Relaxed)
+fn double_compile_count_for_tests(compile_counter: &AtomicU64) -> u64 {
+    compile_counter.load(Ordering::Relaxed)
 }
 
-fn double_compile_snapshot_for_tests() -> u64 {
-    double_compile_count_for_tests()
+fn important_matcher_for_tests(
+    entries: &[CoreModEntry],
+    cache: &Cache<u64, Arc<AhoCorasick>>,
+    compile_counter: &AtomicU64,
+) -> Result<Arc<AhoCorasick>> {
+    get_important_matcher_with_cache(entries, cache, compile_counter)
 }
 
-fn important_matcher_for_tests(entries: &[CoreModEntry]) -> Result<Arc<AhoCorasick>> {
-    get_important_matcher(entries)
-}
-
-fn important_compile_count_for_tests() -> u64 {
-    IMPORTANT_MATCHER_COMPILES.load(Ordering::Relaxed)
+fn important_compile_count_for_tests(compile_counter: &AtomicU64) -> u64 {
+    compile_counter.load(Ordering::Relaxed)
 }
 
 // ============================================
@@ -203,7 +217,6 @@ fn test_detect_mods_single_longest_match_priority() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_single_reuses_cached_matcher_for_same_normalized_input() {
     let mut yaml_dict = IndexMap::new();
     yaml_dict.insert(
@@ -215,19 +228,20 @@ fn test_detect_mods_single_reuses_cached_matcher_for_same_normalized_input() {
         "Repeatable Mod Extended\nStill cache me once.".to_string(),
     );
 
-    reset_matcher_caches_for_tests();
+    let cache = regex_matcher_cache_for_tests();
+    let compile_counter = compile_counter_for_tests();
 
-    let first = single_matcher_for_tests(&yaml_dict).unwrap();
-    let second = single_matcher_for_tests(&yaml_dict).unwrap();
+    let first = single_matcher_for_tests(&yaml_dict, &cache, &compile_counter).unwrap();
+    let second = single_matcher_for_tests(&yaml_dict, &cache, &compile_counter).unwrap();
 
     assert!(Arc::ptr_eq(&first, &second));
-    assert_eq!(single_compile_count_for_tests(), 1);
+    assert_eq!(single_compile_count_for_tests(&compile_counter), 1);
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_single_cache_stays_bounded_without_victim_assertions() {
-    reset_matcher_caches_for_tests();
+    let cache = regex_matcher_cache_for_tests();
+    let compile_counter = compile_counter_for_tests();
 
     for index in 0..70 {
         let mut yaml_dict = IndexMap::new();
@@ -235,12 +249,12 @@ fn test_detect_mods_single_cache_stays_bounded_without_victim_assertions() {
             format!("bounded-single-{index}"),
             format!("Bounded Single {index}\nKeep cache bounded."),
         );
-        let _ = single_matcher_for_tests(&yaml_dict).unwrap();
+        let _ = single_matcher_for_tests(&yaml_dict, &cache, &compile_counter).unwrap();
     }
 
-    assert_eq!(single_cache_capacity_for_tests(), 64);
-    assert!(single_cache_size_for_tests() <= single_cache_capacity_for_tests());
-    assert!(single_compile_count_for_tests() >= 64);
+    assert_eq!(single_cache_capacity_for_tests(&cache), 64);
+    assert!(single_cache_size_for_tests(&cache) <= single_cache_capacity_for_tests(&cache));
+    assert!(single_compile_count_for_tests(&compile_counter) >= 64);
 }
 
 #[test]
@@ -406,10 +420,7 @@ fn make_conflict(mod_a: &str, mod_b: &str) -> ModConflictEntry {
     }
 }
 
-// Keep detect_mods_double coverage serial so shared matcher compile counters stay scoped
-// to each regression proof during grouped test runs.
 #[test]
-#[serial]
 fn test_detect_mods_double_empty() {
     let entries: Vec<ModConflictEntry> = Vec::new();
     let plugins: IndexMap<String, String> = IndexMap::new();
@@ -419,7 +430,6 @@ fn test_detect_mods_double_empty() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_double_no_conflict() {
     let entries = vec![make_conflict("moda", "modb")];
 
@@ -431,7 +441,6 @@ fn test_detect_mods_double_no_conflict() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_double_conflict_detected() {
     let entries = vec![make_conflict("moda", "modb")];
 
@@ -447,7 +456,6 @@ fn test_detect_mods_double_conflict_detected() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_double_case_insensitive() {
     let entries = vec![make_conflict("moda", "modb")];
 
@@ -460,7 +468,6 @@ fn test_detect_mods_double_case_insensitive() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_double_with_link() {
     let entries = vec![ModConflictEntry {
         mod_a: "modx".to_string(),
@@ -482,7 +489,6 @@ fn test_detect_mods_double_with_link() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_double_multiple_conflicts_single_header() {
     let entries = vec![make_conflict("moda", "modb"), make_conflict("modc", "modd")];
 
@@ -517,21 +523,20 @@ fn test_detect_mods_double_multiple_conflicts_single_header() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_double_reuses_cached_matcher_for_same_conflict_set() {
     let entries = vec![
         make_conflict("repeat-double-a", "repeat-double-b"),
         make_conflict("repeat-double-c", "repeat-double-d"),
     ];
 
-    reset_matcher_caches_for_tests();
-    let starting_compiles = double_compile_snapshot_for_tests();
+    let cache = regex_matcher_cache_for_tests();
+    let compile_counter = compile_counter_for_tests();
 
-    let first = double_matcher_for_tests(&entries).unwrap();
-    let second = double_matcher_for_tests(&entries).unwrap();
+    let first = double_matcher_for_tests(&entries, &cache, &compile_counter).unwrap();
+    let second = double_matcher_for_tests(&entries, &cache, &compile_counter).unwrap();
 
     assert!(Arc::ptr_eq(&first, &second));
-    assert_eq!(double_compile_count_for_tests() - starting_compiles, 1);
+    assert_eq!(double_compile_count_for_tests(&compile_counter), 1);
 }
 
 // ============================================
@@ -654,14 +659,14 @@ fn test_detect_mods_important_reuses_cached_matcher_for_same_detect_literals() {
         ),
     ];
 
-    reset_matcher_caches_for_tests();
-    let starting_compiles = important_compile_count_for_tests();
+    let cache = important_matcher_cache_for_tests();
+    let compile_counter = compile_counter_for_tests();
 
-    let first = important_matcher_for_tests(&entries).unwrap();
-    let second = important_matcher_for_tests(&entries).unwrap();
+    let first = important_matcher_for_tests(&entries, &cache, &compile_counter).unwrap();
+    let second = important_matcher_for_tests(&entries, &cache, &compile_counter).unwrap();
 
     assert!(Arc::ptr_eq(&first, &second));
-    assert!(important_compile_count_for_tests() > starting_compiles);
+    assert_eq!(important_compile_count_for_tests(&compile_counter), 1);
 }
 
 #[test]
@@ -1044,7 +1049,6 @@ fn test_detect_mods_batch_preserves_order() {
 }
 
 #[test]
-#[serial]
 fn test_detect_mods_batch_reuses_cached_matcher_across_repeated_invocations() {
     let mut yaml_dict = IndexMap::new();
     yaml_dict.insert(
@@ -1066,13 +1070,14 @@ fn test_detect_mods_batch_reuses_cached_matcher_across_repeated_invocations() {
     );
 
     let logs = vec![log1, log2];
-
-    reset_matcher_caches_for_tests();
+    let cache = regex_matcher_cache_for_tests();
+    let compile_counter = compile_counter_for_tests();
 
     let first = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
-    let cached_after_first = batch_matcher_for_tests(&yaml_dict).unwrap();
+    let cached_after_first = batch_matcher_for_tests(&yaml_dict, &cache, &compile_counter).unwrap();
     let second = detect_mods_batch(yaml_dict.clone(), logs.clone()).unwrap();
-    let cached_after_second = batch_matcher_for_tests(&yaml_dict).unwrap();
+    let cached_after_second =
+        batch_matcher_for_tests(&yaml_dict, &cache, &compile_counter).unwrap();
 
     assert_eq!(first, second);
     assert!(Arc::ptr_eq(&cached_after_first, &cached_after_second));
