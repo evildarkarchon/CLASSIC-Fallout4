@@ -1,4 +1,7 @@
 import { describe, test, expect } from "bun:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   applyYamlUpdate,
   // Yaml-update orchestrator
@@ -95,20 +98,24 @@ describe("yaml-update NAPI surface", () => {
   });
 
   test("rollbackYamlUpdate returns rolledBack=false for unknown file", () => {
-    // On a fresh machine the rollback may either report "no previous
-    // version" or fail because the per-user yaml-cache root itself cannot
-    // be resolved. Either outcome is acceptable as long as the binding does
-    // not panic.
+    const root = mkdtempSync(join(tmpdir(), "classic-node-yaml-rollback-"));
+    const originalLocalAppData = process.env.LOCALAPPDATA;
+
     try {
+      process.env.LOCALAPPDATA = root;
+
       const outcome: JsYamlRollbackOutcome = rollbackYamlUpdate(
         "__bun_spec_definitely_nonexistent_file_xyzzy__.yaml",
       );
       expect(outcome).toHaveProperty("rolledBack");
       expect(outcome).toHaveProperty("fileName");
       expect(outcome.rolledBack).toBe(false);
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toContain("cache dir unavailable");
+    } finally {
+      if (originalLocalAppData === undefined) {
+        delete process.env.LOCALAPPDATA;
+      } else {
+        process.env.LOCALAPPDATA = originalLocalAppData;
+      }
     }
   });
 });

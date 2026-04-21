@@ -56,7 +56,7 @@ use crate::github::GithubClient;
 use classic_file_io_core::{
     FileHasher, FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic,
 };
-use classic_path_core::{ensure_yaml_cache_dir, yaml_cache_dir};
+use classic_path_core::ensure_yaml_cache_dir;
 use classic_settings_core::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, parse_yaml_content,
     schema_compat_check,
@@ -2045,7 +2045,9 @@ pub fn rollback_yaml_update(file_name: &str) -> Result<RollbackOutcome> {
     // the filesystem. See the Codex adversarial review finding for the
     // direct-call escape scenario this blocks.
     validate_cache_file_name(file_name)?;
-    let cache_dir = yaml_cache_dir()
+    // Rollback uses the same per-target lockfile helper as install, so the
+    // cache directory must exist even when the file itself never has.
+    let cache_dir = ensure_yaml_cache_dir()
         .map_err(|e| UpdateError::Generic(format!("cache dir unavailable: {e}")))?;
     let target = cache_dir.join(file_name);
     ensure_path_in_cache(&cache_dir, &target)?;
