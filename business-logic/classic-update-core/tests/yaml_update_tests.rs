@@ -24,9 +24,9 @@
 use classic_settings_core::{SchemaCompat, SchemaVersion};
 use classic_update_core::{
     ApprovedUpdate, ClientSchemaSet, GithubClient, MAX_MANIFEST_VERSION, UpdateCheckConfig,
-    UpdateError, YamlManifest, YamlManifestFile, YamlUpdateStatus,
-    apply_yaml_update_with_decision, check_yaml_update, classify_manifest, fetch_yaml_manifest,
-    rollback_yaml_update, validate_manifest,
+    UpdateError, YamlManifest, YamlManifestFile, YamlUpdateStatus, apply_yaml_update_with_decision,
+    check_yaml_update, classify_manifest, fetch_yaml_manifest, rollback_yaml_update,
+    validate_manifest,
 };
 use std::path::Path;
 use tempfile::TempDir;
@@ -1277,7 +1277,11 @@ fn classify_accepts_when_min_client_schema_above_client_floor_but_ranges_overlap
             incompatible_files,
             ..
         } => {
-            assert_eq!(compatible_files.len(), 1, "expected 1 compatible, got {compatible_files:?}");
+            assert_eq!(
+                compatible_files.len(),
+                1,
+                "expected 1 compatible, got {compatible_files:?}"
+            );
             assert!(incompatible_files.is_empty(), "no rejections expected");
         }
         other => panic!("expected UpdateAvailable with overlapping schema range, got {other:?}"),
@@ -1397,6 +1401,36 @@ fn classify_accepts_when_client_point_within_bounds() {
             assert!(incompatible_files.is_empty());
         }
         other => panic!("expected UpdateAvailable, got {other:?}"),
+    }
+}
+
+#[test]
+fn classify_rejects_when_client_schema_bounds_are_inverted() {
+    let mut m = valid_manifest();
+    m.files[0].schema_version = "1.7".into();
+    m.files[0].min_client_schema = Some("1.10".into());
+    m.files[0].max_client_schema = Some("1.5".into());
+
+    let set = client_set("CLASSIC Main.yaml", SchemaCompat::new(1, 7), None);
+
+    match classify_manifest(m, &set).unwrap() {
+        YamlUpdateStatus::UpToDate {
+            incompatible_files, ..
+        } => {
+            assert_eq!(incompatible_files.len(), 1);
+            assert!(
+                incompatible_files[0].reason.contains("inverted")
+                    && incompatible_files[0]
+                        .reason
+                        .contains("min_client_schema 1.10")
+                    && incompatible_files[0]
+                        .reason
+                        .contains("max_client_schema 1.5"),
+                "reason should describe inverted bounds, got: {}",
+                incompatible_files[0].reason,
+            );
+        }
+        other => panic!("expected UpToDate with inverted-bound rejection, got {other:?}"),
     }
 }
 
@@ -1645,7 +1679,8 @@ async fn check_yaml_update_uses_explicit_bundled_dir_for_clean_install() {
     // Pages mock serving a manifest that advertises the same sha256.
     let mut server = mockito::Server::new_async().await;
     let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
-    let download_url = "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml";
+    let download_url =
+        "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml";
     let manifest_body = valid_manifest_json(
         "yaml-data-v2026.04.17",
         &bundled_sha,
@@ -1671,8 +1706,8 @@ async fn check_yaml_update_uses_explicit_bundled_dir_for_clean_install() {
     // not the raw schema_version (which would always say "updateAvailable"
     // against a None installed).
     let client = tokenless_client(&server.url());
-    let config = UpdateCheckConfig::enabled()
-        .with_bundled_yaml_dir(bundled_tmp.path().to_path_buf());
+    let config =
+        UpdateCheckConfig::enabled().with_bundled_yaml_dir(bundled_tmp.path().to_path_buf());
 
     let status = check_yaml_update(&client, &pages_url, "yaml-data-v", &set, config)
         .await
@@ -1713,13 +1748,10 @@ async fn check_yaml_update_with_bundled_dir_still_reports_update_when_shas_diffe
 
     let mut server = mockito::Server::new_async().await;
     let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
-    let download_url = "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml";
-    let manifest_body = valid_manifest_json(
-        "yaml-data-v2026.04.17",
-        &mismatched_sha,
-        download_url,
-        64,
-    );
+    let download_url =
+        "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml";
+    let manifest_body =
+        valid_manifest_json("yaml-data-v2026.04.17", &mismatched_sha, download_url, 64);
     let _pages_mock = server
         .mock("GET", "/yaml-data/manifest-latest.json")
         .with_status(200)
@@ -1732,8 +1764,8 @@ async fn check_yaml_update_with_bundled_dir_still_reports_update_when_shas_diffe
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
     let client = tokenless_client(&server.url());
-    let config = UpdateCheckConfig::enabled()
-        .with_bundled_yaml_dir(bundled_tmp.path().to_path_buf());
+    let config =
+        UpdateCheckConfig::enabled().with_bundled_yaml_dir(bundled_tmp.path().to_path_buf());
 
     let status = check_yaml_update(&client, &pages_url, "yaml-data-v", &set, config)
         .await

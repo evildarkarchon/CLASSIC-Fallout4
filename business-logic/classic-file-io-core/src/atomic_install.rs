@@ -235,12 +235,13 @@ pub fn install_atomic(
     // mode. The handle is scoped to this block so it is closed before the
     // rename executes.
     {
-        let f = OpenOptions::new().write(true).open(source_tmp).map_err(|source| {
-            FileIOError::WriteError {
+        let f = OpenOptions::new()
+            .write(true)
+            .open(source_tmp)
+            .map_err(|source| FileIOError::WriteError {
                 path: source_tmp.to_path_buf(),
                 source,
-            }
-        })?;
+            })?;
         f.sync_all().map_err(|source| FileIOError::WriteError {
             path: source_tmp.to_path_buf(),
             source,

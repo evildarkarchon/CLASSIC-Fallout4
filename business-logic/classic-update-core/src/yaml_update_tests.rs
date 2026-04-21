@@ -503,6 +503,31 @@ fn client_schema_bounds_reject_when_floor_above_max_minor_in_shared_major() {
     );
 }
 
+#[test]
+fn client_schema_bounds_reject_inverted_interval() {
+    let entry = YamlManifestFile {
+        name: "CLASSIC Main.yaml".into(),
+        schema_version: "1.7".into(),
+        sha256: "a".repeat(64),
+        size_bytes: 0,
+        min_client_schema: Some("1.10".into()),
+        max_client_schema: Some("1.5".into()),
+        download_url: "https://github.com/x/y/releases/download/t/f".into(),
+    };
+    let ce = ClientSchemaEntry {
+        accepted: SchemaCompat::new(1, 7),
+        installed: None,
+        installed_sha256: None,
+    };
+    let err = check_client_schema_bounds(&entry, &ce).unwrap_err();
+    assert!(
+        err.contains("inverted")
+            && err.contains("min_client_schema 1.10")
+            && err.contains("max_client_schema 1.5"),
+        "got: {err}"
+    );
+}
+
 /// Regression for Codex adversarial review finding: "Installed-version
 /// detection uses a relative bundled path, so clean installs can be
 /// misreported as needing an update". The helper must never return a

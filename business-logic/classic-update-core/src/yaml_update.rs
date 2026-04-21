@@ -1224,22 +1224,21 @@ pub async fn check_yaml_update(
         }
     };
 
-    let manifest = match fetch_yaml_manifest(client, pages_url, tag_prefix, cache_dir.as_deref())
-        .await
-    {
-        Ok(m) => m,
-        Err(UpdateError::ManifestUnsupportedVersion {
-            found,
-            max_supported,
-        }) => {
-            return Ok(YamlUpdateStatus::Unknown {
-                reason: format!(
-                    "manifest_version {found} not supported (max supported: {max_supported})",
-                ),
-            });
-        }
-        Err(e) => return Err(e),
-    };
+    let manifest =
+        match fetch_yaml_manifest(client, pages_url, tag_prefix, cache_dir.as_deref()).await {
+            Ok(m) => m,
+            Err(UpdateError::ManifestUnsupportedVersion {
+                found,
+                max_supported,
+            }) => {
+                return Ok(YamlUpdateStatus::Unknown {
+                    reason: format!(
+                        "manifest_version {found} not supported (max supported: {max_supported})",
+                    ),
+                });
+            }
+            Err(e) => return Err(e),
+        };
 
     // Enrich any entry the caller left as `installed == None` by reading the
     // currently-installed file. Precedence mirrors the load-time shippable
@@ -1262,9 +1261,7 @@ pub async fn check_yaml_update(
     // fallback a manifest that advertises the same version the app already
     // ships would still be classified as `UpdateAvailable`, triggering
     // pointless downloads and rotating `.prev` to the already-current bytes.
-    let bundled_dir = config
-        .bundled_yaml_dir
-        .or_else(resolve_bundled_yaml_dir);
+    let bundled_dir = config.bundled_yaml_dir.or_else(resolve_bundled_yaml_dir);
     let enriched = enrich_installed(current, cache_dir.as_deref(), bundled_dir.as_deref());
 
     classify_manifest(manifest, &enriched)
@@ -1464,6 +1461,11 @@ fn enrich_installed(
 ///    any file minor at or above `max(minimum_minor, min.minor)`
 ///    overlaps.)
 ///
+/// A manifest that publishes both bounds must also publish a non-inverted
+/// interval (`min_client_schema <= max_client_schema`). Contradictory bounds
+/// are rejected as malformed manifest data even if a specific client schema
+/// point would otherwise appear to sit inside one side of the interval.
+///
 /// Returns `Ok(())` when bounds are absent or overlap exists;
 /// `Err(reason)` with a short diagnostic otherwise.
 fn check_client_schema_bounds(
@@ -1487,6 +1489,14 @@ fn check_client_schema_bounds(
         ),
         None => None,
     };
+
+    if let (Some(min), Some(max)) = (&min, &max) {
+        if min > max {
+            return Err(format!(
+                "file client schema bounds inverted: min_client_schema {min} exceeds max_client_schema {max}"
+            ));
+        }
+    }
 
     if let Some(ref min) = min {
         if accepted_major < min.major {
@@ -1620,9 +1630,7 @@ pub fn classify_manifest(
                 // boundary; compare case-insensitively so a caller-provided
                 // upper-case hex still matches.
                 let is_newer = match (&client_entry.installed_sha256, &client_entry.installed) {
-                    (Some(installed_sha), _) => {
-                        !installed_sha.eq_ignore_ascii_case(&entry.sha256)
-                    }
+                    (Some(installed_sha), _) => !installed_sha.eq_ignore_ascii_case(&entry.sha256),
                     (None, Some(installed_version)) => manifest_version > *installed_version,
                     (None, None) => true,
                 };
@@ -1793,11 +1801,8 @@ pub async fn apply_yaml_update_with_decision(
 
     // Build a quick lookup set so we don't pay O(N*M) membership checks
     // when the approved list has more than a handful of names.
-    let approved_names: std::collections::HashSet<&str> = approved
-        .file_names
-        .iter()
-        .map(|s| s.as_str())
-        .collect();
+    let approved_names: std::collections::HashSet<&str> =
+        approved.file_names.iter().map(|s| s.as_str()).collect();
 
     // Partition the freshly-classified compatible files into "approved"
     // (install) and "not approved" (ignore — the user didn't confirm them,

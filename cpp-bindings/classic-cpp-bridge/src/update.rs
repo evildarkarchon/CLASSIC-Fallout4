@@ -283,7 +283,9 @@ fn yaml_apply_update(
         Err(UpdateError::UpdateCheckDisabled) => ffi::YamlUpdateReportDto {
             installed: Vec::new(),
             failed: Vec::new(),
-            error_message: "update check disabled: enable \"Check for Updates on Startup\" and try again".to_string(),
+            error_message:
+                "update check disabled: enable \"Check for Updates on Startup\" and try again"
+                    .to_string(),
         },
         Err(UpdateError::DecisionStale { approved, manifest }) => ffi::YamlUpdateReportDto {
             installed: Vec::new(),

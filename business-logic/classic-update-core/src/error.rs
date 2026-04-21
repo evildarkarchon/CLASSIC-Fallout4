@@ -107,7 +107,9 @@ pub enum UpdateError {
     /// `YamlManifest::release_tag` differs from
     /// `ApprovedUpdate::release_tag`. The GUI / CLI should prompt the
     /// user to re-check and re-review.
-    #[error("approved release `{approved}` does not match current manifest release `{manifest}`; re-check required")]
+    #[error(
+        "approved release `{approved}` does not match current manifest release `{manifest}`; re-check required"
+    )]
     DecisionStale {
         /// Release tag the user approved at review time.
         approved: String,
