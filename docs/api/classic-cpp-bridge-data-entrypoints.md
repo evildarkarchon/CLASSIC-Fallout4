@@ -2,11 +2,11 @@
 
 Contributor-facing documentation for the active C++ bridge entry points in:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) (renamed from `yaml.rs` during v9.1.0 Phase 1 Plan 2)
+- [`cpp-bindings/classic-cpp-bridge/src/config.rs`](../../cpp-bindings/classic-cpp-bridge/src/config.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/files.rs`](../../cpp-bindings/classic-cpp-bridge/src/files.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs)
 
 This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for YAML operations, config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
 
@@ -40,21 +40,30 @@ For crate-level behavior, see:
 
 ## Current Bridge Ownership
 
-## `src/yaml.rs` -> `classic::yaml`
+## `src/settings.rs` -> `classic::settings`
 
-This file exposes a stateful `YamlOps` wrapper over `classic_yaml_core::YamlOperations` plus bridge-local `YamlValue` and `CacheStats` DTOs that CXX can move by value.
+This file (formerly `src/yaml.rs` -> `classic::yaml`; renamed during v9.1.0 Phase 1 Plan 2) exposes a stateful `YamlOps` wrapper over `classic_settings_core::YamlOperations` plus bridge-local `YamlValue` and `YamlCacheStatsDto` DTOs that CXX can move by value, AND the D-09 expansion surface: the settings-core cache operations and validator helpers mirroring the Python surface.
 
 It owns:
 
 - YAML parse/load/save helpers through `yaml_ops_*`
 - typed setting inspection and mutation helpers through `YamlValue`
-- YAML cache helpers `yaml_ops_clear_cache()`, `yaml_ops_cache_stats()`, and the narrowed `yaml_ops_cache_size()` adapter
+- YAML (path-backed) cache helpers `yaml_ops_clear_cache()`, `yaml_ops_cache_stats()`, and the narrowed `yaml_ops_cache_size()` adapter
+- settings-core cache-populating loaders `settings_load_sync`, `settings_load_async_blocking`, `settings_load_batch_sync`, `settings_load_batch_async_blocking` (return a `u32` doc count; the full `Arc<Vec<Yaml>>` does not cross CXX)
+- settings-core cache observability: `settings_cache_stats` (returns `SettingsCacheStats`), `settings_cache_size`, `settings_cache_keys`, `settings_is_cached`, `settings_invalidate`, `settings_clear_cache`, `settings_reset_cache_stats`
+- settings validators mirroring the Python surface: `settings_validate_structure` (returns `Vec<SettingsValidationIssue>`), `settings_validate_value`, and `settings_coerce_value` (returns `SettingsCoercedValue`)
 
 Current cache-observability behavior:
 
-- `yaml_ops_cache_stats()` forwards to the canonical `classic_yaml_core::cache_stats()` contract with `hits`, `misses`, `hit_rate`, `size`, and `capacity`
-- `yaml_ops_cache_size()` intentionally stays as `yaml_ops_cache_stats().size` for older C++ callers that only need a count
-- YAML-specific legacy byte totals remain on the Rust side through `YamlOperations::get_cache_stats()` and are not widened into the C++ `CacheStats` DTO
+- `yaml_ops_cache_stats()` forwards to the canonical `classic_settings_core::yaml_cache_stats()` contract with `hits`, `misses`, `hit_rate`, `size`, and `capacity` — returned through the `YamlCacheStatsDto` shared struct (renamed from a pre-existing `CacheStats` DTO during Phase 1 Plan 2 to avoid collision with the new `SettingsCacheStats`)
+- `yaml_ops_cache_size()` stays as `yaml_ops_cache_stats().size` for older C++ callers
+- `settings_cache_stats()` forwards to `classic_settings_core::cache_stats()` and returns `SettingsCacheStats`; this is a distinct cache (capacity `64`) from the yaml file cache (capacity `128`)
+- YAML-specific legacy byte totals remain on the Rust side through `YamlOperations::get_cache_stats()` and are not widened into either DTO
+
+Two CXX type-system exceptions (bridge-internal design notes):
+
+- `get_cached()` returning `Option<Arc<Vec<Yaml>>>` cannot cross the CXX boundary; the bridge does not expose it. Callers fall back to `yaml_ops_*` when they need parsed YAML documents back out.
+- `load_settings_*()` Rust APIs return `Arc<Vec<Yaml>>`; the bridge's `settings_load_*` variants return only a `u32` doc count because `Arc<Vec<Yaml>>` is not CXX-movable.
 
 ## `src/config.rs` -> `classic::config`
 
@@ -110,26 +119,52 @@ It owns:
 - small scan utilities such as `detect_vr_log` and `detect_crash_pattern`
 - Papyrus monitoring through `classic_scanlog_core::papyrus::PapyrusAnalyzer`
 
-This is currently where `classic-config-core`, `classic-database-core`, `classic-scanlog-core`, `classic-yaml-core`, and `classic-shared-core` meet for the C++ scanning path.
+This is currently where `classic-config-core`, `classic-database-core`, `classic-scanlog-core`, `classic-settings-core` (which absorbed the former ``yaml-core`` in v9.1.0 Phase 1), and `classic-shared-core` meet for the C++ scanning path.
 
 ---
 
 ## FFI Surface By File
 
-## `classic::yaml` entry points
+## `classic::settings` entry points
 
-### Cache stats helpers
+(This namespace was renamed from `classic::yaml` during v9.1.0 Phase 1 Plan 2 and expanded with the D-09 settings-core surface in the same change.)
+
+### YAML file-cache helpers
 
 These helpers keep the C++ YAML surface aligned with the canonical Phase 4 cache stats contract:
 
 - `yaml_ops_clear_cache(ops)` forwards to `YamlOperations::clear_cache()`
-- `yaml_ops_cache_stats(ops) -> CacheStats` forwards to `classic_yaml_core::cache_stats()`
+- `yaml_ops_cache_stats(ops) -> YamlCacheStatsDto` forwards to `classic_settings_core::yaml_cache_stats()`
 - `yaml_ops_cache_size(ops) -> usize` is a narrowed adapter over `yaml_ops_cache_stats(ops).size`
 
 Current bridge behavior:
 
-- the returned `CacheStats` DTO uses the exact shared five-field cache stats contract
+- the returned `YamlCacheStatsDto` DTO uses the exact shared five-field cache stats contract (`hits`, `misses`, `hit_rate`, `size`, `capacity`)
+- the DTO was renamed from the pre-existing `CacheStats` shared struct during Phase 1 Plan 2 to avoid collision with the new `SettingsCacheStats`
 - C++ does not receive YAML-specific `total_bytes`; that legacy detail remains Rust-only
+
+### Settings-core cache loaders (D-09 expansion)
+
+- `settings_load_sync(key, path) -> Result<u32>` forwards to `classic_settings_core::load_settings_sync(...)`, returning the number of parsed YAML documents
+- `settings_load_async_blocking(key, path) -> Result<u32>` wraps the async loader with `block_on(...)` on the shared runtime
+- `settings_load_batch_sync(paths) -> Result<u32>` forwards to `classic_settings_core::load_batch_sync(...)`
+- `settings_load_batch_async_blocking(paths) -> Result<u32>` wraps the async batch loader with `block_on(...)`
+
+These return only a `u32` document count because the Rust APIs return `Arc<Vec<Yaml>>` which cannot cross the CXX boundary. Callers that need the documents back out currently fall back to `yaml_ops_*`.
+
+### Settings-core cache observability (D-09 expansion)
+
+- `settings_cache_stats() -> SettingsCacheStats` forwards to `classic_settings_core::cache_stats()`
+- `settings_cache_size() -> usize`, `settings_cache_keys() -> Vec<String>`, `settings_is_cached(key) -> bool`, `settings_invalidate(key) -> bool`, `settings_clear_cache()`, `settings_reset_cache_stats()` — forward to the matching settings-core APIs
+- `SettingsCacheStats` is a distinct shared struct from `YamlCacheStatsDto`: the settings cache has capacity `64` while the yaml file cache has capacity `128`. Confusing the two would silently swap cache numbers.
+
+### Settings validators (D-09 expansion)
+
+- `settings_validate_structure(yaml) -> Vec<SettingsValidationIssue>` forwards to `classic_settings_core::validators::validate_settings_structure(...)`
+- `settings_validate_value(value, expected_type) -> bool` forwards to `validate_setting_value(...)` with a 9-token case-insensitive type parser (`int`, `integer`, `bool`, `boolean`, `float`, `double`, `path`, `string`, `str`; `list`/`map`/`array` are rejected because the underlying `SettingType` enum has only five variants)
+- `settings_coerce_value(value, target_type) -> Result<SettingsCoercedValue>` forwards to `coerce_setting_value(...)` using the same 9-token parser
+
+New shared structs added in this expansion: `SettingsCacheStats`, `SettingsValidationIssue`, `SettingsCoercedValue`, `YamlCacheStatsDto`.
 
 ## `classic::config` entry points
 
@@ -218,7 +253,7 @@ These helpers expose the `classic_file_io_core::hash::FileHasher` cache directly
 
 Current bridge behavior:
 
-- the returned `CacheStats` DTO uses the same five-field cache stats contract as `classic::yaml` and `classic::config`
+- the returned `CacheStats` DTO uses the same five-field cache stats contract as `classic::settings` and `classic::config`
 - hash calculation and cache semantics remain owned by `classic-file-io-core`; the bridge just forwards the data
 
 ## Backup helpers

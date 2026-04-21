@@ -1,6 +1,6 @@
 # `classic-file-io-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-file-io-core/`](../../ClassicLib-rs/business-logic/classic-file-io-core).
+Contributor-facing API documentation for [`business-logic/classic-file-io-core/`](../../business-logic/classic-file-io-core).
 
 Crate metadata:
 
@@ -35,7 +35,7 @@ Do not use this crate for:
 - database lookup logic
 - binding-specific wrapper APIs
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), and [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), and [`classic-database-core`](../../business-logic/classic-database-core).
 
 ---
 
@@ -524,14 +524,14 @@ Important direct dependencies:
 
 Related CLASSIC crates:
 
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - downstream consumer of `FileIOCore` for reading crash logs and writing `-AUTOSCAN.md` reports
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core) - downstream consumer of `DDSAnalyzer` for texture and game-file checks
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - neighboring loader crate; both participate in file-backed business logic but at different layers
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer of `FileIOCore` for reading crash logs and writing `-AUTOSCAN.md` reports
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of `DDSAnalyzer` for texture and game-file checks
+- [`classic-config-core`](../../business-logic/classic-config-core) - neighboring loader crate; both participate in file-backed business logic but at different layers
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
 
 Source-observed note:
 
-- `Cargo.toml` declares a dependency on [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core), but the current `src/` files do not visibly expose or call shared-runtime APIs directly.
+- `Cargo.toml` declares a dependency on [`classic-shared-core`](../../foundation/classic-shared-core), but the current `src/` files do not visibly expose or call shared-runtime APIs directly.
 
 ---
 

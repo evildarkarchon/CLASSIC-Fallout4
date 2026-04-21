@@ -1,222 +1,128 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-04-04
+**Analysis Date:** 2026-04-14
 
 ## Naming Patterns
 
 **Files:**
-- Rust: `snake_case.rs` (e.g., `core.rs`, `pool_sqlx.rs`, `game_files.rs`)
-- Crates: kebab-case with game-prefix (e.g., `classic-config-core`, `classic-file-io-py`)
-- C++ source: `snake_case.cpp` / `snake_case.h` (e.g., `cli_args.cpp`, `thread_pool.h`)
-- TypeScript: `camelCase.ts` for CLI (`run-scan.ts`), `kebab.spec.ts` for tests
-- Python: `snake_case.py` (e.g., `tier1_parity_fixtures.py`)
+- Rust crate source files use `snake_case.rs` under the repo-root Rust layers, e.g. `foundation/classic-shared-core/src/errors.rs` and `business-logic/classic-config-core/src/config.rs`.
+- Rust crate names use `classic-*-core`, `classic-*-py`, and `classic-node` patterns in the repo-root `Cargo.toml` workspace.
+- C++ CLI files use `snake_case.cpp` / `snake_case.h` in `classic-cli/src/`, e.g. `classic-cli/src/cli_args.cpp` and `classic-cli/src/thread_pool.h`.
+- C++ GUI files also use lowercase path segments with `snake_case` filenames in `classic-gui/src/`, e.g. `classic-gui/src/controllers/scancontroller.cpp` and `classic-gui/src/core/signalhub.h`.
+- TypeScript CLI files use `camelCase.ts` in `node-bindings/classic-node/cli/`, e.g. `node-bindings/classic-node/cli/run-scan.ts` and `node-bindings/classic-node/cli/main.ts`.
+- TypeScript/Bun tests use `*.spec.ts` in `node-bindings/classic-node/__test__/`, e.g. `node-bindings/classic-node/__test__/config.spec.ts`.
+- Python modules and tests use `snake_case.py`, e.g. `python-bindings/tests/test_promoted_config_smoke.py` and `tools/node_api_parity/check_parity_gate.py`.
 
 **Functions:**
-- Rust: `snake_case` for all functions and methods (e.g., `load_yaml_file`, `resolve_settings_search_paths`)
-- NAPI (Node bindings): Rust functions are `snake_case` internally; NAPI auto-converts them to `camelCase` for JS consumers
-- PyO3 (Python bindings): `snake_case` for Python-facing methods, using `#[pyo3(name = "...")]` to override when needed
-- C++: `snake_case` for free functions and methods (e.g., `parse_args`, `auto_concurrency_for_cpu_count`)
-- TypeScript: `camelCase` (e.g., `parseArgs`, `printHelp`, `requireValue`)
+- Rust uses `snake_case` for functions and methods, e.g. `resolve_settings_search_paths()` in `business-logic/classic-config-core/src/config.rs` and `get_runtime()` in `foundation/classic-shared-core/src/lib.rs`.
+- C++ CLI free functions use `snake_case`, e.g. `parse_args()` and `auto_concurrency_for_cpu_count()` in `classic-cli/src/cli_args.cpp`.
+- TypeScript uses `camelCase`, e.g. `parseArgs()`, `printHelp()`, and `requireValue()` in `node-bindings/classic-node/cli/main.ts`.
+- Python test helpers use `snake_case`, e.g. `load_module()` and `minimal_diff_report()` in `python-bindings/tests/test_parity_gate_tooling.py`.
 
 **Variables:**
-- Rust: `snake_case` always
-- C++: `snake_case` (e.g., `cpu_count`, `recommended`, `args`)
-- TypeScript: `camelCase` (e.g., `gameVersion`, `fcxMode`, `showFidValues`)
-- Python: `snake_case`
+- Rust local variables use `snake_case`, e.g. `worker_threads`, `effective_rust_symbol`, and `targeted_rejection_message` in `foundation/classic-shared-core/src/lib.rs`, `tools/node_api_parity/check_parity_gate.py`, and `classic-gui/src/controllers/scancontroller.cpp`.
+- C++ GUI member variables use `m_` prefixes, e.g. `m_scanning`, `m_signalHub`, and `m_currentWorker` in `classic-gui/src/controllers/scancontroller.h`.
+- C++ CLI struct fields use plain `snake_case`, e.g. `game_version`, `max_concurrent`, and `input_paths` in `classic-cli/src/cli_args.h`.
+- TypeScript object fields use `camelCase`, e.g. `gameVersion`, `showFidValues`, and `maxConcurrent` in `node-bindings/classic-node/cli/main.ts`.
+- Shared constants use `SCREAMING_SNAKE_CASE`, e.g. `DEFAULT_CONFIG_FILENAME` in `business-logic/classic-config-core/src/config.rs`, `THIS_SUITE` in `node-bindings/classic-node/__test__/config.spec.ts`, and `PARITY_MAIN_YAML` in `python-bindings/tests/fixtures/tier1_parity_fixtures.py`.
 
-**Types (structs, enums, traits):**
-- Rust: `PascalCase` (e.g., `FileIOCore`, `YamlDataCore`, `SuspectScanner`, `BackupType`)
-- NAPI wrapper types: `Js` prefix (e.g., `JsModConflictEntry`, `JsSuspectErrorRule`, `JsDatabasePool`)
-- C++: `PascalCase` structs (e.g., `CliArgs`, `ArgvBuilder`, `ProgressDisplay`)
-- TypeScript interfaces/types: `PascalCase` (e.g., `CliOptions`, `SupportedGame`)
-
-**Constants:**
-- Rust: `SCREAMING_SNAKE_CASE` (e.g., `DEFAULT_CONFIG_FILENAME`, `NULL_VERSION`)
-- TypeScript: `SCREAMING_SNAKE_CASE` (e.g., `BATCH_CACHE_TTL`, `THIS_SUITE`)
-
-**Crate modules within Python bindings:**
-- Python module names: `classic_config`, `classic_scanlog`, `classic_version_registry` (underscore, not hyphen)
+**Types:**
+- Rust types use `PascalCase`, e.g. `RuntimeConfig`, `ClassicError`, and `YamlSource` in `foundation/classic-shared-core/src/lib.rs` and `business-logic/classic-config-core/src/config.rs`.
+- NAPI-facing Rust wrappers use `Js` prefixes where they wrap JS-visible types, as described in `node-bindings/classic-node/src/lib.rs` and reflected by exports like `JsDatabasePool` in `node-bindings/classic-node/__test__/parity_tier1.spec.ts`.
+- C++ structs/classes use `PascalCase`, e.g. `CliArgs` in `classic-cli/src/cli_args.h` and `ScanController` in `classic-gui/src/controllers/scancontroller.h`.
+- TypeScript type imports use `PascalCase`, e.g. `CliOptions` and `SupportedGame` in `node-bindings/classic-node/cli/main.ts`.
 
 ## Code Style
 
-**Rust formatting:**
-- Tool: `rustfmt` via `cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml`
-- No standalone `rustfmt.toml` detected; default rustfmt settings apply
-- Workspace lints enforced in `ClassicLib-rs/Cargo.toml`:
-  - `deprecated = "deny"`
-  - `unused = "deny"`
+**Formatting:**
+- Rust formatting is enforced through `cargo fmt --all -- --check` in `.github/workflows/ci-rust.yml`.
+- No standalone Rust formatter config file was detected; workspace code follows default `rustfmt` style plus workspace lints in `Cargo.toml`.
+- C++ formatting is explicitly configured in `classic-cli/.clang-format` and `classic-gui/.clang-format`.
+- Common C++ settings across both `.clang-format` files: `ColumnLimit: 120`, `IndentWidth: 4`, `UseTab: Never`, left-aligned pointers/references, and preserved include blocks.
+- `classic-cli/.clang-format` uses attach/K&R braces and snake_case-oriented comments.
+- `classic-gui/.clang-format` uses custom brace wrapping with function-definition braces on the next line and Qt macro awareness for `Q_EMIT`, `Q_SIGNAL`, and `Q_SLOT`.
+- TypeScript strictness is enforced by `node-bindings/classic-node/tsconfig.json` with `strict: true`, `target: "ES2022"`, `module: "CommonJS"`, and `noEmitOnError: true`.
+- No ESLint, Prettier, Ruff, or repo-level `.editorconfig` config was detected.
 
-**C++ formatting:**
-- Tool: clang-format, config at `classic-cli/.clang-format` and `classic-gui/.clang-format`
-- `ColumnLimit: 120`, `IndentWidth: 4`, `UseTab: Never`
-- Braces: K&R / Attach style (same line for everything)
-- Pointer alignment: `Left` (`int* p`)
-- Standard: C++20, MSVC-targeted
-
-**TypeScript:**
-- Compiler: TypeScript 5.8+, `strict: true` in `tsconfig.json`
-- No eslint or prettier config detected; strict TypeScript is the primary linting tool
-- Target: `ES2022`, `module: CommonJS`
-
-**Python:**
-- Formatter: `ruff format` (from `CLAUDE.md` commands)
-- No `ruff.toml` or `pyproject.toml` detected at repo root; ruff uses defaults
-- Type hints: `from __future__ import annotations` used in test files; type annotations on all public functions
+**Linting:**
+- Rust workspace lints deny `deprecated` and `unused` in `Cargo.toml` under `[workspace.lints.rust]`.
+- Clippy is treated as a CI gate via `cargo clippy --workspace --all-targets --all-features -- -D warnings` in `.github/workflows/ci-rust.yml`.
+- TypeScript quality is primarily enforced by `tsconfig.json` and runtime parity tests; no separate TS lint config was detected.
+- Python quality is test-driven in current state: `python-bindings/requirements-ci.txt` only lists `maturin` and `pytest`.
 
 ## Import Organization
 
-**Rust:**
+**Order:**
+1. Standard library / platform modules first, e.g. `use std::...` in `business-logic/classic-config-core/src/config.rs`, `import json` / `from pathlib import Path` in `python-bindings/tests/test_parity_gate_tooling.py`, and `import { basename } from "node:path"` in `node-bindings/classic-node/cli/main.ts`.
+2. Third-party dependencies next, e.g. `use anyhow::{Context, Result};`, `use serde::{Deserialize, Serialize};`, `import pytest`, and `import { describe, test, expect } from "bun:test"`.
+3. Repo-local modules last, e.g. `use classic_settings_core::{...}` in `business-logic/classic-config-core/src/config.rs`, `import classic_config` in `python-bindings/tests/test_promoted_config_smoke.py`, and `import { SUPPORTED_GAMES } from "./types"` in `node-bindings/classic-node/cli/main.ts`.
 
-Standard order (by convention, enforced by rustfmt):
-1. Standard library (`use std::...`)
-2. External crates (alphabetical)
-3. Internal crate modules (`use super::*`, `use crate::...`)
-4. Re-exports (`pub use ...`)
-
-Example from `classic-file-io-core/src/core.rs`:
-```rust
-use dashmap::DashMap;
-use lru::LruCache;
-// ... more external
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use tokio::fs;
-// then internal
-use super::dds::DDSHeader;
-use super::encoding::EncodingDetector;
-use super::error::FileIOError;
-```
-
-**TypeScript:**
-1. Node built-ins (`node:fs`, `node:path`, `node:os`)
-2. Framework imports (`bun:test`)
-3. Local binding index (`../index.js`)
-4. Local fixture files (`./fixtures/...`)
-
-**Python:**
-1. `from __future__ import annotations`
-2. Standard library
-3. Third-party (`pytest`)
-4. Local imports
+**Path Aliases:**
+- No TypeScript path aliases were detected in `node-bindings/classic-node/tsconfig.json`.
+- Tests import the Node binding surface from `../index.js` rather than internal modules, e.g. `node-bindings/classic-node/__test__/config.spec.ts` and `node-bindings/classic-node/__test__/parity_tier1.spec.ts`.
+- Python parity-tool tests centralize `sys.path` bootstrapping in `tools/python_api_parity/tests/conftest.py` and `tools/node_api_parity/tests/conftest.py` instead of repeating `sys.path.insert()` per test file.
 
 ## Error Handling
 
-**Rust - Core crates:**
-- Use `thiserror` for typed, domain-specific errors
-- Define a dedicated `error.rs` in each crate exposing a typed enum
-- Provide a `Result<T>` type alias in each crate: `pub type Result<T> = std::result::Result<T, CrateError>`
-- Use `anyhow::Result` and `.context()` in higher-level integration code and config loading
-- `#[from]` attribute on error variants for `std::io::Error` and `tokio::task::JoinError` conversions
-- Never use bare `unwrap()` in production code; use `.expect("descriptive message")` only in tests
-
-Example from `classic-file-io-core/src/error.rs`:
-```rust
-#[derive(Debug, Error)]
-pub enum FileIOError {
-    #[error("I/O error: {0}")]
-    IoError(#[from] std::io::Error),
-    #[error("File not found: {0}")]
-    NotFound(String),
-    // ...
-}
-pub type Result<T> = std::result::Result<T, FileIOError>;
-```
-
-**NAPI (Node bindings):**
-- Convert Rust errors to NAPI errors via helper functions (e.g., `config_error_to_napi_err`)
-- NAPI errors include a `code` field matching the variant name (e.g., `"InvalidArg"`, `"ParseError"`)
-- Tests verify both `error.message` and `error.code`
-
-**PyO3 (Python bindings):**
-- Expose typed Python exception classes (e.g., `classic_config.RustConfigParseError`, `classic_config.RustConfigIOError`)
-- Tests use `pytest.raises(ExceptionClass)` with message inspection
-
-**C++:**
-- CLI11 parse errors call `std::exit(app.exit(e))` directly
-- Result propagation via return values; no exceptions in bridge-facing code
+**Patterns:**
+- Rust foundational code prefers typed domain errors. `foundation/classic-shared-core/src/errors.rs` defines `ClassicError` with structured variants like `Io`, `Validation`, `Parse`, `NotFound`, and `InvalidState`.
+- Higher-level Rust integration code often uses `anyhow::{Context, Result}`, e.g. `business-logic/classic-config-core/src/config.rs`.
+- Expectation failures in tests use explicit messages, e.g. `expect("Lookup should succeed")` in `business-logic/classic-database-core/tests/integration_tests.rs` and `expect("Stats should exist")` in `foundation/classic-shared-core/tests/test_rolling_stats.rs`.
+- Node parity/tooling code returns human-readable diagnostics rather than silent booleans, e.g. `validate_contract_surface()` in `tools/node_api_parity/check_parity_gate.py` appends specific remediation messages that include crate names and `bun run build` guidance.
+- C++ Qt bridge code converts Rust failures to UI-safe signals instead of throwing through Qt event loops, e.g. `classic-gui/src/controllers/scancontroller.cpp` catches `rust::Error`, emits `scanError`, and returns early.
+- TypeScript tests validate both message and code where exposed. `node-bindings/classic-node/__test__/config.spec.ts` checks thrown `Error & { code?: string }` values and asserts `code === "InvalidArg"`.
+- Python fixtures treat cleanup as best effort rather than suite-failing teardown, e.g. `python-bindings/tests/conftest.py` catches broad exceptions only inside cleanup code and documents the intent.
 
 ## Logging
 
-**Framework:** `log` crate (`log::debug!`, `log::warn!`, `log::info!`, `log::error!`)
+**Framework:** `log` / `tracing` in Rust, Qt logging helpers in GUI, stderr/console only in thin CLIs.
 
 **Patterns:**
-- Internal business-logic crates use `log::debug!` extensively for tracing data extraction
-- `log::warn!` used for missing or unexpected YAML keys
-- `tracing` crate is a workspace dependency but primary usage in business logic is `log` macros
-- Production code does not use `println!`/`eprintln!` directly; CLI output goes through the report system
+- Rust workspace dependencies include `log`, `env_logger`, `tracing`, and `tracing-subscriber` in `Cargo.toml`.
+- GUI code uses Qt logging for operator-visible warnings, e.g. `qWarning(...)` in `classic-gui/src/controllers/scancontroller.cpp` when targeted inputs are rejected.
+- TypeScript CLI writes human-facing errors to `console.error(...)` only at the executable boundary in `node-bindings/classic-node/cli/main.ts`.
+- Tests do not rely on log scraping; they assert return values, emitted signals, generated files, or structured diagnostics directly.
 
 ## Comments
 
-**Rust doc comments:**
-- Module-level: `//!` doc comments at the top of every `lib.rs` and key modules
-- Required sections for modules: description, architecture note, and `# Examples` with runnable code
-- Public items: `///` doc comments with `# Arguments`, `# Returns`, `# Examples` as needed
-- Private items: `//` comments where behavior is non-obvious
+**When to Comment:**
+- Public Rust modules commonly start with `//!` module docs that state purpose and architecture, e.g. `foundation/classic-shared-core/src/lib.rs` and `foundation/classic-shared-core/src/errors.rs`.
+- Section-divider comments are common in larger test files, e.g. `node-bindings/classic-node/__test__/config.spec.ts`, `python-bindings/tests/test_promoted_config_smoke.py`, and `business-logic/classic-database-core/tests/integration_tests.rs`.
+- Non-obvious behavior is documented inline near the logic it protects, e.g. the portable-app write-path comments in `classic-gui/src/controllers/scancontroller.cpp` and the proxy-row rules in `tools/node_api_parity/check_parity_gate.py`.
 
-Example pattern from `classic-message-core/src/lib.rs`:
-```rust
-//! Core message routing and formatting for CLASSIC.
-//!
-//! # Architecture
-//! ...
-//! # Examples
-//! ```rust
-//! use classic_message_core::{Message, MessageType};
-//! let msg = Message::new("Operation started", MessageType::Info);
-//! ```
-```
-
-**C++:**
-- `///` doc-style comments for public functions in headers (Doxygen-adjacent)
-- `//` for inline implementation notes
-
-**TypeScript:**
-- TSDoc `@param`, `@throws` comments on NAPI-exposed Rust functions (in `.rs` source, not `.ts`)
-- Minimal comments in TypeScript CLI source; self-documenting code preferred
+**JSDoc/TSDoc:**
+- Rust public APIs carry `///` docs with examples and rationale, e.g. `RuntimeConfig` and `get_runtime()` in `foundation/classic-shared-core/src/lib.rs`.
+- Python tests use docstrings to state contract intent, e.g. `python-bindings/tests/test_promoted_config_smoke.py` and `tools/cxx_api_parity/tests/test_parser.py`.
+- TypeScript CLI code is mostly self-documenting and uses minimal doc comments; long-form documentation lives closer to Rust-exported APIs and test fixtures.
 
 ## Function Design
 
-**Size:** Functions are generally focused; larger methods in `FileIOCore` and `YamlDataCore` are acceptable for complex workflows
+**Size:**
+- Small helpers are preferred for parsing and normalization, e.g. `cleanDirectoryPath()`, `isCrashLogPath()`, and `collectReportDirectories()` in `classic-gui/src/controllers/scancontroller.cpp`.
+- Larger workflow functions are acceptable when they orchestrate multi-step flows, e.g. `ScanController::startScan(...)` in `classic-gui/src/controllers/scancontroller.cpp` and `validate_contract_surface()` in `tools/node_api_parity/check_parity_gate.py`. Keep helper extraction around them rather than embedding all logic inline.
 
 **Parameters:**
-- Rust: prefer `&str` over `String` for input, `impl Into<String>` for builders
-- Use `Option<&Path>` for optional path parameters
-- Async functions use `async fn` throughout; no manual `Future` boxing in business logic
+- Rust favors borrowed path/string inputs and typed enums where possible, e.g. `Option<&Path>` helpers in `business-logic/classic-config-core/src/config.rs`.
+- CLI adapters prefer flat, explicit option structs rather than dynamic maps, e.g. `CliArgs` in `classic-cli/src/cli_args.h` and `CliOptions` construction in `node-bindings/classic-node/cli/main.ts`.
+- Python tests type annotate helper parameters consistently, e.g. `tmp_path: Path`, `monkeypatch: pytest.MonkeyPatch`, and explicit return types in `python-bindings/tests/test_parity_gate_tooling.py`.
 
 **Return Values:**
-- Return `Result<T>` or `Option<T>` consistently; never panic on expected failure conditions
-- Builder pattern used in `Message`: `Message::new(...).with_title(...).with_details(...)`
+- Rust returns `Result<T, E>` or `Option<T>` for expected failure states, e.g. `foundation/classic-shared-core/src/errors.rs` and `business-logic/classic-config-core/src/config.rs`.
+- TypeScript parsing helpers throw `Error` on invalid CLI input rather than returning sentinel values, e.g. `parseInteger()` and `requireValue()` in `node-bindings/classic-node/cli/main.ts`.
+- Qt controller methods signal failures through emitted signals and object state rather than exceptions crossing thread boundaries, e.g. `classic-gui/src/controllers/scancontroller.cpp`.
 
 ## Module Design
 
-**Exports (Rust):**
-- `lib.rs` re-exports all public API items explicitly
-- `pub use` is used to flatten module hierarchies at the crate boundary
-- Internal helpers stay private (`fn` without `pub`)
+**Exports:**
+- Rust crate boundaries are flattened through explicit `pub use`, e.g. `foundation/classic-shared-core/src/lib.rs` re-exports `ClassicError`, `ClassicResult`, and `game_id` items.
+- Node bindings are intentionally centralized behind `node-bindings/classic-node/index.js` and `index.d.ts`; tests consume that public surface only.
+- Python bindings expose one top-level module per crate plus `.pyi` stubs, e.g. `python-bindings/classic-config-py/classic_config.pyi` and `foundation/classic-shared-py/classic_shared.pyi`.
 
-**Barrel files (TypeScript):**
-- Single `index.js` / `index.d.ts` as the binding surface; all exports flow through it
-- Test files import exclusively from `"../index.js"`, never from individual binding modules
-
-**Python modules:**
-- Each crate produces a top-level `classic_*` Python module
-- A `pyi` stub file lives alongside each binding crate (e.g., `classic-config-py/classic_config.pyi`)
-
-## NAPI-RS Specific Conventions (Node Bindings)
-
-- All NAPI structs are annotated `#[napi]` or `#[napi(object)]`
-- Constructors use `#[napi(constructor)]`, factory methods use `#[napi(factory)]`
-- Private state in NAPI structs uses an `inner:` field holding the core Rust type
-- The `Js` prefix is used for NAPI-facing types that wrap core types (e.g., `JsFileIO`, `JsDatabasePool`)
-- App directory must be initialized via `Once` guard to resolve paths correctly in Node/Bun context
-
-## PyO3 Specific Conventions (Python Bindings)
-
-- `#[getter]` attribute exposes Python properties with `snake_case` names
-- `#[pyo3(name = "method_name")]` overrides Rust name when Python convention differs
-- `#[allow(non_snake_case)]` used selectively where YAML keys require uppercase names
-- Python binding crates are excluded from the standard Rust test run (require Python DLL at runtime)
+**Barrel Files:**
+- Rust uses `lib.rs` as the barrel/export boundary in each crate, e.g. `foundation/classic-shared-core/src/lib.rs` and `node-bindings/classic-node/src/lib.rs`.
+- Node uses a single binding barrel (`node-bindings/classic-node/index.js` / `index.d.ts`) instead of per-feature public entrypoints.
+- Python tooling tests use `conftest.py` as shared bootstrap/fixture entrypoints rather than package barrels.
 
 ---
 
-*Convention analysis: 2026-04-04*
+*Convention analysis: 2026-04-14*

@@ -1,0 +1,26 @@
+[package]
+name = "classic-version-registry-py"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-version-registry-core"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_version_registry"
+crate-type = ["cdylib", "rlib"]  # cdylib for Python, rlib for Rust consumers
+
+[dependencies]
+# Core business logic (pure Rust - NO PyO3)
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
+
+# PyO3 for Python bindings
+pyo3 = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

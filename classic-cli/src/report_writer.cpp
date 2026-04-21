@@ -7,8 +7,7 @@
 #include <fmt/core.h>
 #include <string>
 
-bool write_report(const std::string& log_path,
-                  const std::vector<std::string>& report_lines) {
+bool write_report(const std::string& log_path, const std::vector<std::string>& report_lines) {
     // Preserve Rust-provided line endings verbatim (matches Rust join("") path).
     std::string content;
     std::size_t total_size = 0;
@@ -26,8 +25,7 @@ bool write_report(const std::string& log_path,
         classic::files::write_autoscan_report(log_path, content);
         return true;
     } catch (const rust::Error& e) {
-        fmt::print(stderr, "  Error: report write failed for {}: {}\n",
-            log_path, std::string(e.what()));
+        fmt::print(stderr, "  Error: report write failed for {}: {}\n", log_path, std::string(e.what()));
         return false;
     }
 }

@@ -1,376 +1,372 @@
-# Architecture Patterns
+# Architecture Research
 
-**Domain:** Cache eviction, pattern caching, and state management integration for a layered Rust workspace
-**Researched:** 2026-04-04
-**Confidence:** HIGH (based on direct source inspection of all affected crates)
+**Domain:** Workspace-root migration for CLASSIC's Rust core and binding ecosystem
+**Researched:** 2026-04-11
+**Confidence:** HIGH
 
-## Recommended Architecture
+## Standard Architecture
 
-The changes span five concerns across four architectural layers. The critical insight is that each concern touches a different layer boundary, but they share a common theme: replacing unbounded or per-call constructs with bounded, session-aware alternatives. The existing codebase already demonstrates the correct patterns in adjacent modules -- the work is largely about applying established patterns to the remaining outliers.
+### System Overview
 
-### Layer Map (bottom-up, showing what changes where)
+This milestone should **move the workspace anchor, not redesign the system**. The Rust crate graph, layering, and thin-wrapper rule stay intact; only the physical workspace root and every path contract that depends on it change.
 
 ```
-Foundation
-  classic-shared-core           -- no changes needed
-
-Business Logic (-core crates)
-  classic-yaml-core             -- YAML_CACHE: DashMap -> bounded LRU
-  classic-settings-core         -- SETTINGS_CACHE: DashMap -> bounded LRU
-  classic-file-io-core          -- HASH_CACHE: DashMap -> bounded LRU
-  classic-scanlog-core
-    mod_detector.rs             -- AhoCorasick integration for detect_mods_important
-    fcx_handler.rs              -- reset_global_state contention fix
-    orchestrator.rs             -- session-boundary FCX reset contract
-
-C++ Bridge
-  classic-cpp-bridge/scanner.rs -- Lazy<LogParser>, FCX reset function
-
-Binding Surfaces
-  classic-node/scanlog.rs       -- FCX reset + ConfigIssue list exposure + Lazy<LogParser>
-  (classic-cpp-bridge CXX FFI)  -- new extern "Rust" entry for fcx_reset_global_state
+┌───────────────────────────────────────────────────────────────────────┐
+│ REPOSITORY ROOT (new Rust workspace root)                            │
+├───────────────────────────────────────────────────────────────────────┤
+│ Cargo.toml  Cargo.lock  .cargo/  benches/  criterion.toml            │
+│ benchmark-config.yaml  validate_stubs.py                             │
+├───────────────────────────────────────────────────────────────────────┤
+│ foundation/        business-logic/        cpp-bindings/              │
+│ node-bindings/     python-bindings/       ui-applications/           │
+├───────────────────────────────────────────────────────────────────────┤
+│ classic-cli/       classic-gui/           docs/  tools/  .github/    │
+│ .planning/         tests/                                             │
+└───────────────────────────────────────────────────────────────────────┘
+           │                    │                      │
+           │                    │                      │
+           ▼                    ▼                      ▼
+   CMake/Corrosion       Bun/NAPI + PyO3       parity/docs/CI/tooling
+   native wrappers       binding wrappers      read repo-root paths
 ```
 
-## Component Boundaries
+### Component Responsibilities
 
-| Component | Responsibility | Communicates With | Change Scope |
-|-----------|---------------|-------------------|--------------|
-| `classic-yaml-core` | YAML file parsing + caching | All config-loading crates downstream | Internal cache replacement; public API unchanged |
-| `classic-settings-core` | Settings YAML caching with caller-keyed entries | Config-core, bridge yaml module | Internal cache replacement; public API unchanged |
-| `classic-file-io-core` | File hashing with global cache | Bridge files module, scangame | Internal cache replacement; public API unchanged |
-| `classic-scanlog-core::mod_detector` | Mod detection via pattern matching | Orchestrator (caller), config-core (data) | Internal pattern compilation strategy; function signatures unchanged |
-| `classic-scanlog-core::fcx_handler` | Process-wide FCX state singleton | Orchestrator, bridge scanner, node scanlog | Fix `reset_global_state`; no signature change |
-| `classic-cpp-bridge::scanner` | CXX FFI for crash log analysis | C++ CLI/GUI frontends | Add `Lazy<LogParser>`, add `fcx_reset_global_state` FFI fn |
-| `classic-node::scanlog` | NAPI-RS binding for scanlog | Node/Bun consumers | Add `resetFcxGlobalState`, `getFcxConfigIssues` exports, `Lazy<LogParser>` |
+| Component | Responsibility | Typical Implementation |
+|-----------|----------------|------------------------|
+| Repo-root workspace manifest | Canonical Cargo workspace root, shared lockfile, shared target dir, shared profiles/deps/lints | New root `Cargo.toml` plus moved `Cargo.lock`, `.cargo/config.toml`, benchmark config files |
+| Layer directories | Preserve current crate ownership boundaries | Root-level `foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, `ui-applications/` |
+| Native wrappers | Consume `classic-cpp-bridge` through Corrosion/CMake without knowing old `ClassicLib-rs/` prefix | `classic-cli/CMakeLists.txt`, `classic-gui/CMakeLists.txt`, wrapper PowerShell scripts |
+| Binding wrappers | Keep Node/Python/C++ adapters thin and path-correct after relocation | `node-bindings/classic-node`, `python-bindings/*-py`, `cpp-bindings/classic-cpp-bridge` |
+| Repo tooling | Parse source/build outputs using repo-root-relative contracts | `rebuild_rust.ps1`, parity tools, `validate_stubs.py`, benchmarks workflow, planning tests |
+| Docs/planning/skills | Describe the new root layout so future work does not reintroduce stale paths | `README.md`, `AGENTS.md`, docs under `docs/`, planning artifacts, project skills |
 
-## Data Flow
+## Recommended Project Structure
 
 ### 1. Cache Eviction Flow (YAML_CACHE, SETTINGS_CACHE, HASH_CACHE)
 
 **Current flow:**
 ```
-Caller -> cache.get(key) -> DashMap lookup (unbounded)
-  miss -> parse/compute -> cache.insert(key, value) -> DashMap grows forever
+./
+├── Cargo.toml                  # new authoritative workspace manifest
+├── Cargo.lock                  # shared lockfile moves to repo root
+├── .cargo/
+│   └── config.toml             # workspace-scoped cargo aliases/config
+├── benches/                    # workspace benchmark entrypoints
+├── criterion.toml              # criterion output config (root target/criterion)
+├── benchmark-config.yaml       # benchmark CI thresholds
+├── validate_stubs.py           # python stub validator; should live with workspace root
+├── foundation/                 # unchanged internal crate layout
+├── business-logic/             # unchanged internal crate layout
+├── cpp-bindings/               # unchanged internal crate layout
+├── node-bindings/              # unchanged internal crate layout
+├── python-bindings/            # unchanged internal crate layout
+├── ui-applications/            # unchanged internal crate layout
+├── classic-cli/                # native wrapper over classic-cpp-bridge
+├── classic-gui/                # native wrapper over classic-cpp-bridge
+├── docs/
+├── tools/
+├── .github/
+├── .planning/
+└── tests/
 ```
 
-**Target flow:**
-```
-Caller -> cache.get(key) -> quick_cache::Cache lookup (bounded, concurrent)
-  miss -> parse/compute -> cache.insert(key, value) -> auto-evicts LRU on capacity
-```
+### Structure Rationale
 
-**Why `quick_cache::sync::Cache` instead of `RwLock<LruCache>`:** The codebase already uses `quick_cache` in `FileIOCore.read_cache` (classic-file-io-core/core.rs:99). It provides lock-free concurrent reads with built-in LRU eviction, matching the existing DashMap concurrent access pattern. Using `RwLock<LruCache>` would serialize all reads -- a regression for the YAML and settings caches that serve concurrent scan workers.
+- **Repo root becomes the only workspace root:** Cargo workspaces share a single lockfile and target directory at the workspace root; leaving those concepts split between repo root and `ClassicLib-rs/` would create a confusing half-migrated architecture. Source: Cargo workspace docs.
+- **Layer directories stay exactly layer-based:** the milestone is explicitly a location migration, so `foundation/`, `business-logic/`, bindings, and TUI should move intact rather than being flattened by crate type.
+- **Workspace-owned support files move with the workspace:** `.cargo/config.toml`, `Cargo.lock`, `criterion.toml`, `benchmark-config.yaml`, `benches/`, and `validate_stubs.py` are path contracts for tooling and should not be stranded in a no-longer-authoritative `ClassicLib-rs/` directory.
 
-**Boundary contract:** The public APIs (`load_yaml_file`, `get_cached`, `hash_file`, `clear_cache`, `cache_stats`) do NOT change. The cache is an internal implementation detail. Callers see identical behavior except that very old entries may be evicted under memory pressure.
+## Architectural Patterns
 
-**Data flow direction:**
-- `YAML_CACHE`: Written by `YamlOperations::load_yaml_file()`, read by all config-loading paths, cleared by `clear_global_yaml_cache()`
-- `SETTINGS_CACHE`: Written by `load_settings_sync/async`, read by `get_cached()`, cleared by `clear_cache()`
-- `HASH_CACHE`: Written by `FileHasher::hash_file()`, read by same, cleared by `FileHasher::clear_cache()`
+### Pattern 1: Root manifest as single source of truth
 
-### 2. AhoCorasick Pattern Caching Flow (mod_detector)
+**What:** Put the authoritative `[workspace]`, `[workspace.dependencies]`, `[workspace.lints]`, and `[profile.*]` tables in `./Cargo.toml` and remove `ClassicLib-rs/Cargo.toml` as the workspace anchor.
 
-**Current flow (detect_mods_important):**
-```
-for each entry in CoreModEntry list:
-    Regex::new(escape(entry.detect))  -- compiled per entry per call
-    pattern.is_match(all_text)
-```
+**When to use:** Immediately, for this milestone. Do not keep dual manifests.
 
-**Target flow:**
-```
-hash = xxhash(entry list contents)
-if cached_automaton[hash] exists:
-    automaton = cached_automaton[hash]
-else:
-    patterns = entries.map(|e| e.detect.to_lowercase())
-    automaton = AhoCorasick::builder()
-        .ascii_case_insensitive(true)
-        .build(patterns)
-    cached_automaton[hash] = automaton
+**Trade-offs:**
+- Pro: Aligns Cargo behavior with user expectation: run Cargo from repo root.
+- Pro: Eliminates `--manifest-path ClassicLib-rs/Cargo.toml` everywhere.
+- Pro: Makes CI/cache/benchmark paths deterministic (`./target`, `./Cargo.lock`).
+- Con: Requires broad path cleanup in tooling and docs.
 
-for match in automaton.find_iter(all_text):
-    entry = entries[match.pattern_id]  -- AhoCorasick preserves pattern index
-    // apply gpu/exclusion logic per matched entry
+**Example:**
+```toml
+[workspace]
+members = [
+  "foundation/classic-shared-core",
+  "foundation/classic-shared-py",
+  "business-logic/classic-config-core",
+  "cpp-bindings/classic-cpp-bridge",
+  "node-bindings/classic-node",
+  "python-bindings/classic-config-py",
+  "ui-applications/classic-tui",
+]
+resolver = "2"
 ```
 
-**Why AhoCorasick over combined regex alternation:** `detect_mods_important` has per-entry semantics (gpu checks, exclusions) that require knowing WHICH pattern matched. AhoCorasick's `Match` includes `pattern()` -- the index of the matched pattern. This is exactly how `record_scanner.rs` and `patterns.rs` already work in this crate. Regex alternation loses pattern identity without named captures, which adds complexity.
+### Pattern 2: Preserve crate internals, rewrite only path edges
 
-**Why entries need a two-pass approach:** AhoCorasick searches for ALL matches. But `detect_mods_important` has per-entry exclusion checks (`is_excluded`) that must run BEFORE reporting a match. The recommended approach:
-1. Build the AhoCorasick automaton from all entry detect strings
-2. Run `find_iter` on `all_text` to get all matches
-3. For each match, look up the source entry by `match.pattern().as_usize()` index
-4. Apply `is_excluded` and gpu logic on the source entry
-5. Skip excluded entries, emit output for non-excluded matches
+**What:** Keep every crate's own `src/`, tests, examples, and package metadata intact; only update workspace-member paths and inter-crate `path =` edges that depended on the old `ClassicLib-rs/` container.
 
-**Boundary contract:** The function signature of `detect_mods_important` does not change. The `entries: &[CoreModEntry]` parameter is the cache key source -- hash the serialized detect strings.
+**When to use:** For all member manifests and all non-Rust consumers.
 
-**Data flow direction:**
-- `OrchestratorCore` calls `detect_mods_important` with `config.mods_important` entries
-- Entries come from `AnalysisConfig` which is built from YAML at scan session start
-- Within a session, entries are stable -- the cache key does not change between logs in a batch
-- Cache should be module-level `Lazy<Mutex<LruCache<u64, Arc<AhoCorasick>>>>` with small capacity (8-16 entries, since there is typically one mod list per session)
+**Trade-offs:**
+- Pro: Minimal behavioral risk.
+- Pro: Preserves parity contracts and public APIs.
+- Con: Many relative paths must be rewritten carefully.
 
-### 3. Bridge-Level Parser Caching Flow
+**Example:**
+```toml
+# before, in node-bindings/classic-node/Cargo.toml
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
-**Current flow:**
-```
-detect_crash_pattern(content) {
-    let parser = LogParser::new(None).unwrap();  // allocates + compiles patterns EVERY call
-    parser.parse_crash_header(lines)
-}
+# after root move
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 ```
 
-**Target flow:**
-```
-static BRIDGE_PARSER: Lazy<LogParser> = Lazy::new(|| LogParser::new(None).unwrap());
+### Pattern 3: Repo-root-relative tooling contracts
 
-detect_crash_pattern(content) {
-    BRIDGE_PARSER.parse_crash_header(lines)  // reuses compiled patterns
-}
-```
+**What:** Every repo tool should take `--repo-root .` and derive current locations from that root, not from a hardcoded `ClassicLib-rs/...` prefix.
 
-**Why `Lazy<LogParser>` (not `Lazy<Mutex<LogParser>>`):** `LogParser` uses internal `Arc<RwLock<LruCache>>` for its segment and pattern caches, plus `Arc<DashMap>` for custom patterns. The `parse_crash_header` method takes `&self` (shared reference). It is already designed for concurrent use. No external mutex is needed.
+**When to use:** parity generators/gates, stub validation, rebuild scripts, benchmark workflows, planning tests.
 
-**Boundary contract:** The CXX FFI signature `fn detect_crash_pattern(content: &str) -> String` does not change. Same for `detect_vr_log`. The `Lazy` static is module-private.
+**Trade-offs:**
+- Pro: Future directory moves become cheaper.
+- Pro: Reduces duplicated string constants.
+- Con: Requires a one-time audit of default arguments and fixture paths.
 
-**Note about Node bindings:** The same pattern applies to `parse_log_segments`, `extract_form_ids`, `extract_plugin_list`, and `detect_crash_pattern` in `classic-node/scanlog.rs`, which all call `LogParser::new(None)` per invocation. These should use a module-level `Lazy<LogParser>` too.
-
-### 4. FCX State Reset Flow
-
-**Current flow (broken):**
-```
-FcxModeHandler::reset_global_state() {
-    if let Some(mut handler) = GLOBAL_FCX_HANDLER.try_lock() {  // NON-BLOCKING
-        handler.reset();
-    }
-    // If lock is held: SILENTLY DOES NOTHING -- stale state persists
-}
+**Example:**
+```python
+parser.add_argument(
+    "--index-dts",
+    default="node-bindings/classic-node/index.d.ts",
+)
 ```
 
-**Target flow:**
-```
-FcxModeHandler::reset_global_state() {
-    let mut handler = GLOBAL_FCX_HANDLER.lock();  // BLOCKING -- waits for lock
-    handler.reset();
-}
-```
+## Data Flow
 
-**Why blocking lock instead of try_lock:** The `try_lock` was defensive programming, but it defeats the purpose of a reset. The caller is explicitly asking "clear all FCX state before my scan session." If another scan is still holding the lock, the correct behavior is to wait -- the prior scan will release the lock when its FCX operations complete. A `try_lock` that silently fails is a bug, not a feature.
-
-**Alternative considered: `reset_global_state_or_error() -> Result<()>`** -- this would be more explicit, but adds error handling at every call site. Since `parking_lot::Mutex` never poisons (unlike `std::sync::Mutex`), the blocking lock is safe and simpler.
-
-**Boundary exposure:**
-
-| Surface | Current | Target |
-|---------|---------|--------|
-| Rust core | `FcxModeHandler::reset_global_state()` | Fix to use blocking lock |
-| C++ bridge | Not exposed | Add `fn fcx_reset_global_state()` in `scanner.rs` ffi block |
-| Node binding | Not exposed | Add `#[napi] pub fn reset_fcx_global_state()` |
-| Python binding | Already exposed via `PyFcxModeHandler.reset_global_state` | Verify it delegates correctly |
-
-**Call sites for reset:** Before each scan session start:
-- C++ bridge: `orchestrator_new()` or `build_full_scan_config()` should call reset internally, AND expose a standalone reset for callers who want explicit control
-- Node binding: `process_log()` and `process_logs_batch()` should call reset internally before scan, AND expose standalone `resetFcxGlobalState()`
-- Orchestrator core: `OrchestratorCore::new()` is the natural place for automatic reset
-
-### 5. Singleton Interaction with Test Isolation
-
-**VersionRegistry (OnceLock):**
-- Initialized once per process lifetime. Cannot be reloaded.
-- Test isolation: Tests that need different registry data MUST run in separate processes. This is an explicit design decision (documented in PROJECT.md "Out of Scope").
-- Impact on this milestone: None. The LRU cache and FCX changes do not interact with VersionRegistry.
-
-**FcxModeHandler (Mutex):**
-- Mutable per-session state behind `parking_lot::Mutex`.
-- Test isolation: Tests MUST call `reset_global_state()` in setup. Since `parking_lot::Mutex` is not poisoning, a panicked test does not break subsequent tests -- but stale state does.
-- Impact on this milestone: The fix from `try_lock` to `lock` improves test isolation because reset always succeeds.
-
-**Interaction between singletons:**
-- `VersionRegistry` feeds `AnalysisConfig` via `build_analysis_config_from_yaml`
-- `FcxModeHandler` is driven by `AnalysisConfig.fcx_mode`
-- They do NOT share state. No circular dependency.
-
-## Component Dependency Graph (for changed components only)
+### Build / Validation Flow After Migration
 
 ```
-classic-yaml-core (cache change)
-    ^
-    |
-classic-settings-core (cache change)    classic-file-io-core (cache change)
-    ^                                        ^
-    |                                        |
-classic-config-core (unchanged)         classic-scangame-core (unchanged)
-    ^
-    |
-classic-scanlog-core
-  |-- mod_detector.rs (AhoCorasick)
-  |-- fcx_handler.rs (reset fix)
-  |-- orchestrator.rs (session reset call)
-    ^
-    |
-classic-cpp-bridge/scanner.rs (Lazy<LogParser>, fcx_reset FFI)
-    ^                                    ^
-    |                                    |
-classic-cli (unchanged)          classic-gui (unchanged)
-
-classic-node/scanlog.rs (Lazy<LogParser>, fcx_reset + ConfigIssue NAPI)
+[repo root cargo command]
+    ↓
+[root Cargo.toml workspace]
+    ↓
+[shared target/ and Cargo.lock at repo root]
+    ↓
+┌──────────────────────┬──────────────────────┬─────────────────────────┐
+│ classic-cpp-bridge   │ classic-node         │ classic-*-py            │
+│ (Corrosion/CXX)      │ (napi build)         │ (maturin / PyO3)        │
+└──────────┬───────────┴──────────┬───────────┴──────────┬──────────────┘
+           ↓                      ↓                      ↓
+      classic-cli/gui        Node parity/tests      Python parity/stubs/tests
+           ↓                      ↓                      ↓
+      docs/artifacts refresh and CI caches keyed off repo-root paths
 ```
 
-## Suggested Build Order (Dependencies Between Changes)
+### State Management
 
-Changes group into three independent workstreams that can be parallelized, plus a final integration step.
+The runtime/data architecture does **not** change:
 
-### Workstream A: Bounded Caches (independent of B and C)
-
-**Order matters within this workstream due to shared pattern:**
-
-1. **classic-yaml-core YAML_CACHE** -- Add `quick_cache` dependency (already in workspace), replace `Lazy<DashMap<PathBuf, CachedYaml>>` with `LazyLock<Cache<PathBuf, CachedYaml>>`. Requires `CachedYaml` to implement `Clone + Send + Sync + 'static` (it already implements `Clone`; check `Send`/`Sync` -- `Arc<Yaml>` and `SystemTime` are both Send+Sync, and `Option<String>` is too, so this is satisfied). Update `cache_stats()` to use external atomic counters rather than cache iteration. Update tests that check `YAML_CACHE.contains_key()` to use the new API. Default capacity: 256 entries (covers typical CLASSIC installations with ~20-50 YAML files, with headroom for testing).
-
-2. **classic-settings-core SETTINGS_CACHE** -- Same pattern as step 1. Replace `Lazy<DashMap<String, Arc<Vec<Yaml>>>>` with `LazyLock<Cache<String, Arc<Vec<Yaml>>>>`. Default capacity: 128 entries.
-
-3. **classic-file-io-core HASH_CACHE** -- Same pattern as step 1. Replace `LazyLock<Arc<DashMap<PathBuf, String>>>` with `LazyLock<Cache<PathBuf, String>>`. Default capacity: 1024 entries (hash cache sees more unique keys during game-scan workflows).
-
-**Key technical detail:** `quick_cache::sync::Cache` does NOT support `.iter()` like DashMap does. The `cache_stats()` functions in yaml-core and settings-core currently iterate the cache to compute total bytes or list keys. Options:
-- **Option A (recommended):** Track stats externally with atomic counters (entry count, total bytes) updated on insert/remove. Increment on insert, decrement when a known key is evicted or explicitly removed.
-- **Option B:** Accept approximate stats. `quick_cache` provides `.len()` for entry count. Total bytes can be tracked via an `AtomicUsize` incremented on insert and decremented on eviction (using `quick_cache`'s `Lifecycle` trait).
-
-### Workstream B: Pattern Caching (independent of A and C)
-
-1. **detect_mods_important AhoCorasick** -- Add a module-level `Lazy<Mutex<LruCache<u64, Arc<AhoCorasick>>>>` in `mod_detector.rs`. Hash the detect strings from `entries` using xxhash (already a dependency: `xxhash-rust`). On cache miss, build the automaton. On cache hit, reuse it. The AhoCorasick `find_iter` returns `Match` with `.pattern()` index, which maps back to the `entries` slice by position. Handle per-entry gpu/exclusion logic post-match. Capacity: 8 entries (typically 1-2 mod lists per session).
-
-2. **detect_mods_single/double/batch regex caching** -- Similar approach, but these already build a single combined regex alternation per call. Cache the compiled `Regex` keyed by a hash of the sorted mod patterns. This is lower priority since the single-regex approach is already reasonably fast.
-
-3. **Bridge-level Lazy<LogParser>** -- Add `static BRIDGE_PARSER: Lazy<LogParser>` in `classic-cpp-bridge/scanner.rs`. Use in `detect_crash_pattern`. Trivial change.
-
-4. **Node binding Lazy<LogParser>** -- Same pattern in `classic-node/scanlog.rs` for `parse_log_segments`, `extract_form_ids`, `extract_plugin_list`, `detect_crash_pattern`. These all currently call `LogParser::new(None)` per invocation.
-
-### Workstream C: FCX State Management (independent of A and B)
-
-1. **Fix `reset_global_state` in fcx_handler.rs** -- Change `try_lock()` to `lock()`. Single-line change.
-
-2. **Add automatic reset in OrchestratorCore** -- Call `FcxModeHandler::reset_global_state()` at the start of `OrchestratorCore::process_log()` or in the orchestrator's scan-session initialization path. This ensures every scan session starts clean.
-
-3. **Expose reset in C++ bridge** -- Add `fn fcx_reset_global_state()` to the `extern "Rust"` block in `scanner.rs`. Implementation: call `FcxModeHandler::reset_global_state()`.
-
-4. **Expose reset + ConfigIssue in Node binding** -- Add `#[napi] pub fn reset_fcx_global_state()` and `#[napi] pub fn get_fcx_config_issues() -> Vec<JsConfigIssue>` in `scanlog.rs`. Define `JsConfigIssue` as a NAPI-compatible struct mirroring `ConfigIssue`.
-
-### Integration Step (after all workstreams)
-
-- **Criterion benchmarks** -- Before/after benchmarks for:
-  - YAML cache operations (bounded vs unbounded)
-  - `detect_mods_important` with AhoCorasick vs per-entry regex
-  - `detect_crash_pattern` with cached vs per-call parser
-- **Parity gates** -- Run Python and Node parity gates to verify no binding contract changes
-- **C++ build** -- Rebuild bridge and verify CXX header generation includes `fcx_reset_global_state`
-
-## Patterns to Follow
-
-### Pattern 1: quick_cache for Global Concurrent Caches
-
-**What:** Replace unbounded `DashMap` globals with bounded `quick_cache::sync::Cache`
-**When:** Any static/global cache that grows with input diversity and is read concurrently
-**Existing example:** `FileIOCore.read_cache` in `classic-file-io-core/core.rs:99`
-
-```rust
-use quick_cache::sync::Cache;
-use std::sync::LazyLock;
-
-static YAML_CACHE: LazyLock<Cache<PathBuf, CachedYaml>> =
-    LazyLock::new(|| Cache::new(256));
+```
+shared Tokio runtime in classic-shared-core
+    ↓
+business-logic crates
+    ↓
+thin binding/native wrappers
 ```
 
-**Note:** This also modernizes from `once_cell::sync::Lazy` to `std::sync::LazyLock` (available since Rust 1.80, workspace requires 1.85+). The codebase mixes both; new code should prefer `LazyLock`.
+This milestone changes path discovery and build orchestration only.
 
-### Pattern 2: AhoCorasick with Pattern-Index Lookup
+### Key Data Flows
 
-**What:** Replace per-entry `Regex::new` with a single AhoCorasick automaton
-**When:** Multiple literal (or near-literal) patterns need matching against the same text, and you need to know which pattern matched
-**Existing example:** `RecordScanner` in `classic-scanlog-core/record_scanner.rs:17`
+1. **Cargo flow:** commands now start at repo root and use root `target/` and root `Cargo.lock`.
+2. **Native wrapper flow:** CMake/Corrosion points to `./Cargo.toml` and `cpp-bindings/classic-cpp-bridge/include` instead of `../ClassicLib-rs/...`.
+3. **Parity/report flow:** generators still write into binding-local `parity-artifacts/` and docs baselines, but the embedded source paths and default output locations all shift to root-level directories.
 
-```rust
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
+## Migration-Specific Integration Points
 
-let automaton = AhoCorasickBuilder::new()
-    .ascii_case_insensitive(true)
-    .build(&patterns)?;
+### New integration points
 
-for mat in automaton.find_iter(text) {
-    let pattern_index = mat.pattern().as_usize();
-    let entry = &entries[pattern_index];
-    // per-entry logic here
-}
-```
+| Integration point | Why it is new/load-bearing | Required action |
+|-------------------|----------------------------|-----------------|
+| `./Cargo.toml` | New authoritative workspace root | Create root manifest and move workspace tables here |
+| `./Cargo.lock` | Cargo lockfile must live at workspace root | Move from `ClassicLib-rs/Cargo.lock` |
+| `./.cargo/config.toml` | Workspace cargo aliases/config now belong to root | Move from `ClassicLib-rs/.cargo/config.toml` |
+| `./criterion.toml`, `./benchmark-config.yaml`, `./benches/` | Bench workflows currently assume old workspace directory | Move so benchmark jobs run from repo root without split config |
 
-### Pattern 3: Module-Level Lazy Singleton for Expensive Constructors
+### Modified integration points
 
-**What:** Hold a `Lazy<T>` at module scope for objects that are expensive to construct and safe to share
-**When:** Constructor is called per-invocation but the object is thread-safe and stateless (or uses internal caching)
-**Existing example:** `GLOBAL_FCX_HANDLER` in `classic-scanlog-core/fcx_handler.rs:23`
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| Root workspace manifest ↔ member crates | Cargo workspace membership and path deps | Update `members` list and all `path =` edges; Cargo path dependencies must point to the exact crate directory |
+| `cpp-bindings/classic-cpp-bridge` ↔ core crates | Relative path dependencies | Current `../../foundation/...` and `../../business-logic/...` paths must be rewritten for the new parent depth |
+| `node-bindings/classic-node` ↔ core crates/tools | Cargo deps + package.json scripts | Manifest path deps change; package scripts using `../../../tools/...` and `--repo-root ../../..` become one level shorter |
+| `python-bindings/*-py` ↔ core crates/shared-py | Relative path dependencies | All `../../business-logic/...` / `../../foundation/...` paths change |
+| `ui-applications/classic-tui` ↔ core crates | Relative path dependencies | TUI manifest paths change even though behavior does not |
+| `classic-cli` / `classic-gui` ↔ Rust bridge | Corrosion `MANIFEST_PATH` + include dirs | `../ClassicLib-rs/Cargo.toml` and `../ClassicLib-rs/cpp-bindings/.../include` must point at root workspace and root bridge include dir |
+| `rebuild_rust.ps1` ↔ workspace/bindings | Script-owned path contracts | `$WorkspaceManifest`, `$PythonBindingsRoot`, module discovery roots, and any assumptions about `ClassicLib-rs` must move together |
+| `validate_stubs.py` ↔ Python bindings | Rust-dir and stub path resolution | Prefer moving script to repo root and changing callers to `--rust-dir .`; otherwise callers still depend on a stale subdirectory |
+| parity tools under `tools/` ↔ source trees | Hardcoded crate/module paths | `RUST_TARGET_CRATES`, `PYTHON_TARGET_MODULES`, output-dir defaults, runtime-registry defaults, and CXX bridge path defaults all need path-prefix rewrites |
+| CI workflows ↔ caches/artifacts | `working-directory`, `manifest-path`, cache key globs, upload paths | Replace `ClassicLib-rs/target`, `ClassicLib-rs/**/*.rs`, and `ClassicLib-rs/...` artifact paths with root equivalents |
+| docs / skills / AGENTS / planning ↔ contributors | Human path contract | Update commands, architecture maps, and trigger examples so future work uses the new root layout |
+| generated parity/report files ↔ docs baselines | Embedded source paths | Regenerate Node/Python/CXX surface artifacts because source file paths and artifact paths change even if API shape does not |
+| planning tests / audit fixtures ↔ repo layout | Path assertions | Update tests under `tests/planning/` and similar audit surfaces that assert `ClassicLib-rs/...` paths |
 
-```rust
-use once_cell::sync::Lazy;  // or std::sync::LazyLock
+## Expected Build-Flow Changes
 
-static BRIDGE_PARSER: Lazy<LogParser> = Lazy::new(|| {
-    LogParser::new(None).expect("LogParser pattern compilation failed")
-});
-```
+| Surface | Before | After |
+|---------|--------|-------|
+| Rust workspace commands | `cargo ... --manifest-path ClassicLib-rs/Cargo.toml` | `cargo ...` from repo root |
+| Cargo output directory | `ClassicLib-rs/target` | `target` at repo root |
+| Benchmarks workflow | `working-directory: ClassicLib-rs` | `working-directory: .` or no override |
+| Node package scripts | repo-root is `../../..` from `classic-node` | repo-root is `../..` from `node-bindings/classic-node` |
+| Python rebuild/stub flow | points at `ClassicLib-rs/python-bindings` and `ClassicLib-rs/validate_stubs.py` | points at `python-bindings` and root `validate_stubs.py` |
+| C++ Corrosion imports | `../ClassicLib-rs/Cargo.toml` | `../Cargo.toml` |
 
-### Pattern 4: CXX FFI Function Exposure
+## Verification Surfaces
 
-**What:** Expose a new Rust function through the CXX bridge
-**When:** C++ frontends need access to new Rust functionality
-**Existing example:** `papyrus_reset` in `classic-cpp-bridge/scanner.rs:818,941`
+These are the highest-value checks because they cross the most path-sensitive boundaries.
 
-```rust
-// Implementation function (outside ffi module)
-fn fcx_reset_global_state() {
-    classic_scanlog_core::FcxModeHandler::reset_global_state();
-}
+1. **Workspace health**
+   - `cargo fmt --all -- --check`
+   - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+   - `cargo test --workspace --release -- --nocapture`
 
-// Inside #[cxx::bridge] mod ffi { extern "Rust" { ... } }
-fn fcx_reset_global_state();
-```
+2. **C++ bridge and native wrappers**
+   - `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`
+   - `pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test`
+   - `pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test`
 
-## Anti-Patterns to Avoid
+3. **Node binding flow**
+   - from `node-bindings/classic-node`: `bun install`
+   - `bun run build`
+   - `bun run parity:gate`
+   - `bun run dts:freshness:check`
+   - `bun run test:bun`
+   - `bun run test:node`
 
-### Anti-Pattern 1: RwLock<LruCache> for High-Concurrency Global Caches
+4. **Python binding flow**
+   - `uv venv python-bindings/.venv`
+   - `uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt`
+   - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
+   - `python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
+   - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry`
+   - `uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q`
 
-**What:** Wrapping `lru::LruCache` in `RwLock` for a process-wide static cache
-**Why bad:** Even read operations on `LruCache` require a write lock (to update LRU ordering). This serializes all concurrent readers. The `LogParser`'s internal caches use this pattern but are instance-scoped (one parser, few concurrent readers). For process-wide caches like YAML_CACHE that serve all scan workers simultaneously, this would be a concurrency regression compared to the current DashMap.
-**Instead:** Use `quick_cache::sync::Cache` which handles LRU eviction internally with fine-grained locking.
+5. **Path-audit surfaces**
+   - CI workflow YAMLs
+   - README / docs / AGENTS / skill docs
+   - `tests/planning/*` and any hardcoded-path repo audits
+   - parity baseline JSON/MD files whose `source_paths` or emitted source-file fields changed
 
-### Anti-Pattern 2: try_lock for Mandatory State Operations
+## Build Order
 
-**What:** Using `Mutex::try_lock()` for operations that MUST succeed
-**Why bad:** If the lock cannot be acquired, the operation is silently skipped. For FCX reset, this means stale state from a prior scan leaks into the next session.
-**Instead:** Use `Mutex::lock()` (blocking). If you need non-blocking semantics, return an error: `try_lock().ok_or(ResetContention)` -- but never silently skip.
+1. **Create the new root workspace shell first**
+   - Add root `Cargo.toml`
+   - move `Cargo.lock`, `.cargo/config.toml`, `criterion.toml`, `benchmark-config.yaml`, `benches/`
+   - rationale: everything else depends on there being a real workspace root
 
-### Anti-Pattern 3: Per-Call Pattern Compilation in Hot Paths
+2. **Move the crate directories without changing internals**
+   - `foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, `ui-applications/`
+   - rationale: establishes final filesystem layout before rewriting consumers
 
-**What:** Calling `Regex::new()` or building an AhoCorasick automaton inside a function that runs per-log or per-entry in a batch
-**Why bad:** Pattern compilation is O(n) in pattern length and involves memory allocation. When scanning 100+ logs with 200+ mod entries, this costs seconds of CPU time for work that produces identical results.
-**Instead:** Cache compiled patterns keyed by their input. If inputs are stable within a session (they are -- config is loaded once), a simple hash-based LRU cache eliminates all recompilation.
+3. **Rewrite all member-manifest path edges**
+   - every `Cargo.toml` with a local `path =`
+   - rationale: until these compile, no consumer can build reliably
 
-## Scalability Considerations
+4. **Update first-order consumers of the workspace root**
+   - `classic-cli/CMakeLists.txt`
+   - `classic-gui/CMakeLists.txt`
+   - `rebuild_rust.ps1`
+   - `validate_stubs.py` location/call sites
+   - `node-bindings/classic-node/package.json`
 
-| Concern | Desktop (1-10 logs) | Batch scan (100+ logs) | Long-running server |
-|---------|---------------------|----------------------|---------------------|
-| YAML_CACHE | 20-50 entries, no eviction needed | Same -- config loaded once | Needs eviction; 256 cap sufficient |
-| SETTINGS_CACHE | 5-10 entries | Same | Needs eviction; 128 cap sufficient |
-| HASH_CACHE | 50-200 files | 500-2000 files | Needs eviction; 1024 cap with possible resize |
-| AhoCorasick cache | 1 automaton per session | Same (entries stable) | LRU evicts old sessions; 8 cap sufficient |
-| LogParser cache | 1 instance, reused | Same | Same -- `Lazy` singleton |
-| FCX state | Reset per scan | Reset before batch | Reset before each session |
+5. **Update repo tooling and generated-artifact producers**
+   - `tools/python_api_parity/*`
+   - `tools/node_api_parity/*`
+   - `tools/cxx_api_parity/*`
+   - benchmark workflow assumptions
+   - rationale: these are verification and reporting layers built on top of the final layout
+
+6. **Refresh CI, docs, skills, and planning/audit surfaces**
+   - `.github/workflows/*`
+   - `README.md`, `docs/README.md`, `docs/api/*`, `AGENTS.md`, project skill references
+   - `.planning/*`, `tests/planning/*`
+
+7. **Regenerate and verify**
+   - parity artifacts, runtime coverage summaries, any path-bearing baselines
+   - then run the verification surface list above
+
+## Anti-Patterns
+
+### Anti-Pattern 1: Dual-root workspace state
+
+**What people do:** add a new root `Cargo.toml` but leave `ClassicLib-rs/Cargo.toml`, `Cargo.lock`, and config files effectively active.
+
+**Why it's wrong:** Cargo root behavior, cache paths, and contributor docs drift immediately. People will run commands in both places and get inconsistent lockfiles/targets.
+
+**Do this instead:** make repo root the only authoritative workspace root and demote/remove the old anchor.
+
+### Anti-Pattern 2: Updating commands but not generated/report paths
+
+**What people do:** fix build scripts and stop there.
+
+**Why it's wrong:** parity generators and docs baselines embed source paths; stale generated files will keep CI or audits red even though builds pass.
+
+**Do this instead:** regenerate Node/Python/CXX parity artifacts and any path-bearing reports as part of the same change.
+
+### Anti-Pattern 3: Treating docs and skills as optional cleanup
+
+**What people do:** postpone README/AGENTS/skill/planning updates because runtime behavior did not change.
+
+**Why it's wrong:** this repo uses docs, skills, and planning files as active workflow contracts; stale path guidance will re-break future work.
+
+**Do this instead:** update human-facing path contracts in the same milestone.
+
+## Integration Points
+
+### External Services
+
+| Service | Integration Pattern | Notes |
+|---------|---------------------|-------|
+| Cargo | Root workspace discovery via parent search and explicit root manifest | Official docs confirm shared lockfile/target live at workspace root |
+| Corrosion/CMake | Import `classic-cpp-bridge` from root manifest | Native wrappers are the most obvious place path drift will show up |
+| Bun / NAPI-RS | Build from `node-bindings/classic-node` against root workspace | package.json relative tool paths must shrink by one level |
+| uv / maturin / PyO3 | Build Python bindings against root workspace and local `.venv` | Keep `.venv` under `python-bindings/`, not repo root |
+| GitHub Actions cache/artifacts | Repo-root cache keys and upload paths | `target` and `**/*.rs` globs must follow the new layout |
+
+### Internal Boundaries
+
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| workspace root ↔ crates | Cargo members and path deps | highest-risk migration surface |
+| workspace root ↔ wrapper scripts | manifest path / working directory | must change before CI can be trusted |
+| tooling ↔ generated artifacts | repo-root-relative defaults | regenerate after path rewrite |
+| docs/skills/planning ↔ contributors | textual commands and links | stale guidance is operational drift in this repo |
 
 ## Sources
 
-- Direct source inspection of all affected files (HIGH confidence -- no external sources needed for architecture analysis of existing code)
-- `quick_cache` v0.6 API: already used in `classic-file-io-core/core.rs` (established pattern)
-- `aho-corasick` v1.1 API: already used in `patterns.rs`, `record_scanner.rs`, `plugin_analyzer.rs` (established pattern)
-- `parking_lot::Mutex` v0.12: already used in `fcx_handler.rs` (established pattern)
-- `lru` v0.16: already used in `parser.rs` and `core.rs` for instance-scoped caches (established pattern)
+- `J:\CLASSIC-Fallout4\.planning\PROJECT.md`
+- `J:\CLASSIC-Fallout4\ClassicLib-rs\Cargo.toml`
+- `J:\CLASSIC-Fallout4\classic-cli\CMakeLists.txt`
+- `J:\CLASSIC-Fallout4\classic-gui\CMakeLists.txt`
+- `J:\CLASSIC-Fallout4\rebuild_rust.ps1`
+- `J:\CLASSIC-Fallout4\ClassicLib-rs\node-bindings\classic-node\package.json`
+- `J:\CLASSIC-Fallout4\ClassicLib-rs\validate_stubs.py`
+- `J:\CLASSIC-Fallout4\tools\python_api_parity\*.py`
+- `J:\CLASSIC-Fallout4\tools\node_api_parity\*.py`
+- `J:\CLASSIC-Fallout4\tools\cxx_api_parity\*.py`
+- `J:\CLASSIC-Fallout4\.github\workflows\ci-rust.yml`
+- `J:\CLASSIC-Fallout4\.github\workflows\ci-python-bindings.yml`
+- `J:\CLASSIC-Fallout4\.github\workflows\ci-typescript.yml`
+- `J:\CLASSIC-Fallout4\.github\workflows\ci-cpp.yml`
+- `J:\CLASSIC-Fallout4\.github\workflows\benchmarks.yml`
+- `https://doc.rust-lang.org/cargo/reference/workspaces.html` (official Cargo workspace behavior)
+- `https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html` (official Cargo path-dependency behavior)
 
 ---
-
-*Architecture analysis: 2026-04-04*
+*Architecture research for: CLASSIC workspace-root migration*
+*Researched: 2026-04-11*

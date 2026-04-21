@@ -526,9 +526,8 @@ void ScanSettingsWiringTests::scan_controller_logs_targeted_rejections_with_reas
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    const QRegularExpression warningLoopRegex(
-        QString::fromLatin1(
-            R"REGEX(for\s*\(size_t i = 0; i < resolution\.rejected_paths\.size\(\); \+\+i\)\s*\{(?:.|\n)*?const QString reason = i < resolution\.rejected_reasons\.size\(\)\s*\?\s*classic::toQString\(resolution\.rejected_reasons\[i\]\)\s*:\s*QStringLiteral\("unknown reason"\);(?:.|\n)*?qWarning\("Targeted input rejected: %s \(%s\)",(?:.|\n)*?qPrintable\(reason\)\);(?:.|\n)*?\})REGEX"));
+    const QRegularExpression warningLoopRegex(QString::fromLatin1(
+        R"REGEX(for\s*\(size_t i = 0; i < resolution\.rejected_paths\.size\(\); \+\+i\)\s*\{(?:.|\n)*?const QString reason = i < resolution\.rejected_reasons\.size\(\)\s*\?\s*classic::toQString\(resolution\.rejected_reasons\[i\]\)\s*:\s*QStringLiteral\("unknown reason"\);(?:.|\n)*?qWarning\("Targeted input rejected: %s \(%s\)",(?:.|\n)*?qPrintable\(reason\)\);(?:.|\n)*?\})REGEX"));
     QVERIFY2(warningLoopRegex.match(sourceText).hasMatch(),
              "ScanController should guard targeted rejection logging against missing rejection reasons");
 }
@@ -587,8 +586,9 @@ void ScanSettingsWiringTests::mainwindow_includes_last_scan_report_dirs_in_resul
     const QString headerText = QString::fromUtf8(headerFile.readAll());
     QVERIFY2(headerText.contains(QStringLiteral("QStringList m_lastScanReportDirs;")),
              "MainWindow should retain report directories resolved for the active or last scan");
-    QVERIFY2(headerText.contains(QStringLiteral("void onScanReportDirectoriesResolved(const QStringList& reportDirs);")),
-             "MainWindow should define a slot to receive resolved report directories from ScanController");
+    QVERIFY2(
+        headerText.contains(QStringLiteral("void onScanReportDirectoriesResolved(const QStringList& reportDirs);")),
+        "MainWindow should define a slot to receive resolved report directories from ScanController");
 
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
     QFile sourceFile(sourcePath);
@@ -627,8 +627,8 @@ void ScanSettingsWiringTests::scan_controller_disables_unsolved_relocation_for_t
     QVERIFY2(sourceText.contains(QStringLiteral("const bool targetedMode = !targetedInputs.isEmpty();")),
              "ScanController should detect targeted mode before dispatching work to ScanWorker");
 
-    const QRegularExpression lambdaRegex(QStringLiteral(
-        R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
+    const QRegularExpression lambdaRegex(
+        QStringLiteral(R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass targetedMode to ScanWorker::doScan()");
 }

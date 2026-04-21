@@ -1,6 +1,6 @@
 # `classic-config-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-config-core/`](../../ClassicLib-rs/business-logic/classic-config-core).
+Contributor-facing API documentation for [`business-logic/classic-config-core/`](../../business-logic/classic-config-core).
 
 Crate metadata:
 
@@ -37,7 +37,7 @@ Do not use this crate for:
 - converting config data into binding-specific wrapper types
 - crash-log analysis itself
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -63,8 +63,8 @@ Bulk YAML dataset loader for scanlog/business logic.
 
 ### Re-exports from `lib.rs`
 
-- `get_runtime` from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core)
+- `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
+- `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -198,7 +198,7 @@ Fields:
 - `settings_rules_version: Option<u32>`
 - `settings_rules: Option<CrashgenSettingsRules>`
 
-This type is intentionally still raw. Downstream crates such as [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) convert it into analysis-layer types.
+This type is intentionally still raw. Downstream crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) convert it into analysis-layer types.
 
 ## `ConfigError`
 
@@ -216,7 +216,7 @@ Variants:
 - `resolve_registry_version_info(main_root_name, selected_game_version) -> Option<VersionInfo>`
 - `format_registry_game_version(version: &RegistryGameVersion) -> String`
 
-These helpers bridge the config layer to [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core). They are used both inside this crate and by downstream analysis code.
+These helpers bridge the config layer to [`classic-version-registry-core`](../../business-logic/classic-version-registry-core). They are used both inside this crate and by downstream analysis code.
 
 ---
 
@@ -242,9 +242,9 @@ Read/write path policy is defined in [`classic-config-core-yaml-schema.md`](clas
 2. The crate resolves file paths and checks that all three YAML files exist.
 3. It reads all three files in parallel with `tokio::join!`.
 4. It parses and merges every YAML document from each file.
-5. `YamlOperations` from [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) extracts nested values.
+5. `YamlOperations` from [`classic-settings-core`](../../business-logic/classic-settings-core) extracts nested values.
 6. `Crashgen_Registry` is parsed into `HashMap<String, CrashgenEntryRaw>`.
-7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core):
+7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core):
    - `crashgen_name`
    - `crashgen_latest_og`
    - `xse_acronym`
@@ -287,7 +287,7 @@ Malformed optional substructures inside `Crashgen_Registry` are usually not fata
 This crate performs async file I/O and assumes the shared CLASSIC Tokio runtime model.
 
 - The crate exposes async APIs such as `YamlSource::load()`, `ClassicConfig::load_from_yaml()`, `ClassicConfig::save_to_yaml()`, `ClassicConfig::load_or_default()`, and `YamlDataCore::load_from_yaml_files()`.
-- `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core).
+- `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core).
 - The crate-level docs explicitly say it should use the shared global runtime rather than creating its own runtime.
 - FFI/binding layers in this repo call these async APIs via `get_runtime().block_on(...)` rather than constructing separate runtimes.
 
@@ -297,13 +297,12 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 
 ## Related Crates And Integration Points
 
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) - YAML extraction helpers and cache management
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - version metadata and fallback resolution
-- [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) - typed crashgen settings rules embedded in `CrashgenEntryRaw`
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
+- [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and uses the crashgen rule model (below) inside `SettingsValidator`
+- [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
 
 In practice, `classic-config-core` is the data-loading layer between raw YAML files and higher-level analysis/UI/binding code.
 
@@ -381,3 +380,285 @@ If you extend the crate, update this document when you change:
 - fallback precedence between YAML and version registry data
 - runtime assumptions
 - behavior that bindings depend on
+
+---
+
+## Crashgen rule model
+
+The crashgen rule model lives in `classic-config-core::crashgen_rules` (module `src/crashgen_rules.rs`, absorbed from the former `classic-crashgen-settings-core` crate in v9.1.0 Phase 2). `lib.rs` re-exports the full rule-model surface via `pub use crashgen_rules::*;`, so downstream callers use the flat `classic_config_core::` path.
+
+This section defines the shared Rust rule model used for crashgen settings validation and documents the core evaluator that higher layers call. It is pure business-logic code with no YAML loading, report formatting, UI, FFI, or Tokio runtime ownership — those concerns live in the config loaders, scanlog/scangame orchestrators, and binding layers.
+
+### Purpose and scope
+
+Use the crashgen rule model when you need to:
+
+- represent crashgen settings rules as typed Rust data
+- evaluate those rules against installed plugins, flattened settings, config layout facts, and optional crashgen version data
+- share one rule model across config loading, scanlog analysis, TOML/config validation, and bindings
+- build or transform `CrashgenSettingsRules` values in tests, registry builders, or binding adapters
+
+Do not use this module for parsing YAML or TOML directly, formatting final autoscan reports, deciding game-version family ownership for scan-time config building, or creating a Tokio runtime. Those live in sibling modules and the [`classic-scanlog-core`](classic-scanlog-core.md) / [`classic-scangame-core`](classic-scangame-core.md) crates.
+
+### Rule model types
+
+- `CrashgenSettingsRules` - top-level rules block with `version`, `preflight`, and `checks`
+- `PreflightRule` and `PreflightAction` - early rules that emit notices/issues before setting checks run
+- `CheckRule` - one setting expectation with target metadata, predicate, and messages
+- `RuleTarget` - section/key/value-type metadata for a setting check
+- `RuleMessages` - fail/fix/pass message templates
+- `Predicate` - condition tree used by both preflight and check rules
+- `ExpectedValue` and `TargetValueType` - typed expectation model
+
+### Evaluation types
+
+- `EvaluationContext` - caller-provided facts used during evaluation
+- `EvaluationOutcome` - one emitted notice, issue, or success
+- `EvaluationResult` - ordered outcomes plus `skip_remaining`
+- `OutcomeKind` - `Notice`, `Issue`, or `Success`
+
+### Supporting enums
+
+- `RuleSeverity` - `Info`, `Warning`, `Error`
+- `PreflightActionKind` - `NoticeAndSkipRemaining`, `Notice`, `Issue`
+- `ConfigLayout` - `Og`, `Vr`, `Unknown`
+- `RuleReportBucket` - `Settings` (default) or `ErrorInformation` (promoted destination)
+
+### Main function
+
+- `evaluate_rules(rules, context) -> EvaluationResult`
+
+### `CrashgenSettingsRules`
+
+Top-level model shared between config loading and validation layers. Fields:
+
+- `version: u32`
+- `preflight: Vec<PreflightRule>`
+- `checks: Vec<CheckRule>`
+
+The module does not interpret `version` beyond storing it — today it is schema metadata carried from upstream loaders.
+
+### `Predicate`
+
+Condition tree used to decide whether a rule applies. Variants:
+
+- `Always`
+- `PluginAny(Vec<String>)`
+- `ConfigLayoutIs(ConfigLayout)`
+- `CrashgenVersionLt((u32, u32, u32))`
+- `All(Vec<Predicate>)`
+- `Any(Vec<Predicate>)`
+- `Not(Box<Predicate>)`
+
+Source-visible behavior:
+
+- `PluginAny` compares against `EvaluationContext.installed_plugins` after trimming and lowercasing the predicate entries at evaluation time
+- `ConfigLayoutIs` is strict equality against the caller-provided `ConfigLayout`
+- `CrashgenVersionLt` returns `true` when `crashgen_version` is `None` (uses `Option::is_none_or(...)`)
+- `All`, `Any`, and `Not` compose recursively
+
+### `EvaluationContext`
+
+The only input to the evaluator besides the rules. Fields:
+
+- `crashgen_name: String`
+- `display_section: String`
+- `installed_plugins: HashSet<String>`
+- `settings: HashMap<String, String>`
+- `config_layout: ConfigLayout`
+- `crashgen_version: Option<(u32, u32, u32)>`
+
+Contributor notes:
+
+- `installed_plugins` is expected to contain lowercase DLL/plugin names; downstream callers such as scanlog build it that way
+- `settings` is a flattened key-to-value map; `evaluate_rules()` looks up by `RuleTarget.key` only
+- `RuleTarget.section` is reported back in outcomes but is not used to look up the current value (matters if a caller ever flattens two different sections that share the same key name)
+
+### `PreflightRule` and `PreflightAction`
+
+Preflight rules run before check rules. Fields:
+
+- `PreflightRule`: `id`, `when`, `action`
+- `PreflightAction`: `kind`, `bucket`, `severity`, `message`, `fix`
+
+`RuleReportBucket` meanings:
+
+- `Settings` - default settings-related destination used by ordinary checks and preflight notices
+- `ErrorInformation` - promoted destination for notices or issues that callers want to render under `Error Information`
+
+`PreflightActionKind` meanings:
+
+- `NoticeAndSkipRemaining` - emit a notice and stop before all remaining checks
+- `Notice` - emit a notice and continue
+- `Issue` - emit an issue and continue
+
+### `CheckRule`
+
+Models one expected setting value. Fields: `id`, `target: RuleTarget`, `when: Predicate`, `expect: ExpectedValue`, `messages: RuleMessages`, `severity: RuleSeverity`.
+
+Important behavior:
+
+- a check rule only runs when its predicate is true
+- if the target key is missing from `context.settings`, the rule is skipped silently
+- a failed expectation emits an `Issue`
+- a passing expectation emits a `Success` only when `messages.pass` is present
+
+### `ExpectedValue`, `TargetValueType`, and value matching
+
+Supported expected values: `ExpectedValue::Bool(bool)`, `ExpectedValue::Int(i64)`, `ExpectedValue::String(String)`.
+
+Supported target types: `TargetValueType::Bool`, `TargetValueType::Int`, `TargetValueType::String`.
+
+Matching behavior from `value_matches()`:
+
+- bool parsing accepts `true/1/yes/on` and `false/0/no/off`
+- int parsing trims and parses as `i64`
+- string comparisons compare trimmed current values to the expected string
+- if `target.value_type` and `expect` differ, the evaluator still falls back to matching on the `ExpectedValue` variant instead of erroring
+
+### `EvaluationOutcome` and `EvaluationResult`
+
+`EvaluationOutcome` is the emitted result unit. Fields: `id`, `kind`, `bucket`, `severity`, `message`, `fix`, `section`, `setting`, `expected`, `actual`.
+
+`EvaluationResult` contains:
+
+- `outcomes: Vec<EvaluationOutcome>` in evaluation order
+- `skip_remaining: bool`
+
+There is no separate summary or error channel. Callers interpret `outcomes` directly.
+
+### Parse helpers on enums
+
+- `RuleSeverity::parse(&str) -> Option<RuleSeverity>`
+- `ConfigLayout::parse(&str) -> Option<ConfigLayout>`
+- `TargetValueType::parse(&str) -> Option<TargetValueType>`
+- `PreflightActionKind::parse(&str) -> Option<PreflightActionKind>`
+- `RuleReportBucket::parse(&str) -> Option<RuleReportBucket>`
+
+These return `None` for unsupported strings. Useful in loaders and binding adapters, but they do not report detailed parse errors.
+
+### Rule evaluation flow
+
+The source-visible evaluation order:
+
+1. Start with an empty `EvaluationResult`.
+2. Evaluate all `preflight` rules in declaration order.
+3. For each matching preflight rule: render `message` and optional `fix`, emit a `Notice` or `Issue` outcome based on `PreflightActionKind`, copy `PreflightAction.bucket` into the emitted `EvaluationOutcome`.
+4. If a preflight action is `NoticeAndSkipRemaining`, set `skip_remaining = true` and return immediately.
+5. Evaluate all `checks` in declaration order.
+6. For each matching check rule: look up `context.settings[rule.target.key]`, skip the rule if the key is absent, compare the current value to `expect`, emit an `Issue` on mismatch, emit a `Success` on match only when `messages.pass` exists, emit `RuleReportBucket::Settings` for those check outcomes.
+7. Return the ordered `EvaluationResult`.
+
+Template rendering is intentionally small in scope. `apply_template()` only replaces `{crashgen_name}`, `{display_section}`, and `{setting}`. If `display_section` is empty, the evaluator substitutes `[Compatibility]`.
+
+### Error handling model for the rule evaluator
+
+The rule evaluator does not expose a dedicated error enum and `evaluate_rules()` is intentionally infallible. Contributor-facing implications:
+
+- enum parse helpers return `Option<_>`, not `Result<_>`
+- malformed or incomplete rule YAML is expected to be filtered or defaulted by upstream loaders inside this same crate
+- missing settings do not produce an evaluator error; the corresponding check is skipped
+- unsupported template tokens remain unchanged because only three placeholders are recognized
+
+If you need richer diagnostics for malformed rule definitions, that work belongs in the loader layer rather than in the evaluator.
+
+### Current ownership boundaries
+
+The rule model is shared infrastructure. It owns the typed rule model and evaluator, but not the higher-level meaning of every fact.
+
+`ConfigLayout` still includes `Vr`, and the evaluator fully supports `Predicate::ConfigLayoutIs(ConfigLayout::Vr)`. Current source-backed usage differs by downstream crate:
+
+- in [`classic-scanlog-core`](classic-scanlog-core.md), `derive_scanlog_config_layout()` currently returns `Og` when a detected game version parses and `Unknown` otherwise; it does not use `Vr` as the primary OG/VR selector
+- scanlog currently treats `ConfigLayout` mostly as a coarse valid/invalid fact for settings evaluation
+- OG/VR selection for scanlog is handled earlier during Version Registry-backed config building, not inside this evaluator
+- in [`classic-scangame-core`](classic-scangame-core.md), TOML validation still infers `Og` vs `Vr` from the config file path and passes that fact into `EvaluationContext`
+
+Keep `Vr` support intact unless the downstream callers and rule schema are changed together.
+
+### YAML ownership for the rule schema
+
+- `classic-config-core` (this crate) parses `Crashgen_Registry.*.settings_rules` YAML into `CrashgenSettingsRules` via `CrashgenEntryRaw`
+- Node and Python binding layers convert their own transport shapes into the same core types
+- keep the rule-model module focused on typed evaluation, not schema-specific file parsing
+
+### Rule-model usage example
+
+```rust
+use classic_config_core::{
+    CheckRule, ConfigLayout, CrashgenSettingsRules, EvaluationContext, ExpectedValue,
+    Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages,
+    RuleSeverity, RuleTarget, TargetValueType, evaluate_rules,
+};
+use std::collections::{HashMap, HashSet};
+
+let rules = CrashgenSettingsRules {
+    version: 1,
+    preflight: vec![PreflightRule {
+        id: "addictol_skip".to_string(),
+        when: Predicate::PluginAny(vec!["addictol.dll".to_string()]),
+        action: PreflightAction {
+            kind: PreflightActionKind::NoticeAndSkipRemaining,
+            severity: RuleSeverity::Info,
+            message: "Addictol detected - skipping {crashgen_name} checks".to_string(),
+            fix: None,
+        },
+    }],
+    checks: vec![CheckRule {
+        id: "f4ee_enabled".to_string(),
+        target: RuleTarget {
+            section: "Compatibility".to_string(),
+            key: "F4EE".to_string(),
+            value_type: TargetValueType::Bool,
+        },
+        when: Predicate::PluginAny(vec!["f4ee.dll".to_string()]),
+        expect: ExpectedValue::Bool(true),
+        messages: RuleMessages {
+            fail: "{setting} is disabled".to_string(),
+            fix: Some("Enable the compatibility toggle.".to_string()),
+            pass: Some("{setting} is enabled".to_string()),
+        },
+        severity: RuleSeverity::Warning,
+    }],
+};
+
+let mut installed_plugins = HashSet::new();
+installed_plugins.insert("f4ee.dll".to_string());
+
+let mut settings = HashMap::new();
+settings.insert("F4EE".to_string(), "false".to_string());
+
+let context = EvaluationContext {
+    crashgen_name: "Buffout 4".to_string(),
+    display_section: "[Compatibility]".to_string(),
+    installed_plugins,
+    settings,
+    config_layout: ConfigLayout::Og,
+    crashgen_version: Some((1, 28, 6)),
+};
+
+let result = evaluate_rules(&rules, &context);
+
+assert!(!result.skip_remaining);
+assert_eq!(result.outcomes.len(), 1);
+assert_eq!(result.outcomes[0].message, "F4EE is disabled");
+```
+
+Note the import path: the types come from `classic_config_core::`, not the former `classic_crashgen_settings_core::` path.
+
+### Rule-model contributor notes and known limits
+
+- The rule-model public surface is whatever stays `pub` in `src/crashgen_rules.rs` and is re-exported from `lib.rs`; there are no facade modules or selective re-exports.
+- The evaluator is synchronous and runtime-agnostic.
+- `RuleTarget.section` is descriptive output metadata today, not part of the lookup key.
+- `CrashgenVersionLt` treats a missing crashgen version as matching; if you change that, update downstream callers and docs together.
+- Only `{crashgen_name}`, `{display_section}`, and `{setting}` are recognized in message templates.
+- There is no built-in loader validation API; schema validation currently happens upstream inside the same crate.
+- `classic-scanlog-core` still consumes this rule model even though its current `ConfigLayout` use is mostly `Og` vs `Unknown`.
+
+If you extend the rule model, update this section when you change:
+
+- public types or enum variants in `src/crashgen_rules.rs`
+- predicate semantics or evaluation order
+- value-coercion rules in `value_matches()`
+- template placeholder behavior
+- `ConfigLayout` ownership expectations across config, scanlog, and scangame layers

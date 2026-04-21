@@ -1,6 +1,6 @@
 # `classic-shared-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/foundation/classic-shared-core/`](../../ClassicLib-rs/foundation/classic-shared-core).
+Contributor-facing API documentation for [`foundation/classic-shared-core/`](../../foundation/classic-shared-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - creating a second Tokio runtime for a crate, binding layer, or UI surface
 - assuming every helper here is re-exported from the crate root
 
-Those higher-level concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core), [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core), and [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core).
+Those higher-level concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-file-io-core`](../../business-logic/classic-file-io-core), [`classic-database-core`](../../business-logic/classic-database-core), and [`classic-scanlog-core`](../../business-logic/classic-scanlog-core).
 
 ---
 
@@ -45,6 +45,7 @@ This crate exposes both root-level items and public modules.
 - `get_runtime() -> &'static tokio::runtime::Runtime` - the shared runtime entry point used across CLASSIC
 - `RuntimeConfig` - runtime builder configuration helper used internally and available for advanced callers building their own `tokio::runtime::Builder`
 - `ClassicError`, `ClassicResult`, `IntoClassicError` - re-exported common error API from `errors`
+- `GameId` - shared supported-game enum used across setup, web, registry-state, and binding-facing flows
 
 ## Public modules
 
@@ -89,6 +90,35 @@ Important layout note: `path_core`, `performance_core`, and `strings_core` are p
 ## Public API Surface
 
 ## Shared runtime API
+
+## `GameId`
+
+`GameId` is the shared game-identity enum used across the workspace.
+
+Variants:
+
+- `Fallout4`
+- `Fallout4VR`
+- `Skyrim`
+- `Starfield`
+
+Important methods and traits:
+
+- `as_str() -> &'static str`
+- `exe_name() -> &'static str`
+- `is_vr() -> bool`
+- `all() -> [GameId; 4]`
+- `Display`, `FromStr`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
+
+Behavior worth knowing:
+
+- `exe_name()` hardcodes the expected executable per supported game
+- `is_vr()` is only true for `Fallout4VR`
+- `FromStr` is exact and case-sensitive; it accepts only the variant names shown above
+
+Contributor note:
+
+- `GameId` moved into the foundation layer during Phase 3 so setup, path, web, XSE, bridge, and binding layers can share game identity without depending on a retired constants crate
 
 ## `get_runtime()`
 
@@ -417,10 +447,10 @@ The source-visible flow is:
 
 In-repo examples of this collaboration:
 
-- [`ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`](../../ClassicLib-rs/business-logic/classic-config-core/src/lib.rs) re-exports `get_runtime`
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs) documents `get_runtime().block_on(...)` as the C++ bridge pattern
-- [`ClassicLib-rs/node-bindings/classic-node/src/fileio.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/fileio.rs) and sibling modules clone the shared runtime handle for Node task execution
-- [`ClassicLib-rs/ui-applications/classic-tui/src/app.rs`](../../ClassicLib-rs/ui-applications/classic-tui/src/app.rs) uses `get_runtime().spawn(...)`
+- [`business-logic/classic-config-core/src/lib.rs`](../../business-logic/classic-config-core/src/lib.rs) re-exports `get_runtime`
+- [`cpp-bindings/classic-cpp-bridge/src/lib.rs`](../../cpp-bindings/classic-cpp-bridge/src/lib.rs) documents `get_runtime().block_on(...)` as the C++ bridge pattern
+- [`node-bindings/classic-node/src/fileio.rs`](../../node-bindings/classic-node/src/fileio.rs) and sibling modules clone the shared runtime handle for Node task execution
+- [`ui-applications/classic-tui/src/app.rs`](../../ui-applications/classic-tui/src/app.rs) uses `get_runtime().spawn(...)`
 
 Contributor rule: if you add new async foundation or business-logic APIs, keep them compatible with the shared runtime model rather than introducing per-crate runtime ownership.
 
@@ -451,7 +481,7 @@ That is useful for contributor ergonomics, but callers that need to preserve exa
 
 This crate does not replace the more specific error enums in higher layers such as:
 
-- `YamlError` in [`classic-yaml-core`](../../docs/api/classic-yaml-core.md)
+- `YamlError` in [`classic-settings-core`](../../docs/api/classic-settings-core.md) (absorbed from the former ``yaml-core`` in v9.1.0 Phase 1)
 - `ConfigError` in [`classic-config-core`](../../docs/api/classic-config-core.md)
 - `FileIOError` in [`classic-file-io-core`](../../docs/api/classic-file-io-core.md)
 - `DatabaseError` in [`classic-database-core`](../../docs/api/classic-database-core.md)
@@ -495,11 +525,11 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - re-exports `get_runtime` and depends on the shared-runtime rule
-- [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core), [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core), and [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - async business-logic crates expected to run on the shared runtime
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - binding layers that call into async Rust using the shared runtime
-- [`classic-shared-py`](../../ClassicLib-rs/foundation/classic-shared-py) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
-- [`classic-gui`](../../classic-gui) and Rust UI crates such as [`ClassicLib-rs/ui-applications/classic-tui`](../../ClassicLib-rs/ui-applications/classic-tui) - UI surfaces that depend on the same runtime policy; Slint-style bridging is feature-gated here
+- [`classic-config-core`](../../business-logic/classic-config-core) - re-exports `get_runtime` and depends on the shared-runtime rule
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core), [`classic-database-core`](../../business-logic/classic-database-core), and [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - async business-logic crates expected to run on the shared runtime
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that call into async Rust using the shared runtime
+- [`classic-shared-py`](../../foundation/classic-shared-py) - PyO3 wrapper over this crate's runtime/error/path/performance/string helpers
+- [`classic-gui`](../../classic-gui) and Rust UI crates such as [`ui-applications/classic-tui`](../../ui-applications/classic-tui) - UI surfaces that depend on the same runtime policy; Slint-style bridging is feature-gated here
 
 Source-observed note:
 

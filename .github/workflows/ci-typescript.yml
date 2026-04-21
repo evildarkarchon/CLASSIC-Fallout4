@@ -2,9 +2,9 @@ name: CI — TypeScript
 
 on:
   push:
-    branches: [main, classic-next, develop, classic-9]
+    branches: [main, classic-next, develop, classic-9.1]
   pull_request:
-    branches: [main, classic-next, develop, classic-9]
+    branches: [main, classic-next, develop, classic-9.1]
 
 env:
   RUST_BACKTRACE: 1
@@ -50,22 +50,22 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          path: target
+          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-node-
 
       - name: Install npm dependencies
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun install
 
       - name: Build NAPI-RS binary
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun run build
 
       - name: Verify NAPI binary exists
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         shell: pwsh
         run: |
           $binary = Get-ChildItem -Filter "*.node" -Recurse
@@ -77,19 +77,19 @@ jobs:
           }
 
       - name: Run Tier-1 parity and runtime coverage gate
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun run parity:gate
 
       - name: Run index.d.ts freshness gate
-        working-directory: ClassicLib-rs/node-bindings/classic-node
-        run: bun run dts:freshness:check
+        working-directory: node-bindings/classic-node
+        run: bun run dts:freshness:ci
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: node-parity-diagnostics
-          path: ClassicLib-rs/node-bindings/classic-node/parity-artifacts/
+          path: node-bindings/classic-node/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 
@@ -137,22 +137,22 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          path: target
+          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-node-
 
       - name: Install npm dependencies
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun install
 
       - name: Build NAPI-RS binary
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun run build
 
       - name: Verify NAPI binary exists
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         shell: pwsh
         run: |
           $binary = Get-ChildItem -Filter "*.node" -Recurse
@@ -165,10 +165,10 @@ jobs:
 
       - name: Run Bun tests
         if: matrix.runtime == 'bun'
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun run test:bun
 
       - name: Run Node runtime smoke tests
         if: matrix.runtime == 'node'
-        working-directory: ClassicLib-rs/node-bindings/classic-node
+        working-directory: node-bindings/classic-node
         run: bun run test:node

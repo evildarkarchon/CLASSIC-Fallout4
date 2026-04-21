@@ -1,17 +1,15 @@
 #include "errordialog.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QStyle>
 #include <QApplication>
 #include <QClipboard>
 #include <QFont>
+#include <QHBoxLayout>
+#include <QStyle>
+#include <QVBoxLayout>
 
 // ── Construction ───────────────────────────────────────────────────
 
-ErrorDialog::ErrorDialog(const QString& message,
-                         const QString& details,
-                         QWidget* parent)
+ErrorDialog::ErrorDialog(const QString& message, const QString& details, QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("Error"));

@@ -1,119 +1,95 @@
 # External Integrations
 
-**Analysis Date:** 2026-04-04
+**Analysis Date:** 2026-04-14
 
 ## APIs & External Services
 
-**Update Checking:**
-- GitHub Releases API (`https://api.github.com`) — checks for new CLASSIC releases
-  - SDK/Client: `reqwest 0.13.1` (async HTTP)
-  - Auth: `GITHUB_TOKEN` env var (optional; loaded via `dotenvy` from `.env` file)
-  - Endpoints used: `GET /repos/{owner}/{repo}/releases/latest` and `GET /repos/{owner}/{repo}/releases`
-  - Unauthenticated rate limit: 60 req/hr; authenticated: 5,000 req/hr
-  - Implementation: `ClassicLib-rs/business-logic/classic-update-core/src/github.rs`
+**Release / update services:**
+- GitHub Releases API - checks latest CLASSIC releases and compares versions.
+  - SDK/Client: `reqwest` in `business-logic/classic-update-core/src/github.rs`
+  - Auth: `GITHUB_TOKEN` loaded from environment or optional repo-root `.env` in `business-logic/classic-update-core/src/github.rs`
+  - Consumers: `ui-applications/classic-tui/src/app.rs`, `cpp-bindings/classic-cpp-bridge/src/update.rs`, and `python-bindings/classic-update-py/src/github.rs`
 
-**Mod Distribution Sites (URL utilities only — no live API calls):**
-- NexusMods (`https://www.nexusmods.com`) — URL construction and validation helpers
-- Bethesda.net — URL helpers
-  - SDK/Client: `url 2.5` crate for URL parsing/validation
-  - Implementation: `ClassicLib-rs/business-logic/classic-web-core/src/lib.rs`
-  - Note: These are URL helper utilities only; no API authentication or live queries are made
+**Mod ecosystem links:**
+- Nexus Mods - canonical download/help/update URLs are modeled in `business-logic/classic-web-core/src/lib.rs`, version registry metadata in `business-logic/classic-version-registry-core/src/registry.rs`, GUI help buttons in `classic-gui/src/app/mainwindow.cpp`, and README/install docs in `README.md`.
+  - SDK/Client: no API SDK detected; links and URL helpers are source-defined
+  - Auth: none detected
+- Bethesda.net - mod site URL constants are defined in `business-logic/classic-web-core/src/lib.rs` and surfaced through bindings in `node-bindings/classic-node/src/web.rs` and `cpp-bindings/classic-cpp-bridge/src/web.rs`.
+  - SDK/Client: none detected
+  - Auth: none detected
+- ModDB - mod site URL constants are defined in `business-logic/classic-web-core/src/lib.rs`.
+  - SDK/Client: none detected
+  - Auth: none detected
+
+**Developer platform services:**
+- GitHub Actions - CI/CD orchestration for Rust, C++, Python bindings, Node bindings, and benchmarks via `.github/workflows/ci-rust.yml`, `.github/workflows/ci-cpp.yml`, `.github/workflows/ci-python-bindings.yml`, `.github/workflows/ci-typescript.yml`, and `.github/workflows/benchmarks.yml`.
+  - SDK/Client: GitHub-hosted workflow runner actions
+  - Auth: repository-managed GitHub Actions credentials; no repo-local secret values inspected
 
 ## Data Storage
 
 **Databases:**
-- SQLite (local bundled) — FormID lookup databases for crash log analysis
-  - Connection: local file path from config (not an env var); databases shipped with the app
-  - Client: `sqlx 0.8` (async, runtime-tokio) for pool management and queries; `rusqlite 0.38.0` (bundled, backup) for synchronous paths
-  - Implementation: `ClassicLib-rs/business-logic/classic-database-core/`
-  - Database files: `CLASSIC Data/databases/` — shipped as static data assets (`.yaml`, game-specific lookup files)
-  - Schema conventions: `docs/api/formid-sqlite-conventions.md`
-
-**YAML Config Files:**
-- Local YAML files (`CLASSIC Main.yaml`, `CLASSIC Fallout4.yaml`) — app settings and game-version metadata
-  - Parser: `yaml-rust2 0.11.0` (custom; not serde_yaml)
-  - Implementation: `ClassicLib-rs/business-logic/classic-yaml-core/`, `ClassicLib-rs/business-logic/classic-config-core/`
-  - Runtime schema: `docs/api/classic-config-core-yaml-schema.md`
+- SQLite - local FormID and scan-support databases are accessed through `sqlx` and `rusqlite` in `Cargo.toml` and implemented in `business-logic/classic-database-core/src/pool_sqlx.rs`.
+  - Connection: file-path based SQLite URLs like `sqlite://...` in `business-logic/classic-database-core/src/pool_sqlx.rs`
+  - Client: `sqlx` async pools plus `rusqlite` support from `Cargo.toml`
+- Runtime database assets - packaged data directories are installed from `CLASSIC Data/databases/` by `classic-cli/CMakeLists.txt`; this is repo-managed local data, not a hosted DB service.
 
 **File Storage:**
-- Local filesystem only — crash logs read from user-specified directories
-- Game files read from Windows game installation paths (discovered via registry or config)
-- BA2 archive files parsed via `ba2 3.0.1`
-- DDS texture files validated via `ddsfile 0.5`
+- Local filesystem only - crash logs, generated reports, packaged help/assets, and local databases live in repo/runtime directories such as `Crash Logs/`, `CLASSIC Data/`, and paths created/opened by `ui-applications/classic-tui/src/app.rs` and `classic-gui/src/controllers/resultscontroller.cpp`.
 
 **Caching:**
-- In-process only — `quick_cache 0.6`, `lru 0.16.3`, `dashmap 6.1` for runtime caches
-- No external cache service
+- In-process caches only - TTL query/result caches and pool bookkeeping are implemented in `business-logic/classic-database-core/src/pool_sqlx.rs` using `DashMap`, `lru`, and related Rust crates from `Cargo.toml`.
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None for end users
-- GitHub token optional for update-check rate limiting (developer/CI use)
-  - Implementation: `dotenvy 0.15` loads `GITHUB_TOKEN` from `.env` at runtime in `classic-update-core`
+- Custom token header flow for GitHub only.
+  - Implementation: `business-logic/classic-update-core/src/github.rs` conditionally adds `Authorization: Bearer <token>` when `GITHUB_TOKEN` is present.
+- No user login, OAuth provider, or session identity service was detected in `classic-cli/`, `classic-gui/`, or the repo-root Rust workspace.
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None (no Sentry, Rollbar, or similar service integrated)
+- None detected as an external SaaS. No Sentry, Honeycomb, App Insights, Datadog, or Rollbar integration was found in the repo-root Rust workspace, `classic-cli/`, `classic-gui/`, or `.github/workflows/`.
 
 **Logs:**
-- `log 0.4.29` facade + `env_logger 0.11` for Rust library logging
-- `tracing 0.1.44` + `tracing-subscriber 0.3.22` + `tracing-appender 0.2` for structured/async-aware tracing
-- TUI uses `tracing-appender` for file-backed log output
-- Log output goes to stdout/stderr or rotating file; no remote log aggregation
+- Local structured/runtime logging uses Rust logging crates (`log`, `env_logger`, `tracing`, `tracing-subscriber`, `tracing-appender`) declared in `Cargo.toml`.
+- Extra scan diagnostics are environment-controlled through `CLASSIC_SCAN_DIAGNOSTICS` and `CLASSIC_DB_COUNTER_INTERVAL` in `business-logic/classic-scanlog-core/src/orchestrator.rs` and `cpp-bindings/classic-cpp-bridge/src/scanner.rs`.
+- Failure diagnostics are uploaded as CI artifacts in `.github/workflows/ci-cpp.yml`, `.github/workflows/ci-python-bindings.yml`, and `.github/workflows/ci-typescript.yml`.
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- GitHub (`https://github.com/evildarkarchon/CLASSIC-Fallout4`) — source repository and release hosting
+- GitHub repository + GitHub Releases are the only externally hosted delivery surfaces directly referenced in code and docs, including `README.md`, `classic-gui/src/app/mainwindow.cpp`, and `business-logic/classic-update-core/src/github.rs`.
+- Native desktop binaries are packaged locally as ZIP artifacts through CPack in `classic-cli/CMakeLists.txt` and `classic-gui/CMakeLists.txt`.
 
 **CI Pipeline:**
-- GitHub Actions (`windows-latest` runners for all jobs)
-  - `ci-rust.yml` — rustfmt, clippy, build, test for Rust workspace
-  - `ci-cpp.yml` — MSVC build, Catch2 CLI tests, Qt GUI tests via CTest
-  - `ci-python-bindings.yml` — parity gates, maturin build, pytest smoke tests
-  - `ci-typescript.yml` — NAPI-RS build, parity gates, Bun and Node runtime tests
-  - `benchmarks.yml` — Criterion benchmark runs
-- Caching: GitHub Actions cache for `~/.cargo/registry`, `~/.cargo/git`, `ClassicLib-rs/target`, vcpkg root and archives
-
-**Distribution:**
-- Releases published as GitHub Releases (ZIP packages via CPack for CLI; app bundle for GUI)
-- Python wheels built with maturin (not published to PyPI; installed locally)
-- Node addon distributed as `.node` binary alongside TypeScript types (`index.d.ts`)
-
-## Windows Platform Integrations
-
-**Windows Registry:**
-- Read-only — game installation path discovery (Fallout 4 Steam/GOG paths)
-- Implementation: `ClassicLib-rs/business-logic/classic-path-core/`
-
-**PE File Parsing:**
-- `pelite 0.10` — reads version resources from game executables and XSE loader DLLs to detect installed versions
-- Implementation: `ClassicLib-rs/business-logic/classic-version-core/`
-
-**MSVC Linker:**
-- Required at build time; `tools/use_msvc_from_git_bash.sh` sets up environment so Git's `link.exe` does not shadow the VS linker
-
-## Webhooks & Callbacks
-
-**Incoming:**
-- None — no HTTP server or webhook receiver
-
-**Outgoing:**
-- None — only outbound HTTP is the GitHub Releases API check (pull-only, no push/webhook)
+- GitHub Actions - source of truth for automated validation and benchmark gating in `.github/workflows/*.yml`.
+- vcpkg bootstrap is automated through `.github/scripts/setup-vcpkg.ps1`.
 
 ## Environment Configuration
 
 **Required env vars:**
-- `VCPKG_ROOT` — must point to vcpkg installation for C++ builds
-
-**Optional env vars:**
-- `GITHUB_TOKEN` — GitHub personal access token; read from `.env` via `dotenvy` to increase update-check API rate limit
+- `VCPKG_ROOT` - required for native C++/Qt builds in `classic-cli/build_cli.ps1`, `classic-cli/CMakePresets.json`, and `classic-gui/CMakePresets.json`
+- `GITHUB_TOKEN` - optional but actively consumed for authenticated GitHub API update checks in `business-logic/classic-update-core/src/github.rs`
+- `CLASSIC_SCAN_DIAGNOSTICS` - optional diagnostic toggle in `business-logic/classic-scanlog-core/src/orchestrator.rs`
+- `CLASSIC_DB_COUNTER_INTERVAL` - optional diagnostic/logging interval in `cpp-bindings/classic-cpp-bridge/src/scanner.rs`
+- `QT_QPA_PLATFORM` - set to `offscreen` in GUI CI at `.github/workflows/ci-cpp.yml`
 
 **Secrets location:**
-- `.env` file at repo root (not committed; gitignored); used only for `GITHUB_TOKEN` during development/CI
+- Repo-root `.env` and `.env.example` exist and are relevant to update-token configuration, but their contents were not read.
+- GitHub Actions secrets, if configured, are external to the repository and consumed by workflow runtime rather than checked-in files.
+
+## Webhooks & Callbacks
+
+**Incoming:**
+- None detected. No HTTP server, webhook endpoint, or callback receiver was found in `classic-cli/`, `classic-gui/`, or the repo-root Rust workspace.
+
+**Outgoing:**
+- GitHub REST requests to `https://api.github.com/repos/{owner}/{repo}/releases/latest` in `business-logic/classic-update-core/src/github.rs`.
+- Desktop/browser handoff to external URLs via `QDesktopServices::openUrl` in `classic-gui/src/app/mainwindow.cpp`.
+- No outbound webhook posting integration was detected.
 
 ---
 
-*Integration audit: 2026-04-04*
+*Integration audit: 2026-04-14*

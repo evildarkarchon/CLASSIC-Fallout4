@@ -2,9 +2,9 @@
 
 Contributor-facing documentation for the active C++ bridge entry points in:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
 
 This page documents the current CXX FFI surface that active C++ callers use for path detection, version-registry lookups, PE version probing, XSE probing, and setup-time checks.
 
@@ -110,6 +110,7 @@ Current bridge choices:
 
 - resolves the documents subfolder from version-registry metadata (`docs_name`)
 - accepts a cached string path and otherwise uses the crate's platform-specific discovery flow
+- chains `DocsPathFinder::with_steam_app_id(Fallout4Version::Original.steam_app_id())` so Linux Proton documents-path detection for Fallout 4 still works. This is the canonical call site for the 377160 literal — the bridge now imports `classic_version_registry_core::Fallout4Version` rather than hard-coding the Steam ID.
 - does not expose `validate_ini_files()` or `DocumentsChecker`
 - returns `""` on failure instead of surfacing `DocsPathError`
 

@@ -8,12 +8,12 @@
 
 namespace {
 // ToggleSwitch track/thumb colors (dark theme)
-static const QColor kTrackOn(0x2F, 0xAE, 0x2F);        // #2FAE2F green
-static const QColor kTrackOff(0x55, 0x55, 0x55);        // #555555 gray
-static const QColor kTrackDisabled(0x3C, 0x3C, 0x3C);   // #3C3C3C
-static const QColor kThumbEnabled(0xF2, 0xF2, 0xF2);    // #F2F2F2
-static const QColor kThumbDisabled(0x7A, 0x7A, 0x7A);   // #7A7A7A
-static const QColor kFocusRing(0x52, 0xFF, 0x52);        // #52FF52 Pip-Boy green
+static const QColor kTrackOn(0x2F, 0xAE, 0x2F);       // #2FAE2F green
+static const QColor kTrackOff(0x55, 0x55, 0x55);      // #555555 gray
+static const QColor kTrackDisabled(0x3C, 0x3C, 0x3C); // #3C3C3C
+static const QColor kThumbEnabled(0xF2, 0xF2, 0xF2);  // #F2F2F2
+static const QColor kThumbDisabled(0x7A, 0x7A, 0x7A); // #7A7A7A
+static const QColor kFocusRing(0x52, 0xFF, 0x52);     // #52FF52 Pip-Boy green
 } // namespace
 
 ToggleSwitch::ToggleSwitch(const QString& text, QWidget* parent)
@@ -93,8 +93,7 @@ void ToggleSwitch::paintEvent(QPaintEvent* event)
     if (layoutDirection() == Qt::RightToLeft) {
         textRect = QRect(0, 0, qMax(0, trackRect.left() - kTextGap), height());
     } else {
-        textRect = QRect(trackRect.right() + kTextGap, 0,
-                         qMax(0, width() - (trackRect.right() + kTextGap)), height());
+        textRect = QRect(trackRect.right() + kTextGap, 0, qMax(0, width() - (trackRect.right() + kTextGap)), height());
     }
 
     QColor textColor = palette().color(QPalette::WindowText);
@@ -102,7 +101,6 @@ void ToggleSwitch::paintEvent(QPaintEvent* event)
         textColor = palette().color(QPalette::Disabled, QPalette::WindowText);
     }
     painter.setPen(textColor);
-    painter.drawText(textRect,
-                     Qt::AlignVCenter | (layoutDirection() == Qt::RightToLeft ? Qt::AlignRight : Qt::AlignLeft),
-                     text());
+    painter.drawText(
+        textRect, Qt::AlignVCenter | (layoutDirection() == Qt::RightToLeft ? Qt::AlignRight : Qt::AlignLeft), text());
 }

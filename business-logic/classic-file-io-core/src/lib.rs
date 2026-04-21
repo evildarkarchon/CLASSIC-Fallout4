@@ -1,0 +1,47 @@
+//! CLASSIC File I/O Core - Pure Rust file operations
+//!
+//! This crate provides the core file I/O operations for CLASSIC without any PyO3 dependencies.
+//! It can be used directly by Rust applications (CLI/TUI) or through the Python bindings
+//! in classic-file-io-py.
+//!
+//! ## Features
+//! - Async file operations with Tokio
+//! - Memory-mapped file support
+//! - DDS header parsing
+//! - Parallel directory traversal
+//! - Multi-level caching
+//! - Encoding detection
+//! - Log collection and organization
+//! - SHA256 file hashing with caching
+//! - Configuration file generation (Phase 5)
+
+pub mod atomic_install;
+pub mod backup;
+pub mod core;
+pub mod dds;
+pub mod encoding;
+pub mod error;
+pub mod game_files;
+pub mod generation;
+pub mod hash;
+pub mod log_collection;
+pub mod similarity;
+
+pub use atomic_install::{
+    InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal,
+};
+pub use backup::{BackupInfo, BackupManager, BackupType};
+pub use core::FileIOCore;
+pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};
+pub use encoding::EncodingDetector;
+pub use error::FileIOError;
+pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
+pub use generation::{
+    FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
+};
+pub use hash::FileHasher;
+pub use log_collection::{
+    CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution,
+    resolve_targeted_inputs,
+};
+pub use similarity::{calculate_similarity, similarity_ratio};

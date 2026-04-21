@@ -10,13 +10,14 @@
 #include <QMessageBox>
 
 #include "app/mainwindow.h"
+#include "app/typography.h"
 
 #include "core/rust_qt_bridge.h"
 
 #include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 #include "rust/cxx.h"
 
 #include <cstdlib>
@@ -95,6 +96,18 @@ int main(int argc, char* argv[])
     app.setApplicationName(QStringLiteral("CLASSIC"));
     const std::string correlationId = startupCorrelationId();
 
+    // Bring the logging bridge online before any helper that might emit a
+    // structured warning (font registration, icon lookup, etc.). The Rust
+    // runtime itself is initialized below inside the rust::Error try block.
+    classic::message::init_logging();
+
+    // Register the bundled Inter font family and install it as the process-wide
+    // default QFont. Non-fatal: failures log a structured warning through the
+    // bridge and the QSS fallback chain ("Inter", "Segoe UI Variable",
+    // "Segoe UI", sans-serif) renders the GUI for that session.
+    classic::gui::registerBundledFonts(correlationId);
+    classic::gui::installDefaultFont();
+
     // Set window icon
     QString iconPath = findIcon();
     if (!iconPath.isEmpty()) {
@@ -103,7 +116,6 @@ int main(int argc, char* argv[])
 
     // Initialize Rust runtime (ONE RUNTIME RULE: single Tokio runtime for the process)
     try {
-        classic::message::init_logging();
         classic::runtime::init_runtime();
         classic::message::log_startup_binding_contract_validated("classic-gui.startup", 3, correlationId);
         classic::message::log_startup_acceleration_status(1, 1, "MANDATORY", correlationId);
@@ -147,9 +159,9 @@ int main(int argc, char* argv[])
     }
 
     try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
-        auto version = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
+        auto version = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
         if (version.empty()) {
             classic::message::log_startup_binding_contract_failed(
                 "classic-gui.startup", "CLASSIC_Info.version", "config_invalid",

@@ -2,8 +2,8 @@
 
 This contract defines the Tier-1 parity gate between:
 
-- Rust core symbols in `ClassicLib-rs/business-logic/*-core`
-- Python binding exports declared in `.pyi` files under `ClassicLib-rs/python-bindings/*-py`
+- Rust core symbols in `business-logic/*-core`
+- Python binding exports declared in `.pyi` files under `python-bindings/*-py`
 
 ## Tier model
 
@@ -48,4 +48,4 @@ handled through runtime smoke tests and stub validation instead of parity rows.
 
 Diagnostic artifacts are emitted under:
 
-`ClassicLib-rs/python-bindings/parity-artifacts/`
+`python-bindings/parity-artifacts/`

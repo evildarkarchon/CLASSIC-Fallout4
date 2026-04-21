@@ -1,0 +1,38 @@
+[package]
+name = "classic-perf-core"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Performance monitoring and timing utilities for CLASSIC"
+license = "MIT"
+
+[dependencies]
+# Thread-safe concurrent data structures
+dashmap = "6.1.0"
+
+# Error handling
+thiserror = "2.0.9"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+# Testing
+tokio = { version = "1.49.0", features = ["full", "test-util"] }
+serial_test = "3.2"
+
+[lib]
+crate-type = ["rlib"]
+
+[[example]]
+name = "basic_timing"
+path = "examples/basic_timing.rs"
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

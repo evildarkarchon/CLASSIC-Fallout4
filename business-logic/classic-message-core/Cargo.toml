@@ -1,0 +1,26 @@
+[package]
+name = "classic-message-core"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Core message routing and formatting for CLASSIC"
+license = "MIT"
+
+[dependencies]
+# Logging
+log = { workspace = true }
+
+# Serialization (for message formatting)
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+# Testing
+serial_test = "3.2.0"
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

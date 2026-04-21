@@ -1,6 +1,6 @@
 # FormID Settings Boundary
 
-Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../business-logic/classic-config-core) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 This page is intentionally narrow. It documents the active source-backed boundary contributors hit when tracing why configured FormID database paths do or do not affect scan startup.
 
@@ -27,7 +27,7 @@ There are two different active representations for per-game FormID database path
 
 ## `classic-config-core` representation
 
-[`ClassicLib-rs/business-logic/classic-config-core/src/config.rs`](../../ClassicLib-rs/business-logic/classic-config-core/src/config.rs) defines:
+[`business-logic/classic-config-core/src/config.rs`](../../business-logic/classic-config-core/src/config.rs) defines:
 
 - `ClassicConfig.formid_databases: HashMap<String, Vec<PathBuf>>`
 - YAML key: top-level `formid_databases`
@@ -35,7 +35,7 @@ There are two different active representations for per-game FormID database path
 
 ## `classic-cpp-bridge` scan-startup representation
 
-[`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs) reads:
+[`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) reads:
 
 - YAML key path: `CLASSIC_Settings.FormID Databases.{game}`
 - source file path: `CLASSIC Settings.yaml` next to the executable / root install directory
@@ -87,7 +87,7 @@ Practical limit:
 
 ## What `classic-cpp-bridge` Reads At Scan Startup Today
 
-Active scan startup goes through `build_full_scan_config()` and `resolve_formid_db_paths()` in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs).
+Active scan startup goes through `build_full_scan_config()` and `resolve_formid_db_paths()` in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
 Current path assembly order is:
 
@@ -141,8 +141,8 @@ The active repo surfaces are split across this same boundary.
 
 These wrappers expose the Rust `ClassicConfig` field directly:
 
-- [`ClassicLib-rs/node-bindings/classic-node/src/config.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/config.rs)
-- [`ClassicLib-rs/python-bindings/classic-config-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-config-py/src/lib.rs)
+- [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs)
+- [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs)
 
 Current binding behavior:
 
@@ -195,7 +195,7 @@ These details are source-backed today and matter for contributors, but they shou
 - `classic-config-core` path validation does not validate FormID database files
 - bridge path normalization uses `path.components().collect()`; it does not canonicalize case or resolve symlinks
 - bridge de-duplication is path-based, not content-based
-- missing files are filtered later by [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core) during `DatabasePool::initialize()`, not during settings parsing
+- missing files are filtered later by [`classic-database-core`](../../business-logic/classic-database-core) during `DatabasePool::initialize()`, not during settings parsing
 - for `Fallout4` and `Fallout4VR`, the hardcoded `FOLON FormIDs.db` path is included even when the user list is empty
 
 ---

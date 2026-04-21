@@ -1,6 +1,6 @@
 # `classic-version-registry-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-version-registry-core/`](../../ClassicLib-rs/business-logic/classic-version-registry-core).
+Contributor-facing API documentation for [`business-logic/classic-version-registry-core/`](../../business-logic/classic-version-registry-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - owning or creating a Tokio runtime
 - exposing binding-specific wrapper types
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -47,6 +47,8 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 
 ## Version and matching types
 
+- `NULL_VERSION` - semver `0.0.0` sentinel used by consumers that need a null/invalid version marker
+- `Fallout4Version` - contributor-facing Fallout 4 version-family enum backed by Version Registry lookups
 - `GameVersion` - 4-component game version type used throughout the crate
 - `VersionMatcher` - explicit matcher wrapper over a `VersionRegistry`
 - `MatchResult` - result payload for a version match attempt
@@ -68,6 +70,56 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 ---
 
 ## Public API Surface
+
+## `NULL_VERSION`
+
+`NULL_VERSION` is a plain root-level `semver::Version` constant with value `0.0.0`.
+
+Contributor note:
+
+- it is a sentinel only; it does not change registry behavior on its own
+- downstream crates such as [`classic-version-core`](classic-version-core.md) re-export it directly from this crate now that the dedicated constants crate is gone
+
+## `Fallout4Version`
+
+`Fallout4Version` is the crate's contributor-facing enum for Fallout 4 release families.
+
+Variants:
+
+- `Original`
+- `NextGen`
+- `AnniversaryEdition`
+- `Vr`
+
+Important methods and traits:
+
+- `registry_id() -> &'static str`
+- `get_version_info() -> Option<&'static VersionInfo>`
+- `is_vr() -> bool`
+- `is_standard() -> bool`
+- `exe_name() -> &'static str`
+- `docs_folder_name() -> &'static str`
+- `steam_app_id() -> u32`
+- `game_version() -> GameVersion`
+- `version_semver() -> semver::Version`
+- `xse_acronym() -> &'static str`
+- `xse_acronym_string() -> String`
+- `display_name() -> &'static str`
+- `display_name_string() -> String`
+- `short_name() -> &'static str`
+- `as_str() -> &'static str`
+- `all() -> [Fallout4Version; 4]`
+- `address_library() -> Option<&'static AddressLibraryConfig>`
+- `xse_config() -> Option<&'static XseConfig>`
+- `Serialize`, `Deserialize`, `Default`, `Display`, `FromStr`, `Clone`, `Copy`, `Hash`
+
+Behavior worth knowing:
+
+- `get_version_info()` delegates to `get_version_registry().get_by_id(...)`
+- `game_version()`, `address_library()`, and `xse_config()` all depend on a registry entry being available
+- `exe_name()`, `docs_folder_name()`, and `steam_app_id()` are still convenience mappings derived from VR/non-VR status rather than registry YAML
+- `version_semver()` drops the fourth game-version component because `semver::Version` is three-part
+- `FromStr` accepts the contributor-facing aliases `og`, `ng`, `ae`, `vr`, `auto`, and the documented version-string shortcuts
 
 ## `GameVersion`
 
@@ -258,7 +310,7 @@ Variants:
 
 - `InvalidVersion(String)`
 - `NotFound(String)`
-- `YamlError(classic_yaml_core::YamlError)`
+- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1)
 - `NotInitialized`
 - `InvalidConfig(String)`
 
@@ -280,7 +332,7 @@ This crate is synchronous.
 
 - It does not expose async APIs.
 - It does not construct a Tokio runtime.
-- Registry initialization uses synchronous YAML loading through [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core).
+- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: the former `classic-yaml-core` crate was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
 - This fits the repo rule that runtime ownership stays in shared higher layers rather than inside business-logic crates.
 
 Contributor rule: if you extend this crate, keep it runtime-agnostic and compatible with the shared-runtime assumptions used elsewhere in CLASSIC.
@@ -289,12 +341,12 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 
 ## Related Crates And Integration Points
 
-- [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) - YAML loading and extraction used during registry initialization
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic-constants-py`](../../ClassicLib-rs/python-bindings/classic-constants-py) and [`classic-version-registry-py`](../../ClassicLib-rs/python-bindings/classic-version-registry-py) - maintained Python-facing integration layers
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-config-core`](../../business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
+- [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
+- [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 

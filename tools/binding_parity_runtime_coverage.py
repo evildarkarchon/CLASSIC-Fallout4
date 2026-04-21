@@ -14,7 +14,6 @@ from typing import Any
 VALID_CLASSIFICATIONS = {
     "runtime_verified",
     "contract_mapped",
-    "deferred",
     "newly_uncovered",
 }
 
@@ -224,16 +223,14 @@ def build_coverage_summary(
     contract: dict[str, Any],
     diff_report: dict[str, Any],
     runtime_registry: dict[str, Any],
-    deferred_registry: dict[str, Any],
     source_paths: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Build a machine-readable coverage summary from parity artifacts."""
     runtime_entries = runtime_registry.get("entries", [])
-    deferred_entries = deferred_registry.get("entries", [])
 
     invalid_entries = [
         entry.get("coverageId", "unknown")
-        for entry in [*runtime_entries, *deferred_entries]
+        for entry in runtime_entries
         if entry.get("classification") not in VALID_CLASSIFICATIONS
     ]
     if invalid_entries:
@@ -244,7 +241,6 @@ def build_coverage_summary(
     contract_lookup, registry_mismatches = expand_contract_selectors(
         runtime_entries, diff_report.get("contract_results", [])
     )
-    _, deferred_lookup = _lookup_maps(deferred_entries)
     _, runtime_identifier_lookup = _lookup_maps(runtime_entries)
 
     tracked_surface: list[dict[str, Any]] = []
@@ -254,14 +250,12 @@ def build_coverage_summary(
         )
 
     for gap_row in diff_report.get("gaps", []):
-        runtime_or_deferred_lookup = dict(deferred_lookup)
-        runtime_or_deferred_lookup.update(runtime_identifier_lookup)
         tracked_surface.append(
-            _surface_row_from_gap(binding, runtime_or_deferred_lookup, gap_row)
+            _surface_row_from_gap(binding, runtime_identifier_lookup, gap_row)
         )
 
     tracked_ids = {item["trackedId"] for item in tracked_surface}
-    for registry_entry in [*runtime_entries, *deferred_entries]:
+    for registry_entry in runtime_entries:
         binding_identifiers = registry_entry.get("bindingIdentifiers", [])
         rust_symbols = registry_entry.get("rustSymbols", [])
 
@@ -310,7 +304,6 @@ def build_coverage_summary(
         "tracked_surface_total": len(tracked_surface),
         "runtime_verified_total": classification_counts.get("runtime_verified", 0),
         "contract_mapped_total": classification_counts.get("contract_mapped", 0),
-        "deferred_total": classification_counts.get("deferred", 0),
         "newly_uncovered_total": classification_counts.get("newly_uncovered", 0),
         "tier1_contract_total": len(contract.get("tier1Mappings", [])),
         "tier1_missing_runtime_total": tier1_missing_runtime_total,
@@ -340,22 +333,20 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
         f"- Tracked surfaces: **{summary['tracked_surface_total']}**",
         f"- Runtime verified: **{summary['runtime_verified_total']}**",
         f"- Contract mapped only: **{summary['contract_mapped_total']}**",
-        f"- Deferred: **{summary['deferred_total']}**",
         f"- Newly uncovered: **{summary['newly_uncovered_total']}**",
         f"- Tier-1 rows missing runtime metadata: **{summary['tier1_missing_runtime_total']}**",
         "",
         "## Per-owner totals",
         "",
-        "| Owner Module | Runtime Verified | Contract Mapped | Deferred | Newly Uncovered | Total |",
-        "|---|---:|---:|---:|---:|---:|",
+        "| Owner Module | Runtime Verified | Contract Mapped | Newly Uncovered | Total |",
+        "|---|---:|---:|---:|---:|",
     ]
     for owner_module, counts in summary_payload["perOwnerModule"].items():
         lines.append(
-            "| `{owner}` | {runtime_verified} | {contract_mapped} | {deferred} | {newly_uncovered} | {total} |".format(
+            "| `{owner}` | {runtime_verified} | {contract_mapped} | {newly_uncovered} | {total} |".format(
                 owner=owner_module,
                 runtime_verified=counts.get("runtime_verified", 0),
                 contract_mapped=counts.get("contract_mapped", 0),
-                deferred=counts.get("deferred", 0),
                 newly_uncovered=counts.get("newly_uncovered", 0),
                 total=counts.get("total", 0),
             )

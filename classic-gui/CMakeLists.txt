@@ -31,7 +31,7 @@ if(CMAKE_BUILD_TYPE)
 endif()
 
 corrosion_import_crate(
-    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../ClassicLib-rs/Cargo.toml
+    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../Cargo.toml
     CRATES classic-cpp-bridge
     PROFILE ${CLASSIC_RUST_PROFILE}
 )
@@ -45,14 +45,18 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         types.rs
         runtime.rs
         registry.rs
-        yaml.rs
+        settings.rs
+        shared.rs
         config.rs
         scanner.rs
         database.rs
         files.rs
         scangame.rs
         game.rs
+        xse.rs
+        version_registry.rs
         path.rs
+        web.rs
         update.rs
         message.rs
         perf.rs
@@ -60,7 +64,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
 )
 
 target_include_directories(classic_cxx_bridge PUBLIC
-    "${CMAKE_SOURCE_DIR}/../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include"
+    "${CMAKE_SOURCE_DIR}/../cpp-bindings/classic-cpp-bridge/include"
 )
 
 add_subdirectory(src)

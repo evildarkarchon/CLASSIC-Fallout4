@@ -6,7 +6,7 @@
 /* ── Global defaults ──────────────────────────────────────────────── */
 
 * {
-    font-family: "Segoe UI";
+    font-family: "Inter", "Segoe UI Variable", "Segoe UI", sans-serif;
     font-size: 13px;
     color: #e0e0e0;
 }

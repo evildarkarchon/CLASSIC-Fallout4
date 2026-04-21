@@ -2,10 +2,10 @@
 
 Contributor-facing workflow notes for setup and install validation across:
 
-- [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core)
-- [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core)
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core)
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core)
+- [`classic-path-core`](../../business-logic/classic-path-core)
+- [`classic-xse-core`](../../business-logic/classic-xse-core)
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core)
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core)
 
 This page documents the current source-backed split of responsibilities for setup-time validation work in CLASSIC.
 
@@ -128,8 +128,8 @@ Current strategy order in `find_docs_path()`:
 
 1. cached path, if provided and valid
 2. Windows documents registry lookup plus the game-relative suffix on Windows
-3. on non-Windows builds, a valid Fallout 4 Proton documents path resolved from Steam metadata
-4. `home/.local/share/<relative_path>` on non-Windows builds when Steam lookup fails or the Proton documents path is invalid
+3. on non-Windows builds, if the caller opted in via `DocsPathFinder::with_steam_app_id(app_id)`, a valid Steam/Proton documents path resolved from Steam metadata for that app ID
+4. `home/.local/share/<relative_path>` on non-Windows builds when no opt-in was made or when the Proton lookup fails or the Proton documents path is invalid
 5. `DocsPathError::NotFound` if all strategies fail
 
 After the folder is found, follow-up checks may use:
@@ -275,7 +275,7 @@ saved settings / frontend inputs
 This sketch stays close to the current public Rust surface and shows the split contributors usually need to keep in mind.
 
 ```rust,no_run
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use classic_path_core::{DocsPathFinder, GamePathFinder, validate_settings_paths};
 use classic_scangame_core::{GameVersion as ScanGameVersion, XseChecker};
 use classic_xse_core::{XseType, get_xse_info};
@@ -379,7 +379,7 @@ That is a valid current outcome.
 - `run_combined_checks()` currently ignores `SetupCheckConfig.xse_hashes`
 - `classic-path-core::GamePathFinder` has no built-in manual-prompt fallback; it returns `NotFound` when its automatic strategies fail
 - `classic-path-core::parse_xse_log()` assumes a fixed directory depth under `Data/.../Plugins`
-- `classic-path-core::DocsPathFinder` does not currently auto-build a Proton-specific documents path from Steam metadata
+- `classic-path-core::DocsPathFinder`'s Linux Proton documents path lookup is opt-in via `with_steam_app_id(app_id)`; the default finder skips it and goes straight to `~/.local/share/<relative_path>`
 - `classic-xse-core::detect_xse_version()` uses filename parsing only and returns the first parseable matching DLL it sees
 - `classic-xse-core::get_xse_info()` is fail-soft for version detection
 - `classic-scangame-core::XseChecker` treats OG, NG, and AE Address Library files as acceptable in non-VR mode, while VR mode expects the VR file only
@@ -402,8 +402,8 @@ When setup/install validation behaves unexpectedly, debug in this order:
 
 For active bridge entry points, current contributors usually end up in:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
 
 Those files make the current split especially visible because they expose path detection, registry lookups, XSE probing, and setup checks as separate bridge surfaces.

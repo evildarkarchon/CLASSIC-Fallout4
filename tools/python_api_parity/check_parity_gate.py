@@ -28,6 +28,54 @@ from generate_baseline import (
 )
 
 
+def validate_contract_rust_symbols(
+    contract: dict[str, Any],
+    rust_manifest: dict[str, Any],
+) -> list[str]:
+    """Pitfall 2 guard: every Tier-1 contract row's rustSymbol must appear
+    in the parsed Rust surface.
+
+    Returns a list of human-readable diagnostic strings; empty list means
+    success. Failing fast here keeps downstream tier1_missing_rust noise
+    out of the diff report when the root cause is a missing ``pub use`` at
+    the ``-core/lib.rs`` surface (per Phase 3 D-05; see RESEARCH A1).
+
+    Most Phase 3 promotion failures trace back to a symbol defined in a
+    sub-module (e.g., ``classic_scanlog_core::orchestrator::ScanResult``)
+    that is not re-exported at ``lib.rs``. The parity parser only sees
+    symbols reachable from the crate root, so the downstream diff would
+    report ``missing_rust`` with no hint about the root cause. This guard
+    prints an actionable remediation message instead.
+    """
+    rust_symbols: set[str] = {
+        item["symbol"] for item in rust_manifest.get("symbols", [])
+    }
+    diagnostics: list[str] = []
+    for mapping in contract.get("tier1Mappings", []):
+        rust_symbol = mapping.get("rustSymbol")
+        if not rust_symbol:
+            diagnostics.append(
+                f"Pitfall 2: contract row '{mapping.get('id', '<unknown>')}' "
+                f"is missing 'rustSymbol'."
+            )
+            continue
+        if rust_symbol not in rust_symbols:
+            diagnostics.append(
+                "Pitfall 2: contract row '{id}' references rustSymbol "
+                "'{rust_symbol}' which is not in the parsed Rust surface "
+                "for crate '{crate}'. Add 'pub use "
+                "<sub_module>::{rust_symbol};' to "
+                "'business-logic/{crate}/src/lib.rs' (or the "
+                "appropriate foundation/-py lib.rs for classic_shared) "
+                "before promoting this row.".format(
+                    id=mapping["id"],
+                    rust_symbol=rust_symbol,
+                    crate=mapping.get("rustCrate", "<unknown>"),
+                )
+            )
+    return diagnostics
+
+
 def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     """Render concise Tier-1 gate report for CI diagnostics."""
     summary = diff_report["summary"]
@@ -130,18 +178,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default="ClassicLib-rs/python-bindings/parity-artifacts",
+        default="python-bindings/parity-artifacts",
         help="Directory for generated gate artifacts, relative to repo root.",
     )
     parser.add_argument(
         "--runtime-registry",
-        default="ClassicLib-rs/python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        default="python-bindings/tests/fixtures/runtime_coverage_registry.json",
         help="Path to the Python runtime coverage registry JSON, relative to repo root.",
-    )
-    parser.add_argument(
-        "--deferred-registry",
-        default="docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json",
-        help="Path to the Python deferred backlog registry JSON, relative to repo root.",
     )
     parser.add_argument(
         "--baseline-output-dir",
@@ -168,19 +211,26 @@ def main() -> int:
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     python_manifest = parse_python_surface(repo_root, tier1_python_exports)
+
+    # Pitfall 2 guard (Phase 3 D-05) -- fail FAST before downstream diff
+    # generation so a missing pub use at the -core/lib.rs surface is
+    # reported with an actionable remediation message instead of being
+    # buried as "missing_rust" drift noise later.
+    pitfall2_diagnostics = validate_contract_rust_symbols(contract, rust_manifest)
+    if pitfall2_diagnostics:
+        print("\n".join(pitfall2_diagnostics), file=sys.stderr)
+        return 1
+
     diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
     runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    deferred_registry = load_json_file(repo_root / args.deferred_registry)
     coverage_summary = build_coverage_summary(
         binding="python",
         contract=contract,
         diff_report=diff_report,
         runtime_registry=runtime_registry,
-        deferred_registry=deferred_registry,
         source_paths={
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
-            "deferred_registry": args.deferred_registry,
         },
     )
 

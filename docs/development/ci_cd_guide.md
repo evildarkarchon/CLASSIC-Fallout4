@@ -254,11 +254,13 @@ bun run test:bun
 bun run test:node
 ```
 
-If the change promotes deferred APIs to Tier-1, also update:
-- `docs/implementation/node_api_parity/baseline/parity_contract.json`
-- `docs/implementation/node_api_parity/governance/tier2_backlog_and_governance.md`
+After binding changes, regenerate all three parity baselines and verify all gates pass:
+- `python tools/python_api_parity/check_parity_gate.py --repo-root .`
+- `python tools/node_api_parity/check_parity_gate.py --repo-root .`
+- `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`
+See `docs/api/binding-parity-policy.md` for the full new-API workflow.
 
-Release policy: do not cut/tag a release if Tier-1 parity or `index.d.ts` freshness gates are failing in `ci-typescript.yml`.
+Release policy: do not cut/tag a release if any parity gate or `index.d.ts` freshness gate is failing.
 
 ## Release Process
 

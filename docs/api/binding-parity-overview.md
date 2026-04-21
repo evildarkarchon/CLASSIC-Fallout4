@@ -1,203 +1,75 @@
 # Binding Parity Overview
 
-Contributor-facing notes for the active Rust binding surfaces in:
+As of the active Phase 4 closure state, the surviving 16 Rust business-logic crates are exposed through the maintained binding surfaces: C++ via CXX, Node via NAPI-RS, and Python via PyO3. The sole exception is `classic-resource-core`, which still has no dedicated C++ bridge module.
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/)
-- [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/)
-- [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts)
-- [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings/)
+Historical consolidation note: `classic-settings-core` now owns the former `classic-yaml-core` surface, and `classic-config-core` now owns the former crashgen-settings rule surface. Those retired crate names remain here only as migration breadcrumbs.
 
-This page compares the binding surfaces that exist in source today.
-
-It is intentionally about current exposure, current narrowing, and current omissions. It does **not** define a future parity target, and it does **not** promise that every shared Rust crate must be exposed identically across C++, Node, and Python.
+This page is a contributor-facing reference for the complete binding surface.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
 ---
 
-## Purpose And Scope
+## Per-Crate Binding Table
 
-Use this page when you need to understand:
+Each shared Rust crate and its corresponding binding module across all three surfaces:
 
-- which shared Rust crates are exposed through the active C++ bridge, Node bindings, and Python bindings
-- where one binding is intentionally narrower than another
-- where the binding layer reshapes Rust types into DTOs, strings, primitive tuples, or fail-soft return values
-- which source files are the practical starting points for contributor parity work
-- which gaps are real current behavior versus assumed parity
+| Rust Crate | C++ Bridge Module | Node Module | Python Module |
+| --- | --- | --- | --- |
+| `classic-shared-core` | [`runtime.rs`](../../cpp-bindings/classic-cpp-bridge/src/runtime.rs) | [`shared.rs`](../../node-bindings/classic-node/src/shared.rs) | [`classic-shared-py`](../../foundation/classic-shared-py/src/lib.rs) |
+| `classic-registry-core` | [`registry.rs`](../../cpp-bindings/classic-cpp-bridge/src/registry.rs) | (via [`shared.rs`](../../node-bindings/classic-node/src/shared.rs)) | [`classic-registry-py`](../../python-bindings/classic-registry-py/) |
+| `classic-perf-core` | [`perf.rs`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) | (via [`shared.rs`](../../node-bindings/classic-node/src/shared.rs)) | [`classic-perf-py`](../../python-bindings/classic-perf-py/) |
+| `classic-message-core` | [`message.rs`](../../cpp-bindings/classic-cpp-bridge/src/message.rs) | [`message.rs`](../../node-bindings/classic-node/src/message.rs) | [`classic-message-py`](../../python-bindings/classic-message-py/) |
+| `classic-settings-core` (historical note: absorbed the former `classic-yaml-core` in v9.1.0 Phase 1) | [`settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) | [`settings.rs`](../../node-bindings/classic-node/src/settings.rs) | [`classic-settings-py`](../../python-bindings/classic-settings-py/) |
+| `classic-version-registry-core` | [`version_registry.rs`](../../cpp-bindings/classic-cpp-bridge/src/version_registry.rs) | [`version_registry.rs`](../../node-bindings/classic-node/src/version_registry.rs) | [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py/) |
+| `classic-version-core` | (via [`game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)) | [`version.rs`](../../node-bindings/classic-node/src/version.rs) | [`classic-version-py`](../../python-bindings/classic-version-py/) |
+| `classic-web-core` | [`web.rs`](../../cpp-bindings/classic-cpp-bridge/src/web.rs) | [`web.rs`](../../node-bindings/classic-node/src/web.rs) | [`classic-web-py`](../../python-bindings/classic-web-py/) |
+| `classic-update-core` | [`update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) | [`update.rs`](../../node-bindings/classic-node/src/update.rs) | [`classic-update-py`](../../python-bindings/classic-update-py/) |
+| `classic-config-core` (historical note: absorbed the former `classic-crashgen-settings-core` owner in v9.1.0 Phase 2; rule model now at `classic_config_core::crashgen_rules::*`) | [`config.rs`](../../cpp-bindings/classic-cpp-bridge/src/config.rs) | [`config.rs`](../../node-bindings/classic-node/src/config.rs) + [`crashgen_rules.rs`](../../node-bindings/classic-node/src/crashgen_rules.rs) | [`classic-config-py`](../../python-bindings/classic-config-py/) (plus crashgen-rule surfaces in [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) and [`classic-scangame-py`](../../python-bindings/classic-scangame-py/)) |
+| `classic-path-core` | [`path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs) | [`path.rs`](../../node-bindings/classic-node/src/path.rs) | [`classic-path-py`](../../python-bindings/classic-path-py/) |
+| `classic-xse-core` | [`xse.rs`](../../cpp-bindings/classic-cpp-bridge/src/xse.rs) | [`xse.rs`](../../node-bindings/classic-node/src/xse.rs) | [`classic-xse-py`](../../python-bindings/classic-xse-py/) |
+| `classic-file-io-core` | [`files.rs`](../../cpp-bindings/classic-cpp-bridge/src/files.rs) | [`fileio.rs`](../../node-bindings/classic-node/src/fileio.rs) | [`classic-file-io-py`](../../python-bindings/classic-file-io-py/) |
+| `classic-resource-core` | **Not exposed** | [`resource.rs`](../../node-bindings/classic-node/src/resource.rs) | [`classic-resource-py`](../../python-bindings/classic-resource-py/) |
+| `classic-database-core` | [`database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) | [`database.rs`](../../node-bindings/classic-node/src/database.rs) | [`classic-database-py`](../../python-bindings/classic-database-py/) |
+| `classic-scangame-core` | [`scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs) | [`scangame.rs`](../../node-bindings/classic-node/src/scangame.rs) | [`classic-scangame-py`](../../python-bindings/classic-scangame-py/) |
+| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
 
-This page is for contributor maintenance and debugging.
+**Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` plus settings constants belong to `classic-settings-core`, and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic-shared-py` exposure.
 
-For crate-level Rust behavior, see the existing docs in this directory, especially:
-
-- [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md)
-- [`classic-config-core.md`](classic-config-core.md)
-- [`classic-path-core.md`](classic-path-core.md)
-- [`classic-scangame-core.md`](classic-scangame-core.md)
-- [`classic-scanlog-core.md`](classic-scanlog-core.md)
-- [`classic-version-core.md`](classic-version-core.md)
-- [`classic-version-registry-core.md`](classic-version-registry-core.md)
-- [`classic-xse-core.md`](classic-xse-core.md)
-
----
-
-## Binding Shapes Today
-
-## C++ bridge
-
-The active C++ surface is the Windows-only [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/lib.rs) static library.
-
-Current characteristics:
-
-- organized as CXX namespaces such as `classic::game`, `classic::path`, `classic::scangame`, and `classic::scanner`
-- compiled behind `#[cfg(windows)]`, with no non-Windows bridge surface today
-- often narrows Rust APIs into sync helper calls, sentinel DTOs, `bool`, `String`, or flattened `Vec<String>` payloads
-- tends to prioritize active frontend workflows over full crate-shaped parity
-
-## Node bindings
-
-The active Node surface is the single [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/lib.rs) NAPI package, with the generated TypeScript contract in [`index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts).
-
-Current characteristics:
-
-- one package exposes many shared crates through a flat JS/TS export surface
-- DTOs usually stay closer to Rust model shape than the C++ bridge does
-- async Rust APIs remain async at the JS boundary where that improves fidelity
-- committed `index.d.ts` is the tracked generated contract artifact and the quickest contributor view of the current public Node contract
-- contributors can inspect that committed snapshot directly without building first; builds are for regeneration and verification
-
-## Python bindings
-
-The active Python surface is a set of per-crate PyO3 modules under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings/).
-
-Current characteristics:
-
-- public contract is spread across `classic_*.pyi` stub files, one module per binding crate
-- many modules are closer to crate-shaped exposure than the C++ bridge is
-- repo guidance treats Python bindings as compatibility and deprecation-support work, not the default place for new product behavior
-- for parity questions, the `.pyi` files are the fastest way to see current public behavior
+**Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers used by `classic-file-io-core`. It has no dedicated C++ bridge module. C++ frontends access resource classification functionality transitively through the `classic-file-io-core` bridge surface (`files.rs`) where needed.
 
 ---
 
-## Current Exposure By Shared Crate
+## FFI Adaptation By Binding
 
-| Shared Rust crate or concern | C++ bridge today | Node today | Python today | Current parity notes |
-| --- | --- | --- | --- | --- |
-| `classic-shared-core` plus runtime helpers | Exposes runtime init/check helpers in [`runtime.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/runtime.rs). | Exposes runtime diagnostics plus shared path/string helpers in [`shared.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs). | No single `classic_shared` module; shared-runtime use is mostly internal to other Python modules. | Same shared runtime exists underneath, but only C++ and Node expose explicit runtime-facing helpers. |
-| `classic-registry-core` | Exposes typed primitive get/set helpers and a few convenience keys in [`registry.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/registry.rs). | Exposes JSON-shaped registry get/set plus convenience helpers in [`shared.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs). | Exposes a broader Python object registry in [`classic_registry.pyi`](../../ClassicLib-rs/python-bindings/classic-registry-py/classic_registry.pyi). | C++ is the narrowest surface here: string/bool/i32 only, while Node and Python preserve more dynamic value shapes. |
-| `classic-perf-core` | Exposes record/clear plus stringified summaries in [`perf.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs). | Exposes structured timing summaries in [`shared.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs). | Exposes structured metric objects and RAII timers in [`classic_perf.pyi`](../../ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi). | C++ reshapes metrics into summary strings and a couple scalar accessors; Node and Python keep richer metric structures. |
-| `classic-message-core` | Exposes logging entry points only in [`message.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs). | Exposes message creation, formatting, targets, and logger helpers through `classic-node` public exports. | Exposes full message and logger types in [`classic_message.pyi`](../../ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi). | C++ is log-oriented, not message-model-oriented. |
-| `classic-yaml-core` | Exposes a mutable `YamlOps` wrapper in [`yaml.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/yaml.rs), with `YamlValue` used as a typed fallback because CXX cannot pass YAML nodes directly, plus explicit `yaml_ops_cache_stats()` / `yaml_ops_cache_size()` cache stats helpers. | Exposes `YamlDocument` and YAML helper functions through `classic-node` public exports and [`src/yaml.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/yaml.rs). | Exposes a broad `YamlOperations` API returning native Python values in [`classic_yaml.pyi`](../../ClassicLib-rs/python-bindings/classic-yaml-py/classic_yaml.pyi). | Phase 4 closes the cache stats gap here: all three bindings now expose the canonical cache stats contract even though C++ still flattens YAML values more aggressively. |
-| `classic-config-core` | Exposes `YamlDataCore` through many field getters in [`config.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/config.rs), and `classic::config` now also forwards settings cache stats/reset helpers from `classic-settings-core`. | Exposes both `YamlData` and runtime `ClassicConfigJs` in [`src/config.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/config.rs). | Exposes `YamlData` in [`classic_config.pyi`](../../ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi). | Suspect detection now uses structured rule lists in Rust, Node, and Python. C++ remains narrower for some config DTOs, but cache stats coverage is now aligned across all three binding surfaces. |
-| `classic-file-io-core` | Exposes backups, game-file operations, log collection, similarity, basic read/write, report helpers, and explicit `hash_cache_stats()` / `hash_cache_size()` helpers in [`files.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/files.rs). | Exposes a broad async file-I/O surface, backup managers, DDS helpers, and log collection through `classic-node` exports. | Exposes a broad async file-I/O surface in [`classic_file_io.pyi`](../../ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi). | C++ is still practical but narrower for many file workflows, yet Phase 4 adds matching hash cache stats visibility so cache observability no longer differs across the three bindings. |
-| `classic-database-core` | Exposes an opaque pool in [`database.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/database.rs), with single-string lookups and tab-delimited batch results. | Exposes `JsDatabasePool` and structured batch access through `classic-node` public exports. | Exposes async structured lookups in [`classic_database.pyi`](../../ClassicLib-rs/python-bindings/classic-database-py/classic_database.pyi). | C++ is the narrowest surface and loses structured row shape at the FFI edge. |
-| `classic-path-core` | Exposes FO4-specific convenience detection in [`path.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs) plus a few generic helpers in [`game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs). | Exposes `GamePathFinder`, `DocsPathFinder`, `DocumentsChecker`, `parseXseLog`, and validator functions in [`src/path.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/path.rs). | Exposes the same crate more fully in [`classic_path.pyi`](../../ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi). | This is a major current narrowing point: C++ has the active GUI-focused helpers, but Node and Python expose more of the crate's finder and validator surface, especially documents checks and INI validation. |
-| `classic-xse-core` | Exposes only string-based version detection and install checks in [`game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs). | Exposes typed `JsXseType`, `getXseInfo`, and helper functions in [`src/xse.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/xse.rs). | Exposes typed `XseType` and `XseInfo` in [`classic_xse.pyi`](../../ClassicLib-rs/python-bindings/classic-xse-py/classic_xse.pyi). | C++ drops typed `XseType` and the combined `XseInfo` model; Node and Python preserve them. |
-| `classic-version-core` | Exposes `parse_game_version()` and PE-version string extraction in [`game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs). | Exposes parse/compare/extract/format helpers in [`src/version.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/version.rs). | Exposes the broadest current version helper surface, including PE extraction, in [`classic_version.pyi`](../../ClassicLib-rs/python-bindings/classic-version-py/classic_version.pyi). | Parity is split rather than hierarchical here: C++ has PE probing that Node does not expose, while Node has broader semver-style helpers than C++ does. Python currently covers both areas more fully. |
-| `classic-version-registry-core` | Exposes only a narrowed DTO subset in [`game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs). | Exposes near-full registry DTOs and enumeration/matching helpers in [`src/version_registry.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/version_registry.rs). | Exposes a broad registry object model in [`classic_version_registry.pyi`](../../ClassicLib-rs/python-bindings/classic-version-registry-py/classic_version_registry.pyi). | C++ omits fields such as `display_name`, `description`, `address_library`, `compatible_range`, `exe_hash`, `script_hashes`, and unknown-version policy details that Node and Python expose. |
-| `classic-scangame-core` | Exposes only `run_setup_checks()` and `needs_path_detection()` in [`scangame.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs). | Exposes BA2, unpacked, INI, TOML, ENB, XSE, crashgen, Wrye, orchestrator, and setup helpers in [`src/scangame.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/scangame.rs). | Exposes a similarly broad game-analysis surface in [`classic_scangame.pyi`](../../ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi). | This is the clearest active parity gap: the C++ bridge intentionally exposes only a setup-time subset, not the full crate. |
-| `classic-scanlog-core` | Exposes app-oriented orchestration, batch processing with progress callbacks, Papyrus helpers, and an explicit `fcx_reset_global_state()` bridge helper in [`scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs), but no C++ FCX issue getter in this phase. | Exposes async scanlog orchestration plus config-building, parsing utilities, `resetFcxGlobalState()`, and a standalone `getFcxConfigIssues()` DTO getter in [`src/scanlog.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs). | Exposes the broadest crate-shaped analysis surface in [`classic_scanlog.pyi`](../../ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi). | All three surfaces expose scanlog behavior, but they expose different slices: C++ is frontend-pipeline-oriented and reset-only for FCX in Phase 3, Node adds standalone FCX reset/issue inspection helpers without reshaping scan results, and Python exposes the most individual analyzers and report-building pieces. |
-| `classic-update-core` | Exposes quick semver and one-shot release-check helpers in [`update.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/update.rs). | Exposes a full `GithubClient` plus one-shot convenience helpers in [`src/update.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/update.rs). | Exposes a full `GithubClient` in [`classic_update.pyi`](../../ClassicLib-rs/python-bindings/classic-update-py/classic_update.pyi). | C++ is narrower and front-end-oriented; Node and Python preserve the client model and richer DTOs. |
-| `classic-constants-core` and `classic-web-core` | No active direct C++ bridge module today. | Exposed directly in [`src/constants.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/constants.rs) and [`src/web.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/web.rs). | Exposed directly in [`classic_constants.pyi`](../../ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi) and [`classic_web.pyi`](../../ClassicLib-rs/python-bindings/classic-web-py/classic_web.pyi). | These are current Node/Python-only binding surfaces among the shared crates covered here. |
+### C++ (CXX)
 
----
+The C++ surface in [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/lib.rs) uses CXX shared structs for DTOs, opaque Rust types behind `Box` pointers, and `block_on()` for async-to-sync conversion. Fail-soft returns often use empty-string sentinels (e.g., `""` when a lookup misses) because Qt callers check `.isEmpty()` rather than catching exceptions. The bridge is compiled behind `#[cfg(windows)]` and produces a static library linked into `classic-cli` and `classic-gui`.
 
-## Where The Current Surfaces Narrow Or Reshape Rust APIs
+See: [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md), [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md).
 
-## C++ bridge narrows hardest at the FFI edge
+### Node (NAPI-RS)
 
-The CXX bridge most often trades fidelity for straightforward frontend consumption:
+The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
 
-- `classic-version-registry-core` becomes small DTOs with sentinel `found = false` behavior instead of `Option`-rich models
-- `classic-path-core` gets both generic helpers and FO4-specific convenience entry points, but not the full documents-checking surface
-- `classic-database-core` batch lookups become tab-delimited strings instead of structured maps
-- `classic-config-core` still narrows some fields for C++, and the suspect-rule bridge is currently much thinner than the Rust, Node, and Python surfaces
+See: [`node-python-contract-map.md`](node-python-contract-map.md).
 
-## Node usually keeps object shape closer to Rust
+### Python (PyO3)
 
-The Node binding surface still adapts types for JavaScript, but it usually preserves more model structure:
+The Python surface is a set of per-crate PyO3 modules under [`python-bindings/`](../../python-bindings/). Each module uses `#[pyclass]` wrappers with `#[getter]` properties and `#[pyo3(name="...")]` for Python-convention naming. Error conversion uses typed Python exception classes wired through `classic-shared-py`'s `define_exceptions!`, `register_exceptions!`, and `ToPyErr` trait.
 
-- registry and version-registry calls return object-shaped DTOs instead of sentinel strings
-- async operations such as scanlog, database, file I/O, and update checks stay async at the binding boundary
-- generated [`index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts) is effectively the current public contract
-
-## Python often keeps crate-shaped module boundaries
-
-Python does not mirror Node's single-package design or C++'s namespace design.
-
-Instead, it usually exposes one extension module per crate boundary, which means:
-
-- `classic_path`, `classic_xse`, `classic_version_registry`, `classic_scangame`, and `classic_scanlog` remain easier to map back to their Rust crate owners
-- `.pyi` files are often the clearest contributor reference for what Python actually exports today
-- Python is broad in coverage, but broad coverage does not imply it is the preferred surface for new product features
-
-## Some parity differences cut both directions
-
-Current parity gaps are not always "C++ has less" or "Python has more":
-
-- C++ exposes PE-version extraction through `classic::game`, while Node's public version helpers focus on semver-style parsing and comparison instead
-- Node exposes `classic-web-core` and `classic-constants-core` directly, while the active C++ bridge does not
-- Python exposes many fine-grained scanlog analyzers directly, while C++ focuses more on orchestrator-style app flows
+See: [`node-python-contract-map.md`](node-python-contract-map.md).
 
 ---
 
-## Practical Contributor Notes For Parity Work
+## Gate Coverage
 
-## Start from the public contract files first
+Gate run instructions, ownership, and the step-by-step workflow for adding a new public Rust API across all three bindings are documented in [`binding-parity-policy.md`](binding-parity-policy.md).
 
-For parity debugging, these are usually the fastest source-of-truth files:
-
-- C++: the relevant `classic-cpp-bridge` source file in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/)
-- Node: [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts), then the matching `src/*.rs` file
-- Python: the matching `classic_*.pyi` stub, then the corresponding `src/*.rs` file under that `*-py` crate
-
-## Distinguish crate behavior from binding behavior
-
-When one surface appears "missing" compared with another, check whether the gap is actually in:
-
-- the Rust core crate
-- the binding adapter DTO shape
-- error mapping and fail-soft conventions
-- frontend-specific convenience wrappers that intentionally narrow the call path
-
-Example: C++ `run_setup_checks()` is not a full parity stand-in for `classic-scangame-core`; it builds a limited `SetupCheckConfig`, ignores the `_game_root` input, and passes an empty `xse_hashes` list today.
-
-## Expect different error styles
-
-Current binding styles differ materially:
-
-- C++ often returns `""`, `false`, or a sentinel DTO on failure
-- Node often returns `null` for fail-soft helpers but throws for validation-heavy calls
-- Python usually raises Python exceptions or returns `None`, depending on the module
-
-Many cross-surface "parity bugs" are really error-contract differences.
-
-## Keep parity artifacts aligned when Node or Python contracts change
-
-If you change a Node or Python binding surface, the repo has explicit parity workflow follow-up in:
-
-- [`J:/CLASSIC-Fallout4/.opencode/skills/classic-project-guide/references/repo-guide.md`](../../.opencode/skills/classic-project-guide/references/repo-guide.md)
-- `docs/implementation/node_api_parity/`
-- `docs/implementation/python_api_parity/`
-
-This page is only a contributor overview; it is not the parity gate itself.
-
-## Update docs when current public behavior changes
-
-If you add, remove, or materially reshape a public binding surface:
-
-- update the binding source and its generated or stubbed public contract
-- update this page if the crate-to-surface comparison changed
-- update crate-level docs such as [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md) when the change is C++-specific
+Need an old-to-new path translation first? Use the shared [`workspace migration matrix`](../workspace-migration-matrix.md).
 
 ---
 
-## Source-Backed Caveats And Non-Goals
+## Source-Backed Caveats
 
-- This page covers active binding surfaces under `ClassicLib-rs/`; it does not cover the archived implementation under `deprecated/`.
-- This page is about contributor-visible public behavior, not every internal helper inside each binding crate.
-- This page does not define a mandatory "all surfaces must match exactly" policy.
-- This page does not replace the Node or Python parity gate artifacts under `docs/implementation/`.
-- This page does not describe frontend-only helpers that are not exposing shared Rust crate behavior.
-- The C++ bridge is Windows-gated today, so "parity" with Node or Python should not be read as cross-platform runtime equivalence.
-
-If source and this document diverge, update both in the same change.
+This document describes binding exposure visible in source today. If source and this document diverge, update both in the same change. Runtime ownership stays outside these crates -- follow the shared-runtime guidance in [`AGENTS.md`](../../AGENTS.md).

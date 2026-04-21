@@ -1,6 +1,6 @@
 # `classic-resource-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-resource-core/`](../../ClassicLib-rs/business-logic/classic-resource-core).
+Contributor-facing API documentation for [`business-logic/classic-resource-core/`](../../business-logic/classic-resource-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - validating archive internals or mod compatibility rules
 - async I/O, shared runtime ownership, or UI/binding-specific behavior
 
-Those concerns live in related crates such as [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core), [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core), and the Node/Python binding wrappers.
+Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the Node/Python binding wrappers.
 
 ---
 
@@ -57,7 +57,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 
 ## Root-level re-exports
 
-- `PathError`, `PathResult` from [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core)
+- `PathError`, `PathResult` from [`classic-path-core`](../../business-logic/classic-path-core)
 
 Contributor note:
 
@@ -182,7 +182,7 @@ Source-visible limitation:
 
 Practical implication:
 
-- if a caller needs strict path validation before enumeration, validate the directory separately with [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core) helpers first
+- if a caller needs strict path validation before enumeration, validate the directory separately with [`classic-path-core`](../../business-logic/classic-path-core) helpers first
 
 ## `count_resources_by_type()`
 
@@ -281,14 +281,14 @@ Important direct dependencies:
 
 Declared dependency with no visible use in current `src/lib.rs`:
 
-- `classic-constants-core`
+- none after Phase 3 cleanup
 
 Related CLASSIC crates and wrappers:
 
-- [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core) - neighboring path-validation layer whose error types are re-exported here
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it handles real scan orchestration rather than reusing this crate directly in current source
-- [`classic-resource-py`](../../ClassicLib-rs/python-bindings/classic-resource-py) - Python wrapper for this crate's public API
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
+- [`classic-path-core`](../../business-logic/classic-path-core) - neighboring path-validation layer whose error types are re-exported here
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it handles real scan orchestration rather than reusing this crate directly in current source
+- [`classic-resource-py`](../../python-bindings/classic-resource-py) - Python wrapper for this crate's public API
+- [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
 
 Binding collaboration visible in source today:
 
@@ -338,7 +338,7 @@ If the caller needs stricter directory validation before enumeration, validate t
 - `enumerate_resources()` is best-effort because `WalkDir` entry errors are dropped
 - `count_resources_by_type()` omits zero-count categories and inherits the same best-effort traversal behavior
 - `validate_resource()` validates file existence/readability only; it does not verify supported type or file format integrity
-- `ArchiveError` and the `classic-constants-core` dependency are present in the public/dependency surface, but the current source does not expose real archive-management behavior or visible constants usage
+- `ArchiveError` is present in the public/dependency surface, but the current source does not expose real archive-management behavior
 - the crate-level docs mention BA2 archive support and path resolution, but current contributor-visible APIs are narrower than that description
 
 If you extend this crate, update this document when you change:

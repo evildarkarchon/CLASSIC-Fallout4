@@ -1,0 +1,37 @@
+[package]
+name = "classic-version-registry-core"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Pure Rust version registry for CLASSIC - game version detection and matching"
+authors = ["evildarkarchon"]
+license = "MIT"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+# Foundation layer
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# Version and serialization
+semver = { workspace = true }
+serde = { workspace = true }
+
+# YAML loading
+classic-settings-core = { path = "../classic-settings-core" }
+yaml-rust2 = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.9"
+serde_json = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

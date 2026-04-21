@@ -1,6 +1,6 @@
 # `classic-scangame-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-scangame-core/`](../../ClassicLib-rs/business-logic/classic-scangame-core).
+Contributor-facing API documentation for [`business-logic/classic-scangame-core/`](../../business-logic/classic-scangame-core).
 
 Crate metadata:
 
@@ -33,7 +33,7 @@ Do not use this crate for:
 - owning or creating an application runtime
 - binding-specific wrapper APIs
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-file-io-core`](../../business-logic/classic-file-io-core), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -51,7 +51,7 @@ This crate exposes public modules directly and also re-exports most contributor-
 ### Validation and scan modules
 
 - `xse` - Address Library validation against detected game mode/version
-- `toml` - crashgen TOML validation, with optional [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) rules
+- `toml` - crashgen TOML validation, with optional rule-driven path using the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model)
 - `integrity` - executable hash and installation-location checks
 - `enb` - ENB binary/config detection
 - `logs` - non-crash log scanning with include/exclude patterns
@@ -116,7 +116,7 @@ Behavior worth knowing from the source:
 - per-task failures are collected into `GameScanResult.errors`; one failed sub-check does not abort the whole `run_game_checks()` call
 - the read-only config-issue portion of `run_game_checks()` now shares the public `detect_config_issues(game_path, game_name)` helper
 - `run_mod_scans()` returns a soft failure payload when `mods_path` is missing or nonexistent instead of throwing an orchestrator error
-- loose-file DDS dimension validation is delegated to [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) `DDSAnalyzer`
+- loose-file DDS dimension validation is delegated to [`classic-file-io-core`](../../business-logic/classic-file-io-core) `DDSAnalyzer`
 - BA2 archive findings are converted into the same category map used by `ScanReportBuilder`
 
 ## `detect_config_issues()`
@@ -179,7 +179,7 @@ Important methods:
 
 Source-visible rules and limits:
 
-- if `settings_rules` is present, the crate uses [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) `evaluate_rules()` instead of the legacy hardcoded checks
+- if `settings_rules` is present, the crate uses `evaluate_rules()` from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model) instead of the legacy hardcoded checks
 - without YAML-defined rules, the legacy path checks Achievements, X-Cell/Addictol-related memory settings, Archive Limit, `MaxStdIO`, and LooksMenu/F4EE compatibility
 - Addictol has a legacy short-circuit path only when `settings_rules` is absent; rule-based callers are expected to model that as preflight logic upstream
 - TOML settings are flattened by key name only before rule evaluation, so section names are descriptive output metadata rather than part of the lookup key
@@ -209,7 +209,7 @@ Important types and methods:
 
 Behavior worth knowing:
 
-- Address Library metadata is pulled from [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) when available, with hardcoded Fallout 4 fallbacks otherwise
+- Address Library metadata is pulled from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) when available, with hardcoded Fallout 4 fallbacks otherwise
 - non-VR mode treats OG, NG, and AE Address Library files as acceptable; VR mode expects only the VR file
 - `PluginsPathNotFound` is public but not produced by `check()`; invalid paths fail earlier in `XseChecker::new()` with `XseError::InvalidPath`
 
@@ -454,7 +454,7 @@ The main contributor-facing full-scan flow is:
 6. `run_mod_scans()` concurrently performs:
    - loose-file scan via `UnpackedScanner`
    - BA2 archive scan via `BA2Scanner`
-7. Loose `.dds` files from the unpacked scan are validated afterward with [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) `DDSAnalyzer`.
+7. Loose `.dds` files from the unpacked scan are validated afterward with [`classic-file-io-core`](../../business-logic/classic-file-io-core) `DDSAnalyzer`.
 8. `ScanReportBuilder` formats unpacked/archive issue maps into the final mod-scan report text.
 
 Crashgen TOML flow in more detail:
@@ -541,7 +541,7 @@ Concurrency/performance patterns visible in source:
 Important direct dependencies:
 
 - `classic-file-io-core` - DDS validation helpers used during loose-file scans
-- `classic-crashgen-settings-core` - optional rule-evaluation path for crashgen TOML checks
+- `classic-config-core` - optional rule-evaluation path for crashgen TOML checks via the absorbed crashgen rule model (`classic_config_core::crashgen_rules::*`, formerly a separate crate)
 - `classic-path-core` - documents-folder checks in setup coordination
 - `classic-version-registry-core` - Address Library metadata and Fallout 4 version descriptions
 - `tokio` - async orchestration only
@@ -553,12 +553,11 @@ Important direct dependencies:
 
 Related CLASSIC crates:
 
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - upstream source for paths, game-version decisions, and optional `CrashgenSettingsRules`
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - downstream crash-log analysis layer that complements setup/game scanning rather than replacing it
-- [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) - shared DDS and file helpers used here
-- [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) - shared rule model reused for TOML validation
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - registry-backed Fallout 4 version and Address Library metadata
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared runtime policy; currently a dependency without visible direct runtime calls in this crate's source
+- [`classic-config-core`](../../business-logic/classic-config-core) - upstream source for paths, game-version decisions, optional `CrashgenSettingsRules`, AND the shared rule model reused for TOML validation (see the "Crashgen rule model" section in [classic-config-core.md](classic-config-core.md#crashgen-rule-model))
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream crash-log analysis layer that complements setup/game scanning rather than replacing it
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - shared DDS and file helpers used here
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - registry-backed Fallout 4 version and Address Library metadata
+- [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy; currently a dependency without visible direct runtime calls in this crate's source
 
 ---
 
@@ -603,7 +602,7 @@ println!("Archive issues: {}", mod_result.archived_issue_count);
 # }
 ```
 
-If the caller already has YAML-backed crashgen settings rules from [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), pass them through `GameScanConfig.crashgen_settings_rules` or `CrashgenCheckOrchestrator::check_with_rules()`.
+If the caller already has YAML-backed crashgen settings rules from [`classic-config-core`](../../business-logic/classic-config-core), pass them through `GameScanConfig.crashgen_settings_rules` or `CrashgenCheckOrchestrator::check_with_rules()`.
 
 ---
 

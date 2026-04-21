@@ -1,20 +1,20 @@
 #include "widgets/markdownviewer.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QApplication>
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QFile>
 #include <QFont>
+#include <QHBoxLayout>
 #include <QKeySequence>
 #include <QShortcut>
 #include <QTextStream>
 #include <QTimer>
+#include <QVBoxLayout>
 
-#include "rust/cxx.h"
 #include "classic_cxx_bridge/markdown.h"
 #include "core/rust_qt_bridge.h"
+#include "rust/cxx.h"
 
 // ── Construction ───────────────────────────────────────────────────
 
@@ -76,9 +76,7 @@ void MarkdownViewer::setupUi()
         QApplication::clipboard()->setText(m_browser->toPlainText());
         m_btnCopyAll->setText(QStringLiteral("Copied!"));
         // Reset label after a short delay
-        QTimer::singleShot(1500, this, [this]() {
-            m_btnCopyAll->setText(QStringLiteral("Copy All"));
-        });
+        QTimer::singleShot(1500, this, [this]() { m_btnCopyAll->setText(QStringLiteral("Copy All")); });
         emit copyAllRequested();
     });
     connect(m_btnZoomIn, &QPushButton::clicked, this, &MarkdownViewer::zoomIn);
@@ -104,9 +102,8 @@ void MarkdownViewer::applyContentStylesheet()
     // Load from external file; fall back to built-in CSS if not found.
     QString css;
     const QString appDir = QCoreApplication::applicationDirPath();
-    for (const auto& candidate : {
-             appDir + QStringLiteral("/styles/markdownviewer_content.css"),
-             appDir + QStringLiteral("/../src/styles/markdownviewer_content.css")}) {
+    for (const auto& candidate : {appDir + QStringLiteral("/styles/markdownviewer_content.css"),
+                                  appDir + QStringLiteral("/../src/styles/markdownviewer_content.css")}) {
         QFile file(candidate);
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream stream(&file);
@@ -116,20 +113,19 @@ void MarkdownViewer::applyContentStylesheet()
     }
 
     if (css.isEmpty()) {
-        css = QStringLiteral(
-            "body { font-family: 'Segoe UI'; font-size: 13px; color: #e0e0e0; }"
-            "h1 { font-size: 22px; font-weight: bold; color: #e0e0e0; }"
-            "h2 { font-size: 18px; font-weight: bold; color: #e0e0e0; }"
-            "h3 { font-size: 15px; font-weight: bold; color: #e0e0e0; }"
-            "code { font-family: 'Consolas'; font-size: 12px;"
-            "       background-color: #2a2a2e; border-radius: 3px; padding: 2px 4px; }"
-            "pre  { font-family: 'Consolas'; font-size: 12px;"
-            "       background-color: #2a2a2e; border-radius: 4px; padding: 8px; }"
-            "hr   { border: none; border-top: 1px solid #555555; }"
-            "blockquote { border-left: 3px solid #555555; font-style: italic;"
-            "             padding-left: 8px; margin-left: 0; }"
-            "a    { color: #5599dd; }"
-        );
+        css = QStringLiteral("body { font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', sans-serif; font-size: "
+                             "13px; color: #e0e0e0; }"
+                             "h1 { font-size: 22px; font-weight: bold; color: #e0e0e0; }"
+                             "h2 { font-size: 18px; font-weight: bold; color: #e0e0e0; }"
+                             "h3 { font-size: 15px; font-weight: bold; color: #e0e0e0; }"
+                             "code { font-family: 'Consolas'; font-size: 12px;"
+                             "       background-color: #2a2a2e; border-radius: 3px; padding: 2px 4px; }"
+                             "pre  { font-family: 'Consolas'; font-size: 12px;"
+                             "       background-color: #2a2a2e; border-radius: 4px; padding: 8px; }"
+                             "hr   { border: none; border-top: 1px solid #555555; }"
+                             "blockquote { border-left: 3px solid #555555; font-style: italic;"
+                             "             padding-left: 8px; margin-left: 0; }"
+                             "a    { color: #5599dd; }");
     }
 
     m_browser->document()->setDefaultStyleSheet(css);

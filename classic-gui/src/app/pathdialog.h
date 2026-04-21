@@ -14,9 +14,7 @@ class ManualPathDialog : public QDialog {
 public:
     /// Construct the dialog. Pass empty strings for paths that are not
     /// yet known; the dialog will show input fields for those.
-    explicit ManualPathDialog(bool needsGamePath,
-                              bool needsDocsPath,
-                              QWidget* parent = nullptr);
+    explicit ManualPathDialog(bool needsGamePath, bool needsDocsPath, QWidget* parent = nullptr);
 
     /// Returns the user-entered game folder path (empty if not needed).
     QString gamePath() const;

@@ -1,0 +1,262 @@
+name: Publish YAML Data
+
+# Runs only on maintainer-pushed `yaml-data-v*` tags. No `pull_request`,
+# no `workflow_dispatch` inputs that affect file contents — the spec
+# scenario "Pull request does not trigger publish" requires that narrow
+# surface.
+on:
+  push:
+    tags:
+      - 'yaml-data-v*'
+
+# The workflow is not signed in this slice — Section 11a of the
+# yaml-update-delivery change adds the cosign step plus `id-token: write`.
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-yaml-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish YAML data ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.ref_name }}
+      DATABASES_DIR: CLASSIC Data/databases
+      PAGES_BRANCH: gh-pages
+      PYTHON_VERSION: "3.12"
+    steps:
+      - name: Checkout source (tag)
+        uses: actions/checkout@v6
+        with:
+          # Fetch-depth 0 so we can push to gh-pages from the same clone.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        # ruamel.yaml's pure-Python parser tolerates bare-scalar `foo::bar`
+        # strings in flow sequences (present in CLASSIC Fallout4.yaml), which
+        # the libyaml-backed PyYAML C parser rejects. See tools/publish_yaml_data/validate.py
+        # for the parser-choice rationale.
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
+      # Task 11.2: validation job. Fails the workflow before any release is
+      # created if schema_version is missing or malformed, or if any
+      # client-schema range entry is malformed or inverted.
+      - name: Validate shippable YAML schema headers
+        run: |
+          python tools/publish_yaml_data/validate.py \
+            --databases-dir "$DATABASES_DIR" \
+            --schema-ranges  "$DATABASES_DIR/client-schema-ranges.yaml"
+
+      # Task 11.3 + 11.4: checksum + manifest generation. Produces
+      # <file>.yaml, <file>.yaml.sha256, and manifest.json into the staging
+      # dir. Every download_url is built from github.com/<repo>/releases/...
+      - name: Generate checksums and manifest
+        run: |
+          python tools/publish_yaml_data/generate_manifest.py \
+            --tag             "$TAG" \
+            --repo            "${{ github.repository }}" \
+            --databases-dir   "$DATABASES_DIR" \
+            --schema-ranges   "$DATABASES_DIR/client-schema-ranges.yaml" \
+            --staging         "$RUNNER_TEMP/staging"
+
+      # Sanity log so a maintainer can eyeball the manifest in the job summary.
+      - name: Show manifest preview
+        run: |
+          echo "=== Staged assets ==="
+          ls -la "$RUNNER_TEMP/staging"
+          echo "=== manifest.json ==="
+          cat "$RUNNER_TEMP/staging/manifest.json"
+
+      # Rollout ordering (addresses Codex adversarial reviews, high severity:
+      # "Pages can publish a manifest for a release whose assets are still
+      # draft-only" and "Release is made discoverable to API-fallback clients
+      # before asset reachability is proven"):
+      #
+      #   1. Create the release as a DRAFT with all assets uploaded (this step).
+      #   2. Promote the release to LIVE but flagged as PRERELEASE.
+      #      Prerelease flag is the client-invisibility switch:
+      #      `fetch_from_releases_api` in `classic-update-core` calls
+      #      `get_all_releases(include_drafts=false, include_prereleases=false)`
+      #      so API-fallback clients filter the release out entirely while
+      #      the prerelease flag is set.
+      #   3. Anonymously verify every manifest `download_url` is actually
+      #      reachable without credentials. Prereleases are anonymously
+      #      downloadable (unlike drafts), so this probe exercises the real
+      #      client code path.
+      #   4. Clear the prerelease flag. Only at this moment does the release
+      #      become discoverable to API-fallback clients.
+      #   5. Push `manifest-latest.json` to gh-pages so Pages-first clients
+      #      start seeing the new tag.
+      #   6. Smoke-test the Pages URL serves that tag.
+      #
+      # Rationale: the previous order promoted directly to live BEFORE the
+      # anonymous reachability probe. That opened a race window where an
+      # API-fallback client could discover the live release, fetch the
+      # manifest, and 404 on every asset while propagation was still in
+      # flight — defeating the probe's purpose. Gating client visibility
+      # behind the prerelease flag closes that window: until step 4 runs,
+      # no anonymous discovery path sees the release at all, and by step 4
+      # every asset is proven reachable.
+      #
+      # If step 3 or 4 fails, the release remains as a prerelease — invisible
+      # to API-fallback clients and unreferenced by Pages. The operator can
+      # investigate, delete the prerelease via `gh release delete`, and
+      # rerun the workflow; the "Reset stale draft" step treats a
+      # non-draft release as operator-owned and hard-fails so nothing is
+      # overwritten silently.
+      - name: Reset stale draft (idempotent re-run)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A prior run may have failed between draft creation and the later
+          # steps, leaving a draft behind. Delete it so this run can re-upload
+          # fresh assets. Anything that already exists as a non-draft live
+          # release is treated as an operator-owned state and is NOT
+          # touched — the workflow hard-fails instead so a maintainer can
+          # investigate before overwriting a live tag.
+          set -euo pipefail
+          existing="$(gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft --jq '.isDraft' 2>/dev/null || echo "absent")"
+          case "$existing" in
+            absent)
+              echo "No pre-existing release for $TAG; proceeding"
+              ;;
+            true)
+              echo "Found stale draft for $TAG (likely from a prior failed run); deleting"
+              gh release delete "$TAG" --repo "${{ github.repository }}" --yes --cleanup-tag=false
+              ;;
+            false)
+              echo "::error::release $TAG already exists as a live (non-draft) release; refusing to overwrite. Delete it manually if a republish is intended."
+              exit 1
+              ;;
+          esac
+
+      - name: Create draft GitHub release with assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Glob the staged asset list inside the staging dir so filenames
+          # containing spaces (e.g., "CLASSIC Main.yaml") are word-split
+          # correctly by the shell when gh release create expands them.
+          #
+          # --latest=false preserves the binary release channel's "latest"
+          # pointer; it is re-applied in the promote step because `gh release
+          # edit` will otherwise default to treating a newly-published release
+          # as latest.
+          cd "$RUNNER_TEMP/staging"
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --draft \
+            --latest=false \
+            --title "YAML data $TAG" \
+            --notes "Automated publish of CLASSIC YAML data for \`$TAG\`. See manifest.json for per-file schema ranges and sha256." \
+            *.yaml *.yaml.sha256 manifest.json
+
+      # Promote draft -> live but flagged as PRERELEASE. The anonymous
+      # reachability probe below needs the release out of draft (draft
+      # asset URLs 404 anonymously), but the prerelease flag keeps the
+      # release invisible to `fetch_from_releases_api` in
+      # `classic-update-core`, which filters out prereleases. Until the
+      # later "Clear prerelease flag" step runs, no API-fallback client can
+      # discover this release.
+      #
+      # --latest=false is re-applied here because `gh release edit` does not
+      # remember the flag from `gh release create` on all gh versions.
+      - name: Promote release (draft -> live prerelease)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$TAG" \
+            --repo "${{ github.repository }}" \
+            --draft=false \
+            --prerelease=true \
+            --latest=false
+
+      # Gate: verify every advertised `download_url` in manifest.json is
+      # reachable without credentials. Fails the workflow if any asset 404s
+      # or is still propagating after the probe's retry budget, which keeps
+      # us from advancing to client visibility. If this step fails, the
+      # release remains a prerelease — invisible to API-fallback clients and
+      # unreferenced by Pages. The operator can delete it manually and rerun
+      # the workflow; the "Reset stale draft" step will hard-fail if a
+      # non-draft release still exists, so nothing is overwritten silently.
+      - name: Verify assets reachable anonymously
+        run: |
+          python tools/publish_yaml_data/verify_assets_reachable.py \
+            --manifest "$RUNNER_TEMP/staging/manifest.json"
+
+      # Make the release discoverable to API-fallback clients by clearing
+      # the prerelease flag. Runs only after anonymous asset reachability
+      # is proven, so by the time any client can discover this tag via the
+      # Releases API, every download URL in its manifest is already warm on
+      # the CDN.
+      - name: Clear prerelease flag (make client-discoverable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$TAG" \
+            --repo "${{ github.repository }}" \
+            --prerelease=false \
+            --latest=false
+
+      # Task 11.6: Pages deploy. Only now — after the release is live, its
+      # asset URLs are proven reachable by an unauthenticated client, AND
+      # the prerelease flag has been cleared — is it safe to flip the Pages
+      # `manifest-latest.json` pointer. A failure here leaves the release
+      # client-discoverable via the API-fallback path (Pages-first clients
+      # stay on the old version); operators can rerun the workflow, but the
+      # "Reset stale draft" step will detect the live non-draft release and
+      # hard-fail so the operator can reconcile.
+      - name: Deploy manifest to gh-pages
+        env:
+          GIT_AUTHOR_NAME:     "github-actions[bot]"
+          GIT_AUTHOR_EMAIL:    "41898282+github-actions[bot]@users.noreply.github.com"
+          GIT_COMMITTER_NAME:  "github-actions[bot]"
+          GIT_COMMITTER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+        run: |
+          set -euo pipefail
+          WORK="$(mktemp -d)"
+          git clone --depth=1 --branch "$PAGES_BRANCH" \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            "$WORK" \
+            || (
+              # Initialize an orphan gh-pages branch on first publish.
+              git clone --depth=1 \
+                "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+                "$WORK"
+              cd "$WORK"
+              git checkout --orphan "$PAGES_BRANCH"
+              git rm -rf . || true
+            )
+          mkdir -p "$WORK/yaml-data"
+          cp "$RUNNER_TEMP/staging/manifest.json" "$WORK/yaml-data/manifest-latest.json"
+          cp "$RUNNER_TEMP/staging/manifest.json" "$WORK/yaml-data/manifest-${TAG}.json"
+          cd "$WORK"
+          git add "yaml-data/manifest-latest.json" "yaml-data/manifest-${TAG}.json"
+          if git diff --cached --quiet; then
+            echo "no manifest changes to commit"
+          else
+            git commit -m "yaml-data publish ${TAG}"
+            git push origin "$PAGES_BRANCH"
+          fi
+
+      # Task 11.8: smoke-test that the Pages manifest serves the new tag.
+      # The helper retries for up to 180s to cover Pages propagation lag.
+      # Failure here means the previous step's push succeeded but Pages has
+      # not served the new content yet — not an asset-reachability problem.
+      - name: Smoke-test Pages manifest
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO="$(echo "${{ github.repository }}" | cut -d/ -f2)"
+          python tools/publish_yaml_data/smoke_test_pages.py \
+            --owner "$OWNER" \
+            --repo  "$REPO" \
+            --tag   "$TAG"

@@ -1,415 +1,309 @@
-# Domain Pitfalls: Rust Codebase Health & Cleanup
+# Pitfalls Research
 
-**Domain:** Rust workspace cleanup with FFI boundaries (CXX/PyO3/NAPI-RS), global state refactoring, and performance-critical path optimization
-**Researched:** 2026-04-04
-**Confidence:** HIGH (verified against codebase source, official docs, and known Cargo/crate behaviors)
+**Domain:** Brownfield Rust workspace-root relocation in a multi-language repo
+**Researched:** 2026-04-11
+**Confidence:** HIGH — grounded in current repo paths/scripts plus Cargo workspace documentation.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause broken consumers, data corruption, or require rework of entire phases.
+### Pitfall 1: Dual-Workspace / Partial-Move State
 
-### Pitfall 1: Removing Deprecated Core APIs Breaks FFI Consumers Silently
+**What goes wrong:**
+The repo ends up with a new root `Cargo.toml` and a still-live `ClassicLib-rs/Cargo.toml`, or only some crates move while others still point at the legacy subtree. Cargo then resolves different workspace roots depending on where commands are run, and different tools silently operate against different graphs.
 
-**What goes wrong:** Deleting `parse_segments_parallel` or `is_outdated` from core crates causes a Rust compilation failure in the core crate tests (because `deprecated = "deny"` is set in `classic-scanlog-core`'s own `[lints.rust]`), but the real danger is that downstream FFI consumers (the Python binding in `classic-scanlog-py/src/parser.rs:98` which calls `parse_segments_parallel` with `#[allow(deprecated)]`) break silently at link time rather than with a clear API migration error. Similarly, `classic-scanlog-py/src/report.rs:307` re-exposes the legacy `is_outdated` equivalent without its own deprecation annotation, so Python consumers have no warning at all.
+**Why it happens:**
+Cargo searches parent directories for a `[workspace]` root, and member crates can also be forced to a workspace via manifest configuration. In a brownfield move, teams often add the new root before fully deleting or tombstoning the old one.
 
-**Why it happens:** Deprecation annotations in Rust only affect Rust callers. PyO3 wrappers suppress the warning with `#[allow(deprecated)]` and expose a clean Python-facing API. When the core method is removed, the PyO3 binding fails to compile, but the Python consumers never received a deprecation warning. CXX bridge consumers are similarly opaque -- the C++ side sees a function signature, not Rust deprecation metadata.
+**How to avoid:**
+- Make the move atomic at the workspace level: one canonical `[workspace]`, never two live ones.
+- Treat `ClassicLib-rs/Cargo.toml` as a temporary migration shim only if it is deliberately non-authoritative and documented as such; otherwise delete it in the same phase that activates the root workspace.
+- Run `cargo metadata --format-version 1` from repo root and from representative subcrate directories; verify the same `workspace_root` every time.
+- Add a roadmap gate: no later phase starts until the legacy workspace root is removed or explicitly neutered.
 
-**Consequences:**
-- Python consumers calling `parse_segments_parallel` get a hard break with no migration warning
-- The `generate_suspect_section` Python method silently calls the deprecated `is_outdated` path; removing the core method breaks the Python report API
-- Node/C++ consumers have no visibility into which Rust APIs are deprecated underneath their binding layer
-- Parity gates (`check_parity_gate.py`, `parity:gate:local`) will catch compile-time breakage but NOT catch missing deprecation warnings in the binding-facing APIs
+**Warning signs:**
+- `cargo metadata` reports different `workspace_root` values depending on current directory.
+- `cargo test` works from one folder but not another.
+- Both `Cargo.toml` files still contain `[workspace]` sections.
 
-**Prevention:**
-1. **Binding-side deprecation first:** Before removing any core API, add explicit deprecation warnings at every binding surface. For Python: emit `warnings.warn("...", DeprecationWarning)` from the PyO3 wrapper. For Node: mark the function with `@deprecated` in `index.d.ts` or emit a console warning.
-2. **Two-phase removal:** Phase A: add binding-surface deprecation warnings + migrate binding internals to new API. Phase B (next milestone or after a release cycle): remove the core deprecated method.
-3. **Grep for `#[allow(deprecated)]`:** Currently 7 call sites across `classic-scanlog-core` tests and `classic-scanlog-py`. Every `#[allow(deprecated)]` must be migrated before the underlying method can be removed.
-4. **Parity gate check:** After migrating bindings, run both `check_parity_gate.py` and `parity:gate:local` to confirm no function signature changes.
-
-**Detection:**
-- Search for `#[allow(deprecated)]` across the entire workspace -- any hit is a migration blocker
-- Python consumers calling removed methods get `ImportError` or `AttributeError` at runtime
-- Node binding build fails at `napi build` step
-
-**Phase to address:** Must be the FIRST work item in any deprecated-API-removal phase. Do not remove core methods until all binding callers are migrated.
+**Phase to address:**
+Phase 1 — workspace migration contract + Phase 2 — Cargo root cutover.
 
 ---
 
-### Pitfall 2: FCX Global State Reset Silently No-Ops Under Contention
+### Pitfall 2: Path-Dependency Fan-Out Rewrite Is Incomplete
 
-**What goes wrong:** `FcxModeHandler::reset_global_state()` at `fcx_handler.rs:295-298` uses `try_lock()` on `GLOBAL_FCX_HANDLER`. If ANY thread holds the mutex (e.g., a concurrent batch scan is running), the reset is silently skipped. The next scan session inherits stale FCX state -- detected issues from a previous scan appear in the new scan's results.
+**What goes wrong:**
+Some crates still depend on `../../foundation/...` or `../../business-logic/...` paths that were correct under `ClassicLib-rs/` but are wrong after the move. A few crates build; others fail later, usually in bindings or C++ bridge crates with the highest path fan-out.
 
-**Why it happens:** The `try_lock()` pattern was chosen to avoid deadlock in concurrent contexts, but the tradeoff is silent failure. The docstring says "thread-safe and can be called from multiple threads without risk of data races" which is technically true but misleading -- it IS safe from data races, but it is NOT safe from stale state.
+**Why it happens:**
+This repo has a large number of explicit local `path = "..."` dependencies across core crates, Python crates, the Node crate, the TUI crate, and the C++ bridge. The move is not just a workspace-member edit; it is a workspace-wide relative-path rewrite.
 
-**Consequences:**
-- Stale FCX `detected_issues` from scan N appear in scan N+1 results
-- C++ bridge and Node bindings don't even call `reset_global_state()` at all (documented in CONCERNS.md), so every multi-scan session in those bindings accumulates FCX state
-- This is a correctness bug, not just a performance issue -- users see wrong results
+**How to avoid:**
+- Inventory all `path =` entries before moving anything.
+- Rewrite manifests mechanically, not by hand crate-by-crate.
+- After the rewrite, run `cargo metadata`, `cargo check --workspace`, and targeted `cargo check -p classic-cpp-bridge -p classic-node` from the new root.
+- Add a validation script/grep in the roadmap that fails if any `Cargo.toml` still contains a path segment anchored to the old depth.
 
-**Prevention:**
-1. **Replace `try_lock()` with `lock()` and a timeout.** If the lock cannot be acquired within a reasonable window (e.g., 100ms), log a warning and return an error rather than silently succeeding.
-2. **Add reset calls to C++ bridge and Node binding scan entry points.** The bridge `scan_crashlogs_batch` and Node `scanLogsBatch` must call `reset_global_state()` BEFORE initiating a new scan session.
-3. **Make reset observable:** Change `reset_global_state()` to return a `Result<(), FcxResetError>` or `bool` so callers know whether the reset actually happened.
-4. **Test the contention case:** Hold the mutex from a spawned thread, call `reset_global_state()`, assert that either it blocks until success or returns an error -- never silently succeeds.
+**Warning signs:**
+- A subset of crates build, but `classic-cpp-bridge`, `classic-node`, or `classic-*-py` fails with missing local dependency errors.
+- Grep still finds old relative paths in moved manifests.
 
-**Detection:**
-- FCX results contain issues from a scan that was not the current one
-- Repeated scans in the same process show growing `detected_issues` lists
-- Integration tests that run two scans in sequence see ghost results from scan 1 in scan 2
-
-**Phase to address:** Must be addressed in the FCX hardening phase, BEFORE exposing FCX reset to C++ bridge and Node bindings. Fix the reset mechanism first, then wire it to new binding surfaces.
+**Phase to address:**
+Phase 2 — manifest/path rewrite.
 
 ---
 
-### Pitfall 3: AhoCorasick Match Semantics Differ From Regex in Ways That Change Results
+### Pitfall 3: Frontend and Wrapper Scripts Still Target `ClassicLib-rs`
 
-**What goes wrong:** Replacing per-entry `Regex::new` in `detect_mods_important` (mod_detector.rs:524) with an AhoCorasick automaton changes which mods are detected, because AhoCorasick's default `MatchKind::Standard` reports the first match found by the automaton walk, not the leftmost-longest match that `Regex` returns.
+**What goes wrong:**
+Rust itself may build from repo root, but the real product entrypoints break: CLI/GUI CMake still points to `../ClassicLib-rs/Cargo.toml`, PowerShell rebuild scripts still look for `ClassicLib-rs/python-bindings/.venv`, and VS-dev-shell helpers still launch in old directories.
 
-**Why it happens:** Three distinct semantic differences between AhoCorasick and Regex:
+**Why it happens:**
+The operational surface is bigger than Cargo. Current repo files hardcode the old root in:
+- `classic-cli/CMakeLists.txt`
+- `classic-gui/CMakeLists.txt`
+- `rebuild_rust.ps1`
+- `tools/enter_vs_dev_shell.ps1`
 
-1. **Match reporting order:** AhoCorasick `Standard` mode reports matches "as they are seen" during automaton traversal. If pattern "Mod" and pattern "ModManager" are both in the automaton and the text contains "ModManager", `Standard` mode will report "Mod" because it's found first during traversal. Regex with alternation `Mod|ModManager` (longest-first-sorted, as the current code does) would match "ModManager".
+**How to avoid:**
+- Make wrapper/script rewiring its own roadmap phase, not a cleanup footnote.
+- Replace hardcoded `ClassicLib-rs/...` joins with variables derived from repo root + new workspace root.
+- Validate through real entrypoints, not just Cargo:
+  - `pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test`
+  - `pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test`
+  - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target workspace`
+  - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python ...`
 
-2. **Substring vs whole-pattern:** AhoCorasick matches anywhere within the haystack, like `str::contains()`. The current `detect_mods_important` code escapes its patterns with `regex::escape` and wraps in `(?i)`, effectively doing case-insensitive substring search. This IS equivalent to AhoCorasick with `ascii_case_insensitive(true)`, but ONLY if `MatchKind::LeftmostLongest` is used.
+**Warning signs:**
+- Cargo passes, but CLI/GUI configure fails with a missing manifest/include path.
+- `rebuild_rust.ps1` errors that `.venv` or `Cargo.toml` cannot be found under `ClassicLib-rs`.
 
-3. **Overlapping patterns:** If mod entries have patterns where one is a prefix/substring of another (e.g., "ENB" vs "ENBSeries"), AhoCorasick `Standard` will match "ENB" and skip "ENBSeries" at the same position. `LeftmostFirst` would also prefer "ENB" if it was added first. Only `LeftmostLongest` preserves the current regex behavior.
-
-**Consequences:**
-- Mods with shorter names that are prefixes of other mods get false-positive matches
-- Mods with longer names that contain shorter mod names as prefixes get missed
-- GPU-specific mod detection logic (`entry.gpu` checks) fires on wrong mods
-- Results differ between pre-optimization and post-optimization code, breaking parity
-
-**Prevention:**
-1. **Use `MatchKind::LeftmostLongest`** when building the AhoCorasick automaton. This is the closest semantic equivalent to the current regex behavior.
-2. **Use `ascii_case_insensitive(true)`** on the builder to match the current `(?i)` behavior.
-3. **Sort patterns longest-first** before adding to the automaton, matching the existing `detect_mods_single` sort pattern.
-4. **Write before/after parity tests:** Run both the regex path and the AhoCorasick path against the same input data and assert identical match sets before removing the regex path.
-5. **Handle exclusions post-match:** The current per-entry loop checks `is_excluded()` before matching. With AhoCorasick, match all patterns first, then apply exclusion filtering. This changes the control flow and requires careful preservation of the `gpu_mismatch` / `gpu_matches_user` per-entry logic.
-
-**Detection:**
-- Before/after criterion benchmarks should include result comparison, not just timing
-- Parity tests showing different mod detection results for the same input
-- Existing test fixtures should be run against both paths
-
-**Phase to address:** Performance optimization phase. Build AhoCorasick implementation alongside existing regex path, run parity tests, then swap.
-
-**Sources:**
-- [AhoCorasick MatchKind documentation](https://docs.rs/aho-corasick/latest/aho_corasick/enum.MatchKind.html)
-- [Regex issue #891 - AhoCorasick for literal alternations](https://github.com/rust-lang/regex/issues/891)
+**Phase to address:**
+Phase 3 — wrapper/front-end integration rewiring.
 
 ---
 
-### Pitfall 4: Replacing Unbounded DashMap Caches with LRU Introduces Performance Regression
+### Pitfall 4: Parity Tools and Generated-Artifact Commands Keep Writing to Old Paths
 
-**What goes wrong:** The project plan calls for adding LRU capacity eviction to `YAML_CACHE` (DashMap in `classic-yaml-core`), `SETTINGS_CACHE` (DashMap in `classic-settings-core`), and `HASH_CACHE` (DashMap in `classic-file-io-core`). Wrapping a DashMap in an LRU layer introduces lock contention on every access because LRU requires updating a doubly-linked list (reordering the accessed element to the front) on every GET, not just on INSERT.
+**What goes wrong:**
+Parity gates, baseline generators, d.ts freshness checks, and stub validation keep reading or writing `ClassicLib-rs/...` artifact locations. The move looks successful until parity or freshness jobs run, then they either fail outright or regenerate files into abandoned directories.
 
-**Why it happens:** DashMap uses shard-level locking -- concurrent reads to different shards don't contend. An LRU wrapper requires exclusive write access to the ordering structure on every read, converting all reads into writes from a concurrency perspective. The `lru` crate (already in the workspace at `0.16.3`) is single-threaded and requires an external mutex. The `quick_cache` crate (already in workspace at `0.6`, already used in `classic-file-io-core/src/core.rs`) is lock-free and concurrent.
+**Why it happens:**
+The parity tooling is path-encoded, not discovery-based. Current defaults in `tools/python_api_parity/*`, `tools/node_api_parity/*`, and `tools/cxx_api_parity/*` point directly at `ClassicLib-rs/...` source and artifact paths. Node `package.json` scripts also assume the old depth (`../../../tools/... --repo-root ../../..`).
 
-**Consequences:**
-- Batch scanning of 50+ crash logs (the primary use case) hits the cache on every mod detection call across all Rayon threads
-- Single-mutex LRU becomes a serialization point for parallel scan operations
-- Throughput regression on the hot path, potentially worse than the unbounded DashMap it replaces
-- Under-sized LRU capacity causes cache thrashing: entries evicted and re-loaded in a tight loop
+**How to avoid:**
+- Treat parity-tool rewiring as first-class migration work.
+- Update default paths and script relative paths in the same change as the directory move.
+- Re-run all three gates after rewiring:
+  - `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`
+  - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
+  - Node parity from the new `node-bindings/classic-node` location
+- Add a sweep that fails if any tool default still contains `ClassicLib-rs/`.
 
-**Prevention:**
-1. **Use `quick_cache::sync::Cache` instead of `lru` + `Mutex`/`DashMap`.** This is already a workspace dependency and already used in `classic-file-io-core` for file content caching. It provides lock-free concurrent LRU semantics without requiring an external mutex.
-2. **Size caches based on measured workloads:** Instrument current cache sizes under real workloads before choosing capacity. The YAML cache typically holds 5-15 files; setting capacity to 32-64 is safe. The hash cache grows with scanned files; capacity should be at least 2x the typical scan batch size.
-3. **Benchmark before and after with criterion:** The benchmark must use `detect_mods_batch` on a realistic number of crash logs to exercise concurrent cache access under contention.
-4. **Keep `clear()` methods:** All three caches already expose `clear()` functions. The `quick_cache` `Cache` type supports `clear()`.
-5. **Preserve `DashMap` iteration semantics:** `YAML_CACHE` has `get_yaml_cache_stats()` which iterates over entries to sum sizes. `quick_cache` does NOT support iteration. If stats collection is needed, track size metadata separately (e.g., an `AtomicUsize` incremented on insert, decremented on evict).
+**Warning signs:**
+- Gate reports missing source files even though the crate exists at its new location.
+- Freshness/parity artifacts appear under a recreated `ClassicLib-rs/` subtree.
+- Node scripts fail because `../../../tools/...` is now the wrong relative depth.
 
-**Detection:**
-- Criterion benchmarks showing throughput regression after cache replacement
-- Higher lock contention in `perf` or `tokio-console` traces during batch scans
-- Cache hit rate drops below 90% (indicates capacity too small)
-
-**Phase to address:** Cache bounding phase. Benchmark first to establish baseline, then swap implementation.
-
----
-
-## Moderate Pitfalls
-
-Mistakes that cause delays, test failures, or subtle behavioral changes.
-
-### Pitfall 5: `map_copy()` on Windows Doubles Memory Usage for Large Files
-
-**What goes wrong:** Switching from `Mmap::map()` to `MmapOptions::new().map_copy()` in `read_file_mmap` (file-io-core/src/core.rs:1050) eliminates the TOCTOU issue but creates a copy-on-write mapping. On Windows, this means the OS allocates physical memory pages for the private copy as soon as ANY read triggers a page fault, because Windows' copy-on-write for file mappings backed by `PAGE_WRITECOPY` protection commits pages differently than Linux's lazy CoW.
-
-**Why it happens:** `map_copy()` uses `PAGE_WRITECOPY` protection on Windows via `CreateFileMapping` + `MapViewOfFile`. While Linux lazily shares pages until a write occurs, Windows may commit pages to the page file immediately for CoW mappings. For read-only access (which is all `read_file_mmap` does), this is unnecessary overhead.
-
-**Consequences:**
-- Files >1MB (the mmap threshold) use roughly 2x the memory: one copy in the filesystem cache, one in the process's private page set
-- For a batch scan of 50+ crash logs where some are multi-MB, this adds up
-- Performance regression from additional page fault handling
-
-**Prevention:**
-1. **Use `map_copy_read_only()` instead of `map_copy()`.** This was added to `memmap2` to provide CoW semantics with read-only access -- the mapping is isolated from external changes but doesn't allocate private pages for writes (since writes are prohibited). This is the correct choice for a read-only scan path.
-2. **Benchmark the three options:** `map()` (current, unsafe), `map_copy()` (CoW with write), `map_copy_read_only()` (CoW read-only). Criterion benchmark on a representative set of large crash log files.
-3. **The function is already `async` and calls `File::open` synchronously.** Consider whether the sync `File::open` + mmap is actually better than `tokio::fs::read` for the file sizes involved (1-10MB). Profile both paths.
-
-**Detection:**
-- Working set memory increases after switching mmap strategy
-- Criterion benchmarks show throughput regression on the `read_file_mmap` path
-- Windows Task Manager shows higher "Commit charge" per scan process
-
-**Phase to address:** Security/TOCTOU hardening phase.
-
-**Sources:**
-- [memmap2 MmapOptions documentation](https://docs.rs/memmap2/latest/memmap2/struct.MmapOptions.html)
-- [Windows memory-mapped file IO behavior](https://www.jeremyong.com/winapi/io/2024/11/03/windows-memory-mapped-file-io/)
+**Phase to address:**
+Phase 3 — tooling/parity rewiring, before any baseline refresh.
 
 ---
 
-### Pitfall 6: Workspace Dependency Promotion Silently Enables Unwanted Features
+### Pitfall 5: Stale Build Caches and Generated Outputs Make the Move Look Green
 
-**What goes wrong:** Promoting `winreg = "0.52"` and `phf = { version = "0.13.1", features = ["macros"] }` to `[workspace.dependencies]` can silently enable features in crates that did not previously use them, because Cargo's dependency resolver unifies features across the entire workspace.
+**What goes wrong:**
+CI or local runs appear green because they reuse old `ClassicLib-rs/target`, old parity-artifact directories, old `dist/`, or an old Python `.venv`. Then a clean machine fails because the real new-root paths were never exercised.
 
-**Why it happens:** Cargo follows an additive feature model. When `phf` is declared at the workspace level with `features = ["macros"]`, every crate that depends on `phf` (even if only one today) gets the `macros` feature. If a second crate later adds `phf` without `features = ["macros"]`, it still gets `macros` because the workspace-level declaration includes it. The inverse problem is worse: if the workspace declares `phf` WITHOUT `macros`, but `classic-constants-core` needs `macros`, the crate must add `features = ["macros"]` to its local `{ workspace = true }` declaration -- and this is easy to forget, causing a build failure.
+**Why it happens:**
+This repo caches and documents many path-sensitive artifacts:
+- CI caches `ClassicLib-rs/target`
+- benchmarks use `ClassicLib-rs/target/criterion`
+- Python uses `ClassicLib-rs/python-bindings/.venv`
+- parity artifacts live under binding-specific directories
 
-**Consequences:**
-- Build failures when a crate needs a feature the workspace didn't declare
-- Unnecessary compile-time dependencies (PHF macros trigger proc-macro compilation in crates that don't use compile-time maps)
-- For `winreg`: Windows-only dependency leaks into cross-compilation targets unless properly gated with `[target.'cfg(windows)'.dependencies]`
+In a root move, stale artifacts can hide missing rewires.
 
-**Prevention:**
-1. **Declare workspace deps with the minimal feature set.** Add features at the crate level: `phf = { workspace = true, features = ["macros"] }` in `classic-constants-core`.
-2. **Gate `winreg` on Windows target** at the workspace level: `[workspace.dependencies] winreg = { version = "0.52", ... }` AND at the crate level: `[target.'cfg(windows)'.dependencies] winreg = { workspace = true }`.
-3. **Test cross-compilation** (even if not targeting Linux in production) to catch accidental Windows-only dependency leaks.
-4. **Check the default-features interaction:** Known Cargo issue [#12162](https://github.com/rust-lang/cargo/issues/12162) -- if the workspace sets `default-features = false`, individual crates cannot re-enable default features easily. For `winreg` and `phf`, keep `default-features = true` at the workspace level.
+**How to avoid:**
+- Add a dedicated clean-state validation phase after path rewrites.
+- Delete or invalidate old-path caches before claiming success.
+- On CI, update cache keys and cache paths in the same PR as the move.
+- On local validation, run at least one clean build/test with old target/artifact directories absent.
+- Explicitly check that no new files are created under `ClassicLib-rs/` after the move.
 
-**Detection:**
-- `cargo build` succeeds but `cargo build --target x86_64-unknown-linux-gnu` fails (if ever attempted)
-- Feature unification warnings in `cargo tree -e features`
-- Build time increases from proc-macro compilation in crates that don't need it
+**Warning signs:**
+- Incremental builds pass but clean builds fail.
+- CI uploads artifacts from `ClassicLib-rs/...` after the supposed cutover.
+- A new empty `ClassicLib-rs/` directory reappears during validation.
 
-**Phase to address:** Dependency management phase. Small and mechanical, but verify with `cargo tree` after promotion.
-
-**Sources:**
-- [Cargo workspace dependencies and default-features issue](https://github.com/rust-lang/cargo/issues/12162)
-- [Cargo features documentation](https://doc.rust-lang.org/cargo/reference/features.html)
-
----
-
-### Pitfall 7: Criterion Benchmarks Measure Wrong Thing Due to Optimizer Elision
-
-**What goes wrong:** Adding criterion benchmarks for `detect_mods_important`, `detect_mods_single`, and `detect_mods_batch` shows unrealistically fast times because LLVM optimizes away the computation. The benchmark calls a function, discards the result, and the optimizer removes the entire call chain.
-
-**Why it happens:** Criterion uses `iter()` which takes a closure. If the closure's return value is never used (or if the inputs are compile-time constants), LLVM's optimization passes can eliminate the computation entirely. This is especially likely for:
-- Functions that return `Vec<String>` where the Vec is immediately dropped
-- Functions where inputs don't change between iterations (constant folding)
-- Functions with no observable side effects
-
-**Consequences:**
-- Benchmarks show sub-microsecond times for operations that actually take milliseconds
-- Before/after comparisons are meaningless
-- Decisions based on benchmark data lead to wrong optimization choices
-- Benchmark results don't reproduce in real workloads
-
-**Prevention:**
-1. **Use `criterion::black_box()` on ALL inputs AND outputs.** Both matter. Inputs prevent constant folding; output prevents dead code elimination.
-   ```rust
-   b.iter(|| {
-       let result = detect_mods_important(
-           black_box(&entries),
-           black_box(&plugins),
-           black_box(Some("NVIDIA")),
-           black_box(&modules),
-       );
-       black_box(result)
-   })
-   ```
-2. **Use `iter_batched()` for setup-heavy benchmarks.** When testing regex/AhoCorasick compilation separately from matching, use `iter_batched` with `BatchSize::SmallInput` to separate setup from the measured operation.
-3. **Disable quick-mode:** Never run criterion with `--quick`. Quick mode reduces sample size and skips warm-up, making benchmarks susceptible to frequency scaling, thermal throttling, and context switches.
-4. **Pin CPU frequency** on the benchmark machine (Windows: set power plan to "High Performance"). Turbo boost causes variance between runs.
-5. **Verify benchmarks are measuring what you think:** Add an assertion inside the benchmark closure (only during development) to confirm the result is non-empty. Remove the assertion for actual timing runs.
-6. **Note version inconsistency:** The workspace declares `criterion` at multiple versions -- `classic-scanlog-core` uses `criterion 0.6.0` in dev-dependencies while the stack analysis mentions `0.5/0.6/0.8`. Standardize on one version across all benchmark targets.
-
-**Detection:**
-- Benchmark shows <1us for a function that processes 100+ regex patterns against thousands of strings
-- "Performance improved by 99%" without code changes between runs (optimizer behavior changed)
-- Results don't match wall-clock profiling with `cargo flamegraph`
-
-**Phase to address:** Performance benchmarking phase. Set up the benchmark harness correctly before measuring any optimizations.
-
-**Sources:**
-- [Criterion FAQ - optimizer issues](https://bheisler.github.io/criterion.rs/book/faq.html)
-- [Criterion unstable benchmarks issue #485](https://github.com/bheisler/criterion.rs/issues/485)
+**Phase to address:**
+Phase 4 — artifact/cache invalidation + clean validation.
 
 ---
 
-### Pitfall 8: Test Isolation Breaks When Refactoring Global Singletons
+### Pitfall 6: Docs, Planning, and Agent Context Drift Far Behind the Code Move
 
-**What goes wrong:** The codebase has multiple global singletons: `GLOBAL_FCX_HANDLER` (parking_lot Mutex), `YAML_CACHE` (DashMap via Lazy), `SETTINGS_CACHE` (DashMap via Lazy), `HASH_CACHE` (DashMap via LazyLock), and `VersionRegistry` (OnceLock). Refactoring any of these (e.g., replacing DashMap with quick_cache, changing the lock type on FCX handler) can break test isolation because Rust tests run in parallel within a single process by default.
+**What goes wrong:**
+The code is moved, but contributor instructions, planning docs, API docs, agent skills, and milestone validation docs still encode `ClassicLib-rs/...`. Humans and automation then keep reintroducing old paths in follow-up work.
 
-**Why it happens:** `cargo test` runs all `#[test]` functions in the same binary as parallel threads. Global statics are shared across all tests. If test A populates `YAML_CACHE` and test B expects it empty, B fails non-deterministically based on execution order. The existing code already handles this with `YAML_CACHE.clear()` calls in test setup (e.g., `classic-yaml-core/src/lib.rs:1490`), but refactoring the cache type can break these clear patterns.
+**Why it happens:**
+This repo has a very large documentation/agent surface. A broad sweep already finds pervasive `ClassicLib-rs` references across `.planning/`, `docs/`, repo guidance, and tests. In this codebase, stale documentation is not cosmetic; it actively drives future edits and validations.
 
-**Consequences:**
-- Tests pass when run individually (`cargo test -- test_name`) but fail when run together (`cargo test`)
-- Non-deterministic CI failures ("it worked on my machine")
-- Replacing DashMap with quick_cache breaks existing `.clear()` and `.contains_key()` calls in tests because the APIs differ
-- OnceLock-based singletons (VersionRegistry) CANNOT be reset at all -- tests must accept the first-initialized value
+**How to avoid:**
+- Give doc/agent cleanup its own roadmap phase with explicit scope.
+- Prioritize high-authority sources first: `AGENTS.md`, `CLAUDE.md`, project skill docs, `docs/api/README.md`, quick starts, CI guides, testing guides, and active milestone/project docs.
+- Run grep-based audits before closure, not after.
+- Update validation/proof docs so future phases do not keep using `--manifest-path ClassicLib-rs/Cargo.toml`.
 
-**Prevention:**
-1. **Preserve the test-clearing API.** When replacing cache implementations, ensure `clear()` remains available with identical semantics. `quick_cache::sync::Cache` has `.clear()`, so this works. But `quick_cache` does NOT have `.contains_key()` -- tests using `YAML_CACHE.contains_key(...)` assertions must be rewritten.
-2. **Run tests with `-- --test-threads=1`** as a validation step after global state refactoring to confirm no ordering dependency.
-3. **Add `#[cfg(test)] pub fn reset_for_tests()` methods** to global singleton wrappers so test cleanup is explicit and maintained.
-4. **Do not attempt to make VersionRegistry resettable.** The PROJECT.md explicitly marks this as out of scope ("OnceLock design is intentional; process-restart isolation is acceptable").
-5. **For FCX handler refactoring:** If changing from `try_lock()` to `lock()`, ensure the test that holds the mutex during contention testing doesn't deadlock the entire test suite.
+**Warning signs:**
+- New plans or PRs copy `ClassicLib-rs/...` commands after the move.
+- Agent instructions and API docs disagree with the live tree.
+- Planning validation tests still assert old paths.
 
-**Detection:**
-- `cargo test` passes locally but fails in CI (different thread scheduling)
-- Tests that previously passed start failing after cache refactoring
-- Deadlock in test suite (no output, process hangs) after changing lock types
-
-**Phase to address:** Every phase that touches global state. Add singleton reset-for-tests methods early.
+**Phase to address:**
+Phase 5 — docs/agent/planning reconciliation.
 
 ---
 
-### Pitfall 9: Workspace Lint Configuration Is Not Inherited
+### Pitfall 7: Validation Tests Encode the Old Topology and Block Closure Late
 
-**What goes wrong:** The workspace `Cargo.toml` defines `[workspace.lints.rust]` with `deprecated = "deny"` and `unused = "deny"`, but NO crate in the workspace has `[lints] workspace = true`. Each crate that uses lints defines its own `[lints.rust]` section (e.g., `classic-scanlog-core/Cargo.toml:84`). Adding a new crate or modifying lint policies at the workspace level has no effect.
+**What goes wrong:**
+The migration seems complete until planning tests, parity-tool tests, or synthetic repo tests fail because fixtures and assertions still require `ClassicLib-rs/...` paths. This usually happens late, after most mechanical work is already merged locally.
 
-**Why it happens:** Cargo requires crates to opt-in to workspace lint inheritance with `[lints] workspace = true`. Simply defining `[workspace.lints]` does not propagate. The workspace and crate definitions are currently independent, and they happen to match only because they were manually synchronized.
+**Why it happens:**
+Repo tests in `tests/planning/` and under `tools/*_api_parity/tests/` contain hardcoded path assertions. They are easy to miss because they are not the main product tests, but they are exactly the tests that enforce repo contract drift.
 
-**Consequences:**
-- Changing the workspace lint level (e.g., upgrading `missing_docs` from "warn" to "deny") does nothing
-- New crates added to the workspace get Rust's defaults unless they copy the lint section
-- Inconsistent lint enforcement across crates -- some may be stricter than others
-- The workspace lint section gives a false sense of centralized control
+**How to avoid:**
+- Inventory test files with `ClassicLib-rs` references before the move.
+- Rewrite them in the same phase as tooling/docs updates.
+- Run planning/tooling suites explicitly, not just product builds.
+- Add one migration-specific test that asserts the old root is absent from active commands and canonical paths.
 
-**Prevention:**
-1. **If centralizing lints is desired:** Add `[lints] workspace = true` to every crate's `Cargo.toml` and remove crate-local `[lints.rust]` sections. But be aware this is a significant change -- some crates have stricter lints (like `unsafe_code = "deny"`) that would need to be either promoted to workspace level or kept as crate-level overrides.
-2. **If keeping per-crate lints:** Document that `[workspace.lints]` is NOT the source of truth and that lint policy lives in each crate. Consider removing the workspace lint section to avoid confusion.
-3. **Either way, do not assume workspace lints are enforced.** Verify by checking each crate's `Cargo.toml`.
+**Warning signs:**
+- Product builds pass, but `tests/planning` or `tools/*_api_parity/tests` fails on string/path assertions.
+- Synthetic test repos still generate a `ClassicLib-rs` subtree.
 
-**Detection:**
-- `cargo clippy` passes despite workspace-level lint changes
-- New crate has no lint section and compiles with default (lenient) lints
-- grep for `[lints.rust]` or `[lints] workspace` across Cargo.toml files
-
-**Phase to address:** Dependency/workspace management phase. Decide on lint strategy and execute uniformly.
+**Phase to address:**
+Phase 5 — validation-contract updates.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 8: Hidden Relative Fixture / Include / Benchmark Paths Break After Move
 
-Mistakes that cause annoyance, confusion, or wasted time but are recoverable.
+**What goes wrong:**
+Less obvious relative paths inside source, benches, bridge tests, or packaging scripts break after the move. These are not Cargo dependency paths; they are runtime fixture paths, include roots, benchmark working directories, and generated-header locations.
 
-### Pitfall 10: Cached LogParser in C++ Bridge Creates Thread-Safety Concern
+**Why it happens:**
+The repo contains path-sensitive internals such as:
+- fixture paths in bridge/tests/bench code
+- benchmark workflow `working-directory: ClassicLib-rs`
+- CMake bridge include paths under `ClassicLib-rs/cpp-bindings/...`
+- Criterion and profiling docs/scripts anchored to `ClassicLib-rs/target/...`
 
-**What goes wrong:** Replacing per-call `LogParser::new(None)` in `detect_crash_pattern` (scanner.rs:671) with a `Lazy<LogParser>` or `LazyLock<LogParser>` at module level introduces a shared mutable state concern. `LogParser` has a `PatternCache` (DashMap) that is populated during matching. If `detect_crash_pattern` is called from multiple threads via the C++ bridge (which is possible during batch scans), the shared `LogParser` instance must be confirmed thread-safe.
+These are usually discovered only when niche workflows run.
 
-**Why it happens:** The fix seems obvious ("just cache it!") but `LogParser` may hold state that changes during parsing. The `PatternCache` inside it uses DashMap, which IS thread-safe, but `add_pattern` modifications to the pattern set during concurrent reads could produce inconsistent results.
+**How to avoid:**
+- Add a targeted path audit for non-manifest path consumers.
+- Validate at least one benchmark/profiling path and one bridge/test fixture path after the move.
+- Search for `ClassicLib-rs/`, `../..`, and known old include roots in `.rs`, `.ps1`, `.yml`, `.md`, `CMakeLists.txt`, and package manifests.
 
-**Prevention:**
-1. **Verify `LogParser` is `Send + Sync` at compile time:** Add a static assertion `const _: () = { fn assert_send_sync<T: Send + Sync>() {} assert_send_sync::<LogParser>(); };`
-2. **Do not allow pattern mutation after initialization.** The cached parser should be initialized once with the full pattern set and never modified.
-3. **Prefer `LazyLock<LogParser>` over `Lazy<Mutex<LogParser>>`.** If the parser is truly read-only after initialization, no mutex is needed.
+**Warning signs:**
+- Benchmarks fail only in CI or only on clean machines.
+- C++ bridge compiles but fixture-based tests fail.
+- Docs and scripts still point to `ClassicLib-rs/target/criterion` after cutover.
 
-**Detection:**
-- Data races or inconsistent match results under high concurrency
-- Miri or thread sanitizer detects concurrent access violations
-- Batch scans return different results than single scans
-
-**Phase to address:** Performance optimization phase, specifically the C++ bridge parser caching work.
-
----
-
-### Pitfall 11: `detect_mods_important` Refactoring Loses Per-Entry Exclusion Logic
-
-**What goes wrong:** Converting the per-entry loop in `detect_mods_important` to a bulk AhoCorasick match loses the ability to check `is_excluded()` and per-entry `gpu` fields BEFORE deciding whether a match matters. The current control flow is: for each entry, check exclusion, THEN match. A bulk AhoCorasick approach matches everything first, then must retroactively apply exclusion and GPU logic.
-
-**Why it happens:** AhoCorasick finds ALL pattern matches in a single pass over the haystack. There's no way to "skip" certain patterns during the search based on external state (like exclusion lists or GPU presence).
-
-**Prevention:**
-1. **Two-phase approach:** Run AhoCorasick to get all raw matches, then filter matches through the per-entry exclusion and GPU logic in a second pass.
-2. **Map AhoCorasick match IDs back to entries:** Use `PatternID` from AhoCorasick matches to index back into the entries slice, retrieving the associated `exclude_when`, `gpu`, `name`, and `description` fields.
-3. **Preserve the "entry not found" branch:** The current code emits "not installed" messages for entries where the GPU matches but the mod wasn't found. This negative-result logic must survive the refactoring.
-
-**Detection:**
-- Missing "not installed" messages for expected-but-absent mods
-- GPU mismatch warnings no longer appearing
-- Exclusion logic no longer filtering results
-
-**Phase to address:** Performance optimization phase, alongside Pitfall 3 (AhoCorasick semantics).
+**Phase to address:**
+Phase 4 — nonstandard path consumer audit, then rechecked in Phase 5.
 
 ---
 
-### Pitfall 12: `zerovec` Workaround Breaks Silently on Slint Upgrade
+## Technical Debt Patterns
 
-**What goes wrong:** `classic-shared-core` has a dev-dependency `zerovec = { version = "0.11", features = ["alloc"] }` documented as a workaround for Slint's transitive `icu_properties` dependency. Upgrading Slint from 1.15.0 to a newer version may change the `icu_properties` version, which may change the `zerovec` version requirement, breaking the workaround.
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Leave a live `ClassicLib-rs/Cargo.toml` “for compatibility” | Fewer immediate edits | Dual-workspace ambiguity and future path drift | Never, unless it is an explicit tombstone shim with no live `[workspace]` authority |
+| Update Cargo only, defer docs/tools/scripts | Faster initial green build | Follow-up PRs keep reintroducing stale paths | Never for this repo |
+| Keep old CI cache/artifact paths until later | Fewer workflow edits | False greens from stale outputs | Never |
+| Hand-edit manifests one by one | Feels safe | Missed path rewrites in high-fan-out crates | Only if backed by a complete inventory + grep-based closure audit |
 
-**Why it happens:** The workaround pins a specific `zerovec` version. Slint's dependency chain is: `slint -> icu_properties -> zerovec`. If Slint upgrades `icu_properties`, which upgrades `zerovec` to 0.12+, the pinned `0.11` dev-dependency conflicts.
+## Integration Gotchas
 
-**Prevention:**
-1. **Add a CI check** that builds `classic-shared-core` with the `gui-bridge` feature in isolation and fails with a clear message if the zerovec workaround is stale.
-2. **Add a `# FIXME` comment** in the Cargo.toml referencing the upstream Slint issue number so it's findable by grep.
-3. **Test the `gui-bridge` feature specifically** after any Slint version bump.
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| CMake frontends | Only updating Rust workspace, not `MANIFEST_PATH` or bridge include dirs | Rewire `classic-cli/CMakeLists.txt` and `classic-gui/CMakeLists.txt` in the same phase as workspace cutover |
+| Node binding package | Forgetting `package.json` script depth changes | Recompute relative `tools/...` paths and rerun Bun + Node parity/runtime commands from the new directory |
+| Python bindings | Moving crates but leaving `.venv`, `requirements-ci.txt`, or `validate_stubs.py` paths anchored to `ClassicLib-rs` | Rewire all Python commands and stub-validation defaults together |
+| CI caches/artifacts | Updating commands but not cache/upload paths | Change command paths, cache paths, and artifact upload paths in the same PR |
+| Benchmark workflow | Keeping `working-directory: ClassicLib-rs` and `ClassicLib-rs/target/...` baseline paths | Move working directory and criterion cache roots together, then run one benchmark smoke validation |
 
-**Detection:**
-- Build fails with zerovec version conflict after Slint upgrade
-- Feature-gated `gui-bridge` build fails in CI while default build succeeds
+## Performance Traps
 
-**Phase to address:** Dependency management phase.
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Huge grep-only cleanup deferred to the end | Late-stage surprise failures in docs/tests/scripts | Front-load a path inventory and classify authoritative vs archival references | Immediately in a repo with dense planning/docs surfaces like this one |
+| Relying on incremental builds after path surgery | Clean CI fails, local incremental build passes | Require one clean-state validation after move | As soon as stale `target`/artifact directories exist |
+| Refreshing baselines before path rewiring is complete | Parity artifacts regenerated into wrong directories | Rewire paths first, refresh artifacts second | Immediately when parity jobs run |
 
----
+## Security / Integrity Mistakes
 
-## Phase-Specific Warnings
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Accidentally committing generated artifacts from a recreated legacy subtree | Confusing source of truth and noisy diffs | Assert `ClassicLib-rs/` stays absent or empty after cutover and audit `git status` before closure |
+| Letting CI upload diagnostics from old directories | Misleading failure analysis and false confidence | Update upload-artifact paths in the same change as the move |
 
-| Phase Topic | Likely Pitfall | Severity | Mitigation |
-|---|---|---|---|
-| Deprecated API removal | Silent FFI consumer breakage (#1) | CRITICAL | Binding-side deprecation warnings first, two-phase removal |
-| FCX state hardening | Silent no-op reset under contention (#2) | CRITICAL | Replace `try_lock()` with timeout-based lock, return Result |
-| AhoCorasick optimization | Semantic mismatch with regex (#3) | CRITICAL | Use `LeftmostLongest` match kind, parity tests |
-| Cache bounding (LRU) | Throughput regression from lock contention (#4) | HIGH | Use `quick_cache` (already in workspace), not `lru` + Mutex |
-| mmap TOCTOU fix | Memory doubling on Windows (#5) | MODERATE | Use `map_copy_read_only()`, benchmark three strategies |
-| Workspace dep promotion | Feature flag unification (#6) | MODERATE | Declare minimal features at workspace, add at crate level |
-| Criterion benchmarks | Optimizer elision, meaningless numbers (#7) | MODERATE | `black_box()` all inputs/outputs, disable quick mode |
-| Global state refactoring | Test isolation breakage (#8) | MODERATE | Preserve clear() API, add reset_for_tests() methods |
-| Workspace lints | Not actually inherited (#9) | LOW | Decide: centralize with `workspace = true` or document per-crate policy |
-| Bridge parser caching | Thread safety of shared LogParser (#10) | LOW | Static Send+Sync assertion, read-only after init |
-| AhoCorasick refactoring | Lost exclusion/GPU logic (#11) | MODERATE | Two-phase match-then-filter, preserve negative-result branches |
-| Slint dep workaround | Breaks on Slint upgrade (#12) | LOW | CI feature-gate check, FIXME comment |
+## UX / Contributor Pitfalls
 
-## CLASSIC-Specific Considerations
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Commands still require `--manifest-path ClassicLib-rs/Cargo.toml` in docs | Contributors think the move is incomplete or broken | Standardize on repo-root Cargo commands immediately after cutover |
+| Agent docs still route work into `ClassicLib-rs/` | Future AI/human edits keep targeting dead paths | Update high-authority instructions before milestone closure |
 
-Given this codebase's architecture, several pitfalls compound:
+## "Looks Done But Isn't" Checklist
 
-1. **Three binding surfaces multiply API removal risk.** A deprecated method in core must be checked against C++ bridge (CXX), Python (PyO3), and Node (NAPI-RS) consumers. Each binding framework has different deprecation signaling mechanisms. CXX has none. PyO3 can emit Python `DeprecationWarning`. NAPI-RS can mark TypeScript declarations with `@deprecated` JSDoc.
+- [ ] **Workspace cutover:** `cargo metadata` from repo root and subcrates reports the same `workspace_root`.
+- [ ] **Manifest rewrite:** no active `Cargo.toml` still uses old-depth local dependency paths.
+- [ ] **Frontend integration:** CLI and GUI wrappers pass after CMake manifest/include rewiring.
+- [ ] **Parity tooling:** Python, Node, and CXX gate scripts no longer default to `ClassicLib-rs/...` paths.
+- [ ] **Generated artifacts:** CI/cache/upload paths no longer point at `ClassicLib-rs/target` or old parity-artifact dirs.
+- [ ] **Docs/agents:** authoritative instructions no longer tell contributors to use `ClassicLib-rs/Cargo.toml`.
+- [ ] **Legacy tombstone:** running the full validation suite does not recreate or depend on a live `ClassicLib-rs/` subtree.
 
-2. **Parallel scan architecture magnifies cache contention.** `detect_mods_batch` uses `par_iter()` across crash logs. Every cache access inside the parallel closure is a potential contention point. Replacing DashMap (sharded locks, read-friendly) with anything that requires write locks on read (standard LRU) will serialize the parallel scan path.
+## Recovery Strategies
 
-3. **The `deprecated = "deny"` lint in crate-local `[lints.rust]` means you cannot add `#[deprecated]` annotations to existing code AND keep it compiling in the same commit.** The workflow must be: (a) add the deprecated annotation, (b) in the SAME commit, update all callers in that crate, (c) in a LATER commit, update callers in other crates. Or temporarily change `deprecated = "deny"` to `deprecated = "warn"`.
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Dual workspace / partial move | HIGH | Stop feature work, choose one canonical root, rerun `cargo metadata` audits, then revalidate all wrappers and CI commands |
+| Incomplete path-dependency rewrite | MEDIUM | Inventory all `path =` entries, mechanize the rewrite, rerun `cargo check --workspace` and high-fan-out target checks |
+| Wrapper/CI breakage | MEDIUM | Rewire scripts/CMake/workflows together, invalidate stale caches, rerun end-to-end entrypoints |
+| Artifact shadowing | MEDIUM | Delete stale old-path outputs, fix cache/upload paths, rerun from clean state |
+| Docs/agent drift | LOW/MEDIUM | Update authoritative docs first, then planning/API docs, then add grep-based regression checks |
 
-4. **The "parity gate" tooling is your safety net.** Both `check_parity_gate.py` (Python) and `parity:gate:local` (Node) compare binding surfaces against core API shapes. Run these AFTER every binding-touching change. They catch function signature changes but NOT behavioral regressions (semantic parity).
+## Pitfall-to-Phase Mapping
 
-5. **Windows-primary development means Windows-specific mmap/memory behavior is the default case**, not an edge case. All benchmarks and memory measurements should be done on Windows, not Linux/macOS.
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Dual-workspace / partial move | Phase 1-2 | `cargo metadata` shows one canonical `workspace_root`; no live legacy workspace remains |
+| Incomplete path-dependency rewrite | Phase 2 | `cargo check --workspace` plus grep over `Cargo.toml` path dependencies |
+| Frontend/wrapper breakage | Phase 3 | CLI, GUI, rebuild, and shell-entrypoint commands succeed |
+| Parity tool stale-path drift | Phase 3 | All three parity gates run from new paths without recreating old directories |
+| Artifact/cache shadowing | Phase 4 | Clean local/CI runs succeed with old caches removed |
+| Hidden fixture/include/benchmark path breaks | Phase 4 | Benchmark/fixture/path-sensitive smoke checks pass |
+| Docs/agent/planning drift | Phase 5 | Grep/audit of authoritative docs, planning docs, and agent instructions is clean |
+| Validation tests still encode old topology | Phase 5 | `tests/planning` and `tools/*_api_parity/tests` pass under the new topology |
 
 ## Sources
 
-### Official Documentation (HIGH confidence)
-- [AhoCorasick MatchKind](https://docs.rs/aho-corasick/latest/aho_corasick/enum.MatchKind.html) -- match semantic differences
-- [memmap2 MmapOptions](https://docs.rs/memmap2/latest/memmap2/struct.MmapOptions.html) -- map vs map_copy vs map_copy_read_only
-- [Cargo Features](https://doc.rust-lang.org/cargo/reference/features.html) -- additive feature model
-- [Criterion FAQ](https://bheisler.github.io/criterion.rs/book/faq.html) -- optimizer elision, black_box
-
-### GitHub Issues (MEDIUM confidence)
-- [Cargo #12162 - workspace deps and default-features](https://github.com/rust-lang/cargo/issues/12162)
-- [Criterion #485 - unstable benchmarks](https://github.com/bheisler/criterion.rs/issues/485)
-- [Regex #891 - AhoCorasick for literal alternations](https://github.com/rust-lang/regex/issues/891)
-
-### Codebase Source (HIGH confidence)
-- `classic-scanlog-core/src/fcx_handler.rs:295-298` -- try_lock silent drop
-- `classic-scanlog-core/src/mod_detector.rs:524` -- per-entry regex compilation
-- `classic-file-io-core/src/core.rs:1050` -- unsafe Mmap::map
-- `classic-yaml-core/src/lib.rs:156` -- unbounded YAML_CACHE DashMap
-- `classic-settings-core/src/cache.rs:18` -- unbounded SETTINGS_CACHE DashMap
-- `classic-file-io-core/src/hash.rs:51` -- unbounded HASH_CACHE DashMap
-- `classic-scanlog-py/src/parser.rs:98` -- #[allow(deprecated)] on FFI boundary
-- `ClassicLib-rs/Cargo.toml:187-189` -- workspace lints not inherited by any crate
+- Cargo workspaces reference: https://doc.rust-lang.org/cargo/reference/workspaces.html — workspace root semantics, parent discovery, and `workspace.package` path behavior. **HIGH**
+- Cargo manifest reference: https://doc.rust-lang.org/cargo/reference/manifest.html — manifest/root behavior. **HIGH**
+- `ClassicLib-rs/Cargo.toml` — current workspace members/dependencies. **HIGH**
+- `classic-cli/CMakeLists.txt`, `classic-gui/CMakeLists.txt` — frontend manifest/include path coupling. **HIGH**
+- `rebuild_rust.ps1`, `tools/enter_vs_dev_shell.ps1` — wrapper-script coupling to old paths. **HIGH**
+- `.github/workflows/ci-rust.yml`, `ci-python-bindings.yml`, `ci-typescript.yml`, `ci-cpp.yml`, `benchmarks.yml` — cache/artifact/working-directory coupling. **HIGH**
+- `tools/python_api_parity/*`, `tools/node_api_parity/*`, `tools/cxx_api_parity/*` — parity/default-path coupling. **HIGH**
+- `.planning/PROJECT.md` and current `.planning/` / `docs/` path references — stale-path drift risk across planning and documentation surfaces. **HIGH**
 
 ---
-
-*Pitfalls research: 2026-04-04*
+*Pitfalls research for: moving the Rust workspace to the repository root*
+*Researched: 2026-04-11*

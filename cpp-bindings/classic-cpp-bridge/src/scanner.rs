@@ -1,0 +1,1074 @@
+//! Crash log scanning bridge for CXX FFI.
+//!
+//! Bridges `classic_scanlog_core::OrchestratorCore` for crash log analysis.
+//! This is the PRIMARY FEATURE of the CLASSIC application.
+
+use classic_config_core::YamlDataCore;
+use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
+use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
+use classic_scanlog_core::{
+    AnalysisConfig, AnalysisResult, ConfigIssue as CoreFcxConfigIssue, FcxModeHandler,
+    FcxResetError, GLOBAL_FCX_HANDLER, LogParser, OrchestratorCore, ScanProgressPhase,
+    build_analysis_config_from_yaml,
+};
+use classic_settings_core::YamlOperations;
+use classic_shared_core::get_runtime;
+use log::info;
+use std::collections::{HashSet, VecDeque};
+use std::path::Path;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
+use std::time::Duration;
+
+/// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
+pub struct FullScanConfig {
+    inner: AnalysisConfig,
+    db_paths: Vec<PathBuf>,
+}
+
+/// Opaque wrapper around OrchestratorCore.
+pub struct Orchestrator {
+    inner: OrchestratorCore,
+    completed_logs: AtomicU64,
+    db_counter_interval: u64,
+}
+
+const SHORT_SCAN_CACHE_CAPACITY: usize = 30_000;
+const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
+const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
+const SHORT_SCAN_CACHE_TTL_SECS: u64 = BATCH_CACHE_TTL_SECS;
+const DB_COUNTER_LOG_INTERVAL_DEFAULT: u64 = 25;
+
+static CRASH_PATTERN_PARSER: LazyLock<classic_scanlog_core::LogParser> =
+    LazyLock::new(|| LogParser::new(None).expect("default crash-pattern parser should initialize"));
+
+fn diagnostics_enabled() -> bool {
+    std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some()
+}
+
+fn map_progress_phase(phase: ScanProgressPhase) -> ffi::BatchProgressPhase {
+    match phase {
+        ScanProgressPhase::Setup => ffi::BatchProgressPhase::Setup,
+        ScanProgressPhase::Parse => ffi::BatchProgressPhase::Parse,
+        ScanProgressPhase::Analyze => ffi::BatchProgressPhase::Analyze,
+        ScanProgressPhase::Finalize => ffi::BatchProgressPhase::Finalize,
+    }
+}
+
+fn event_rank(kind: ffi::BatchProgressEventKind, phase: ffi::BatchProgressPhase) -> u8 {
+    match kind {
+        ffi::BatchProgressEventKind::Queued => 0,
+        ffi::BatchProgressEventKind::Started => 1,
+        ffi::BatchProgressEventKind::Phase => match phase {
+            ffi::BatchProgressPhase::Setup => 2,
+            ffi::BatchProgressPhase::Parse => 3,
+            ffi::BatchProgressPhase::Analyze => 4,
+            ffi::BatchProgressPhase::Finalize => 5,
+            _ => 5,
+        },
+        ffi::BatchProgressEventKind::Completed | ffi::BatchProgressEventKind::Failed => 6,
+        _ => 6,
+    }
+}
+
+fn make_progress_event(
+    event_kind: ffi::BatchProgressEventKind,
+    phase: ffi::BatchProgressPhase,
+    completed: u32,
+    total: u32,
+    input_index: u32,
+    log_path: &str,
+    success: bool,
+) -> ffi::BatchProgressEvent {
+    ffi::BatchProgressEvent {
+        completed,
+        total,
+        input_index,
+        log_path: log_path.to_string(),
+        event_kind,
+        phase,
+        success,
+    }
+}
+
+fn make_progress_event_with_current_completed(
+    event_kind: ffi::BatchProgressEventKind,
+    phase: ffi::BatchProgressPhase,
+    completed_counter: &AtomicU32,
+    total: u32,
+    input_index: u32,
+    log_path: &str,
+    success: bool,
+) -> ffi::BatchProgressEvent {
+    make_progress_event(
+        event_kind,
+        phase,
+        completed_counter.load(Ordering::Relaxed),
+        total,
+        input_index,
+        log_path,
+        success,
+    )
+}
+
+#[derive(Default)]
+struct BatchProgressDiagnostics {
+    queued_events: u32,
+    started_events: u32,
+    phase_events: u32,
+    completed_events: u32,
+    failed_events: u32,
+    in_flight_logs: HashSet<u32>,
+    max_in_flight: usize,
+}
+
+impl BatchProgressDiagnostics {
+    fn record(&mut self, event: &ffi::BatchProgressEvent) {
+        match event.event_kind {
+            ffi::BatchProgressEventKind::Queued => {
+                self.queued_events += 1;
+            }
+            ffi::BatchProgressEventKind::Started => {
+                self.started_events += 1;
+                self.in_flight_logs.insert(event.input_index);
+            }
+            ffi::BatchProgressEventKind::Phase => {
+                self.phase_events += 1;
+            }
+            ffi::BatchProgressEventKind::Completed => {
+                self.completed_events += 1;
+                self.in_flight_logs.remove(&event.input_index);
+            }
+            ffi::BatchProgressEventKind::Failed => {
+                self.failed_events += 1;
+                self.in_flight_logs.remove(&event.input_index);
+            }
+            _ => {}
+        }
+        self.max_in_flight = self.max_in_flight.max(self.in_flight_logs.len());
+    }
+
+    fn log_summary(&self, total: usize) {
+        info!(
+            "Batch progress diagnostics: total_logs={}, queued={}, started={}, phase={}, completed={}, failed={}, max_in_flight={}",
+            total,
+            self.queued_events,
+            self.started_events,
+            self.phase_events,
+            self.completed_events,
+            self.failed_events,
+            self.max_in_flight,
+        );
+    }
+}
+
+fn emit_progress_event(
+    callback: &ffi::ScanBatchProgressCallback,
+    diagnostics: Option<&mut BatchProgressDiagnostics>,
+    event: ffi::BatchProgressEvent,
+) {
+    if let Some(diagnostics) = diagnostics {
+        diagnostics.record(&event);
+        info!(
+            "Batch progress event: idx={}, kind={:?}, phase={:?}, completed={}/{}, success={}, log={}",
+            event.input_index,
+            event.event_kind,
+            event.phase,
+            event.completed,
+            event.total,
+            event.success,
+            event.log_path,
+        );
+    }
+    callback.on_batch_progress(&event);
+}
+
+type BatchTaskResult = (u32, String, ffi::BatchProgressPhase, AnalysisResult);
+
+const READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS: usize = 2;
+
+enum BatchUpdate {
+    Progress(ffi::BatchProgressEvent),
+    Result(BatchTaskResult),
+    TasksExhausted,
+}
+
+/// Drain all progress currently visible to preserve global event ordering before emitting the
+/// terminal Completed/Failed event for a finished task.
+async fn drain_ready_progress_events(
+    pending_progress_events: &mut VecDeque<ffi::BatchProgressEvent>,
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<ffi::BatchProgressEvent>,
+) -> Vec<ffi::BatchProgressEvent> {
+    let mut events = Vec::new();
+
+    while let Some(event) = pending_progress_events.pop_front() {
+        events.push(event);
+    }
+
+    let mut empty_yields_remaining = READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+    loop {
+        match progress_rx.try_recv() {
+            Ok(event) => {
+                events.push(event);
+                empty_yields_remaining = READY_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) if empty_yields_remaining > 0 => {
+                // A same-log phase send can be queued a couple runtime turns after the task
+                // result becomes visible. Yield a small, bounded number of times so already-
+                // scheduled sends can land before the terminal event without paying the old
+                // eight-yield busy-poll cost on every empty drain.
+                empty_yields_remaining -= 1;
+                tokio::task::yield_now().await;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => break,
+            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => {
+                // The sender side is gone, so only already-buffered task results remain.
+                break;
+            }
+        }
+    }
+
+    events
+}
+
+async fn next_batch_update<S>(
+    pending_progress_events: &mut VecDeque<ffi::BatchProgressEvent>,
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<ffi::BatchProgressEvent>,
+    tasks: &mut S,
+) -> BatchUpdate
+where
+    S: futures::stream::Stream<Item = BatchTaskResult> + Unpin,
+{
+    use futures::StreamExt;
+
+    if let Some(event) = pending_progress_events.pop_front() {
+        return BatchUpdate::Progress(event);
+    }
+
+    tokio::select! {
+        biased;
+        maybe_event = progress_rx.recv() => {
+            match maybe_event {
+                Some(event) => BatchUpdate::Progress(event),
+                None => match tasks.next().await {
+                    Some(result) => BatchUpdate::Result(result),
+                    None => BatchUpdate::TasksExhausted,
+                },
+            }
+        }
+        maybe_result = tasks.next() => {
+            match maybe_result {
+                Some(result) => BatchUpdate::Result(result),
+                None => BatchUpdate::TasksExhausted,
+            }
+        }
+    }
+}
+
+fn parse_db_counter_interval(raw: Option<&str>) -> u64 {
+    raw.and_then(|value| value.trim().parse::<u64>().ok())
+        .filter(|interval| *interval > 0)
+        .unwrap_or(DB_COUNTER_LOG_INTERVAL_DEFAULT)
+}
+
+fn resolve_db_counter_interval() -> u64 {
+    parse_db_counter_interval(std::env::var("CLASSIC_DB_COUNTER_INTERVAL").ok().as_deref())
+}
+
+fn apply_short_scan_db_profile(pool: &DatabasePool) {
+    pool.set_cache_ttl(Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS));
+    pool.set_cache_capacity(SHORT_SCAN_CACHE_CAPACITY);
+    pool.set_cache_cleanup_threshold(SHORT_SCAN_CLEANUP_THRESHOLD);
+    pool.set_cache_cleanup_interval(Duration::from_secs(SHORT_SCAN_CLEANUP_INTERVAL_SECS));
+}
+
+fn maybe_log_db_perf_counters(orch: &Orchestrator, scanned_path: &str) {
+    let completed = orch.completed_logs.fetch_add(1, Ordering::Relaxed) + 1;
+    let interval = orch.db_counter_interval;
+
+    if completed % interval != 0 {
+        return;
+    }
+
+    let Some(pool) = orch.inner.database_pool() else {
+        return;
+    };
+
+    let Ok(stats) = pool.get_stats() else {
+        return;
+    };
+
+    let cache_queries = stats.cache_hits.saturating_add(stats.cache_misses);
+    let cache_hit_rate = if cache_queries == 0 {
+        0.0
+    } else {
+        (stats.cache_hits as f64 / cache_queries as f64) * 100.0
+    };
+    let log_name = Path::new(scanned_path)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or(scanned_path);
+
+    info!(
+        "DB counters @{} logs (last={}): cache_size={}/{}, cache_hits={}, cache_misses={}, hit_rate={:.1}%, evictions={}, cleanup_runs={}, cleanup_removed={}, cleanup_total_ms={:.3}, cleanup_max_ms={:.3}, eviction_total_ms={:.3}, eviction_max_ms={:.3}, stable_shape_selections={}, stable_shape_padding_pairs={}",
+        completed,
+        log_name,
+        pool.cache_size(),
+        pool.get_cache_capacity(),
+        stats.cache_hits,
+        stats.cache_misses,
+        cache_hit_rate,
+        stats.cache_evictions,
+        stats.cleanup_runs,
+        stats.cleanup_removed,
+        stats.cleanup_elapsed_total_ns as f64 / 1_000_000.0,
+        stats.cleanup_elapsed_max_ns as f64 / 1_000_000.0,
+        stats.eviction_elapsed_total_ns as f64 / 1_000_000.0,
+        stats.eviction_elapsed_max_ns as f64 / 1_000_000.0,
+        stats.stable_shape_selections,
+        stats.stable_shape_padding_pairs
+    );
+}
+
+fn fcx_reset_global_state() -> Result<(), String> {
+    match FcxModeHandler::reset_global_state() {
+        Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return a snapshot of all FCX configuration issues currently held in the global handler.
+///
+/// # Empty-state contract
+///
+/// - Fresh process (no scan run): lazy-init handler has no issues → returns empty Vec.
+/// - After `fcx_reset_global_state()`: detected_issues cleared → returns empty Vec.
+/// - After scan with no FCX issues: returns empty Vec.
+/// - After scan with issues: returns one `FcxIssueDto` per `ConfigIssue`, order preserved.
+///
+/// # No-throw guarantee
+///
+/// The function is infallible. It uses `parking_lot::Mutex::lock()` which blocks until
+/// acquired and never returns an error. Callers on the C++ side wrap it in `try` as a
+/// belt-and-suspenders convention, but the fn itself cannot panic under normal operation.
+fn get_fcx_config_issues() -> Vec<ffi::FcxIssueDto> {
+    // parking_lot::Mutex::lock() returns the guard directly — no Result unwrap needed.
+    let handler = GLOBAL_FCX_HANDLER.lock();
+    handler
+        .get_detected_issues()
+        .iter()
+        .map(|i: &CoreFcxConfigIssue| {
+            let has_section = i.section.is_some();
+            ffi::FcxIssueDto {
+                file_path: i.file_path.clone(),
+                section_or_empty: i.section.clone().unwrap_or_default(),
+                has_section,
+                setting: i.setting.clone(),
+                current_value: i.current_value.clone(),
+                recommended_value: i.recommended_value.clone(),
+                description: i.description.clone(),
+                severity: i.severity.clone(),
+            }
+        })
+        .collect()
+}
+
+fn batch_reset_failure_result(log_path: String, error_message: String) -> ffi::ScanResult {
+    ffi::ScanResult {
+        log_path,
+        success: false,
+        report_lines: Vec::new(),
+        error_message,
+        processing_time_ms: 0,
+        formid_count: 0,
+        plugin_count: 0,
+        suspect_count: 0,
+    }
+}
+
+fn batch_progress_reset_failure_result(
+    input_index: u32,
+    total: u32,
+    log_path: String,
+    error_message: String,
+) -> ffi::BatchScanResult {
+    ffi::BatchScanResult {
+        input_index,
+        completed: 0,
+        total,
+        log_path,
+        success: false,
+        report_lines: Vec::new(),
+        error_message,
+        processing_time_ms: 0,
+        formid_count: 0,
+        plugin_count: 0,
+        suspect_count: 0,
+    }
+}
+
+// ── Config construction ─────────────────────────────────────────────
+
+fn build_full_scan_config(
+    yaml_dir_root: &str,
+    yaml_dir_data: &str,
+    game: &str,
+    game_version: &str,
+    show_formid_values: bool,
+    fcx_mode: bool,
+    simplify_logs: bool,
+) -> Result<Box<FullScanConfig>, String> {
+    let dirs = vec![PathBuf::from(yaml_dir_root), PathBuf::from(yaml_dir_data)];
+    let yaml = get_runtime()
+        .block_on(YamlDataCore::load_from_yaml_files(
+            dirs,
+            game.to_string(),
+            game_version.to_string(),
+        ))
+        .map_err(|e| format!("{e}"))?;
+
+    let remove_list = load_exclude_log_records(yaml_dir_data);
+    let config = build_analysis_config_from_yaml(
+        &yaml,
+        game,
+        game_version,
+        show_formid_values,
+        fcx_mode,
+        simplify_logs,
+        remove_list,
+    );
+    let db_paths = resolve_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
+    Ok(Box::new(FullScanConfig {
+        inner: config,
+        db_paths,
+    }))
+}
+
+// ── Orchestrator ────────────────────────────────────────────────────
+
+fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String> {
+    let mut orch = OrchestratorCore::new(config.inner.clone()).map_err(|e| format!("{e}"))?;
+
+    // Match Python behavior: when FormID values are enabled, initialize DB pool
+    // with Main + hardcoded + user-configured database paths.
+    if config.inner.show_formid_values {
+        let pool = Arc::new(DatabasePool::new(
+            None,
+            Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS),
+            config.inner.game.clone(),
+        ));
+        apply_short_scan_db_profile(&pool);
+
+        get_runtime()
+            .block_on(pool.initialize(config.db_paths.clone()))
+            .map_err(|e| format!("{e}"))?;
+
+        orch.attach_database_pool(pool)
+            .map_err(|e| format!("{e}"))?;
+    }
+
+    Ok(Box::new(Orchestrator {
+        inner: orch,
+        completed_logs: AtomicU64::new(0),
+        db_counter_interval: resolve_db_counter_interval(),
+    }))
+}
+
+fn orchestrator_new_minimal(
+    game: &str,
+    game_version: &str,
+    crashgen_name: &str,
+    xse_acronym: &str,
+) -> Result<Box<Orchestrator>, String> {
+    let mut config = AnalysisConfig::new(game.to_string(), game_version.to_string());
+    config.crashgen_name = crashgen_name.to_string();
+    config.xse_acronym = xse_acronym.to_string();
+    let orch = OrchestratorCore::new(config).map_err(|e| format!("{e}"))?;
+    Ok(Box::new(Orchestrator {
+        inner: orch,
+        completed_logs: AtomicU64::new(0),
+        db_counter_interval: resolve_db_counter_interval(),
+    }))
+}
+
+fn orchestrator_process_log(
+    orch: &Orchestrator,
+    log_path: &str,
+) -> Result<ffi::ScanResult, String> {
+    fcx_reset_global_state()?;
+
+    match get_runtime().block_on(orch.inner.process_log(log_path.to_string())) {
+        Ok(result) => {
+            maybe_log_db_perf_counters(orch, result.log_path.as_str());
+            Ok(analysis_result_to_dto(result))
+        }
+        Err(e) => {
+            maybe_log_db_perf_counters(orch, log_path);
+            Err(format!("{e}"))
+        }
+    }
+}
+
+fn orchestrator_process_logs_batch(
+    orch: &Orchestrator,
+    log_paths: &[String],
+    max_concurrent: u32,
+) -> Vec<ffi::ScanResult> {
+    if let Err(error) = fcx_reset_global_state() {
+        let log_path = log_paths.first().cloned().unwrap_or_default();
+        return vec![batch_reset_failure_result(log_path, error)];
+    }
+
+    let paths: Vec<String> = log_paths.to_vec();
+    let max_parallel = if max_concurrent == 0 {
+        None
+    } else {
+        Some(max_concurrent as usize)
+    };
+    let results = get_runtime().block_on(orch.inner.process_logs_batch(paths, max_parallel));
+    for result in &results {
+        maybe_log_db_perf_counters(orch, result.log_path.as_str());
+    }
+    results.into_iter().map(analysis_result_to_dto).collect()
+}
+
+fn effective_batch_concurrency(total_logs: usize, max_concurrent: u32) -> usize {
+    if total_logs == 0 {
+        return 1;
+    }
+    if max_concurrent > 0 {
+        return (max_concurrent as usize).max(1);
+    }
+
+    let cpu_count = std::thread::available_parallelism()
+        .map(std::num::NonZeroUsize::get)
+        .unwrap_or(4);
+
+    if total_logs < cpu_count {
+        total_logs.max(1)
+    } else {
+        cpu_count.max(4)
+    }
+}
+
+fn orchestrator_process_logs_batch_with_progress(
+    orch: &Orchestrator,
+    log_paths: &[String],
+    max_concurrent: u32,
+    callback: &ffi::ScanBatchProgressCallback,
+) -> Vec<ffi::BatchScanResult> {
+    use futures::stream::{self, StreamExt};
+    use tokio::sync::mpsc;
+
+    if let Err(error) = fcx_reset_global_state() {
+        let log_path = log_paths.first().cloned().unwrap_or_default();
+        return vec![batch_progress_reset_failure_result(
+            0,
+            log_paths.len() as u32,
+            log_path,
+            error,
+        )];
+    }
+
+    let total = log_paths.len();
+    if total == 0 {
+        return Vec::new();
+    }
+
+    let concurrency = effective_batch_concurrency(total, max_concurrent);
+    let diagnostics_enabled = diagnostics_enabled();
+    let indexed_paths: Vec<(u32, String)> = log_paths
+        .iter()
+        .cloned()
+        .enumerate()
+        .map(|(idx, path)| (idx as u32, path))
+        .collect();
+
+    get_runtime().block_on(async {
+        let mut completed = 0_u32;
+        let completed_counter = Arc::new(AtomicU32::new(0));
+        let mut batch_results = Vec::with_capacity(indexed_paths.len());
+        let mut diagnostics = diagnostics_enabled.then(BatchProgressDiagnostics::default);
+        let mut pending_progress_events = VecDeque::new();
+
+        for (input_index, log_path) in &indexed_paths {
+            emit_progress_event(
+                callback,
+                diagnostics.as_mut(),
+                // Queued events announce discovered work before any log has finished, so
+                // their completed count intentionally stays at the batch-level snapshot of 0.
+                make_progress_event(
+                    ffi::BatchProgressEventKind::Queued,
+                    ffi::BatchProgressPhase::Setup,
+                    completed,
+                    total as u32,
+                    *input_index,
+                    log_path,
+                    false,
+                ),
+            );
+        }
+
+        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel::<ffi::BatchProgressEvent>();
+
+        let mut tasks = stream::iter(indexed_paths)
+            .map(|(input_index, log_path)| {
+                let log_path_for_error = log_path.clone();
+                let completed_counter = Arc::clone(&completed_counter);
+                let progress_tx = progress_tx.clone();
+                async move {
+                    let started_event = make_progress_event_with_current_completed(
+                        ffi::BatchProgressEventKind::Started,
+                        ffi::BatchProgressPhase::Setup,
+                        completed_counter.as_ref(),
+                        total as u32,
+                        input_index,
+                        &log_path,
+                        false,
+                    );
+                    let _ = progress_tx.send(started_event);
+
+                    let mut last_phase = ffi::BatchProgressPhase::Setup;
+                    let result = match orch
+                        .inner
+                        .process_log_with_progress(log_path.clone(), |phase| {
+                            last_phase = map_progress_phase(phase);
+                            let _ = progress_tx.send(make_progress_event_with_current_completed(
+                                ffi::BatchProgressEventKind::Phase,
+                                last_phase,
+                                completed_counter.as_ref(),
+                                total as u32,
+                                input_index,
+                                &log_path,
+                                false,
+                            ));
+                        })
+                        .await
+                    {
+                        Ok(result) => result,
+                        Err(e) => AnalysisResult::failure(log_path_for_error, e.to_string()),
+                    };
+                    (input_index, log_path, last_phase, result)
+                }
+            })
+            .buffer_unordered(concurrency);
+
+        while completed < total as u32 {
+            match next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
+                .await
+            {
+                BatchUpdate::Progress(event) => {
+                    emit_progress_event(callback, diagnostics.as_mut(), event);
+                }
+                BatchUpdate::Result((input_index, scanned_path, last_phase, result)) => {
+                    for event in
+                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
+                            .await
+                    {
+                        emit_progress_event(callback, diagnostics.as_mut(), event);
+                    }
+
+                    completed += 1;
+                    completed_counter.store(completed, Ordering::Relaxed);
+                    maybe_log_db_perf_counters(orch, scanned_path.as_str());
+                    emit_progress_event(
+                        callback,
+                        diagnostics.as_mut(),
+                        make_progress_event(
+                            if result.success {
+                                ffi::BatchProgressEventKind::Completed
+                            } else {
+                                ffi::BatchProgressEventKind::Failed
+                            },
+                            last_phase,
+                            completed,
+                            total as u32,
+                            input_index,
+                            &result.log_path,
+                            result.success,
+                        ),
+                    );
+                    batch_results.push(analysis_result_to_batch_dto(
+                        input_index,
+                        completed,
+                        total as u32,
+                        result,
+                    ));
+                }
+                BatchUpdate::TasksExhausted => break,
+            }
+        }
+
+        drop(tasks);
+        drop(progress_tx);
+
+        // Any events left here come from an abnormal shutdown path where some task results never
+        // surfaced. Keep emitting them for diagnostics, even though they may be orphaned from a
+        // terminal Completed/Failed event; under the normal invariant, all logs finish above.
+        while let Some(event) = pending_progress_events.pop_front() {
+            emit_progress_event(callback, diagnostics.as_mut(), event);
+        }
+
+        while let Some(event) = progress_rx.recv().await {
+            emit_progress_event(callback, diagnostics.as_mut(), event);
+        }
+
+        if let Some(diagnostics) = diagnostics.as_ref() {
+            diagnostics.log_summary(total);
+        }
+
+        batch_results
+    })
+}
+
+fn analysis_result_to_dto(r: AnalysisResult) -> ffi::ScanResult {
+    ffi::ScanResult {
+        log_path: r.log_path,
+        success: r.success,
+        report_lines: r.report_lines,
+        error_message: r.error.unwrap_or_default(),
+        processing_time_ms: r.processing_time_ms,
+        formid_count: r.formid_count as u32,
+        plugin_count: r.plugin_count as u32,
+        suspect_count: r.suspect_count as u32,
+    }
+}
+
+fn analysis_result_to_batch_dto(
+    input_index: u32,
+    completed: u32,
+    total: u32,
+    r: AnalysisResult,
+) -> ffi::BatchScanResult {
+    ffi::BatchScanResult {
+        input_index,
+        completed,
+        total,
+        log_path: r.log_path,
+        success: r.success,
+        report_lines: r.report_lines,
+        error_message: r.error.unwrap_or_default(),
+        processing_time_ms: r.processing_time_ms,
+        formid_count: r.formid_count as u32,
+        plugin_count: r.plugin_count as u32,
+        suspect_count: r.suspect_count as u32,
+    }
+}
+
+// ── Utility functions ───────────────────────────────────────────────
+
+fn detect_vr_log(content: &str) -> bool {
+    // VR logs contain "Fallout4VR.esm" or "SkyrimVR.esm" in plugin list
+    content.contains("Fallout4VR.esm") || content.contains("SkyrimVR.esm")
+}
+
+fn detect_crash_pattern(content: &str) -> String {
+    // Parse the crash header to extract the main error/crash module
+    let lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+    match CRASH_PATTERN_PARSER.parse_crash_header(&lines) {
+        Ok(header) => header.get("main_error").cloned().unwrap_or_default(),
+        Err(_) => String::new(),
+    }
+}
+
+// ── FormID database path resolution ─────────────────────────────────
+
+fn hardcoded_formid_db_relpaths(game: &str) -> &'static [&'static str] {
+    match game {
+        "Fallout4" | "Fallout4VR" => &["databases/FOLON FormIDs.db"],
+        _ => &[],
+    }
+}
+
+fn normalize_path(path: PathBuf) -> PathBuf {
+    path.components().collect()
+}
+
+fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut seen = HashSet::new();
+    let mut deduped = Vec::with_capacity(paths.len());
+    for path in paths {
+        let normalized = normalize_path(path);
+        if seen.insert(normalized.clone()) {
+            deduped.push(normalized);
+        }
+    }
+    deduped
+}
+
+fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
+    let settings_path = PathBuf::from(yaml_dir_root).join("CLASSIC Settings.yaml");
+
+    if !settings_path.exists() {
+        return Vec::new();
+    }
+
+    let ops = YamlOperations::new();
+    let doc = match ops.load_yaml_file(Path::new(&settings_path)) {
+        Ok(doc) => doc,
+        Err(_) => return Vec::new(),
+    };
+
+    let key_path = format!("CLASSIC_Settings.FormID Databases.{game}");
+    let raw_paths = ops.get_vec_value(&doc, &key_path);
+    raw_paths
+        .into_iter()
+        .map(PathBuf::from)
+        .map(|p| {
+            if p.is_absolute() {
+                normalize_path(p)
+            } else {
+                normalize_path(PathBuf::from(yaml_dir_data).join(p))
+            }
+        })
+        .collect()
+}
+
+fn load_exclude_log_records(yaml_dir_data: &str) -> Vec<String> {
+    let main_yaml = PathBuf::from(yaml_dir_data)
+        .join("databases")
+        .join("CLASSIC Main.yaml");
+
+    if !main_yaml.exists() {
+        return Vec::new();
+    }
+
+    let ops = YamlOperations::new();
+    let doc = match ops.load_yaml_file(Path::new(&main_yaml)) {
+        Ok(doc) => doc,
+        Err(_) => return Vec::new(),
+    };
+
+    ops.get_vec_value(&doc, "exclude_log_records")
+}
+
+fn resolve_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
+    let data_dir = PathBuf::from(yaml_dir_data);
+    let main_db = data_dir
+        .join("databases")
+        .join(format!("{game} FormIDs Main.db"));
+
+    let hardcoded = hardcoded_formid_db_relpaths(game)
+        .iter()
+        .map(|rel| data_dir.join(rel))
+        .collect::<Vec<_>>();
+
+    let user_paths = load_user_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
+
+    let mut all_paths = Vec::with_capacity(1 + hardcoded.len() + user_paths.len());
+    all_paths.push(main_db);
+    all_paths.extend(hardcoded);
+    all_paths.extend(user_paths);
+    dedupe_paths(all_paths)
+}
+
+// ── Papyrus monitoring ────────────────────────────────────────────
+
+/// Opaque wrapper around `PapyrusAnalyzer` for CXX FFI.
+pub struct CxxPapyrusAnalyzer {
+    inner: PapyrusAnalyzer,
+}
+
+/// Convert `PapyrusStats` to the CXX-shared DTO.
+fn papyrus_stats_to_dto(stats: &PapyrusStats) -> ffi::PapyrusStatsDto {
+    ffi::PapyrusStatsDto {
+        dumps: stats.dumps as u32,
+        stacks: stats.stacks as u32,
+        warnings: stats.warnings as u32,
+        errors: stats.errors as u32,
+        lines_processed: stats.lines_processed as u32,
+        dumps_stacks_ratio: stats.dumps_to_stacks_ratio(),
+    }
+}
+
+fn papyrus_analyzer_new(log_path: &str) -> Box<CxxPapyrusAnalyzer> {
+    Box::new(CxxPapyrusAnalyzer {
+        inner: PapyrusAnalyzer::new(PathBuf::from(log_path)),
+    })
+}
+
+fn papyrus_start_monitoring(analyzer: &mut CxxPapyrusAnalyzer) -> Result<(), String> {
+    analyzer
+        .inner
+        .start_monitoring()
+        .map_err(|e| format!("{e}"))
+}
+
+fn papyrus_check_updates(analyzer: &mut CxxPapyrusAnalyzer) -> ffi::PapyrusStatsDto {
+    // Poll for new data; if there are updates they're folded into internal stats.
+    // Errors are silently ignored -- C++ gets the last-known stats either way.
+    let _ = analyzer.inner.check_for_updates();
+    papyrus_stats_to_dto(analyzer.inner.stats())
+}
+
+fn papyrus_analyze_full(analyzer: &mut CxxPapyrusAnalyzer) -> Result<ffi::PapyrusStatsDto, String> {
+    let stats = analyzer.inner.analyze_full().map_err(|e| format!("{e}"))?;
+    Ok(papyrus_stats_to_dto(&stats))
+}
+
+fn papyrus_log_exists(analyzer: &CxxPapyrusAnalyzer) -> bool {
+    analyzer.inner.log_exists()
+}
+
+fn papyrus_reset(analyzer: &mut CxxPapyrusAnalyzer) {
+    analyzer.inner.reset();
+}
+
+#[cxx::bridge(namespace = "classic::scanner")]
+mod ffi {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum BatchProgressEventKind {
+        Queued = 0,
+        Started = 1,
+        Phase = 2,
+        Completed = 3,
+        Failed = 4,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum BatchProgressPhase {
+        Setup = 0,
+        Parse = 1,
+        Analyze = 2,
+        Finalize = 3,
+    }
+
+    struct BatchProgressEvent {
+        completed: u32,
+        total: u32,
+        input_index: u32,
+        log_path: String,
+        event_kind: BatchProgressEventKind,
+        phase: BatchProgressPhase,
+        success: bool,
+    }
+
+    /// Result of scanning a single crash log.
+    struct ScanResult {
+        log_path: String,
+        success: bool,
+        report_lines: Vec<String>,
+        error_message: String,
+        processing_time_ms: u64,
+        formid_count: u32,
+        plugin_count: u32,
+        suspect_count: u32,
+    }
+
+    /// Batch scan result plus progress metadata for each completed log.
+    struct BatchScanResult {
+        input_index: u32,
+        completed: u32,
+        total: u32,
+        log_path: String,
+        success: bool,
+        report_lines: Vec<String>,
+        error_message: String,
+        processing_time_ms: u64,
+        formid_count: u32,
+        plugin_count: u32,
+        suspect_count: u32,
+    }
+
+    /// Papyrus log statistics transferred across the FFI boundary.
+    struct PapyrusStatsDto {
+        dumps: u32,
+        stacks: u32,
+        warnings: u32,
+        errors: u32,
+        lines_processed: u32,
+        dumps_stacks_ratio: f64,
+    }
+
+    /// Mirrors `classic_scanlog_core::fcx_handler::ConfigIssue` field-for-field (CXXS-03).
+    ///
+    /// The single `Option<String>` field (`section`) is flattened following the
+    /// Bridge String/Path Contract from plan 02-01:
+    ///   - `section_or_empty`: the section name, or `""` when `section` was `None`
+    ///   - `has_section`: `true` when `section` was `Some(…)`, `false` when `None`
+    ///
+    /// All other fields are plain `String` copies — no `Option` wrappers (Pitfall 6 CLEAR).
+    struct FcxIssueDto {
+        /// Path to the configuration file (e.g., "Fallout4.ini")
+        file_path: String,
+        /// INI section name, or `""` when the source `section` field was `None`
+        section_or_empty: String,
+        /// `true` when `section` was `Some(…)`, `false` when it was `None`
+        has_section: bool,
+        /// Setting/key name (e.g., "iNumThreads")
+        setting: String,
+        /// Current value found in the file
+        current_value: String,
+        /// Recommended replacement value
+        recommended_value: String,
+        /// Human-readable description of the issue
+        description: String,
+        /// Severity level: "error", "warning", or "info"
+        severity: String,
+    }
+
+    unsafe extern "C++" {
+        include!("classic_cxx_bridge/scan_progress_callback.h");
+        type ScanBatchProgressCallback;
+        fn on_batch_progress(self: &ScanBatchProgressCallback, event: &BatchProgressEvent);
+    }
+
+    extern "Rust" {
+        type FullScanConfig;
+        type Orchestrator;
+
+        // Config construction
+        fn build_full_scan_config(
+            yaml_dir_root: &str,
+            yaml_dir_data: &str,
+            game: &str,
+            game_version: &str,
+            show_formid_values: bool,
+            fcx_mode: bool,
+            simplify_logs: bool,
+        ) -> Result<Box<FullScanConfig>>;
+
+        // Orchestrator
+        fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>>;
+        fn orchestrator_new_minimal(
+            game: &str,
+            game_version: &str,
+            crashgen_name: &str,
+            xse_acronym: &str,
+        ) -> Result<Box<Orchestrator>>;
+        fn fcx_reset_global_state() -> Result<()>;
+        /// Return a snapshot of all FCX configuration issues from the global handler (CXXS-03).
+        /// Empty Vec when no scan has run, after a reset, or when no issues were detected.
+        fn get_fcx_config_issues() -> Vec<FcxIssueDto>;
+        fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
+        fn orchestrator_process_logs_batch(
+            orch: &Orchestrator,
+            log_paths: &[String],
+            max_concurrent: u32,
+        ) -> Vec<ScanResult>;
+        fn orchestrator_process_logs_batch_with_progress(
+            orch: &Orchestrator,
+            log_paths: &[String],
+            max_concurrent: u32,
+            callback: &ScanBatchProgressCallback,
+        ) -> Vec<BatchScanResult>;
+
+        // Utilities
+        fn detect_vr_log(content: &str) -> bool;
+        fn detect_crash_pattern(content: &str) -> String;
+
+        // Papyrus monitoring
+        type CxxPapyrusAnalyzer;
+        fn papyrus_analyzer_new(log_path: &str) -> Box<CxxPapyrusAnalyzer>;
+        fn papyrus_start_monitoring(analyzer: &mut CxxPapyrusAnalyzer) -> Result<()>;
+        fn papyrus_check_updates(analyzer: &mut CxxPapyrusAnalyzer) -> PapyrusStatsDto;
+        fn papyrus_analyze_full(analyzer: &mut CxxPapyrusAnalyzer) -> Result<PapyrusStatsDto>;
+        fn papyrus_log_exists(analyzer: &CxxPapyrusAnalyzer) -> bool;
+        fn papyrus_reset(analyzer: &mut CxxPapyrusAnalyzer);
+    }
+}
+
+#[cfg(test)]
+#[path = "scanner_tests.rs"]
+mod tests;

@@ -20,6 +20,8 @@ qt_add_executable(ClassicGui WIN32
     app/papyrusdialog.cpp
     app/pathdialog.h
     app/pathdialog.cpp
+    app/typography.h
+    app/typography.cpp
 
     # Core infrastructure
     core/rust_qt_bridge.h
@@ -41,6 +43,8 @@ qt_add_executable(ClassicGui WIN32
     workers/papyrusworker.cpp
     workers/updateworker.h
     workers/updateworker.cpp
+    workers/yamlupdateworker.h
+    workers/yamlupdateworker.cpp
 
     # Widgets (reusable UI components)
     widgets/reportlistwidget.h

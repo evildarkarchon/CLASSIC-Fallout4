@@ -2,6 +2,8 @@
 
 This index points contributors to the active testing workflows for the current **C++ + Rust** architecture.
 
+Need the old-to-new path translation first? Use the [Workspace Migration Matrix](../workspace-migration-matrix.md).
+
 ## 1) Primary testing entry points (active)
 
 ### C++ frontend tests (via script wrappers + CTest)
@@ -22,11 +24,11 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ### Rust workspace tests and quality gates
 
 ```powershell
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ---
@@ -50,26 +52,28 @@ Use local command sets that mirror these workflows before opening PRs.
 
 ## 3) Binding-specific testing flows
 
-### Node bindings (`ClassicLib-rs/node-bindings/classic-node`)
+### Node bindings (`node-bindings/classic-node`)
 
 ```powershell
+# From node-bindings/classic-node
 bun install
 bun run build
 bun run cli -- --version
-bun run parity:gate:local
+bun run parity:gate
 bun run test:bun
 bun run test:node
 ```
 
-### Python bindings (`ClassicLib-rs/python-bindings`)
+### Python bindings (`python-bindings`)
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+uv venv python-bindings/.venv
+uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ---
@@ -79,10 +83,13 @@ uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m
 - Active app/runtime paths:
   - [`classic-cli/`](../../classic-cli)
   - [`classic-gui/`](../../classic-gui)
-  - [`ClassicLib-rs/`](../../ClassicLib-rs)
+  - [`foundation/`](../../foundation)
+  - [`business-logic/`](../../business-logic)
+  - [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
+  - [`ui-applications/classic-tui/`](../../ui-applications/classic-tui)
 - Maintained integration bindings:
-  - [`ClassicLib-rs/node-bindings/`](../../ClassicLib-rs/node-bindings)
-  - [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+  - [`node-bindings/classic-node/`](../../node-bindings/classic-node)
+  - [`python-bindings/`](../../python-bindings)
 - Deprecated runtime entrypoints/orchestration:
   - [`deprecated/`](../../deprecated)
 
@@ -110,4 +117,6 @@ Do not assume Python runtime/orchestration tests under `deprecated/` are part of
 - [ ] Updated docs when architecture/build/test behavior changed
 
 Canonical policy reference: [`AGENTS.md`](../../AGENTS.md).
+
+> Migration note: older `ClassicLib-rs/...` testing instructions are historical only; translate them through the [Workspace Migration Matrix](../workspace-migration-matrix.md).
 

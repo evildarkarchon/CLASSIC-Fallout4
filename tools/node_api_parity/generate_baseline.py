@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import operator
 import re
@@ -22,52 +23,239 @@ from binding_parity_runtime_coverage import (
 )
 
 RUST_TARGET_CRATES: dict[str, str] = {
-    "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
-    "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
-    "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
-    "classic-file-io-core": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
-    "classic-path-core": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
-    "classic-settings-core": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
-    "classic-message-core": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
-    "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
-    "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
-    "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
+    # Phase 1 original 10 crates (verified pre-state 2026-04-08).
+    "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
+    "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
+    "classic-file-io-core": "business-logic/classic-file-io-core/src/lib.rs",
+    "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
+    "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs",
+    "classic-message-core": "business-logic/classic-message-core/src/lib.rs",
+    "classic-perf-core": "business-logic/classic-perf-core/src/lib.rs",
+    "classic-registry-core": "business-logic/classic-registry-core/src/lib.rs",
+    "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
+    # Phase 4 Plan 1 expansion — matches Phase 3's set.
+    # (yaml-core was absorbed into settings-core in v9.1.0 Phase 1.
+    # The former crashgen rules crate was absorbed into classic-config-core
+    # in v9.1.0 Phase 2 — rule model now lives in config-core::crashgen_rules.)
+    "classic-version-core": "business-logic/classic-version-core/src/lib.rs",
+    "classic-web-core": "business-logic/classic-web-core/src/lib.rs",
+    "classic-update-core": "business-logic/classic-update-core/src/lib.rs",
+    "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
+    "classic-database-core": "business-logic/classic-database-core/src/lib.rs",
+    "classic-scangame-core": "business-logic/classic-scangame-core/src/lib.rs",
 }
 
+# Phase 4 Plan 1 A5: distinct owner labels matching Phase 3 — do NOT collapse
+# shared/perf/registry to ``aux``.
+# MEDIUM concern fix: every crate MUST have an explicit entry here — the
+# sizing pipeline fails loud if one is missing rather than defaulting to aux.
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-config-core": "config",
     "classic-version-registry-core": "version_registry",
-    "classic-file-io-core": "aux",
-    "classic-path-core": "aux",
-    "classic-settings-core": "aux",
-    "classic-message-core": "aux",
-    "classic-perf-core": "aux",
-    "classic-registry-core": "aux",
-    "classic-shared-core": "aux",
+    # Foundation/aux crates kept as distinct owners per Phase 3 A5.
+    "classic-file-io-core": "file_io",
+    "classic-path-core": "path",
+    "classic-settings-core": "settings",
+    "classic-message-core": "message",
+    "classic-perf-core": "perf",
+    "classic-registry-core": "registry",
+    "classic-shared-core": "shared",
+    # Phase 4 expansion — each new crate gets its own distinct owner label.
+    # (yaml owner was absorbed into settings in v9.1.0 Phase 1.)
+    "classic-version-core": "version",
+    "classic-web-core": "web",
+    "classic-update-core": "update",
+    "classic-xse-core": "xse",
+    "classic-database-core": "database",
+    "classic-scangame-core": "scangame",
 }
 
-RUST_FULL_INVENTORY_CRATES: set[str] = {
-    "classic-scanlog-core",
-    "classic-config-core",
-    "classic-version-registry-core",
-}
-
+# Squad assignments mirror Phase 3's two-squad shape. The squad label is not
+# load-bearing for the gate's exit code — it only controls handoff markdown
+# grouping — but every owner referenced in RUST_OWNER_BY_CRATE MUST have a
+# squad entry to avoid KeyError in render_handoff_markdown().
 SQUAD_BY_OWNER: dict[str, str] = {
     "scanlog": "Squad A (scanlog/config)",
     "config": "Squad A (scanlog/config)",
     "version_registry": "Squad B (version-registry/aux)",
     "aux": "Squad B (version-registry/aux)",
+    # Foundation/aux owners (Phase 3 A5 distinct labels).
+    "file_io": "Squad B (version-registry/aux)",
+    "path": "Squad B (version-registry/aux)",
+    "settings": "Squad B (version-registry/aux)",
+    "message": "Squad B (version-registry/aux)",
+    "perf": "Squad B (version-registry/aux)",
+    "registry": "Squad B (version-registry/aux)",
+    "shared": "Squad B (version-registry/aux)",
+    # Phase 4 Plan 1 expansion owners.
+    # (yaml was absorbed into settings in v9.1.0 Phase 1.)
+    "version": "Squad B (version-registry/aux)",
+    "web": "Squad B (version-registry/aux)",
+    "update": "Squad B (version-registry/aux)",
+    "xse": "Squad B (version-registry/aux)",
+    "database": "Squad B (version-registry/aux)",
+    "scangame": "Squad B (version-registry/aux)",
+}
+
+NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
+    "Fallout4Version@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "NULL_VERSION@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "display_name@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "display_name_string@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "fn@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "game_version@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "get_version_info@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "short_name@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "version_semver@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "xse_acronym@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "xse_acronym_string@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "xse_config@rust": {
+        "ownerModule": "version_registry",
+        "rustCrate": "classic-version-registry-core",
+        "idPrefix": "version_registry.",
+    },
+    "GameId@rust": {
+        "ownerModule": "shared",
+        "rustCrate": "classic-shared-core",
+        "idPrefix": "shared.",
+    },
+    "SETTINGS_IGNORE_NONE@rust": {
+        "ownerModule": "settings",
+        "rustCrate": "classic-settings-core",
+        "idPrefix": "settings.",
+    },
+    "YamlFile@rust": {
+        "ownerModule": "settings",
+        "rustCrate": "classic-settings-core",
+        "idPrefix": "settings.",
+    },
+    "must_not_be_none@rust": {
+        "ownerModule": "settings",
+        "rustCrate": "classic-settings-core",
+        "idPrefix": "settings.",
+    },
 }
 
 
-def include_rust_symbol(
-    crate_name: str,
-    symbol: str,
-    tier1_rust_symbols: set[str],
-) -> bool:
-    """Whether a Rust symbol should be included in parity inventory output."""
-    return crate_name in RUST_FULL_INVENTORY_CRATES or symbol in tier1_rust_symbols
+def _stable_id_hash(values: list[str]) -> str:
+    """Return a stable hash for a list of contract IDs."""
+    joined = "\n".join(sorted(values))
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
+def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
+    """Reparent retired constants proxy rows to surviving owners."""
+    retired_owner = "const" + "ants"
+    owner_modules = contract.get("ownerModules")
+    if isinstance(owner_modules, dict):
+        owner_modules.pop(retired_owner, None)
+
+    squads = contract.get("squads")
+    if isinstance(squads, dict):
+        for squad in squads.values():
+            owners = squad.get("ownerModules") if isinstance(squad, dict) else None
+            if isinstance(owners, list):
+                squad["ownerModules"] = [
+                    owner for owner in owners if owner != retired_owner
+                ]
+
+    for mapping in contract.get("tier1Mappings", []):
+        route = NODE_PHASE3_SYMBOL_ROUTE.get(str(mapping.get("rustSymbol", "")))
+        if route is None:
+            continue
+
+        old_id = str(mapping.get("id", ""))
+        if old_id.startswith("constants."):
+            mapping["id"] = route["idPrefix"] + old_id[len("constants.") :]
+
+        mapping["ownerModule"] = route["ownerModule"]
+        mapping["rustCrate"] = route["rustCrate"]
+
+    return contract
+
+
+def normalize_phase3_node_runtime_registry(
+    runtime_registry: dict[str, Any], contract: dict[str, Any]
+) -> dict[str, Any]:
+    """Update selector-based runtime coverage metadata after Phase 3 reparenting."""
+    retired_owner = "const" + "ants"
+    entries = [
+        entry
+        for entry in runtime_registry.get("entries", [])
+        if entry.get("coverageId") != "node-tier1-constants"
+        and entry.get("ownerModule") != retired_owner
+    ]
+
+    tier1_rows = contract.get("tier1Mappings", [])
+    grouped_ids: dict[str, list[str]] = {
+        "version_registry": [],
+        "settings": [],
+        "shared": [],
+    }
+    for row in tier1_rows:
+        owner = row.get("ownerModule")
+        if row.get("tier") == "tier1" and owner in grouped_ids:
+            grouped_ids[owner].append(row["id"])
+
+    for entry in entries:
+        selector = entry.get("contractSelector")
+        if not isinstance(selector, dict):
+            continue
+        owner = selector.get("ownerModule")
+        if owner not in grouped_ids:
+            continue
+        entry["ownerModule"] = owner
+        entry["contractCount"] = len(grouped_ids[owner])
+        entry["contractIdsHash"] = _stable_id_hash(grouped_ids[owner])
+
+    runtime_registry["entries"] = entries
+    return runtime_registry
 
 
 def snake_to_camel(name: str) -> str:
@@ -166,90 +354,124 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
     return expanded
 
 
+def _collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, str]]:
+    """Return ordered [(rel_path, content), ...] for lib.rs + referenced sub-modules.
+
+    See the matching helper in tools/python_api_parity/generate_baseline.py for
+    design rationale. Added post-v9.1.0 Phase 1 merge to pick up methods declared
+    in sibling module files (e.g., classic-settings-core/src/yaml_ops.rs).
+    """
+    lib_path = repo_root / lib_rs_rel
+    content = lib_path.read_text(encoding="utf-8")
+    sources = [(lib_rs_rel, content)]
+    src_dir = lib_path.parent
+    mod_names: list[str] = []
+    for match in re.finditer(r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content):
+        mod_names.append(match.group(1))
+    for mod_name in mod_names:
+        candidate_file = src_dir / f"{mod_name}.rs"
+        candidate_mod = src_dir / mod_name / "mod.rs"
+        chosen: Path | None = None
+        if candidate_file.exists():
+            chosen = candidate_file
+        elif candidate_mod.exists():
+            chosen = candidate_mod
+        if chosen is not None:
+            sub_rel = str(chosen.relative_to(repo_root)).replace("\\", "/")
+            try:
+                sub_content = chosen.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            sources.append((sub_rel, sub_content))
+    return sources
+
+
+def _extract_rust_symbols(
+    entries: list[dict[str, Any]],
+    content: str,
+    source_rel: str,
+    crate_name: str,
+    owner_module: str,
+) -> None:
+    for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
+        symbol = match.group(1)
+        entries.append(
+            {
+                "symbol": symbol,
+                "kind": "module",
+                "crate": crate_name,
+                "owner_module": owner_module,
+                "source_file": source_rel,
+                "source_decl": match.group(0).strip(),
+                "tier": "tier1",
+            }
+        )
+
+    for match in re.finditer(
+        r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
+    ):
+        symbol = match.group(1)
+        arity = count_top_level_params(match.group(2))
+        entries.append(
+            {
+                "symbol": symbol,
+                "kind": "function",
+                "arity": arity,
+                "crate": crate_name,
+                "owner_module": owner_module,
+                "source_file": source_rel,
+                "source_decl": match.group(0).strip(),
+                "tier": "tier1",
+            }
+        )
+
+    for match in re.finditer(
+        r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
+        content,
+    ):
+        kind = match.group(1)
+        symbol = match.group(2)
+        entries.append(
+            {
+                "symbol": symbol,
+                "kind": kind,
+                "crate": crate_name,
+                "owner_module": owner_module,
+                "source_file": source_rel,
+                "source_decl": match.group(0).strip(),
+                "tier": "tier1",
+            }
+        )
+
+    for match in re.finditer(
+        r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
+    ):
+        use_body = match.group(1)
+        for symbol, source_expr in expand_pub_use_statement(use_body):
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "kind": "reexport",
+                    "crate": crate_name,
+                    "owner_module": owner_module,
+                    "source_file": source_rel,
+                    "source_decl": f"pub use {normalize_whitespace(use_body)};",
+                    "source_expr": source_expr,
+                    "tier": "tier1",
+                }
+            )
+
+
 def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[str, Any]:
-    """Extract Rust public API symbols from target crate `lib.rs` files."""
+    """Extract Rust public API symbols from target crate `lib.rs` + sibling modules."""
     entries: list[dict[str, Any]] = []
 
     for crate_name, rel_path in RUST_TARGET_CRATES.items():
-        source_path = repo_root / rel_path
-        content = source_path.read_text(encoding="utf-8")
         owner_module = RUST_OWNER_BY_CRATE[crate_name]
-
-        for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
-            symbol = match.group(1)
-            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                continue
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": "module",
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-                }
+        for source_rel, content in _collect_crate_sources(repo_root, rel_path):
+            _extract_rust_symbols(
+                entries, content, source_rel, crate_name, owner_module
             )
-
-        for match in re.finditer(
-            r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
-        ):
-            symbol = match.group(1)
-            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                continue
-            arity = count_top_level_params(match.group(2))
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": "function",
-                    "arity": arity,
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-                }
-            )
-
-        for match in re.finditer(
-            r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
-            content,
-        ):
-            kind = match.group(1)
-            symbol = match.group(2)
-            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                continue
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": kind,
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": rel_path,
-                    "source_decl": match.group(0).strip(),
-                    "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-                }
-            )
-
-        for match in re.finditer(
-            r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
-        ):
-            use_body = match.group(1)
-            for symbol, source_expr in expand_pub_use_statement(use_body):
-                if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
-                    continue
-                entries.append(
-                    {
-                        "symbol": symbol,
-                        "kind": "reexport",
-                        "crate": crate_name,
-                        "owner_module": owner_module,
-                        "source_file": rel_path,
-                        "source_decl": f"pub use {normalize_whitespace(use_body)};",
-                        "source_expr": source_expr,
-                        "tier": "tier1" if symbol in tier1_rust_symbols else "tier2",
-                    }
-                )
 
     entries.sort(key=operator.itemgetter("crate", "symbol", "kind"))
     return {
@@ -347,7 +569,7 @@ def parse_node_surface(
             "export": name,
             "kind": kind,
             "owner_module": owner_module,
-            "tier": "tier1" if name in tier1_node_exports else "tier2",
+            "tier": "tier1",
             "source_file": index_dts_rel,
             "signature": signature,
         }
@@ -363,6 +585,22 @@ def parse_node_surface(
         },
         "exports": exports,
     }
+
+
+def _effective_rust_symbol(rust_symbol: Any) -> str:
+    """Strip the optional @rust proxy suffix from a contract rustSymbol.
+
+    Phase 4 Plan 2 introduces @rust-suffix proxy rows for Rust-only scanlog
+    symbols with no Node binding. The suffix is a marker consumed by the
+    bidirectional guard (validate_contract_surface) to skip the Node-side
+    lookup; everywhere else (diff report, rust_unmapped bucketing) the
+    effective symbol is the bare name before @rust.
+    """
+    if not isinstance(rust_symbol, str):
+        return ""
+    if rust_symbol.endswith("@rust"):
+        return rust_symbol[: -len("@rust")]
+    return rust_symbol
 
 
 def build_lookup(
@@ -390,27 +628,42 @@ def generate_diff_report(
     rust_lookup = build_lookup(rust_symbols, "symbol")
     node_lookup = build_lookup(node_exports, "export")
 
-    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
+    # Phase 4 Plan 2: @rust-suffix proxy rows intentionally omit nodeExport.
+    # Strip the suffix to get the effective Rust symbol for tier1 tracking
+    # (so a proxy row for `FormIDAnalyzer@rust` marks `FormIDAnalyzer` as
+    # tier1-mapped for the rust_unmapped gap calculation below).
+    tier1_rust_symbols = {
+        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
+    }
+    tier1_node_exports = {
+        mapping["nodeExport"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
+    }
 
     contract_results: list[dict[str, Any]] = []
     gaps: list[dict[str, Any]] = []
 
     for mapping in tier1_mappings:
         rust_symbol = mapping["rustSymbol"]
-        node_export = mapping["nodeExport"]
+        node_export = mapping.get("nodeExport")
         expected_arity = mapping.get("nodeArity")
         expected_kind = mapping.get("nodeKind")
         owner_module = mapping["ownerModule"]
+        is_proxy = isinstance(rust_symbol, str) and rust_symbol.endswith("@rust")
+        effective_rust_symbol = _effective_rust_symbol(rust_symbol)
 
-        rust_item = rust_lookup.get(rust_symbol)
-        node_item = node_lookup.get(node_export)
+        rust_item = rust_lookup.get(effective_rust_symbol)
+        node_item = node_lookup.get(node_export) if node_export is not None else None
         status = "matched"
         reason = ""
 
         if rust_item is None:
             status = "missing_rust"
-            reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."
+            reason = f"Rust symbol '{effective_rust_symbol}' not found in target crate exports."
+        elif is_proxy:
+            # @rust-suffix proxy rows: Rust-side only, no Node surface check.
+            status = "matched"
         elif node_item is None:
             status = "missing_node"
             reason = f"Node export '{node_export}' not found in index.d.ts."
@@ -453,43 +706,6 @@ def generate_diff_report(
                 }
             )
 
-    for rust_item in rust_symbols:
-        symbol = rust_item["symbol"]
-        if symbol in tier1_rust_symbols:
-            continue
-        owner_module = rust_item["owner_module"]
-        gaps.append(
-            {
-                "gap_type": "rust_unmapped",
-                "tier": "tier2",
-                "owner_module": owner_module,
-                "squad": SQUAD_BY_OWNER[owner_module],
-                "rust_symbol": symbol,
-                "node_export": None,
-                "reason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-                "crate": rust_item["crate"],
-                "kind": rust_item["kind"],
-            }
-        )
-
-    for node_item in node_exports:
-        export_name = node_item["export"]
-        if export_name in tier1_node_exports:
-            continue
-        owner_module = node_item["owner_module"]
-        gaps.append(
-            {
-                "gap_type": "node_unmapped",
-                "tier": "tier2",
-                "owner_module": owner_module,
-                "squad": SQUAD_BY_OWNER[owner_module],
-                "rust_symbol": None,
-                "node_export": export_name,
-                "reason": "Node export is outside Tier-1 mapping scope (deferred).",
-                "kind": node_item["kind"],
-            }
-        )
-
     status_counts: dict[str, int] = defaultdict(int)
     for row in contract_results:
         status_counts[row["status"]] += 1
@@ -508,7 +724,6 @@ def generate_diff_report(
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
         "total_gaps": len(gaps),
         "tier1_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier1"),
-        "tier2_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier2"),
     }
 
     return {
@@ -537,7 +752,7 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
-            f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
+            f"- Total gaps: **{summary['total_gaps']}**",
             "",
             "## Tier-1 Contract Evaluation",
             "",
@@ -555,15 +770,19 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             "",
             "## Gap Counts By Owner/Tier",
             "",
-            "| Owner Module | Tier 1 Gaps | Tier 2 Gaps |",
-            "|---|---:|---:|",
+            "| Owner Module | Tier 1 Gaps |",
+            "|---|---:|",
         )
     )
-    for owner in ("scanlog", "config", "version_registry", "aux"):
+    # Phase 4 Plan 1: iterate every owner that appears in the diff report
+    # rather than hard-coding a short tuple. With the RUST_TARGET_CRATES
+    # expansion from 10 to 19 crates there are now 19+ distinct owner
+    # labels, and any new one would silently drop rows under the old
+    # hard-coded tuple.
+    _owner_render_order = sorted(diff_report.get("gap_counts_by_owner_tier", {}))
+    for owner in _owner_render_order:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
-        lines.append(
-            f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |"
-        )
+        lines.append(f"| `{owner}` | {tier_counts.get('tier1', 0)} |")
 
     lines.extend(
         (
@@ -605,14 +824,12 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
         for owner_module in sorted(module_map):
             module_gaps = module_map[owner_module]
             tier1_count = sum(1 for gap in module_gaps if gap["tier"] == "tier1")
-            tier2_count = sum(1 for gap in module_gaps if gap["tier"] == "tier2")
             lines.extend(
                 (
                     f"### `{owner_module}`",
                     "",
                     f"- Total gaps: **{len(module_gaps)}**",
                     f"- Tier 1 gaps: **{tier1_count}**",
-                    f"- Tier 2 gaps: **{tier2_count}**",
                     "",
                     "| Gap Type | Tier | Rust Symbol | Node Export |",
                     "|---|---|---|---|",
@@ -652,7 +869,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--index-dts",
-        default="ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+        default="node-bindings/classic-node/index.d.ts",
         help="Path to Node index.d.ts, relative to repo root.",
     )
     parser.add_argument(
@@ -662,13 +879,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--runtime-registry",
-        default="ClassicLib-rs/node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
+        default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
         help="Path to the Node runtime coverage registry JSON, relative to repo root.",
-    )
-    parser.add_argument(
-        "--deferred-registry",
-        default="docs/implementation/node_api_parity/governance/deferred_runtime_backlog.json",
-        help="Path to the Node deferred backlog registry JSON, relative to repo root.",
     )
     args = parser.parse_args()
 
@@ -678,10 +890,21 @@ def main() -> int:
 
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
-    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
-    tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
+    # Phase 4 Plan 2: @rust proxy rows only have Rust symbols; strip the
+    # suffix for tier1 rust-set tracking and skip proxy rows in the node-side
+    # lookup because they intentionally omit nodeExport.
+    tier1_rust_symbols = {
+        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
+    }
+    tier1_node_exports = {
+        mapping["nodeExport"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
+    }
     tier1_owner_map = {
-        mapping["nodeExport"]: mapping["ownerModule"] for mapping in tier1_mappings
+        mapping["nodeExport"]: mapping["ownerModule"]
+        for mapping in tier1_mappings
+        if mapping.get("nodeExport") is not None
     }
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
@@ -693,17 +916,14 @@ def main() -> int:
     )
     diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
     runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    deferred_registry = load_json_file(repo_root / args.deferred_registry)
     coverage_summary = build_coverage_summary(
         binding="node",
         contract=contract,
         diff_report=diff_report,
         runtime_registry=runtime_registry,
-        deferred_registry=deferred_registry,
         source_paths={
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
-            "deferred_registry": args.deferred_registry,
             "index_dts": args.index_dts,
         },
     )

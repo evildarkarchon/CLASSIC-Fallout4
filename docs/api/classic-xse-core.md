@@ -1,6 +1,6 @@
 # `classic-xse-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-xse-core/`](../../ClassicLib-rs/business-logic/classic-xse-core).
+Contributor-facing API documentation for [`business-logic/classic-xse-core/`](../../business-logic/classic-xse-core).
 
 Crate metadata:
 
@@ -24,7 +24,7 @@ Use this crate when you need to:
 - check whether an expected XSE loader executable exists in a known game directory
 - derive an XSE version from versioned DLL filenames next to the loader
 - package installation status and optional detected version into one `XseInfo` value
-- reuse common version helpers re-exported from [`classic-version-core`](../../ClassicLib-rs/business-logic/classic-version-core)
+- reuse common version helpers re-exported from [`classic-version-core`](../../business-logic/classic-version-core)
 
 Do not use this crate for:
 
@@ -34,7 +34,7 @@ Do not use this crate for:
 - crashgen or broader setup scanning orchestration
 - binding-specific wrapper DTOs
 
-Those concerns live in related crates such as [`classic-path-core`](../../ClassicLib-rs/business-logic/classic-path-core), [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core), [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core), and the C++/Node/Python binding layers.
+Those concerns live in related crates such as [`classic-path-core`](../../business-logic/classic-path-core), [`classic-version-registry-core`](../../business-logic/classic-version-registry-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++/Node/Python binding layers.
 
 ---
 
@@ -53,7 +53,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 
 ## Root-level re-exports
 
-- `compare_versions()`, `parse_version()`, `try_parse_version()` from [`classic-version-core`](../../ClassicLib-rs/business-logic/classic-version-core)
+- `compare_versions()`, `parse_version()`, `try_parse_version()` from [`classic-version-core`](../../business-logic/classic-version-core)
 
 Contributor note:
 
@@ -87,7 +87,7 @@ Important methods and traits:
 Behavior worth knowing:
 
 - `FromStr` is case-insensitive because it uppercases the input before matching
-- `from_game_id()` maps `GameId::Skyrim` to `SKSE64`; there is no separate `GameId` variant for classic Skyrim or Skyrim VR in `classic-constants-core`
+- `from_game_id()` maps `GameId::Skyrim` to `SKSE64`; there is no separate `GameId` variant for classic Skyrim or Skyrim VR in `classic-shared-core`
 - loader and DLL naming are hardcoded by enum variant, for example `F4SE -> f4se_loader.exe` and `f4se_`
 
 ## `XseInfo`
@@ -134,7 +134,7 @@ Important contributor details:
 
 - detection uses DLL filenames, not PE metadata and not log parsing
 - the loader filename itself is not parsed for version information
-- `parse_version()` comes from [`classic-version-core`](../../ClassicLib-rs/business-logic/classic-version-core) and ignores a fourth version component, so `1_10_163_0` becomes semver `1.10.163`
+- `parse_version()` comes from [`classic-version-core`](../../business-logic/classic-version-core) and ignores a fourth version component, so `1_10_163_0` becomes semver `1.10.163`
 - directory iteration comes from `std::fs::read_dir()`, so if multiple matching DLLs exist, the returned version is simply the first parseable one encountered
 
 ## `is_xse_installed()`
@@ -161,7 +161,7 @@ That last point matters for callers: `get_xse_info()` is fail-soft for version d
 
 ## Re-exported version helpers
 
-The crate re-exports three helpers from [`classic-version-core`](../../ClassicLib-rs/business-logic/classic-version-core):
+The crate re-exports three helpers from [`classic-version-core`](../../business-logic/classic-version-core):
 
 - `parse_version()`
 - `try_parse_version()`
@@ -235,7 +235,7 @@ Contributor note:
 
 Important direct dependencies:
 
-- `classic-constants-core` - provides `GameId` for `XseType::from_game_id()`
+- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()`
 - `classic-version-core` - provides the re-exported version parsing/comparison helpers used by `detect_xse_version()`
 - `classic-path-core` - currently visible only through `XseError::PathError`
 - `semver` - `XseInfo.version` and `detect_xse_version()` return type
@@ -244,11 +244,11 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - exposes `detect_xse_version()` and `is_xse_installed()` to C++ callers in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs)
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - wraps the same core APIs for JavaScript in [`ClassicLib-rs/node-bindings/classic-node/src/xse.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/xse.rs)
-- [`classic-xse-py`](../../ClassicLib-rs/python-bindings/classic-xse-py) - wraps the same core APIs for Python in [`ClassicLib-rs/python-bindings/classic-xse-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-xse-py/src/lib.rs)
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core) - adjacent higher-level scan/setup crate; current source does not directly call `classic-xse-core`, but both participate in setup-time XSE-related workflows
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - upstream source of expected XSE metadata for other layers, even though this crate does not query it directly today
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes `detect_xse_version()` and `is_xse_installed()` to C++ callers in [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`classic-node`](../../node-bindings/classic-node) - wraps the same core APIs for JavaScript in [`node-bindings/classic-node/src/xse.rs`](../../node-bindings/classic-node/src/xse.rs)
+- [`classic-xse-py`](../../python-bindings/classic-xse-py) - wraps the same core APIs for Python in [`python-bindings/classic-xse-py/src/lib.rs`](../../python-bindings/classic-xse-py/src/lib.rs)
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - adjacent higher-level scan/setup crate; current source does not directly call `classic-xse-core`, but both participate in setup-time XSE-related workflows
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - upstream source of expected XSE metadata for other layers, even though this crate does not query it directly today
 
 ---
 
@@ -257,7 +257,7 @@ Related CLASSIC crates and consumers:
 This example follows the real public API and shows the common contributor pattern: derive the XSE family from a game, check presence, then request the combined info payload.
 
 ```rust
-use classic_constants_core::GameId;
+use classic_shared_core::GameId;
 use classic_xse_core::{XseType, get_xse_info, is_xse_installed};
 use std::path::Path;
 

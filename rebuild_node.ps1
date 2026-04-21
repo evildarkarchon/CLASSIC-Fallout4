@@ -1,16 +1,14 @@
 <#
 .SYNOPSIS
-    Build the CLASSIC Node.js/Bun native addon.
+    Delegate CLASSIC Node.js/Bun addon rebuilds to rebuild_rust.ps1.
 .DESCRIPTION
-    Builds the classic-node NAPI-RS crate and generates JS/TS glue files.
+    Thin compatibility wrapper that preserves the public rebuild_node.ps1 entrypoint
+    while routing all Node rebuild behavior through the canonical repo-root
+    rebuild_rust.ps1 -Target node flow.
 .PARAMETER Clean
-    Perform a clean build (removes previous artifacts).
+    Perform a clean node rebuild.
 .PARAMETER Debug
     Build in debug mode instead of release.
-.EXAMPLE
-    ./rebuild_node.ps1           # Release build
-    ./rebuild_node.ps1 -Debug    # Debug build
-    ./rebuild_node.ps1 -Clean    # Clean release build
 #>
 param(
     [switch]$Clean,
@@ -18,47 +16,16 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$nodeDir = Join-Path (Join-Path (Join-Path $PSScriptRoot "rust") "node-bindings") "classic-node"
 
-if (-not (Test-Path $nodeDir)) {
-    Write-Error "Node bindings directory not found: $nodeDir"
+$rebuildRustScript = Join-Path $PSScriptRoot "rebuild_rust.ps1"
+if (-not (Test-Path $rebuildRustScript)) {
+    Write-Error "Canonical rebuild script not found at '$rebuildRustScript'. Use the repo-root rebuild_rust.ps1 entrypoint."
     exit 1
 }
 
-Push-Location $nodeDir
-try {
-    # Ensure dependencies are installed
-    if (-not (Test-Path "node_modules")) {
-        Write-Host "Installing dependencies..." -ForegroundColor Cyan
-        bun install
-    }
-
-    if ($Clean) {
-        Write-Host "Cleaning previous build artifacts..." -ForegroundColor Yellow
-        Remove-Item -Force -ErrorAction SilentlyContinue *.node
-        Remove-Item -Force -ErrorAction SilentlyContinue index.js
-        Remove-Item -Force -ErrorAction SilentlyContinue index.d.ts
-        cargo clean -p classic-node
-    }
-
-    if ($Debug) {
-        Write-Host "Building classic-node (debug)..." -ForegroundColor Cyan
-        bun run build:debug
-    } else {
-        Write-Host "Building classic-node (release)..." -ForegroundColor Cyan
-        bun run build
-    }
-
-    Write-Host "Build complete!" -ForegroundColor Green
-
-    # Verify the build produced expected files
-    $nodeFile = Get-ChildItem -Filter "*.node" -ErrorAction SilentlyContinue
-    if ($nodeFile) {
-        Write-Host "  Native addon: $($nodeFile.Name) ($([math]::Round($nodeFile.Length / 1MB, 2)) MB)" -ForegroundColor Gray
-    }
-    if (Test-Path "index.d.ts") {
-        Write-Host "  TypeScript types: index.d.ts" -ForegroundColor Gray
-    }
-} finally {
-    Pop-Location
+Write-Host "Delegating to rebuild_rust.ps1 -Target node..." -ForegroundColor Cyan
+& $rebuildRustScript -Target node -Clean:$Clean -DebugBuild:$Debug
+$exitCode = if ($LASTEXITCODE -is [int]) { $LASTEXITCODE } else { 0 }
+if ($exitCode -ne 0) {
+    exit $exitCode
 }
