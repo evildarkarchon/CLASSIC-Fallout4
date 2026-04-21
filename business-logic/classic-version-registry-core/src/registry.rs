@@ -450,7 +450,7 @@ impl VersionRegistry {
     #[must_use]
     pub fn get_all(&self) -> Vec<&VersionInfo> {
         let mut versions: Vec<_> = self.versions.values().collect();
-        versions.sort_by(|a, b| b.priority.cmp(&a.priority));
+        versions.sort_by_key(|version| std::cmp::Reverse(version.priority));
         versions
     }
 
@@ -471,7 +471,7 @@ impl VersionRegistry {
             .values()
             .filter(|v| v.game == game && is_vr.is_none_or(|vr| v.is_vr == vr))
             .collect();
-        versions.sort_by(|a, b| b.priority.cmp(&a.priority));
+        versions.sort_by_key(|version| std::cmp::Reverse(version.priority));
         versions
     }
 

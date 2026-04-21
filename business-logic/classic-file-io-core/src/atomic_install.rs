@@ -205,10 +205,10 @@ pub fn install_atomic(
     // path as well.
     let _lock = acquire_install_lock(target)?;
 
-    // Clear any cached hash first so a stale entry from a previous install at
-    // this path does not short-circuit the integrity check.
-    FileHasher::clear_cache();
-    let actual_sha = FileHasher::hash_file(source_tmp)?;
+    // Bypass the shared hash cache for one-shot integrity verification so an
+    // unrelated install cannot perturb process-global cache state used by
+    // dedicated cache tests.
+    let actual_sha = FileHasher::hash_file_uncached(source_tmp)?;
 
     if !sha256_eq(&actual_sha, expected_sha256) {
         // Integrity failure — delete the temp file and preserve all existing

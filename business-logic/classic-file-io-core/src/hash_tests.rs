@@ -61,6 +61,7 @@ fn test_hash_file_caching() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+#[serial]
 fn test_hash_nonexistent_file() {
     let result = FileHasher::hash_file(Path::new("nonexistent_file.txt"));
     assert!(result.is_err());

@@ -114,7 +114,22 @@ impl FileHasher {
 
         CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
 
-        // Validate file exists
+        let hash = Self::hash_file_uncached(path)?;
+
+        // Cache result
+        HASH_CACHE.insert(path.to_path_buf(), hash.clone());
+        debug!("Cached hash for: {}", path.display());
+
+        Ok(hash)
+    }
+
+    /// Calculate SHA256 for a file without mutating the shared cache or stats.
+    pub(crate) fn hash_file_uncached(path: &Path) -> Result<String, FileIOError> {
+        Self::validate_hash_target(path)?;
+        Self::calculate_sha256(path)
+    }
+
+    fn validate_hash_target(path: &Path) -> Result<(), FileIOError> {
         if !path.exists() {
             return Err(FileIOError::NotFound(path.display().to_string()));
         }
@@ -126,14 +141,7 @@ impl FileHasher {
             )));
         }
 
-        // Calculate hash
-        let hash = Self::calculate_sha256(path)?;
-
-        // Cache result
-        HASH_CACHE.insert(path.to_path_buf(), hash.clone());
-        debug!("Cached hash for: {}", path.display());
-
-        Ok(hash)
+        Ok(())
     }
 
     /// Calculate SHA256 hash without caching (internal implementation).
