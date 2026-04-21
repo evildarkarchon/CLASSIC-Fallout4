@@ -116,19 +116,19 @@ impl App {
 
         if self.active_tab == TabIndex::Results {
             match mouse.kind {
-                MouseEventKind::ScrollDown => {
-                    if self.click_areas.results.viewer_area.contains(position) {
-                        self.results_set_focus_viewer();
-                        self.results_scroll_by(3);
-                        return;
-                    }
+                MouseEventKind::ScrollDown
+                    if self.click_areas.results.viewer_area.contains(position) =>
+                {
+                    self.results_set_focus_viewer();
+                    self.results_scroll_by(3);
+                    return;
                 }
-                MouseEventKind::ScrollUp => {
-                    if self.click_areas.results.viewer_area.contains(position) {
-                        self.results_set_focus_viewer();
-                        self.results_scroll_by(-3);
-                        return;
-                    }
+                MouseEventKind::ScrollUp
+                    if self.click_areas.results.viewer_area.contains(position) =>
+                {
+                    self.results_set_focus_viewer();
+                    self.results_scroll_by(-3);
+                    return;
                 }
                 _ => {}
             }
@@ -391,15 +391,15 @@ impl App {
             KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.results_copy_all();
             }
-            KeyCode::Char(ch) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
-                if ch != 's'
+            KeyCode::Char(ch)
+                if !key.modifiers.contains(KeyModifiers::CONTROL)
+                    && ch != 's'
                     && ch != 'S'
                     && ch != 'o'
                     && ch != 'O'
-                    && matches!(self.results.focus, crate::app::ResultsFocus::List)
-                {
-                    self.results_push_search_char(ch);
-                }
+                    && matches!(self.results.focus, crate::app::ResultsFocus::List) =>
+            {
+                self.results_push_search_char(ch);
             }
             _ => {}
         }

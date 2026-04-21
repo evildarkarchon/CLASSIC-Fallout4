@@ -375,12 +375,12 @@ fn render_scrollbar(
     let track_height = area.height as usize;
     let max_scroll = total_lines.saturating_sub(viewport_height);
 
-    let thumb_height = if total_lines == 0 {
-        track_height
-    } else {
-        ((viewport_height.saturating_mul(track_height)).max(track_height) / total_lines)
-            .clamp(1, track_height)
-    };
+    let thumb_height = viewport_height
+        .saturating_mul(track_height)
+        .max(track_height)
+        .checked_div(total_lines)
+        .unwrap_or(track_height)
+        .clamp(1, track_height);
 
     let thumb_pos = if max_scroll == 0 || track_height == thumb_height {
         0
