@@ -301,14 +301,14 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
         // Step 1: check (gated by enabled). Empty bundled dir = native-exe fallback.
         auto status = classic::update::yaml_check_update(
             kYamlPagesUrl, kYamlTagPrefix, entries, enabled, rust::Str(""));
-        (void)report_status(status);
+        const int status_exit_code = report_status(status);
 
         if (status.tag != kYamlTagUpdateAvailable) {
-            // Nothing to apply: either disabled, up-to-date, unknown, or error.
-            // `report_status` already surfaced the details; we just pick the
-            // appropriate exit code.
+            // A blocked or failed apply must surface as a failing exit code so
+            // scripts can distinguish "already current" from "apply was not
+            // allowed / could not proceed".
             classic::runtime::shutdown_runtime();
-            return (status.tag == kYamlTagUnknown || status.tag == kYamlTagError) ? 1 : 0;
+            return (status.tag == kYamlTagDisabled) ? 1 : status_exit_code;
         }
 
         // Step 2: confirm with the user.

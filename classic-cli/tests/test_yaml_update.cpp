@@ -18,12 +18,20 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "../src/yaml_update.h"
+
 #include "classic_cxx_bridge/update.h"
 
+#include <chrono>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <string>
+#include <system_error>
 
 namespace {
+
+namespace fs = std::filesystem;
 
 /// Tags mirror `TAG_*` constants in
 /// `cpp-bindings/classic-cpp-bridge/src/update.rs`. Keep in sync when
@@ -42,6 +50,36 @@ rust::Vec<classic::update::YamlClientSchemaEntryDto> make_entries() {
     entry.installed_minor = 0u;
     entries.push_back(std::move(entry));
     return entries;
+}
+
+struct ScopedCurrentPath {
+    explicit ScopedCurrentPath(const fs::path& path) : original(fs::current_path()) {
+        fs::current_path(path);
+    }
+
+    ~ScopedCurrentPath() {
+        std::error_code ec;
+        fs::current_path(original, ec);
+    }
+
+    fs::path original;
+};
+
+fs::path make_disabled_settings_root() {
+    const auto unique_suffix =
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const fs::path root =
+        fs::temp_directory_path() / ("classic-cli-yaml-update-" + unique_suffix);
+
+    fs::create_directories(root / "CLASSIC Data");
+
+    std::ofstream settings(root / "CLASSIC Settings.yaml", std::ios::binary);
+    settings << "---\n"
+                "CLASSIC_Settings:\n"
+                "  Update Check: false\n";
+    settings.close();
+
+    return root;
 }
 
 } // namespace
@@ -78,4 +116,34 @@ TEST_CASE("yaml_rollback_update on unknown file does not error",
     // produces a Generic error — still acceptable; the guard here is
     // only against a panic reaching C++.
     SUCCEED("yaml_rollback_update FFI round-trip produced a valid outcome");
+}
+
+TEST_CASE("run_check_yaml_updates reports disabled setting without failing",
+          "[cli][update][yaml]") {
+    const fs::path root = make_disabled_settings_root();
+    int exit_code = -1;
+    {
+        const ScopedCurrentPath cwd(root);
+        exit_code = run_check_yaml_updates(CliArgs{});
+    }
+
+    std::error_code ec;
+    fs::remove_all(root, ec);
+
+    REQUIRE(exit_code == 0);
+}
+
+TEST_CASE("run_apply_yaml_updates fails when updates are disabled in settings",
+          "[cli][update][yaml]") {
+    const fs::path root = make_disabled_settings_root();
+    int exit_code = -1;
+    {
+        const ScopedCurrentPath cwd(root);
+        exit_code = run_apply_yaml_updates(CliArgs{});
+    }
+
+    std::error_code ec;
+    fs::remove_all(root, ec);
+
+    REQUIRE(exit_code == 1);
 }

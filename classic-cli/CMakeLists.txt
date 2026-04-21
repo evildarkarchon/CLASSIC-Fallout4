@@ -164,10 +164,14 @@ if(Catch2_FOUND)
     # consumers prove the discriminated DTO shape at compile AND run time.
     add_executable(classic-cli-bridge-tests
         tests/test_yaml_update.cpp
+        src/yaml_update.cpp
     )
+
+    target_include_directories(classic-cli-bridge-tests PRIVATE src/)
 
     target_link_libraries(classic-cli-bridge-tests PRIVATE
         Catch2::Catch2WithMain
+        fmt::fmt
         classic_cxx_bridge
     )
 

@@ -13,8 +13,9 @@
 ///
 /// Returns:
 ///   0 = success (for check: status was reported; for apply: at least one
-///       file was installed OR there was nothing to apply)
-///   1 = failure (network error, checksum mismatch, user declined, etc.)
+///       file was installed OR the installed data was already current)
+///   1 = failure / blocked apply (network error, settings disabled,
+///       checksum mismatch, user declined, etc.)
 ///   2 = fatal (runtime init or settings load failed)
 int run_check_yaml_updates(const CliArgs& args);
 int run_apply_yaml_updates(const CliArgs& args);

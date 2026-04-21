@@ -439,7 +439,9 @@ pub struct JsYamlRejectedFile {
 /// — its value is one of:
 /// - `"disabled"`: `Update Check: false`; nothing fetched.
 /// - `"updateAvailable"`: `compatibleFiles` + `incompatibleFiles` populated.
-/// - `"upToDate"`: `releaseTag` + `publishedAt` populated; nothing else.
+/// - `"upToDate"`: `releaseTag` + `publishedAt` populated; may also carry
+///   `incompatibleFiles` when a newer release exists but this CLASSIC build
+///   cannot install those files.
 /// - `"unknown"`: `unknownReason` populated.
 #[napi(object)]
 #[derive(Clone)]
@@ -452,7 +454,9 @@ pub struct JsYamlUpdateStatus {
     pub published_at: String,
     /// Files the client can install (compatible + newer). `updateAvailable` only.
     pub compatible_files: Vec<JsYamlUpdateFile>,
-    /// Files the client rejected, each paired with its reason. `updateAvailable` only.
+    /// Files the client rejected, each paired with its reason. Populated for
+    /// `updateAvailable`, and also for some `upToDate` results when the
+    /// published release contains files this build cannot install.
     pub incompatible_files: Vec<JsYamlRejectedFile>,
     /// Reason for `"unknown"` (e.g. `"manifest_version 2 not supported"`).
     pub unknown_reason: String,
@@ -616,6 +620,15 @@ fn core_outcome_to_js(outcome: &core::FileInstallOutcome) -> JsYamlUpdateFileOut
 /// @param entries    Per-file accepted-range + currently-installed schema
 ///                   the client knows about.
 /// @param enabled    `false` → short-circuit with `tag: "disabled"`.
+/// @param bundledYamlDir  Install-tree directory containing the bundled
+///                        shippable YAML files (`CLASSIC Data/databases`).
+///                        Node callers should pass the package-local path
+///                        (for example `path.join(__dirname, "CLASSIC Data", "databases")`)
+///                        so clean installs whose bundled bytes already
+///                        match the manifest are classified as `upToDate`.
+///                        `null` / omitted falls back to probing
+///                        `current_exe()`, which yields the wrong path under
+///                        `node.exe` / `bun.exe`.
 /// @throws on network failure that even the fallback can't recover from.
 #[napi]
 pub async fn check_yaml_update(
@@ -646,7 +659,7 @@ pub async fn check_yaml_update(
 /// This is the reviewed-decision form of apply:
 ///
 /// - `enabled` mirrors the `Update Check` settings toggle. Passing `false`
-///   rejects the call with a `update check disabled` error before any
+///   rejects the call with an `update check disabled` error before any
 ///   HTTP is issued — the user's opt-out survives between check and apply.
 /// - `approvedReleaseTag` + `approvedFileNames` come from a prior
 ///   `checkYamlUpdate` call the user confirmed. They pin the install to
@@ -664,6 +677,12 @@ pub async fn check_yaml_update(
 /// @param enabled             Honors the `Update Check: false` setting end-to-end.
 /// @param approvedReleaseTag  Release tag the user reviewed.
 /// @param approvedFileNames   File names the user reviewed.
+/// @param bundledYamlDir      Install-tree directory containing the bundled
+///                            shippable YAML files (`CLASSIC Data/databases`).
+///                            Node callers should pass the package-local path
+///                            because the fallback probes `current_exe()` and
+///                            therefore resolves to `node.exe` / `bun.exe`
+///                            instead of the CLASSIC package directory.
 /// @throws when the whole batch fails, when the update check is disabled,
 ///         or when the decision is stale.
 #[napi]

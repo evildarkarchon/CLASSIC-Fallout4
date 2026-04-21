@@ -1310,16 +1310,35 @@ export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
  * Fetch + download + atomically install the files the user approved at
  * check time.
  *
- * `bundledYamlDir` is the install-tree `CLASSIC Data/databases` path used
- * to resolve the currently-installed bytes when `entries` leave
- * `installed` unset. Node hosts should pass it (e.g. derived from
- * `__dirname`), because the core fallback probes `current_exe()`, which
- * resolves to `node.exe`/`bun.exe` and cannot find the package-local
- * YAML. Pass `null` or undefined to keep the `current_exe()` fallback
- * (only useful when the native binding happens to live next to
- * `CLASSIC Data/`).
+ * This is the reviewed-decision form of apply:
  *
- * @throws when the whole batch fails (e.g. manifest fetch error, cache dir unreachable).
+ * - `enabled` mirrors the `Update Check` settings toggle. Passing `false`
+ *   rejects the call with an `update check disabled` error before any
+ *   HTTP is issued — the user's opt-out survives between check and apply.
+ * - `approvedReleaseTag` + `approvedFileNames` come from a prior
+ *   `checkYamlUpdate` call the user confirmed. They pin the install to
+ *   the exact release the user reviewed; if the publisher has rotated
+ *   the manifest to a newer tag in the meantime, the call throws a
+ *   `decision stale` error instead of silently installing the new
+ *   release.
+ *
+ * Returns per-file outcomes — a mixed batch is a valid success (the
+ * successful subset is installed).
+ *
+ * @param pagesUrl            Absolute Pages URL of `manifest-latest.json`.
+ * @param tagPrefix           Release-tag prefix for the anonymous API fallback.
+ * @param entries             Per-file accepted-range + installed-schema set.
+ * @param enabled             Honors the `Update Check: false` setting end-to-end.
+ * @param approvedReleaseTag  Release tag the user reviewed.
+ * @param approvedFileNames   File names the user reviewed.
+ * @param bundledYamlDir      Install-tree directory containing the bundled
+ *                            shippable YAML files (`CLASSIC Data/databases`).
+ *                            Node callers should pass the package-local path
+ *                            because the fallback probes `current_exe()` and
+ *                            therefore resolves to `node.exe` / `bun.exe`
+ *                            instead of the CLASSIC package directory.
+ * @throws when the whole batch fails, when the update check is disabled,
+ *         or when the decision is stale.
  */
 export declare function applyYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, approvedReleaseTag: string, approvedFileNames: Array<string>, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateReport>
 
@@ -1462,21 +1481,22 @@ export declare function checkXsePlugins(pluginsPath: string, gameVersion: string
  * classifies the manifest against `entries`. When `enabled` is `false`,
  * returns `{ tag: "disabled" }` immediately without any HTTP call.
  *
- * @param pagesUrl        Absolute HTTPS URL of the Pages manifest (normally
- *                        `https://<owner>.github.io/<repo>/yaml-data/manifest-latest.json`).
- * @param tagPrefix       Release-tag prefix for the anonymous API fallback
- *                        (e.g. `"yaml-data-v"`).
- * @param entries         Per-file accepted-range + currently-installed schema
- *                        the client knows about.
- * @param enabled         `false` → short-circuit with `tag: "disabled"`.
+ * @param pagesUrl   Absolute HTTPS URL of the Pages manifest (normally
+ *                   `https://<owner>.github.io/<repo>/yaml-data/manifest-latest.json`).
+ * @param tagPrefix  Release-tag prefix for the anonymous API fallback
+ *                   (e.g. `"yaml-data-v"`).
+ * @param entries    Per-file accepted-range + currently-installed schema
+ *                   the client knows about.
+ * @param enabled    `false` → short-circuit with `tag: "disabled"`.
  * @param bundledYamlDir  Install-tree directory containing the bundled
  *                        shippable YAML files (`CLASSIC Data/databases`).
  *                        Node callers should pass the package-local path
- *                        (e.g. `path.join(__dirname, "CLASSIC Data", "databases")`)
+ *                        (for example `path.join(__dirname, "CLASSIC Data", "databases")`)
  *                        so clean installs whose bundled bytes already
  *                        match the manifest are classified as `upToDate`.
- *                        `null` / omitted falls back to probing `current_exe()`,
- *                        which yields the wrong path under `node.exe`/`bun.exe`.
+ *                        `null` / omitted falls back to probing
+ *                        `current_exe()`, which yields the wrong path under
+ *                        `node.exe` / `bun.exe`.
  * @throws on network failure that even the fallback can't recover from.
  */
 export declare function checkYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateStatus>
@@ -3405,13 +3425,7 @@ export declare const enum JsYamlFile {
 }
 
 /**
- * YAML file source identifier.
- *
- * Provides paths and display names for the various YAML configuration files
- * used by CLASSIC.
- */
-/**
- * One rejection entry inside `JsYamlUpdateStatus`. Parallels the
+ * One rejection entry inside [`JsYamlUpdateStatus`]. Parallels the
  * `incompatibleFiles` list.
  */
 export interface JsYamlRejectedFile {
@@ -3422,7 +3436,7 @@ export interface JsYamlRejectedFile {
 }
 
 /**
- * Result of `rollbackYamlUpdate`. `rolledBack === false` with no exception
+ * Result of `rollbackYamlUpdate`. `rolledBack == false` with no exception
  * means `NoPreviousVersion` (the file has no `.prev` sibling).
  */
 export interface JsYamlRollbackOutcome {
@@ -3432,6 +3446,12 @@ export interface JsYamlRollbackOutcome {
   fileName: string
 }
 
+/**
+ * YAML file source identifier.
+ *
+ * Provides paths and display names for the various YAML configuration files
+ * used by CLASSIC.
+ */
 export declare const enum JsYamlSource {
   /** Main database: CLASSIC Data/databases/CLASSIC Main.yaml */
   Main = 'Main',
@@ -3450,11 +3470,11 @@ export declare const enum JsYamlSource {
 }
 
 /**
- * One file entry inside `JsYamlUpdateStatus` or `JsYamlUpdateReport`.
+ * One file entry inside [`JsYamlUpdateStatus`] or [`JsYamlUpdateReport`].
  *
  * Mirrors `YamlManifestFile` in `classic-update-core`, with the optional
- * `min_client_schema` / `max_client_schema` dropped because JS consumers
- * don't read them today.
+ * `min_client_schema`/`max_client_schema` dropped because the binding
+ * consumers don't currently read them.
  */
 export interface JsYamlUpdateFile {
   /** Canonical file name. */
@@ -3463,16 +3483,16 @@ export interface JsYamlUpdateFile {
   schemaVersion: string
   /** Hex-encoded SHA-256 of the file bytes. */
   sha256: string
-  /** Size in bytes. */
+  /** Size in bytes. NAPI represents u64 as f64 (JS number). */
   sizeBytes: number
   /** Absolute HTTPS URL of the release asset. */
   downloadUrl: string
 }
 
 /**
- * Per-file install outcome inside `JsYamlUpdateReport`. When
- * `installed === true`, `schemaVersion` + `createdPrev` are populated.
- * When `installed === false`, `failureReason` is populated.
+ * Per-file install outcome inside [`JsYamlUpdateReport`]. When
+ * `installed == true`, `schemaVersion` + `createdPrev` are populated.
+ * When `installed == false`, `failureReason` is populated.
  */
 export interface JsYamlUpdateFileOutcome {
   /** Canonical file name. */
@@ -3496,12 +3516,17 @@ export interface JsYamlUpdateReport {
 }
 
 /**
- * Discriminated status DTO returned by `checkYamlUpdate`. Inspect `tag`
- * first — its value is one of: `"disabled"`, `"updateAvailable"`,
- * `"upToDate"`, or `"unknown"`.
+ * Discriminated status DTO returned by `checkYamlUpdate`. Read `tag` first
+ * — its value is one of:
+ * - `"disabled"`: `Update Check: false`; nothing fetched.
+ * - `"updateAvailable"`: `compatibleFiles` + `incompatibleFiles` populated.
+ * - `"upToDate"`: `releaseTag` + `publishedAt` populated; may also carry
+ *   `incompatibleFiles` when a newer release exists but this CLASSIC build
+ *   cannot install those files.
+ * - `"unknown"`: `unknownReason` populated.
  */
 export interface JsYamlUpdateStatus {
-  /** Discriminator. */
+  /** Discriminator. See module doc for possible values. */
   tag: string
   /** Manifest's `release_tag`, populated for `updateAvailable` / `upToDate`. */
   releaseTag: string
@@ -3509,7 +3534,7 @@ export interface JsYamlUpdateStatus {
   publishedAt: string
   /** Files the client can install (compatible + newer). `updateAvailable` only. */
   compatibleFiles: Array<JsYamlUpdateFile>
-  /** Files the client rejected, each paired with its reason. `updateAvailable` only. */
+  /** Files the client rejected, each paired with its reason. Populated for `updateAvailable`, and also for some `upToDate` results when the published release contains files this build cannot install. */
   incompatibleFiles: Array<JsYamlRejectedFile>
   /** Reason for `"unknown"` (e.g. `"manifest_version 2 not supported"`). */
   unknownReason: string
@@ -3851,14 +3876,22 @@ export interface ResourceInfo {
 }
 
 /**
+ * Swap the cached YAML file with its `.prev` sibling (if any).
+ *
+ * Returns `rolledBack: false` with no exception when the file has no
+ * `.prev` (steady-state after a fresh install).
+ *
+ * @param fileName Canonical file name (e.g. `"CLASSIC Main.yaml"`).
+ */
+export declare function rollbackYamlUpdate(fileName: string): JsYamlRollbackOutcome
+
+/**
  * Run all game integrity checks concurrently.
  *
  * Executes XSE validation, crashgen checking, ENB detection,
  * log error scanning, Wrye Bash analysis, and mod INI scanning
  * as concurrent tasks.
  */
-export declare function rollbackYamlUpdate(fileName: string): JsYamlRollbackOutcome
-
 export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>
 
 /**

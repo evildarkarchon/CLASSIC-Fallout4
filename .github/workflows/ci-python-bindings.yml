@@ -103,9 +103,11 @@ jobs:
 
       # `maturin` is intentionally installed into `python-bindings/.venv`.
       # `rebuild_rust.ps1` targets that interpreter explicitly for Python binding builds.
-      - name: Build and install required Python bindings
+      # Smoke-test collection imports promoted modules at import time, so CI must
+      # install the full Python binding set instead of a hand-maintained subset.
+      - name: Build and install Python bindings
         shell: pwsh
-        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
+        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 
       - name: Run Python bindings smoke tests
         run: uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
