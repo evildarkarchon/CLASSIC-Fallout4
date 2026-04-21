@@ -67,3 +67,31 @@ fn yaml_rollback_update_returns_no_prev_for_unknown_file() {
         assert!(!dto.rolled_back);
     }
 }
+
+#[test]
+fn yaml_apply_update_accepts_structured_request_and_short_circuits_when_disabled() {
+    let request = ffi::YamlApplyRequestDto {
+        pages_url: "http://127.0.0.1:1/manifest-latest.json".into(),
+        tag_prefix: "yaml-data-v".into(),
+        entries: vec![ffi::YamlClientSchemaEntryDto {
+            name: "CLASSIC Main.yaml".into(),
+            accepted_major: 1,
+            accepted_minimum_minor: 0,
+            has_installed: false,
+            installed_major: 0,
+            installed_minor: 0,
+        }],
+        enabled: false,
+        approved: ffi::ApprovedUpdateDto {
+            release_tag: "yaml-data-v-test".into(),
+            file_names: vec!["CLASSIC Main.yaml".into()],
+            file_sha256: vec!["deadbeef".into()],
+        },
+        bundled_yaml_dir: String::new(),
+    };
+
+    let dto = yaml_apply_update(&request);
+    assert!(dto.installed.is_empty());
+    assert!(dto.failed.is_empty());
+    assert!(dto.error_message.starts_with("update check disabled:"));
+}

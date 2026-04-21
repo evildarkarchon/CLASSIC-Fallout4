@@ -1,8 +1,11 @@
 import { describe, test, expect } from "bun:test";
 import {
+  applyYamlUpdate,
   // Yaml-update orchestrator
   checkYamlUpdate,
   rollbackYamlUpdate,
+  type JsApprovedUpdate,
+  type JsYamlApplyRequest,
   // Input / output DTOs
   type JsYamlClientSchemaEntry,
   type JsYamlUpdateStatus,
@@ -69,6 +72,26 @@ describe("yaml-update NAPI surface", () => {
       "/nonexistent/path",
     );
     expect(status.tag).toBe("disabled");
+  });
+
+  test("applyYamlUpdate accepts a structured request object", async () => {
+    const approved: JsApprovedUpdate = {
+      releaseTag: "yaml-data-v-test",
+      fileNames: ["CLASSIC Main.yaml"],
+      fileSha256: ["deadbeef"],
+    };
+    const request: JsYamlApplyRequest = {
+      pagesUrl: "http://127.0.0.1:1/manifest-latest.json",
+      tagPrefix: "yaml-data-v",
+      entries: [MAIN_ENTRY],
+      enabled: false,
+      approved,
+      bundledYamlDir: "/nonexistent/path",
+    };
+
+    await expect(applyYamlUpdate(request)).rejects.toThrow(
+      /update check.*disabled/i,
+    );
   });
 
   test("rollbackYamlUpdate returns rolledBack=false for unknown file", () => {

@@ -334,10 +334,20 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
             approved_file_sha256.push_back(f.sha256);
         }
 
-        auto report = classic::update::yaml_apply_update(
-            kYamlPagesUrl, kYamlTagPrefix, entries, enabled,
-            status.release_tag, approved_file_names, approved_file_sha256,
-            rust::Str(""));
+        classic::update::ApprovedUpdateDto approved{};
+        approved.release_tag = status.release_tag;
+        approved.file_names = std::move(approved_file_names);
+        approved.file_sha256 = std::move(approved_file_sha256);
+
+        classic::update::YamlApplyRequestDto request{};
+        request.pages_url = kYamlPagesUrl;
+        request.tag_prefix = kYamlTagPrefix;
+        request.entries = std::move(entries);
+        request.enabled = enabled;
+        request.approved = std::move(approved);
+        request.bundled_yaml_dir = rust::String("");
+
+        auto report = classic::update::yaml_apply_update(request);
 
         const auto installed = report.installed.size();
         const auto failed = report.failed.size();

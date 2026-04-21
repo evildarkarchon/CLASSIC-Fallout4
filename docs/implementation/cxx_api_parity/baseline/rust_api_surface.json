@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-21T07:32:51Z",
+  "generated_at_utc": "2026-04-21T08:31:37Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
@@ -5613,36 +5613,8 @@
       "signature": {
         "args": [
           {
-            "name": "pages_url",
-            "type": "&str"
-          },
-          {
-            "name": "tag_prefix",
-            "type": "&str"
-          },
-          {
-            "name": "entries",
-            "type": "&Vec<YamlClientSchemaEntryDto>"
-          },
-          {
-            "name": "enabled",
-            "type": "bool"
-          },
-          {
-            "name": "approved_release_tag",
-            "type": "&str"
-          },
-          {
-            "name": "approved_file_names",
-            "type": "&Vec<String>"
-          },
-          {
-            "name": "approved_file_sha256",
-            "type": "&Vec<String>"
-          },
-          {
-            "name": "bundled_yaml_dir",
-            "type": "&str"
+            "name": "request",
+            "type": "&YamlApplyRequestDto"
           }
         ],
         "returnType": "YamlUpdateReportDto"
@@ -5699,6 +5671,28 @@
       }
     },
     {
+      "id": "f0ae26428d3c795b",
+      "rustSymbol": "ApprovedUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "release_tag",
+          "type": "String"
+        },
+        {
+          "name": "file_names",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "file_sha256",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
       "id": "fdf05d86cfb41258",
       "rustSymbol": "UpdateCheckResult",
       "kind": "struct",
@@ -5720,6 +5714,40 @@
         },
         {
           "name": "error_message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "992cf44bfb2981ed",
+      "rustSymbol": "YamlApplyRequestDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "pages_url",
+          "type": "String"
+        },
+        {
+          "name": "tag_prefix",
+          "type": "String"
+        },
+        {
+          "name": "entries",
+          "type": "Vec<YamlClientSchemaEntryDto>"
+        },
+        {
+          "name": "enabled",
+          "type": "bool"
+        },
+        {
+          "name": "approved",
+          "type": "ApprovedUpdateDto"
+        },
+        {
+          "name": "bundled_yaml_dir",
           "type": "String"
         }
       ]

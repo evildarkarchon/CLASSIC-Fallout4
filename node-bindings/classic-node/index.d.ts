@@ -1310,38 +1310,22 @@ export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
  * Fetch + download + atomically install the files the user approved at
  * check time.
  *
- * This is the reviewed-decision form of apply:
- *
- * - `enabled` mirrors the `Update Check` settings toggle. Passing `false`
- *   rejects the call with an `update check disabled` error before any
- *   HTTP is issued — the user's opt-out survives between check and apply.
- * - `approvedReleaseTag` + the parallel `approvedFileNames` /
- *   `approvedFileSha256` arrays come from a prior `checkYamlUpdate` call
- *   the user confirmed. They pin the install to the exact release and
- *   bytes the user reviewed; if the publisher has rotated the manifest to
- *   a newer tag or replaced an approved asset in place, the call throws a
- *   `decision stale` error instead of silently installing the new bytes.
+ * This is the reviewed-decision form of apply. `request.enabled` mirrors the
+ * `Update Check` settings toggle, and `request.approved` carries the exact
+ * release/file identity the user confirmed from a prior `checkYamlUpdate`
+ * call. If the publisher has rotated the manifest to a newer tag or replaced
+ * an approved asset in place, the call throws a `decision stale` error
+ * instead of silently installing the new bytes.
  *
  * Returns per-file outcomes — a mixed batch is a valid success (the
  * successful subset is installed).
  *
- * @param pagesUrl            Absolute Pages URL of `manifest-latest.json`.
- * @param tagPrefix           Release-tag prefix for the anonymous API fallback.
- * @param entries             Per-file accepted-range + installed-schema set.
- * @param enabled             Honors the `Update Check: false` setting end-to-end.
- * @param approvedReleaseTag  Release tag the user reviewed.
- * @param approvedFileNames   File names the user reviewed.
- * @param approvedFileSha256  SHA-256 digests aligned with `approvedFileNames`.
- * @param bundledYamlDir      Install-tree directory containing the bundled
- *                            shippable YAML files (`CLASSIC Data/databases`).
- *                            Node callers should pass the package-local path
- *                            because the fallback probes `current_exe()` and
- *                            therefore resolves to `node.exe` / `bun.exe`
- *                            instead of the CLASSIC package directory.
+ * @param request Structured apply request. See `JsYamlApplyRequest` and
+ *                `JsApprovedUpdate` for the required fields.
  * @throws when the whole batch fails, when the update check is disabled,
  *         or when the decision is stale.
  */
-export declare function applyYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, approvedReleaseTag: string, approvedFileNames: Array<string>, approvedFileSha256: Array<string>, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateReport>
+export declare function applyYamlUpdate(request: JsYamlApplyRequest): Promise<JsYamlUpdateReport>
 
 /** Extended cache TTL for batch log scanning (1800 seconds / 30 minutes). */
 export const BATCH_CACHE_TTL: number
@@ -2430,6 +2414,24 @@ export interface JsAnalysisResult {
   suspectCount: number
 }
 
+/**
+ * Reviewed decision captured from a prior `checkYamlUpdate` call.
+ *
+ * Mirrors `classic_update_core::ApprovedUpdate`: the caller must pass the
+ * exact `releaseTag` they showed the user plus the parallel reviewed
+ * `fileNames` / `fileSha256` identity. The apply path re-checks those values
+ * against the live manifest and rejects stale decisions instead of silently
+ * installing different bytes.
+ */
+export interface JsApprovedUpdate {
+  /** Release tag the user reviewed. */
+  releaseTag: string
+  /** Reviewed file names. */
+  fileNames: Array<string>
+  /** SHA-256 digests aligned with `fileNames`. */
+  fileSha256: Array<string>
+}
+
 /** Issues detected during BA2 archive scanning. */
 export interface JsBa2Issues {
   /** Texture dimension issues (odd-numbered dimensions) */
@@ -3380,6 +3382,27 @@ export declare const enum JsXseType {
   Sksevr = 'SKSEVR',
   /** Starfield Script Extender */
   Sfse = 'SFSE'
+}
+
+/** Structured input to `applyYamlUpdate`. */
+export interface JsYamlApplyRequest {
+  /** Absolute Pages URL of `manifest-latest.json`. */
+  pagesUrl: string
+  /** Release-tag prefix for the anonymous API fallback. */
+  tagPrefix: string
+  /** Per-file accepted-range + installed-schema set. */
+  entries: Array<JsYamlClientSchemaEntry>
+  /** Honors the `Update Check: false` setting end-to-end. */
+  enabled: boolean
+  /** Reviewed decision from a prior `checkYamlUpdate` result. */
+  approved: JsApprovedUpdate
+  /**
+   * Install-tree directory containing the bundled shippable YAML files
+   * (`CLASSIC Data/databases`). Node callers should pass the package-local
+   * path because the fallback probes `current_exe()` and therefore resolves
+   * to `node.exe` / `bun.exe` instead of the CLASSIC package directory.
+   */
+  bundledYamlDir?: string
 }
 
 /**

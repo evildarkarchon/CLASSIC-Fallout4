@@ -134,6 +134,20 @@ fn validate_cache_name_rejects_embedded_nul() {
     assert!(!is_valid_cache_file_name("good.yaml\0evil"));
 }
 
+#[test]
+fn validate_cache_name_rejects_trailing_dot_or_space() {
+    for name in [
+        "CLASSIC Main.yaml.",
+        "CLASSIC Main.yaml ",
+        "CLASSIC Main.yaml. ",
+    ] {
+        assert!(
+            !is_valid_cache_file_name(name),
+            "Win32-trimmed suffixes must be rejected: {name}"
+        );
+    }
+}
+
 // Regression coverage (Codex adversarial review, third pass): Windows
 // reserves DOS device basenames (`NUL`, `CON`, `COM1`, `LPT1`, ...) at
 // the kernel level, so a `<cache_dir>/NUL` join routes at the device
@@ -198,6 +212,43 @@ fn validate_cache_name_allows_device_like_stems_with_extra_chars() {
             "non-reserved stem must be allowed: {name}"
         );
     }
+}
+
+#[test]
+fn validate_manifest_rejects_case_only_duplicate_file_names() {
+    let manifest = YamlManifest {
+        manifest_version: 1,
+        release_tag: "yaml-data-v2026.04.17".into(),
+        published_at: "2026-04-17T00:00:00Z".into(),
+        files: vec![
+            YamlManifestFile {
+                name: "CLASSIC Main.yaml".into(),
+                schema_version: "1.0".into(),
+                sha256: "a".repeat(64),
+                size_bytes: 0,
+                min_client_schema: None,
+                max_client_schema: None,
+                download_url: "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml".into(),
+            },
+            YamlManifestFile {
+                name: "classic main.yaml".into(),
+                schema_version: "1.0".into(),
+                sha256: "b".repeat(64),
+                size_bytes: 0,
+                min_client_schema: None,
+                max_client_schema: None,
+                download_url: "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.17/classic%20main.yaml".into(),
+            },
+        ],
+        signatures: Vec::new(),
+    };
+
+    let err = validate_manifest(&manifest, "evildarkarchon", "CLASSIC-Fallout4").unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("duplicate entry") && msg.contains("classic main.yaml"),
+        "got: {msg}"
+    );
 }
 
 #[test]

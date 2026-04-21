@@ -165,9 +165,20 @@ void YamlUpdateWorker::doApply(bool enabled, const QString& approvedReleaseTag,
         }
         const rust::String approvedTag(approvedReleaseTag.toStdString());
 
-        auto report = classic::update::yaml_apply_update(
-            kYamlPagesUrl, kYamlTagPrefix, entries, enabled,
-            approvedTag, approvedNames, approvedSha256, rust::Str(""));
+        classic::update::ApprovedUpdateDto approved{};
+        approved.release_tag = approvedTag;
+        approved.file_names = std::move(approvedNames);
+        approved.file_sha256 = std::move(approvedSha256);
+
+        classic::update::YamlApplyRequestDto request{};
+        request.pages_url = kYamlPagesUrl;
+        request.tag_prefix = kYamlTagPrefix;
+        request.entries = std::move(entries);
+        request.enabled = enabled;
+        request.approved = std::move(approved);
+        request.bundled_yaml_dir = rust::String("");
+
+        auto report = classic::update::yaml_apply_update(request);
 
         result.installed = static_cast<qsizetype>(report.installed.size());
         result.failed = static_cast<qsizetype>(report.failed.size());

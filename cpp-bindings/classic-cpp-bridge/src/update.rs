@@ -225,28 +225,17 @@ fn yaml_check_update(
     }
 }
 
-#[allow(clippy::ptr_arg)] // CXX Vec transfer — see yaml_check_update.
-fn yaml_apply_update(
-    pages_url: &str,
-    tag_prefix: &str,
-    entries: &Vec<ffi::YamlClientSchemaEntryDto>,
-    enabled: bool,
-    approved_release_tag: &str,
-    approved_file_names: &Vec<String>,
-    approved_file_sha256: &Vec<String>,
-    bundled_yaml_dir: &str,
-) -> ffi::YamlUpdateReportDto {
+fn yaml_apply_update(request: &ffi::YamlApplyRequestDto) -> ffi::YamlUpdateReportDto {
     // Apply is a user-consent-gated operation: we install exactly the files
     // the user reviewed at check-time, for exactly the release tag they
-    // saw. The caller passes that decision back via `approved_release_tag`
-    // + per-file `(name, sha256)` identity; the core then refuses the
-    // install when the live manifest has rotated to a different release or
-    // changed the bytes advertised for an approved file.
+    // saw. The caller passes that decision back via `request.approved`; the
+    // core then refuses the install when the live manifest has rotated to a
+    // different release or changed the bytes advertised for an approved file.
     //
-    // `enabled` is honored end-to-end: passing `false` makes the core
-    // return `UpdateCheckDisabled` without any HTTP — the "Update Check:
-    // false" setting survives between check and apply even if the user
-    // toggled it mid-review.
+    // `request.enabled` is honored end-to-end: passing `false` makes the
+    // core return `UpdateCheckDisabled` without any HTTP — the "Update
+    // Check: false" setting survives between check and apply even if the
+    // user toggled it mid-review.
     let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
         Ok(c) => c,
         Err(e) => {
@@ -258,16 +247,21 @@ fn yaml_apply_update(
         }
     };
 
-    let set = build_client_schema_set(entries);
-    let config = build_yaml_config(enabled, bundled_yaml_dir);
+    let set = build_client_schema_set(&request.entries);
+    let config = build_yaml_config(request.enabled, &request.bundled_yaml_dir);
     let approved = ApprovedUpdate {
-        release_tag: approved_release_tag.to_string(),
-        file_names: approved_file_names.clone(),
-        file_sha256: approved_file_sha256.clone(),
+        release_tag: request.approved.release_tag.clone(),
+        file_names: request.approved.file_names.clone(),
+        file_sha256: request.approved.file_sha256.clone(),
     };
 
     let result = get_runtime().block_on(apply_yaml_update_with_decision(
-        &client, pages_url, tag_prefix, &set, config, &approved,
+        &client,
+        &request.pages_url,
+        &request.tag_prefix,
+        &set,
+        config,
+        &approved,
     ));
 
     match result {
@@ -397,6 +391,23 @@ mod ffi {
         installed_minor: u32,
     }
 
+    /// Reviewed decision captured from a prior `yaml_check_update` call.
+    struct ApprovedUpdateDto {
+        release_tag: String,
+        file_names: Vec<String>,
+        file_sha256: Vec<String>,
+    }
+
+    /// Structured input to `yaml_apply_update`.
+    struct YamlApplyRequestDto {
+        pages_url: String,
+        tag_prefix: String,
+        entries: Vec<YamlClientSchemaEntryDto>,
+        enabled: bool,
+        approved: ApprovedUpdateDto,
+        bundled_yaml_dir: String,
+    }
+
     /// Discriminated status DTO. Read `tag` first:
     /// - 0 `Disabled`: `Update Check: false`; nothing fetched.
     /// - 1 `UpdateAvailable`: compatible_files + incompatible_files populated.
@@ -471,33 +482,23 @@ mod ffi {
 
         /// Install exactly the files the user approved at check-time.
         ///
-        /// `enabled` mirrors the `Update Check: false` settings toggle; when
-        /// `false`, no HTTP is issued and `error_message` is populated with
-        /// a "update check disabled" diagnostic.
+        /// `request.enabled` mirrors the `Update Check: false` settings
+        /// toggle; when `false`, no HTTP is issued and `error_message` is
+        /// populated with a "update check disabled" diagnostic.
         ///
-        /// `approved_release_tag` + the parallel `approved_file_names` /
-        /// `approved_file_sha256` arrays form the reviewed decision. They
-        /// MUST come from a prior `yaml_check_update` call whose result the
-        /// user confirmed — typically from `YamlUpdateStatusDto::release_tag`
-        /// and each `compatible_files[i].{name, sha256}` pair. When the live
-        /// manifest has since rotated to a different release tag, or it keeps
-        /// the same tag/name but changes the bytes advertised for an approved
+        /// `request.approved` MUST come from a prior `yaml_check_update`
+        /// call whose result the user confirmed — typically from
+        /// `YamlUpdateStatusDto::release_tag` and each
+        /// `compatible_files[i].{name, sha256}` pair. When the live manifest
+        /// has since rotated to a different release tag, or it keeps the
+        /// same tag/name but changes the bytes advertised for an approved
         /// file, the call returns an empty report with `error_message`
         /// prefixed `decision stale:`.
         ///
-        /// `bundled_yaml_dir` has the same meaning as on
+        /// `request.bundled_yaml_dir` has the same meaning as on
         /// [`yaml_check_update`]: empty string keeps the `current_exe()`
         /// fallback; non-empty overrides it.
-        fn yaml_apply_update(
-            pages_url: &str,
-            tag_prefix: &str,
-            entries: &Vec<YamlClientSchemaEntryDto>,
-            enabled: bool,
-            approved_release_tag: &str,
-            approved_file_names: &Vec<String>,
-            approved_file_sha256: &Vec<String>,
-            bundled_yaml_dir: &str,
-        ) -> YamlUpdateReportDto;
+        fn yaml_apply_update(request: &YamlApplyRequestDto) -> YamlUpdateReportDto;
 
         fn yaml_rollback_update(file_name: &str) -> YamlRollbackOutcomeDto;
     }

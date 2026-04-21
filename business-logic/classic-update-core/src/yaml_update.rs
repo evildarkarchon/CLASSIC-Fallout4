@@ -804,6 +804,8 @@ async fn fetch_from_releases_api(client: &GithubClient, tag_prefix: &str) -> Res
 /// A valid cache file name MUST be:
 /// - non-empty and not equal to `.` or `..`,
 /// - free of path separators (`/` or `\`) and embedded NUL bytes,
+/// - not end with a space or `.`, because Win32 trims those suffixes during
+///   path resolution and aliases them to the unsuffixed on-disk file,
 /// - relative, not absolute (rejects `C:\x`, `\\server\share\x`, `/x`),
 /// - a single path component (rejects Windows drive-relative forms like
 ///   `C:x`, which are not absolute but still escape the cache dir),
@@ -822,6 +824,9 @@ fn is_valid_cache_file_name(name: &str) -> bool {
         return false;
     }
     if name.bytes().any(|b| b == b'/' || b == b'\\' || b == 0) {
+        return false;
+    }
+    if name.ends_with(' ') || name.ends_with('.') {
         return false;
     }
     let path = Path::new(name);
@@ -895,6 +900,18 @@ fn validate_cache_file_name(name: &str) -> Result<()> {
     Ok(())
 }
 
+/// Normalize a validated cache basename to the same identity Windows path
+/// resolution uses for collision checks.
+///
+/// Windows file lookup is case-insensitive and strips trailing dots/spaces.
+/// Validation already rejects names with those suffixes, but the duplicate
+/// guard still trims them here so the normalization stays aligned with the
+/// platform rule if the validator changes later.
+fn windows_normalized_cache_file_key(name: &str) -> String {
+    name.trim_end_matches(|c| c == ' ' || c == '.')
+        .to_ascii_lowercase()
+}
+
 /// Defense-in-depth containment check: after joining a validated basename
 /// onto `cache_dir`, confirm the resolved path still begins with
 /// `cache_dir` component-wise. Uses lexical comparison because the target
@@ -943,15 +960,17 @@ pub fn validate_manifest(manifest: &YamlManifest, owner: &str, repo: &str) -> Re
             reason: "files must be non-empty".into(),
         });
     }
-    // Reject duplicate `files[].name` entries. A second install of the same
-    // target path would rotate `.prev` away from the pre-update copy, making
-    // rollback depend on manifest order instead of the on-disk state before
-    // the apply call. Refuse at the validation boundary so `apply_yaml_update`
-    // never iterates a list that can corrupt its own rollback invariant.
-    let mut seen_names: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    // Reject duplicate `files[].name` entries by Windows path identity. A
+    // second install of the same target path would rotate `.prev` away from
+    // the pre-update copy, making rollback depend on manifest order instead
+    // of the on-disk state before the apply call. Refuse at the validation
+    // boundary so `apply_yaml_update` never iterates a list that can corrupt
+    // its own rollback invariant.
+    let mut seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
     for entry in &manifest.files {
         validate_cache_file_name(&entry.name)?;
-        if !seen_names.insert(entry.name.as_str()) {
+        let normalized_name = windows_normalized_cache_file_key(&entry.name);
+        if !seen_names.insert(normalized_name) {
             return Err(UpdateError::ManifestInvalid {
                 reason: format!(
                     "files[] contains duplicate entry for `{}`; each file name must appear at most once",

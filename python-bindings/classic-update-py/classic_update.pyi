@@ -253,6 +253,46 @@ class YamlClientSchemaEntry:
         installed_minor: int = 0,
     ) -> None: ...
 
+class ApprovedUpdate:
+    """Reviewed decision captured from a prior `check_yaml_update` call.
+
+    Attributes:
+        release_tag: Release tag the user reviewed.
+        file_names: Reviewed file names.
+        file_sha256: SHA-256 digests aligned with ``file_names``.
+    """
+
+    release_tag: str
+    file_names: list[str]
+    file_sha256: list[str]
+
+    def __init__(
+        self,
+        release_tag: str,
+        file_names: list[str],
+        file_sha256: list[str],
+    ) -> None: ...
+
+class YamlApplyRequest:
+    """Structured input to `apply_yaml_update`."""
+
+    pages_url: str
+    tag_prefix: str
+    entries: list[YamlClientSchemaEntry]
+    enabled: bool
+    approved: ApprovedUpdate
+    bundled_yaml_dir: str | None
+
+    def __init__(
+        self,
+        pages_url: str,
+        tag_prefix: str,
+        entries: list[YamlClientSchemaEntry],
+        enabled: bool,
+        approved: ApprovedUpdate,
+        bundled_yaml_dir: str | None = None,
+    ) -> None: ...
+
 class YamlUpdateFile:
     """One file entry inside `YamlUpdateStatus` or `YamlUpdateReport`.
 
@@ -361,29 +401,13 @@ def check_yaml_update(
         RuntimeError: on network failure the fallback cannot recover from.
     """
 
-def apply_yaml_update(
-    pages_url: str,
-    tag_prefix: str,
-    entries: list[YamlClientSchemaEntry],
-    enabled: bool,
-    approved_release_tag: str,
-    approved_file_names: list[str],
-    approved_file_sha256: list[str],
-    bundled_yaml_dir: str | None = None,
-) -> YamlUpdateReport:
+def apply_yaml_update(request: YamlApplyRequest) -> YamlUpdateReport:
     """Fetch + download + atomically install the reviewed set of files.
 
-    This is the reviewed-decision form of apply. It takes three extra
-    arguments beyond the check inputs:
-
-    - ``enabled`` mirrors the ``Update Check`` settings toggle. Pass
-      ``False`` to refuse the apply without issuing any HTTP — the user's
-      opt-out survives between check and apply.
-    - ``approved_release_tag`` is the ``release_tag`` field of the
-      ``YamlUpdateStatus`` the user reviewed.
-    - ``approved_file_names`` / ``approved_file_sha256`` are the
-      ``name`` / ``sha256`` fields of each entry in that status's
-      ``compatible_files``.
+    This is the reviewed-decision form of apply. ``request.enabled`` mirrors
+    the ``Update Check`` settings toggle, while ``request.approved`` carries
+    the exact release/file identity the user reviewed from a prior
+    ``check_yaml_update`` call.
 
     When the live manifest has rotated to a different tag since the user's
     review, the call raises ``RuntimeError`` (``"approved release ... does
@@ -391,19 +415,8 @@ def apply_yaml_update(
     of silently installing the newer release.
 
     Args:
-        pages_url: Absolute HTTPS URL of the Pages manifest.
-        tag_prefix: Release-tag prefix for the anonymous API fallback.
-        entries: Per-file schema entries.
-        enabled: Honors ``Update Check: false`` end-to-end.
-        approved_release_tag: Release tag the user reviewed.
-        approved_file_names: File names the user reviewed.
-        approved_file_sha256: SHA-256 digests aligned with
-            ``approved_file_names``.
-        bundled_yaml_dir: Install-tree directory containing the bundled
-            shippable YAML files. Same semantics as on
-            :func:`check_yaml_update` — Python callers should pass the
-            package-local path so the pre-install classification step can
-            find the bundled copy even when the host exe is ``python.exe``.
+        request: Structured apply request. See ``YamlApplyRequest`` and
+            ``ApprovedUpdate`` for the required fields.
 
     Raises:
         RuntimeError: when the whole batch fails (manifest fetch, cache

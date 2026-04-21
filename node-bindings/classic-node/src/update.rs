@@ -16,6 +16,8 @@
 //! - `JsGithubRelease` — GitHub release information (tag, name, body, assets, etc.)
 //! - `JsGithubAsset` — Downloadable file attached to a release.
 //! - `JsYamlClientSchemaEntry` — Input entry for `checkYamlUpdate`/`applyYamlUpdate`.
+//! - `JsApprovedUpdate` — Reviewed release/file decision passed into apply.
+//! - `JsYamlApplyRequest` — Structured apply request object.
 //! - `JsYamlUpdateFile` — One file inside a YAML manifest (compatible or incompatible).
 //! - `JsYamlUpdateStatus` — Discriminated status DTO for the YAML update check path.
 //! - `JsYamlUpdateFileOutcome` — Per-file install outcome.
@@ -27,7 +29,7 @@
 //! - `getLatestRelease(owner, repo)` — One-shot latest release fetch.
 //! - `checkForUpdates(owner, repo, currentVersion)` — Convenience: fetch + compare.
 //! - `checkYamlUpdate(pagesUrl, tagPrefix, entries, enabled)` — YAML manifest check.
-//! - `applyYamlUpdate(pagesUrl, tagPrefix, entries, enabled, approvedReleaseTag, approvedFileNames, approvedFileSha256)` — Fetch + download + install the approved set.
+//! - `applyYamlUpdate(request)` — Fetch + download + install the approved set.
 //! - `rollbackYamlUpdate(fileName)` — Swap cache entry with its `.prev` sibling.
 
 use classic_settings_core::{SchemaCompat, SchemaVersion};
@@ -404,6 +406,45 @@ pub struct JsYamlClientSchemaEntry {
     pub installed_minor: u32,
 }
 
+/// Reviewed decision captured from a prior `checkYamlUpdate` call.
+///
+/// Mirrors `classic_update_core::ApprovedUpdate`: the caller must pass the
+/// exact `releaseTag` they showed the user plus the parallel reviewed
+/// `fileNames` / `fileSha256` identity. The apply path re-checks those values
+/// against the live manifest and rejects stale decisions instead of silently
+/// installing different bytes.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsApprovedUpdate {
+    /// Release tag the user reviewed.
+    pub release_tag: String,
+    /// Reviewed file names.
+    pub file_names: Vec<String>,
+    /// SHA-256 digests aligned with `fileNames`.
+    pub file_sha256: Vec<String>,
+}
+
+/// Structured input to `applyYamlUpdate`.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsYamlApplyRequest {
+    /// Absolute Pages URL of `manifest-latest.json`.
+    pub pages_url: String,
+    /// Release-tag prefix for the anonymous API fallback.
+    pub tag_prefix: String,
+    /// Per-file accepted-range + installed-schema set.
+    pub entries: Vec<JsYamlClientSchemaEntry>,
+    /// Honors the `Update Check: false` setting end-to-end.
+    pub enabled: bool,
+    /// Reviewed decision from a prior `checkYamlUpdate` result.
+    pub approved: JsApprovedUpdate,
+    /// Install-tree directory containing the bundled shippable YAML files
+    /// (`CLASSIC Data/databases`). Node callers should pass the package-local
+    /// path because the fallback probes `current_exe()` and therefore resolves
+    /// to `node.exe` / `bun.exe` instead of the CLASSIC package directory.
+    pub bundled_yaml_dir: Option<String>,
+}
+
 /// One file entry inside [`JsYamlUpdateStatus`] or [`JsYamlUpdateReport`].
 ///
 /// Mirrors `YamlManifestFile` in `classic-update-core`, with the optional
@@ -656,55 +697,38 @@ pub async fn check_yaml_update(
 /// Fetch + download + atomically install the files the user approved at
 /// check time.
 ///
-/// This is the reviewed-decision form of apply:
-///
-/// - `enabled` mirrors the `Update Check` settings toggle. Passing `false`
-///   rejects the call with an `update check disabled` error before any
-///   HTTP is issued — the user's opt-out survives between check and apply.
-/// - `approvedReleaseTag` + the parallel `approvedFileNames` /
-///   `approvedFileSha256` arrays come from a prior `checkYamlUpdate` call
-///   the user confirmed. They pin the install to the exact release and
-///   bytes the user reviewed; if the publisher has rotated the manifest to
-///   a newer tag or replaced an approved asset in place, the call throws a
-///   `decision stale` error instead of silently installing the new bytes.
+/// This is the reviewed-decision form of apply. `request.enabled` mirrors the
+/// `Update Check` settings toggle, and `request.approved` carries the exact
+/// release/file identity the user confirmed from a prior `checkYamlUpdate`
+/// call. If the publisher has rotated the manifest to a newer tag or replaced
+/// an approved asset in place, the call throws a `decision stale` error
+/// instead of silently installing the new bytes.
 ///
 /// Returns per-file outcomes — a mixed batch is a valid success (the
 /// successful subset is installed).
 ///
-/// @param pagesUrl            Absolute Pages URL of `manifest-latest.json`.
-/// @param tagPrefix           Release-tag prefix for the anonymous API fallback.
-/// @param entries             Per-file accepted-range + installed-schema set.
-/// @param enabled             Honors the `Update Check: false` setting end-to-end.
-/// @param approvedReleaseTag  Release tag the user reviewed.
-/// @param approvedFileNames   File names the user reviewed.
-/// @param approvedFileSha256  SHA-256 digests aligned with `approvedFileNames`.
-/// @param bundledYamlDir      Install-tree directory containing the bundled
-///                            shippable YAML files (`CLASSIC Data/databases`).
-///                            Node callers should pass the package-local path
-///                            because the fallback probes `current_exe()` and
-///                            therefore resolves to `node.exe` / `bun.exe`
-///                            instead of the CLASSIC package directory.
+/// @param request Structured apply request. See `JsYamlApplyRequest` and
+///                `JsApprovedUpdate` for the required fields.
 /// @throws when the whole batch fails, when the update check is disabled,
 ///         or when the decision is stale.
 #[napi]
-pub async fn apply_yaml_update(
-    pages_url: String,
-    tag_prefix: String,
-    entries: Vec<JsYamlClientSchemaEntry>,
-    enabled: bool,
-    approved_release_tag: String,
-    approved_file_names: Vec<String>,
-    approved_file_sha256: Vec<String>,
-    bundled_yaml_dir: Option<String>,
-) -> napi::Result<JsYamlUpdateReport> {
+pub async fn apply_yaml_update(request: JsYamlApplyRequest) -> napi::Result<JsYamlUpdateReport> {
+    let JsYamlApplyRequest {
+        pages_url,
+        tag_prefix,
+        entries,
+        enabled,
+        approved,
+        bundled_yaml_dir,
+    } = request;
     let client =
         core::GithubClient::new("evildarkarchon", "CLASSIC-Fallout4").map_err(to_napi_err)?;
     let set = js_entries_to_core(&entries);
     let config = build_yaml_update_config(enabled, bundled_yaml_dir);
     let approved = core::ApprovedUpdate {
-        release_tag: approved_release_tag,
-        file_names: approved_file_names,
-        file_sha256: approved_file_sha256,
+        release_tag: approved.release_tag,
+        file_names: approved.file_names,
+        file_sha256: approved.file_sha256,
     };
     let handle = classic_shared_core::get_runtime().handle().clone();
     let report = handle

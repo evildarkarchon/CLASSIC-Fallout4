@@ -75,6 +75,89 @@ pub struct PyYamlClientSchemaEntry {
     pub installed_minor: u32,
 }
 
+/// Reviewed decision captured from a prior `check_yaml_update` call.
+#[pyclass(name = "ApprovedUpdate", from_py_object)]
+#[derive(Clone)]
+pub struct PyApprovedUpdate {
+    #[pyo3(get, set)]
+    pub release_tag: String,
+    #[pyo3(get, set)]
+    pub file_names: Vec<String>,
+    #[pyo3(get, set)]
+    pub file_sha256: Vec<String>,
+}
+
+#[pymethods]
+impl PyApprovedUpdate {
+    #[new]
+    fn new(release_tag: String, file_names: Vec<String>, file_sha256: Vec<String>) -> Self {
+        Self {
+            release_tag,
+            file_names,
+            file_sha256,
+        }
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "ApprovedUpdate(release_tag={:?}, files={})",
+            self.release_tag,
+            self.file_names.len(),
+        )
+    }
+}
+
+/// Structured input to `apply_yaml_update`.
+#[pyclass(name = "YamlApplyRequest", from_py_object)]
+#[derive(Clone)]
+pub struct PyYamlApplyRequest {
+    #[pyo3(get, set)]
+    pub pages_url: String,
+    #[pyo3(get, set)]
+    pub tag_prefix: String,
+    #[pyo3(get, set)]
+    pub entries: Vec<PyYamlClientSchemaEntry>,
+    #[pyo3(get, set)]
+    pub enabled: bool,
+    #[pyo3(get, set)]
+    pub approved: PyApprovedUpdate,
+    #[pyo3(get, set)]
+    pub bundled_yaml_dir: Option<String>,
+}
+
+#[pymethods]
+impl PyYamlApplyRequest {
+    #[new]
+    #[pyo3(signature = (pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None))]
+    fn new(
+        pages_url: String,
+        tag_prefix: String,
+        entries: Vec<PyYamlClientSchemaEntry>,
+        enabled: bool,
+        approved: PyApprovedUpdate,
+        bundled_yaml_dir: Option<String>,
+    ) -> Self {
+        Self {
+            pages_url,
+            tag_prefix,
+            entries,
+            enabled,
+            approved,
+            bundled_yaml_dir,
+        }
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "YamlApplyRequest(pages_url={:?}, tag_prefix={:?}, entries={}, enabled={})",
+            self.pages_url,
+            self.tag_prefix,
+            self.entries.len(),
+            self.enabled,
+        )
+    }
+}
+
 #[pymethods]
 impl PyYamlClientSchemaEntry {
     #[new]
@@ -345,17 +428,10 @@ fn check_yaml_update(
 /// Fetch + download + atomically install the files the user approved at
 /// check time.
 ///
-/// This is the reviewed-decision form of apply. It takes three decision
-/// arguments in addition to the check inputs:
-///
-/// - ``enabled``: mirrors the ``Update Check`` settings toggle. Pass
-///   ``False`` to refuse the apply without issuing any HTTP — the user's
-///   opt-out survives between check and apply.
-/// - ``approved_release_tag``: the ``release_tag`` field of the
-///   ``YamlUpdateStatus`` the user confirmed.
-/// - ``approved_file_names`` / ``approved_file_sha256``: parallel arrays of
-///   ``compatible_files[i].name`` and ``compatible_files[i].sha256`` from
-///   that reviewed status.
+/// This is the reviewed-decision form of apply. ``request.enabled`` mirrors
+/// the ``Update Check`` settings toggle, while ``request.approved`` carries
+/// the exact release/file identity the user reviewed from a prior
+/// ``check_yaml_update`` call.
 ///
 /// When the live manifest has rotated to a different tag in the meantime,
 /// the call raises ``RuntimeError('approved release ... does not match
@@ -363,51 +439,31 @@ fn check_yaml_update(
 /// silently installing the newer release.
 ///
 /// Args:
-///     pages_url: Absolute HTTPS URL of the Pages manifest.
-///     tag_prefix: Release-tag prefix for the anonymous API fallback.
-///     entries: Per-file schema entries.
-///     enabled: Honors ``Update Check: false`` end-to-end.
-///     approved_release_tag: Release tag the user reviewed.
-///     approved_file_names: File names the user reviewed.
-///     approved_file_sha256: SHA-256 digests aligned with
-///         ``approved_file_names``.
+///     request: Structured apply request. See ``YamlApplyRequest`` and
+///         ``ApprovedUpdate`` for the required fields.
 ///
 /// Raises:
 ///     RuntimeError: when the whole batch fails, when the update check is
 ///         disabled, or when the approved decision is stale.
 #[pyfunction]
-#[pyo3(signature = (
-    pages_url,
-    tag_prefix,
-    entries,
-    enabled,
-    approved_release_tag,
-    approved_file_names,
-    approved_file_sha256,
-    bundled_yaml_dir=None,
-))]
-fn apply_yaml_update(
-    pages_url: &str,
-    tag_prefix: &str,
-    entries: Vec<PyYamlClientSchemaEntry>,
-    enabled: bool,
-    approved_release_tag: String,
-    approved_file_names: Vec<String>,
-    approved_file_sha256: Vec<String>,
-    bundled_yaml_dir: Option<&str>,
-) -> PyResult<PyYamlUpdateReport> {
+fn apply_yaml_update(request: &PyYamlApplyRequest) -> PyResult<PyYamlUpdateReport> {
     let client =
         core::GithubClient::new("evildarkarchon", "CLASSIC-Fallout4").map_err(runtime_error)?;
-    let set = entries_to_core(&entries);
-    let config = build_config(enabled, bundled_yaml_dir);
+    let set = entries_to_core(&request.entries);
+    let config = build_config(request.enabled, request.bundled_yaml_dir.as_deref());
     let approved = core::ApprovedUpdate {
-        release_tag: approved_release_tag,
-        file_names: approved_file_names,
-        file_sha256: approved_file_sha256,
+        release_tag: request.approved.release_tag.clone(),
+        file_names: request.approved.file_names.clone(),
+        file_sha256: request.approved.file_sha256.clone(),
     };
     let report = classic_shared_core::get_runtime()
         .block_on(core::apply_yaml_update_with_decision(
-            &client, pages_url, tag_prefix, &set, config, &approved,
+            &client,
+            &request.pages_url,
+            &request.tag_prefix,
+            &set,
+            config,
+            &approved,
         ))
         .map_err(runtime_error)?;
     Ok(PyYamlUpdateReport {
@@ -444,6 +500,8 @@ fn rollback_yaml_update(file_name: &str) -> PyResult<PyYamlRollbackOutcome> {
 /// Register the yaml-update-delivery surface on the Python module.
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlClientSchemaEntry>()?;
+    m.add_class::<PyApprovedUpdate>()?;
+    m.add_class::<PyYamlApplyRequest>()?;
     m.add_class::<PyYamlUpdateFile>()?;
     m.add_class::<PyYamlRejectedFile>()?;
     m.add_class::<PyYamlUpdateStatus>()?;

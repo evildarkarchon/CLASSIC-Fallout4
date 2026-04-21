@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 342,
-    "current_total": 342,
-    "matched": 342,
+    "contract_total": 344,
+    "current_total": 344,
+    "matched": 344,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2329,8 +2329,24 @@
       "reason": "-"
     },
     {
+      "id": "f0ae26428d3c795b",
+      "rustSymbol": "ApprovedUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "fdf05d86cfb41258",
       "rustSymbol": "UpdateCheckResult",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "992cf44bfb2981ed",
+      "rustSymbol": "YamlApplyRequestDto",
       "kind": "struct",
       "bridgeModule": "update",
       "status": "matched",

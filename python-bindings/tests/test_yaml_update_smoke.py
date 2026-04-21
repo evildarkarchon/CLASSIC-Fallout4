@@ -12,6 +12,8 @@ still works.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 
@@ -21,7 +23,7 @@ classic_update = pytest.importorskip(
 )
 
 
-def _main_entry() -> "classic_update.YamlClientSchemaEntry":
+def _main_entry() -> Any:
     """Canonical entry for ``CLASSIC Main.yaml`` matching the client_schemas
     constants in ``classic-config-core::client_schemas::MAIN_YAML``."""
     return classic_update.YamlClientSchemaEntry(
@@ -85,6 +87,24 @@ def test_check_yaml_update_accepts_bundled_yaml_dir_kwarg() -> None:
         bundled_yaml_dir="/nonexistent/path",
     )
     assert status.tag == "disabled"
+
+
+def test_apply_yaml_update_accepts_request_object() -> None:
+    request = classic_update.YamlApplyRequest(
+        pages_url="http://127.0.0.1:1/manifest-latest.json",
+        tag_prefix="yaml-data-v",
+        entries=[_main_entry()],
+        enabled=False,
+        approved=classic_update.ApprovedUpdate(
+            release_tag="yaml-data-v-test",
+            file_names=["CLASSIC Main.yaml"],
+            file_sha256=["deadbeef"],
+        ),
+        bundled_yaml_dir="/nonexistent/path",
+    )
+
+    with pytest.raises(RuntimeError, match="update check.*disabled"):
+        classic_update.apply_yaml_update(request)
 
 
 def test_rollback_yaml_update_unknown_file_is_no_previous_version() -> None:

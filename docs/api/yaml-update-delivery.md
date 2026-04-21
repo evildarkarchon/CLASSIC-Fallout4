@@ -110,9 +110,9 @@ Review-and-apply is two logical steps separated by an unbounded amount of time (
 
 Binding-layer contract:
 
-- C++ bridge `yaml_apply_update(pages_url, tag_prefix, entries, enabled, approved_release_tag, approved_file_names, approved_file_sha256, bundled_yaml_dir)` returns `YamlUpdateReportDto`. Typed errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix. The trailing `bundled_yaml_dir` is an empty string for the native CLI / GUI (which relies on the `current_exe()` fallback).
-- Node `applyYamlUpdate(pagesUrl, tagPrefix, entries, enabled, approvedReleaseTag, approvedFileNames, approvedFileSha256, bundledYamlDir?)` throws on disabled / stale (propagated as NAPI `Error` with the message body). Node callers should pass the package-local install path because `current_exe()` resolves to `node.exe`.
-- Python `apply_yaml_update(pages_url, tag_prefix, entries, enabled, approved_release_tag, approved_file_names, approved_file_sha256, bundled_yaml_dir=None)` raises `RuntimeError` on disabled / stale. Python callers should pass a package-local install path because `current_exe()` resolves to `python.exe`.
+- C++ bridge `yaml_apply_update(request)` takes `YamlApplyRequestDto { pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir }`, where `approved` is `ApprovedUpdateDto { release_tag, file_names, file_sha256 }`. It returns `YamlUpdateReportDto`. Typed errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix. `bundled_yaml_dir` is an empty string for the native CLI / GUI (which relies on the `current_exe()` fallback).
+- Node `applyYamlUpdate(request)` takes `JsYamlApplyRequest { pagesUrl, tagPrefix, entries, enabled, approved, bundledYamlDir? }`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. It throws on disabled / stale (propagated as NAPI `Error` with the message body). Node callers should pass the package-local install path because `current_exe()` resolves to `node.exe`.
+- Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. Python callers should pass a package-local install path because `current_exe()` resolves to `python.exe`.
 
 ### Bundled-directory resolution (non-native hosts)
 

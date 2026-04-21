@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-21T07:31:17.510702+00:00",
+  "generated_at_utc": "2026-04-21T08:28:50.560028+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8034,6 +8034,28 @@
     },
     {
       "module": "classic_update",
+      "export": "ApprovedUpdate",
+      "export_path": "ApprovedUpdate",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ApprovedUpdate:"
+    },
+    {
+      "module": "classic_update",
+      "export": "__init__",
+      "export_path": "ApprovedUpdate.__init__",
+      "parent_class": "ApprovedUpdate",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def __init__( self, release_tag: str, file_names: list[str], file_sha256: list[str], ) -> None: ..."
+    },
+    {
+      "module": "classic_update",
       "export": "GithubAsset",
       "export_path": "GithubAsset",
       "kind": "class",
@@ -8124,6 +8146,28 @@
     },
     {
       "module": "classic_update",
+      "export": "YamlApplyRequest",
+      "export_path": "YamlApplyRequest",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlApplyRequest:"
+    },
+    {
+      "module": "classic_update",
+      "export": "__init__",
+      "export_path": "YamlApplyRequest.__init__",
+      "parent_class": "YamlApplyRequest",
+      "kind": "method",
+      "arity": 6,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def __init__( self, pages_url: str, tag_prefix: str, entries: list[YamlClientSchemaEntry], enabled: bool, approved: ApprovedUpdate, bundled_yaml_dir: str | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_update",
       "export": "YamlClientSchemaEntry",
       "export_path": "YamlClientSchemaEntry",
       "kind": "class",
@@ -8209,11 +8253,11 @@
       "export": "apply_yaml_update",
       "export_path": "apply_yaml_update",
       "kind": "function",
-      "arity": 8,
+      "arity": 1,
       "owner_module": "update",
       "tier": "tier1",
       "source_file": "python-bindings/classic-update-py/classic_update.pyi",
-      "signature": "def apply_yaml_update( pages_url: str, tag_prefix: str, entries: list[YamlClientSchemaEntry], enabled: bool, approved_release_tag: str, approved_file_names: list[str], approved_file_sha256: list[str], bundled_yaml_dir: str | None = None, ) -> YamlUpdateReport:"
+      "signature": "def apply_yaml_update(request: YamlApplyRequest) -> YamlUpdateReport:"
     },
     {
       "module": "classic_update",
