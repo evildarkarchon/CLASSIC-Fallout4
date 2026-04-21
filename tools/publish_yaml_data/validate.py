@@ -25,6 +25,14 @@ from pathlib import Path
 
 from ruamel.yaml import YAML, YAMLError
 
+try:
+    from tools.publish_yaml_data.cache_names import (
+        is_valid_cache_file_name,
+        windows_normalized_cache_file_key,
+    )
+except ModuleNotFoundError:
+    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key
+
 # `pure=True` forces the pure-Python parser; the libyaml-backed C parser
 # rejects the `foo::bar` bare-scalar pattern used by several
 # `stack_contains_any` flow sequences in `CLASSIC Fallout4.yaml`, which the
@@ -34,20 +42,6 @@ from ruamel.yaml import YAML, YAMLError
 _YAML = YAML(typ="safe", pure=True)
 
 SCHEMA_VERSION_RE = re.compile(r"^\d+\.\d+$")
-_ASCII_UPPER_TO_LOWER = str.maketrans(
-    {chr(code): chr(code + 32) for code in range(ord("A"), ord("Z") + 1)}
-)
-
-
-def windows_normalized_cache_file_key(name: str) -> str:
-    """Mirror the client-side Windows cache-basename collision key.
-
-    Windows treats trailing spaces/dots as insignificant during path lookup
-    and compares file names case-insensitively. Keep this helper ASCII-only so
-    it matches Rust's ``to_ascii_lowercase()`` exactly.
-    """
-
-    return name.rstrip(" .").translate(_ASCII_UPPER_TO_LOWER)
 
 
 def _parse_schema_point(value: str) -> tuple[int, int]:
@@ -118,6 +112,11 @@ def load_shippable_names(schema_ranges_path: Path) -> set[str]:
                 f"FAIL: {schema_ranges_path} entry missing 'name': {entry!r}"
             )
         name = str(entry["name"])
+        if not is_valid_cache_file_name(name):
+            raise SystemExit(
+                f"FAIL: {schema_ranges_path} entry {name!r}: "
+                "file name is not a valid cache/install basename"
+            )
         normalized_name = windows_normalized_cache_file_key(name)
         if normalized_name in normalized_names:
             raise SystemExit(
@@ -178,7 +177,7 @@ def validate_file(path: Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument(
         "--databases-dir",
         type=Path,

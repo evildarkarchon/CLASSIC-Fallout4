@@ -1,7 +1,8 @@
-"""Regression tests for Windows-identity duplicate handling in YAML publish tooling."""
+"""Regression tests for YAML publish-tool range validation."""
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -20,7 +21,7 @@ def _write_schema_ranges(tmp_path: Path, names: list[str]) -> Path:
     for name in names:
         lines.extend(
             [
-                f'  - name: "{name}"',
+                f"  - name: {json.dumps(name)}",
                 '    min_client_schema: "1.0"',
                 '    max_client_schema: "1.0"',
             ]
@@ -35,8 +36,6 @@ def _write_schema_ranges(tmp_path: Path, names: list[str]) -> Path:
     [
         (["CLASSIC Main.yaml", "CLASSIC Main.yaml"], "CLASSIC Main.yaml"),
         (["CLASSIC Main.yaml", "classic main.yaml"], "classic main.yaml"),
-        (["CLASSIC Main.yaml", "CLASSIC Main.yaml."], "CLASSIC Main.yaml."),
-        (["CLASSIC Main.yaml", "CLASSIC Main.yaml "], "CLASSIC Main.yaml "),
     ],
 )
 def test_range_loaders_reject_windows_identity_duplicates(
@@ -65,10 +64,58 @@ def test_load_shippable_names_preserves_original_names(tmp_path: Path) -> None:
     }
 
 
-def test_validate_script_reports_duplicate_entry(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "invalid_name",
+    [
+        ".",
+        "..",
+        "NUL.yaml",
+        "CON.txt",
+        "foo:bar.yaml",
+        "CLASSIC Main.yaml:alt",
+        "../etc/passwd",
+        "foo\\bar.yaml",
+        "CLASSIC Main.yaml.",
+        "CLASSIC Main.yaml ",
+    ],
+)
+def test_range_loaders_reject_non_installable_cache_basenames(
+    tmp_path: Path, invalid_name: str
+) -> None:
+    schema_ranges_path = _write_schema_ranges(tmp_path, [invalid_name])
+
+    for loader in (load_shippable_names, load_ranges):
+        with pytest.raises(SystemExit) as exc_info:
+            loader(schema_ranges_path)
+
+        message = str(exc_info.value)
+        assert "not a valid cache/install basename" in message
+        assert repr(invalid_name) in message
+
+
+@pytest.mark.parametrize(
+    "allowed_name",
+    ["NULL.yaml", "COM10.yaml", "LPT10.yaml", "CON_main.yaml"],
+)
+def test_range_loaders_allow_near_miss_device_names(
+    tmp_path: Path, allowed_name: str
+) -> None:
+    schema_ranges_path = _write_schema_ranges(tmp_path, [allowed_name])
+
+    assert load_shippable_names(schema_ranges_path) == {allowed_name}
+    assert load_ranges(schema_ranges_path) == [
+        {
+            "name": allowed_name,
+            "min_client_schema": "1.0",
+            "max_client_schema": "1.0",
+        }
+    ]
+
+
+def test_validate_script_reports_invalid_cache_basename(tmp_path: Path) -> None:
     schema_ranges_path = _write_schema_ranges(
         tmp_path,
-        ["CLASSIC Main.yaml", "classic main.yaml"],
+        ["NUL.yaml"],
     )
 
     result = subprocess.run(
@@ -88,5 +135,5 @@ def test_validate_script_reports_duplicate_entry(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 1
-    assert "duplicate entry" in result.stderr
-    assert "classic main.yaml" in result.stderr
+    assert "not a valid cache/install basename" in result.stderr
+    assert "NUL.yaml" in result.stderr

@@ -34,6 +34,14 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
+try:
+    from tools.publish_yaml_data.cache_names import (
+        is_valid_cache_file_name,
+        windows_normalized_cache_file_key,
+    )
+except ModuleNotFoundError:
+    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key
+
 # `pure=True` mirrors the parser choice in validate.py; see that module for
 # the rationale around bare-scalar `foo::bar` patterns in flow sequences.
 _YAML = YAML(typ="safe", pure=True)
@@ -45,15 +53,6 @@ CURRENT_MANIFEST_VERSION = 1
 # malformed ranges rather than writing them verbatim into manifest.json,
 # where they would turn every client into a runtime-rejection.
 _SCHEMA_VERSION_RE = re.compile(r"^\d+\.\d+$")
-_ASCII_UPPER_TO_LOWER = str.maketrans(
-    {chr(code): chr(code + 32) for code in range(ord("A"), ord("Z") + 1)}
-)
-
-
-def _windows_normalized_cache_file_key(name: str) -> str:
-    """Mirror validate.py's Windows cache-basename collision key."""
-
-    return name.rstrip(" .").translate(_ASCII_UPPER_TO_LOWER)
 
 
 def _parse_schema_point(value: str) -> tuple[int, int]:
@@ -89,7 +88,12 @@ def load_ranges(schema_ranges_path: Path) -> list[dict[str, str]]:
             )
 
         name = str(entry["name"])
-        normalized_name = _windows_normalized_cache_file_key(name)
+        if not is_valid_cache_file_name(name):
+            raise SystemExit(
+                f"FAIL: ranges entry {name!r}: "
+                "file name is not a valid cache/install basename"
+            )
+        normalized_name = windows_normalized_cache_file_key(name)
         if normalized_name in normalized_names:
             raise SystemExit(
                 f"FAIL: {schema_ranges_path} contains duplicate entry for "
@@ -159,7 +163,7 @@ def build_download_url(repo: str, tag: str, asset_name: str) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument(
         "--tag", required=True, help="Release tag, e.g. yaml-data-v2026.04.17"
     )
