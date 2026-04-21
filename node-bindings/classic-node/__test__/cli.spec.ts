@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { autoConcurrencyForCpuCount, effectiveConcurrency } from "../cli/run-scan";
+import { getVersion } from "../index.js";
 import {
   CLI_GAME_YAML,
   CLI_IGNORE_YAML,
@@ -126,12 +127,13 @@ describe("classic-node CLI", () => {
   test("prints version output without scanning", () => {
     const workspace = rememberTempDir("classic-node-cli-version-");
     writeWorkspaceDataRoot(workspace);
+    const expectedVersion = getVersion();
 
     const result = runCli(["--version"], workspace);
 
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain("CLASSIC CLI Scanner");
-    expect(result.output).toContain("9.0.0");
+    expect(result.output).toContain(expectedVersion);
   });
 
   test("returns success when no logs are found", () => {
