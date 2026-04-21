@@ -27,7 +27,7 @@
 //! - `getLatestRelease(owner, repo)` — One-shot latest release fetch.
 //! - `checkForUpdates(owner, repo, currentVersion)` — Convenience: fetch + compare.
 //! - `checkYamlUpdate(pagesUrl, tagPrefix, entries, enabled)` — YAML manifest check.
-//! - `applyYamlUpdate(pagesUrl, tagPrefix, entries, enabled, approvedReleaseTag, approvedFileNames)` — Fetch + download + install the approved set.
+//! - `applyYamlUpdate(pagesUrl, tagPrefix, entries, enabled, approvedReleaseTag, approvedFileNames, approvedFileSha256)` — Fetch + download + install the approved set.
 //! - `rollbackYamlUpdate(fileName)` — Swap cache entry with its `.prev` sibling.
 
 use classic_settings_core::{SchemaCompat, SchemaVersion};
@@ -661,12 +661,12 @@ pub async fn check_yaml_update(
 /// - `enabled` mirrors the `Update Check` settings toggle. Passing `false`
 ///   rejects the call with an `update check disabled` error before any
 ///   HTTP is issued — the user's opt-out survives between check and apply.
-/// - `approvedReleaseTag` + `approvedFileNames` come from a prior
-///   `checkYamlUpdate` call the user confirmed. They pin the install to
-///   the exact release the user reviewed; if the publisher has rotated
-///   the manifest to a newer tag in the meantime, the call throws a
-///   `decision stale` error instead of silently installing the new
-///   release.
+/// - `approvedReleaseTag` + the parallel `approvedFileNames` /
+///   `approvedFileSha256` arrays come from a prior `checkYamlUpdate` call
+///   the user confirmed. They pin the install to the exact release and
+///   bytes the user reviewed; if the publisher has rotated the manifest to
+///   a newer tag or replaced an approved asset in place, the call throws a
+///   `decision stale` error instead of silently installing the new bytes.
 ///
 /// Returns per-file outcomes — a mixed batch is a valid success (the
 /// successful subset is installed).
@@ -677,6 +677,7 @@ pub async fn check_yaml_update(
 /// @param enabled             Honors the `Update Check: false` setting end-to-end.
 /// @param approvedReleaseTag  Release tag the user reviewed.
 /// @param approvedFileNames   File names the user reviewed.
+/// @param approvedFileSha256  SHA-256 digests aligned with `approvedFileNames`.
 /// @param bundledYamlDir      Install-tree directory containing the bundled
 ///                            shippable YAML files (`CLASSIC Data/databases`).
 ///                            Node callers should pass the package-local path
@@ -693,6 +694,7 @@ pub async fn apply_yaml_update(
     enabled: bool,
     approved_release_tag: String,
     approved_file_names: Vec<String>,
+    approved_file_sha256: Vec<String>,
     bundled_yaml_dir: Option<String>,
 ) -> napi::Result<JsYamlUpdateReport> {
     let client =
@@ -702,6 +704,7 @@ pub async fn apply_yaml_update(
     let approved = core::ApprovedUpdate {
         release_tag: approved_release_tag,
         file_names: approved_file_names,
+        file_sha256: approved_file_sha256,
     };
     let handle = classic_shared_core::get_runtime().handle().clone();
     let report = handle

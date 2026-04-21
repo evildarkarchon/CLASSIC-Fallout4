@@ -17,6 +17,8 @@ struct YamlCheckResult {
     QString status;
     QString releaseTag;
     QStringList compatibleFileNames;
+    /// SHA-256 digests for `compatibleFileNames`, aligned by index.
+    QStringList compatibleFileSha256;
     /// Files the published manifest advertised that this client cannot
     /// install — e.g., a newer MAJOR schema or a file outside the client's
     /// accepted range. Populated on both `updateAvailable` and `upToDate`
@@ -85,7 +87,8 @@ public slots:
     /// Run `classic::update::yaml_apply_update` against a reviewed
     /// decision. Emits `applyFinished`.
     void doApply(bool enabled, const QString& approvedReleaseTag,
-                 const QStringList& approvedFileNames);
+                 const QStringList& approvedFileNames,
+                 const QStringList& approvedFileSha256);
 
     /// Run `classic::update::yaml_rollback_update` once per file in
     /// `fileNames`, aggregating the per-file outcomes into a single

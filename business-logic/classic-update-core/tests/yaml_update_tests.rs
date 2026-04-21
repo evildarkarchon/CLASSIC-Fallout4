@@ -1594,6 +1594,7 @@ async fn apply_with_decision_refuses_when_check_disabled() {
     let approved = ApprovedUpdate {
         release_tag: "yaml-data-v2026.04.17".into(),
         file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64)],
     };
 
     let err = apply_yaml_update_with_decision(
@@ -1648,6 +1649,7 @@ async fn apply_with_decision_rejects_stale_release_tag() {
     let approved = ApprovedUpdate {
         release_tag: "yaml-data-v2026.04.17".into(),
         file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64)],
     };
 
     let err = apply_yaml_update_with_decision(
@@ -1716,6 +1718,7 @@ async fn apply_with_decision_rejects_stale_even_when_up_to_date() {
     let approved = ApprovedUpdate {
         release_tag: "yaml-data-v2026.04.17".into(),
         file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec![installed_sha],
     };
 
     let err = apply_yaml_update_with_decision(
@@ -1775,6 +1778,7 @@ async fn apply_with_decision_reports_rejected_approved_file_when_up_to_date() {
     let approved = ApprovedUpdate {
         release_tag: "yaml-data-v2026.04.17".into(),
         file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64)],
     };
 
     let report = apply_yaml_update_with_decision(
@@ -1835,6 +1839,7 @@ async fn apply_with_decision_keeps_empty_success_when_approved_file_is_current()
     let approved = ApprovedUpdate {
         release_tag: "yaml-data-v2026.04.17".into(),
         file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64)],
     };
 
     let report = apply_yaml_update_with_decision(
@@ -1852,6 +1857,149 @@ async fn apply_with_decision_keeps_empty_success_when_approved_file_is_current()
     assert!(
         report.failed.is_empty(),
         "already-current file should stay a no-op"
+    );
+}
+
+/// Regression for approval pinning: same release tag + same file name is not
+/// enough when the manifest now advertises different bytes than the user
+/// reviewed.
+#[tokio::test(flavor = "multi_thread")]
+async fn apply_with_decision_rejects_same_tag_digest_drift() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let body = valid_manifest_json(
+        "yaml-data-v2026.04.17",
+        &"b".repeat(64),
+        "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml",
+        7,
+    );
+    let _mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(body)
+        .create_async()
+        .await;
+
+    let client = tokenless_client(&server.url());
+    let set = client_set("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64)],
+    };
+
+    let err = apply_yaml_update_with_decision(
+        &client,
+        &pages_url,
+        "yaml-data-v",
+        &set,
+        UpdateCheckConfig::enabled(),
+        &approved,
+    )
+    .await
+    .unwrap_err();
+
+    match err {
+        UpdateError::DecisionDigestStale {
+            release_tag,
+            file,
+            approved_sha256,
+            manifest_sha256,
+        } => {
+            assert_eq!(release_tag, "yaml-data-v2026.04.17");
+            assert_eq!(file, "CLASSIC Main.yaml");
+            assert_eq!(approved_sha256, "a".repeat(64));
+            assert_eq!(manifest_sha256, "b".repeat(64));
+        }
+        other => panic!("expected DecisionDigestStale, got: {other:?}"),
+    }
+}
+
+/// Regression: `apply_yaml_update_with_decision` must validate the approved
+/// decision *before* issuing any HTTP request. Mismatched arrays should fail
+/// fast with a generic validation error rather than hitting the network.
+#[tokio::test(flavor = "multi_thread")]
+async fn apply_with_decision_rejects_mismatched_approved_arrays() {
+    let client = tokenless_client("http://127.0.0.1:1");
+    let set = client_set("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec![],
+    };
+
+    let err = apply_yaml_update_with_decision(
+        &client,
+        "http://127.0.0.1:1/manifest-latest.json",
+        "yaml-data-v",
+        &set,
+        UpdateCheckConfig::enabled(),
+        &approved,
+    )
+    .await
+    .unwrap_err();
+
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("1 file names") && msg.contains("0 file digests"),
+        "expected malformed approved error before fetch, got: {err:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn apply_with_decision_rejects_invalid_digest() {
+    let client = tokenless_client("http://127.0.0.1:1");
+    let set = client_set("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["not-hex".into()],
+    };
+
+    let err = apply_yaml_update_with_decision(
+        &client,
+        "http://127.0.0.1:1/manifest-latest.json",
+        "yaml-data-v",
+        &set,
+        UpdateCheckConfig::enabled(),
+        &approved,
+    )
+    .await
+    .unwrap_err();
+
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("not 64 hex chars"),
+        "expected invalid digest error before fetch, got: {err:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn apply_with_decision_rejects_duplicate_approved_names() {
+    let client = tokenless_client("http://127.0.0.1:1");
+    let set = client_set("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into(), "CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64), "b".repeat(64)],
+    };
+
+    let err = apply_yaml_update_with_decision(
+        &client,
+        "http://127.0.0.1:1/manifest-latest.json",
+        "yaml-data-v",
+        &set,
+        UpdateCheckConfig::enabled(),
+        &approved,
+    )
+    .await
+    .unwrap_err();
+
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("duplicate approved file"),
+        "expected duplicate name error before fetch, got: {err:?}"
     );
 }
 

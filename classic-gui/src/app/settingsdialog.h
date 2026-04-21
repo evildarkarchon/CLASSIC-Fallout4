@@ -106,6 +106,7 @@ private:
     // in `classic_update_core::apply_yaml_update_with_decision`.
     QString m_approvedReleaseTag;
     QStringList m_approvedFileNames;
+    QStringList m_approvedFileSha256;
 
     // Dedicated worker thread for the YAML update check/apply/rollback
     // calls. Owned by the dialog; created lazily via

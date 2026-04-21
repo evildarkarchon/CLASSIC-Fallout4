@@ -233,13 +233,15 @@ fn yaml_apply_update(
     enabled: bool,
     approved_release_tag: &str,
     approved_file_names: &Vec<String>,
+    approved_file_sha256: &Vec<String>,
     bundled_yaml_dir: &str,
 ) -> ffi::YamlUpdateReportDto {
     // Apply is a user-consent-gated operation: we install exactly the files
     // the user reviewed at check-time, for exactly the release tag they
     // saw. The caller passes that decision back via `approved_release_tag`
-    // + `approved_file_names`; the core then refuses the install when the
-    // live manifest has rotated to a different release (`DecisionStale`).
+    // + per-file `(name, sha256)` identity; the core then refuses the
+    // install when the live manifest has rotated to a different release or
+    // changed the bytes advertised for an approved file.
     //
     // `enabled` is honored end-to-end: passing `false` makes the core
     // return `UpdateCheckDisabled` without any HTTP — the "Update Check:
@@ -261,6 +263,7 @@ fn yaml_apply_update(
     let approved = ApprovedUpdate {
         release_tag: approved_release_tag.to_string(),
         file_names: approved_file_names.clone(),
+        file_sha256: approved_file_sha256.clone(),
     };
 
     let result = get_runtime().block_on(apply_yaml_update_with_decision(
@@ -292,6 +295,18 @@ fn yaml_apply_update(
             failed: Vec::new(),
             error_message: format!(
                 "decision stale: approved release `{approved}` but current manifest is `{manifest}`; re-check required"
+            ),
+        },
+        Err(UpdateError::DecisionDigestStale {
+            release_tag,
+            file,
+            approved_sha256,
+            manifest_sha256,
+        }) => ffi::YamlUpdateReportDto {
+            installed: Vec::new(),
+            failed: Vec::new(),
+            error_message: format!(
+                "decision stale: approved file `{file}` for release `{release_tag}` changed digest from `{approved_sha256}` to `{manifest_sha256}`; re-check required"
             ),
         },
         Err(e) => ffi::YamlUpdateReportDto {
@@ -460,13 +475,15 @@ mod ffi {
         /// `false`, no HTTP is issued and `error_message` is populated with
         /// a "update check disabled" diagnostic.
         ///
-        /// `approved_release_tag` + `approved_file_names` form the reviewed
-        /// decision. They MUST come from a prior `yaml_check_update` call
-        /// whose result the user confirmed — typically from a
-        /// `YamlUpdateStatusDto::release_tag` and the `name` of each
-        /// `compatible_files` entry. When the live manifest has since
-        /// rotated to a different release tag, the call returns an empty
-        /// report with `error_message` prefixed `decision stale:`.
+        /// `approved_release_tag` + the parallel `approved_file_names` /
+        /// `approved_file_sha256` arrays form the reviewed decision. They
+        /// MUST come from a prior `yaml_check_update` call whose result the
+        /// user confirmed — typically from `YamlUpdateStatusDto::release_tag`
+        /// and each `compatible_files[i].{name, sha256}` pair. When the live
+        /// manifest has since rotated to a different release tag, or it keeps
+        /// the same tag/name but changes the bytes advertised for an approved
+        /// file, the call returns an empty report with `error_message`
+        /// prefixed `decision stale:`.
         ///
         /// `bundled_yaml_dir` has the same meaning as on
         /// [`yaml_check_update`]: empty string keeps the `current_exe()`
@@ -478,6 +495,7 @@ mod ffi {
             enabled: bool,
             approved_release_tag: &str,
             approved_file_names: &Vec<String>,
+            approved_file_sha256: &Vec<String>,
             bundled_yaml_dir: &str,
         ) -> YamlUpdateReportDto;
 

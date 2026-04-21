@@ -79,8 +79,11 @@ void YamlUpdateWorker::doCheck(bool enabled)
             result.releaseTag = classic::toQString(status.release_tag);
             result.compatibleFileNames.reserve(
                 static_cast<int>(status.compatible_files.size()));
+            result.compatibleFileSha256.reserve(
+                static_cast<int>(status.compatible_files.size()));
             for (const auto& f : status.compatible_files) {
                 result.compatibleFileNames.push_back(classic::toQString(f.name));
+                result.compatibleFileSha256.push_back(classic::toQString(f.sha256));
             }
             result.incompatibleFileNames.reserve(
                 static_cast<int>(status.incompatible_files.size()));
@@ -143,22 +146,28 @@ void YamlUpdateWorker::doCheck(bool enabled)
 }
 
 void YamlUpdateWorker::doApply(bool enabled, const QString& approvedReleaseTag,
-                               const QStringList& approvedFileNames)
+                               const QStringList& approvedFileNames,
+                               const QStringList& approvedFileSha256)
 {
     YamlApplyResult result;
     try {
         auto entries = buildDefaultEntries();
 
         rust::Vec<rust::String> approvedNames;
+        rust::Vec<rust::String> approvedSha256;
         approvedNames.reserve(static_cast<std::size_t>(approvedFileNames.size()));
+        approvedSha256.reserve(static_cast<std::size_t>(approvedFileSha256.size()));
         for (const auto& n : approvedFileNames) {
             approvedNames.push_back(rust::String(n.toStdString()));
+        }
+        for (const auto& sha256 : approvedFileSha256) {
+            approvedSha256.push_back(rust::String(sha256.toStdString()));
         }
         const rust::String approvedTag(approvedReleaseTag.toStdString());
 
         auto report = classic::update::yaml_apply_update(
             kYamlPagesUrl, kYamlTagPrefix, entries, enabled,
-            approvedTag, approvedNames, rust::Str(""));
+            approvedTag, approvedNames, approvedSha256, rust::Str(""));
 
         result.installed = static_cast<qsizetype>(report.installed.size());
         result.failed = static_cast<qsizetype>(report.failed.size());

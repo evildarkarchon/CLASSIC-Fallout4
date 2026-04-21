@@ -384,11 +384,9 @@ pub struct YamlUpdateReport {
 /// never saw. This type closes that hole by carrying the approved identity
 /// forward: apply refuses to run when the live manifest diverges.
 ///
-/// `file_names` is the intersection of "user approved" and "manifest
-/// advertised compatible" at review time. Apply further intersects it with
-/// the freshly-fetched manifest's compatible set, so a file the user
-/// approved that later becomes incompatible (client downgrade, publisher
-/// narrows bounds) is skipped with a diagnostic rather than installed.
+/// `file_names` and `file_sha256` are parallel arrays describing the exact
+/// file identities the user approved at review time. Apply re-checks both
+/// dimensions against the freshly-fetched manifest before touching disk.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApprovedUpdate {
     /// Release tag the user reviewed — used as an identity check against
@@ -396,8 +394,11 @@ pub struct ApprovedUpdate {
     /// [`UpdateError::DecisionStale`].
     pub release_tag: String,
     /// Canonical file names (e.g. `"CLASSIC Main.yaml"`) the user
-    /// approved. Order is not significant; membership is.
+    /// approved.
     pub file_names: Vec<String>,
+    /// Manifest-advertised SHA-256 digests for each approved file, aligned
+    /// by index with `file_names`.
+    pub file_sha256: Vec<String>,
 }
 
 impl ApprovedUpdate {
@@ -413,10 +414,40 @@ impl ApprovedUpdate {
             } => Some(Self {
                 release_tag: manifest.release_tag.clone(),
                 file_names: compatible_files.iter().map(|f| f.name.clone()).collect(),
+                file_sha256: compatible_files.iter().map(|f| f.sha256.clone()).collect(),
             }),
             _ => None,
         }
     }
+}
+
+fn approved_file_sha_map<'a>(approved: &'a ApprovedUpdate) -> Result<HashMap<&'a str, &'a str>> {
+    if approved.file_names.len() != approved.file_sha256.len() {
+        return Err(UpdateError::Generic(format!(
+            "approved decision malformed: {} file names but {} file digests",
+            approved.file_names.len(),
+            approved.file_sha256.len()
+        )));
+    }
+
+    let mut approved_sha_by_name = HashMap::with_capacity(approved.file_names.len());
+    for (name, sha256) in approved.file_names.iter().zip(&approved.file_sha256) {
+        if sha256.len() != 64 || !sha256.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err(UpdateError::Generic(format!(
+                "approved decision malformed: digest for `{name}` is not 64 hex chars"
+            )));
+        }
+        if approved_sha_by_name
+            .insert(name.as_str(), sha256.as_str())
+            .is_some()
+        {
+            return Err(UpdateError::Generic(format!(
+                "approved decision malformed: duplicate approved file `{name}`"
+            )));
+        }
+    }
+
+    Ok(approved_sha_by_name)
 }
 
 /// Outcome of [`rollback_yaml_update`].
@@ -1746,11 +1777,16 @@ pub async fn apply_yaml_update(
 ///    publisher rotated to a new release while the user was reviewing;
 ///    refuse to install the new release silently and surface the drift
 ///    so the GUI / CLI can prompt a re-check.
-/// 4. Install only manifest files whose `name` is in `approved.file_names`
-///    AND that the fresh classifier still marks as compatible. An
-///    approved file that no longer appears in the manifest (or that has
-///    become incompatible) is recorded in the report's `failed` list with
-///    a reason, not silently dropped.
+/// 4. If a freshly-fetched manifest entry keeps the same file name but now
+///    advertises a different `sha256` than the user approved,
+///    [`UpdateError::DecisionDigestStale`] short-circuits the whole apply.
+///    Same tag plus same name is not sufficient consent when the bytes
+///    changed.
+/// 5. Install only manifest files whose `name` is in `approved.file_names`
+///    AND that the fresh classifier still marks as compatible. An approved
+///    file that no longer appears in the manifest (or that has become
+///    incompatible) is recorded in the report's `failed` list with a
+///    reason, not silently dropped.
 ///
 /// # Why not just `apply_yaml_update(status)` directly
 ///
@@ -1770,6 +1806,10 @@ pub async fn apply_yaml_update_with_decision(
     if !config.enabled {
         return Err(UpdateError::UpdateCheckDisabled);
     }
+
+    // Validate the approved decision early, before any network I/O, so
+    // binding-layer bugs fail fast without unnecessary HTTP traffic.
+    let approved_sha_by_name = approved_file_sha_map(approved)?;
 
     let status = check_yaml_update(client, pages_url, tag_prefix, current, config).await?;
 
@@ -1803,10 +1843,23 @@ pub async fn apply_yaml_update_with_decision(
         });
     }
 
+    for entry in &manifest.files {
+        if let Some(approved_sha256) = approved_sha_by_name.get(entry.name.as_str()) {
+            if !approved_sha256.eq_ignore_ascii_case(&entry.sha256) {
+                return Err(UpdateError::DecisionDigestStale {
+                    release_tag: manifest.release_tag.clone(),
+                    file: entry.name.clone(),
+                    approved_sha256: (*approved_sha256).to_string(),
+                    manifest_sha256: entry.sha256.clone(),
+                });
+            }
+        }
+    }
+
     // Build a quick lookup set so we don't pay O(N*M) membership checks
     // when the approved list has more than a handful of names.
     let approved_names: std::collections::HashSet<&str> =
-        approved.file_names.iter().map(|s| s.as_str()).collect();
+        approved_sha_by_name.keys().copied().collect();
     let manifest_names: std::collections::HashSet<&str> = manifest
         .files
         .iter()

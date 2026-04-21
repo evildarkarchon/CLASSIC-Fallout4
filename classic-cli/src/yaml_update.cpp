@@ -320,23 +320,24 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
 
         // Step 3: apply the reviewed decision.
         //
-        // We pass the exact release_tag + file name list the user just
-        // confirmed via `report_status`. The bridge intersects this with
-        // the freshly-fetched manifest and refuses to install a
-        // different release if the publisher has rotated in between
-        // (see `DecisionStale` in classic_update_core::error). This is
-        // how the `Update Check: false` opt-out is honored end-to-end
-        // and how we guarantee the apply payload matches what was
-        // shown to the user.
+        // We pass the exact release_tag + per-file `(name, sha256)` pairs the
+        // user just confirmed via `report_status`. The bridge re-checks that
+        // identity against the live manifest and refuses to install if the
+        // publisher rotated to a different release or replaced an approved
+        // asset in place.
         rust::Vec<rust::String> approved_file_names;
+        rust::Vec<rust::String> approved_file_sha256;
         approved_file_names.reserve(status.compatible_files.size());
+        approved_file_sha256.reserve(status.compatible_files.size());
         for (const auto& f : status.compatible_files) {
             approved_file_names.push_back(f.name);
+            approved_file_sha256.push_back(f.sha256);
         }
 
         auto report = classic::update::yaml_apply_update(
             kYamlPagesUrl, kYamlTagPrefix, entries, enabled,
-            status.release_tag, approved_file_names, rust::Str(""));
+            status.release_tag, approved_file_names, approved_file_sha256,
+            rust::Str(""));
 
         const auto installed = report.installed.size();
         const auto failed = report.failed.size();

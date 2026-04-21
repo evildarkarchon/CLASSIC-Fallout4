@@ -368,6 +368,7 @@ def apply_yaml_update(
     enabled: bool,
     approved_release_tag: str,
     approved_file_names: list[str],
+    approved_file_sha256: list[str],
     bundled_yaml_dir: str | None = None,
 ) -> YamlUpdateReport:
     """Fetch + download + atomically install the reviewed set of files.
@@ -380,8 +381,9 @@ def apply_yaml_update(
       opt-out survives between check and apply.
     - ``approved_release_tag`` is the ``release_tag`` field of the
       ``YamlUpdateStatus`` the user reviewed.
-    - ``approved_file_names`` is the ``name`` of each entry in that
-      status's ``compatible_files``.
+    - ``approved_file_names`` / ``approved_file_sha256`` are the
+      ``name`` / ``sha256`` fields of each entry in that status's
+      ``compatible_files``.
 
     When the live manifest has rotated to a different tag since the user's
     review, the call raises ``RuntimeError`` (``"approved release ... does
@@ -395,6 +397,8 @@ def apply_yaml_update(
         enabled: Honors ``Update Check: false`` end-to-end.
         approved_release_tag: Release tag the user reviewed.
         approved_file_names: File names the user reviewed.
+        approved_file_sha256: SHA-256 digests aligned with
+            ``approved_file_names``.
         bundled_yaml_dir: Install-tree directory containing the bundled
             shippable YAML files. Same semantics as on
             :func:`check_yaml_update` — Python callers should pass the

@@ -5638,6 +5638,10 @@
             "type": "&Vec<String>"
           },
           {
+            "name": "approved_file_sha256",
+            "type": "&Vec<String>"
+          },
+          {
             "name": "bundled_yaml_dir",
             "type": "&str"
           }

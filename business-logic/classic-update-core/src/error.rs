@@ -116,6 +116,23 @@ pub enum UpdateError {
         /// Release tag the freshly-fetched manifest actually advertises.
         manifest: String,
     },
+
+    /// The reviewed decision still points at the same release tag, but at
+    /// least one approved file now advertises different bytes than the user
+    /// reviewed.
+    #[error(
+        "approved file `{file}` for release `{release_tag}` changed digest from `{approved_sha256}` to `{manifest_sha256}`; re-check required"
+    )]
+    DecisionDigestStale {
+        /// Release tag whose approved file digest drifted.
+        release_tag: String,
+        /// Canonical file name whose digest changed.
+        file: String,
+        /// Digest the user approved at review time.
+        approved_sha256: String,
+        /// Digest the freshly-fetched manifest now advertises.
+        manifest_sha256: String,
+    },
 }
 
 /// Result type alias for update operations.

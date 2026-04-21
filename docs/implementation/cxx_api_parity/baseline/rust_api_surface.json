@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-19T13:35:38Z",
+  "generated_at_utc": "2026-04-21T07:32:51Z",
   "entries": [
     {
       "id": "583bb255b5c8b9ef",
@@ -5634,6 +5634,10 @@
           },
           {
             "name": "approved_file_names",
+            "type": "&Vec<String>"
+          },
+          {
+            "name": "approved_file_sha256",
             "type": "&Vec<String>"
           },
           {

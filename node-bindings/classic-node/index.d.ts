@@ -1315,12 +1315,12 @@ export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
  * - `enabled` mirrors the `Update Check` settings toggle. Passing `false`
  *   rejects the call with an `update check disabled` error before any
  *   HTTP is issued — the user's opt-out survives between check and apply.
- * - `approvedReleaseTag` + `approvedFileNames` come from a prior
- *   `checkYamlUpdate` call the user confirmed. They pin the install to
- *   the exact release the user reviewed; if the publisher has rotated
- *   the manifest to a newer tag in the meantime, the call throws a
- *   `decision stale` error instead of silently installing the new
- *   release.
+ * - `approvedReleaseTag` + the parallel `approvedFileNames` /
+ *   `approvedFileSha256` arrays come from a prior `checkYamlUpdate` call
+ *   the user confirmed. They pin the install to the exact release and
+ *   bytes the user reviewed; if the publisher has rotated the manifest to
+ *   a newer tag or replaced an approved asset in place, the call throws a
+ *   `decision stale` error instead of silently installing the new bytes.
  *
  * Returns per-file outcomes — a mixed batch is a valid success (the
  * successful subset is installed).
@@ -1331,6 +1331,7 @@ export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
  * @param enabled             Honors the `Update Check: false` setting end-to-end.
  * @param approvedReleaseTag  Release tag the user reviewed.
  * @param approvedFileNames   File names the user reviewed.
+ * @param approvedFileSha256  SHA-256 digests aligned with `approvedFileNames`.
  * @param bundledYamlDir      Install-tree directory containing the bundled
  *                            shippable YAML files (`CLASSIC Data/databases`).
  *                            Node callers should pass the package-local path
@@ -1340,7 +1341,7 @@ export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
  * @throws when the whole batch fails, when the update check is disabled,
  *         or when the decision is stale.
  */
-export declare function applyYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, approvedReleaseTag: string, approvedFileNames: Array<string>, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateReport>
+export declare function applyYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, approvedReleaseTag: string, approvedFileNames: Array<string>, approvedFileSha256: Array<string>, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateReport>
 
 /** Extended cache TTL for batch log scanning (1800 seconds / 30 minutes). */
 export const BATCH_CACHE_TTL: number

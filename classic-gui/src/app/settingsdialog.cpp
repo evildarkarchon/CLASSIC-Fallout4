@@ -690,6 +690,7 @@ void SettingsDialog::onCheckForYamlUpdates()
     // the result lands with status == "updateAvailable".
     m_approvedReleaseTag.clear();
     m_approvedFileNames.clear();
+    m_approvedFileSha256.clear();
 
     const bool enabled = m_chkUpdateCheck && m_chkUpdateCheck->isChecked();
 
@@ -707,7 +708,8 @@ void SettingsDialog::onApplyYamlUpdates()
     // This is the UI-layer counterpart to `DecisionStale` in the core —
     // we never want the user clicking Apply without first seeing the
     // exact release tag and file list the install will target.
-    if (m_approvedReleaseTag.isEmpty() || m_approvedFileNames.isEmpty()) {
+    if (m_approvedReleaseTag.isEmpty() || m_approvedFileNames.isEmpty() ||
+        m_approvedFileSha256.size() != m_approvedFileNames.size()) {
         m_lblYamlUpdateStatus->setText(QStringLiteral(
             "Please run \"Check for Data Updates\" first to review the files that will be installed."));
         return;
@@ -740,7 +742,8 @@ void SettingsDialog::onApplyYamlUpdates()
     QMetaObject::invokeMethod(m_yamlUpdateWorker, "doApply", Qt::QueuedConnection,
                               Q_ARG(bool, enabled),
                               Q_ARG(QString, m_approvedReleaseTag),
-                              Q_ARG(QStringList, m_approvedFileNames));
+                              Q_ARG(QStringList, m_approvedFileNames),
+                              Q_ARG(QStringList, m_approvedFileSha256));
 }
 
 void SettingsDialog::onRollbackYamlUpdate()
@@ -786,6 +789,7 @@ void SettingsDialog::onYamlCheckFinished(YamlCheckResult result)
         // cannot see a half-populated state via signal/slot reordering.
         m_approvedReleaseTag = result.releaseTag;
         m_approvedFileNames = result.compatibleFileNames;
+        m_approvedFileSha256 = result.compatibleFileSha256;
     } else if (result.status == QStringLiteral("upToDate")) {
         // Distinguish "nothing newer" from "newer data exists but this
         // client cannot consume it" (manifest contains only higher-schema
@@ -857,6 +861,7 @@ void SettingsDialog::onYamlApplyFinished(YamlApplyResult result)
     // decision guard rather than re-using whatever was last reviewed.
     m_approvedReleaseTag.clear();
     m_approvedFileNames.clear();
+    m_approvedFileSha256.clear();
 }
 
 void SettingsDialog::onYamlRollbackFinished(YamlRollbackResult result)

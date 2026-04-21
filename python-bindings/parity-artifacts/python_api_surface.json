@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-19T13:35:44.652631+00:00",
+  "generated_at_utc": "2026-04-21T07:31:17.510702+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8209,11 +8209,11 @@
       "export": "apply_yaml_update",
       "export_path": "apply_yaml_update",
       "kind": "function",
-      "arity": 7,
+      "arity": 8,
       "owner_module": "update",
       "tier": "tier1",
       "source_file": "python-bindings/classic-update-py/classic_update.pyi",
-      "signature": "def apply_yaml_update( pages_url: str, tag_prefix: str, entries: list[YamlClientSchemaEntry], enabled: bool, approved_release_tag: str, approved_file_names: list[str], bundled_yaml_dir: str | None = None, ) -> YamlUpdateReport:"
+      "signature": "def apply_yaml_update( pages_url: str, tag_prefix: str, entries: list[YamlClientSchemaEntry], enabled: bool, approved_release_tag: str, approved_file_names: list[str], approved_file_sha256: list[str], bundled_yaml_dir: str | None = None, ) -> YamlUpdateReport:"
     },
     {
       "module": "classic_update",

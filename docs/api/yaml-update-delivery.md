@@ -94,23 +94,25 @@ The compatibility and freshness checks are distinct — a file must pass both to
 
 Review-and-apply is two logical steps separated by an unbounded amount of time (the user reads the confirmation dialog, switches tabs, goes to lunch). Between those steps the published manifest can rotate to a new `release_tag`. A naive apply that re-fetches and installs whatever the live manifest currently advertises would silently install a release the user never saw.
 
-`ApprovedUpdate { release_tag, file_names }` closes that hole. Produced from a prior `check_yaml_update` result:
+`ApprovedUpdate { release_tag, file_names, file_sha256 }` closes that hole. Produced from a prior `check_yaml_update` result:
 
 - `release_tag` — the tag the user reviewed on the confirmation dialog.
 - `file_names` — the canonical names of every file the user saw in the `compatible_files` list.
+- `file_sha256` — the manifest-advertised digest for each approved file, aligned by index with `file_names`.
 
 `apply_yaml_update_with_decision` enforces four gates in order:
 
 1. `config.enabled == false` → `UpdateError::UpdateCheckDisabled` (no HTTP). Honors the `Update Check: false` setting end-to-end so a user that toggled the setting off between check and apply cannot still trigger a network install.
 2. Fetch + classify the current manifest.
 3. If the fresh manifest's `release_tag` differs from `approved.release_tag` → `UpdateError::DecisionStale`. Refuses to install a different release than the one the user confirmed.
-4. Install only the intersection of `approved.file_names` ∩ `fresh.compatible_files`. An approved file that is no longer in the current manifest's compatible set is reported as a failure with a `re-check required` reason rather than silently dropped.
+4. If a fresh manifest entry keeps the same file name but advertises a different `sha256` than `approved.file_sha256[i]` → `UpdateError::DecisionDigestStale`. Same tag plus same file name is not sufficient consent when the bytes changed.
+5. Install only the intersection of `approved.file_names` ∩ `fresh.compatible_files`. An approved file that is no longer in the current manifest's compatible set is reported as a failure with a `re-check required` reason rather than silently dropped.
 
 Binding-layer contract:
 
-- C++ bridge `yaml_apply_update(pages_url, tag_prefix, entries, enabled, approved_release_tag, approved_file_names, bundled_yaml_dir)` returns `YamlUpdateReportDto`. Typed errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix. The trailing `bundled_yaml_dir` is an empty string for the native CLI / GUI (which relies on the `current_exe()` fallback).
-- Node `applyYamlUpdate(pagesUrl, tagPrefix, entries, enabled, approvedReleaseTag, approvedFileNames, bundledYamlDir?)` throws on disabled / stale (propagated as NAPI `Error` with the message body). Node callers should pass the package-local install path because `current_exe()` resolves to `node.exe`.
-- Python `apply_yaml_update(pages_url, tag_prefix, entries, enabled, approved_release_tag, approved_file_names, bundled_yaml_dir=None)` raises `RuntimeError` on disabled / stale. Python callers should pass a package-local install path because `current_exe()` resolves to `python.exe`.
+- C++ bridge `yaml_apply_update(pages_url, tag_prefix, entries, enabled, approved_release_tag, approved_file_names, approved_file_sha256, bundled_yaml_dir)` returns `YamlUpdateReportDto`. Typed errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix. The trailing `bundled_yaml_dir` is an empty string for the native CLI / GUI (which relies on the `current_exe()` fallback).
+- Node `applyYamlUpdate(pagesUrl, tagPrefix, entries, enabled, approvedReleaseTag, approvedFileNames, approvedFileSha256, bundledYamlDir?)` throws on disabled / stale (propagated as NAPI `Error` with the message body). Node callers should pass the package-local install path because `current_exe()` resolves to `node.exe`.
+- Python `apply_yaml_update(pages_url, tag_prefix, entries, enabled, approved_release_tag, approved_file_names, approved_file_sha256, bundled_yaml_dir=None)` raises `RuntimeError` on disabled / stale. Python callers should pass a package-local install path because `current_exe()` resolves to `python.exe`.
 
 ### Bundled-directory resolution (non-native hosts)
 

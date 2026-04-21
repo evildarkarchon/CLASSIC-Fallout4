@@ -353,8 +353,9 @@ fn check_yaml_update(
 ///   opt-out survives between check and apply.
 /// - ``approved_release_tag``: the ``release_tag`` field of the
 ///   ``YamlUpdateStatus`` the user confirmed.
-/// - ``approved_file_names``: the ``name`` of each entry in that status's
-///   ``compatible_files``.
+/// - ``approved_file_names`` / ``approved_file_sha256``: parallel arrays of
+///   ``compatible_files[i].name`` and ``compatible_files[i].sha256`` from
+///   that reviewed status.
 ///
 /// When the live manifest has rotated to a different tag in the meantime,
 /// the call raises ``RuntimeError('approved release ... does not match
@@ -368,6 +369,8 @@ fn check_yaml_update(
 ///     enabled: Honors ``Update Check: false`` end-to-end.
 ///     approved_release_tag: Release tag the user reviewed.
 ///     approved_file_names: File names the user reviewed.
+///     approved_file_sha256: SHA-256 digests aligned with
+///         ``approved_file_names``.
 ///
 /// Raises:
 ///     RuntimeError: when the whole batch fails, when the update check is
@@ -380,6 +383,7 @@ fn check_yaml_update(
     enabled,
     approved_release_tag,
     approved_file_names,
+    approved_file_sha256,
     bundled_yaml_dir=None,
 ))]
 fn apply_yaml_update(
@@ -389,6 +393,7 @@ fn apply_yaml_update(
     enabled: bool,
     approved_release_tag: String,
     approved_file_names: Vec<String>,
+    approved_file_sha256: Vec<String>,
     bundled_yaml_dir: Option<&str>,
 ) -> PyResult<PyYamlUpdateReport> {
     let client =
@@ -398,6 +403,7 @@ fn apply_yaml_update(
     let approved = core::ApprovedUpdate {
         release_tag: approved_release_tag,
         file_names: approved_file_names,
+        file_sha256: approved_file_sha256,
     };
     let report = classic_shared_core::get_runtime()
         .block_on(core::apply_yaml_update_with_decision(

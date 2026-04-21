@@ -600,6 +600,84 @@ fn enrich_installed_skips_incompatible_cache_and_uses_bundled() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// approved_file_sha_map validation
+// ---------------------------------------------------------------------------
+
+#[test]
+fn approved_file_sha_map_rejects_mismatched_lengths() {
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec![],
+    };
+    let err = approved_file_sha_map(&approved).unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("1 file names") && msg.contains("0 file digests"),
+        "got: {msg}"
+    );
+}
+
+#[test]
+fn approved_file_sha_map_rejects_invalid_digest() {
+    for bad_digest in ["not-hex", &"a".repeat(63), &"a".repeat(65)] {
+        let approved = ApprovedUpdate {
+            release_tag: "yaml-data-v2026.04.17".into(),
+            file_names: vec!["CLASSIC Main.yaml".into()],
+            file_sha256: vec![bad_digest.into()],
+        };
+        let err = approved_file_sha_map(&approved).unwrap_err();
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("digest for `CLASSIC Main.yaml` is not 64 hex chars"),
+            "for digest '{bad_digest}', got: {msg}"
+        );
+    }
+}
+
+#[test]
+fn approved_file_sha_map_rejects_duplicate_names() {
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into(), "CLASSIC Main.yaml".into()],
+        file_sha256: vec!["a".repeat(64), "b".repeat(64)],
+    };
+    let err = approved_file_sha_map(&approved).unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("duplicate approved file `CLASSIC Main.yaml`"),
+        "got: {msg}"
+    );
+}
+
+#[test]
+fn approved_file_sha_map_accepts_valid() {
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into(), "CLASSIC Fallout4.yaml".into()],
+        file_sha256: vec!["a".repeat(64), "b".repeat(64)],
+    };
+    let map = approved_file_sha_map(&approved).unwrap();
+    assert_eq!(map.len(), 2);
+    assert_eq!(map.get("CLASSIC Main.yaml"), Some(&"a".repeat(64).as_str()));
+    assert_eq!(
+        map.get("CLASSIC Fallout4.yaml"),
+        Some(&"b".repeat(64).as_str())
+    );
+}
+
+#[test]
+fn approved_file_sha_map_accepts_uppercase_hex() {
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["A".repeat(64)],
+    };
+    let map = approved_file_sha_map(&approved).unwrap();
+    assert_eq!(map.get("CLASSIC Main.yaml"), Some(&"A".repeat(64).as_str()));
+}
+
 /// End-to-end guard: the "incompatible cache + compatible bundled"
 /// scenario plus a compatible `1.1` manifest entry must classify as
 /// `UpdateAvailable` — because the runtime is really serving `1.0` from
