@@ -263,7 +263,7 @@ fn discover_report_files(directory: &str) -> Vec<String> {
         .collect();
 
     // Sort newest first
-    files.sort_by(|a, b| b.0.cmp(&a.0));
+    files.sort_by_key(|b| std::cmp::Reverse(b.0));
     files.into_iter().map(|(_, path)| path).collect()
 }
 
