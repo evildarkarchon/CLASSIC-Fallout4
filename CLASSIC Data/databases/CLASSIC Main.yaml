@@ -1,11 +1,16 @@
 # DYNAMIC DATABASE for Crash Log Auto Scanner & Setup Integrity Checker (CLASSIC) v7.0+
 
+# File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
+# - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
+# - MINOR bumps are additive (new optional keys older clients ignore)
+schema_version: "1.0"
+
 CLASSIC_Info:
   # ========================================================================================
   # CAUTION: DO NOT CHANGE YOUR SETTINGS HERE! OPEN & EDIT CLASSIC Settings.yaml instead!
   # ========================================================================================
-  version: CLASSIC v9.0.0
-  version_date: 26.02.11 #YY/MM/DD
+  version: CLASSIC v9.1.0
+  version_date: 26.04.19 #YY/MM/DD
   is_prerelease: false
 
   default_settings: |

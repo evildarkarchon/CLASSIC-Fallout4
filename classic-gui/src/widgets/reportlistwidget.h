@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QWidget>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
 #include <QString>
 #include <QStringList>
+#include <QWidget>
 
 class ReportListWidget : public QWidget {
     Q_OBJECT

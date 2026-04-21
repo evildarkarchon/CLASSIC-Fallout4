@@ -19,7 +19,5 @@ public slots:
 
 signals:
     /// Emitted when the update check completes (success or failure).
-    void updateCheckCompleted(bool hasUpdate,
-                              QString latestVersion,
-                              QString errorMessage);
+    void updateCheckCompleted(bool hasUpdate, QString latestVersion, QString errorMessage);
 };

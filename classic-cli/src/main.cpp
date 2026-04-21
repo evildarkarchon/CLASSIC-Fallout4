@@ -1,8 +1,9 @@
 #include "cli_args.h"
 #include "scanner.h"
+#include "yaml_update.h"
 
-#include "rust/cxx.h"
 #include "classic_cxx_bridge/config.h"
+#include "rust/cxx.h"
 
 #include <fmt/core.h>
 
@@ -50,15 +51,26 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    // yaml-update-delivery Section 12.3: data-update flags short-circuit the
+    // scan pipeline. They are mutually exclusive with each other and with a
+    // normal scan invocation; if combined, --apply takes precedence because
+    // it implies --check.
+    if (args.apply_yaml_updates) {
+        return run_apply_yaml_updates(args);
+    }
+    if (args.check_yaml_updates) {
+        return run_check_yaml_updates(args);
+    }
+
     // Print banner
     std::string mode_suffix;
     if (args.game_version != "auto") {
         mode_suffix += " " + args.game_version;
     }
-    if (args.fcx_mode)     mode_suffix += " [FCX]";
+    if (args.fcx_mode)
+        mode_suffix += " [FCX]";
 
-    fmt::print("CLASSIC v9.0.0 - Crash Log Scanner ({}{})\n\n",
-        args.game, mode_suffix);
+    fmt::print("CLASSIC v9.0.0 - Crash Log Scanner ({}{})\n\n", args.game, mode_suffix);
 
     // Run the scan pipeline
     return run_scan(args);

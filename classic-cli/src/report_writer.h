@@ -10,5 +10,4 @@
 /// falling back to direct std::ofstream if the bridge call fails.
 ///
 /// Returns true on success, false on failure (logs warning to stderr).
-bool write_report(const std::string& log_path,
-                  const std::vector<std::string>& report_lines);
+bool write_report(const std::string& log_path, const std::vector<std::string>& report_lines);

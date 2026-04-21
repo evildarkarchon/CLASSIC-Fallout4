@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 333,
-    "current_total": 333,
-    "matched": 333,
+    "contract_total": 344,
+    "current_total": 344,
+    "matched": 344,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2305,8 +2305,96 @@
       "reason": "-"
     },
     {
+      "id": "0eeee967af4cfa2d",
+      "rustSymbol": "yaml_apply_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ce26959df3d010dd",
+      "rustSymbol": "yaml_check_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9b1acfc60be56622",
+      "rustSymbol": "yaml_rollback_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f0ae26428d3c795b",
+      "rustSymbol": "ApprovedUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "fdf05d86cfb41258",
       "rustSymbol": "UpdateCheckResult",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "992cf44bfb2981ed",
+      "rustSymbol": "YamlApplyRequestDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8aef2c1cfc7c97cf",
+      "rustSymbol": "YamlClientSchemaEntryDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c7d8aa1ee5aed27e",
+      "rustSymbol": "YamlRollbackOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ee8abce557bf4560",
+      "rustSymbol": "YamlUpdateFileDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c77712b2140e1ebe",
+      "rustSymbol": "YamlUpdateFileOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7d9f8579b4faec8a",
+      "rustSymbol": "YamlUpdateReportDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "10e249f28357e5aa",
+      "rustSymbol": "YamlUpdateStatusDto",
       "kind": "struct",
       "bridgeModule": "update",
       "status": "matched",

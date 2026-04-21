@@ -14,6 +14,7 @@ class ReportListWidgetTests : public QObject {
 
 private slots:
     void setReports_sorts_reports_and_sets_tooltip_without_status_coloring();
+    void setReports_preserves_current_selection_when_selected_path_still_exists();
     void search_filter_rebuilds_visible_items();
     void selection_and_toolbar_buttons_emit_expected_signals();
 };
@@ -23,9 +24,7 @@ const QString kRefreshButtonObjectName = QStringLiteral("reportListRefreshButton
 const QString kDeleteButtonObjectName = QStringLiteral("reportListDeleteButton");
 const QString kOpenFolderButtonObjectName = QStringLiteral("reportListOpenFolderButton");
 
-QString writeReportFile(QTemporaryDir& tempDir,
-                        const QString& fileName,
-                        const QString& content)
+QString writeReportFile(QTemporaryDir& tempDir, const QString& fileName, const QString& content)
 {
     const QString path = tempDir.filePath(fileName);
     QFile file(path);
@@ -44,18 +43,14 @@ void ReportListWidgetTests::setReports_sorts_reports_and_sets_tooltip_without_st
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());
 
-    const QString solved = writeReportFile(
-        tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"),
-        QStringLiteral("NO ISSUES FOUND\n"));
-    const QString incomplete = writeReportFile(
-        tempDir, QStringLiteral("crash-2024-01-16-09-00-00.log"),
-        QStringLiteral("Report is INCOMPLETE\n"));
-    const QString unsolved = writeReportFile(
-        tempDir, QStringLiteral("crash-2024-01-17-10-00-00.log"),
-        QStringLiteral("SUSPECT: plugin\n"));
-    const QString unknown = writeReportFile(
-        tempDir, QStringLiteral("crash-2024-01-18-11-00-00.log"),
-        QStringLiteral("normal text only\n"));
+    const QString solved =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"), QStringLiteral("NO ISSUES FOUND\n"));
+    const QString incomplete = writeReportFile(tempDir, QStringLiteral("crash-2024-01-16-09-00-00.log"),
+                                               QStringLiteral("Report is INCOMPLETE\n"));
+    const QString unsolved =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-17-10-00-00.log"), QStringLiteral("SUSPECT: plugin\n"));
+    const QString unknown =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-18-11-00-00.log"), QStringLiteral("normal text only\n"));
 
     QVERIFY(!solved.isEmpty());
     QVERIFY(!incomplete.isEmpty());
@@ -69,22 +64,57 @@ void ReportListWidgetTests::setReports_sorts_reports_and_sets_tooltip_without_st
     widget.setReports({solved, unknown, unsolved, incomplete});
 
     QCOMPARE(list->count(), 4);
-    QCOMPARE(list->item(0)->text(),
-             QStringLiteral("crash-2024-01-18-11-00-00.log"));
-    QCOMPARE(list->item(1)->text(),
-             QStringLiteral("crash-2024-01-17-10-00-00.log"));
-    QCOMPARE(list->item(2)->text(),
-             QStringLiteral("crash-2024-01-16-09-00-00.log"));
-    QCOMPARE(list->item(3)->text(),
-             QStringLiteral("crash-2024-01-15-08-30-45.log"));
+    QCOMPARE(list->item(0)->text(), QStringLiteral("crash-2024-01-18-11-00-00.log"));
+    QCOMPARE(list->item(1)->text(), QStringLiteral("crash-2024-01-17-10-00-00.log"));
+    QCOMPARE(list->item(2)->text(), QStringLiteral("crash-2024-01-16-09-00-00.log"));
+    QCOMPARE(list->item(3)->text(), QStringLiteral("crash-2024-01-15-08-30-45.log"));
 
     for (int i = 0; i < list->count(); ++i) {
         auto* item = list->item(i);
         QVERIFY(!item->data(Qt::ForegroundRole).isValid());
     }
 
-    QCOMPARE(list->item(0)->toolTip(),
-             QStringLiteral("Crash: 2024-01-18 11:00:00"));
+    QCOMPARE(list->item(0)->toolTip(), QStringLiteral("Crash: 2024-01-18 11:00:00"));
+}
+
+void ReportListWidgetTests::setReports_preserves_current_selection_when_selected_path_still_exists()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString a =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"), QStringLiteral("NO ISSUES FOUND\n"));
+    const QString b =
+        writeReportFile(tempDir, QStringLiteral("crash-2025-06-01-12-00-00.log"), QStringLiteral("SUSPECT\n"));
+
+    QVERIFY(!a.isEmpty());
+    QVERIFY(!b.isEmpty());
+
+    ReportListWidget widget;
+    auto* list = widget.findChild<QListWidget*>();
+    QVERIFY(list);
+
+    widget.setReports({a, b});
+    QCOMPARE(list->count(), 2);
+
+    QListWidgetItem* selectedItem = nullptr;
+    for (int i = 0; i < list->count(); ++i) {
+        auto* item = list->item(i);
+        if (item->data(Qt::UserRole).toString() == a) {
+            selectedItem = item;
+            break;
+        }
+    }
+
+    QVERIFY(selectedItem);
+    list->setCurrentItem(selectedItem);
+    QTRY_COMPARE(widget.currentReportPath(), a);
+
+    widget.setReports({a, b});
+
+    QTRY_COMPARE(widget.currentReportPath(), a);
+    QVERIFY(list->currentItem());
+    QCOMPARE(list->currentItem()->data(Qt::UserRole).toString(), a);
 }
 
 void ReportListWidgetTests::search_filter_rebuilds_visible_items()
@@ -92,12 +122,10 @@ void ReportListWidgetTests::search_filter_rebuilds_visible_items()
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());
 
-    const QString a = writeReportFile(
-        tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"),
-        QStringLiteral("NO ISSUES FOUND\n"));
-    const QString b = writeReportFile(
-        tempDir, QStringLiteral("crash-2025-06-01-12-00-00.log"),
-        QStringLiteral("SUSPECT\n"));
+    const QString a =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"), QStringLiteral("NO ISSUES FOUND\n"));
+    const QString b =
+        writeReportFile(tempDir, QStringLiteral("crash-2025-06-01-12-00-00.log"), QStringLiteral("SUSPECT\n"));
 
     QVERIFY(!a.isEmpty());
     QVERIFY(!b.isEmpty());
@@ -124,12 +152,10 @@ void ReportListWidgetTests::selection_and_toolbar_buttons_emit_expected_signals(
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());
 
-    const QString a = writeReportFile(
-        tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"),
-        QStringLiteral("NO ISSUES FOUND\n"));
-    const QString b = writeReportFile(
-        tempDir, QStringLiteral("crash-2025-06-01-12-00-00.log"),
-        QStringLiteral("SUSPECT\n"));
+    const QString a =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-15-08-30-45.log"), QStringLiteral("NO ISSUES FOUND\n"));
+    const QString b =
+        writeReportFile(tempDir, QStringLiteral("crash-2025-06-01-12-00-00.log"), QStringLiteral("SUSPECT\n"));
 
     QVERIFY(!a.isEmpty());
     QVERIFY(!b.isEmpty());

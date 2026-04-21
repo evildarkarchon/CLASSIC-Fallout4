@@ -45,6 +45,20 @@ if ($scriptText -match '(?m)^\s*"all"\s*\{') {
     throw "Expected -Target all support to be removed from the target switch."
 }
 
+if ($scriptText -match 'ClassicLib-rs[\\/]python-bindings' -or $scriptText -match 'ClassicLib-rs[\\/]node-bindings') {
+    throw "Expected rebuild_rust.ps1 to use repo-root python-bindings/ and node-bindings/classic-node paths only."
+}
+
+foreach ($requiredPath in @('Join-Path $ProjectRoot "python-bindings"', 'Join-Path $ProjectRoot "node-bindings/classic-node"')) {
+    if ($scriptText -notmatch [regex]::Escape($requiredPath)) {
+        throw "Expected rebuild_rust.ps1 to contain repo-root path join '$requiredPath'."
+    }
+}
+
+if ($scriptText -match 'uv venv ClassicLib-rs/python-bindings/.venv') {
+    throw "Expected wrapper guidance to teach repo-root python-bindings/.venv, not ClassicLib-rs/python-bindings/.venv."
+}
+
 $targetParameter = $paramBlock.Parameters |
 Where-Object { $_.Name.VariablePath.UserPath -eq "Target" } |
 Select-Object -First 1

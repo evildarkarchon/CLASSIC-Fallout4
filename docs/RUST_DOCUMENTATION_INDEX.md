@@ -5,12 +5,16 @@ This index tracks Rust-centric documentation for the **active** CLASSIC architec
 ## Architecture Context
 
 - Active frontends: [`classic-cli/`](../classic-cli), [`classic-gui/`](../classic-gui)
-- Active core: [`ClassicLib-rs/`](../ClassicLib-rs)
-- Active bridge to native frontends: [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`](../ClassicLib-rs/cpp-bindings/classic-cpp-bridge)
-- Maintained integration bindings: [`ClassicLib-rs/node-bindings/`](../ClassicLib-rs/node-bindings), [`ClassicLib-rs/python-bindings/`](../ClassicLib-rs/python-bindings)
+- Active workspace shell: repo root (`../Cargo.toml`, `../Cargo.lock`, `../.cargo/config.toml`)
+- Active shared/runtime crates: [`foundation/`](../foundation)
+- Active core: [`business-logic/`](../business-logic)
+- Active bridge to native frontends: [`cpp-bindings/classic-cpp-bridge/`](../cpp-bindings/classic-cpp-bridge)
+- Maintained integration bindings: [`node-bindings/classic-node/`](../node-bindings/classic-node), [`python-bindings/`](../python-bindings)
+- Active Rust TUI app: [`ui-applications/classic-tui/`](../ui-applications/classic-tui)
 - Deprecated Python runtime entrypoints/orchestration: [`deprecated/`](../deprecated)
 
 For contributor policy and canonical command expectations, see [`AGENTS.md`](../AGENTS.md).
+For old-to-new workspace translations, see the [Workspace Migration Matrix](workspace-migration-matrix.md).
 
 ---
 
@@ -21,6 +25,7 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 3. [`docs/api/QUICK_START.md`](api/QUICK_START.md) — practical setup/build/test flow
 4. [`docs/development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — integration surfaces and extension patterns
 5. [`docs/testing/TESTING_GUIDE_INDEX.md`](testing/TESTING_GUIDE_INDEX.md) — testing matrix and CI alignment
+6. [`docs/workspace-migration-matrix.md`](workspace-migration-matrix.md) — legacy `ClassicLib-rs/...` to repo-root workflow map
 
 ---
 
@@ -80,7 +85,7 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 - [`docs/rust/PyO3-0.27-migration.md`](rust/PyO3-0.27-migration.md)
 - [`docs/rust/pyo3_quick_reference.md`](rust/pyo3_quick_reference.md)
 
-> Scope note: this section documents maintained binding surfaces under [`ClassicLib-rs/python-bindings/`](../ClassicLib-rs/python-bindings), not deprecated Python app runtime entrypoints.
+> Scope note: this section documents maintained binding surfaces under [`python-bindings/`](../python-bindings), not deprecated Python app runtime entrypoints.
 
 ### Development and troubleshooting
 
@@ -99,15 +104,17 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 ## Canonical Build/Test Commands (Rust)
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace
+cargo build --workspace --release
 
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
+
+Need binding-path or artifact translations as well? Start with the [Workspace Migration Matrix](workspace-migration-matrix.md).
 
 ---
 
@@ -124,7 +131,9 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 
 Older documents may still discuss hybrid Python-runtime execution or fallback-heavy flows. Treat those as historical unless they are explicitly aligned with:
 
-1. Current active architecture (`classic-cli` + `classic-gui` + `ClassicLib-rs`)
-2. Maintained binding surfaces (`python-bindings`, `node-bindings`)
+1. Current active architecture (`classic-cli` + `classic-gui` + repo-root Rust workspace layers)
+2. Maintained binding surfaces (`python-bindings`, `node-bindings/classic-node`)
 3. Deprecated runtime scope (`deprecated/`)
+
+> Migration note: a historical `ClassicLib-rs/...` mention is not live workspace guidance; translate it through the [Workspace Migration Matrix](workspace-migration-matrix.md).
 

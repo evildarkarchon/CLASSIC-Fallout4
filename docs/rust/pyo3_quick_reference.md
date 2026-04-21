@@ -200,20 +200,30 @@ for (key, value) in dict.iter() {
 
 ## Testing Patterns
 
+Unit tests live in a sibling `<stem>_tests.rs` file, not inline. See
+`openspec/specs/rust-test-module-layout/spec.md` for the workspace-wide rule.
+
+In `src/lib.rs` (or any parent source file), declare the sibling module:
+
 ```rust
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use pyo3::Python;
+#[path = "lib_tests.rs"]
+mod tests;
+```
 
-    #[test]
-    fn test_basic() {
-        Python::attach(|py| {
-            let result = my_function(py)?;
-            assert!(result.is_some());
-            Ok::<_, PyErr>(())
-        }).unwrap();
-    }
+Then put the test bodies in `src/lib_tests.rs`:
+
+```rust
+use super::*;
+use pyo3::Python;
+
+#[test]
+fn test_basic() {
+    Python::attach(|py| {
+        let result = my_function(py)?;
+        assert!(result.is_some());
+        Ok::<_, PyErr>(())
+    }).unwrap();
 }
 ```
 

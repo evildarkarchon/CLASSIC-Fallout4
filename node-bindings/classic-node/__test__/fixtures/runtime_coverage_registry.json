@@ -1,0 +1,404 @@
+{
+  "schemaVersion": "1.0",
+  "binding": "node",
+  "entries": [
+    {
+      "coverageId": "node-tier1-scanlog",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scanlog",
+        "tier": "tier1"
+      },
+      "contractCount": 87,
+      "contractIdsHash": "013a26b15ad0129ba07a37ea64149bb2fc634823e6f60fad5cf97819bbf74921",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ]
+    },
+    {
+      "coverageId": "node-tier1-config",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "config",
+        "tier": "tier1"
+      },
+      "contractCount": 107,
+      "contractIdsHash": "5979e7195066a913fd0e5e84f3eccd8fa335d994b09aa2c66d6a093f77a6e399",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "coverageId": "node-tier1-version-registry",
+      "classification": "runtime_verified",
+      "ownerModule": "version_registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version_registry",
+        "tier": "tier1"
+      },
+      "contractCount": 90,
+      "contractIdsHash": "c39fd2710c3a5600ae169d5431bf45c85f4e9bbd165c9bfe68dfa800d2562aed",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ]
+    },
+    {
+      "coverageId": "node-tier1-aux",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "aux",
+        "tier": "tier1"
+      },
+      "contractCount": 155,
+      "contractIdsHash": "a4062cc908448c8ed4833109729c3a87ea475e773369521831cf6e3343e4bdea",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+    },
+    {
+      "coverageId": "node-tier2-scanlog-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsLogCollector",
+        "JsLogProcessor",
+        "processGameLogs"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
+      "testCaseId": "scanlog-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier2-config-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsConfigDuplicateDetector",
+        "detectConfigDuplicates",
+        "migrateGameVersionSetting",
+        "needsPathDetection"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
+      "testCaseId": "config-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier2-aux-application-dir-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "getApplicationDir",
+        "setApplicationDir"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "config-application-dir-runtime"
+    },
+    {
+      "coverageId": "node-tier2-aux-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "DocsPathFinder",
+        "DocumentsChecker",
+        "GamePathFinder",
+        "JsLogger",
+        "createLogger",
+        "internString",
+        "registryGet",
+        "registrySetGame"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/path.spec.ts",
+      "testCaseId": "aux-tier2-path-shared-message"
+    },
+    {
+      "coverageId": "node-tier2-aux-cache-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "aux",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "HashCacheStats",
+        "clearHashCache",
+        "getHashCacheStats",
+        "resetHashCacheStats"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "aux-tier1-parity",
+      "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
+    },
+    {
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsLogCollector",
+        "processLogsBatch",
+        "writeAutoscanReport"
+      ],
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+    },
+    {
+      "coverageId": "node-tier2-scanlog-fcx-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsFcxConfigIssue",
+        "getFcxConfigIssues",
+        "resetFcxGlobalState"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "scanlog-fcx-state-isolation",
+      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
+    },
+    {
+      "coverageId": "node-tier1-database",
+      "classification": "runtime_verified",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "database",
+        "tier": "tier1"
+      },
+      "contractCount": 14,
+      "contractIdsHash": "3c4bd255d9c615d7b5dcb827dd795131595556e2817a2dd68076d3da639208d5",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-file-io",
+      "classification": "runtime_verified",
+      "ownerModule": "file_io",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "file_io",
+        "tier": "tier1"
+      },
+      "contractCount": 24,
+      "contractIdsHash": "8e4b79b2669e1890e38c200c0bef46c7067a9d1f60b4663f7926674a63131bcd",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "file-io-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-message",
+      "classification": "runtime_verified",
+      "ownerModule": "message",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "message",
+        "tier": "tier1"
+      },
+      "contractCount": 9,
+      "contractIdsHash": "37703d9d6e48b747c932d819ffea07f1f90801525bbab5761aab1d03eb599f1f",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "message-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-path",
+      "classification": "runtime_verified",
+      "ownerModule": "path",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "path",
+        "tier": "tier1"
+      },
+      "contractCount": 25,
+      "contractIdsHash": "c8c45e573e877499c1a7e520cf4a7a3cc2b20184fc65332e01f0b2ef467f3a38",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "path-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-perf",
+      "classification": "runtime_verified",
+      "ownerModule": "perf",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "perf",
+        "tier": "tier1"
+      },
+      "contractCount": 2,
+      "contractIdsHash": "939016a92148f0d427829ad19d173bd8cc994d04858992a55b9ac430ab45ea2a",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "perf-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-registry",
+      "classification": "runtime_verified",
+      "ownerModule": "registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "registry",
+        "tier": "tier1"
+      },
+      "contractCount": 14,
+      "contractIdsHash": "62598721dcb8bf4f810d9b0f130d373080676d06370941dc38f74c8ebe9860fc",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "registry-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-scangame",
+      "classification": "runtime_verified",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scangame",
+        "tier": "tier1"
+      },
+      "contractCount": 70,
+      "contractIdsHash": "6e8349a06890e6b347d949f0fbed5272bc48e19d0d8b118918ea215431b71b5e",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scangame-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-settings",
+      "classification": "runtime_verified",
+      "ownerModule": "settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "settings",
+        "tier": "tier1"
+      },
+      "contractCount": 47,
+      "contractIdsHash": "2eb14033161d5a5fcc9422e4819f243e806ca890283e9a1f75e6c20edbadbf53",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "settings-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-shared",
+      "classification": "runtime_verified",
+      "ownerModule": "shared",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "shared",
+        "tier": "tier1"
+      },
+      "contractCount": 10,
+      "contractIdsHash": "bfa1ae2cc924496cd18147af3df554ce405813af2a183f1bf509e59467929b59",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "shared-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-update",
+      "classification": "runtime_verified",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "update",
+        "tier": "tier1"
+      },
+      "contractCount": 6,
+      "contractIdsHash": "f6eab258a4b47a270ea35201938cda956571a29844d44061296e48f4c9400d10",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "update-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-web",
+      "classification": "runtime_verified",
+      "ownerModule": "web",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "web",
+        "tier": "tier1"
+      },
+      "contractCount": 15,
+      "contractIdsHash": "dec36c87fe5c80548ca26624fefed0a8ed7a4e0b750ec726313243a2981edb94",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "web-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-xse",
+      "classification": "runtime_verified",
+      "ownerModule": "xse",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "xse",
+        "tier": "tier1"
+      },
+      "contractCount": 17,
+      "contractIdsHash": "0d7249c6797d77b926dd944640f1bc24641b3edb09235d3da1684b514f34992b",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "xse-tier1-parity",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "node-tier1-version",
+      "classification": "runtime_verified",
+      "ownerModule": "version",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version",
+        "tier": "tier1"
+      },
+      "contractCount": 13,
+      "contractIdsHash": "2a15a7f43ed86992b20f02983b8b652892bf1d3a2150167258e77fcd6fb86266",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "version-registry-tier1-parity",
+      "fixtureRefs": [
+        "versionRegistryCases"
+      ],
+      "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
+    }
+  ]
+}

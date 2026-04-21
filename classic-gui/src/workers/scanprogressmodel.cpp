@@ -11,10 +11,12 @@ constexpr float kAnalyzeContribution = 0.82f;
 constexpr float kFinalizeContribution = 0.95f;
 constexpr float kTerminalContribution = 1.0f;
 constexpr int kUnknownRank = -2;
-}
+} // namespace
 
 BatchProgressModel::BatchProgressModel(int totalLogs)
-    : m_totalLogs(totalLogs) {}
+    : m_totalLogs(totalLogs)
+{
+}
 
 float BatchProgressModel::update(const classic::scanner::BatchProgressEvent& event)
 {
@@ -38,8 +40,7 @@ float BatchProgressModel::update(const classic::scanner::BatchProgressEvent& eve
         aggregate += it.value().contribution;
     }
 
-    const float computedPercent =
-        (aggregate * 100.0f) / static_cast<float>(std::max(m_totalLogs, 1));
+    const float computedPercent = (aggregate * 100.0f) / static_cast<float>(std::max(m_totalLogs, 1));
     m_percent = std::max(m_percent, computedPercent);
     return m_percent;
 }

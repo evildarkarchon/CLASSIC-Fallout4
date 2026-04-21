@@ -1,6 +1,6 @@
 # `classic-path-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-path-core/`](../../ClassicLib-rs/business-logic/classic-path-core).
+Contributor-facing API documentation for [`business-logic/classic-path-core/`](../../business-logic/classic-path-core).
 
 Crate metadata:
 
@@ -33,7 +33,7 @@ Do not use this crate for:
 - higher-level game scan orchestration
 - binding-specific wrapper APIs
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core), and the C++/Node/Python binding crates.
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++/Node/Python binding crates.
 
 ---
 
@@ -392,13 +392,13 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
-- [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core) - converts or reuses `PathError` in its own error model
-- [`classic-resource-core`](../../ClassicLib-rs/business-logic/classic-resource-core) - re-exports `PathError` and `PathResult`
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_valid_path()`, and `is_restricted_path()` for C++ interop
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) and [`classic-path-py`](../../ClassicLib-rs/python-bindings/classic-path-py) - binding surfaces over this crate's APIs
-- [`ClassicLib-rs/ui-applications/classic-tui`](../../ClassicLib-rs/ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
+- [`classic-config-core`](../../business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
+- [`classic-xse-core`](../../business-logic/classic-xse-core) - converts or reuses `PathError` in its own error model
+- [`classic-resource-core`](../../business-logic/classic-resource-core) - re-exports `PathError` and `PathResult`
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_valid_path()`, and `is_restricted_path()` for C++ interop
+- [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
+- [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
 
 In practice, `classic-path-core` sits between config-driven path settings and higher-level scan/setup orchestration.
 

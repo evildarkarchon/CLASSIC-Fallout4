@@ -2,7 +2,7 @@
 
 The CXX parity gate is a Python source-parsing tool that enumerates the CXX
 bridge surface exposed by
-[`ClassicLib-rs/cpp-bindings/classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/)
+[`cpp-bindings/classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/)
 and compares it against a committed baseline. It runs on cross-platform Python
 alone — no Rust build, no MSVC, no `cxx-build` invocation.
 
@@ -22,7 +22,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
   `classic-cpp-bridge/build.rs::cxx_build::bridges([...])` (14 files as of this
   milestone).
 - **Single source of truth for the file list:**
-  [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs).
+  [`cpp-bindings/classic-cpp-bridge/build.rs`](../../cpp-bindings/classic-cpp-bridge/build.rs).
   The gate parses it dynamically — there is no hardcoded list to keep in sync.
 - **Single source of truth for the contract:**
   [`docs/implementation/cxx_api_parity/baseline/parity_contract.json`](../implementation/cxx_api_parity/baseline/parity_contract.json).
@@ -57,7 +57,7 @@ To run the gate's own integration test suite (22 tests covering the parser,
 the gate, and drift detection):
 
 ```bash
-ClassicLib-rs/python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q
+python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q
 ```
 
 ---
@@ -141,7 +141,7 @@ breaking older gates.
 ## build.rs Relationship
 
 The gate parses
-[`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/build.rs)
+[`cpp-bindings/classic-cpp-bridge/build.rs`](../../cpp-bindings/classic-cpp-bridge/build.rs)
 for the `cxx_build::bridges([...])` array. This is the single source of truth
 for which bridge files participate in the gate.
 
@@ -167,7 +167,7 @@ gate itself runs on any platform.
 The gate writes two sets of files:
 
 - **Ephemeral (gitignored):**
-  `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/` contains
+  `cpp-bindings/classic-cpp-bridge/parity-artifacts/` contains
   the output of the current run. These files are regenerated on every
   invocation and must not be committed. A local `.gitignore` in the bridge
   crate hides the directory so it never pollutes `git status`.
@@ -231,3 +231,5 @@ parser could not locate the bridge file list. Restore the standard
 - [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) —
   the batch scan progress callback contract that Phase 2 narrowing work will
   touch repeatedly
+
+Need to translate an older `ClassicLib-rs/...` bridge path first? Use the shared [`workspace migration matrix`](../workspace-migration-matrix.md).

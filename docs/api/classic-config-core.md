@@ -1,6 +1,6 @@
 # `classic-config-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-config-core/`](../../ClassicLib-rs/business-logic/classic-config-core).
+Contributor-facing API documentation for [`business-logic/classic-config-core/`](../../business-logic/classic-config-core).
 
 Crate metadata:
 
@@ -37,7 +37,7 @@ Do not use this crate for:
 - converting config data into binding-specific wrapper types
 - crash-log analysis itself
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -63,8 +63,8 @@ Bulk YAML dataset loader for scanlog/business logic.
 
 ### Re-exports from `lib.rs`
 
-- `get_runtime` from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
+- `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
+- `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -198,7 +198,7 @@ Fields:
 - `settings_rules_version: Option<u32>`
 - `settings_rules: Option<CrashgenSettingsRules>`
 
-This type is intentionally still raw. Downstream crates such as [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) convert it into analysis-layer types.
+This type is intentionally still raw. Downstream crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) convert it into analysis-layer types.
 
 ## `ConfigError`
 
@@ -216,7 +216,7 @@ Variants:
 - `resolve_registry_version_info(main_root_name, selected_game_version) -> Option<VersionInfo>`
 - `format_registry_game_version(version: &RegistryGameVersion) -> String`
 
-These helpers bridge the config layer to [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core). They are used both inside this crate and by downstream analysis code.
+These helpers bridge the config layer to [`classic-version-registry-core`](../../business-logic/classic-version-registry-core). They are used both inside this crate and by downstream analysis code.
 
 ---
 
@@ -242,9 +242,9 @@ Read/write path policy is defined in [`classic-config-core-yaml-schema.md`](clas
 2. The crate resolves file paths and checks that all three YAML files exist.
 3. It reads all three files in parallel with `tokio::join!`.
 4. It parses and merges every YAML document from each file.
-5. `YamlOperations` from [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) extracts nested values.
+5. `YamlOperations` from [`classic-settings-core`](../../business-logic/classic-settings-core) extracts nested values.
 6. `Crashgen_Registry` is parsed into `HashMap<String, CrashgenEntryRaw>`.
-7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core):
+7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core):
    - `crashgen_name`
    - `crashgen_latest_og`
    - `xse_acronym`
@@ -287,7 +287,7 @@ Malformed optional substructures inside `Crashgen_Registry` are usually not fata
 This crate performs async file I/O and assumes the shared CLASSIC Tokio runtime model.
 
 - The crate exposes async APIs such as `YamlSource::load()`, `ClassicConfig::load_from_yaml()`, `ClassicConfig::save_to_yaml()`, `ClassicConfig::load_or_default()`, and `YamlDataCore::load_from_yaml_files()`.
-- `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core).
+- `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core).
 - The crate-level docs explicitly say it should use the shared global runtime rather than creating its own runtime.
 - FFI/binding layers in this repo call these async APIs via `get_runtime().block_on(...)` rather than constructing separate runtimes.
 
@@ -297,12 +297,12 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 
 ## Related Crates And Integration Points
 
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (absorbed the former ``yaml-core`` in v9.1.0 Phase 1)
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - version metadata and fallback resolution
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and uses the crashgen rule model (below) inside `SettingsValidator`
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
+- [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and uses the crashgen rule model (below) inside `SettingsValidator`
+- [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
 
 In practice, `classic-config-core` is the data-loading layer between raw YAML files and higher-level analysis/UI/binding code.
 

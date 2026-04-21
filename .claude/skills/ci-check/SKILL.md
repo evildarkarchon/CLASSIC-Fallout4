@@ -15,7 +15,7 @@ uv run ruff format .
 uv run ruff check . --fix
 
 # Rust formatting
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml
+cargo fmt --all
 ```
 
 ## Full CI Check (Pre-PR)
@@ -36,20 +36,20 @@ uv run ruff check .
 
 ```bash
 # Format check
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+cargo fmt --all -- --check
 
 # Clippy (treat warnings as errors)
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ### Step 3: Rust Build and Test
 
 ```bash
 # Build all crates
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace --release
 
 # Run Rust tests
-cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace --release
 ```
 
 ### Step 4: Python Bindings
@@ -83,12 +83,12 @@ uv run mypy ClassicLib/ --ignore-missing-imports
 
 ### Minimal Check
 ```bash
-uv run ruff check . && cargo clippy --workspace --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+uv run ruff check . && cargo clippy --workspace -- -D warnings
 ```
 
 ### Full Check
 ```bash
-uv run ruff format --check . && uv run ruff check . && cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check && cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings && cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml && uv run pytest -m "unit and not slow"
+uv run ruff format --check . && uv run ruff check . && cargo fmt --all -- --check && cargo clippy --workspace --all-targets --all-features -- -D warnings && cargo test --workspace --release && uv run pytest -m "unit and not slow"
 ```
 
 ## CI Timeouts Reference
@@ -117,7 +117,7 @@ uv run ruff rule <ERROR_CODE>
 ### Clippy Warnings
 ```bash
 # See suggested fixes
-cargo clippy --workspace --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings 2>&1 | head -100
+cargo clippy --workspace -- -D warnings 2>&1 | head -100
 ```
 
 ### Test Failures
@@ -132,7 +132,7 @@ uv run pytest tests/path/to/test.py::test_name -v -s --tb=long
 ### Rust Build Failures
 ```bash
 # Check specific crate
-cargo build -p classic-<name>-core --manifest-path ClassicLib-rs/Cargo.toml 2>&1
+cargo build -p classic-<name>-core 2>&1
 ```
 
 ## Checklist

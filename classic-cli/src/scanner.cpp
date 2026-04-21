@@ -270,11 +270,11 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
                 std::string severity(issue.severity.data(), issue.severity.size());
                 if (issue.has_section) {
                     std::string section(issue.section_or_empty.data(), issue.section_or_empty.size());
-                    fmt::print("  [{}] {}/[{}] {}: {} (current: {}, recommended: {})\n", severity,
-                               file_path, section, setting, description, current, recommended);
+                    fmt::print("  [{}] {}/[{}] {}: {} (current: {}, recommended: {})\n", severity, file_path, section,
+                               setting, description, current, recommended);
                 } else {
-                    fmt::print("  [{}] {} {}: {} (current: {}, recommended: {})\n", severity,
-                               file_path, setting, description, current, recommended);
+                    fmt::print("  [{}] {} {}: {} (current: {}, recommended: {})\n", severity, file_path, setting,
+                               description, current, recommended);
                 }
             }
         }

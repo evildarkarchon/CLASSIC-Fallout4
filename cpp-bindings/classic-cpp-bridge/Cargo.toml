@@ -1,0 +1,70 @@
+[package]
+name = "classic-cpp-bridge"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "C++ FFI bindings for CLASSIC via CXX"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["staticlib", "lib"]  # staticlib for C++ linking, lib for Rust tests
+
+[dependencies]
+# Markdown → HTML rendering
+pulldown-cmark = { workspace = true, features = ["html"] }
+
+# Async runtime (ONE RUNTIME RULE)
+tokio = { workspace = true }
+futures = { workspace = true }
+
+# Data structures
+indexmap = { workspace = true }
+yaml-rust2 = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+env_logger = { workspace = true }
+
+# Version parsing
+semver = { workspace = true }
+
+# Foundation
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# Business Logic crates
+classic-registry-core = { path = "../../business-logic/classic-registry-core" }
+classic-perf-core = { path = "../../business-logic/classic-perf-core" }
+classic-message-core = { path = "../../business-logic/classic-message-core" }
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+classic-database-core = { path = "../../business-logic/classic-database-core" }
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
+classic-version-core = { path = "../../business-logic/classic-version-core" }
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
+classic-xse-core = { path = "../../business-logic/classic-xse-core" }
+classic-path-core = { path = "../../business-logic/classic-path-core" }
+classic-update-core = { path = "../../business-logic/classic-update-core" }
+classic-web-core = { path = "../../business-logic/classic-web-core" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+serial_test = "3.2"
+
+[target.'cfg(windows)'.dependencies]
+# CXX FFI framework
+cxx = { workspace = true }
+
+[target.'cfg(windows)'.build-dependencies]
+cxx-build = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "allow"  # CXX generates unsafe FFI code at bridge boundary (documented exception)
+dead_code = "allow"    # CXX exports are called from C++, not Rust; cargo check can't see FFI usage

@@ -1,6 +1,6 @@
 # `classic-version-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-version-core/`](../../ClassicLib-rs/business-logic/classic-version-core).
+Contributor-facing API documentation for [`business-logic/classic-version-core/`](../../business-logic/classic-version-core).
 
 Crate metadata:
 
@@ -34,7 +34,7 @@ Do not use this crate for:
 - async file I/O or runtime ownership
 - binding-specific wrapper DTOs
 
-Those concerns live in related crates such as [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core), [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core), and the Node/Python/C++ binding crates.
+Those concerns live in related crates such as [`classic-version-registry-core`](../../business-logic/classic-version-registry-core), [`classic-xse-core`](../../business-logic/classic-xse-core), and the Node/Python/C++ binding crates.
 
 ---
 
@@ -65,7 +65,7 @@ This crate exposes one public submodule plus a root-level helper API.
 ## Root-level re-exports
 
 - `extract_pe_version()`, `PeVersionError`, `PeVersionResult<T>` from `pe_version`
-- `VersionInfo`, `VersionRegistry`, `VersionRegistryError`, `get_version_registry()`, and `NULL_VERSION` from [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core)
+- `VersionInfo`, `VersionRegistry`, `VersionRegistryError`, `get_version_registry()`, and `NULL_VERSION` from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core)
 
 Contributor note:
 
@@ -249,7 +249,7 @@ The current source exposes three practical flows.
 2. The crate normalizes the input to `semver::Version`.
 3. Compare with `compare_versions()` or pass the normalized value into higher-level code.
 
-This is the flow reused by [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core), which parses DLL filename versions through this crate before doing XSE-specific work.
+This is the flow reused by [`classic-xse-core`](../../business-logic/classic-xse-core), which parses DLL filename versions through this crate before doing XSE-specific work.
 
 ## Flow 2: Extract version-like text from filenames or logs
 
@@ -327,10 +327,10 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - actual registry implementation and immediate re-export source for `VersionRegistry`, `VersionInfo`, `VersionRegistryError`, `get_version_registry()`, and `NULL_VERSION`
-- [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core) - re-exports `parse_version()`, `try_parse_version()`, and `compare_versions()` and uses them during DLL filename parsing
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - uses `extract_pe_version()` to expose executable version data to C++ callers
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) and [`classic-version-py`](../../ClassicLib-rs/python-bindings/classic-version-py) - binding layers over the parse/extract/format helpers and PE helpers
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - actual registry implementation and immediate re-export source for `VersionRegistry`, `VersionInfo`, `VersionRegistryError`, `get_version_registry()`, and `NULL_VERSION`
+- [`classic-xse-core`](../../business-logic/classic-xse-core) - re-exports `parse_version()`, `try_parse_version()`, and `compare_versions()` and uses them during DLL filename parsing
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `extract_pe_version()` to expose executable version data to C++ callers
+- [`classic-node`](../../node-bindings/classic-node) and [`classic-version-py`](../../python-bindings/classic-version-py) - binding layers over the parse/extract/format helpers and PE helpers
 
 In practice, `classic-version-core` is the low-level utility layer beneath XSE detection, bindings, and some executable-version probes.
 

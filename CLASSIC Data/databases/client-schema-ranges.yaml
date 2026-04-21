@@ -1,0 +1,33 @@
+# Authoritative list of shippable YAML files for the yaml-data-v* release
+# channel, plus the per-file min/max client schema ranges published in
+# manifest.json. Clients read these ranges to decide whether to accept a newer
+# file: a client accepts a published file when its own accepted schema range
+# overlaps [min_client_schema, max_client_schema].
+#
+# Editing rules
+# - The `files` list is the single source of truth for what ships as a release
+#   asset. Add a new entry when a new shippable file lands under
+#   `CLASSIC Data/databases/`; remove an entry when a file is retired.
+# - `min_client_schema` / `max_client_schema` are MAJOR.MINOR strings matching
+#   the regex `^\d+\.\d+$` — the same regex the publish workflow validates
+#   the file's own `schema_version` header against.
+# - Widen the range (raise `max_client_schema`) on any MINOR bump that remains
+#   readable by existing clients.
+# - Introduce a new entry with a bumped `min_client_schema` on a MAJOR bump;
+#   leave the old entry in place only if the publisher intends to keep
+#   shipping the legacy file under the same asset name.
+
+files:
+  - name: "CLASSIC Main.yaml"
+    # Name of the `pub const` in
+    # business-logic/classic-config-core/src/client_schemas.rs that governs
+    # which schema range the *current client binary* accepts for this file.
+    # The drift-guard CI step (tools/schema_version_gate.py) uses this
+    # mapping to cross-check the YAML header against the client constant.
+    client_schemas_const: "MAIN_YAML"
+    min_client_schema: "1.0"
+    max_client_schema: "1.999"
+  - name: "CLASSIC Fallout4.yaml"
+    client_schemas_const: "GAME_FALLOUT4_YAML"
+    min_client_schema: "1.0"
+    max_client_schema: "1.999"

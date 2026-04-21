@@ -84,9 +84,9 @@ param (
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = $PSScriptRoot
-$WorkspaceManifest = Join-Path $ProjectRoot "ClassicLib-rs/Cargo.toml"
+$WorkspaceRootManifest = Join-Path $ProjectRoot "Cargo.toml"
 $UseUv = [bool](Get-Command uv -ErrorAction SilentlyContinue)
-$PythonBindingsRoot = Join-Path $ProjectRoot "ClassicLib-rs/python-bindings"
+$PythonBindingsRoot = Join-Path $ProjectRoot "python-bindings"
 $PythonBindingsVenv = Join-Path $PythonBindingsRoot ".venv"
 $PythonBindingsPython = Join-Path $PythonBindingsVenv "Scripts/python.exe"
 
@@ -212,6 +212,50 @@ function Invoke-MaturinBuildWithRetry {
     return $false
 }
 
+function Invoke-CommandWithTransientLinkerRetry {
+    param (
+        [string[]]$Command,
+        [string]$CommandLabel,
+        [int]$MaxAttempts = 3
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        $previousNativeCommandPreference = $PSNativeCommandUseErrorActionPreference
+        $outputText = @()
+        $exitCode = 1
+        $commandName = $Command[0]
+        $commandArgs = if ($Command.Count -gt 1) { $Command[1..($Command.Count - 1)] } else { @() }
+
+        try {
+            $PSNativeCommandUseErrorActionPreference = $false
+            & $commandName @commandArgs 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+            $exitCode = $LASTEXITCODE
+        }
+        finally {
+            $PSNativeCommandUseErrorActionPreference = $previousNativeCommandPreference
+        }
+
+        if ($exitCode -in @(-1073741510, 3221225786)) {
+            throw [System.OperationCanceledException]::new("Build interrupted by Ctrl+C.")
+        }
+
+        if ($exitCode -eq 0) {
+            return $true
+        }
+
+        $combinedOutput = (@($outputText | ForEach-Object { "$_" }) | Out-String)
+        if ((-not (Test-IsTransientLinkerLock -Text $combinedOutput)) -or $attempt -eq $MaxAttempts) {
+            return $false
+        }
+
+        $sleepSeconds = [int][Math]::Pow(2, $attempt)
+        Write-Warning "Detected transient Windows linker file lock while running $CommandLabel (attempt $attempt/$MaxAttempts). Retrying in $sleepSeconds second(s)..."
+        Start-Sleep -Seconds $sleepSeconds
+    }
+
+    return $false
+}
+
 function Get-PythonRustModules {
     param (
         [string[]]$CrateFilters
@@ -221,8 +265,8 @@ function Get-PythonRustModules {
     $rustModules = @()
 
     $searchPaths = @(
-        (Join-Path $ProjectRoot "ClassicLib-rs/foundation"),
-        (Join-Path $ProjectRoot "ClassicLib-rs/python-bindings")
+        (Join-Path $ProjectRoot "foundation"),
+        (Join-Path $ProjectRoot "python-bindings")
     )
 
     foreach ($path in $searchPaths) {
@@ -239,7 +283,7 @@ function Get-PythonRustModules {
 
     # Sort modules (foundation first, then alphabetical)
     $rustModules = @($rustModules | Sort-Object {
-            if ($_.Dir -match "ClassicLib-rs[\\/]foundation") { "0_" + $_.WheelName } else { "1_" + $_.WheelName }
+            if ($_.Dir -match "[\\/]foundation([\\/]|$)") { "0_" + $_.WheelName } else { "1_" + $_.WheelName }
         })
 
     # Filter modules if arguments provided
@@ -282,7 +326,7 @@ function Remove-PythonInstalledArtifacts {
         return
     }
 
-    Write-Host "🗑️  Removing old Python binding artifacts from ClassicLib-rs/python-bindings/.venv..." -ForegroundColor Cyan
+    Write-Host "🗑️  Removing old Python binding artifacts from python-bindings/.venv..." -ForegroundColor Cyan
     foreach ($module in $RustModules) {
         Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.pyd") -ErrorAction SilentlyContinue
         Remove-Item -Path (Join-Path $sitePackages "$($module.WheelName)*.dll") -ErrorAction SilentlyContinue
@@ -302,7 +346,7 @@ function Invoke-PythonBindingsRebuild {
     Write-Host "Using Python bindings virtual environment at $PythonBindingsVenv" -ForegroundColor Cyan
 
     if (-not (Test-Path $PythonBindingsPython)) {
-        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv venv ClassicLib-rs/python-bindings/.venv' and install dependencies into that interpreter."
+        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv venv python-bindings/.venv' and install dependencies into that interpreter."
         exit 1
     }
 
@@ -320,7 +364,7 @@ function Invoke-PythonBindingsRebuild {
 
     if ($CleanBuild) {
         Write-Host "🧹 Cleaning old Rust build artifacts..." -ForegroundColor Cyan
-        Push-Location (Join-Path $ProjectRoot "ClassicLib-rs")
+        Push-Location $ProjectRoot
         try {
             & cargo clean
             Assert-LastExitCode -CommandLabel "cargo clean"
@@ -442,21 +486,27 @@ function Invoke-RustWorkspaceRebuild {
         [string[]]$CrateFilters
     )
 
-    if (-not (Test-Path $WorkspaceManifest)) {
-        Write-Error "Rust workspace manifest not found: $WorkspaceManifest"
+    if (-not (Test-Path $WorkspaceRootManifest)) {
+        Write-Error "Rust workspace manifest not found: $WorkspaceRootManifest"
         exit 1
     }
 
     if ($CleanBuild) {
         Write-Host "🧹 Cleaning Rust workspace..." -ForegroundColor Cyan
-        & cargo clean --manifest-path $WorkspaceManifest
-        Assert-LastExitCode -CommandLabel "cargo clean --manifest-path ClassicLib-rs/Cargo.toml"
+        Push-Location $ProjectRoot
+        try {
+            & cargo clean
+            Assert-LastExitCode -CommandLabel "cargo clean"
+        }
+        finally {
+            Pop-Location
+        }
     }
     else {
         Write-Host "ℹ️  Skipping workspace clean step (use -Clean to force)" -ForegroundColor Gray
     }
 
-    $cargoArgs = @("build", "--manifest-path", $WorkspaceManifest)
+    $cargoArgs = @("build")
     if ($CrateFilters -and $CrateFilters.Count -gt 0) {
         Write-Host "Using workspace crate filters: $($CrateFilters -join ', ')" -ForegroundColor Cyan
         foreach ($crate in $CrateFilters) {
@@ -472,8 +522,14 @@ function Invoke-RustWorkspaceRebuild {
 
     Write-Host "🔨 Building Rust workspace..." -ForegroundColor Yellow
     Write-Host "cargo $($cargoArgs -join ' ')" -ForegroundColor DarkGray
-    & cargo @cargoArgs
-    Assert-LastExitCode -CommandLabel "cargo build --workspace"
+    Push-Location $ProjectRoot
+    try {
+        & cargo @cargoArgs
+        Assert-LastExitCode -CommandLabel "cargo build --workspace"
+    }
+    finally {
+        Pop-Location
+    }
 
     Write-Host "✨ Rust workspace rebuild complete!" -ForegroundColor Green
 }
@@ -484,7 +540,7 @@ function Invoke-NodeBindingsRebuild {
         [switch]$DebugBuild
     )
 
-    $nodeDir = Join-Path $ProjectRoot "ClassicLib-rs/node-bindings/classic-node"
+    $nodeDir = Join-Path $ProjectRoot "node-bindings/classic-node"
     if (-not (Test-Path $nodeDir)) {
         Write-Error "Node bindings directory not found: $nodeDir"
         exit 1
@@ -504,7 +560,7 @@ function Invoke-NodeBindingsRebuild {
             Remove-Item -Force -ErrorAction SilentlyContinue index.js
             Remove-Item -Force -ErrorAction SilentlyContinue index.d.ts
 
-            & cargo clean -p classic-node --manifest-path $WorkspaceManifest
+            & cargo clean -p classic-node
             Assert-LastExitCode -CommandLabel "cargo clean -p classic-node"
         }
         else {
@@ -513,13 +569,17 @@ function Invoke-NodeBindingsRebuild {
 
         if ($DebugBuild) {
             Write-Host "🔨 Building classic-node (debug)..." -ForegroundColor Cyan
-            & bun run build:debug
-            Assert-LastExitCode -CommandLabel "bun run build:debug"
+            if (-not (Invoke-CommandWithTransientLinkerRetry -Command @("bun", "run", "build:debug") -CommandLabel "bun run build:debug")) {
+                Write-Error "bun run build:debug failed after retry attempts."
+                exit 1
+            }
         }
         else {
             Write-Host "🔨 Building classic-node (release)..." -ForegroundColor Cyan
-            & bun run build
-            Assert-LastExitCode -CommandLabel "bun run build"
+            if (-not (Invoke-CommandWithTransientLinkerRetry -Command @("bun", "run", "build") -CommandLabel "bun run build")) {
+                Write-Error "bun run build failed after retry attempts."
+                exit 1
+            }
         }
 
         Write-Host "Build complete!" -ForegroundColor Green

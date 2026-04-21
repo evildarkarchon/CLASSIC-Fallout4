@@ -4,4 +4,11 @@
         <file>icons/chevron-down.svg</file>
         <file>icons/chevron-up.svg</file>
     </qresource>
+    <qresource prefix="/fonts/Inter">
+        <file alias="Inter-Regular.ttf">fonts/Inter/Inter-Regular.ttf</file>
+        <file alias="Inter-Italic.ttf">fonts/Inter/Inter-Italic.ttf</file>
+        <file alias="Inter-Bold.ttf">fonts/Inter/Inter-Bold.ttf</file>
+        <file alias="Inter-BoldItalic.ttf">fonts/Inter/Inter-BoldItalic.ttf</file>
+        <file alias="OFL.txt">fonts/Inter/OFL.txt</file>
+    </qresource>
 </RCC>

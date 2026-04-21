@@ -30,7 +30,8 @@ QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& ga
         auto ops = classic::settings::yaml_ops_new();
         classic::settings::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
 
-        const QString xsePath = cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
+        const QString xsePath =
+            cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
         if (!xsePath.isEmpty()) {
             return xsePath;
         }
@@ -69,8 +70,8 @@ QString formatTargetedRejectionMessage(const rust::Vec<rust::String>& rejectedPa
 
     for (size_t i = 0; i < rejectedPaths.size(); ++i) {
         const QString path = classic::toQString(rejectedPaths[i]);
-        const QString reason = i < rejectedReasons.size() ? classic::toQString(rejectedReasons[i])
-                                                          : QStringLiteral("unknown reason");
+        const QString reason =
+            i < rejectedReasons.size() ? classic::toQString(rejectedReasons[i]) : QStringLiteral("unknown reason");
         lines.append(QStringLiteral("- %1 (%2)").arg(path, reason));
     }
 
@@ -154,8 +155,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
                                                ? classic::toQString(resolution.rejected_reasons[i])
                                                : QStringLiteral("unknown reason");
                     qWarning("Targeted input rejected: %s (%s)",
-                             qPrintable(classic::toQString(resolution.rejected_paths[i])),
-                             qPrintable(reason));
+                             qPrintable(classic::toQString(resolution.rejected_paths[i])), qPrintable(reason));
                 }
             }
         } else {
@@ -229,9 +229,9 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     connect(thread, &QThread::started, worker,
             [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs,
              moveUnsolvedLogs, maxConcurrentScans, targetedMode]() {
-                 worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
-                                simplifyLogs, moveUnsolvedLogs, maxConcurrentScans, targetedMode);
-             });
+                worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
+                               simplifyLogs, moveUnsolvedLogs, maxConcurrentScans, targetedMode);
+            });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);
 }

@@ -1,14 +1,12 @@
 #include "progress.h"
-#include <fmt/core.h>
 #include <algorithm>
+#include <fmt/core.h>
 #include <vector>
 
 ProgressDisplay::ProgressDisplay(uint32_t total, const std::string& game)
     : total_(total)
     , game_(game)
-    , start_time_(std::chrono::steady_clock::now())
-{
-}
+    , start_time_(std::chrono::steady_clock::now()) {}
 
 void ProgressDisplay::report_started(std::thread::id tid, const std::string& log_name) {
     std::lock_guard lock(inflight_mutex_);
@@ -51,8 +49,7 @@ void ProgressDisplay::render() {
         bar += std::string(bar_width - filled - 1, ' ');
     }
 
-    fmt::print("[{}] {:3.0f}% ({}/{}) | {:.1f}s elapsed\n",
-        bar, pct, done, total_, elapsed);
+    fmt::print("[{}] {:3.0f}% ({}/{}) | {:.1f}s elapsed\n", bar, pct, done, total_, elapsed);
     ++lines;
 
     // In-flight list (only show logs processing for >1 second)
@@ -69,8 +66,7 @@ void ProgressDisplay::render() {
 
     if (!active.empty()) {
         // Sort by duration descending (longest first)
-        std::sort(active.begin(), active.end(),
-            [](const auto& a, const auto& b) { return a.second > b.second; });
+        std::sort(active.begin(), active.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
 
         fmt::print("  In-flight:\n");
         ++lines;

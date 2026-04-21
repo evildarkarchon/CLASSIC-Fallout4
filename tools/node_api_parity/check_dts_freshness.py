@@ -64,12 +64,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--package-dir",
-        default="ClassicLib-rs/node-bindings/classic-node",
+        default="node-bindings/classic-node",
         help="Path to classic-node package directory, relative to repo root.",
     )
     parser.add_argument(
         "--output-dir",
-        default="ClassicLib-rs/node-bindings/classic-node/parity-artifacts",
+        default="node-bindings/classic-node/parity-artifacts",
         help="Directory for freshness artifacts, relative to repo root.",
     )
     parser.add_argument(

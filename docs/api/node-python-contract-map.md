@@ -1,6 +1,6 @@
 # Node And Python Contract Map
 
-Contributor-facing map for the active public binding contracts under `ClassicLib-rs/node-bindings/` and `ClassicLib-rs/python-bindings/`.
+Contributor-facing map for the active public binding contracts under `node-bindings/` and `python-bindings/`.
 
 Use this page when you need to answer a practical contract question quickly:
 
@@ -28,16 +28,18 @@ Use this page when you need to find the binding-facing contract files first, bef
 
 ## Current Contract Sources
 
+Need to translate an older `ClassicLib-rs/...` path first? Use the shared [`workspace migration matrix`](../workspace-migration-matrix.md), then come back here for the active contract files.
+
 ## Node
 
-The active Node public contract is the single `classic-node` package under [`ClassicLib-rs/node-bindings/classic-node/`](../../ClassicLib-rs/node-bindings/classic-node/).
+The active Node public contract is the single `classic-node` package under [`node-bindings/classic-node/`](../../node-bindings/classic-node/).
 
 The first contract files to treat as public-facing are:
 
-- [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts) - generated TypeScript declaration surface; quickest source of truth for exported names, classes, functions, DTOs, and return types
-- [`ClassicLib-rs/node-bindings/classic-node/index.js`](../../ClassicLib-rs/node-bindings/classic-node/index.js) - generated runtime loader for the package exports
-- [`ClassicLib-rs/node-bindings/classic-node/src/lib.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/lib.rs) - top-level module map showing which wrapper files are compiled into the package
-- [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/) - the Rust NAPI adapter modules that actually define the exported surface
+- [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts) - generated TypeScript declaration surface; quickest source of truth for exported names, classes, functions, DTOs, and return types
+- [`node-bindings/classic-node/index.js`](../../node-bindings/classic-node/index.js) - generated runtime loader for the package exports
+- [`node-bindings/classic-node/src/lib.rs`](../../node-bindings/classic-node/src/lib.rs) - top-level module map showing which wrapper files are compiled into the package
+- [`node-bindings/classic-node/src/`](../../node-bindings/classic-node/src/) - the Rust NAPI adapter modules that actually define the exported surface
 
 Current shape notes:
 
@@ -47,13 +49,13 @@ Current shape notes:
 
 ## Python
 
-The active Python public contract is split across per-module binding crates under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings/).
+The active Python public contract is split across per-module binding crates under [`python-bindings/`](../../python-bindings/).
 
 The first contract files to treat as public-facing are:
 
-- [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings/) - module root; one `classic-*-py` crate per Python extension module
-- matching `classic_*.pyi` stub files such as [`ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi`](../../ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi) and [`ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi`](../../ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi) - fastest contributor view of exported Python names and signatures
-- matching Rust wrapper sources such as [`ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs) and [`ClassicLib-rs/python-bindings/classic-scanlog-py/src/lib.rs`](../../ClassicLib-rs/python-bindings/classic-scanlog-py/src/lib.rs)
+- [`python-bindings/`](../../python-bindings/) - module root; one `classic-*-py` crate per Python extension module
+- matching `classic_*.pyi` stub files such as [`python-bindings/classic-path-py/classic_path.pyi`](../../python-bindings/classic-path-py/classic_path.pyi) and [`python-bindings/classic-scanlog-py/classic_scanlog.pyi`](../../python-bindings/classic-scanlog-py/classic_scanlog.pyi) - fastest contributor view of exported Python names and signatures
+- matching Rust wrapper sources such as [`python-bindings/classic-path-py/src/lib.rs`](../../python-bindings/classic-path-py/src/lib.rs) and [`python-bindings/classic-scanlog-py/src/lib.rs`](../../python-bindings/classic-scanlog-py/src/lib.rs)
 
 Current shape notes:
 
@@ -69,9 +71,9 @@ Current shape notes:
 
 For Node, the practical contract chain is:
 
-1. authored NAPI wrapper code in [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/)
-2. generated package artifacts in [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts) and [`ClassicLib-rs/node-bindings/classic-node/index.js`](../../ClassicLib-rs/node-bindings/classic-node/index.js)
-3. parity and coverage artifacts in [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/)
+1. authored NAPI wrapper code in [`node-bindings/classic-node/src/`](../../node-bindings/classic-node/src/)
+2. generated package artifacts in [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts) and [`node-bindings/classic-node/index.js`](../../node-bindings/classic-node/index.js)
+3. parity and coverage artifacts in [`node-bindings/classic-node/parity-artifacts/`](../../node-bindings/classic-node/parity-artifacts/)
 
 In practice:
 
@@ -85,7 +87,7 @@ For Python, the practical contract chain is:
 
 1. maintained `classic_*.pyi` stub files under each `classic-*-py/` crate
 2. PyO3 wrapper code in the matching `src/lib.rs` and adjacent `src/*.rs` files
-3. parity and stub-validation artifacts in [`ClassicLib-rs/python-bindings/parity-artifacts/`](../../ClassicLib-rs/python-bindings/parity-artifacts/)
+3. parity and stub-validation artifacts in [`python-bindings/parity-artifacts/`](../../python-bindings/parity-artifacts/)
 
 In practice:
 
@@ -101,16 +103,16 @@ In practice:
 
 Check these in order:
 
-1. [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts) for the exported name, argument list, and return shape
-2. the owning wrapper file in [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/) such as `config.rs`, `path.rs`, `scanlog.rs`, `scangame.rs`, `version_registry.rs`, or `xse.rs`
-3. [`ClassicLib-rs/node-bindings/classic-node/src/lib.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/lib.rs) to confirm the module is actually part of the package build
+1. [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts) for the exported name, argument list, and return shape
+2. the owning wrapper file in [`node-bindings/classic-node/src/`](../../node-bindings/classic-node/src/) such as `config.rs`, `path.rs`, `scanlog.rs`, `scangame.rs`, `version_registry.rs`, or `xse.rs`
+3. [`node-bindings/classic-node/src/lib.rs`](../../node-bindings/classic-node/src/lib.rs) to confirm the module is actually part of the package build
 4. the underlying Rust core crate only after you have confirmed the binding contract really points there
 
 Useful follow-up artifacts:
 
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/parity_diff_report.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/parity_diff_report.md)
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md)
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md)
+- [`node-bindings/classic-node/parity-artifacts/parity_diff_report.md`](../../node-bindings/classic-node/parity-artifacts/parity_diff_report.md)
+- [`node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md)
+- [`node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../node-bindings/classic-node/parity-artifacts/tier1_gate_report.md)
 
 ## Python checklist
 
@@ -118,15 +120,15 @@ Check these in order:
 
 1. the matching `.pyi` stub under the relevant `classic-*-py/` crate
 2. the matching `src/lib.rs` for the module-level `#[pymodule]` registration and the primary exported classes/functions
-3. adjacent `src/*.rs` files when a large module is split across multiple wrappers, such as [`ClassicLib-rs/python-bindings/classic-scangame-py/src/`](../../ClassicLib-rs/python-bindings/classic-scangame-py/src/) or [`ClassicLib-rs/python-bindings/classic-scanlog-py/src/`](../../ClassicLib-rs/python-bindings/classic-scanlog-py/src/)
+3. adjacent `src/*.rs` files when a large module is split across multiple wrappers, such as [`python-bindings/classic-scangame-py/src/`](../../python-bindings/classic-scangame-py/src/) or [`python-bindings/classic-scanlog-py/src/`](../../python-bindings/classic-scanlog-py/src/)
 4. the underlying Rust core crate only after you have confirmed the Python wrapper intends to expose that behavior
 
 Useful follow-up artifacts:
 
-- [`ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.md)
-- [`ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md)
-- [`ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md)
-- [`ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json`](../../ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json)
+- [`python-bindings/parity-artifacts/parity_diff_report.md`](../../python-bindings/parity-artifacts/parity_diff_report.md)
+- [`python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../python-bindings/parity-artifacts/runtime_coverage_summary.md)
+- [`python-bindings/parity-artifacts/tier1_gate_report.md`](../../python-bindings/parity-artifacts/tier1_gate_report.md)
+- [`python-bindings/parity-artifacts/stub_validation_report.json`](../../python-bindings/parity-artifacts/stub_validation_report.json)
 
 ---
 
@@ -136,24 +138,24 @@ These artifacts are part of the active contributor workflow today, but they are 
 
 ## Node parity artifacts
 
-Node keeps binding-local parity artifacts in [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/).
+Node keeps binding-local parity artifacts in [`node-bindings/classic-node/parity-artifacts/`](../../node-bindings/classic-node/parity-artifacts/).
 
 Current source-backed examples:
 
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
-- [`ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
+- [`node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../node-bindings/classic-node/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
+- [`node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
 
 See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate refresh policy.
 
 ## Python parity artifacts
 
-Python keeps binding-local parity artifacts in [`ClassicLib-rs/python-bindings/parity-artifacts/`](../../ClassicLib-rs/python-bindings/parity-artifacts/).
+Python keeps binding-local parity artifacts in [`python-bindings/parity-artifacts/`](../../python-bindings/parity-artifacts/).
 
 Current source-backed examples:
 
-- [`ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
-- [`ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../ClassicLib-rs/python-bindings/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
-- [`ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json`](../../ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json) is the direct stub-consistency artifact produced by the current validation workflow
+- [`python-bindings/parity-artifacts/tier1_gate_report.md`](../../python-bindings/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
+- [`python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../python-bindings/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
+- [`python-bindings/parity-artifacts/stub_validation_report.json`](../../python-bindings/parity-artifacts/stub_validation_report.json) is the direct stub-consistency artifact produced by the current validation workflow
 
 See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate refresh policy.
 
@@ -161,8 +163,8 @@ See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate ref
 
 ## Rule Of Thumb By Problem Type
 
-- missing or renamed Node export: start in [`ClassicLib-rs/node-bindings/classic-node/index.d.ts`](../../ClassicLib-rs/node-bindings/classic-node/index.d.ts)
-- wrong Node DTO shape or async/sync behavior: check the owning file in [`ClassicLib-rs/node-bindings/classic-node/src/`](../../ClassicLib-rs/node-bindings/classic-node/src/)
+- missing or renamed Node export: start in [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts)
+- wrong Node DTO shape or async/sync behavior: check the owning file in [`node-bindings/classic-node/src/`](../../node-bindings/classic-node/src/)
 - suspect-rule contract questions: start with `classic-node/src/config.rs`, `classic-config-py/src/lib.rs`, and `classic-scanlog-py/src/orchestrator.rs` because those wrappers reshape the structured `Crashlog_*_Check` YAML rule lists for each binding
 - missing or renamed Python export: start in the module's `.pyi` file
 - Python runtime exports do not match the stub: check the module's `src/lib.rs`, then `stub_validation_report.json`
@@ -172,7 +174,7 @@ See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate ref
 
 ## Source-Backed Caveats And Non-Goals
 
-- This page covers active Node and Python binding contracts under `ClassicLib-rs/`; it does not cover `deprecated/`.
+- This page covers active Node and Python binding contracts under the repo-root `node-bindings/` and `python-bindings/` trees; it does not cover `deprecated/`.
 - This page maps public contract locations, not every internal helper in each binding crate.
 - This page does not replace crate-level API docs in `docs/api/`.
 - This page does not promise exact Node/Python parity; it documents where current contracts live.

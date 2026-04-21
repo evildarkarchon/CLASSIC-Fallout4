@@ -4,12 +4,13 @@
 CLI surface (locked by CONTEXT.md D-12):
     --repo-root             Repo root (default: parents[2])
     --contract              Path to parity_contract.json (default: docs/.../baseline/parity_contract.json)
-    --output-dir            Ephemeral artifacts dir (default: ClassicLib-rs/.../parity-artifacts)
+    --output-dir            Ephemeral artifacts dir (default: cpp-bindings/.../parity-artifacts)
     --baseline-output-dir   Committed artifacts dir (default: docs/.../baseline)
     --update-baseline       Refresh committed artifacts from output_dir before stale check
 
 There is INTENTIONALLY no --deferred-registry argument (CXXG-04 / D-12).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -65,10 +66,12 @@ def render_cxx_gate_markdown(diff_report: dict[str, Any]) -> str:
     new_entries = diff_report.get("new_entries", [])
     lines.extend(("## Result", "", "Drift detected. Review failing rows below.", ""))
     if failing:
-        lines.extend((
-            "| ID | Bridge Module | Rust Symbol | Kind | Status | Reason |",
-            "|---|---|---|---|---|---|",
-        ))
+        lines.extend(
+            (
+                "| ID | Bridge Module | Rust Symbol | Kind | Status | Reason |",
+                "|---|---|---|---|---|---|",
+            )
+        )
         for row in failing:
             lines.append(
                 f"| `{row['id']}` | `{row['bridgeModule']}` | `{row['rustSymbol']}` | "
@@ -76,12 +79,14 @@ def render_cxx_gate_markdown(diff_report: dict[str, Any]) -> str:
             )
         lines.append("")
     if new_entries:
-        lines.extend((
-            "## New Entries Not in Baseline",
-            "",
-            "| ID | Bridge Module | Rust Symbol | Kind |",
-            "|---|---|---|---|",
-        ))
+        lines.extend(
+            (
+                "## New Entries Not in Baseline",
+                "",
+                "| ID | Bridge Module | Rust Symbol | Kind |",
+                "|---|---|---|---|",
+            )
+        )
         for row in new_entries:
             lines.append(
                 f"| `{row['id']}` | `{row['bridgeModule']}` | "
@@ -106,11 +111,13 @@ def artifacts_match(expected: Path, actual: Path) -> bool:
         actual_payload.pop("generated_at_utc", None)
         return expected_payload == actual_payload
     expected_lines = [
-        l for l in expected.read_text(encoding="utf-8").splitlines()
+        l
+        for l in expected.read_text(encoding="utf-8").splitlines()
         if not l.startswith("- Generated:")
     ]
     actual_lines = [
-        l for l in actual.read_text(encoding="utf-8").splitlines()
+        l
+        for l in actual.read_text(encoding="utf-8").splitlines()
         if not l.startswith("- Generated:")
     ]
     return expected_lines == actual_lines
@@ -131,9 +138,7 @@ def sync_baseline_artifacts(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Run the CXX bridge parity gate."
-    )
+    parser = argparse.ArgumentParser(description="Run the CXX bridge parity gate.")
     parser.add_argument(
         "--repo-root",
         default=str(Path(__file__).resolve().parents[2]),
@@ -146,7 +151,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default="ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts",
+        default="cpp-bindings/classic-cpp-bridge/parity-artifacts",
         help="Directory for generated gate artifacts, relative to repo root.",
     )
     parser.add_argument(
@@ -186,10 +191,12 @@ def main() -> int:
     write_json(output_dir / "rust_api_surface.json", current_surface)
     write_json(output_dir / "cxx_diff_report.json", diff_report)
     (output_dir / "cxx_diff_report.md").write_text(
-        render_diff_markdown(diff_report) + "\n", encoding="utf-8",
+        render_diff_markdown(diff_report) + "\n",
+        encoding="utf-8",
     )
     (output_dir / "cxx_gate_report.md").write_text(
-        render_cxx_gate_markdown(diff_report) + "\n", encoding="utf-8",
+        render_cxx_gate_markdown(diff_report) + "\n",
+        encoding="utf-8",
     )
     # Copy the current contract into output_dir so sync_baseline_artifacts()
     # can mirror it back during --update-baseline. When the gate runs in
@@ -197,9 +204,7 @@ def main() -> int:
     write_json(output_dir / "parity_contract.json", contract)
 
     if args.update_baseline:
-        sync_baseline_artifacts(
-            output_dir, baseline_output_dir, TRACKED_ARTIFACT_NAMES
-        )
+        sync_baseline_artifacts(output_dir, baseline_output_dir, TRACKED_ARTIFACT_NAMES)
 
     summary = diff_report["summary"]
     drift_count = (

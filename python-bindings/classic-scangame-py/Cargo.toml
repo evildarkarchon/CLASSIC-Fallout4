@@ -1,0 +1,41 @@
+[package]
+name = "classic-scangame-py"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-scangame-core - High-performance game scanning"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_scangame"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 bindings
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+# Core business logic (pure Rust - no PyO3)
+classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
+classic-config-core = { path = "../../business-logic/classic-config-core" }
+
+# CLASSIC shared utilities
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
+# File I/O operations (for DDS and file handling)
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+
+# Error handling (minimal for bindings)
+anyhow = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

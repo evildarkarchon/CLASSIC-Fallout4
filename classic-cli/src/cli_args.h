@@ -15,6 +15,12 @@ struct CliArgs {
     uint32_t max_concurrent = 0; // 0 = auto (cpu_count - 2, min 2, max 32)
     bool version_flag = false;
     std::vector<std::string> input_paths; // Explicit crash-log files or directories
+
+    // yaml-update-delivery (Section 12.3): data-file update flags. Each is a
+    // standalone action; if set, the CLI short-circuits the normal scan
+    // pipeline and dispatches to the YAML update handler instead.
+    bool check_yaml_updates = false;
+    bool apply_yaml_updates = false;
 };
 
 uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count);

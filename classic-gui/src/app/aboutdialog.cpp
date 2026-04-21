@@ -1,17 +1,17 @@
 #include "aboutdialog.h"
 
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushButton>
 #include <QApplication>
 #include <QIcon>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
 
 AboutDialog::AboutDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("About CLASSIC"));
     setModal(true);
-    setFixedSize(400, 260);
+    setFixedSize(400, 320);
 
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(24, 24, 24, 24);
@@ -34,20 +34,34 @@ AboutDialog::AboutDialog(QWidget* parent)
 
     // Description and version
     QString version = QApplication::applicationVersion();
-    auto* descLabel = new QLabel(
-        QStringLiteral("Crash Log Auto Scanner & Setup Integrity Checker<br>"
-                       "Version: %1<br><br>"
-                       "Developed by evildarkarchon<br>"
-                       "Based on the original CLASSIC by Poet<br>"
-                       "Special credits to wxMichael, kittivelae, and AtomicFallout757<br><br>"
-                       "<a href=\"https://github.com/evildarkarchon/CLASSIC-Fallout4\">"
-                       "https://github.com/evildarkarchon/CLASSIC-Fallout4</a>")
-            .arg(version));
+    auto* descLabel = new QLabel(QStringLiteral("Crash Log Auto Scanner & Setup Integrity Checker<br>"
+                                                "Version: %1<br><br>"
+                                                "Developed by evildarkarchon<br>"
+                                                "Based on the original CLASSIC by Poet<br>"
+                                                "Special credits to wxMichael, kittivelae, and AtomicFallout757<br><br>"
+                                                "<a href=\"https://github.com/evildarkarchon/CLASSIC-Fallout4\">"
+                                                "https://github.com/evildarkarchon/CLASSIC-Fallout4</a>")
+                                     .arg(version));
     descLabel->setAlignment(Qt::AlignCenter);
     descLabel->setWordWrap(true);
     descLabel->setTextFormat(Qt::RichText);
     descLabel->setOpenExternalLinks(true);
     layout->addWidget(descLabel);
+
+    // Font attribution required by the SIL Open Font License (propagated
+    // with the bundled Inter typeface under :/fonts/Inter/OFL.txt).
+    auto* attributionLabel =
+        new QLabel(QStringLiteral("UI font: <a href=\"https://rsms.me/inter/\">Inter</a> "
+                                  "by Rasmus Andersson, licensed under the "
+                                  "<a href=\"https://openfontlicense.org/\">SIL Open Font License 1.1</a>."));
+    attributionLabel->setAlignment(Qt::AlignCenter);
+    attributionLabel->setWordWrap(true);
+    attributionLabel->setTextFormat(Qt::RichText);
+    attributionLabel->setOpenExternalLinks(true);
+    QFont attributionFont = attributionLabel->font();
+    attributionFont.setPointSize(8);
+    attributionLabel->setFont(attributionFont);
+    layout->addWidget(attributionLabel);
 
     layout->addStretch();
 

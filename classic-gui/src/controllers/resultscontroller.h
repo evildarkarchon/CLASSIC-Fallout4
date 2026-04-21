@@ -1,9 +1,9 @@
 #pragma once
 
+#include <QFileSystemWatcher>
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <QFileSystemWatcher>
 
 class SignalHub;
 class QTabWidget;
@@ -15,15 +15,11 @@ class ResultsController : public QObject {
     Q_OBJECT
 
 public:
-    explicit ResultsController(SignalHub* signalHub,
-                               QTabWidget* tabWidget,
-                               ReportListWidget* reportList,
-                               MarkdownViewer* markdownViewer,
-                               ReportMetadataWidget* metadata,
+    explicit ResultsController(SignalHub* signalHub, QTabWidget* tabWidget, ReportListWidget* reportList,
+                               MarkdownViewer* markdownViewer, ReportMetadataWidget* metadata,
                                QObject* parent = nullptr);
 
-    void setReportDirectories(const QStringList& dirPaths,
-                              const QString& primaryDir = QString());
+    void setReportDirectories(const QStringList& dirPaths, const QString& primaryDir = QString());
     void setAutoSwitchToResults(bool enabled);
     void refreshReports();
 
@@ -40,6 +36,8 @@ private:
     QStringList discoverReports() const;
     virtual bool openFolderInFileBrowser(const QString& folderPath);
     virtual bool revealFileInFileBrowser(const QString& filePath);
+    virtual bool startDetachedProcess(const QString& program, const QStringList& arguments = {},
+                                      const QString& nativeArguments = QString());
 
     SignalHub* m_signalHub = nullptr;
     QTabWidget* m_tabWidget = nullptr;

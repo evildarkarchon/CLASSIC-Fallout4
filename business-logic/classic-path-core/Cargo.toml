@@ -1,0 +1,46 @@
+[package]
+name = "classic-path-core"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Core path management for CLASSIC (game paths, documents, validation, backups)"
+license = "MIT"
+
+[dependencies]
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# File I/O and paths
+dirs = { workspace = true }
+walkdir = { workspace = true }
+
+# INI parsing
+configparser = "3.1"
+
+# Serialization (for Any type handling)
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Regex for parsing
+regex = { workspace = true }
+
+# Windows registry access
+[target.'cfg(windows)'.dependencies]
+winreg = { workspace = true }
+
+[dev-dependencies]
+# Testing
+tempfile = { workspace = true }
+serial_test = "3.2"
+
+[lib]
+crate-type = ["rlib"]
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"  # We don't use unsafe in CLASSIC
+missing_docs = "warn"   # Encourage documentation
+unused = "deny"

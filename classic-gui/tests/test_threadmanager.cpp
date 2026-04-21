@@ -1,5 +1,5 @@
-#include <QThread>
 #include <QPointer>
+#include <QThread>
 #include <QtTest/QtTest>
 
 #include "core/threadmanager.h"

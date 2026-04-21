@@ -1,7 +1,10 @@
 param(
     [string]$GuiBuildScriptPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-gui/build_gui.ps1"),
     [string]$CliBuildScriptPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/build_cli.ps1"),
-    [string]$CliIntegrationScriptPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/test_cli.ps1")
+    [string]$CliIntegrationScriptPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/test_cli.ps1"),
+    [string]$CliCmakePath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/CMakeLists.txt"),
+    [string]$GuiCmakePath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-gui/CMakeLists.txt"),
+    [string]$TuiMainPath = (Join-Path (Join-Path $PSScriptRoot "../..") "ui-applications/classic-tui/src/main.rs")
 )
 
 $ErrorActionPreference = "Stop"
@@ -95,6 +98,35 @@ foreach ($scenarioName in @("help", "version", "single-scan", "multi-scan", "max
     if ($integrationText -notmatch [regex]::Escape($scenarioName)) {
         throw "Expected classic-cli/test_cli.ps1 to advertise '$scenarioName' as a selectable integration scenario name."
     }
+}
+
+$cliCmake = Get-Content -Path (Resolve-Path $CliCmakePath) -Raw
+$guiCmake = Get-Content -Path (Resolve-Path $GuiCmakePath) -Raw
+
+foreach ($cmakeText in @($cliCmake, $guiCmake)) {
+    if ($cmakeText -match 'ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include') {
+        throw "Expected native CMake bridge include paths to stop referencing ClassicLib-rs/cpp-bindings/..."
+    }
+    if ($cmakeText -notmatch 'cpp-bindings/classic-cpp-bridge/include') {
+        throw "Expected native CMake bridge include paths to use repo-root cpp-bindings/classic-cpp-bridge/include."
+    }
+}
+
+$tuiMain = Get-Content -Path (Resolve-Path $TuiMainPath) -Raw
+foreach ($required in @('env::args', '--version', '--help')) {
+    if ($tuiMain -notmatch [regex]::Escape($required)) {
+        throw "Expected classic-tui probe handling to mention '$required'."
+    }
+}
+
+$probeIndex = $tuiMain.IndexOf('handle_cli_probe()')
+$terminalSetupIndex = $tuiMain.IndexOf('let mut stderr_handle = stderr()')
+$rawModeIndex = $tuiMain.IndexOf('enable_raw_mode()?')
+if ($probeIndex -lt 0 -or $terminalSetupIndex -lt 0 -or $rawModeIndex -lt 0) {
+    throw "Expected classic-tui main.rs to contain probe handling and terminal setup markers."
+}
+if ($probeIndex -gt $terminalSetupIndex -or $probeIndex -gt $rawModeIndex) {
+    throw "Expected classic-tui CLI probe handling to run before alternate-screen or raw-mode setup."
 }
 
 Write-Host "PASS: C++ PowerShell build scripts expose selective test execution metadata."

@@ -2,9 +2,9 @@
 
 Contributor-facing documentation for the active C++ bridge entry points in:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/path.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/game.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scangame.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/path.rs`](../../cpp-bindings/classic-cpp-bridge/src/path.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs)
 
 This page documents the current CXX FFI surface that active C++ callers use for path detection, version-registry lookups, PE version probing, XSE probing, and setup-time checks.
 

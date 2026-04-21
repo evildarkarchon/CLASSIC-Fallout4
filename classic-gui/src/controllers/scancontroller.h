@@ -12,21 +12,11 @@ class ScanController : public QObject {
     Q_OBJECT
 
 public:
-    explicit ScanController(SignalHub* signalHub,
-                            ThreadManager* threadManager,
-                            QObject* parent = nullptr);
+    explicit ScanController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent = nullptr);
 
-    void startScan(const QString& yamlRoot,
-                   const QString& yamlData,
-                   const QString& game,
-                   const QString& gameVersion,
-                   bool showFormIdValues,
-                   bool fcxMode,
-                   bool simplifyLogs,
-                   bool moveUnsolvedLogs,
-                   int maxConcurrentScans,
-                   const QString& customFolder,
-                   const QStringList& targetedInputs = {});
+    void startScan(const QString& yamlRoot, const QString& yamlData, const QString& game, const QString& gameVersion,
+                   bool showFormIdValues, bool fcxMode, bool simplifyLogs, bool moveUnsolvedLogs,
+                   int maxConcurrentScans, const QString& customFolder, const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 

@@ -733,8 +733,8 @@ void MainWindow::connectSignals()
     connect(m_scanController, &ScanController::scanFinished, this, &MainWindow::onScanCompleted);
     connect(m_scanController, &ScanController::scanError, this, &MainWindow::onScanError);
     connect(m_scanController, &ScanController::scanWarning, this, &MainWindow::onScanWarning);
-    connect(m_scanController, &ScanController::scanReportDirectoriesResolved,
-            this, &MainWindow::onScanReportDirectoriesResolved);
+    connect(m_scanController, &ScanController::scanReportDirectoriesResolved, this,
+            &MainWindow::onScanReportDirectoriesResolved);
 
     // Settings button
     connect(m_btnSettings, &QPushButton::clicked, this, &MainWindow::onShowSettings);
@@ -937,13 +937,13 @@ void MainWindow::saveSettings()
         auto stagingValue = m_editStagingFolder->text();
         if (!stagingValue.isEmpty()) {
             classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Staging Mods Folder",
-                                                       std::string(stagingValue.toUtf8().constData()));
+                                                           std::string(stagingValue.toUtf8().constData()));
         }
 
         auto customValue = m_editCustomFolder->text();
         if (!customValue.isEmpty()) {
             classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder",
-                                                       std::string(customValue.toUtf8().constData()));
+                                                           std::string(customValue.toUtf8().constData()));
         }
 
         classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -1032,8 +1032,8 @@ void MainWindow::checkFirstRunPaths()
             docsPath = classic::toQString(dp);
         }
 
-        gameVersion = classic::toQString(
-            classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
+        gameVersion =
+            classic::toQString(classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
 
     } catch (...) {
         // If settings can't be read, fall through to path detection
@@ -1078,18 +1078,16 @@ void MainWindow::checkFirstRunPaths()
 
     // Fallback: use Rust auto-detection (registry / docs discovery).
     if (gamePath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_game_path(
-            std::string(gamePath.toUtf8().constData()),
-            std::string(gameVersion.toUtf8().constData()));
+        auto detected = classic::path::detect_fallout4_game_path(std::string(gamePath.toUtf8().constData()),
+                                                                 std::string(gameVersion.toUtf8().constData()));
         if (!detected.empty()) {
             gamePath = classic::toQString(detected);
             resolvedFromFallbacks = true;
         }
     }
     if (docsPath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_docs_path(
-            std::string(docsPath.toUtf8().constData()),
-            std::string(gameVersion.toUtf8().constData()));
+        auto detected = classic::path::detect_fallout4_docs_path(std::string(docsPath.toUtf8().constData()),
+                                                                 std::string(gameVersion.toUtf8().constData()));
         if (!detected.empty()) {
             docsPath = classic::toQString(detected);
             resolvedFromFallbacks = true;
@@ -1103,21 +1101,21 @@ void MainWindow::checkFirstRunPaths()
 
             if (!gamePath.isEmpty()) {
                 classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
-                                                           std::string(gamePath.toUtf8().constData()));
+                                                               std::string(gamePath.toUtf8().constData()));
 
                 auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
                 if (exePath.empty()) {
-                    auto exeName = classic::path::resolve_fallout4_exe_name(
-                        std::string(gameVersion.toUtf8().constData()));
+                    auto exeName =
+                        classic::path::resolve_fallout4_exe_name(std::string(gameVersion.toUtf8().constData()));
                     auto defaultExe = gamePath + QStringLiteral("/") + classic::toQString(exeName);
                     classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
-                                                               std::string(defaultExe.toUtf8().constData()));
+                                                                   std::string(defaultExe.toUtf8().constData()));
                 }
             }
 
             if (!docsPath.isEmpty()) {
                 classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
-                                                           std::string(docsPath.toUtf8().constData()));
+                                                               std::string(docsPath.toUtf8().constData()));
             }
 
             classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -1175,11 +1173,11 @@ void MainWindow::checkFirstRunPaths()
 
             if (needs.needs_game_path && !finalGamePath.isEmpty()) {
                 classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
-                                                           std::string(finalGamePath.toUtf8().constData()));
+                                                               std::string(finalGamePath.toUtf8().constData()));
             }
             if (needs.needs_docs_path && !finalDocsPath.isEmpty()) {
                 classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
-                                                           std::string(finalDocsPath.toUtf8().constData()));
+                                                               std::string(finalDocsPath.toUtf8().constData()));
             }
 
             classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -1585,10 +1583,8 @@ void MainWindow::onScanGameFiles()
     // D-11 / CXXS-01 consumer migration: use the bridged GameId helper instead
     // of hardcoding the literal "Fallout4". This proves classic::shared is
     // callable from production C++ code.
-    auto gameIdRustStr =
-        classic::shared::game_id_as_str(classic::shared::GameId::Fallout4);
-    QString gameName =
-        QString::fromUtf8(gameIdRustStr.data(), static_cast<int>(gameIdRustStr.size()));
+    auto gameIdRustStr = classic::shared::game_id_as_str(classic::shared::GameId::Fallout4);
+    QString gameName = QString::fromUtf8(gameIdRustStr.data(), static_cast<int>(gameIdRustStr.size()));
 
     const QString settingsPath = settingsFilePath(m_dataRoot);
     if (!loadValidatedGameAndDocsPaths(&gameRoot, &docsPath)) {

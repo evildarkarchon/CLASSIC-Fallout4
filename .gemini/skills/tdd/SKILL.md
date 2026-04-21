@@ -162,30 +162,38 @@ def clear_singletons():
 
 ### Unit Tests (In-Module)
 
-Place unit tests in `#[cfg(test)]` module within source files:
+Unit tests live in a sibling `<stem>_tests.rs` file colocated with the module
+under test. See `openspec/specs/rust-test-module-layout/spec.md` for the
+workspace-wide rule.
+
+In `src/parser.rs`:
 
 ```rust
-// src/parser.rs
 pub fn parse_formid(hex: &str) -> Result<FormID, ParseError> {
     // implementation
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+#[path = "parser_tests.rs"]
+mod tests;
+```
 
-    #[test]
-    fn test_parse_formid_valid_hex() {
-        let result = parse_formid("0A001234").unwrap();
-        assert_eq!(result.plugin_index, 0x0A);
-        assert_eq!(result.local_id, 0x001234);
-    }
+In the sibling `src/parser_tests.rs`:
 
-    #[test]
-    fn test_parse_formid_invalid_hex() {
-        let result = parse_formid("ZZZZZZZZ");
-        assert!(result.is_err());
-    }
+```rust
+use super::*;
+
+#[test]
+fn test_parse_formid_valid_hex() {
+    let result = parse_formid("0A001234").unwrap();
+    assert_eq!(result.plugin_index, 0x0A);
+    assert_eq!(result.local_id, 0x001234);
+}
+
+#[test]
+fn test_parse_formid_invalid_hex() {
+    let result = parse_formid("ZZZZZZZZ");
+    assert!(result.is_err());
 }
 ```
 
@@ -193,16 +201,23 @@ mod tests {
 
 Use `#[tokio::test]` for async tests:
 
+In the parent source file (e.g. `src/io.rs`):
+
 ```rust
 #[cfg(test)]
-mod tests {
-    use super::*;
+#[path = "io_tests.rs"]
+mod tests;
+```
 
-    #[tokio::test]
-    async fn test_async_file_read() {
-        let result = read_file_async("test.txt").await.unwrap();
-        assert!(!result.is_empty());
-    }
+In the sibling `src/io_tests.rs`:
+
+```rust
+use super::*;
+
+#[tokio::test]
+async fn test_async_file_read() {
+    let result = read_file_async("test.txt").await.unwrap();
+    assert!(!result.is_empty());
 }
 ```
 

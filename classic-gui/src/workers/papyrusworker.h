@@ -26,11 +26,7 @@ public slots:
 
 signals:
     /// Emitted every polling cycle with updated Papyrus stats.
-    void statsUpdated(uint32_t dumps,
-                      uint32_t stacks,
-                      uint32_t warnings,
-                      uint32_t errors,
-                      uint32_t linesProcessed,
+    void statsUpdated(uint32_t dumps, uint32_t stacks, uint32_t warnings, uint32_t errors, uint32_t linesProcessed,
                       double dumpsStacksRatio);
 
     /// Emitted if monitoring setup fails (e.g. log file not found).

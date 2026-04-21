@@ -68,11 +68,11 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ### Rust tests and quality checks
 
 ```powershell
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ---
@@ -80,17 +80,19 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 ## 5) Rust workspace development
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace
+cargo build --workspace --release
 ```
 
-Core domain work belongs under [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic).
+Core domain work belongs under [`business-logic/`](../../business-logic).
+
+If you are translating older instructions that still mention `ClassicLib-rs/...`, use the shared [`workspace migration matrix`](../workspace-migration-matrix.md) instead of guessing the repo-root replacement.
 
 ---
 
 ## 6) Node bindings workflow (only when touching Node surface)
 
-From [`ClassicLib-rs/node-bindings/classic-node/`](../../ClassicLib-rs/node-bindings/classic-node):
+From [`node-bindings/classic-node/`](../../node-bindings/classic-node):
 
 ```powershell
 bun install
@@ -117,7 +119,7 @@ bun run test:node
 
 ## 8) Scope boundary: maintained vs deprecated Python
 
-- Maintained Python scope: bindings under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+- Maintained Python scope: bindings under [`python-bindings/`](../../python-bindings)
 - Deprecated runtime scope: Python entrypoints/orchestration under [`deprecated/`](../../deprecated)
 
 Do not treat legacy Python runtime paths as the default contributor flow unless the task is explicitly migration/legacy support.

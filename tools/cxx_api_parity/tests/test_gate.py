@@ -4,6 +4,7 @@ These tests exercise the full CLI surface via subprocess (matching how CI runs
 the gate) and the drift-detection path by mutating fixture files in tmp_path
 synthetic bridge trees.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,9 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 GATE_SCRIPT = REPO_ROOT / "tools" / "cxx_api_parity" / "check_parity_gate.py"
 BOOTSTRAP_SCRIPT = REPO_ROOT / "tools" / "cxx_api_parity" / "generate_baseline.py"
 BASELINE_DIR = REPO_ROOT / "docs" / "implementation" / "cxx_api_parity" / "baseline"
-BRIDGE_BUILD_RS = (
-    REPO_ROOT / "ClassicLib-rs" / "cpp-bindings" / "classic-cpp-bridge" / "build.rs"
-)
+BRIDGE_BUILD_RS = REPO_ROOT / "cpp-bindings" / "classic-cpp-bridge" / "build.rs"
 
 # Make the parser importable so we can derive the expected module set from build.rs
 # at test time instead of hardcoding it (D-07: build.rs is the single source of truth).
@@ -96,7 +95,9 @@ class TestGateSmoke:
         """CXXG-03: gate exits 0 against the committed born-green baseline."""
         result = subprocess.run(
             [sys.executable, str(GATE_SCRIPT), "--repo-root", str(REPO_ROOT)],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
         )
         assert result.returncode == 0, (
             f"gate should pass against committed baseline. "
@@ -115,7 +116,7 @@ def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> 
     re-run the gate to exercise drift cases.
     """
     synth_repo = tmp_path / "repo"
-    bridge = synth_repo / "ClassicLib-rs" / "cpp-bindings" / "classic-cpp-bridge"
+    bridge = synth_repo / "cpp-bindings" / "classic-cpp-bridge"
     (bridge / "src").mkdir(parents=True)
 
     # Write build.rs
@@ -132,11 +133,15 @@ def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> 
     # Bootstrap the baseline for this synthetic tree
     result = subprocess.run(
         [
-            sys.executable, str(BOOTSTRAP_SCRIPT),
-            "--repo-root", str(synth_repo),
+            sys.executable,
+            str(BOOTSTRAP_SCRIPT),
+            "--repo-root",
+            str(synth_repo),
             "--write-baseline",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
     )
     assert result.returncode == 0, (
         f"bootstrap failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
@@ -146,11 +151,15 @@ def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> 
     # the gate_report placeholder vs the real gate output.
     result = subprocess.run(
         [
-            sys.executable, str(GATE_SCRIPT),
-            "--repo-root", str(synth_repo),
+            sys.executable,
+            str(GATE_SCRIPT),
+            "--repo-root",
+            str(synth_repo),
             "--update-baseline",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
     )
     assert result.returncode == 0, (
         f"initial --update-baseline gate run failed. "
@@ -160,7 +169,9 @@ def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> 
     # Final clean gate run
     result = subprocess.run(
         [sys.executable, str(GATE_SCRIPT), "--repo-root", str(synth_repo)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
     )
     assert result.returncode == 0, (
         f"post-bootstrap gate run failed. "
@@ -172,32 +183,32 @@ def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> 
 def _run_gate(synth_repo: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(GATE_SCRIPT), "--repo-root", str(synth_repo)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
     )
 
 
 _SIMPLE_BRIDGE = (
     '#[cxx::bridge(namespace = "classic::synth")]\n'
-    'mod ffi {\n'
-    '    struct SynthStruct {\n'
-    '        name: String,\n'
-    '        count: u32,\n'
-    '    }\n'
+    "mod ffi {\n"
+    "    struct SynthStruct {\n"
+    "        name: String,\n"
+    "        count: u32,\n"
+    "    }\n"
     '    extern "Rust" {\n'
-    '        fn synth_hello(name: &str) -> String;\n'
-    '        fn synth_count(items: u32) -> u32;\n'
-    '    }\n'
-    '}\n'
+    "        fn synth_hello(name: &str) -> String;\n"
+    "        fn synth_count(items: u32) -> u32;\n"
+    "    }\n"
+    "}\n"
 )
 
 
 class TestDriftDetection:
     def test_gate_fails_on_added_function(self, tmp_path: Path):
         """CXXG-03: adding a fn to a bridge file -> gate exits 1."""
-        synth_repo = _bootstrap_synthetic_gate(
-            tmp_path, {"synth.rs": _SIMPLE_BRIDGE}
-        )
-        synth_file = synth_repo / "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/synth.rs"
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
         mutated = _SIMPLE_BRIDGE.replace(
             "fn synth_count(items: u32) -> u32;",
             "fn synth_count(items: u32) -> u32;\n        fn synth_new_fn() -> bool;",
@@ -208,14 +219,14 @@ class TestDriftDetection:
         assert result.returncode == 1, (
             f"gate should fail on added fn. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-        assert "drift" in result.stderr.lower() or "missing_from_contract" in result.stderr
+        assert (
+            "drift" in result.stderr.lower() or "missing_from_contract" in result.stderr
+        )
 
     def test_gate_fails_on_removed_function(self, tmp_path: Path):
         """CXXG-03: removing a fn -> gate exits 1 with missing_from_current drift."""
-        synth_repo = _bootstrap_synthetic_gate(
-            tmp_path, {"synth.rs": _SIMPLE_BRIDGE}
-        )
-        synth_file = synth_repo / "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/synth.rs"
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
         mutated = _SIMPLE_BRIDGE.replace(
             "        fn synth_count(items: u32) -> u32;\n", ""
         )
@@ -227,10 +238,8 @@ class TestDriftDetection:
 
     def test_gate_fails_on_struct_field_rename(self, tmp_path: Path):
         """CXXG-03: renaming a struct field -> gate exits 1 with signature_mismatch."""
-        synth_repo = _bootstrap_synthetic_gate(
-            tmp_path, {"synth.rs": _SIMPLE_BRIDGE}
-        )
-        synth_file = synth_repo / "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/synth.rs"
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
         mutated = _SIMPLE_BRIDGE.replace("name: String,", "renamed_name: String,")
         synth_file.write_text(mutated, encoding="utf-8")
 
@@ -240,10 +249,8 @@ class TestDriftDetection:
 
     def test_gate_fails_on_function_signature_change(self, tmp_path: Path):
         """CXXG-03: changing a fn return type -> gate exits 1 with signature_mismatch."""
-        synth_repo = _bootstrap_synthetic_gate(
-            tmp_path, {"synth.rs": _SIMPLE_BRIDGE}
-        )
-        synth_file = synth_repo / "ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/synth.rs"
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
         mutated = _SIMPLE_BRIDGE.replace(
             "fn synth_count(items: u32) -> u32;",
             "fn synth_count(items: u32) -> u64;",
@@ -255,16 +262,32 @@ class TestDriftDetection:
         assert "signature_mismatch" in result.stderr
 
 
+def test_cxx_gate_defaults_use_repo_root_paths() -> None:
+    gate_source = (
+        REPO_ROOT / "tools" / "cxx_api_parity" / "check_parity_gate.py"
+    ).read_text(encoding="utf-8")
+    generator_source = (
+        REPO_ROOT / "tools" / "cxx_api_parity" / "generate_baseline.py"
+    ).read_text(encoding="utf-8")
+    assert 'default="cpp-bindings/classic-cpp-bridge/parity-artifacts"' in gate_source
+    assert (
+        'bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge"' in generator_source
+    )
+    assert "ClassicLib-rs/cpp-bindings/classic-cpp-bridge" not in gate_source
+    assert "ClassicLib-rs/cpp-bindings/classic-cpp-bridge" not in generator_source
+
+
 # ----- Stale-artifact detection (CXXG-03 freshness, D-14) -----
 
 
 class TestStaleArtifact:
     def test_gate_fails_on_stale_artifact(self, tmp_path: Path):
         """D-14: manually corrupting a committed baseline artifact -> gate exits 1."""
-        synth_repo = _bootstrap_synthetic_gate(
-            tmp_path, {"synth.rs": _SIMPLE_BRIDGE}
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        stale_md = (
+            synth_repo
+            / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
         )
-        stale_md = synth_repo / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
         stale_md.write_text(
             "# CXX Parity Diff Report\n\nSTALE PLACEHOLDER\n", encoding="utf-8"
         )
@@ -277,10 +300,11 @@ class TestStaleArtifact:
 
     def test_update_baseline_clears_stale(self, tmp_path: Path):
         """D-08/D-14: --update-baseline refreshes committed artifacts; next run is clean."""
-        synth_repo = _bootstrap_synthetic_gate(
-            tmp_path, {"synth.rs": _SIMPLE_BRIDGE}
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        stale_md = (
+            synth_repo
+            / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
         )
-        stale_md = synth_repo / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
         stale_md.write_text("STALE\n", encoding="utf-8")
 
         # Pre-refresh: gate fails
@@ -290,11 +314,15 @@ class TestStaleArtifact:
         # Refresh
         refresh = subprocess.run(
             [
-                sys.executable, str(GATE_SCRIPT),
-                "--repo-root", str(synth_repo),
+                sys.executable,
+                str(GATE_SCRIPT),
+                "--repo-root",
+                str(synth_repo),
                 "--update-baseline",
             ],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
         )
         assert refresh.returncode == 0, (
             f"--update-baseline should succeed. stderr:\n{refresh.stderr}"
@@ -315,7 +343,9 @@ class TestNoDeferredRegistry:
         """CXXG-04 / D-12: --deferred-registry is NOT a registered argument."""
         result = subprocess.run(
             [sys.executable, str(GATE_SCRIPT), "--help"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
         )
         assert result.returncode == 0
         assert "--deferred-registry" not in result.stdout
@@ -329,11 +359,18 @@ class TestNoDeferredRegistry:
         """CXXG-04: passing --deferred-registry produces an argparse error (exit 2)."""
         result = subprocess.run(
             [
-                sys.executable, str(GATE_SCRIPT),
-                "--deferred-registry", "whatever.json",
+                sys.executable,
+                str(GATE_SCRIPT),
+                "--deferred-registry",
+                "whatever.json",
             ],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
         )
         # argparse unrecognized-argument error code is 2
         assert result.returncode == 2
-        assert "unrecognized arguments" in result.stderr.lower() or "error" in result.stderr.lower()
+        assert (
+            "unrecognized arguments" in result.stderr.lower()
+            or "error" in result.stderr.lower()
+        )

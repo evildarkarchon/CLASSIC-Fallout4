@@ -18,6 +18,7 @@ Use this directory in this order:
 8. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers plus direct Version Registry re-exports
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer
 11. [`classic-update-core.md`](classic-update-core.md) - async GitHub release/update-check client and DTO layer
+11a. [`yaml-update-delivery.md`](yaml-update-delivery.md) - cross-crate YAML-data update flow: schema_version contract, client load-precedence, manifest format, Pages-mirrored publish workflow
 12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
 13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for settings discovery, merged YAML semantics, and consumed schema keys
 14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, validation, and backup helpers
@@ -42,7 +43,9 @@ Use this directory in this order:
 33. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
 34. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
-That order matches the current layering in `ClassicLib-rs/business-logic/`:
+Need a path translation? Start with the shared [`workspace migration matrix`](../workspace-migration-matrix.md), then return here for the active API pages.
+
+That order matches the current repo-root layering across `foundation/`, `business-logic/`, and the binding surfaces:
 
 - `classic-shared-core` provides the shared Tokio runtime plus common error, path, performance, and string helpers
 - `classic-perf-core` provides process-wide timing buckets, scoped timers, and summary computation for lightweight metrics collection
@@ -55,6 +58,7 @@ That order matches the current layering in `ClassicLib-rs/business-logic/`:
 - `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime
+- `yaml-update-delivery.md` documents the cross-crate YAML-data update channel: the `schema_version` contract in `classic-settings-core`, `client_schemas::*` and `shippable::load_shippable_yaml` in `classic-config-core`, atomic install/rollback in `classic-file-io-core`, the `yaml_update` orchestrator in `classic-update-core`, and the Pages-mirrored maintainer publish workflow
 - `classic-config-core` loads YAML and uses Version Registry metadata to build config data; the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (historical note: this owner absorbed the former `classic-crashgen-settings-core` crate during v9.1.0 Phase 2)
 - `classic-config-core-yaml-schema.md` captures the runtime YAML contract for merged settings files and the Main/Game/Ignore sections that `classic-config-core` actually consumes
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups

@@ -1,6 +1,6 @@
 # `classic-config-core` YAML Schema Contract
 
-Runtime-facing schema reference for [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core). This page is the source of truth for the YAML shapes that `ClassicConfig` and `YamlDataCore` consume after the shared loader refactor.
+Runtime-facing schema reference for [`classic-config-core`](../../business-logic/classic-config-core). This page is the source of truth for the YAML shapes that `ClassicConfig` and `YamlDataCore` consume after the shared loader refactor.
 
 Reference: [`classic-config-core.md`](classic-config-core.md).
 

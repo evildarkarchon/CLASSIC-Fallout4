@@ -325,7 +325,10 @@ con
 classic-gui/result.txt
 ClassicLib-rs/ui-applications/classic-gui-slint/CLASSIC Data/
 Qt6/
-styles/
+# Legacy flat-deployment artifact only; do not re-broaden to 'styles/'
+# because that would also ignore classic-gui/src/styles/, which holds
+# the source-of-truth QSS and markdown CSS.
+/styles/
 classic-gui/install/
 qt.conf
 !classic-gui/**/qt.conf
@@ -342,3 +345,4 @@ build-*/
 opencode.json
 .claude/worktrees
 .claude/worktrees
+*.pfx

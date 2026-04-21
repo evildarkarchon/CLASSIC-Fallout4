@@ -1,6 +1,6 @@
 # `classic-web-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-web-core/`](../../ClassicLib-rs/business-logic/classic-web-core).
+Contributor-facing API documentation for [`business-logic/classic-web-core/`](../../business-logic/classic-web-core).
 
 Crate metadata:
 
@@ -21,7 +21,7 @@ Use this crate when you need to:
 - extract a host/domain from a parsed HTTP or HTTPS URL
 - construct a URL from a trusted base plus a relative path or query parameters
 - generate the shared CLASSIC user-agent string used by wrapper crates
-- map a [`GameId`](../../ClassicLib-rs/foundation/classic-shared-core) to a small set of well-known mod-site URLs
+- map a [`GameId`](../../foundation/classic-shared-core) to a small set of well-known mod-site URLs
 
 Do not use this crate for:
 
@@ -201,7 +201,7 @@ Display-like mappings in current source:
 
 ### `game_url()`
 
-`game_url()` is where this crate collaborates directly with [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core): it accepts a `GameId` and maps it to a site-specific URL.
+`game_url()` is where this crate collaborates directly with [`classic-shared-core`](../../foundation/classic-shared-core): it accepts a `GameId` and maps it to a site-specific URL.
 
 Current `GameId` slug mapping used for Nexus Mods:
 
@@ -297,13 +297,13 @@ Important direct dependencies:
 - `url` - parsing, joining, host extraction, and query construction
 - `thiserror` - `WebError` derive and display messages
 - `serde` - `ModSite` serialization/deserialization
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - provides `GameId` used by `ModSite::game_url()`
+- [`classic-shared-core`](../../foundation/classic-shared-core) - provides `GameId` used by `ModSite::game_url()`
 
 Related crates in this repository:
 
-- [`ClassicLib-rs/python-bindings/classic-web-py`](../../ClassicLib-rs/python-bindings/classic-web-py) - Python wrapper over this crate's public surface
-- [`ClassicLib-rs/node-bindings/classic-node/src/web.rs`](../../ClassicLib-rs/node-bindings/classic-node/src/web.rs) - Node/N-API wrapper over this crate's public surface
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - upstream enum definitions for supported games
+- [`python-bindings/classic-web-py`](../../python-bindings/classic-web-py) - Python wrapper over this crate's public surface
+- [`node-bindings/classic-node/src/web.rs`](../../node-bindings/classic-node/src/web.rs) - Node/N-API wrapper over this crate's public surface
+- [`classic-shared-core`](../../foundation/classic-shared-core) - upstream enum definitions for supported games
 
 Current collaboration pattern in the repo:
 

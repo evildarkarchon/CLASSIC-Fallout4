@@ -1,7 +1,7 @@
 {
-  "generated_at_utc": "2026-04-12T01:59:47.827220+00:00",
+  "generated_at_utc": "2026-04-12T23:03:44.743161+00:00",
   "scope": {
-    "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts"
+    "source_file": "node-bindings/classic-node/index.d.ts"
   },
   "exports": [
     {
@@ -9,7 +9,7 @@
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const BATCH_CACHE_TTL: number"
     },
     {
@@ -17,7 +17,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class BackupManager {"
     },
     {
@@ -25,7 +25,7 @@
       "kind": "const",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const CRASH_AUTOSCAN_PATTERN: string"
     },
     {
@@ -33,7 +33,7 @@
       "kind": "const",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const CRASH_LOG_PATTERN: string"
     },
     {
@@ -41,7 +41,7 @@
       "kind": "class",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ClassicConfigJs {"
     },
     {
@@ -49,7 +49,7 @@
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const DEFAULT_CACHE_CLEANUP_INTERVAL: number"
     },
     {
@@ -57,7 +57,7 @@
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const DEFAULT_CACHE_CLEANUP_THRESHOLD: number"
     },
     {
@@ -65,7 +65,7 @@
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const DEFAULT_CACHE_TTL: number"
     },
     {
@@ -73,7 +73,7 @@
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const DEFAULT_QUERY_CACHE_CAPACITY: number"
     },
     {
@@ -81,7 +81,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class DocsPathFinder {"
     },
     {
@@ -89,7 +89,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class DocumentsChecker {"
     },
     {
@@ -97,7 +97,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface Fallout4VersionInfo {"
     },
     {
@@ -105,7 +105,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface FileIoConfig {"
     },
     {
@@ -113,7 +113,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class GamePathFinder {"
     },
     {
@@ -121,7 +121,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class GithubClient {"
     },
     {
@@ -129,7 +129,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface HashCacheStats {"
     },
     {
@@ -137,7 +137,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAddressLibInfo {"
     },
     {
@@ -145,7 +145,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAddressLibraryConfig {"
     },
     {
@@ -153,7 +153,7 @@
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAnalysisBuildOptions {"
     },
     {
@@ -161,7 +161,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAnalysisConfig {"
     },
     {
@@ -169,7 +169,7 @@
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAnalysisResult {"
     },
     {
@@ -177,7 +177,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsBa2Issues {"
     },
     {
@@ -185,7 +185,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsBa2ScanResult {"
     },
     {
@@ -193,7 +193,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsBa2Scanner {"
     },
     {
@@ -201,7 +201,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsBackupInfo {"
     },
     {
@@ -209,7 +209,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsBackupManager {"
     },
     {
@@ -217,7 +217,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsBatchEntry {"
     },
     {
@@ -225,7 +225,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCheckResult {"
     },
     {
@@ -233,7 +233,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCheckRule {"
     },
     {
@@ -241,7 +241,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsCheckType {"
     },
     {
@@ -249,7 +249,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCompatibleRange {"
     },
     {
@@ -257,7 +257,7 @@
       "kind": "class",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsConfigDuplicateDetector {"
     },
     {
@@ -265,7 +265,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsConfigIssue {"
     },
     {
@@ -273,7 +273,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenCheckResult {"
     },
     {
@@ -281,7 +281,7 @@
       "kind": "class",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsCrashgenChecker {"
     },
     {
@@ -289,7 +289,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenConfig {"
     },
     {
@@ -297,7 +297,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenRegistryEntry {"
     },
     {
@@ -305,7 +305,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenReport {"
     },
     {
@@ -313,7 +313,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenSettingsRules {"
     },
     {
@@ -321,7 +321,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenVersionInfo {"
     },
     {
@@ -329,7 +329,7 @@
       "kind": "const_enum",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsCrashgenVersionStatus {"
     },
     {
@@ -337,7 +337,7 @@
       "kind": "type",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export type JsDDSAnalyzer = JsDdsAnalyzer"
     },
     {
@@ -345,7 +345,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsDatabasePool {"
     },
     {
@@ -353,7 +353,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsDdsAnalyzer {"
     },
     {
@@ -361,7 +361,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsDdsBatchResult {"
     },
     {
@@ -369,7 +369,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsDdsIssue {"
     },
     {
@@ -377,7 +377,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsDuplicateGroup {"
     },
     {
@@ -385,7 +385,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsEnbChecker {"
     },
     {
@@ -393,7 +393,7 @@
       "kind": "const_enum",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsEnbConfigResult {"
     },
     {
@@ -401,7 +401,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsEnbResult {"
     },
     {
@@ -409,7 +409,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsEnbValidationResult {"
     },
     {
@@ -417,7 +417,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsExpectedValue {"
     },
     {
@@ -425,7 +425,7 @@
       "kind": "const_enum",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsFallout4Version {"
     },
     {
@@ -433,7 +433,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsFcxConfigIssue {"
     },
     {
@@ -441,7 +441,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsFileGenerator {"
     },
     {
@@ -449,7 +449,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsFileIO {"
     },
     {
@@ -457,7 +457,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsFileOperationResult {"
     },
     {
@@ -465,7 +465,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsGameFilesManager {"
     },
     {
@@ -473,7 +473,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsGameId {"
     },
     {
@@ -481,7 +481,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsGameIntegrityChecker {"
     },
     {
@@ -489,7 +489,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGameScanConfig {"
     },
     {
@@ -497,7 +497,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGameScanResult {"
     },
     {
@@ -505,7 +505,7 @@
       "kind": "const_enum",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsGameVersion {"
     },
     {
@@ -513,7 +513,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGithubAsset {"
     },
     {
@@ -521,7 +521,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGithubRelease {"
     },
     {
@@ -529,7 +529,7 @@
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGpuInfo {"
     },
     {
@@ -537,7 +537,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsIniCheckResult {"
     },
     {
@@ -545,7 +545,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsIniValidator {"
     },
     {
@@ -553,7 +553,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsIntegrityCheckResult {"
     },
     {
@@ -561,7 +561,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsIntegrityConfig {"
     },
     {
@@ -569,7 +569,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsIssueSeverity {"
     },
     {
@@ -577,7 +577,7 @@
       "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLogCollector {"
     },
     {
@@ -585,7 +585,7 @@
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLogErrorEntry {"
     },
     {
@@ -593,7 +593,7 @@
       "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLogProcessor {"
     },
     {
@@ -601,7 +601,7 @@
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLogSegments {"
     },
     {
@@ -609,7 +609,7 @@
       "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLogger {"
     },
     {
@@ -617,7 +617,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsMatchResult {"
     },
     {
@@ -625,7 +625,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsMessage {"
     },
     {
@@ -633,7 +633,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsMessageTarget {"
     },
     {
@@ -641,7 +641,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsMessageType {"
     },
     {
@@ -649,7 +649,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModConflictEntry {"
     },
     {
@@ -657,7 +657,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModDuplicateEntry {"
     },
     {
@@ -665,7 +665,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModIniScanResult {"
     },
     {
@@ -673,7 +673,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModScanResult {"
     },
     {
@@ -681,7 +681,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsModSite {"
     },
     {
@@ -689,7 +689,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModSolutionCriteria {"
     },
     {
@@ -697,7 +697,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModSolutionEntry {"
     },
     {
@@ -705,7 +705,7 @@
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPapyrusStats {"
     },
     {
@@ -713,7 +713,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPathConfig {"
     },
     {
@@ -721,7 +721,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPathDetectionResult {"
     },
     {
@@ -729,7 +729,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPeVersion {"
     },
     {
@@ -737,7 +737,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPoolStatistics {"
     },
     {
@@ -745,7 +745,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPreflightAction {"
     },
     {
@@ -753,7 +753,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPreflightRule {"
     },
     {
@@ -761,7 +761,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsRuleMessages {"
     },
     {
@@ -769,7 +769,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsRuleTarget {"
     },
     {
@@ -777,7 +777,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsSuspectErrorRule {"
     },
     {
@@ -785,7 +785,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsSuspectStackCountRule {"
     },
     {
@@ -793,7 +793,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsSuspectStackRule {"
     },
     {
@@ -801,7 +801,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsTomlConfigIssue {"
     },
     {
@@ -809,7 +809,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsTomlIssueSeverity {"
     },
     {
@@ -817,7 +817,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsUnknownVersionHandling {"
     },
     {
@@ -825,7 +825,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsUnpackedIssues {"
     },
     {
@@ -833,7 +833,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsUnpackedScanner {"
     },
     {
@@ -841,7 +841,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsUpdateCheckResult {"
     },
     {
@@ -849,7 +849,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsValidationResult {"
     },
     {
@@ -857,7 +857,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsVersionInfo {"
     },
     {
@@ -865,7 +865,7 @@
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsVersionRegistrySnapshot {"
     },
     {
@@ -873,7 +873,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsVsyncEntry {"
     },
     {
@@ -881,7 +881,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsWryeBashParser {"
     },
     {
@@ -889,7 +889,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsWryeIssue {"
     },
     {
@@ -897,7 +897,7 @@
       "kind": "class",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsXseChecker {"
     },
     {
@@ -905,7 +905,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsXseConfig {"
     },
     {
@@ -913,7 +913,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsXseInfo {"
     },
     {
@@ -921,7 +921,7 @@
       "kind": "const_enum",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsXseType {"
     },
     {
@@ -929,7 +929,7 @@
       "kind": "const_enum",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsYamlFile {"
     },
     {
@@ -937,7 +937,7 @@
       "kind": "const_enum",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsYamlSource {"
     },
     {
@@ -945,7 +945,7 @@
       "kind": "const",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const MAX_CACHE_TTL: number"
     },
     {
@@ -953,7 +953,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface MetricsSummaryResult {"
     },
     {
@@ -961,7 +961,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface QueryParam {"
     },
     {
@@ -969,7 +969,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface ResourceCount {"
     },
     {
@@ -977,7 +977,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface ResourceInfo {"
     },
     {
@@ -985,7 +985,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface RuntimeInfo {"
     },
     {
@@ -993,7 +993,7 @@
       "kind": "interface",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface SettingsCacheStats {"
     },
     {
@@ -1001,7 +1001,7 @@
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface TimingStats {"
     },
     {
@@ -1009,7 +1009,7 @@
       "kind": "class",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class XseVersion {"
     },
     {
@@ -1017,7 +1017,7 @@
       "kind": "class",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class YamlData {"
     },
     {
@@ -1025,7 +1025,7 @@
       "kind": "class",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class YamlDocument {"
     },
     {
@@ -1033,7 +1033,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats",
       "arity": 1
     },
@@ -1042,7 +1042,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function buildUrlWithQuery(base: string, params: Array<QueryParam>): string",
       "arity": 2
     },
@@ -1051,7 +1051,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function calculateFileSimilarity(path1: string, path2: string): number",
       "arity": 2
     },
@@ -1060,7 +1060,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function calculateTextSimilarity(text1: string, text2: string): number",
       "arity": 2
     },
@@ -1069,7 +1069,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenConfig(pluginsPath: string, crashgenName: string): JsCrashgenCheckResult",
       "arity": 2
     },
@@ -1078,7 +1078,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenConfigWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenCheckResult",
       "arity": 3
     },
@@ -1087,7 +1087,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenFull(pluginsPath: string, crashgenName: string): JsCrashgenReport",
       "arity": 2
     },
@@ -1096,7 +1096,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenFullWithRules(pluginsPath: string, crashgenName: string, settingsRules?: JsCrashgenSettingsRules | undefined | null): JsCrashgenReport",
       "arity": 3
     },
@@ -1105,7 +1105,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkCrashgenVersionStatus(detected: string, validVersions: Array<string>): JsCrashgenVersionStatus",
       "arity": 2
     },
@@ -1114,7 +1114,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkDriveExists(path: string): void",
       "arity": 1
     },
@@ -1123,7 +1123,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkEnb(gamePath: string): JsEnbValidationResult",
       "arity": 1
     },
@@ -1132,7 +1132,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkForUpdates(owner: string, repo: string, currentVersion: string): Promise<JsUpdateCheckResult>",
       "arity": 3
     },
@@ -1141,7 +1141,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkReadPermissions(path: string): void",
       "arity": 1
     },
@@ -1150,7 +1150,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkWritePermissions(path: string): void",
       "arity": 1
     },
@@ -1159,7 +1159,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string",
       "arity": 2
     },
@@ -1168,7 +1168,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function clearAllMetrics(): void",
       "arity": 0
     },
@@ -1177,7 +1177,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function clearHashCache(): void",
       "arity": 0
     },
@@ -1186,7 +1186,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function clearSettingsCache(): void",
       "arity": 0
     },
@@ -1195,7 +1195,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function clearYamlCache(): void",
       "arity": 0
     },
@@ -1204,7 +1204,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function compareVersions(a: string, b: string): number",
       "arity": 2
     },
@@ -1213,7 +1213,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function countResourcesByType(root: string): Array<ResourceCount>",
       "arity": 1
     },
@@ -1222,7 +1222,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createAnalysisConfig(game: string, gameVersion: string): JsAnalysisConfig",
       "arity": 2
     },
@@ -1231,7 +1231,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
       "arity": 6
     },
@@ -1240,7 +1240,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createDefaultConfig(): ClassicConfigJs",
       "arity": 0
     },
@@ -1249,7 +1249,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createLogger(name: string): JsLogger",
       "arity": 1
     },
@@ -1258,7 +1258,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createMessage(msgType: JsMessageType, content: string, target?: JsMessageTarget | undefined | null): JsMessage",
       "arity": 3
     },
@@ -1267,7 +1267,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createResourceInfo(path: string): ResourceInfo",
       "arity": 1
     },
@@ -1276,7 +1276,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createResourceInfoWithSize(path: string, size: number): ResourceInfo",
       "arity": 2
     },
@@ -1285,7 +1285,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createYamlDataFromContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string): YamlData",
       "arity": 5
     },
@@ -1294,7 +1294,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectConfigDuplicates(rootPath: string): Array<JsDuplicateGroup>",
       "arity": 1
     },
@@ -1303,7 +1303,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectCrashPattern(content: string): string | null",
       "arity": 1
     },
@@ -1312,7 +1312,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectEncoding(path: string): string",
       "arity": 1
     },
@@ -1321,7 +1321,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectGpuInfo(systemLines: Array<string>): JsGpuInfo",
       "arity": 1
     },
@@ -1330,7 +1330,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectResourceType(path: string): string",
       "arity": 1
     },
@@ -1339,7 +1339,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectVrLog(content: string): boolean",
       "arity": 1
     },
@@ -1348,7 +1348,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function detectXseVersion(loaderPath: string, xseType: JsXseType): string | null",
       "arity": 2
     },
@@ -1357,7 +1357,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function enumerateResources(root: string, filterType?: string | undefined | null): Array<ResourceInfo>",
       "arity": 2
     },
@@ -1366,7 +1366,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractAllVersions(content: string): Array<string>",
       "arity": 1
     },
@@ -1375,7 +1375,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractDomain(urlStr: string): string",
       "arity": 1
     },
@@ -1384,7 +1384,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractFormIds(content: string): Array<string>",
       "arity": 1
     },
@@ -1393,7 +1393,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractPeVersion(path: string): JsPeVersion",
       "arity": 1
     },
@@ -1402,7 +1402,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractPluginList(content: string): Array<string>",
       "arity": 1
     },
@@ -1411,7 +1411,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractVersionFromFilename(filename: string): string | null",
       "arity": 1
     },
@@ -1420,7 +1420,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function extractVersionFromLog(content: string): string | null",
       "arity": 1
     },
@@ -1429,7 +1429,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function formatMessage(message: JsMessage): string",
       "arity": 1
     },
@@ -1438,7 +1438,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function formatVersion(version: string): string",
       "arity": 1
     },
@@ -1447,7 +1447,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function gameVersionDistance(a: string, b: string): number",
       "arity": 2
     },
@@ -1456,7 +1456,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function generateIgnoreFile(content: string): Promise<boolean>",
       "arity": 1
     },
@@ -1465,7 +1465,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function generateLocalYaml(content: string, gameName: string): Promise<boolean>",
       "arity": 2
     },
@@ -1474,7 +1474,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAddressLibInfo(version: string): JsAddressLibInfo",
       "arity": 1
     },
@@ -1483,7 +1483,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAddressLibraryFilename(version: string, isVr: boolean): string | null",
       "arity": 2
     },
@@ -1492,7 +1492,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllExeHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Array<string>",
       "arity": 2
     },
@@ -1501,7 +1501,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllFallout4Versions(): Array<JsFallout4Version>",
       "arity": 0
     },
@@ -1510,7 +1510,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllGameIds(): Array<JsGameId>",
       "arity": 0
     },
@@ -1519,7 +1519,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllScriptHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Record<string, Array<string>>",
       "arity": 2
     },
@@ -1528,7 +1528,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllVersions(): Array<JsVersionInfo>",
       "arity": 0
     },
@@ -1537,7 +1537,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllVersionsForGame(game: string, isVr?: boolean | undefined | null): Array<JsVersionInfo>",
       "arity": 2
     },
@@ -1546,7 +1546,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getAllYamlFiles(): Array<JsYamlFile>",
       "arity": 0
     },
@@ -1555,7 +1555,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getApplicationDir(): string | null",
       "arity": 0
     },
@@ -1564,7 +1564,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getBatchCacheTtl(): number",
       "arity": 0
     },
@@ -1573,7 +1573,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getCached(key: string): any | null",
       "arity": 1
     },
@@ -1582,7 +1582,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getClassicVersion(): string",
       "arity": 0
     },
@@ -1591,7 +1591,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getCorrectVersions(isVr: boolean): Array<JsVersionInfo>",
       "arity": 1
     },
@@ -1600,7 +1600,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getCrashgenForVersion(id: string, crashgenVersion: string): JsCrashgenConfig | null",
       "arity": 2
     },
@@ -1609,7 +1609,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getCrashgenVersionStrings(id: string): Array<string>",
       "arity": 1
     },
@@ -1618,7 +1618,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getCrashgenVersions(id: string): Array<JsCrashgenConfig>",
       "arity": 1
     },
@@ -1627,7 +1627,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getDefaultCacheCleanupInterval(): number",
       "arity": 0
     },
@@ -1636,7 +1636,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getDefaultCacheCleanupThreshold(): number",
       "arity": 0
     },
@@ -1645,7 +1645,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getDefaultCacheTtl(): number",
       "arity": 0
     },
@@ -1654,7 +1654,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getDefaultQueryCacheCapacity(): number",
       "arity": 0
     },
@@ -1663,7 +1663,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getFallout4VersionInfo(version: JsFallout4Version): Fallout4VersionInfo",
       "arity": 1
     },
@@ -1672,7 +1672,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getFcxConfigIssues(): Array<JsFcxConfigIssue>",
       "arity": 0
     },
@@ -1681,7 +1681,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getGameName(id: JsGameId): string",
       "arity": 1
     },
@@ -1690,7 +1690,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getHashCacheStats(): HashCacheStats",
       "arity": 0
     },
@@ -1699,7 +1699,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getLatestRelease(owner: string, repo: string): Promise<JsGithubRelease>",
       "arity": 2
     },
@@ -1708,7 +1708,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getMaxCacheTtl(): number",
       "arity": 0
     },
@@ -1717,7 +1717,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getMetricsSummary(): MetricsSummaryResult",
       "arity": 0
     },
@@ -1726,7 +1726,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getModSiteGameUrl(site: JsModSite, gameId: JsGameId): string",
       "arity": 2
     },
@@ -1735,7 +1735,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getModSiteName(site: JsModSite): string",
       "arity": 1
     },
@@ -1744,7 +1744,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getModSiteUrl(site: JsModSite): string",
       "arity": 1
     },
@@ -1753,7 +1753,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getResourceExtensions(typeName: string): Array<string>",
       "arity": 1
     },
@@ -1762,7 +1762,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getRuntimeInfo(): RuntimeInfo",
       "arity": 0
     },
@@ -1771,7 +1771,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getScriptHashesForVersion(id: string): Record<string, string>",
       "arity": 1
     },
@@ -1780,7 +1780,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getSettingsCacheStats(): SettingsCacheStats",
       "arity": 0
     },
@@ -1789,7 +1789,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getSystemDocumentsPath(): string | null",
       "arity": 0
     },
@@ -1798,7 +1798,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getUnknownVersionDefault(game: string): string | null",
       "arity": 1
     },
@@ -1807,7 +1807,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getUnknownVersionHandling(): JsUnknownVersionHandling",
       "arity": 0
     },
@@ -1816,7 +1816,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getUserAgent(): string",
       "arity": 0
     },
@@ -1825,7 +1825,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getUserAgentPrefix(): string",
       "arity": 0
     },
@@ -1834,7 +1834,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getUserAgentWithSuffix(suffix: string): string",
       "arity": 1
     },
@@ -1843,7 +1843,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getVersion(): string",
       "arity": 0
     },
@@ -1852,7 +1852,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getVersionById(id: string): JsVersionInfo | null",
       "arity": 1
     },
@@ -1861,7 +1861,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getVersionByShortName(shortName: string): JsVersionInfo | null",
       "arity": 1
     },
@@ -1870,7 +1870,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getVersionByVersionString(version: string): JsVersionInfo | null",
       "arity": 1
     },
@@ -1879,7 +1879,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getVersionRegistry(game?: string | undefined | null, isVr?: boolean | undefined | null): JsVersionRegistrySnapshot",
       "arity": 2
     },
@@ -1888,7 +1888,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getWrongVersions(isVr: boolean): Array<JsVersionInfo>",
       "arity": 1
     },
@@ -1897,7 +1897,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getXseInfo(gamePath: string, xseType: JsXseType): JsXseInfo",
       "arity": 2
     },
@@ -1906,7 +1906,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getYamlFileDescription(file: JsYamlFile): string",
       "arity": 1
     },
@@ -1915,7 +1915,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getYamlSourceDisplayName(source: JsYamlSource): string",
       "arity": 1
     },
@@ -1924,7 +1924,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getYamlSourceDisplayNameWithGame(source: JsYamlSource, game: string): string",
       "arity": 2
     },
@@ -1933,7 +1933,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getYamlSourcePath(source: JsYamlSource, game: string): string",
       "arity": 2
     },
@@ -1942,7 +1942,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function hasUpdate(currentVersion: string, latestVersion: string): boolean",
       "arity": 2
     },
@@ -1951,7 +1951,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function hashFile(path: string): string",
       "arity": 1
     },
@@ -1960,7 +1960,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function hashFilesParallel(paths: Array<string>): Record<string, string>",
       "arity": 1
     },
@@ -1969,7 +1969,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function internString(value: string): string",
       "arity": 1
     },
@@ -1978,7 +1978,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function invalidateSettings(key: string): boolean",
       "arity": 1
     },
@@ -1987,7 +1987,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isCached(key: string): boolean",
       "arity": 1
     },
@@ -1996,7 +1996,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isKnownFallout4Version(version: string): boolean",
       "arity": 1
     },
@@ -2005,7 +2005,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isRestrictedPath(path: string): boolean",
       "arity": 1
     },
@@ -2014,7 +2014,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isRuntimeAvailable(): boolean",
       "arity": 0
     },
@@ -2023,7 +2023,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isSupportedResource(path: string): boolean",
       "arity": 1
     },
@@ -2032,7 +2032,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isValidExecutablePath(path: string): boolean",
       "arity": 1
     },
@@ -2041,7 +2041,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isValidPath(path: string): boolean",
       "arity": 1
     },
@@ -2050,7 +2050,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isValidPePath(path: string): boolean",
       "arity": 1
     },
@@ -2059,7 +2059,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isValidUrl(urlStr: string): boolean",
       "arity": 1
     },
@@ -2068,7 +2068,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isVersionCompatible(id: string, version: string): boolean",
       "arity": 2
     },
@@ -2077,7 +2077,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function isXseInstalled(gamePath: string, xseType: JsXseType): boolean",
       "arity": 2
     },
@@ -2086,7 +2086,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function joinPaths(parts: Array<string>): string",
       "arity": 1
     },
@@ -2095,7 +2095,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function joinUrl(base: string, path: string): string",
       "arity": 2
     },
@@ -2104,7 +2104,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadBatchAsync(paths: Array<string>): Promise<number>",
       "arity": 1
     },
@@ -2113,7 +2113,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadBatchSync(paths: Array<string>): number",
       "arity": 1
     },
@@ -2122,7 +2122,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadSettingsAsync(key: string, path: string): Promise<any>",
       "arity": 2
     },
@@ -2131,7 +2131,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadSettingsSync(key: string, path: string): any",
       "arity": 2
     },
@@ -2140,7 +2140,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function matchVersion(version: string, game: string, isVr: boolean): JsMatchResult",
       "arity": 3
     },
@@ -2149,7 +2149,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function migrateGameVersionSetting(gameVersion?: string | undefined | null): string | null",
       "arity": 1
     },
@@ -2158,7 +2158,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function needsPathDetection(gamePath?: string | undefined | null, docsPath?: string | undefined | null): JsPathDetectionResult",
       "arity": 2
     },
@@ -2167,7 +2167,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function normalizePath(path: string): string",
       "arity": 1
     },
@@ -2176,7 +2176,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function normalizeString(value: string): string",
       "arity": 1
     },
@@ -2185,7 +2185,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseCrashgenVersion(versionStr: string): JsCrashgenVersionInfo | null",
       "arity": 1
     },
@@ -2194,7 +2194,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseGameVersion(version: string): string",
       "arity": 1
     },
@@ -2203,7 +2203,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseLogSegments(content: string): JsLogSegments",
       "arity": 1
     },
@@ -2212,7 +2212,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseResourceType(typeName: string): string",
       "arity": 1
     },
@@ -2221,7 +2221,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseSteamLibrary(gameSteamId: number): string | null",
       "arity": 1
     },
@@ -2230,7 +2230,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseVersion(input: string): string",
       "arity": 1
     },
@@ -2239,7 +2239,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseXseLog(logPath: string): string | null",
       "arity": 1
     },
@@ -2248,7 +2248,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseXseType(typeName: string): JsXseType",
       "arity": 1
     },
@@ -2257,7 +2257,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processGameLogs(logDir: string, catchErrors: Array<string>, excludeFiles: Array<string>, excludeErrors: Array<string>): string",
       "arity": 4
     },
@@ -2266,7 +2266,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processLog(logPath: string, config: JsAnalysisConfig): Promise<JsAnalysisResult>",
       "arity": 2
     },
@@ -2275,7 +2275,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>",
       "arity": 7
     },
@@ -2284,7 +2284,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
       "arity": 3
     },
@@ -2293,7 +2293,7 @@
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
       "arity": 8
     },
@@ -2302,7 +2302,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processStringBatch(values: Array<string>): Array<string>",
       "arity": 1
     },
@@ -2311,7 +2311,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function queryGameRegistry(gameName: string, vrSuffix: string, tryGog: boolean): string | null",
       "arity": 3
     },
@@ -2320,7 +2320,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function recordTimingMetric(label: string, durationMs: number): void",
       "arity": 2
     },
@@ -2329,7 +2329,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registryClear(): void",
       "arity": 0
     },
@@ -2338,7 +2338,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registryGet(key: string): any",
       "arity": 1
     },
@@ -2347,7 +2347,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registryGetGame(): string | null",
       "arity": 0
     },
@@ -2356,7 +2356,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registryGetGameVersion(): string | null",
       "arity": 0
     },
@@ -2365,7 +2365,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registryRemove(key: string): boolean",
       "arity": 1
     },
@@ -2374,7 +2374,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registrySet(key: string, value: any): void",
       "arity": 2
     },
@@ -2383,7 +2383,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function registrySetGame(game: string): void",
       "arity": 1
     },
@@ -2392,7 +2392,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function removeReadonly(filePath: string): void",
       "arity": 1
     },
@@ -2401,7 +2401,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resetFcxGlobalState(): void",
       "arity": 0
     },
@@ -2410,7 +2410,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resetHashCacheStats(): void",
       "arity": 0
     },
@@ -2419,7 +2419,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resetSettingsCacheStats(): void",
       "arity": 0
     },
@@ -2428,7 +2428,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resolveEffectiveGameVersion(version?: string | undefined | null): string",
       "arity": 1
     },
@@ -2437,7 +2437,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>",
       "arity": 1
     },
@@ -2446,7 +2446,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function runModScans(config: JsGameScanConfig): Promise<JsModScanResult>",
       "arity": 1
     },
@@ -2455,7 +2455,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanResult>",
       "arity": 1
     },
@@ -2464,7 +2464,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult",
       "arity": 2
     },
@@ -2473,7 +2473,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanUnpackedFiles(rootPath: string, xseScriptfiles: Array<string>): JsUnpackedIssues",
       "arity": 2
     },
@@ -2482,7 +2482,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function setApplicationDir(path: string): void",
       "arity": 1
     },
@@ -2491,7 +2491,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function settingsCacheKeys(): Array<string>",
       "arity": 0
     },
@@ -2500,7 +2500,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function settingsCacheSize(): number",
       "arity": 0
     },
@@ -2509,7 +2509,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function stripEmojiText(text: string): string",
       "arity": 1
     },
@@ -2518,7 +2518,7 @@
       "kind": "function",
       "owner_module": "version_registry",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function tryParseVersion(input: string): string | null",
       "arity": 1
     },
@@ -2527,7 +2527,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateCustomScanPath(path: string): void",
       "arity": 1
     },
@@ -2536,7 +2536,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validatePathWithPermissions(path: string, checkRead?: boolean | undefined | null, checkWrite?: boolean | undefined | null): void",
       "arity": 3
     },
@@ -2545,7 +2545,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validatePathsBatch(paths: Array<string>): Record<string, boolean>",
       "arity": 1
     },
@@ -2554,7 +2554,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateRequiredFiles(directory: string, requiredFiles: Array<string>): void",
       "arity": 2
     },
@@ -2563,7 +2563,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateResource(path: string): void",
       "arity": 1
     },
@@ -2572,7 +2572,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateSettingsPath(path: string, settingName: string, requiredFiles?: Array<string> | undefined | null): void",
       "arity": 3
     },
@@ -2581,7 +2581,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateSettingsPaths(gamePath: string, docsPath: string, customScanPath: string | undefined | null, gameExe: string): void",
       "arity": 4
     },
@@ -2590,7 +2590,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateUrl(urlStr: string): string",
       "arity": 1
     },
@@ -2599,7 +2599,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function writeAutoscanReport(logPath: string, content: string): Promise<string>",
       "arity": 2
     },
@@ -2608,7 +2608,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function xseDllPrefix(xseType: JsXseType): string",
       "arity": 1
     },
@@ -2617,7 +2617,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function xseLoaderName(xseType: JsXseType): string",
       "arity": 1
     },
@@ -2626,7 +2626,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function xseTypeForGame(gameId: JsGameId): JsXseType",
       "arity": 1
     },
@@ -2635,7 +2635,7 @@
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function xseTypeName(xseType: JsXseType): string",
       "arity": 1
     },
@@ -2644,7 +2644,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlClearCache(): void",
       "arity": 0
     },
@@ -2653,7 +2653,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetCacheStats(): { hits: number; misses: number; hit_rate: number; size: number; capacity: number }",
       "arity": 0
     },
@@ -2662,7 +2662,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetHashmapValue(content: string, keyPath: string): Record<string, string>",
       "arity": 2
     },
@@ -2671,7 +2671,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetHashmapVecValue(content: string, keyPath: string): Record<string, Array<string>>",
       "arity": 2
     },
@@ -2680,7 +2680,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetIndexmapValue(content: string, keyPath: string): any",
       "arity": 2
     },
@@ -2689,7 +2689,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetSettingsBatch(content: string, keyPaths: Array<string>): any",
       "arity": 2
     },
@@ -2698,7 +2698,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetStringValue(content: string, keyPath: string, default: string): string",
       "arity": 3
     },
@@ -2707,7 +2707,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetValue(content: string, keyPath: string): any",
       "arity": 2
     },
@@ -2716,7 +2716,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlGetVecValue(content: string, keyPath: string): Array<string>",
       "arity": 2
     },
@@ -2725,7 +2725,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlLoadFile(path: string): any",
       "arity": 1
     },
@@ -2734,7 +2734,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlParse(content: string): any",
       "arity": 1
     },
@@ -2743,7 +2743,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlSaveFile(path: string, data: any): void",
       "arity": 2
     },
@@ -2752,7 +2752,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlSetSetting(content: string, keyPath: string, value: any): string",
       "arity": 3
     },
@@ -2761,7 +2761,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlSetSettingsBatch(content: string, settings: any): string",
       "arity": 2
     },
@@ -2770,7 +2770,7 @@
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
-      "source_file": "ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+      "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function yamlStringify(data: any): string",
       "arity": 1
     }

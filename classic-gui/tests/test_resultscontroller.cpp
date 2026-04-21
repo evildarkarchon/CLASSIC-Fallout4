@@ -5,8 +5,8 @@
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTextStream>
-#include <QWidget>
 #include <QtTest/QtTest>
+#include <QWidget>
 
 #include "controllers/resultscontroller.h"
 #include "core/signalhub.h"
@@ -23,8 +23,13 @@ private slots:
     void scan_completed_switches_to_results_tab_when_auto_switch_enabled();
     void scan_completed_does_not_switch_tabs_when_auto_switch_disabled();
     void open_folder_reveals_selected_report_when_file_exists();
+    void open_folder_reveals_selected_report_after_refresh_rebuild();
+#ifdef Q_OS_WIN
+    void open_folder_uses_native_explorer_select_arguments_for_paths_with_spaces();
+#endif
     void open_folder_falls_back_to_crash_logs_when_no_selection();
     void open_folder_falls_back_to_crash_logs_when_selected_report_missing();
+    void open_folder_does_not_launch_browser_when_no_report_dirs_exist();
 };
 
 namespace {
@@ -74,6 +79,29 @@ protected:
         return true;
     }
 };
+
+#ifdef Q_OS_WIN
+class ProcessCapturingResultsController final : public ResultsController {
+public:
+    using ResultsController::ResultsController;
+
+    QString startedProgram;
+    QStringList startedArguments;
+    QString startedNativeArguments;
+    int startDetachedCalls = 0;
+
+protected:
+    bool startDetachedProcess(const QString& program, const QStringList& arguments,
+                              const QString& nativeArguments) override
+    {
+        ++startDetachedCalls;
+        startedProgram = program;
+        startedArguments = arguments;
+        startedNativeArguments = nativeArguments;
+        return true;
+    }
+};
+#endif
 } // namespace
 
 void ResultsControllerTests::setReportDirectories_creates_primary_and_discovers_reports_from_both_dirs()
@@ -87,12 +115,10 @@ void ResultsControllerTests::setReportDirectories_creates_primary_and_discovers_
 
     QVERIFY(!QDir(crashDir).exists());
 
-    const QString customReport = writeTextFile(
-        customDir + QStringLiteral("/crash-2025-01-01-00-00-00-AUTOSCAN.md"),
-        QStringLiteral("SUSPECT: custom\n"));
-    const QString customLog = writeTextFile(
-        customDir + QStringLiteral("/crash-2025-01-01-00-00-00.log"),
-        QStringLiteral("raw log\n"));
+    const QString customReport = writeTextFile(customDir + QStringLiteral("/crash-2025-01-01-00-00-00-AUTOSCAN.md"),
+                                               QStringLiteral("SUSPECT: custom\n"));
+    const QString customLog =
+        writeTextFile(customDir + QStringLiteral("/crash-2025-01-01-00-00-00.log"), QStringLiteral("raw log\n"));
 
     QVERIFY(!customReport.isEmpty());
     QVERIFY(!customLog.isEmpty());
@@ -102,12 +128,7 @@ void ResultsControllerTests::setReportDirectories_creates_primary_and_discovers_
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    ResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setReportDirectories({crashDir, customDir}, crashDir);
 
@@ -118,9 +139,8 @@ void ResultsControllerTests::setReportDirectories_creates_primary_and_discovers_
     QTRY_COMPARE(list->count(), 1);
     QVERIFY(list->item(0)->text().endsWith(QStringLiteral("-AUTOSCAN.md")));
 
-    const QString crashReport = writeTextFile(
-        crashDir + QStringLiteral("/crash-2025-01-01-00-00-01-AUTOSCAN.md"),
-        QStringLiteral("NO ISSUES FOUND\n"));
+    const QString crashReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-01-01-00-00-01-AUTOSCAN.md"),
+                                              QStringLiteral("NO ISSUES FOUND\n"));
     QVERIFY(!crashReport.isEmpty());
 
     QTRY_COMPARE(list->count(), 2);
@@ -139,9 +159,8 @@ void ResultsControllerTests::custom_directory_changes_trigger_refresh()
     QVERIFY(QDir().mkpath(crashDir));
     QVERIFY(QDir().mkpath(customDir));
 
-    const QString crashReport = writeTextFile(
-        crashDir + QStringLiteral("/crash-2025-02-01-00-00-00-AUTOSCAN.md"),
-        QStringLiteral("NO ISSUES FOUND\n"));
+    const QString crashReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-02-01-00-00-00-AUTOSCAN.md"),
+                                              QStringLiteral("NO ISSUES FOUND\n"));
     QVERIFY(!crashReport.isEmpty());
 
     QTabWidget tabWidget;
@@ -149,12 +168,7 @@ void ResultsControllerTests::custom_directory_changes_trigger_refresh()
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    ResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setReportDirectories({crashDir, customDir}, crashDir);
 
@@ -162,9 +176,8 @@ void ResultsControllerTests::custom_directory_changes_trigger_refresh()
     QVERIFY(list);
     QTRY_COMPARE(list->count(), 1);
 
-    const QString customReport = writeTextFile(
-        customDir + QStringLiteral("/crash-2025-02-01-00-00-01-AUTOSCAN.md"),
-        QStringLiteral("SUSPECT: custom\n"));
+    const QString customReport = writeTextFile(customDir + QStringLiteral("/crash-2025-02-01-00-00-01-AUTOSCAN.md"),
+                                               QStringLiteral("SUSPECT: custom\n"));
     QVERIFY(!customReport.isEmpty());
 
     QTRY_COMPARE(list->count(), 2);
@@ -187,12 +200,7 @@ void ResultsControllerTests::scan_completed_switches_to_results_tab_when_auto_sw
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    ResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setAutoSwitchToResults(true);
     emit SignalHub::instance().scanCompleted();
@@ -217,12 +225,7 @@ void ResultsControllerTests::scan_completed_does_not_switch_tabs_when_auto_switc
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    ResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setAutoSwitchToResults(false);
     emit SignalHub::instance().scanCompleted();
@@ -240,9 +243,8 @@ void ResultsControllerTests::open_folder_reveals_selected_report_when_file_exist
     QVERIFY(QDir().mkpath(crashDir));
     QVERIFY(QDir().mkpath(customDir));
 
-    const QString customReport = writeTextFile(
-        customDir + QStringLiteral("/crash-2025-03-01-00-00-00-AUTOSCAN.md"),
-        QStringLiteral("SUSPECT: custom\n"));
+    const QString customReport = writeTextFile(customDir + QStringLiteral("/crash-2025-03-01-00-00-00-AUTOSCAN.md"),
+                                               QStringLiteral("SUSPECT: custom\n"));
     QVERIFY(!customReport.isEmpty());
 
     QTabWidget tabWidget;
@@ -250,12 +252,7 @@ void ResultsControllerTests::open_folder_reveals_selected_report_when_file_exist
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    TestableResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    TestableResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setReportDirectories({crashDir, customDir}, crashDir);
 
@@ -275,6 +272,93 @@ void ResultsControllerTests::open_folder_reveals_selected_report_when_file_exist
     QCOMPARE(controller.openFolderCalls, 0);
 }
 
+void ResultsControllerTests::open_folder_reveals_selected_report_after_refresh_rebuild()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    const QString customDir = tempDir.filePath(QStringLiteral("Custom Folder"));
+    QVERIFY(QDir().mkpath(crashDir));
+    QVERIFY(QDir().mkpath(customDir));
+
+    const QString customReport = writeTextFile(customDir + QStringLiteral("/crash-2025-03-01-00-00-00-AUTOSCAN.md"),
+                                               QStringLiteral("SUSPECT: custom\n"));
+    QVERIFY(!customReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    TestableResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
+
+    controller.setReportDirectories({crashDir, customDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    list->setCurrentRow(0);
+    QTRY_VERIFY(!reportList.currentReportPath().isEmpty());
+
+    controller.refreshReports();
+
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
+    QVERIFY(openFolderButton);
+
+    openFolderButton->click();
+
+    QTRY_COMPARE(controller.revealFileCalls, 1);
+    QCOMPARE(controller.revealedFilePath, QDir::cleanPath(customReport));
+    QCOMPARE(controller.openFolderCalls, 0);
+}
+
+#ifdef Q_OS_WIN
+void ResultsControllerTests::open_folder_uses_native_explorer_select_arguments_for_paths_with_spaces()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    const QString customDir = tempDir.filePath(QStringLiteral("Custom Folder"));
+    QVERIFY(QDir().mkpath(crashDir));
+    QVERIFY(QDir().mkpath(customDir));
+
+    const QString customReport = writeTextFile(customDir + QStringLiteral("/crash-2025-03-01-00-00-00-AUTOSCAN.md"),
+                                               QStringLiteral("SUSPECT: custom\n"));
+    QVERIFY(!customReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ProcessCapturingResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer,
+                                                 &metadata);
+
+    controller.setReportDirectories({crashDir, customDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    list->setCurrentRow(0);
+    QTRY_VERIFY(!reportList.currentReportPath().isEmpty());
+
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
+    QVERIFY(openFolderButton);
+
+    openFolderButton->click();
+
+    QTRY_COMPARE(controller.startDetachedCalls, 1);
+    QVERIFY(
+        QFileInfo(controller.startedProgram).fileName().compare(QStringLiteral("explorer.exe"), Qt::CaseInsensitive) ==
+        0);
+    QCOMPARE(controller.startedArguments, QStringList());
+    QCOMPARE(controller.startedNativeArguments,
+             QStringLiteral("/select,\"%1\"").arg(QDir::toNativeSeparators(QDir::cleanPath(customReport))));
+}
+#endif
+
 void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_no_selection()
 {
     QTemporaryDir tempDir;
@@ -283,9 +367,8 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_no_select
     const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
     QVERIFY(QDir().mkpath(crashDir));
 
-    const QString crashReport = writeTextFile(
-        crashDir + QStringLiteral("/crash-2025-03-01-00-00-01-AUTOSCAN.md"),
-        QStringLiteral("NO ISSUES FOUND\n"));
+    const QString crashReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-03-01-00-00-01-AUTOSCAN.md"),
+                                              QStringLiteral("NO ISSUES FOUND\n"));
     QVERIFY(!crashReport.isEmpty());
 
     QTabWidget tabWidget;
@@ -293,12 +376,7 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_no_select
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    TestableResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    TestableResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setReportDirectories({crashDir}, crashDir);
 
@@ -319,6 +397,28 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_no_select
     QCOMPARE(controller.revealFileCalls, 0);
 }
 
+void ResultsControllerTests::open_folder_does_not_launch_browser_when_no_report_dirs_exist()
+{
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    TestableResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
+
+    controller.setReportDirectories({}, QString());
+
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
+    QVERIFY(openFolderButton);
+
+    openFolderButton->click();
+
+    QCOMPARE(controller.openFolderCalls, 0);
+    QCOMPARE(controller.revealFileCalls, 0);
+    QCOMPARE(controller.openedFolderPath, QString());
+    QCOMPARE(controller.revealedFilePath, QString());
+}
+
 void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_selected_report_missing()
 {
     QTemporaryDir tempDir;
@@ -329,9 +429,8 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_selected_
     QVERIFY(QDir().mkpath(crashDir));
     QVERIFY(QDir().mkpath(customDir));
 
-    const QString customReport = writeTextFile(
-        customDir + QStringLiteral("/crash-2025-03-01-00-00-02-AUTOSCAN.md"),
-        QStringLiteral("SUSPECT: custom\n"));
+    const QString customReport = writeTextFile(customDir + QStringLiteral("/crash-2025-03-01-00-00-02-AUTOSCAN.md"),
+                                               QStringLiteral("SUSPECT: custom\n"));
     QVERIFY(!customReport.isEmpty());
 
     QTabWidget tabWidget;
@@ -339,12 +438,7 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_selected_
     MarkdownViewer markdownViewer;
     ReportMetadataWidget metadata;
 
-    TestableResultsController controller(
-        &SignalHub::instance(),
-        &tabWidget,
-        &reportList,
-        &markdownViewer,
-        &metadata);
+    TestableResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
 
     controller.setReportDirectories({crashDir, customDir}, crashDir);
 

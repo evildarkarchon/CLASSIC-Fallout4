@@ -1,6 +1,6 @@
 # `classic-perf-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-perf-core/`](../../ClassicLib-rs/business-logic/classic-perf-core).
+Contributor-facing API documentation for [`business-logic/classic-perf-core/`](../../business-logic/classic-perf-core).
 
 Crate metadata:
 
@@ -220,9 +220,9 @@ Important direct dependencies:
 
 Related CLASSIC crates and wrappers:
 
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/perf.rs) - exposes `record`, `clear`, and stringified summary helpers for C++ callers
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/shared.rs) - converts the Rust summary into JavaScript-friendly timing objects, using milliseconds at the API edge
-- [`classic-perf-py`](../../ClassicLib-rs/python-bindings/classic-perf-py/src/lib.rs) - exposes structured metric summaries plus a Python wrapper over `Timer`
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) - exposes `record`, `clear`, and stringified summary helpers for C++ callers
+- [`classic-node`](../../node-bindings/classic-node/src/shared.rs) - converts the Rust summary into JavaScript-friendly timing objects, using milliseconds at the API edge
+- [`classic-perf-py`](../../python-bindings/classic-perf-py/src/lib.rs) - exposes structured metric summaries plus a Python wrapper over `Timer`
 - [`binding-parity-overview.md`](binding-parity-overview.md) - compares how C++, Node, and Python currently narrow or preserve this crate's surface
 - [`classic-shared-core`](classic-shared-core.md) - has its own separate `performance_core` helper module; do not assume the two crates expose the same API or storage model
 

@@ -1,7 +1,10 @@
 """PYT-03 snapshot guard: tier1_contract_total invariant for Plan 9 cleanup."""
+
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -70,3 +73,37 @@ def test_tier2_gap_total_removed_from_summary() -> None:
     assert "tier2_gap_total" not in diff["summary"], (
         "Plan 9b must remove tier2_gap_total from parity_diff_report.json::summary"
     )
+
+
+def test_python_gate_defaults_use_repo_root_paths() -> None:
+    source = (
+        REPO_ROOT / "tools" / "python_api_parity" / "check_parity_gate.py"
+    ).read_text(encoding="utf-8")
+    assert 'default="python-bindings/parity-artifacts"' in source
+    assert (
+        'default="python-bindings/tests/fixtures/runtime_coverage_registry.json"'
+        in source
+    )
+    assert "ClassicLib-rs/python-bindings" not in source
+
+
+def test_validate_stubs_rejects_legacy_workspace_path() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "validate_stubs.py"),
+            "--rust-dir",
+            "ClassicLib-rs",
+        ],
+        cwd=REPO_ROOT,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert (
+        "Legacy rust-dir 'ClassicLib-rs' is no longer supported"
+        in result.stdout + result.stderr
+    )
+    assert "python-bindings" in result.stdout + result.stderr

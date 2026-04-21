@@ -14,29 +14,23 @@ private slots:
 
 void ReportMetadataWidgetTests::extractDate_handles_valid_and_invalid_names()
 {
-    QCOMPARE(
-        ReportMetadataWidget::extractDate(
-            QStringLiteral("crash-2024-01-15-08-30-45.log")),
-        QStringLiteral("2024-01-15 08:30:45"));
+    QCOMPARE(ReportMetadataWidget::extractDate(QStringLiteral("crash-2024-01-15-08-30-45.log")),
+             QStringLiteral("2024-01-15 08:30:45"));
 
-    QCOMPARE(
-        ReportMetadataWidget::extractDate(QStringLiteral("no-timestamp.log")),
-        QStringLiteral("Unknown"));
+    QCOMPARE(ReportMetadataWidget::extractDate(QStringLiteral("no-timestamp.log")), QStringLiteral("Unknown"));
 }
 
 void ReportMetadataWidgetTests::formatFileSize_formats_bytes_kb_and_mb()
 {
     QCOMPARE(ReportMetadataWidget::formatFileSize(512), QStringLiteral("512 B"));
     QCOMPARE(ReportMetadataWidget::formatFileSize(1536), QStringLiteral("1.5 KB"));
-    QCOMPARE(ReportMetadataWidget::formatFileSize(2 * 1024 * 1024),
-             QStringLiteral("2.0 MB"));
+    QCOMPARE(ReportMetadataWidget::formatFileSize(2 * 1024 * 1024), QStringLiteral("2.0 MB"));
 }
 
 void ReportMetadataWidgetTests::setMetadata_and_clear_update_labels()
 {
     ReportMetadataWidget widget;
-    widget.setMetadata(QStringLiteral("2024-01-15 08:30:45"),
-                       QStringLiteral("1.5 KB"));
+    widget.setMetadata(QStringLiteral("2024-01-15 08:30:45"), QStringLiteral("1.5 KB"));
 
     QLabel* dateLabel = nullptr;
     QLabel* sizeLabel = nullptr;
@@ -52,8 +46,7 @@ void ReportMetadataWidgetTests::setMetadata_and_clear_update_labels()
     QVERIFY(dateLabel);
     QVERIFY(sizeLabel);
 
-    QCOMPARE(dateLabel->text(),
-             QStringLiteral("<b>Date:</b> 2024-01-15 08:30:45"));
+    QCOMPARE(dateLabel->text(), QStringLiteral("<b>Date:</b> 2024-01-15 08:30:45"));
     QCOMPARE(sizeLabel->text(), QStringLiteral("<b>Size:</b> 1.5 KB"));
 
     bool hasIssues = false;

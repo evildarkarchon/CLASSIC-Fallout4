@@ -37,8 +37,8 @@ private:
     std::vector<std::thread> workers_;
     std::queue<std::function<void()>> tasks_;
     std::mutex mutex_;
-    std::condition_variable cv_task_;        // Workers wait for tasks
-    std::condition_variable cv_finished_;    // wait_all() waits here
+    std::condition_variable cv_task_;     // Workers wait for tasks
+    std::condition_variable cv_finished_; // wait_all() waits here
     uint32_t active_tasks_ = 0;
     bool stop_ = false;
 };

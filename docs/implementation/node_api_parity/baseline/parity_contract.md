@@ -8,7 +8,7 @@ This contract defines how API parity is measured between:
   - `classic-scanlog-core`
   - `classic-config-core`
   - `classic-version-registry-core`
-- Node surface exported by `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
+- Node surface exported by `node-bindings/classic-node/index.d.ts`
 
 This contract establishes the live one-tier baseline: Tier-1 is the full enforced Node parity contract.
 

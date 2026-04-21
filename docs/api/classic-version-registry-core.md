@@ -1,6 +1,6 @@
 # `classic-version-registry-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-version-registry-core/`](../../ClassicLib-rs/business-logic/classic-version-registry-core).
+Contributor-facing API documentation for [`business-logic/classic-version-registry-core/`](../../business-logic/classic-version-registry-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - owning or creating a Tokio runtime
 - exposing binding-specific wrapper types
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -332,7 +332,7 @@ This crate is synchronous.
 
 - It does not expose async APIs.
 - It does not construct a Tokio runtime.
-- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) (the former ``yaml-core`` was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
+- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: the former `classic-yaml-core` crate was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
 - This fits the repo rule that runtime ownership stays in shared higher layers rather than inside business-logic crates.
 
 Contributor rule: if you extend this crate, keep it runtime-agnostic and compatible with the shared-runtime assumptions used elsewhere in CLASSIC.
@@ -341,12 +341,12 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 
 ## Related Crates And Integration Points
 
-- [`classic-settings-core`](../../ClassicLib-rs/business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (absorbed the former ``yaml-core`` in v9.1.0 Phase 1)
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic-version-registry-py`](../../ClassicLib-rs/python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-config-core`](../../business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
+- [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
+- [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 
