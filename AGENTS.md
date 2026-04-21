@@ -7,9 +7,9 @@ This file provides always-on guidance for GitHub Copilot and other AI coding age
 For CLASSIC-specific guidance that does not need to be injected on every prompt, use the project skill at `.agents/skills/classic-project-guide/`.
 
 - Skill entrypoint: `.agents/skills/classic-project-guide/SKILL.md`
-- Detailed reference: `.agents/skills/classic-project-guide/references/repo-guide.md`
+- Detailed reference: `references/repo-guide.md` relative to that `SKILL.md`
 
-If your environment does not support project skills, read the reference file directly before doing repo-specific build, test, parity, or architecture work.
+If your environment does not support project skills, read the reference file next to the skill entrypoint before doing repo-specific build, test, parity, or architecture work.
 
 ## Project Overview
 
