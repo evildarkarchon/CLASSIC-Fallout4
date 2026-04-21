@@ -344,5 +344,5 @@ build-*/
 !.agents/skills/
 opencode.json
 .claude/worktrees
-.claude/worktrees
 *.pfx
+.kilocode/package-lock.json
