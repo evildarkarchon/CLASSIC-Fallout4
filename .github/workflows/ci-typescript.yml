@@ -82,7 +82,7 @@ jobs:
 
       - name: Run index.d.ts freshness gate
         working-directory: node-bindings/classic-node
-        run: bun run dts:freshness:check
+        run: bun run dts:freshness:ci
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()

@@ -3534,7 +3534,11 @@ export interface JsYamlUpdateStatus {
   publishedAt: string
   /** Files the client can install (compatible + newer). `updateAvailable` only. */
   compatibleFiles: Array<JsYamlUpdateFile>
-  /** Files the client rejected, each paired with its reason. Populated for `updateAvailable`, and also for some `upToDate` results when the published release contains files this build cannot install. */
+  /**
+   * Files the client rejected, each paired with its reason. Populated for
+   * `updateAvailable`, and also for some `upToDate` results when the
+   * published release contains files this build cannot install.
+   */
   incompatibleFiles: Array<JsYamlRejectedFile>
   /** Reason for `"unknown"` (e.g. `"manifest_version 2 not supported"`). */
   unknownReason: string

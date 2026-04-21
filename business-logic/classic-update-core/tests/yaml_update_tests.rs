@@ -23,10 +23,10 @@
 
 use classic_settings_core::{SchemaCompat, SchemaVersion};
 use classic_update_core::{
-    ApprovedUpdate, ClientSchemaSet, GithubClient, MAX_MANIFEST_VERSION, UpdateCheckConfig,
-    UpdateError, YamlManifest, YamlManifestFile, YamlUpdateStatus, apply_yaml_update_with_decision,
-    check_yaml_update, classify_manifest, fetch_yaml_manifest, rollback_yaml_update,
-    validate_manifest,
+    ApprovedUpdate, ClientSchemaSet, FileInstallOutcome, GithubClient, MAX_MANIFEST_VERSION,
+    UpdateCheckConfig, UpdateError, YamlManifest, YamlManifestFile, YamlUpdateStatus,
+    apply_yaml_update_with_decision, check_yaml_update, classify_manifest, fetch_yaml_manifest,
+    rollback_yaml_update, validate_manifest,
 };
 use std::path::Path;
 use tempfile::TempDir;
@@ -988,6 +988,95 @@ async fn fetch_pages_200_with_invalid_manifest_falls_back_to_api() {
     );
 }
 
+/// Pages returns HTTP 200 with a structurally valid manifest whose
+/// `release_tag` does not match the requested prefix. The client must treat
+/// that as a wrong-channel Pages publish, fall back to the Releases API, and
+/// avoid caching the mismatched body.
+#[tokio::test(flavor = "multi_thread")]
+async fn fetch_pages_200_with_wrong_tag_prefix_falls_back_to_api() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let wrong_pages_manifest = valid_manifest_json(
+        "v9.1.0",
+        &"b".repeat(64),
+        "https://github.com/owner/repo/releases/download/v9.1.0/CLASSIC%20Main.yaml",
+        7,
+    );
+    let canonical_download =
+        "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml";
+
+    let pages_mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(wrong_pages_manifest)
+        .create_async()
+        .await;
+
+    let healthy_manifest = valid_manifest_json(
+        "yaml-data-v2026.04.17",
+        &"c".repeat(64),
+        canonical_download,
+        7,
+    );
+    let releases_json = format!(
+        r#"[{{
+            "tag_name": "yaml-data-v2026.04.17",
+            "name": "latest",
+            "body": "",
+            "prerelease": false,
+            "draft": false,
+            "html_url": "https://github.com/owner/repo/releases/tag/yaml-data-v2026.04.17",
+            "assets": [{{
+                "name": "manifest.json",
+                "size": {size},
+                "browser_download_url": "{server}/releases/download/yaml-data-v2026.04.17/manifest.json",
+                "content_type": "application/json",
+                "download_count": 0
+            }}],
+            "created_at": "2026-04-17T00:00:00Z",
+            "published_at": "2026-04-17T12:00:00Z"
+        }}]"#,
+        size = healthy_manifest.len(),
+        server = server.url(),
+    );
+    let api_mock = server
+        .mock("GET", "/repos/owner/repo/releases")
+        .match_query(mockito::Matcher::Any)
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(releases_json)
+        .create_async()
+        .await;
+    let asset_mock = server
+        .mock(
+            "GET",
+            "/releases/download/yaml-data-v2026.04.17/manifest.json",
+        )
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(healthy_manifest)
+        .create_async()
+        .await;
+
+    let cache_dir = TempDir::new().unwrap();
+    let client = tokenless_client(&server.url());
+    let manifest = fetch_yaml_manifest(&client, &pages_url, "yaml-data-v", Some(cache_dir.path()))
+        .await
+        .unwrap();
+    assert_eq!(manifest.release_tag, "yaml-data-v2026.04.17");
+    assert_eq!(manifest.files[0].sha256, "c".repeat(64));
+
+    pages_mock.assert_async().await;
+    api_mock.assert_async().await;
+    asset_mock.assert_async().await;
+
+    assert!(
+        !cache_dir.path().join("manifest-latest.json").exists(),
+        "wrong-channel Pages body must never be cached",
+    );
+}
+
 /// Pages returns 304 against a previously-cached body that happens to be
 /// invalid. The fetch must not return that poisoned body — it must fall
 /// back to the Releases API. Regression for Codex adversarial review
@@ -1643,6 +1732,126 @@ async fn apply_with_decision_rejects_stale_even_when_up_to_date() {
     assert!(
         matches!(err, UpdateError::DecisionStale { .. }),
         "UpToDate with mismatched release_tag must still surface DecisionStale, got: {err:?}"
+    );
+}
+
+/// Same-tag `UpToDate` is not automatically success: if the approved file is
+/// still in the manifest but fresh classification now rejects it (for example
+/// because publisher/client compatibility bounds changed), apply must surface
+/// that approved-file failure in `report.failed` rather than returning an
+/// empty success.
+#[tokio::test(flavor = "multi_thread")]
+async fn apply_with_decision_reports_rejected_approved_file_when_up_to_date() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let body = format!(
+        r#"{{
+  "manifest_version": 1,
+  "release_tag": "yaml-data-v2026.04.17",
+  "published_at": "2026-04-17T12:00:00Z",
+  "files": [
+    {{
+      "name": "CLASSIC Main.yaml",
+      "schema_version": "1.1",
+      "sha256": "{}",
+      "size_bytes": 7,
+      "min_client_schema": "2.0",
+      "download_url": "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml"
+    }}
+  ]
+}}"#,
+        "a".repeat(64)
+    );
+    let _mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(body)
+        .create_async()
+        .await;
+
+    let client = tokenless_client(&server.url());
+    let set = client_set("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+    };
+
+    let report = apply_yaml_update_with_decision(
+        &client,
+        &pages_url,
+        "yaml-data-v",
+        &set,
+        UpdateCheckConfig::enabled(),
+        &approved,
+    )
+    .await
+    .unwrap();
+
+    assert!(report.installed.is_empty());
+    assert_eq!(report.failed.len(), 1, "expected approved-file failure");
+    match &report.failed[0] {
+        FileInstallOutcome::Failed { name, reason } => {
+            assert_eq!(name, "CLASSIC Main.yaml");
+            assert!(
+                reason.contains("no longer installable") && reason.contains("min_client_schema"),
+                "expected compatibility rejection reason, got: {reason}"
+            );
+        }
+        other => panic!("expected Failed outcome, got {other:?}"),
+    }
+}
+
+/// Companion to the rejection regression above: when same-tag `UpToDate`
+/// means the approved bytes are already installed, apply should remain a
+/// truthful no-op rather than synthesizing a failure.
+#[tokio::test(flavor = "multi_thread")]
+async fn apply_with_decision_keeps_empty_success_when_approved_file_is_current() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let installed_sha = "a".repeat(64);
+    let body = valid_manifest_json(
+        "yaml-data-v2026.04.17",
+        &installed_sha,
+        "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml",
+        7,
+    );
+    let _mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(body)
+        .create_async()
+        .await;
+
+    let client = tokenless_client(&server.url());
+    let mut set = ClientSchemaSet::new();
+    set.insert_with_sha256(
+        "CLASSIC Main.yaml",
+        SchemaCompat::new(1, 0),
+        Some(SchemaVersion::new(1, 1)),
+        Some(installed_sha),
+    );
+    let approved = ApprovedUpdate {
+        release_tag: "yaml-data-v2026.04.17".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+    };
+
+    let report = apply_yaml_update_with_decision(
+        &client,
+        &pages_url,
+        "yaml-data-v",
+        &set,
+        UpdateCheckConfig::enabled(),
+        &approved,
+    )
+    .await
+    .unwrap();
+
+    assert!(report.installed.is_empty());
+    assert!(
+        report.failed.is_empty(),
+        "already-current file should stay a no-op"
     );
 }
 

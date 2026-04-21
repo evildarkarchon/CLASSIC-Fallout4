@@ -445,8 +445,10 @@ pub enum RollbackOutcome {
 /// Flow:
 ///
 /// 1. If `pages_url` is set, GET it with the cached ETag (if any). On `200`,
-///    validate and return. On `304`, return the previously-cached body. On
-///    any other response (timeout, 4xx, 5xx), fall through to step 2.
+///    validate the manifest and confirm its `release_tag` matches
+///    `tag_prefix`, then return. On `304`, return the previously-cached body
+///    after the same checks. On any other response (timeout, 4xx, 5xx,
+///    invalid body, wrong channel), fall through to step 2.
 /// 2. GET `{base_url}/repos/{owner}/{repo}/releases` through the existing
 ///    [`GithubClient`] (no `Authorization` header unless one was provided at
 ///    construction — see module docs). Filter the list to tags starting with
@@ -476,7 +478,7 @@ pub async fn fetch_yaml_manifest(
     tag_prefix: &str,
     cache_dir: Option<&Path>,
 ) -> Result<YamlManifest> {
-    match try_pages(client, pages_url, cache_dir).await {
+    match try_pages(client, pages_url, tag_prefix, cache_dir).await {
         Ok(manifest) => {
             return Ok(manifest);
         }
@@ -496,6 +498,7 @@ pub async fn fetch_yaml_manifest(
 
     let manifest = fetch_from_releases_api(client, tag_prefix).await?;
     validate_manifest(&manifest, client.owner(), client.repo())?;
+    validate_release_tag_prefix(&manifest.release_tag, tag_prefix)?;
     Ok(manifest)
 }
 
@@ -534,6 +537,7 @@ impl From<UpdateError> for PagesError {
 async fn try_pages(
     client: &GithubClient,
     pages_url: &str,
+    tag_prefix: &str,
     cache_dir: Option<&Path>,
 ) -> std::result::Result<YamlManifest, PagesError> {
     // When `cache_dir` is `None`, manifest-cache read/write is disabled:
@@ -577,6 +581,7 @@ async fn try_pages(
         // Validate the cached body too: a poisoned 304-cached manifest must
         // fall through to the API rather than being returned verbatim.
         validate_manifest(&manifest, client.owner(), client.repo()).map_err(PagesError::from)?;
+        validate_release_tag_prefix(&manifest.release_tag, tag_prefix).map_err(PagesError::from)?;
         return Ok(manifest);
     }
 
@@ -604,6 +609,7 @@ async fn try_pages(
     // Validate BEFORE persisting so we never cache an invalid body that a
     // future 304 would then return from the cached-body branch.
     validate_manifest(&manifest, client.owner(), client.repo()).map_err(PagesError::from)?;
+    validate_release_tag_prefix(&manifest.release_tag, tag_prefix).map_err(PagesError::from)?;
 
     // Persist the body + ETag so a future 304 can reuse them. Only reached
     // once parse+validate have both succeeded. Skipped entirely when
@@ -651,6 +657,17 @@ fn read_etag(etag_path: &Path) -> Option<String> {
 
 fn parse_manifest(bytes: &[u8]) -> Result<YamlManifest> {
     serde_json::from_slice::<YamlManifest>(bytes).map_err(UpdateError::JsonError)
+}
+
+fn validate_release_tag_prefix(release_tag: &str, tag_prefix: &str) -> Result<()> {
+    if !release_tag.starts_with(tag_prefix) {
+        return Err(UpdateError::ManifestInvalid {
+            reason: format!(
+                "release_tag `{release_tag}` does not match requested prefix `{tag_prefix}`"
+            ),
+        });
+    }
+    Ok(())
 }
 
 /// Parse a `yaml-data-v<YYYY>.<MM>.<DD>[.<N>]` tag into a comparable tuple
@@ -1756,26 +1773,16 @@ pub async fn apply_yaml_update_with_decision(
 
     let status = check_yaml_update(client, pages_url, tag_prefix, current, config).await?;
 
-    let (manifest, compatible_files) = match status {
+    let (manifest, compatible_files, incompatible_files) = match status {
         YamlUpdateStatus::UpdateAvailable {
             manifest,
             compatible_files,
-            ..
-        } => (manifest, compatible_files),
-        YamlUpdateStatus::UpToDate { manifest, .. } => {
-            // The user approved a release, but the fresh classification
-            // says there is nothing left to install. Treat this as a stale
-            // decision if the approved tag differs from the current one;
-            // otherwise the installed state already matches what the user
-            // wanted and an empty report is the truthful answer.
-            if manifest.release_tag != approved.release_tag {
-                return Err(UpdateError::DecisionStale {
-                    approved: approved.release_tag.clone(),
-                    manifest: manifest.release_tag,
-                });
-            }
-            return Ok(YamlUpdateReport::default());
-        }
+            incompatible_files,
+        } => (manifest, compatible_files, incompatible_files),
+        YamlUpdateStatus::UpToDate {
+            manifest,
+            incompatible_files,
+        } => (manifest, Vec::new(), incompatible_files),
         YamlUpdateStatus::Disabled => {
             // Guarded above via `config.enabled`, but check_yaml_update
             // may return Disabled for other reasons in the future. Keep
@@ -1796,13 +1803,19 @@ pub async fn apply_yaml_update_with_decision(
         });
     }
 
-    let cache_dir = ensure_yaml_cache_dir()
-        .map_err(|e| UpdateError::Generic(format!("cache dir unavailable: {e}")))?;
-
     // Build a quick lookup set so we don't pay O(N*M) membership checks
     // when the approved list has more than a handful of names.
     let approved_names: std::collections::HashSet<&str> =
         approved.file_names.iter().map(|s| s.as_str()).collect();
+    let manifest_names: std::collections::HashSet<&str> = manifest
+        .files
+        .iter()
+        .map(|entry| entry.name.as_str())
+        .collect();
+    let rejected_reasons: HashMap<&str, &str> = incompatible_files
+        .iter()
+        .map(|rejected| (rejected.file.name.as_str(), rejected.reason.as_str()))
+        .collect();
 
     // Partition the freshly-classified compatible files into "approved"
     // (install) and "not approved" (ignore — the user didn't confirm them,
@@ -1811,10 +1824,24 @@ pub async fn apply_yaml_update_with_decision(
     // contract.
     let mut report = YamlUpdateReport::default();
     let mut approved_found: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    let mut cache_dir: Option<PathBuf> = None;
     for entry in &compatible_files {
         if approved_names.contains(entry.name.as_str()) {
             approved_found.insert(entry.name.as_str());
-            match install_one(client, entry, &cache_dir, &manifest.release_tag).await {
+            if cache_dir.is_none() {
+                cache_dir =
+                    Some(ensure_yaml_cache_dir().map_err(|e| {
+                        UpdateError::Generic(format!("cache dir unavailable: {e}"))
+                    })?);
+            }
+            match install_one(
+                client,
+                entry,
+                cache_dir.as_deref().expect("cache dir initialized"),
+                &manifest.release_tag,
+            )
+            .await
+            {
                 Ok(outcome) => report.installed.push(outcome),
                 Err(failure) => report.failed.push(failure),
             }
@@ -1822,17 +1849,27 @@ pub async fn apply_yaml_update_with_decision(
     }
 
     // Any approved name that did not survive the fresh classification is
-    // reported as a skipped file with a reason. Silent drops here would
-    // look to the GUI like "you asked for 3 files, we installed 2" with
-    // no explanation for the third.
+    // reported only when the file disappeared from the manifest entirely or
+    // was freshly rejected as incompatible. If the file is still present and
+    // compatible but no longer newer than what is installed, that is a
+    // truthful no-op rather than a failure.
     for approved_name in &approved.file_names {
         if !approved_found.contains(approved_name.as_str()) {
-            report.failed.push(FileInstallOutcome::Failed {
-                name: approved_name.clone(),
-                reason: format!(
-                    "approved file `{approved_name}` is no longer in the current manifest's compatible set; re-check required"
-                ),
-            });
+            if let Some(reason) = rejected_reasons.get(approved_name.as_str()) {
+                report.failed.push(FileInstallOutcome::Failed {
+                    name: approved_name.clone(),
+                    reason: format!(
+                        "approved file `{approved_name}` is no longer installable: {reason}; re-check required"
+                    ),
+                });
+            } else if !manifest_names.contains(approved_name.as_str()) {
+                report.failed.push(FileInstallOutcome::Failed {
+                    name: approved_name.clone(),
+                    reason: format!(
+                        "approved file `{approved_name}` is no longer present in the current manifest; re-check required"
+                    ),
+                });
+            }
         }
     }
 
