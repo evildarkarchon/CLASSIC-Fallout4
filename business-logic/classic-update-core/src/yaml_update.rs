@@ -908,8 +908,7 @@ fn validate_cache_file_name(name: &str) -> Result<()> {
 /// guard still trims them here so the normalization stays aligned with the
 /// platform rule if the validator changes later.
 fn windows_normalized_cache_file_key(name: &str) -> String {
-    name.trim_end_matches([' ', '.'])
-        .to_ascii_lowercase()
+    name.trim_end_matches([' ', '.']).to_ascii_lowercase()
 }
 
 /// Defense-in-depth containment check: after joining a validated basename
