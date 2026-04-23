@@ -354,18 +354,21 @@ function Update-YamlFile {
         $Content = Get-Content -Path $FilePath -Raw -Encoding UTF8
         $OriginalContent = $Content
 
-        # Update version line: version: v<X.Y.Z>
-        # The pattern captures ONLY the "  version: " prefix (non-capturing group
-        # tolerates legacy "CLASSIC v" / bare "v" / no-prefix forms in the input
-        # so this script can upgrade a pre-schema_version-2.0 YAML cleanly), and
-        # the replacement appends a literal "v" before the version so output is
-        # always the schema_version 2.0 canonical shape.
+        # Update CLASSIC_Info.version line: version: v<X.Y.Z>
+        # The pattern is anchored to the top-level CLASSIC_Info section so
+        # game-specific `version:` fields elsewhere in the YAML are never
+        # rewritten. It captures the section prefix and ONLY the "  version: "
+        # prefix (non-capturing group tolerates legacy "CLASSIC v" / bare "v" /
+        # no-prefix forms in the input so this script can upgrade a
+        # pre-schema_version-2.0 YAML cleanly), and the replacement appends a
+        # literal "v" before the version so output is always the schema_version
+        # 2.0 canonical shape.
         #
         # NOTE: Use ${1} instead of $1 to disambiguate backreference from
         # version digits (e.g., "$1" + "9.0.0" = "$19.0.0" which .NET
         # interprets as group 19, corrupting the output).
-        $VersionPattern = '(?m)^(\s*version:\s*)(?:CLASSIC\s+v|v)?[^\n\r]*'
-        $VersionReplacement = '${1}v' + $NewVersion
+        $VersionPattern = '(?m)(^CLASSIC_Info:[^\r\n]*(?:\r?\n(?!\S)[^\r\n]*)*?\r?\n)([ \t]*version:[ \t]*)(?:CLASSIC[ \t]+v|v)?[^\r\n]*'
+        $VersionReplacement = '${1}${2}v' + $NewVersion
         $NewContent = $Content -replace $VersionPattern, $VersionReplacement
 
         # Update version_date line: version_date: YY.MM.DD
