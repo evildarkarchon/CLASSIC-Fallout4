@@ -89,27 +89,8 @@ target_include_directories(classic-cli PRIVATE src/)
 # cpp). Extracting the version here at configure time keeps the CLI from
 # broadcasting a stale CMake literal to the notification check.
 set(_CLASSIC_MAIN_YAML "${CMAKE_SOURCE_DIR}/../CLASSIC Data/databases/CLASSIC Main.yaml")
-file(STRINGS "${_CLASSIC_MAIN_YAML}" _classic_version_lines
-    REGEX "^[ \t]+version:[ \t]+v?[0-9]+\\.[0-9]+\\.[0-9]+")
-if(NOT _classic_version_lines)
-    message(FATAL_ERROR
-        "Could not locate `version: v<MAJOR>.<MINOR>.<PATCH>` in:\n"
-        "  ${_CLASSIC_MAIN_YAML}\n"
-        "This file is the documented single source of truth for the "
-        "application version; the CLI's --check-app-update path needs it.")
-endif()
-list(GET _classic_version_lines 0 _classic_first_version_line)
-string(REGEX REPLACE
-    "^[ \t]+version:[ \t]+v?([0-9]+\\.[0-9]+\\.[0-9]+).*$"
-    "\\1"
-    CLASSIC_APP_VERSION
-    "${_classic_first_version_line}")
-if(CLASSIC_APP_VERSION STREQUAL _classic_first_version_line)
-    message(FATAL_ERROR
-        "Failed to parse SemVer from CLASSIC_Info.version line:\n"
-        "  ${_classic_first_version_line}\n"
-        "Expected `  version: v<MAJOR>.<MINOR>.<PATCH>`.")
-endif()
+include(ClassicAppVersion)
+classic_extract_main_yaml_version("${_CLASSIC_MAIN_YAML}" CLASSIC_APP_VERSION)
 
 # Guard: the CMake `project(VERSION ...)` (used by CPack and as the
 # binary's own marker) MUST match the YAML-sourced app version. They are

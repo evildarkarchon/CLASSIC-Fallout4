@@ -120,12 +120,13 @@ foreach ($required in @('env::args', '--version', '--help')) {
 }
 
 $probeIndex = $tuiMain.IndexOf('handle_cli_probe()')
-$terminalSetupIndex = $tuiMain.IndexOf('let mut stderr_handle = stderr()')
-$rawModeIndex = $tuiMain.IndexOf('enable_raw_mode()?')
-if ($probeIndex -lt 0 -or $terminalSetupIndex -lt 0 -or $rawModeIndex -lt 0) {
+$terminalSetupCallIndex = $tuiMain.IndexOf('TerminalStateGuard::enter()?')
+$alternateScreenIndex = $tuiMain.IndexOf('EnterAlternateScreen')
+$rawModeIndex = $tuiMain.IndexOf('enable_raw_mode()')
+if ($probeIndex -lt 0 -or $terminalSetupCallIndex -lt 0 -or $alternateScreenIndex -lt 0 -or $rawModeIndex -lt 0) {
     throw "Expected classic-tui main.rs to contain probe handling and terminal setup markers."
 }
-if ($probeIndex -gt $terminalSetupIndex -or $probeIndex -gt $rawModeIndex) {
+if ($probeIndex -gt $terminalSetupCallIndex) {
     throw "Expected classic-tui CLI probe handling to run before alternate-screen or raw-mode setup."
 }
 
