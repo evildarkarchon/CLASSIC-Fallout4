@@ -186,6 +186,22 @@ def test_display_cta_url_https_is_accepted(tmp_path: Path) -> None:
     assert validate_path(path) == []
 
 
+def test_display_cta_url_must_parse_as_https_url(tmp_path: Path) -> None:
+    # Regression: prefix checks alone accepted malformed values that the
+    # Rust runtime rejects via url::Url::parse, causing published
+    # manifests to fail at client fetch/validate time.
+    for cta in (
+        "https://",
+        "https://example.com bad",
+    ):
+        body = _BASE_VALID_MANIFEST + _DISPLAY_BLOCK.format(cta=f'"{cta}"')
+        path = _write_manifest(tmp_path, body)
+        errors = validate_path(path)
+        assert any("cta_url" in err and "HTTPS" in err for err in errors), (
+            f"expected parse rejection for {cta!r}, got {errors!r}"
+        )
+
+
 def test_display_cta_url_http_is_rejected(tmp_path: Path) -> None:
     # Regression: Codex adversarial-review finding #3. The GUI opens
     # `display.cta_url` from an update prompt, so a typo'd or

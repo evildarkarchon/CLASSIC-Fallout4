@@ -39,6 +39,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from ruamel.yaml import YAML, YAMLError
 
@@ -144,6 +145,23 @@ def _validate_published_at(value: Any) -> str | None:
     return None
 
 
+def _is_https_cta_url(value: str) -> bool:
+    """Return ``True`` only when ``value`` parses as an HTTPS URL."""
+    try:
+        parsed = urlsplit(value)
+        # urlsplit defers invalid-port errors until the property is read.
+        _ = parsed.port
+    except ValueError:
+        return False
+    if parsed.scheme.lower() != "https":
+        return False
+    if not parsed.netloc or not parsed.hostname:
+        return False
+    # ``urllib.parse`` is a parser, not a full validator; it leaves spaces in
+    # the authority untouched. The Rust runtime's url parser rejects those.
+    return not any(ord(ch) <= 0x20 or ch == "\x7f" for ch in parsed.netloc)
+
+
 def _validate_display(value: Any) -> list[str]:
     """Return a list of error messages (empty on success)."""
     if value is None:
@@ -161,7 +179,7 @@ def _validate_display(value: Any) -> list[str]:
     if cta is not None:
         if not isinstance(cta, str):
             errors.append("display.cta_url must be a string or null/omitted")
-        elif not cta.lower().startswith("https://"):
+        elif not _is_https_cta_url(cta):
             # Codex adversarial-review finding: the GUI opens this URL from
             # an update prompt, so a typo'd or compromised manifest could
             # downgrade users onto an unauthenticated destination at the
