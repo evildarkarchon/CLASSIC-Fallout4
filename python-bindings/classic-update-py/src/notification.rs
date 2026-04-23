@@ -23,8 +23,11 @@
 //!   common supertype for every notification-channel failure.
 //! - Four variant-discriminating subclasses under
 //!   `ClassicNotificationError`, one per `UpdateError::Notification*`
-//!   variant. Consumers that want to catch any notification failure
-//!   use `except ClassicNotificationError`; callers that want to
+//!   variant. The shared `ManifestUnsupportedVersion` variant also maps
+//!   to `ClassicNotificationError` when surfaced by this notification
+//!   check, because it is a notification-channel manifest failure.
+//!   Consumers that want to catch any notification failure use
+//!   `except ClassicNotificationError`; callers that want to
 //!   discriminate (e.g., "show a retry button only on FetchFailed")
 //!   catch the specific subclass.
 
@@ -32,6 +35,10 @@ use classic_update_core as core;
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+
+#[cfg(test)]
+#[path = "notification_tests.rs"]
+mod tests;
 
 // ---------------------------------------------------------------------------
 // Exception hierarchy
@@ -188,6 +195,9 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
         core::UpdateError::NotificationCacheIo { .. } => {
             ClassicNotificationCacheIoError::new_err(display)
         }
+        core::UpdateError::ManifestUnsupportedVersion { .. } => {
+            ClassicNotificationError::new_err(display)
+        }
         // Non-notification error variants still bubble through
         // ClassicUpdateError so a consumer catching the base class
         // receives every update-subsystem failure.
@@ -200,8 +210,8 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
 /// Drives the Pages-first manifest fetch with ETag caching, falling back
 /// to listing releases filtered by the ``app-notification-v*`` tag prefix.
 /// On success returns a :class:`NotificationStatus`; on failure raises a
-/// :class:`ClassicNotificationError` subclass keyed to the underlying
-/// variant.
+/// :class:`ClassicNotificationError` or subclass keyed to the underlying
+/// notification-channel failure.
 ///
 /// Args:
 ///     owner: GitHub org / repo slug (e.g. ``"evildarkarchon"``).
@@ -220,6 +230,7 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
 ///         ``"unknown"`` when it happens *during* classify; this exception
 ///         is reserved for explicit parse-failure paths).
 ///     ClassicNotificationCacheIoError: cache I/O failure.
+///     ClassicNotificationError: unsupported notification manifest version.
 ///     ClassicUpdateError: non-notification update-subsystem error.
 #[pyfunction]
 fn check_app_notification(

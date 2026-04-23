@@ -456,6 +456,10 @@ class ClassicNotificationError(ClassicUpdateError):
     - :class:`ClassicNotificationDecodeError`
     - :class:`ClassicNotificationInstalledVersionParseError`
     - :class:`ClassicNotificationCacheIoError`
+
+    A notification manifest with an unsupported ``manifest_version`` raises
+    this base class directly because the underlying Rust variant is shared
+    with other update surfaces.
     """
 
 class ClassicNotificationFetchFailed(ClassicNotificationError):
@@ -522,8 +526,8 @@ def check_app_notification(
     Drives the Pages-first manifest fetch with ETag caching, falling back
     to listing releases filtered by the ``app-notification-v*`` tag
     prefix. On success returns a :class:`NotificationStatus`; on failure
-    raises a :class:`ClassicNotificationError` subclass keyed to the
-    underlying variant.
+    raises a :class:`ClassicNotificationError` or subclass keyed to the
+    notification-channel failure.
 
     Args:
         owner: GitHub org / repo slug (e.g. ``"evildarkarchon"``).
@@ -540,5 +544,6 @@ def check_app_notification(
         ClassicNotificationInstalledVersionParseError: Installed-version
             string failed semver parsing.
         ClassicNotificationCacheIoError: Cache I/O failure.
+        ClassicNotificationError: Unsupported notification manifest version.
         ClassicUpdateError: Non-notification update-subsystem error.
     """
