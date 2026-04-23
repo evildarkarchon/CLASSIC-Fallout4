@@ -212,3 +212,70 @@ Game_Info:
         ))
     );
 }
+
+#[test]
+fn update_result_ok_update_available_stores_status_and_formats_message() {
+    use classic_update_core::{AppNotificationDisplay, Classification, NotificationStatus};
+
+    let status = NotificationStatus {
+        classification: Classification::UpdateAvailable,
+        latest_version: "9.2.0".to_string(),
+        published_at: "2026-05-01T12:00:00Z".to_string(),
+        min_supported_version: None,
+        display: Some(AppNotificationDisplay {
+            title: "Security hotfix".to_string(),
+            body: "Fixes CVE-1234.".to_string(),
+            cta_url: Some("https://example.test/releases".to_string()),
+        }),
+        parse_error: None,
+    };
+
+    let mut app = App::new_for_testing();
+    app.update_checking = true;
+    app.handle_async_message(AsyncMessage::UpdateResult(Ok(status.clone())));
+
+    assert_eq!(
+        app.scan_status, "Update available: v9.2.0 — Security hotfix",
+        "status bar should carry classification + title"
+    );
+    assert!(!app.update_checking, "update_checking should be cleared");
+    assert_eq!(
+        app.last_update_notification,
+        Some(status),
+        "structured notification should persist on the App",
+    );
+    assert!(app.status_clear_at.is_some());
+}
+
+#[test]
+fn update_result_ok_up_to_date_formats_message() {
+    use classic_update_core::{Classification, NotificationStatus};
+
+    let status = NotificationStatus {
+        classification: Classification::UpToDate,
+        latest_version: "9.1.0".to_string(),
+        published_at: "2026-03-01T00:00:00Z".to_string(),
+        min_supported_version: None,
+        display: None,
+        parse_error: None,
+    };
+
+    let mut app = App::new_for_testing();
+    app.handle_async_message(AsyncMessage::UpdateResult(Ok(status)));
+
+    assert_eq!(app.scan_status, "You are up to date");
+}
+
+#[test]
+fn update_result_err_formats_failure_and_clears_last_notification() {
+    let mut app = App::new_for_testing();
+    app.handle_async_message(AsyncMessage::UpdateResult(Err(
+        "network unreachable".to_string()
+    )));
+
+    assert_eq!(
+        app.scan_status, "Update check failed: network unreachable",
+        "err branch should surface the underlying message"
+    );
+    assert_eq!(app.last_update_notification, None);
+}

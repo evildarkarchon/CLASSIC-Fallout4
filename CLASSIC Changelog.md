@@ -1,5 +1,10 @@
 # CLASSIC CHANGELOG #
 
+### 9.1.0 CHANGES
+- Overhaul the update system to use GitHub Pages instead of GitHub API.
+- Add YAML update delivery system to allow for dynamic updates to the program's databases.
+- Change interface font to "Inter" and enable antialiasing.
+
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.
 - Now a fully native-compiled application, no longer using Python with PyInstaller.

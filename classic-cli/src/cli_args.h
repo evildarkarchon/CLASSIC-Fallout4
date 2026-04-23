@@ -21,6 +21,11 @@ struct CliArgs {
     // pipeline and dispatches to the YAML update handler instead.
     bool check_yaml_updates = false;
     bool apply_yaml_updates = false;
+
+    // app-update-manifest-notification: binary-release notification check
+    // via the Pages-first notification manifest. Short-circuits the scan
+    // pipeline like the yaml-update flags.
+    bool check_app_update = false;
 };
 
 uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count);

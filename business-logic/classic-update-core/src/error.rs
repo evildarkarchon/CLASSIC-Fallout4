@@ -133,6 +133,74 @@ pub enum UpdateError {
         /// Digest the freshly-fetched manifest now advertises.
         manifest_sha256: String,
     },
+
+    // -----------------------------------------------------------------
+    // Notification-channel error variants (design D-05).
+    //
+    // These cover the `classic_update_core::notification` module's
+    // failure modes. They're kept as sibling variants (rather than
+    // nested inside a `Notification(NotificationErrorKind)` wrapper)
+    // so bindings that map `UpdateError -> per-language error shape`
+    // already documented in `docs/api/error-contract.md` don't need a
+    // second enum to destructure.
+    // -----------------------------------------------------------------
+    /// Both the Pages-first fetch and the Releases-API fallback failed
+    /// for an app-notification check. Both cause strings are embedded
+    /// so diagnostic logs can explain which channel failed how.
+    ///
+    /// Produced by [`crate::notification::check_app_notification`].
+    #[error("notification fetch failed — pages: {pages_error}; releases: {releases_error}")]
+    NotificationFetchFailed {
+        /// Human-readable description of the Pages-leg failure.
+        pages_error: String,
+        /// Human-readable description of the Releases-fallback failure.
+        releases_error: String,
+    },
+
+    /// The fetched notification manifest deserialized as JSON but lacks
+    /// a required field (e.g. `latest_version`) or carries an invalid
+    /// value (e.g. `manifest_version` not matching `^\d+\.\d+$`).
+    ///
+    /// Distinct from [`UpdateError::JsonError`] so callers can tell
+    /// malformed bytes apart from structurally-invalid manifests.
+    #[error("notification manifest decode failure: missing or invalid `{field}`")]
+    NotificationDecode {
+        /// Field name that was missing or invalid.
+        field: String,
+    },
+
+    /// The caller-supplied installed-version string could not be parsed
+    /// as a semantic version.
+    ///
+    /// Distinct from [`UpdateError::VersionError`] so binding consumers
+    /// can surface "your installed version is unparseable" rather than
+    /// conflating it with manifest-side version problems.
+    #[error("installed version `{input}` is not a valid semver: {source}")]
+    NotificationInstalledVersionParse {
+        /// The installed-version string the caller provided.
+        input: String,
+        /// Underlying semver parse error.
+        #[source]
+        source: semver::Error,
+    },
+
+    /// The notification cache file (body or ETag) could not be read,
+    /// written, or created.
+    ///
+    /// Produced when the cache directory is available but a specific
+    /// I/O operation fails (missing parent, permission denied,
+    /// disk full, etc.). Cache-directory *resolution* failures
+    /// (no `LOCALAPPDATA`, no `HOME`) are not reported through this
+    /// variant — instead, the notification check degrades to
+    /// no-caching per design D-06 ("best-effort, rebuildable").
+    #[error("notification cache I/O failure at {path}: {source}")]
+    NotificationCacheIo {
+        /// Offending cache path (file or directory).
+        path: std::path::PathBuf,
+        /// Underlying I/O error.
+        #[source]
+        source: std::io::Error,
+    },
 }
 
 /// Result type alias for update operations.

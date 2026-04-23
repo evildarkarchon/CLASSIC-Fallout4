@@ -250,7 +250,7 @@ def test_report_generator_construct_zero_arg() -> None:
 
 def test_report_generator_staticmethod_with_config() -> None:
     """``ReportGenerator.with_config(version, crashgen_name)`` factory."""
-    gen = classic_scanlog.ReportGenerator.with_config("CLASSIC v9.1.0", "Buffout 4")
+    gen = classic_scanlog.ReportGenerator.with_config("v9.1.0", "Buffout 4")
     assert gen is not None
 
 

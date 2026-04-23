@@ -207,7 +207,9 @@ pub struct AnalysisConfig {
     /// Game root name (e.g., "Fallout4" from Main_Root_Name setting)
     pub game_root_name: String,
 
-    /// CLASSIC version string (e.g., "CLASSIC v8.0.0")
+    /// Bare SemVer string sourced from `CLASSIC_Info.version` in `CLASSIC Main.yaml`
+    /// (e.g., "v8.0.0"). Display-decorated forms like "CLASSIC v8.0.0" are constructed
+    /// at format time by consumers such as `ReportGenerator`.
     pub classic_version: String,
 
     /// Ignore lists (plugins, records, general)

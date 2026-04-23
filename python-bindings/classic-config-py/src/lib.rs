@@ -79,6 +79,8 @@
 //!     t.join()
 //! ```
 
+mod main_yaml_version;
+
 use classic_config_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
 };
@@ -1127,6 +1129,14 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);
 
+    // Register the schema-gated `CLASSIC_Info.version` reader and its
+    // variant-keyed exception hierarchy. Own module because the
+    // exceptions here are narrower than the generic `RustConfig*`
+    // hierarchy above and consumers need to discriminate between
+    // schema-incompat, missing-key, empty-value, and non-string-value
+    // failures.
+    main_yaml_version::register(m)?;
+
     Ok(())
 }
 
@@ -1146,6 +1156,9 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);
+
+    // See the matching comment in the `classic_config` pymodule above.
+    main_yaml_version::register(m)?;
 
     Ok(())
 }

@@ -261,6 +261,7 @@ impl PyGithubClient {
     /// Example:
     ///     >>> latest = await client.get_latest_release()
     ///     >>> print(f"Latest: {latest.tag_name}")
+    #[allow(deprecated)] // compat wrapper over GithubClient::get_latest_release (design D-08); migrate in notification PyO3 task 5.2.
     fn get_latest_release<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let client = self.inner.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {

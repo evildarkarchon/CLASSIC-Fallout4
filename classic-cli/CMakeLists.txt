@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
-project(classic-cli VERSION 9.0.0 LANGUAGES CXX)
+project(classic-cli VERSION 9.1.0 LANGUAGES CXX)
+
+# ── Linker identity guard ────────────────────────────────────────────
+# Fail fast if Git for Windows' coreutils `link.exe` is shadowing MSVC's
+# linker on PATH. See cmake/ClassicLinkerCheck.cmake for the rationale.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+include(ClassicLinkerCheck)
+classic_assert_msvc_linker()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -69,9 +76,63 @@ add_executable(classic-cli
     src/thread_pool.cpp
     src/report_writer.cpp
     src/yaml_update.cpp
+    src/app_update.cpp
 )
 
 target_include_directories(classic-cli PRIVATE src/)
+
+# ── App version single-source-of-truth ──────────────────────────────
+# `CLASSIC Data/databases/CLASSIC Main.yaml` is the documented source of
+# truth for the application version (the Qt GUI also reads CLASSIC_Info.
+# version from this file at startup and feeds it to the same
+# `check_app_notification` bridge entry point — see classic-gui/src/main.
+# cpp). Extracting the version here at configure time keeps the CLI from
+# broadcasting a stale CMake literal to the notification check.
+set(_CLASSIC_MAIN_YAML "${CMAKE_SOURCE_DIR}/../CLASSIC Data/databases/CLASSIC Main.yaml")
+file(STRINGS "${_CLASSIC_MAIN_YAML}" _classic_version_lines
+    REGEX "^[ \t]+version:[ \t]+v?[0-9]+\\.[0-9]+\\.[0-9]+")
+if(NOT _classic_version_lines)
+    message(FATAL_ERROR
+        "Could not locate `version: v<MAJOR>.<MINOR>.<PATCH>` in:\n"
+        "  ${_CLASSIC_MAIN_YAML}\n"
+        "This file is the documented single source of truth for the "
+        "application version; the CLI's --check-app-update path needs it.")
+endif()
+list(GET _classic_version_lines 0 _classic_first_version_line)
+string(REGEX REPLACE
+    "^[ \t]+version:[ \t]+v?([0-9]+\\.[0-9]+\\.[0-9]+).*$"
+    "\\1"
+    CLASSIC_APP_VERSION
+    "${_classic_first_version_line}")
+if(CLASSIC_APP_VERSION STREQUAL _classic_first_version_line)
+    message(FATAL_ERROR
+        "Failed to parse SemVer from CLASSIC_Info.version line:\n"
+        "  ${_classic_first_version_line}\n"
+        "Expected `  version: v<MAJOR>.<MINOR>.<PATCH>`.")
+endif()
+
+# Guard: the CMake `project(VERSION ...)` (used by CPack and as the
+# binary's own marker) MUST match the YAML-sourced app version. They are
+# conceptually different — one stamps the CLI binary, the other is the
+# application's broadcast version — but if they diverge silently we ship
+# a binary whose self-reported version disagrees with the YAML source of
+# truth, which is exactly the drift class the YAML extraction prevents.
+if(NOT PROJECT_VERSION STREQUAL CLASSIC_APP_VERSION)
+    message(FATAL_ERROR
+        "classic-cli CMake project(VERSION ${PROJECT_VERSION}) disagrees "
+        "with CLASSIC Main.yaml CLASSIC_Info.version "
+        "(${CLASSIC_APP_VERSION}). Update the `project(... VERSION ...)` "
+        "line in classic-cli/CMakeLists.txt to match the YAML, or fix "
+        "the YAML if the CMake value is correct.")
+endif()
+
+# Single source of truth for the CLI's reported app version. Any C++ site
+# that wants to print or transmit the installed CLI version MUST use this
+# macro rather than a hardcoded literal — `app_update.cpp` consumes it
+# when calling the notification bridge.
+target_compile_definitions(classic-cli PRIVATE
+    CLASSIC_CLI_VERSION="${CLASSIC_APP_VERSION}"
+)
 
 target_link_libraries(classic-cli PRIVATE
     fmt::fmt

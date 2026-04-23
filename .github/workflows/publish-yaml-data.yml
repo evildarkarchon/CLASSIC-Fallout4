@@ -92,27 +92,34 @@ jobs:
       #      reachable without credentials. Prereleases are anonymously
       #      downloadable (unlike drafts), so this probe exercises the real
       #      client code path.
-      #   4. Clear the prerelease flag. Only at this moment does the release
-      #      become discoverable to API-fallback clients.
-      #   5. Push `manifest-latest.json` to gh-pages so Pages-first clients
-      #      start seeing the new tag.
-      #   6. Smoke-test the Pages URL serves that tag.
+      #   4. Push `manifest-latest.json` to gh-pages so Pages-first clients
+      #      will start seeing the new tag once Pages propagates.
+      #   5. Smoke-test the Pages URL serves that tag.
+      #   6. Clear the prerelease flag LAST. Only at this moment does the
+      #      release become discoverable to API-fallback clients, and by
+      #      then the Pages mirror has already been proven to serve the
+      #      new tag.
       #
       # Rationale: the previous order promoted directly to live BEFORE the
       # anonymous reachability probe. That opened a race window where an
       # API-fallback client could discover the live release, fetch the
       # manifest, and 404 on every asset while propagation was still in
       # flight — defeating the probe's purpose. Gating client visibility
-      # behind the prerelease flag closes that window: until step 4 runs,
-      # no anonymous discovery path sees the release at all, and by step 4
-      # every asset is proven reachable.
+      # behind the prerelease flag closes that window: until step 6 runs,
+      # no anonymous discovery path sees the release at all, and by step 6
+      # every asset is proven reachable AND Pages serves the new tag.
       #
-      # If step 3 or 4 fails, the release remains as a prerelease — invisible
-      # to API-fallback clients and unreferenced by Pages. The operator can
-      # investigate, delete the prerelease via `gh release delete`, and
-      # rerun the workflow; the "Reset stale draft" step treats a
-      # non-draft release as operator-owned and hard-fails so nothing is
-      # overwritten silently.
+      # The current order also keeps the two discovery channels (Pages-first
+      # and Releases-API fallback) on the same tag at every instant. If the
+      # Pages deploy or smoke test fails, the release stays a prerelease —
+      # invisible to fallback, with Pages-first clients still reading the
+      # previous `manifest-latest.json`. No split-brain state is possible.
+      #
+      # If any step before "Clear prerelease flag" fails, the release
+      # remains a prerelease. The operator can investigate, delete the
+      # prerelease via `gh release delete`, and rerun the workflow; the
+      # "Reset stale draft" step treats a non-draft release as operator-owned
+      # and hard-fails so nothing is overwritten silently.
       - name: Reset stale draft (idempotent re-run)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -193,28 +200,12 @@ jobs:
           python tools/publish_yaml_data/verify_assets_reachable.py \
             --manifest "$RUNNER_TEMP/staging/manifest.json"
 
-      # Make the release discoverable to API-fallback clients by clearing
-      # the prerelease flag. Runs only after anonymous asset reachability
-      # is proven, so by the time any client can discover this tag via the
-      # Releases API, every download URL in its manifest is already warm on
-      # the CDN.
-      - name: Clear prerelease flag (make client-discoverable)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release edit "$TAG" \
-            --repo "${{ github.repository }}" \
-            --prerelease=false \
-            --latest=false
-
-      # Task 11.6: Pages deploy. Only now — after the release is live, its
-      # asset URLs are proven reachable by an unauthenticated client, AND
-      # the prerelease flag has been cleared — is it safe to flip the Pages
-      # `manifest-latest.json` pointer. A failure here leaves the release
-      # client-discoverable via the API-fallback path (Pages-first clients
-      # stay on the old version); operators can rerun the workflow, but the
-      # "Reset stale draft" step will detect the live non-draft release and
-      # hard-fail so the operator can reconcile.
+      # Task 11.6: Pages deploy. Runs while the release is still a prerelease
+      # so that if this step or the following smoke test fails, the
+      # Releases-API fallback path still filters the release out (via
+      # `include_prereleases=false`). That keeps Pages-first clients on the
+      # old `manifest-latest.json` and fallback clients blind to the new
+      # tag — the two channels never disagree.
       - name: Deploy manifest to gh-pages
         env:
           GIT_AUTHOR_NAME:     "github-actions[bot]"
@@ -260,3 +251,20 @@ jobs:
             --owner "$OWNER" \
             --repo  "$REPO" \
             --tag   "$TAG"
+
+      # Final step: make the release discoverable to Releases-API fallback
+      # clients by clearing the prerelease flag. Runs ONLY after anonymous
+      # asset reachability is proven AND Pages has been proven to serve the
+      # new tag. By the time any client can discover this release via the
+      # Releases API, every download URL is warm on the CDN and Pages is
+      # already on the matching tag, so the two discovery channels advance
+      # together. If anything earlier failed, this step never runs and the
+      # release remains a prerelease.
+      - name: Clear prerelease flag (make client-discoverable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$TAG" \
+            --repo "${{ github.repository }}" \
+            --prerelease=false \
+            --latest=false

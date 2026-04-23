@@ -607,15 +607,34 @@ void SettingsDialog::onCheckForUpdates()
 
     try {
         const QString currentVersion = QApplication::applicationVersion();
-        auto result = classic::update::github_check_for_updates("evildarkarchon", "CLASSIC-Fallout4",
-                                                                classic::toRustString(currentVersion));
+        auto status = classic::update::check_app_notification(
+            rust::Str("evildarkarchon"),
+            rust::Str("CLASSIC-Fallout4"),
+            classic::toRustString(currentVersion));
 
-        if (!result.error_message.empty()) {
-            m_lblUpdateStatus->setText(QStringLiteral("Error: ") + classic::toQString(result.error_message));
-        } else if (result.has_update) {
-            m_lblUpdateStatus->setText(QStringLiteral("Update available: v") +
-                                       classic::toQString(result.latest_version));
+        const std::string classification(status.classification);
+        if (classification == "error") {
+            const std::string errorMessage(status.error_message);
+            m_lblUpdateStatus->setText(QStringLiteral("Error: ") +
+                                       (errorMessage.empty() ? QStringLiteral("unknown error")
+                                                             : QString::fromUtf8(errorMessage)));
+        } else if (classification == "update_available") {
+            const std::string title(status.display_title);
+            QString text = QStringLiteral("Update available: v") + classic::toQString(status.latest_version);
+            if (!title.empty()) {
+                text += QStringLiteral(" — ") + QString::fromUtf8(title);
+            }
+            m_lblUpdateStatus->setText(text);
+        } else if (classification == "deprecated_client") {
+            m_lblUpdateStatus->setText(QStringLiteral("Deprecated build; upgrade to v") +
+                                       classic::toQString(status.latest_version));
+        } else if (classification == "unknown") {
+            const std::string parseError(status.parse_error);
+            m_lblUpdateStatus->setText(QStringLiteral("Update check inconclusive: ") +
+                                       (parseError.empty() ? QStringLiteral("unknown reason")
+                                                           : QString::fromUtf8(parseError)));
         } else {
+            // "up_to_date" or any unexpected classification.
             m_lblUpdateStatus->setText(QStringLiteral("You are up to date."));
         }
     } catch (const std::exception& e) {

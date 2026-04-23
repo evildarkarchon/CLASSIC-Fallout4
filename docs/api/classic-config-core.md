@@ -662,3 +662,69 @@ If you extend the rule model, update this section when you change:
 - value-coercion rules in `value_matches()`
 - template placeholder behavior
 - `ConfigLayout` ownership expectations across config, scanlog, and scangame layers
+
+## Schema-gated `CLASSIC Main.yaml` version reader
+
+The `shippable` module exports a narrow startup-path reader,
+`load_main_yaml_version`, that loads `CLASSIC Main.yaml` via
+`shippable::load_shippable_yaml` (so both the per-user YAML cache and the
+bundled install-tree copy are candidates) and returns the trimmed
+`CLASSIC_Info.version` value. It enforces `client_schemas::MAIN_YAML`, which
+means a stale `schema_version: 1.x` payload still carrying the legacy
+`CLASSIC v…` decoration is rejected at this boundary instead of flowing
+through to `QApplication::applicationVersion()` (GUI) or the binary-release
+update-check input (CLI). Callers MUST NOT fall back to a raw `yaml_ops`
+read on failure — that reintroduces the silent-degradation behavior the
+gate exists to prevent.
+
+Entry points:
+
+- `load_main_yaml_version()` — production default; resolves the bundled
+  copy against the process working directory.
+- `load_main_yaml_version_with_bundled_dir(bundled_dir: Option<&Path>)` —
+  native-frontend variant that takes the install-tree directory discovered
+  by the caller (e.g. the GUI's `findDataDir()` result joined with
+  `/databases`). Passing `None` keeps the default relative-path behavior.
+- `load_main_yaml_version_with_env(bundled_dir, env)` — test-only variant
+  that threads an `env` closure through to `yaml_cache_dir_with_env`; used
+  by the sibling `shippable_tests.rs` to drive the reader against a mocked
+  `LOCALAPPDATA` / `XDG_CACHE_HOME` without touching process env.
+
+Error type: `MainYamlVersionError` (`#[non_exhaustive]`). Variants:
+
+- `Load(YamlLoadError)` — the generic shippable-loader rejection. Covers
+  file missing, YAML parse failure, missing / malformed `schema_version`,
+  and incompatible-schema cases via the per-candidate
+  `CandidateRejection.reason` strings.
+- `VersionKeyMissing { source_path }` — the YAML loaded and schema-gated,
+  but `CLASSIC_Info.version` (or the `CLASSIC_Info` section) is absent or
+  explicitly `null`.
+- `VersionEmpty { source_path }` — the key is present but empty or
+  whitespace-only after trimming.
+- `VersionNotString { source_path }` — the key is present but not a YAML
+  scalar string (e.g. a sequence or mapping).
+
+Field naming note: `source_path` rather than `source` is deliberate;
+`thiserror` reserves the `source` field name for the error-chain link and
+would demand `StdError` on the field type.
+
+Binding surfaces (see [`error-contract.md`](error-contract.md) for shape
+rationale):
+
+- C++ CXX bridge exposes `classic::config::load_main_yaml_version(bundled_yaml_dir: &str)`
+  returning `MainYamlVersionDto { version, error_kind, error_message }`.
+  Empty-string sentinels on success; `error_kind` is one of `"load"`,
+  `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, or
+  `"unknown"` (reserved for future non-exhaustive variants).
+- Node binding exposes `loadMainYamlVersion(bundledYamlDir?: string | null): Promise<string>`.
+  Rejects with an `Error` whose `message` is prefixed with the variant
+  code (`LOAD:`, `VERSION_KEY_MISSING:`, `VERSION_EMPTY:`,
+  `VERSION_NOT_STRING:`, `UNKNOWN:`), matching the `check_app_notification`
+  precedent for async napi-rs surfaces.
+- Python binding exposes `load_main_yaml_version(bundled_yaml_dir=None)`
+  and the typed exception hierarchy rooted at
+  `ClassicMainYamlVersionError`, with one subclass per core variant
+  (`ClassicMainYamlVersionLoadError`,
+  `ClassicMainYamlVersionKeyMissingError`,
+  `ClassicMainYamlVersionEmptyError`,
+  `ClassicMainYamlVersionNotStringError`).

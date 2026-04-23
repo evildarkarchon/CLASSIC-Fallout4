@@ -346,7 +346,7 @@ function Invoke-PythonBindingsRebuild {
     Write-Host "Using Python bindings virtual environment at $PythonBindingsVenv" -ForegroundColor Cyan
 
     if (-not (Test-Path $PythonBindingsPython)) {
-        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv venv python-bindings/.venv' and install dependencies into that interpreter."
+        Write-Error "Python bindings virtual environment not found at '$PythonBindingsVenv'. Create it first with 'uv sync --project python-bindings --inexact' (the python-bindings/ directory is a uv-managed project: pyproject.toml + uv.lock)."
         exit 1
     }
 

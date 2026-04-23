@@ -36,6 +36,16 @@ Each shared Rust crate and its corresponding binding module across all three sur
 
 **Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` plus settings constants belong to `classic-settings-core`, and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic-shared-py` exposure.
 
+**Note on app-update notification surface (`classic-update-core`):** the `notification` module adds a single cross-binding entry point in addition to the legacy `GithubClient` surface. Contract map:
+
+| Binding | Entry point | DTO / return | Error shape |
+| --- | --- | --- | --- |
+| C++ (CXX) | `classic::update::check_app_notification(owner, repo, installed_version)` | `NotificationStatusDto` | `classification == "error"` + populated `error_message`; empty-string sentinels on every other string field |
+| Node (NAPI-RS) | `checkAppNotification({ owner, repo, installedVersion })` | `Promise<JsNotificationStatus>` | `Promise.reject(Error)` whose `message` is prefixed with the variant-keyed code: `FETCH_FAILED: …` / `DECODE: …` / `INSTALLED_VERSION_PARSE: …` / `CACHE_IO: …` / `UPDATE_ERROR: …` (catch-all). Discriminate via `err.message.startsWith("FETCH_FAILED:")`. Shape rationale (napi-rs 3.x async `Status`-enum constraint) documented in [`error-contract.md`](error-contract.md#notification-errors-app-update-manifest-notification) |
+| Python (PyO3) | `classic_update_py.check_app_notification(owner, repo, installed_version)` | `NotificationStatus` | `ClassicNotificationError` subclass under the existing `ClassicUpdateError` hierarchy |
+
+Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notification-delivery.md). Error shapes: [`error-contract.md`](error-contract.md). The legacy `github_check_for_updates` / `GithubClient::get_latest_release` surface is retained as compat-only and is no longer called from user-facing update checks.
+
 **Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers used by `classic-file-io-core`. It has no dedicated C++ bridge module. C++ frontends access resource classification functionality transitively through the `classic-file-io-core` bridge surface (`files.rs`) where needed.
 
 ---

@@ -34,8 +34,12 @@ fn yamlsource_main_load_routes_through_shippable_loader() {
     let work_dir = tempdir().unwrap();
     let bundled_dir = work_dir.path().join("CLASSIC Data").join("databases");
     std::fs::create_dir_all(&bundled_dir).unwrap();
+    // schema_version: "2.0" matches the current `MAIN_YAML` SchemaCompat so the
+    // shippable loader accepts the bundled payload. The `version:` value here is
+    // a sentinel used only to prove routing; the schema gate, not the value
+    // shape, is what this test exercises.
     let bundled_payload = concat!(
-        "schema_version: \"1.0\"\n",
+        "schema_version: \"2.0\"\n",
         "CLASSIC_Info:\n",
         "  version: shippable-routing-regression\n",
     );

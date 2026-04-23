@@ -1,7 +1,24 @@
 {
-  "generated_at_utc": "2026-04-21T08:31:22Z",
+  "generated_at_utc": "2026-04-22T10:26:15Z",
   "schema_version": 1,
   "entries": [
+    {
+      "id": "b0d609f9ed78e468",
+      "rustSymbol": "load_main_yaml_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "bundled_yaml_dir",
+            "type": "&str"
+          }
+        ],
+        "returnType": "MainYamlVersionDto"
+      }
+    },
     {
       "id": "583bb255b5c8b9ef",
       "rustSymbol": "reset_settings_cache_stats",
@@ -823,6 +840,28 @@
         {
           "name": "capacity",
           "type": "usize"
+        }
+      ]
+    },
+    {
+      "id": "e4c0636b37aa1f97",
+      "rustSymbol": "MainYamlVersionDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "version",
+          "type": "String"
+        },
+        {
+          "name": "error_kind",
+          "type": "String"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
         }
       ]
     },
@@ -5559,6 +5598,31 @@
       "blockOrigin": "Rust"
     },
     {
+      "id": "20888c90002f9464",
+      "rustSymbol": "check_app_notification",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "owner",
+            "type": "&str"
+          },
+          {
+            "name": "repo",
+            "type": "&str"
+          },
+          {
+            "name": "installed_version",
+            "type": "&str"
+          }
+        ],
+        "returnType": "NotificationStatusDto"
+      }
+    },
+    {
       "id": "5b0f082531a28c27",
       "rustSymbol": "github_check_for_updates",
       "kind": "function",
@@ -5690,6 +5754,52 @@
         {
           "name": "file_sha256",
           "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "0fd15da635276348",
+      "rustSymbol": "NotificationStatusDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "classification",
+          "type": "String"
+        },
+        {
+          "name": "latest_version",
+          "type": "String"
+        },
+        {
+          "name": "published_at",
+          "type": "String"
+        },
+        {
+          "name": "min_supported_version",
+          "type": "String"
+        },
+        {
+          "name": "display_title",
+          "type": "String"
+        },
+        {
+          "name": "display_body",
+          "type": "String"
+        },
+        {
+          "name": "display_cta_url",
+          "type": "String"
+        },
+        {
+          "name": "parse_error",
+          "type": "String"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
         }
       ]
     },

@@ -12,9 +12,10 @@
 //!    `clearYamlCache()`, convenience accessors.
 
 use classic_config_core::{
-    ClassicConfig as CoreClassicConfig, ConfigError, ModConflictEntry, ModSolutionCriteria,
-    ModSolutionEntry, PathConfig as CorePathConfig, SuspectErrorRule, SuspectStackRule,
-    YamlDataCore, YamlSource as CoreYamlSource,
+    ClassicConfig as CoreClassicConfig, ConfigError, MainYamlVersionError, ModConflictEntry,
+    ModSolutionCriteria, ModSolutionEntry, PathConfig as CorePathConfig, SuspectErrorRule,
+    SuspectStackRule, YamlDataCore, YamlSource as CoreYamlSource,
+    load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
 };
 use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
@@ -1010,6 +1011,87 @@ pub fn get_yaml_source_display_name_with_game(source: JsYamlSource, game: String
 #[napi]
 pub fn set_application_dir(path: String) {
     classic_registry_core::set_application_dir(PathBuf::from(path));
+}
+
+// ============================================================================
+// CLASSIC Main.yaml version (schema-gated startup read)
+// ============================================================================
+//
+// Mirrors `classic::config::load_main_yaml_version` on the C++ bridge side:
+// startup reader that enforces `client_schemas::MAIN_YAML` before yielding
+// `CLASSIC_Info.version`. Message-prefix error discriminator follows the
+// `check_app_notification` precedent — napi-rs 3.x `async fn` signatures
+// thread errors through `Error<Status>`, where `Status` is a fixed C-style
+// enum with no room for custom per-variant codes. The prefix is the only
+// representation that survives the async bridge while preserving a stable
+// discriminator the consumer can branch on.
+
+/// Error-prefix discriminators on [`load_main_yaml_version`] failures.
+const MAIN_YAML_VERSION_CODE_LOAD: &str = "LOAD";
+const MAIN_YAML_VERSION_CODE_VERSION_KEY_MISSING: &str = "VERSION_KEY_MISSING";
+const MAIN_YAML_VERSION_CODE_VERSION_EMPTY: &str = "VERSION_EMPTY";
+const MAIN_YAML_VERSION_CODE_VERSION_NOT_STRING: &str = "VERSION_NOT_STRING";
+const MAIN_YAML_VERSION_CODE_VERSION_INVALID: &str = "VERSION_INVALID";
+const MAIN_YAML_VERSION_CODE_OTHER: &str = "UNKNOWN";
+
+fn main_yaml_version_error_to_napi(err: MainYamlVersionError) -> napi::Error {
+    let code = match &err {
+        MainYamlVersionError::Load(_) => MAIN_YAML_VERSION_CODE_LOAD,
+        MainYamlVersionError::VersionKeyMissing { .. } => {
+            MAIN_YAML_VERSION_CODE_VERSION_KEY_MISSING
+        }
+        MainYamlVersionError::VersionEmpty { .. } => MAIN_YAML_VERSION_CODE_VERSION_EMPTY,
+        MainYamlVersionError::VersionNotString { .. } => MAIN_YAML_VERSION_CODE_VERSION_NOT_STRING,
+        MainYamlVersionError::VersionInvalid { .. } => MAIN_YAML_VERSION_CODE_VERSION_INVALID,
+        // `MainYamlVersionError` is `#[non_exhaustive]`; new variants in
+        // the core crate surface via the `UNKNOWN:` prefix until the
+        // binding adds a dedicated code for them.
+        _ => MAIN_YAML_VERSION_CODE_OTHER,
+    };
+    napi::Error::new(Status::GenericFailure, format!("{code}: {err}"))
+}
+
+/// Load `CLASSIC Main.yaml` with `MAIN_YAML` schema gating and return
+/// `CLASSIC_Info.version`.
+///
+/// Rejects stale `schema_version: 1.x` files (which still carry the legacy
+/// `CLASSIC v...` decoration) before the version ever reaches downstream
+/// update-check classification — the schema gate is the whole reason this
+/// reader exists. Callers MUST NOT fall back to a raw YAML read on error,
+/// since that reintroduces the silent-degradation behavior the gate
+/// prevents.
+///
+/// `bundledYamlDir` empty / null keeps the default relative path
+/// (`CLASSIC Data/databases`, resolved against `process.cwd()`). Non-empty
+/// values are the explicit install-tree `CLASSIC Data/databases` directory
+/// — Node hosts run inside `node.exe` / `bun.exe`, so `process.cwd()`
+/// resolution is unreliable unless the caller controls it; prefer an
+/// explicit path in that case.
+///
+/// @param bundledYamlDir Directory containing `CLASSIC Main.yaml`. Pass
+///                       `null` or `""` to use the default relative path.
+/// @returns The trimmed `CLASSIC_Info.version` value (never empty).
+/// @throws an `Error` whose message starts with the variant-keyed code
+///         followed by `": "`. Codes: `LOAD:`, `VERSION_KEY_MISSING:`,
+///         `VERSION_EMPTY:`, `VERSION_NOT_STRING:`, `VERSION_INVALID:`,
+///         `UNKNOWN:`.
+#[napi]
+pub async fn load_main_yaml_version(bundled_yaml_dir: Option<String>) -> napi::Result<String> {
+    let bundled = bundled_yaml_dir.and_then(|s| {
+        if s.is_empty() {
+            None
+        } else {
+            Some(PathBuf::from(s))
+        }
+    });
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    let result = handle
+        .spawn(
+            async move { core_load_main_yaml_version_with_bundled_dir(bundled.as_deref()).await },
+        )
+        .await
+        .map_err(|e| napi::Error::from_reason(format!("runtime join error: {e}")))?;
+    result.map_err(main_yaml_version_error_to_napi)
 }
 
 /// Return the current application directory override, or `undefined` if no

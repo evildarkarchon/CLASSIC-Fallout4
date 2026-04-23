@@ -1892,30 +1892,90 @@ void MainWindow::checkForUpdates(bool explicitCheck)
     auto* thread = new QThread();
     auto* worker = new UpdateWorker();
 
-    // Wire completion signal (queued connection across threads)
+    // Wire completion signal (queued connection across threads). The worker
+    // emits a QVariantMap shaped like classic::update::NotificationStatusDto
+    // — classification + latestVersion + published_at + optional display
+    // payload + parseError/errorMessage. Keys are defined as constants on
+    // UpdateWorker so we don't sprinkle string literals through the UI.
     connect(worker, &UpdateWorker::updateCheckCompleted, this,
-            [this, explicitCheck](bool hasUpdate, const QString& latestVersion, const QString& errorMessage) {
+            [this, explicitCheck](const QVariantMap& result) {
                 if (explicitCheck) {
                     m_btnCheckUpdates->setEnabled(true);
                     m_btnCheckUpdates->setText(QStringLiteral("CHECK UPDATES"));
                 }
 
-                if (!errorMessage.isEmpty()) {
+                const QString classification = result.value(UpdateWorker::kKeyClassification).toString();
+                const QString latestVersion = result.value(UpdateWorker::kKeyLatestVersion).toString();
+                const QString displayTitle = result.value(UpdateWorker::kKeyDisplayTitle).toString();
+                const QString displayBody = result.value(UpdateWorker::kKeyDisplayBody).toString();
+                const QString displayCtaUrl = result.value(UpdateWorker::kKeyDisplayCtaUrl).toString();
+                const QString minSupported = result.value(UpdateWorker::kKeyMinSupportedVersion).toString();
+                const QString parseError = result.value(UpdateWorker::kKeyParseError).toString();
+                const QString errorMessage = result.value(UpdateWorker::kKeyErrorMessage).toString();
+
+                if (classification == QLatin1String(UpdateWorker::kClassificationError)) {
                     setStatusMessage(QStringLiteral("Update check failed"));
-                    QMessageBox::warning(this, QStringLiteral("Update Check"),
-                                         QStringLiteral("Error checking for updates:\n") + errorMessage);
-                } else if (hasUpdate) {
+                    QMessageBox::warning(
+                        this, QStringLiteral("Update Check"),
+                        QStringLiteral("Error checking for updates:\n") +
+                            (errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage));
+                } else if (classification == QLatin1String(UpdateWorker::kClassificationUpdateAvailable)) {
                     setStatusMessage(QStringLiteral("Update available: v") + latestVersion);
-                    auto response = QMessageBox::question(this, QStringLiteral("Update Available"),
-                                                          QStringLiteral("A new version is available: v%1\n\n"
-                                                                         "Open the GitHub releases page now?")
-                                                              .arg(latestVersion),
+                    QString body = QStringLiteral("A new version is available: v%1").arg(latestVersion);
+                    if (!displayTitle.isEmpty()) {
+                        body += QStringLiteral("\n\n") + displayTitle;
+                    }
+                    if (!displayBody.isEmpty()) {
+                        body += QStringLiteral("\n\n") + displayBody;
+                    }
+                    body += QStringLiteral("\n\nOpen the GitHub releases page now?");
+                    auto response = QMessageBox::question(this, QStringLiteral("Update Available"), body,
                                                           QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
                     if (response == QMessageBox::Yes) {
-                        QDesktopServices::openUrl(
-                            QUrl(QStringLiteral("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest")));
+                        // `displayCtaUrl` originates from the remote
+                        // app-notification manifest (see
+                        // `docs/api/app-update-notification-delivery.md`).
+                        // Even though the manifest is published from our own
+                        // Pages/Releases infrastructure, restrict the scheme
+                        // to HTTPS as defense-in-depth: a compromised or
+                        // misconfigured publish could otherwise hand the
+                        // system default handler a `file://`, `javascript:`,
+                        // `data:`, or — the Codex adversarial-review motivator
+                        // — a cleartext `http://` downgrade at exactly the
+                        // moment the user is being asked to fetch an update.
+                        // The publish-side and Rust runtime validators reject
+                        // non-HTTPS first; this branch is the third line of
+                        // defense if either is bypassed.
+                        const QString fallbackUrl =
+                            QStringLiteral("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest");
+                        QUrl candidate(displayCtaUrl);
+                        const QString scheme = candidate.scheme().toLower();
+                        const bool ctaAcceptable =
+                            !displayCtaUrl.isEmpty()
+                            && candidate.isValid()
+                            && scheme == QLatin1String("https");
+                        QDesktopServices::openUrl(ctaAcceptable ? candidate : QUrl(fallbackUrl));
+                    }
+                } else if (classification == QLatin1String(UpdateWorker::kClassificationDeprecated)) {
+                    setStatusMessage(QStringLiteral("Client deprecated — upgrade required"));
+                    QMessageBox::warning(
+                        this, QStringLiteral("Client Deprecated"),
+                        QStringLiteral("This CLASSIC build is below the minimum supported version (v%1).\n"
+                                       "Upgrade to v%2 to keep receiving support.")
+                            .arg(minSupported.isEmpty() ? QStringLiteral("unknown") : minSupported, latestVersion));
+                } else if (classification == QLatin1String(UpdateWorker::kClassificationUnknown)) {
+                    if (explicitCheck) {
+                        setStatusMessage(QStringLiteral("Update check inconclusive"));
+                        QMessageBox::information(
+                            this, QStringLiteral("Update Check"),
+                            parseError.isEmpty()
+                                ? QStringLiteral("Update check returned an unknown status.")
+                                : QStringLiteral("Update check inconclusive: ") + parseError);
                     }
                 } else if (explicitCheck) {
+                    // UpToDate (or any unexpected classification treated as
+                    // "nothing to show"). Only surface a dialog on user-initiated
+                    // checks to avoid a popup on startup.
                     setStatusMessage(QStringLiteral("You are up to date"));
                     QMessageBox::information(this, QStringLiteral("Update Check"),
                                              QStringLiteral("You are running the latest version."));

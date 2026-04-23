@@ -76,12 +76,14 @@ bun run test:node
 ### Python bindings (when touching PyO3 surface)
 
 ```powershell
-uv venv python-bindings/.venv
-uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
-python tools/python_api_parity/check_parity_gate.py --repo-root .
-python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# `--inexact` is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+# Add `--group drift-guards` to also install ruamel.yaml for schema_version_gate.py.
+uv sync --project python-bindings --inexact --group drift-guards
+uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
+uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
+uv run --project python-bindings python -m pytest python-bindings/tests -q
 ```
 
 ---

@@ -1,0 +1,270 @@
+name: Publish App Notification
+
+# Trigger surface is intentionally narrow (spec scenario "Pull request does
+# not trigger publish" + "App-notification publish trigger surface is
+# narrow"): push of `app-notification-v*` tags only. No `pull_request`, no
+# `workflow_dispatch` inputs that affect file contents.
+on:
+  push:
+    tags:
+      - 'app-notification-v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-app-notification-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish app-notification ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.ref_name }}
+      SOURCE_ARTIFACT: CLASSIC Data/app-notification.yaml
+      PAGES_BRANCH: gh-pages
+      PYTHON_VERSION: "3.12"
+    steps:
+      - name: Checkout source (tag)
+        uses: actions/checkout@v6
+        with:
+          # fetch-depth 0 so we can push to gh-pages from the same clone.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        # ruamel.yaml for parity with tools/publish_yaml_data tooling. The
+        # app-notification source doesn't exercise ruamel-specific tolerance,
+        # but using the same parser across both publish workflows keeps
+        # maintenance predictable.
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
+      # Task 7.2: validation step. Fails the workflow before any release is
+      # created if `manifest_version`, `release_tag`, `latest_version`, or
+      # `published_at` are missing/malformed; also guards against unknown
+      # top-level or display keys (typos) even though the Rust decoder
+      # tolerates unknown fields at runtime.
+      - name: Validate app-notification source
+        run: |
+          python tools/publish_app_notification/validate.py \
+            --source "$SOURCE_ARTIFACT"
+
+      # Task 7.3: generation step. Projects the validated source into the
+      # final JSON manifest. `published_at` falls back to the tag's UTC
+      # publication timestamp when the source sets it to null, so the
+      # manifest every client sees carries a workflow-provided timestamp.
+      - name: Resolve tag publication timestamp
+        id: tag_ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Annotated tags carry their own creation timestamp (`taggerdate`)
+          # distinct from the target commit's committer date; lightweight
+          # tags do not. Prefer `taggerdate` so annotated `app-notification-v*`
+          # tags publish the moment they were cut, and only fall back to the
+          # commit's `%cI` for lightweight tags (where `taggerdate` is empty).
+          # `gh api` could supply `publishedAt` via the release, but the
+          # release does not exist yet at this step.
+          TAGGER_TS="$(git for-each-ref --format='%(taggerdate:iso-strict)' "refs/tags/$TAG")"
+          if [ -n "$TAGGER_TS" ]; then
+            PUBLISHED_AT="$TAGGER_TS"
+          else
+            PUBLISHED_AT="$(git log -1 --format=%cI "$TAG")"
+          fi
+          echo "published_at=$PUBLISHED_AT" >> "$GITHUB_OUTPUT"
+
+      - name: Generate manifest.json
+        run: |
+          mkdir -p "$RUNNER_TEMP/staging"
+          python tools/publish_app_notification/generate_manifest.py \
+            --source "$SOURCE_ARTIFACT" \
+            --output "$RUNNER_TEMP/staging/manifest.json" \
+            --published-at "${{ steps.tag_ts.outputs.published_at }}"
+
+      - name: Show manifest preview
+        run: |
+          echo "=== manifest.json ==="
+          cat "$RUNNER_TEMP/staging/manifest.json"
+
+      # Rollout ordering mirrors the yaml-data publish workflow:
+      #   1. Reset any stale draft from a prior failed run.
+      #   2. Create release as a DRAFT with `manifest.json` attached.
+      #   3. Promote to live PRERELEASE so the anonymous probe can fetch
+      #      the asset (draft asset URLs 404 anonymously). Prerelease keeps
+      #      `classic_update_core::notification::fetch_via_releases_fallback`
+      #      from picking this release up (it excludes prereleases).
+      #   4. Probe the anonymous asset URL until it's warm.
+      #   5. Deploy `manifest-latest.json` + dated sibling to gh-pages.
+      #   6. Smoke-test the Pages URL serves the new tag.
+      #   7. Clear prerelease flag LAST to make the release client-discoverable.
+      #
+      # The prerelease flag is the single switch that gates Releases-API
+      # fallback visibility. Clearing it only AFTER the Pages deploy and
+      # smoke test succeed is what keeps Pages-first and Releases-fallback
+      # clients on the same tag at every instant: if step 5 or 6 fails,
+      # the release stays a prerelease (invisible to API fallback) and
+      # Pages-first clients keep reading the previous `manifest-latest.json`,
+      # so the two channels never disagree. A maintainer can then delete
+      # the prerelease via `gh release delete` and rerun the workflow; the
+      # "Reset stale draft" step treats a non-draft release as operator-owned
+      # and hard-fails so nothing is overwritten silently.
+      #
+      # `--latest=false` is applied at every edit point because this is an
+      # app-notification release, not a binary release: the repo's "latest"
+      # pointer must stay on the most recent `v*` binary tag (spec scenario
+      # "Latest pointer preserved").
+
+      - name: Reset stale draft (idempotent re-run)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing="$(gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft --jq '.isDraft' 2>/dev/null || echo "absent")"
+          case "$existing" in
+            absent)
+              echo "No pre-existing release for $TAG; proceeding"
+              ;;
+            true)
+              echo "Found stale draft for $TAG; deleting"
+              gh release delete "$TAG" --repo "${{ github.repository }}" --yes --cleanup-tag=false
+              ;;
+            false)
+              echo "::error::release $TAG already exists as a live (non-draft) release; refusing to overwrite"
+              exit 1
+              ;;
+          esac
+
+      - name: Create draft GitHub release with manifest asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$RUNNER_TEMP/staging"
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --draft \
+            --latest=false \
+            --title "App notification $TAG" \
+            --notes "Automated publish of the CLASSIC app-update notification manifest for \`$TAG\`. This release is informational only — it announces the latest binary release via manifest.json and does not change the \`latest\` pointer on this repo." \
+            manifest.json
+
+      - name: Promote release (draft -> live prerelease)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$TAG" \
+            --repo "${{ github.repository }}" \
+            --draft=false \
+            --prerelease=true \
+            --latest=false
+
+      # Probe the single release asset. Same rationale as yaml-data's
+      # verify_assets_reachable.py: until we've proven the asset URL is
+      # anonymously fetchable, advancing client visibility would create a
+      # race where an API-fallback client discovers the release, pulls the
+      # manifest URL, and 404s.
+      #
+      # `--expected-body-path` forces the probe to SHA-256 the fetched
+      # asset against the bytes this run staged. The workflow supports
+      # operator delete-and-rerun on the same tag; that reuses the
+      # `releases/download/<tag>/manifest.json` URL. If GitHub's CDN
+      # serves a stale copy of the previous recreation, a reachability-
+      # only probe would pass while Releases-fallback clients later
+      # read the stale asset — splitting them from Pages-first clients
+      # (who always see the new gh-pages payload after the smoke test).
+      # Strict-body parity with the Pages smoke-test step below.
+      - name: Verify manifest asset reachable anonymously
+        run: |
+          ASSET_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/manifest.json"
+          python tools/publish_app_notification/verify_release_asset.py \
+            --url "$ASSET_URL" \
+            --expected-body-path "$RUNNER_TEMP/staging/manifest.json"
+
+      # Task 7.6: Pages deploy. Writes both the rolling `manifest-latest.json`
+      # (the Pages-first client URL) and a dated sibling `manifest-<tag>.json`
+      # under `app-notification/`. Path is deliberately disjoint from the
+      # yaml-data `/yaml-data/` prefix so the two publishers never collide.
+      #
+      # Runs while the release is still a prerelease so that if this step or
+      # the following smoke test fails, the Releases-API fallback path still
+      # filters the release out (via `include_prereleases=false`). That keeps
+      # the two discovery channels in lock-step.
+      - name: Deploy manifest to gh-pages
+        env:
+          GIT_AUTHOR_NAME:     "github-actions[bot]"
+          GIT_AUTHOR_EMAIL:    "41898282+github-actions[bot]@users.noreply.github.com"
+          GIT_COMMITTER_NAME:  "github-actions[bot]"
+          GIT_COMMITTER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+        run: |
+          set -euo pipefail
+          WORK="$(mktemp -d)"
+          git clone --depth=1 --branch "$PAGES_BRANCH" \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            "$WORK" \
+            || (
+              git clone --depth=1 \
+                "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+                "$WORK"
+              cd "$WORK"
+              git checkout --orphan "$PAGES_BRANCH"
+              git rm -rf . || true
+            )
+          mkdir -p "$WORK/app-notification"
+          cp "$RUNNER_TEMP/staging/manifest.json" "$WORK/app-notification/manifest-latest.json"
+          cp "$RUNNER_TEMP/staging/manifest.json" "$WORK/app-notification/manifest-${TAG}.json"
+          cd "$WORK"
+          git add "app-notification/manifest-latest.json" "app-notification/manifest-${TAG}.json"
+          if git diff --cached --quiet; then
+            echo "no manifest changes to commit"
+          else
+            git commit -m "app-notification publish ${TAG}"
+            git push origin "$PAGES_BRANCH"
+          fi
+
+      # Task 7.7: smoke-test the Pages URL serves the new tag. Reuses the
+      # yaml-data smoke-test helper via `--pages-path`, but in strict-body
+      # mode rather than `--tag` mode.
+      #
+      # The notification channel allows notification-only republishes that
+      # keep the same binary `release_tag` while changing
+      # `min_supported_version` or the `display` block. Comparing only
+      # `release_tag` would pass against the PREVIOUS Pages payload in that
+      # case and then the final "Clear prerelease flag" step would make the
+      # new release visible to the Releases fallback — splitting
+      # Pages-first clients (reading the old payload) from
+      # Releases-fallback clients (seeing the new one). The strict-body
+      # mode compares SHA-256 of the live Pages response against the
+      # staged manifest bytes, so the smoke test cannot pass until the new
+      # payload is actually live.
+      - name: Smoke-test Pages manifest
+        run: |
+          set -euo pipefail
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO="$(echo "${{ github.repository }}" | cut -d/ -f2)"
+          python tools/publish_yaml_data/smoke_test_pages.py \
+            --owner "$OWNER" \
+            --repo  "$REPO" \
+            --expected-body-path "$RUNNER_TEMP/staging/manifest.json" \
+            --pages-path "app-notification/manifest-latest.json"
+
+      # Final step: make the release discoverable to Releases-API fallback
+      # clients by clearing the prerelease flag. Runs ONLY after the Pages
+      # deploy and its smoke test have both succeeded, so the two discovery
+      # channels (Pages-first and Releases fallback) advance together. If
+      # anything earlier failed, this step never runs and the release
+      # remains a prerelease — invisible to fallback, Pages-first clients
+      # still read the previous manifest, and the channels stay coherent.
+      - name: Clear prerelease flag (make client-discoverable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$TAG" \
+            --repo "${{ github.repository }}" \
+            --prerelease=false \
+            --latest=false

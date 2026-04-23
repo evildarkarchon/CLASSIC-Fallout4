@@ -4,6 +4,8 @@ __pycache__/
 .ruff_cache/
 .venv
 *.lock
+# uv project lockfiles must be committed for reproducible `uv sync --locked`.
+!uv.lock
 *.py[cod]
 *$py.class
 poetry.toml

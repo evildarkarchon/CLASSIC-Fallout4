@@ -163,15 +163,19 @@ $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 Typical local workflow from the repo root:
 
 ```powershell
-uv venv python-bindings/.venv
-uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
+# `python-bindings/` is a uv-managed project (`pyproject.toml` + `uv.lock`).
+# `uv sync` creates the venv at python-bindings/.venv and installs the
+# locked tooling (maturin, pytest). `--inexact` is load-bearing: it stops
+# uv from pruning the maturin-built `classic-*-py` wheels on re-sync.
+# Add `--group drift-guards` when you need `ruamel.yaml` for schema_version_gate.py.
+uv sync --project python-bindings --inexact --group drift-guards
 
-python tools/python_api_parity/check_parity_gate.py --repo-root .
-python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-python tools/schema_version_gate.py --repo-root .
+uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
+uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
 
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
-uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
+uv run --project python-bindings python -m pytest python-bindings/tests -q
 ```
 
 Before `pytest python-bindings/tests`, rebuild the Python bindings with `rebuild_rust.ps1 -Target python` so every `-py` crate is installed into `python-bindings/.venv/`. You can pass crate filters only when deliberately narrowing a local iteration loop.
@@ -276,14 +280,13 @@ Required follow-up in the same change:
 3. Refresh and commit the touched `python-bindings/*-py/*.pyi` files when the public Python surface changes.
 4. Refresh and commit the tracked outputs under `python-bindings/parity-artifacts/` and any affected checked-in baseline reports under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
 5. Run:
-   - `uv venv python-bindings/.venv`
-   - `uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt`
+   - `uv sync --project python-bindings --inexact --group drift-guards` (creates/refreshes `python-bindings/.venv` from the locked tooling set; `--inexact` preserves the maturin-built `classic-*-py` wheels)
    - `$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"`
-   - `python tools/python_api_parity/check_parity_gate.py --repo-root .`
-   - `python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
-   - `python tools/schema_version_gate.py --repo-root .` when the change touches shippable YAML data or schema-version constants
+   - `uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .`
+   - `uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
+   - `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .` when the change touches shippable YAML data or schema-version constants
    - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python`
-   - `uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q`
+   - `uv run --project python-bindings python -m pytest python-bindings/tests -q`
 6. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
 7. Make sure `ci-python-bindings.yml` passes before merge.
 

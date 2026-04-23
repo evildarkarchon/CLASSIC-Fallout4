@@ -127,17 +127,17 @@ fn structured_mods_solu_log(plugins: &[(&str, &str)]) -> String {
 
 #[test]
 fn build_analysis_config_does_not_double_prefix_classic_version() {
-    let yaml = make_yaml_data("CLASSIC v9.0.0");
+    let yaml = make_yaml_data("v9.0.0");
 
     let config =
         build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
 
-    assert_eq!(config.classic_version, "CLASSIC v9.0.0");
+    assert_eq!(config.classic_version, "v9.0.0");
 }
 
 #[test]
 fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing() {
-    let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+    let mut yaml = make_yaml_data("v9.0.0");
     yaml.crashgen_name.clear();
     yaml.crashgen_latest_og.clear();
     yaml.xse_acronym.clear();
@@ -183,7 +183,7 @@ fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing()
 
 #[test]
 fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_name() {
-    let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+    let mut yaml = make_yaml_data("v9.0.0");
     yaml.game_root_name = "Fallout 4".to_string();
     yaml.crashgen_name.clear();
     yaml.crashgen_latest_og.clear();
@@ -207,7 +207,7 @@ fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_nam
 
 #[test]
 fn build_analysis_config_resolves_identical_metadata_for_spaced_and_compact_names() {
-    let mut compact_yaml = make_yaml_data("CLASSIC v9.0.0");
+    let mut compact_yaml = make_yaml_data("v9.0.0");
     compact_yaml.crashgen_name.clear();
     compact_yaml.crashgen_latest_og.clear();
     compact_yaml.xse_acronym.clear();
@@ -250,7 +250,7 @@ fn build_analysis_config_resolves_identical_metadata_for_spaced_and_compact_name
 
 #[test]
 fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
-    let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+    let mut yaml = make_yaml_data("v9.0.0");
     yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
 
     let config =

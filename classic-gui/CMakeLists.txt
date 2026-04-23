@@ -1,5 +1,17 @@
 cmake_minimum_required(VERSION 3.25)
-project(ClassicGui VERSION 1.0.0 LANGUAGES CXX)
+# PROJECT_VERSION here MUST match `CLASSIC_Info.version` in
+# `CLASSIC Data/databases/CLASSIC Main.yaml`. The drift guard below
+# enforces that invariant so a `set_version.ps1` run that touches one
+# without the other fails the build instead of shipping a binary whose
+# CPack package version disagrees with the broadcast app version.
+project(ClassicGui VERSION 9.1.0 LANGUAGES CXX)
+
+# ── Linker identity guard ────────────────────────────────────────────
+# Fail fast if Git for Windows' coreutils `link.exe` is shadowing MSVC's
+# linker on PATH. See cmake/ClassicLinkerCheck.cmake for the rationale.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+include(ClassicLinkerCheck)
+classic_assert_msvc_linker()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,6 +19,57 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+
+# ── App version single-source-of-truth ──────────────────────────────
+# `CLASSIC Data/databases/CLASSIC Main.yaml` is the documented source of
+# truth for the application version. The CLI extracts it the same way at
+# its own configure step (see `classic-cli/CMakeLists.txt`); the TUI does
+# the same in `ui-applications/classic-tui/build.rs`. Sourcing the
+# installed-binary version from this install-immutable bundled file —
+# instead of the runtime cache-preferring `load_main_yaml_version`
+# loader — guarantees a per-user YAML data update cannot move the
+# broadcast version ahead of the actual installed executable, which would
+# otherwise suppress real binary upgrade prompts via
+# QApplication::applicationVersion(). This is the codex adversarial-review
+# fix for the binary-identity bug; the runtime loader stays available for
+# data/schema decisions but MUST NOT be the source of truth for the GUI's
+# self-reported version.
+set(_CLASSIC_MAIN_YAML "${CMAKE_SOURCE_DIR}/../CLASSIC Data/databases/CLASSIC Main.yaml")
+file(STRINGS "${_CLASSIC_MAIN_YAML}" _classic_version_lines
+    REGEX "^[ \t]+version:[ \t]+v?[0-9]+\\.[0-9]+\\.[0-9]+")
+if(NOT _classic_version_lines)
+    message(FATAL_ERROR
+        "Could not locate `version: v<MAJOR>.<MINOR>.<PATCH>` in:\n"
+        "  ${_CLASSIC_MAIN_YAML}\n"
+        "This file is the documented single source of truth for the "
+        "application version; the GUI's binary-identity startup needs it.")
+endif()
+list(GET _classic_version_lines 0 _classic_first_version_line)
+string(REGEX REPLACE
+    "^[ \t]+version:[ \t]+v?([0-9]+\\.[0-9]+\\.[0-9]+).*$"
+    "\\1"
+    CLASSIC_APP_VERSION
+    "${_classic_first_version_line}")
+if(CLASSIC_APP_VERSION STREQUAL _classic_first_version_line)
+    message(FATAL_ERROR
+        "Failed to parse SemVer from CLASSIC_Info.version line:\n"
+        "  ${_classic_first_version_line}\n"
+        "Expected `  version: v<MAJOR>.<MINOR>.<PATCH>`.")
+endif()
+
+# Guard: the CMake `project(VERSION ...)` (used by CPack and as the
+# binary's own marker) MUST match the YAML-sourced app version. If they
+# diverge silently we ship a binary whose self-reported version disagrees
+# with the YAML source of truth, which is exactly the drift class the
+# YAML extraction prevents.
+if(NOT PROJECT_VERSION STREQUAL CLASSIC_APP_VERSION)
+    message(FATAL_ERROR
+        "ClassicGui CMake project(VERSION ${PROJECT_VERSION}) disagrees "
+        "with CLASSIC Main.yaml CLASSIC_Info.version "
+        "(${CLASSIC_APP_VERSION}). Update the `project(... VERSION ...)` "
+        "line in classic-gui/CMakeLists.txt to match the YAML, or fix "
+        "the YAML if the CMake value is correct.")
+endif()
 
 # ── Qt 6 ──────────────────────────────────────────────────────────────
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ClassicGuiQt.cmake)

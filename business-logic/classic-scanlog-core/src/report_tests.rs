@@ -45,8 +45,7 @@ fn test_report_composer() {
 
 #[test]
 fn test_generate_error_section_uses_list_based_valid_message() {
-    let generator =
-        ReportGenerator::with_config("CLASSIC v9.0.0".to_string(), "Buffout 4".to_string());
+    let generator = ReportGenerator::with_config("v9.0.0".to_string(), "Buffout 4".to_string());
 
     let section = generator.generate_error_section_with_status(
         "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\"",
@@ -61,8 +60,7 @@ fn test_generate_error_section_uses_list_based_valid_message() {
 
 #[test]
 fn test_generate_error_section_fake_bot_mode_notice_replaces_version_status() {
-    let generator =
-        ReportGenerator::with_config("CLASSIC v9.0.0".to_string(), "Buffout 4".to_string());
+    let generator = ReportGenerator::with_config("v9.0.0".to_string(), "Buffout 4".to_string());
 
     let section = generator.generate_error_section_with_status_and_fake_mode(
         "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\"",

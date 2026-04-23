@@ -256,6 +256,7 @@ impl GithubClient {
     /// @returns A promise resolving to `JsGithubRelease`.
     /// @throws on HTTP errors, rate limiting, or if no releases exist.
     #[napi]
+    #[allow(deprecated)] // compat wrapper over GithubClient::get_latest_release (design D-08).
     pub async fn get_latest_release(&self) -> napi::Result<JsGithubRelease> {
         let client = self.inner.clone();
         let handle = classic_shared_core::get_runtime().handle().clone();
@@ -322,6 +323,7 @@ pub fn has_update(current_version: String, latest_version: String) -> napi::Resu
 /// @returns A promise resolving to `JsGithubRelease`.
 /// @throws on HTTP errors, rate limiting, or if no releases exist.
 #[napi]
+#[allow(deprecated)] // compat wrapper over GithubClient::get_latest_release (design D-08).
 pub async fn get_latest_release(owner: String, repo: String) -> napi::Result<JsGithubRelease> {
     let client = core::GithubClient::new(owner, repo).map_err(to_napi_err)?;
     let handle = classic_shared_core::get_runtime().handle().clone();
@@ -344,6 +346,7 @@ pub async fn get_latest_release(owner: String, repo: String) -> napi::Result<JsG
 /// @returns A promise resolving to `JsUpdateCheckResult`.
 /// @throws on HTTP errors, rate limiting, version parse errors, or if no releases exist.
 #[napi]
+#[allow(deprecated)] // compat wrapper over GithubClient::get_latest_release (design D-08); migrate in notification NAPI task 4.2.
 pub async fn check_for_updates(
     owner: String,
     repo: String,
@@ -750,6 +753,187 @@ pub async fn apply_yaml_update(request: JsYamlApplyRequest) -> napi::Result<JsYa
         installed: report.installed.iter().map(core_outcome_to_js).collect(),
         failed: report.failed.iter().map(core_outcome_to_js).collect(),
     })
+}
+
+// ============================================================================
+// App-notification (app-update-manifest-notification change, §4)
+// ============================================================================
+//
+// Consumers call `checkAppNotification({ owner, repo, installedVersion })` and
+// receive a `JsNotificationStatus` on success. On failure the returned
+// promise rejects with an `Error` whose `code` property is keyed to the
+// underlying `UpdateError::Notification*` variant name. Per
+// `docs/api/error-contract.md` the three bindings deliberately diverge on
+// error shape — Node uses `.code` strings rather than the CXX empty-string
+// sentinel or the Python typed-exception hierarchy.
+
+/// Classification strings on [`JsNotificationStatus::classification`].
+///
+/// Following the YAML-update tag convention in this module, these are
+/// camelCase so TypeScript consumers can use string-discriminated unions:
+/// `"upToDate" | "updateAvailable" | "deprecatedClient" | "unknown"`.
+const NOTIFICATION_TAG_UP_TO_DATE: &str = "upToDate";
+const NOTIFICATION_TAG_UPDATE_AVAILABLE: &str = "updateAvailable";
+const NOTIFICATION_TAG_DEPRECATED_CLIENT: &str = "deprecatedClient";
+const NOTIFICATION_TAG_UNKNOWN: &str = "unknown";
+
+/// Error-code strings on NAPI `Error.code` for notification failures.
+///
+/// Variant names mirror the Rust `UpdateError::Notification*` family so
+/// JS consumers can switch on `err.code` without parsing `err.message`.
+const NOTIFICATION_CODE_FETCH_FAILED: &str = "FETCH_FAILED";
+const NOTIFICATION_CODE_DECODE: &str = "DECODE";
+const NOTIFICATION_CODE_INSTALLED_VERSION_PARSE: &str = "INSTALLED_VERSION_PARSE";
+const NOTIFICATION_CODE_CACHE_IO: &str = "CACHE_IO";
+const NOTIFICATION_CODE_OTHER: &str = "UPDATE_ERROR";
+
+/// Options-object parameter for `checkAppNotification`.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsCheckAppNotificationOptions {
+    /// GitHub org / repo slug (e.g. `"evildarkarchon"`).
+    pub owner: String,
+    /// GitHub repository name (e.g. `"CLASSIC-Fallout4"`).
+    pub repo: String,
+    /// Caller's current client semver; a leading `v` or `V` is tolerated.
+    pub installed_version: String,
+}
+
+/// Optional display payload attached to a notification manifest.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsNotificationDisplay {
+    /// Short heading (e.g. `"Update available"`).
+    pub title: String,
+    /// Longer body text; may include changelog highlights.
+    pub body: String,
+    /// Optional call-to-action URL.
+    pub cta_url: Option<String>,
+}
+
+/// Result of `checkAppNotification`. `classification` is one of:
+/// `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`.
+/// Error outcomes are surfaced as rejected promises (see NAPI
+/// `Error.code` constants in the module docs), not as an additional
+/// classification value.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsNotificationStatus {
+    /// Discriminator. See module doc for possible values.
+    pub classification: String,
+    /// Latest version from the manifest.
+    pub latest_version: String,
+    /// RFC 3339 `published_at` from the manifest.
+    pub published_at: String,
+    /// Minimum supported version, when the manifest declares one.
+    pub min_supported_version: Option<String>,
+    /// Optional display payload for user-facing presentation.
+    pub display: Option<JsNotificationDisplay>,
+    /// When `classification === "unknown"`, a human-readable description
+    /// of the installed-version parse failure.
+    pub parse_error: Option<String>,
+}
+
+fn classification_tag(c: core::Classification) -> &'static str {
+    match c {
+        core::Classification::UpToDate => NOTIFICATION_TAG_UP_TO_DATE,
+        core::Classification::UpdateAvailable => NOTIFICATION_TAG_UPDATE_AVAILABLE,
+        core::Classification::DeprecatedClient => NOTIFICATION_TAG_DEPRECATED_CLIENT,
+        core::Classification::Unknown => NOTIFICATION_TAG_UNKNOWN,
+    }
+}
+
+fn core_notification_status_to_js(status: core::NotificationStatus) -> JsNotificationStatus {
+    JsNotificationStatus {
+        classification: classification_tag(status.classification).to_string(),
+        latest_version: status.latest_version,
+        published_at: status.published_at,
+        min_supported_version: status.min_supported_version,
+        display: status.display.map(|d| JsNotificationDisplay {
+            title: d.title,
+            body: d.body,
+            cta_url: d.cta_url,
+        }),
+        parse_error: status.parse_error,
+    }
+}
+
+fn notification_error_code(err: &core::UpdateError) -> &'static str {
+    match err {
+        core::UpdateError::NotificationFetchFailed { .. } => NOTIFICATION_CODE_FETCH_FAILED,
+        core::UpdateError::NotificationDecode { .. } => NOTIFICATION_CODE_DECODE,
+        core::UpdateError::NotificationInstalledVersionParse { .. } => {
+            NOTIFICATION_CODE_INSTALLED_VERSION_PARSE
+        }
+        core::UpdateError::NotificationCacheIo { .. } => NOTIFICATION_CODE_CACHE_IO,
+        // Non-notification variants — keep the check surface consistent
+        // so an unexpected error class still rejects with *a* code.
+        _ => NOTIFICATION_CODE_OTHER,
+    }
+}
+
+fn notification_error_to_napi(err: core::UpdateError) -> napi::Error {
+    // napi-rs 3.x's async macro requires the error type to be
+    // `Into<Error<Status>>`, and `Status` is a fixed C-style enum with
+    // no room for custom per-variant codes. To preserve the
+    // variant-keyed discriminator promised by the spec and
+    // `docs/api/error-contract.md`, we encode the code as a structured
+    // prefix on `reason` — JS consumers parse
+    // `err.message.startsWith("FETCH_FAILED:")` to discriminate
+    // between variants without string-searching the whole message.
+    let code = notification_error_code(&err);
+    napi::Error::new(napi::Status::GenericFailure, format!("{code}: {err}"))
+}
+
+fn runtime_join_error<E: std::fmt::Display>(e: E) -> napi::Error {
+    // Tokio JoinError is not part of the notification-variant family, so
+    // surface it under `UPDATE_ERROR` rather than mis-attributing to one
+    // of the four notification codes.
+    napi::Error::new(
+        napi::Status::GenericFailure,
+        format!("{NOTIFICATION_CODE_OTHER}: runtime error: {e}"),
+    )
+}
+
+/// Check for a published CLASSIC binary-release notification.
+///
+/// Drives the Pages-first manifest fetch with ETag caching, falling back
+/// to listing releases filtered by the `app-notification-v*` tag prefix.
+/// On success resolves to a [`JsNotificationStatus`]; on total failure
+/// the returned promise rejects with an `Error` whose `message` is
+/// prefixed with the variant-keyed code (`"FETCH_FAILED: …"`,
+/// `"DECODE: …"`, `"INSTALLED_VERSION_PARSE: …"`, `"CACHE_IO: …"`, or
+/// `"UPDATE_ERROR: …"`). Consumers discriminate via
+/// `err.message.startsWith("FETCH_FAILED:")`.
+///
+/// The `code`-in-`message`-prefix shape is a napi-rs 3.x stable-API
+/// limitation — `napi::Error<String>` supports custom codes at the FFI
+/// layer but the async macro still threads `Error<Status>` through
+/// `execute_tokio_future_with_finalize_callback`, so we pick the best
+/// representation that round-trips through the async bridge.
+///
+/// @param options Options object with required `owner`, `repo`, and
+///                `installedVersion` fields.
+/// @returns A promise resolving to `JsNotificationStatus`.
+/// @throws an `Error` whose message starts with the variant-keyed code
+///         followed by `": "`.
+#[napi]
+pub async fn check_app_notification(
+    options: JsCheckAppNotificationOptions,
+) -> napi::Result<JsNotificationStatus> {
+    let JsCheckAppNotificationOptions {
+        owner,
+        repo,
+        installed_version,
+    } = options;
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    let result = handle
+        .spawn(async move { core::check_app_notification(&owner, &repo, &installed_version).await })
+        .await
+        .map_err(runtime_join_error)?;
+    result
+        .map(core_notification_status_to_js)
+        .map_err(notification_error_to_napi)
 }
 
 /// Swap the cached YAML file with its `.prev` sibling (if any).

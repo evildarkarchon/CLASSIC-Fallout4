@@ -10,7 +10,7 @@ use classic_file_io_core::LogCollector;
 use classic_path_core::{DocsPathFinder, validate_custom_scan_path};
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use classic_shared_core::get_runtime;
-use classic_update_core::GithubClient;
+use classic_update_core::{Classification, NotificationStatus, check_app_notification};
 use classic_version_registry_core::Fallout4Version;
 use ratatui::Terminal;
 use ratatui::backend::Backend;
@@ -252,7 +252,7 @@ pub enum AsyncMessage {
         cancelled: bool,
     },
     ScanError(String),
-    UpdateResult(String),
+    UpdateResult(Result<NotificationStatus, String>),
     BackupStatuses([bool; 4]),
     BackupComplete(String),
     BackupError(String),
@@ -284,6 +284,7 @@ pub struct App {
     pub scan_status: String,
     pub status_clear_at: Option<Instant>,
     pub update_checking: bool,
+    pub last_update_notification: Option<NotificationStatus>,
     pub papyrus_active: bool,
     pub pending_backup_remove: Option<BackupType>,
     pub pending_delete_report: Option<PathBuf>,
@@ -340,6 +341,7 @@ impl App {
             scan_status: "Ready".to_string(),
             status_clear_at: None,
             update_checking: false,
+            last_update_notification: None,
             papyrus_active: false,
             pending_backup_remove: None,
             pending_delete_report: None,
@@ -385,6 +387,7 @@ impl App {
             scan_status: "Ready".to_string(),
             status_clear_at: None,
             update_checking: false,
+            last_update_notification: None,
             papyrus_active: false,
             pending_backup_remove: None,
             pending_delete_report: None,
@@ -477,9 +480,26 @@ impl App {
                 self.status_clear_at =
                     Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
             }
-            AsyncMessage::UpdateResult(message) => {
+            AsyncMessage::UpdateResult(result) => {
                 self.update_checking = false;
-                self.scan_status = message;
+                match &result {
+                    Ok(status) => {
+                        self.scan_status = format_update_status(status);
+                        if let Some(display) = status.display.as_ref() {
+                            let body = display.body.trim();
+                            if !body.is_empty() {
+                                tracing::info!(target: "classic_tui::update", "{}", body);
+                            }
+                            if let Some(cta) = display.cta_url.as_deref() {
+                                tracing::info!(target: "classic_tui::update", "See: {cta}");
+                            }
+                        }
+                    }
+                    Err(message) => {
+                        self.scan_status = format!("Update check failed: {message}");
+                    }
+                }
+                self.last_update_notification = result.ok();
                 self.status_clear_at =
                     Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
             }
@@ -664,21 +684,26 @@ impl App {
         self.scan_progress = -1.0;
 
         let tx = self.async_tx.clone();
-        let current_version = env!("CARGO_PKG_VERSION").to_string();
 
+        // `CLASSIC_APP_VERSION` is baked at build time by `build.rs`,
+        // which reads `CLASSIC_Info.version` directly from
+        // `CLASSIC Main.yaml` (the install-immutable source of truth) and
+        // verifies it matches `Cargo.toml`'s `version` field. Mirrors the
+        // CLI's CMake-based `CLASSIC_CLI_VERSION` and the GUI's CMake-based
+        // `CLASSIC_GUI_VERSION`, so all three native frontends derive
+        // their installed-binary version from the same install-immutable
+        // bytes. Sourcing the runtime cache-preferring `load_main_yaml_version`
+        // here would let a per-user YAML data update move the broadcast
+        // version ahead of the actual installed binary and make the TUI
+        // alone misclassify updates relative to the other frontends —
+        // the codex adversarial-review fix for the binary-identity bug.
+        let installed_version = env!("CLASSIC_APP_VERSION");
         get_runtime().spawn(async move {
-            let message = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
-                Ok(client) => match client.get_latest_release().await {
-                    Ok(latest) => match client.has_update(&current_version, &latest.tag_name) {
-                        Ok(true) => format!("Update available: {}", latest.tag_name),
-                        Ok(false) => "You are up to date".to_string(),
-                        Err(error) => format!("Update check failed: {error}"),
-                    },
-                    Err(error) => format!("Update check failed: {error}"),
-                },
-                Err(error) => format!("Update check failed: {error}"),
-            };
-            let _ = tx.send(AsyncMessage::UpdateResult(message));
+            let payload =
+                check_app_notification("evildarkarchon", "CLASSIC-Fallout4", installed_version)
+                    .await
+                    .map_err(|error| error.to_string());
+            let _ = tx.send(AsyncMessage::UpdateResult(payload));
         });
     }
 
@@ -1447,6 +1472,32 @@ enum BackupOperation {
     Create,
     Restore,
     Remove,
+}
+
+fn format_update_status(status: &NotificationStatus) -> String {
+    match status.classification {
+        Classification::UpToDate => "You are up to date".to_string(),
+        Classification::UpdateAvailable => {
+            let base = format!("Update available: v{}", status.latest_version);
+            match status.display.as_ref() {
+                Some(display) if !display.title.trim().is_empty() => {
+                    format!("{base} — {}", display.title.trim())
+                }
+                _ => base,
+            }
+        }
+        Classification::DeprecatedClient => {
+            let min = status.min_supported_version.as_deref().unwrap_or("unknown");
+            format!(
+                "Client deprecated (min v{min}); upgrade to v{}",
+                status.latest_version
+            )
+        }
+        Classification::Unknown => match status.parse_error.as_deref() {
+            Some(detail) => format!("Update check returned unknown status: {detail}"),
+            None => "Update check returned unknown status".to_string(),
+        },
+    }
 }
 
 fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {

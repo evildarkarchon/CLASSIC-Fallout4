@@ -23,21 +23,32 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: python-bindings/uv.lock
+
+      # The parity-gates job only needs the drift-guard tooling (ruamel.yaml);
+      # everything else in check_parity_gate.py / validate_stubs.py is stdlib.
+      # `--inexact` is a safety net if a prior step ever seeded the venv with
+      # maturin-built wheels; it keeps extraneous packages untouched.
+      # `--locked` fails if committed uv.lock drifts from pyproject.toml.
+      - name: Install Python parity-gate tooling
+        run: uv sync --project python-bindings --inexact --group drift-guards --locked
+
       - name: Run Tier-1 Python parity and runtime coverage gate
-        run: python tools/python_api_parity/check_parity_gate.py --repo-root .
+        run: uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 
       - name: Run Python stub validation gate
-        run: python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+        run: uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 
       # Drift guard: checked-in YAML `schema_version` headers vs the
       # `client_schemas::*` constants in classic-config-core. Fails when a
       # shippable YAML file's header would be refused at load time by the
       # current client binary — i.e., the two sides of the contract drifted.
-      - name: Install ruamel.yaml for drift guards
-        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
-
       - name: Run YAML schema-version drift guard
-        run: python tools/schema_version_gate.py --repo-root .
+        run: uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
@@ -68,7 +79,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          cache-dependency-glob: python-bindings/requirements-ci.txt
+          cache-dependency-glob: python-bindings/uv.lock
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -95,19 +106,30 @@ jobs:
             ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-python-
 
-      - name: Create Python bindings virtual environment
-        run: uv venv python-bindings/.venv
+      # `uv sync` creates `python-bindings/.venv` and installs the locked
+      # tooling set (`maturin`, `pytest`). `--inexact` guards against the
+      # maturin-built `classic-*-py` wheels being pruned on any re-sync.
+      # `--locked` fails the job if the committed uv.lock drifts from
+      # pyproject.toml — catches silent lock/manifest divergence.
+      - name: Install Python bindings tooling
+        run: uv sync --project python-bindings --inexact --locked
 
-      - name: Install Python build and test dependencies
-        run: uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
-
-      # `maturin` is intentionally installed into `python-bindings/.venv`.
-      # `rebuild_rust.ps1` targets that interpreter explicitly for Python binding builds.
-      # Smoke-test collection imports promoted modules at import time, so CI must
-      # install the full Python binding set instead of a hand-maintained subset.
+      # `maturin` is intentionally installed into `python-bindings/.venv` by
+      # the step above. `rebuild_rust.ps1` targets that interpreter explicitly
+      # for Python binding builds. Smoke-test collection imports promoted
+      # modules at import time, so CI must install the full Python binding
+      # set instead of a hand-maintained subset.
       - name: Build and install Python bindings
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 
+      # Must invoke pytest through `python -m pytest`, not the `pytest.exe`
+      # entrypoint. `classic_config.ClassicConfig.get_config_path()` anchors
+      # settings discovery to `sys.argv[0]`'s parent directory (see
+      # test_config_import_anchors_settings_to_script_directory). When pytest
+      # runs as a console-script .exe, sys.argv[0] becomes `.venv\Scripts\pytest.exe`,
+      # which `get_config_path()` treats as a script path and derives a bogus
+      # settings parent from. `-m pytest` keeps sys.argv[0] pointed at the
+      # pytest package file, preserving the expected script-directory shape.
       - name: Run Python bindings smoke tests
-        run: uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
+        run: uv run --project python-bindings python -m pytest python-bindings/tests -q
