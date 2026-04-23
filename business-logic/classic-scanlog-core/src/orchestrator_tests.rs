@@ -136,6 +136,23 @@ fn build_analysis_config_does_not_double_prefix_classic_version() {
 }
 
 #[test]
+fn create_report_generator_from_default_config_avoids_double_classic_prefix() {
+    let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let report_text = orchestrator
+        .create_report_generator()
+        .generate_header("crash.log")
+        .to_list()
+        .join("");
+
+    assert!(
+        !report_text.contains("CLASSIC CLASSIC"),
+        "default-config report header should not double-prefix CLASSIC"
+    );
+}
+
+#[test]
 fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing() {
     let mut yaml = make_yaml_data("v9.0.0");
     yaml.crashgen_name.clear();

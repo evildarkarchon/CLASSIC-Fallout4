@@ -7,8 +7,8 @@ cmake_minimum_required(VERSION 3.25)
 project(ClassicGui VERSION 9.1.0 LANGUAGES CXX)
 
 # ── Linker identity guard ────────────────────────────────────────────
-# Fail fast if Git for Windows' coreutils `link.exe` is shadowing MSVC's
-# linker on PATH. See cmake/ClassicLinkerCheck.cmake for the rationale.
+# Fail fast if CMake resolves a non-MSVC linker, including PATH-shadowed
+# Git for Windows toolchains. See cmake/ClassicLinkerCheck.cmake.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 include(ClassicLinkerCheck)
 classic_assert_msvc_linker()

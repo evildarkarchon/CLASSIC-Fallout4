@@ -301,7 +301,7 @@ impl AnalysisConfig {
             game_version_vr: String::new(),
             xse_acronym: String::new(),
             game_root_name: String::new(),
-            classic_version: "CLASSIC".to_string(),
+            classic_version: String::new(),
             ignore_plugins: Vec::new(),
             ignore_records: Vec::new(),
             ignore_list: Vec::new(),
