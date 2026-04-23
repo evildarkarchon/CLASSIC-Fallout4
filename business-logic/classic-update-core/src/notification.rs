@@ -23,7 +23,9 @@
 
 use crate::error::{Result, UpdateError};
 use crate::github::GithubClient;
-use crate::manifest_fetch::{CACHED_MANIFEST_FILENAME, ETAG_FILENAME, PagesError, try_pages};
+use crate::manifest_fetch::{
+    CACHED_MANIFEST_FILENAME, ETAG_FILENAME, PagesError, try_pages, write_body_atomically,
+};
 use classic_path_core::PathError;
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -579,7 +581,7 @@ pub async fn check_app_notification_with(
 /// A present, in-TTL marker implies the body it names was successfully
 /// replaced by *this* call — not by a previous one. We get there by:
 ///
-/// 1. Writing the new body to a `.tmp` sibling.
+/// 1. Writing the new body to a unique temp sibling.
 /// 2. `rename`-ing the sibling onto [`CACHED_MANIFEST_FILENAME`].
 /// 3. *Only then* writing/refreshing the marker.
 ///
@@ -616,7 +618,16 @@ fn persist_fallback_manifest_body(cache_dir: Option<&Path>, bytes: &[u8]) {
     let marker_path = dir.join(FALLBACK_MARKER_FILENAME);
     let etag_path = dir.join(ETAG_FILENAME);
 
-    let body_ok = write_body_atomic(dir, &body_path, bytes);
+    let body_ok = match write_body_atomically(&body_path, bytes) {
+        Ok(()) => true,
+        Err(e) => {
+            log::warn!(
+                "failed to atomically replace fallback manifest body at {}: {e}",
+                body_path.display(),
+            );
+            false
+        }
+    };
 
     match std::fs::remove_file(&etag_path) {
         Ok(()) => {}
@@ -653,46 +664,6 @@ fn persist_fallback_manifest_body(cache_dir: Option<&Path>, bytes: &[u8]) {
             }
         }
     }
-}
-
-/// Atomically replace `target` with `bytes` via temp-file + rename.
-///
-/// Returns `true` only when the new body is durable at `target`. A
-/// direct `std::fs::write` on Windows truncates `target` before
-/// writing, so an `ERROR_SHARING_VIOLATION` from AV holding the file
-/// open can either (a) fail the open with the previous bytes intact,
-/// or (b) succeed the truncate but fail the write, leaving partial
-/// bytes. Both cases are dangerous when paired with the
-/// fallback-cache marker. Staging through a sibling and renaming
-/// makes the replacement a single filesystem operation: either the
-/// rename succeeds and `target` holds the new bytes, or it fails and
-/// `target` is unchanged.
-fn write_body_atomic(dir: &Path, target: &Path, bytes: &[u8]) -> bool {
-    let staging = dir.join(format!("{}.tmp", CACHED_MANIFEST_FILENAME));
-    // Clean up any stragglers from a previous failed attempt before
-    // staging — a directory or read-only file at the staging path
-    // would otherwise jam every subsequent fallback persist.
-    let _ = std::fs::remove_file(&staging);
-
-    if let Err(e) = std::fs::write(&staging, bytes) {
-        log::warn!(
-            "failed to stage fallback manifest body at {}: {e}",
-            staging.display(),
-        );
-        return false;
-    }
-
-    if let Err(e) = std::fs::rename(&staging, target) {
-        log::warn!(
-            "failed to atomically replace fallback manifest body {} via {}: {e}",
-            target.display(),
-            staging.display(),
-        );
-        let _ = std::fs::remove_file(&staging);
-        return false;
-    }
-
-    true
 }
 
 /// Attempt to reuse a fallback-seeded cached manifest.

@@ -705,6 +705,30 @@ mod fallback_cache {
     }
 
     #[test]
+    fn persist_ignores_occupied_legacy_fixed_tmp_path() {
+        let tmp = TempDir::new().unwrap();
+        let legacy_staging = tmp.path().join(format!("{}.tmp", CACHED_MANIFEST_FILENAME));
+
+        // Regression for the fixed-temp race: the old helper always staged
+        // through `manifest-latest.json.tmp`, so any competing writer or
+        // stranded directory at that legacy path jammed fallback seeding.
+        // The shared atomic helper uses a unique temp sibling instead, so
+        // this occupied legacy path must no longer block persistence.
+        std::fs::create_dir(&legacy_staging).unwrap();
+
+        persist_fallback_manifest_body(Some(tmp.path()), minimal_manifest_bytes());
+
+        assert!(
+            tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "body must still be written when the legacy fixed tmp path is occupied",
+        );
+        assert!(
+            tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "marker must still be written when the legacy fixed tmp path is occupied",
+        );
+    }
+
+    #[test]
     fn persist_is_noop_when_cache_dir_is_none() {
         // Simply must not panic. No files to inspect — the side-effect
         // surface is empty when caching is disabled.
@@ -798,13 +822,14 @@ mod fallback_cache {
             "precondition: fresh fallback cache must initially reuse",
         );
 
-        // Sabotage the next body write by occupying the staging path
-        // with a directory. Cross-platform: `std::fs::write` to a path
-        // that is a directory always fails with the OS equivalent of
-        // EISDIR / ERROR_ACCESS_DENIED, exercising the body_ok=false
-        // branch without needing per-platform AV emulation.
-        let staging = tmp.path().join(format!("{}.tmp", CACHED_MANIFEST_FILENAME));
-        std::fs::create_dir(&staging).unwrap();
+        // Sabotage the next body replacement by turning the target into
+        // a directory. The shared atomic writer can still stage its temp
+        // file, but the final rename must fail cross-platform when the
+        // destination is a directory, exercising the body_ok=false path
+        // without relying on a fixed temp filename.
+        let body_path = tmp.path().join(CACHED_MANIFEST_FILENAME);
+        std::fs::remove_file(&body_path).unwrap();
+        std::fs::create_dir(&body_path).unwrap();
 
         let newer_bytes = br#"{
             "manifest_version": "1.0",
@@ -840,8 +865,7 @@ mod fallback_cache {
         // already closed; we just need to confirm the failure path
         // doesn't open it.
         let tmp = TempDir::new().unwrap();
-        let staging = tmp.path().join(format!("{}.tmp", CACHED_MANIFEST_FILENAME));
-        std::fs::create_dir(&staging).unwrap();
+        std::fs::create_dir(tmp.path().join(CACHED_MANIFEST_FILENAME)).unwrap();
 
         persist_fallback_manifest_body(Some(tmp.path()), minimal_manifest_bytes());
 

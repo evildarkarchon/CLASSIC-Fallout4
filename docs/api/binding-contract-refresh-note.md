@@ -80,6 +80,12 @@ Typical triggers already documented in the repo include:
 
 In practice, if a Node export name, signature, DTO shape, or async/sync contract changes, refresh and commit `index.d.ts` in the same change.
 
+From `node-bindings/classic-node`, the repo-owned refresh command is:
+
+```powershell
+bun run dts:refresh
+```
+
 ---
 
 ## When To Refresh Python `.pyi` Stubs
@@ -124,6 +130,7 @@ When Node `index.d.ts` changes, the important checks are:
 
 ```powershell
 # From node-bindings/classic-node
+bun run dts:refresh
 bun run parity:gate
 bun run parity:gate:update-baseline   # only if the plain gate shows intentional source-backed drift
 bun run parity:gate

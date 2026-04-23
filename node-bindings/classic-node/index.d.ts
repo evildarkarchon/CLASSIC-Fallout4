@@ -3676,7 +3676,8 @@ export declare function loadBatchSync(paths: Array<string>): number
  * @returns The trimmed `CLASSIC_Info.version` value (never empty).
  * @throws an `Error` whose message starts with the variant-keyed code
  *         followed by `": "`. Codes: `LOAD:`, `VERSION_KEY_MISSING:`,
- *         `VERSION_EMPTY:`, `VERSION_NOT_STRING:`, `UNKNOWN:`.
+ *         `VERSION_EMPTY:`, `VERSION_NOT_STRING:`, `VERSION_INVALID:`,
+ *         `UNKNOWN:`.
  */
 export declare function loadMainYamlVersion(bundledYamlDir?: string | undefined | null): Promise<string>
 

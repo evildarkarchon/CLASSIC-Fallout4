@@ -4,10 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
+
+INDEX_DTS_FILENAME = "index.d.ts"
 
 
 def run_command(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -22,26 +26,60 @@ def run_command(command: list[str], cwd: Path) -> subprocess.CompletedProcess[st
     return completed
 
 
-def run_build(package_dir: Path) -> None:
-    """Regenerate Node binding outputs via debug build."""
-    print("Running `bun run build:debug` to refresh generated bindings...")
-    result = run_command(["bun", "run", "build:debug"], cwd=package_dir)
+def generate_temp_dts(package_dir: Path, temp_output_dir: Path) -> Path:
+    """Generate ``index.d.ts`` into a temporary output directory."""
+    print(
+        "Running `bun x napi build` in a temporary output directory to verify "
+        "generated bindings..."
+    )
+    result = run_command(
+        [
+            "bun",
+            "x",
+            "napi",
+            "build",
+            "--platform",
+            "--manifest-path",
+            "./Cargo.toml",
+            "--output-dir",
+            str(temp_output_dir),
+            "--dts",
+            INDEX_DTS_FILENAME,
+            "--no-js",
+        ],
+        cwd=package_dir,
+    )
     if result.returncode != 0:
         print(result.stdout, end="")
         print(result.stderr, end="")
         raise RuntimeError(
-            "Failed to run `bun run build:debug` for d.ts freshness check."
+            "Failed to generate temp `index.d.ts` for d.ts freshness check."
         )
+    generated_dts = temp_output_dir / INDEX_DTS_FILENAME
+    if not generated_dts.is_file():
+        raise RuntimeError(
+            f"Expected generated d.ts at {generated_dts}, but it was not created."
+        )
+    return generated_dts
 
 
-def collect_git_diff(package_dir: Path) -> str:
-    """Collect git diff output for index.d.ts relative to the package directory."""
-    result = run_command(["git", "diff", "--", "index.d.ts"], cwd=package_dir)
-    if result.returncode != 0:
-        print(result.stdout, end="")
-        print(result.stderr, end="")
-        raise RuntimeError("Failed to collect `git diff` for index.d.ts.")
-    return result.stdout
+def normalize_text(text: str) -> str:
+    """Normalize line endings for stable cross-platform comparisons."""
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def collect_content_diff(tracked_path: Path, generated_path: Path) -> str:
+    """Collect a unified diff between tracked and freshly generated d.ts files."""
+    tracked_text = normalize_text(tracked_path.read_text(encoding="utf-8"))
+    generated_text = normalize_text(generated_path.read_text(encoding="utf-8"))
+    return "".join(
+        difflib.unified_diff(
+            tracked_text.splitlines(keepends=True),
+            generated_text.splitlines(keepends=True),
+            fromfile=str(tracked_path),
+            tofile=str(generated_path),
+        )
+    )
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -75,7 +113,10 @@ def main() -> int:
     parser.add_argument(
         "--check-only",
         action="store_true",
-        help="Skip build step and only verify whether index.d.ts has pending changes.",
+        help=(
+            "Retained for compatibility. The freshness check is now always "
+            "read-only and compares temp-generated output to the tracked file."
+        ),
     )
     args = parser.parse_args()
 
@@ -83,11 +124,12 @@ def main() -> int:
     package_dir = repo_root / args.package_dir
     output_dir = repo_root / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
+    tracked_dts = package_dir / INDEX_DTS_FILENAME
 
-    if not args.check_only:
-        run_build(package_dir)
+    with tempfile.TemporaryDirectory(prefix="classic-node-dts-") as temp_dir:
+        generated_dts = generate_temp_dts(package_dir, Path(temp_dir))
+        diff_output = collect_content_diff(tracked_dts, generated_dts)
 
-    diff_output = collect_git_diff(package_dir)
     diff_path = output_dir / "index_dts.diff"
     summary_path = output_dir / "dts_freshness_report.json"
 
@@ -99,7 +141,10 @@ def main() -> int:
             "check_only": args.check_only,
             "fresh": is_fresh,
             "package_dir": str(package_dir),
+            "tracked_dts": str(tracked_dts),
             "diff_artifact": str(diff_path),
+            "comparison_mode": "temp-generated-content",
+            "line_endings_normalized": True,
         },
     )
 

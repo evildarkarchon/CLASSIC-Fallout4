@@ -144,7 +144,7 @@ where
                     .into(),
             ))
         })?;
-        let bytes = std::fs::read(cached_path).map_err(|e| {
+        let bytes = tokio::fs::read(cached_path).await.map_err(|e| {
             PagesError::Transport(UpdateError::Generic(format!(
                 "Pages returned 304 but cached manifest at {} could not be read: {e}",
                 cached_path.display(),
@@ -258,7 +258,7 @@ where
 /// disjoint temp paths; they still race on the `rename`, but `rename`
 /// over the destination is atomic at the filesystem level, so the
 /// loser's body is replaced wholesale instead of merged.
-fn write_body_atomically(target: &Path, bytes: &[u8]) -> std::io::Result<()> {
+pub(crate) fn write_body_atomically(target: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let tmp = unique_tmp_sibling(target);
     // Best-effort cleanup of a stranded tmp from a prior crash at the
     // exact same PID+counter+nanos coordinate — astronomically
