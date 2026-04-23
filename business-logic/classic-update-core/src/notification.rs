@@ -536,19 +536,16 @@ pub async fn check_app_notification_with(
                     persist_fallback_manifest_body(cache_dir, &bytes);
                     Ok(classify(installed_version, &manifest))
                 }
-                // Propagate a structural "client too old for this manifest"
-                // rejection from the Releases fallback leg directly instead
-                // of folding it into the ambiguous `NotificationFetchFailed`.
-                // The fallback asset is the same schema as the Pages leg, so
-                // a MAJOR bump that the client cannot parse is a deterministic
-                // bindings-surface signal ("upgrade required"), not a
-                // transient transport failure — collapsing it into
-                // `NotificationFetchFailed` would mislead every binding
-                // exactly when Pages is down or blocked and the fallback is
-                // serving the new schema.
-                Err(fallback_err @ UpdateError::ManifestUnsupportedVersion { .. }) => {
-                    Err(fallback_err)
-                }
+                // Propagate schema/validation rejections from the Releases
+                // fallback leg directly instead of folding them into the
+                // ambiguous `NotificationFetchFailed`. The fallback asset is
+                // the same schema as the Pages leg, so these deterministic
+                // bindings-surface signals must not be reported as transient
+                // transport failures exactly when Pages is down or blocked.
+                Err(
+                    fallback_err @ (UpdateError::ManifestUnsupportedVersion { .. }
+                    | UpdateError::NotificationDecode { .. }),
+                ) => Err(fallback_err),
                 Err(fallback_err) => Err(UpdateError::NotificationFetchFailed {
                     pages_error: pages_err.to_string(),
                     releases_error: fallback_err.to_string(),

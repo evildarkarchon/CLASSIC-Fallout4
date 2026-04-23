@@ -1121,6 +1121,95 @@ mod orchestrator {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn fallback_leg_decode_failure_surfaces_decode_error() {
+        // Pages is down, but Releases successfully returns an app-notification
+        // asset whose body is structurally invalid. That is a manifest decode
+        // failure, not a transport failure, so bindings must keep their
+        // DECODE / typed-exception discriminator instead of seeing
+        // `NotificationFetchFailed`.
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(503)
+            .create_async()
+            .await;
+
+        let asset_url = format!("{}/assets/manifest.json", server.url());
+        let releases_body = format!(
+            r#"[{{
+                "tag_name": "app-notification-v9.2.0",
+                "name": "Notification v9.2.0",
+                "body": "",
+                "prerelease": false,
+                "draft": false,
+                "html_url": "https://example.com/release",
+                "assets": [
+                    {{
+                        "name": "manifest.json",
+                        "size": 256,
+                        "browser_download_url": "{asset_url}",
+                        "content_type": "application/json",
+                        "download_count": 0
+                    }}
+                ],
+                "created_at": "2026-05-01T12:00:00Z",
+                "published_at": "2026-05-01T12:00:00Z"
+            }}]"#,
+        );
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(releases_body)
+            .create_async()
+            .await;
+
+        let malformed_asset = r#"{
+            "manifest_version": "1.0",
+            "release_tag": "v9.2.0",
+            "published_at": "2026-05-01T12:00:00Z"
+        }"#;
+        let asset_mock = server
+            .mock("GET", "/assets/manifest.json")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(malformed_asset)
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let err = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.2.0")
+            .await
+            .expect_err("malformed fallback manifest must fail the check");
+
+        match err {
+            UpdateError::NotificationDecode { field } => {
+                assert_eq!(field, "latest_version");
+            }
+            other => panic!("expected NotificationDecode from fallback leg, got {other:?}"),
+        }
+
+        assert!(
+            !tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "decode failure must not seed the fallback cache",
+        );
+        assert!(
+            !tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "decode failure must not create a fallback marker",
+        );
+
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+        asset_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
     async fn pages_outage_with_fresh_fallback_cache_reuses_body_and_skips_releases() {
         // The core reuse test: Pages is 5xx, fallback cache is fresh
         // (marker within TTL, body valid). The check MUST classify from
