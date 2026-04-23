@@ -128,8 +128,9 @@ bool read_update_check_setting(const std::string& settings_path) {
 // ── Schema-entry builder ──────────────────────────────────────────────
 //
 // Keep in sync with `business-logic/classic-config-core/src/client_schemas.rs`:
-// both entries are `SchemaCompat::new(1, 0)`. The schema-version gate in
-// tools/schema_version_gate.py enforces that the bundled YAML matches.
+// `MAIN_YAML` is `SchemaCompat::new(2, 0)` and `GAME_FALLOUT4_YAML` is
+// `SchemaCompat::new(1, 0)`. The schema-version gate in
+// tools/schema_version_gate.py enforces that the bundled YAML matches Rust.
 //
 // `has_installed` is intentionally left at `false`. The Rust orchestrator
 // (`check_yaml_update`) reads each installed file from the yaml-cache
@@ -142,7 +143,7 @@ rust::Vec<classic::update::YamlClientSchemaEntryDto> build_yaml_schema_entries()
 
     classic::update::YamlClientSchemaEntryDto main{};
     main.name = "CLASSIC Main.yaml";
-    main.accepted_major = 1u;
+    main.accepted_major = 2u;
     main.accepted_minimum_minor = 0u;
     main.has_installed = false;
     entries.push_back(std::move(main));

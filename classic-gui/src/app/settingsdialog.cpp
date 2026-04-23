@@ -662,8 +662,9 @@ constexpr const char* kYamlTagPrefix = "yaml-data-v";
 
 // The two shippable files the client knows about today. The accepted ranges
 // mirror `client_schemas::MAIN_YAML` and `client_schemas::GAME_FALLOUT4_YAML`
-// on the Rust side (both `SchemaCompat::new(1, 0)`); the schema-version gate
-// in tools/schema_version_gate.py keeps them in sync with the bundled YAML.
+// on the Rust side (`SchemaCompat::new(2, 0)` for Main, `SchemaCompat::new(1, 0)`
+// for Fallout4); the schema-version gate in tools/schema_version_gate.py keeps
+// them in sync with the bundled YAML.
 //
 // We deliberately send `has_installed = false` for both entries: the Rust
 // orchestrator (`check_yaml_update`) reads each file from the yaml-cache
@@ -677,7 +678,7 @@ rust::Vec<classic::update::YamlClientSchemaEntryDto> buildYamlSchemaEntries()
 
     classic::update::YamlClientSchemaEntryDto main{};
     main.name = "CLASSIC Main.yaml";
-    main.accepted_major = 1u;
+    main.accepted_major = 2u;
     main.accepted_minimum_minor = 0u;
     main.has_installed = false;
     entries.push_back(std::move(main));

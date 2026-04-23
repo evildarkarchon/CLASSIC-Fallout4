@@ -69,6 +69,11 @@ private slots:
     // `enabled` argument. Without this, the CLI would always hit the network
     // regardless of user opt-out.
     void cli_handler_reads_update_check_setting_and_forwards_to_bridge();
+
+    // The native YAML update entry builders must stay in sync with
+    // `classic_config_core::client_schemas`; otherwise C++ callers reject a
+    // current data release before Rust can install it.
+    void native_yaml_update_builders_accept_current_main_schema();
 };
 
 namespace {
@@ -81,6 +86,14 @@ QString readFile(const QString& relativePath)
         return {};
     }
     return QString::fromUtf8(file.readAll());
+}
+
+bool builderAcceptsCurrentMainSchema(const QString& source)
+{
+    const QRegularExpression mainSchema(
+        QStringLiteral(R"(main\.name\s*=\s*"CLASSIC Main\.yaml"\s*;\s*main\.accepted_major\s*=\s*2u\s*;)"),
+        QRegularExpression::DotMatchesEverythingOption);
+    return mainSchema.match(source).hasMatch();
 }
 
 } // namespace
@@ -283,6 +296,24 @@ void YamlUpdateWiringTests::cli_handler_reads_update_check_setting_and_forwards_
         QStringLiteral(R"(yaml_check_update\([^)]*\benabled\b[^)]*\))"));
     QVERIFY2(forward.match(handlerSource).hasMatch(),
              "CLI handler must pass the Update Check setting as the `enabled` arg of yaml_check_update");
+}
+
+void YamlUpdateWiringTests::native_yaml_update_builders_accept_current_main_schema()
+{
+    const QString cliSource = readFile(QStringLiteral("../classic-cli/src/yaml_update.cpp"));
+    QVERIFY2(!cliSource.isEmpty(), "classic-cli/src/yaml_update.cpp must be readable");
+    QVERIFY2(builderAcceptsCurrentMainSchema(cliSource),
+             "CLI YAML update entries must accept CLASSIC Main.yaml schema_version 2.x");
+
+    const QString dialogSource = readFile(QStringLiteral("src/app/settingsdialog.cpp"));
+    QVERIFY2(!dialogSource.isEmpty(), "settingsdialog.cpp must be readable");
+    QVERIFY2(builderAcceptsCurrentMainSchema(dialogSource),
+             "SettingsDialog YAML update entries must accept CLASSIC Main.yaml schema_version 2.x");
+
+    const QString workerSource = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
+    QVERIFY2(!workerSource.isEmpty(), "yamlupdateworker.cpp must be readable");
+    QVERIFY2(builderAcceptsCurrentMainSchema(workerSource),
+             "YamlUpdateWorker YAML update entries must accept CLASSIC Main.yaml schema_version 2.x");
 }
 
 QTEST_MAIN(YamlUpdateWiringTests)
