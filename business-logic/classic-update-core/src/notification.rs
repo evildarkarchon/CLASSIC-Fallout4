@@ -544,6 +544,7 @@ pub async fn check_app_notification_with(
                 // transport failures exactly when Pages is down or blocked.
                 Err(
                     fallback_err @ (UpdateError::ManifestUnsupportedVersion { .. }
+                    | UpdateError::ManifestInvalid { .. }
                     | UpdateError::NotificationDecode { .. }),
                 ) => Err(fallback_err),
                 Err(fallback_err) => Err(UpdateError::NotificationFetchFailed {

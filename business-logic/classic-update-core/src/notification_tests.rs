@@ -1210,6 +1210,100 @@ mod orchestrator {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn fallback_leg_manifest_invalid_surfaces_schema_error() {
+        // Pages is down, but Releases successfully returns an
+        // app-notification asset whose fields parse individually while
+        // failing the cross-field invariant. That deterministic publisher
+        // data error must stay `ManifestInvalid`, not be wrapped as a
+        // transient `NotificationFetchFailed`.
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(503)
+            .create_async()
+            .await;
+
+        let asset_url = format!("{}/assets/manifest.json", server.url());
+        let releases_body = format!(
+            r#"[{{
+                "tag_name": "app-notification-v9.2.0",
+                "name": "Notification v9.2.0",
+                "body": "",
+                "prerelease": false,
+                "draft": false,
+                "html_url": "https://example.com/release",
+                "assets": [
+                    {{
+                        "name": "manifest.json",
+                        "size": 256,
+                        "browser_download_url": "{asset_url}",
+                        "content_type": "application/json",
+                        "download_count": 0
+                    }}
+                ],
+                "created_at": "2026-05-01T12:00:00Z",
+                "published_at": "2026-05-01T12:00:00Z"
+            }}]"#,
+        );
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(releases_body)
+            .create_async()
+            .await;
+
+        let invalid_asset = r#"{
+            "manifest_version": "1.0",
+            "release_tag": "v9.2.0",
+            "latest_version": "9.2.0",
+            "min_supported_version": "9.3.0",
+            "published_at": "2026-05-01T12:00:00Z"
+        }"#;
+        let asset_mock = server
+            .mock("GET", "/assets/manifest.json")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(invalid_asset)
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let err = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.2.0")
+            .await
+            .expect_err("invalid fallback manifest must fail the check");
+
+        match err {
+            UpdateError::ManifestInvalid { reason } => {
+                assert!(
+                    reason.contains("min_supported_version") && reason.contains("latest_version"),
+                    "reason must cite the invalid cross-field pair: {reason}",
+                );
+            }
+            other => panic!("expected ManifestInvalid from fallback leg, got {other:?}"),
+        }
+
+        assert!(
+            !tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "invalid manifest must not seed the fallback cache",
+        );
+        assert!(
+            !tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "invalid manifest must not create a fallback marker",
+        );
+
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+        asset_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
     async fn pages_outage_with_fresh_fallback_cache_reuses_body_and_skips_releases() {
         // The core reuse test: Pages is 5xx, fallback cache is fresh
         // (marker within TTL, body valid). The check MUST classify from
