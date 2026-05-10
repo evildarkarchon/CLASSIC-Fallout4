@@ -11,7 +11,7 @@
 ## Next Milestone Goals
 
 - Define the next milestone scope, requirements, and roadmap with `/gsd-new-milestone`.
-- Decide whether to pay down accepted `v9.1.0-root` debt first: non-active doc cleanup outside the Phase 10 audited surface and the missing `12-VALIDATION.md` contract.
+- Decide whether to pay down accepted `v9.1.0-root` debt first: non-active doc cleanup outside the Phase 10 audited surface.
 - Keep the next milestone grounded in the repo-root workspace contract and the current parity/verification closure state.
 
 <details>
@@ -128,7 +128,7 @@ None - create a fresh `.planning/REQUIREMENTS.md` for the next milestone with `/
 - v9.1.0-consolidation Phase 5 closed the remaining audit debt: top-level docs routing, Phase 3 verification bookkeeping, and Node parity contract artifacts now agree with the live 705-row one-tier baseline
 - The repo-root workspace migration milestone now includes active docs, skills, and codebase-map guidance that point to the moved tree and a shared migration matrix for old-to-new workflow translation
 - The repo-root workspace currently resolves 37 members from `Cargo.toml`, with canonical closure evidence recorded in `07-VERIFICATION.md`, `08-VERIFICATION.md`, and `09-VERIFICATION.md`
-- Accepted residual debt from `v9.1.0-root`: non-active historical docs still contain some legacy `ClassicLib-rs` references, and `12-VALIDATION.md` is still missing
+- Accepted residual debt from `v9.1.0-root`: non-active historical docs still contain some legacy `ClassicLib-rs` references. The Phase 12 Nyquist gap was closed on 2026-05-10 by `12-VALIDATION.md`.
 
 ## Constraints
 

@@ -60,7 +60,7 @@ Recent decisions affecting current work:
 ### Blockers/Concerns
 
 - Non-active and historical docs still contain some `ClassicLib-rs` references outside the Phase 10 audited surface.
-- `12-VALIDATION.md` is still missing, so Nyquist coverage for Phase 12 remains partial.
+- Phase 12 Nyquist coverage is now closed by `.planning/phases/12-integration-replay-and-verification-closure/12-VALIDATION.md`.
 
 ## Session Continuity
 

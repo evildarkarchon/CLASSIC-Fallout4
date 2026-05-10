@@ -27,7 +27,7 @@
 **Known Gaps:**
 
 - Non-active and historical docs outside the Phase 10 audited surface still contain some legacy `ClassicLib-rs` references.
-- `12-VALIDATION.md` is still missing, so Nyquist coverage for the final gap-closure phase is partial.
+- Phase 12 Nyquist coverage was closed after archive by `12-VALIDATION.md` and `tests/planning/test_phase12_validation.py`.
 
 **What's next:** Define the next milestone and create a fresh `.planning/REQUIREMENTS.md` with `/gsd-new-milestone`.
 
