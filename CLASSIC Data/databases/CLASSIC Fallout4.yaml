@@ -599,7 +599,7 @@ Crashlog_Stack_Check:
     name: BA2 Limit Crash
     severity: 6
     main_error_required_any: []
-    main_error_optional_any: []
+    main_error_optional_any: ["1AF8F6A"]
     stack_contains_any: [LooseFileAsyncStream]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
