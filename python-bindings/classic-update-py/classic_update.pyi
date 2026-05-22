@@ -450,16 +450,18 @@ class ClassicUpdateError(Exception):
 class ClassicNotificationError(ClassicUpdateError):
     """Base class for app-notification check failures.
 
-    Subclasses are raised by :func:`check_app_notification`:
+    :func:`check_app_notification` raises this base class directly for
+    shared manifest-validation failures, and raises subclasses for
+    notification-channel-specific failures:
 
     - :class:`ClassicNotificationFetchFailed`
     - :class:`ClassicNotificationDecodeError`
     - :class:`ClassicNotificationInstalledVersionParseError`
     - :class:`ClassicNotificationCacheIoError`
 
-    A notification manifest with an unsupported ``manifest_version`` raises
-    this base class directly because the underlying Rust variant is shared
-    with other update surfaces.
+    Invalid notification manifest invariants and unsupported
+    ``manifest_version`` values raise this base class directly because the
+    underlying Rust variants are shared with other update surfaces.
     """
 
 class ClassicNotificationFetchFailed(ClassicNotificationError):
@@ -493,8 +495,8 @@ class NotificationStatus:
 
     ``classification`` is one of ``"upToDate"``, ``"updateAvailable"``,
     ``"deprecatedClient"``, ``"unknown"``. Error outcomes are raised as
-    :class:`ClassicNotificationError` subclasses, not as an additional
-    classification value.
+    :class:`ClassicNotificationError` or one of its subclasses, not as an
+    additional classification value.
 
     Attributes:
         classification: Discriminator string (see above).
@@ -526,8 +528,9 @@ def check_app_notification(
     Drives the Pages-first manifest fetch with ETag caching, falling back
     to listing releases filtered by the ``app-notification-v*`` tag
     prefix. On success returns a :class:`NotificationStatus`; on failure
-    raises a :class:`ClassicNotificationError` or subclass keyed to the
-    notification-channel failure.
+    raises a :class:`ClassicNotificationError` directly for shared
+    manifest-validation failures, or a subclass keyed to the
+    notification-channel-specific failure.
 
     Args:
         owner: GitHub org / repo slug (e.g. ``"evildarkarchon"``).

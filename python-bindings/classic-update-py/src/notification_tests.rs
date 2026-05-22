@@ -22,20 +22,33 @@ fn manifest_unsupported_version_maps_to_notification_base() {
 }
 
 #[test]
-fn manifest_invalid_maps_to_notification_base() {
+fn manifest_invalid_maps_directly_to_notification_base_with_reason() {
     Python::initialize();
     Python::attach(|py| {
+        let reason = "min_supported_version must not exceed latest_version";
         let py_err = update_error_to_py(core::UpdateError::ManifestInvalid {
-            reason: "min_supported_version must not exceed latest_version".to_string(),
+            reason: reason.to_string(),
         });
 
         assert!(
-            py_err.is_instance_of::<ClassicNotificationError>(py),
-            "invalid notification manifests must be catchable as ClassicNotificationError",
+            py_err
+                .get_type(py)
+                .is(&py.get_type::<ClassicNotificationError>()),
+            "invalid notification manifests must map directly to ClassicNotificationError",
         );
         assert!(
             py_err.is_instance_of::<ClassicUpdateError>(py),
             "notification exceptions must still inherit from ClassicUpdateError",
+        );
+        let message = py_err
+            .value(py)
+            .str()
+            .expect("notification exception should stringify")
+            .to_string_lossy()
+            .into_owned();
+        assert!(
+            message.contains(reason),
+            "invalid notification manifest reason must survive in the Python exception message: {message}",
         );
     });
 }

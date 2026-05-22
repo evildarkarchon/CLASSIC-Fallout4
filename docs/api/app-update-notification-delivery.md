@@ -52,8 +52,8 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 │   5. Releases fallback: list releases filtered by the             │
 │      `app-notification-v*` prefix, newest tag, download           │
 │      `manifest.json`, parse, validate, classify, and seed the     │
-│      Pages cache (body + fallback marker, ETag cleared). Schema   │
-│      and validation errors propagate directly.                    │
+│      Pages cache (body + fallback marker, ETag cleared). Typed    │
+│      schema and validation rejections propagate directly.          │
 │   6. Returns NotificationStatus { classification, latest_version, │
 │      published_at, min_supported_version?, display?, parse_error? │
 │      }.                                                           │
@@ -69,7 +69,7 @@ Produced by `classic_update_core::notification::classify(installed, &manifest)`:
 | `UpToDate` | `installed >= latest_version` (covers CI pre-release builds "ahead of latest") | Report current; no user action needed. |
 | `UpdateAvailable` | `installed < latest_version` AND not deprecated | Surface display payload if present; optionally open `cta_url`. |
 | `DeprecatedClient` | `installed < min_supported_version` | Warn the user; recommend upgrade to `latest_version`. |
-| `Unknown` | Installed version fails SemVer parse, or the manifest's `latest_version` is itself not SemVer | Surface `parse_error`; do NOT silently treat as `UpToDate`. |
+| `Unknown` | Direct `classify` callers pass an installed version or manifest `latest_version` that fails SemVer parse. Public `check_app_notification()` validates those inputs first and raises typed errors instead of returning `Unknown` for them. | Surface `parse_error`; do NOT silently treat as `UpToDate`. |
 
 ### Cache layout
 

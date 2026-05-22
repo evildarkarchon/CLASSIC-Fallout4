@@ -135,8 +135,8 @@ impl PyAppNotificationDisplay {
 
 /// Result of `check_app_notification`. `classification` is one of:
 /// `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`.
-/// Error outcomes are raised as `ClassicNotificationError` subclasses,
-/// not as an additional classification value.
+/// Error outcomes are raised as `ClassicNotificationError` or one of its
+/// subclasses, not as an additional classification value.
 #[pyclass(name = "NotificationStatus", from_py_object)]
 #[derive(Clone)]
 pub struct PyNotificationStatus {
@@ -212,8 +212,9 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
 /// Drives the Pages-first manifest fetch with ETag caching, falling back
 /// to listing releases filtered by the ``app-notification-v*`` tag prefix.
 /// On success returns a :class:`NotificationStatus`; on failure raises a
-/// :class:`ClassicNotificationError` or subclass keyed to the underlying
-/// notification-channel failure.
+/// :class:`ClassicNotificationError` directly for shared manifest-validation
+/// failures, or a subclass keyed to the underlying notification-channel
+/// failure.
 ///
 /// Args:
 ///     owner: GitHub org / repo slug (e.g. ``"evildarkarchon"``).
