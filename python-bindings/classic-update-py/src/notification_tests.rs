@@ -33,7 +33,7 @@ fn manifest_invalid_maps_directly_to_notification_base_with_reason() {
         assert!(
             py_err
                 .get_type(py)
-                .is(&py.get_type::<ClassicNotificationError>()),
+                .is(py.get_type::<ClassicNotificationError>()),
             "invalid notification manifests must map directly to ClassicNotificationError",
         );
         assert!(

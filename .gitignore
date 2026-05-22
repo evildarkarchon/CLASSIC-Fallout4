@@ -348,3 +348,4 @@ opencode.json
 .claude/worktrees
 *.pfx
 .kilocode/package-lock.json
+graphify-out/
