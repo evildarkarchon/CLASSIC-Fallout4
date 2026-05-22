@@ -51,8 +51,9 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 │      during prolonged Pages outages. Otherwise hit Releases.      │
 │   5. Releases fallback: list releases filtered by the             │
 │      `app-notification-v*` prefix, newest tag, download           │
-│      `manifest.json`, parse, classify, and seed the Pages cache   │
-│      (body + fallback marker, ETag cleared).                      │
+│      `manifest.json`, parse, validate, classify, and seed the     │
+│      Pages cache (body + fallback marker, ETag cleared). Schema   │
+│      and validation errors propagate directly.                    │
 │   6. Returns NotificationStatus { classification, latest_version, │
 │      published_at, min_supported_version?, display?, parse_error? │
 │      }.                                                           │
@@ -102,13 +103,13 @@ When `fallback.marker` is present and its mtime is within TTL, a subsequent Page
 
 ## 3. Error contract (per binding)
 
-All three bindings propagate a single unified `UpdateError` family (design decision D-05) with notification-specific variants `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`. The notification path can also surface the shared `ManifestUnsupportedVersion` variant when a fetched notification manifest advertises a newer `manifest_version` major. The shape each binding exposes follows the established per-language idiom:
+All three bindings propagate a single unified `UpdateError` family (design decision D-05) with notification-specific variants `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`. The notification path can also surface shared manifest-validation variants: `ManifestInvalid` when a fetched notification manifest violates cross-field invariants, and `ManifestUnsupportedVersion` when it advertises a newer `manifest_version` major. The shape each binding exposes follows the established per-language idiom:
 
 | Binding | Error shape |
 | --- | --- |
 | C++ (CXX) | `NotificationStatusDto { classification = "error", error_message = "<Display>", …empty-string sentinels… }` |
 | Node (NAPI-RS) | Promise rejects with `Error` whose `message` is prefixed with the variant-keyed code: `"FETCH_FAILED: <detail>"` / `"DECODE: <detail>"` / `"INSTALLED_VERSION_PARSE: <detail>"` / `"CACHE_IO: <detail>"` / `"UPDATE_ERROR: <detail>"`. Consumers discriminate with `err.message.startsWith("FETCH_FAILED:")`. The prefix-on-message shape (rather than a custom `err.code`) is a napi-rs 3.x async-macro constraint — `Status` is a fixed C-style enum, so custom variant codes can't round-trip through `execute_tokio_future_with_finalize_callback` as structured `code` values |
-| Python (PyO3) | Raises a `ClassicNotificationError` subclass keyed to the variant, or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestUnsupportedVersion`; subclass of `ClassicUpdateError` so existing catches still work |
+| Python (PyO3) | Raises a `ClassicNotificationError` subclass keyed to the variant, or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestInvalid` and `ManifestUnsupportedVersion`; subclass of `ClassicUpdateError` so existing catches still work |
 
 Full precedent + examples: [`error-contract.md`](error-contract.md).
 

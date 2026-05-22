@@ -79,7 +79,7 @@ Payload-free app-update notification channel: fetches a published JSON manifest 
 - `fetch_via_releases_fallback(client)` - low-level Releases-API fallback
 - `build_app_notification_pages_url(client)` - canonical Pages URL builder (shared with binding layers)
 
-Error variants for notification failures live on `UpdateError` as `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, and `NotificationCacheIo` (design D-05 — nested on `UpdateError` rather than a sibling enum so the per-binding error mapping does not double). `ManifestUnsupportedVersion` is shared with YAML updates but can also surface directly from the notification path when a fetched notification manifest advertises a newer `manifest_version` major. See [`error-contract.md`](error-contract.md) for per-binding shapes.
+Error variants for notification failures live on `UpdateError` as `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, and `NotificationCacheIo` (design D-05 — nested on `UpdateError` rather than a sibling enum so the per-binding error mapping does not double). Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface directly from the notification path when a fetched notification manifest violates cross-field invariants or advertises a newer `manifest_version` major. See [`error-contract.md`](error-contract.md) for per-binding shapes.
 
 Contributor note:
 

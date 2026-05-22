@@ -23,10 +23,11 @@
 //!   common supertype for every notification-channel failure.
 //! - Four variant-discriminating subclasses under
 //!   `ClassicNotificationError`, one per `UpdateError::Notification*`
-//!   variant. The shared `ManifestUnsupportedVersion` variant also maps
-//!   to `ClassicNotificationError` when surfaced by this notification
-//!   check, because it is a notification-channel manifest failure.
-//!   Consumers that want to catch any notification failure use
+//!   variant. Shared manifest-validation variants (`ManifestInvalid` and
+//!   `ManifestUnsupportedVersion`) also map to `ClassicNotificationError`
+//!   when surfaced by this notification check, because they are
+//!   notification-channel manifest failures. Consumers that want to catch
+//!   any notification failure use
 //!   `except ClassicNotificationError`; callers that want to
 //!   discriminate (e.g., "show a retry button only on FetchFailed")
 //!   catch the specific subclass.
@@ -195,7 +196,8 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
         core::UpdateError::NotificationCacheIo { .. } => {
             ClassicNotificationCacheIoError::new_err(display)
         }
-        core::UpdateError::ManifestUnsupportedVersion { .. } => {
+        core::UpdateError::ManifestInvalid { .. }
+        | core::UpdateError::ManifestUnsupportedVersion { .. } => {
             ClassicNotificationError::new_err(display)
         }
         // Non-notification error variants still bubble through
@@ -230,7 +232,7 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
 ///         ``"unknown"`` when it happens *during* classify; this exception
 ///         is reserved for explicit parse-failure paths).
 ///     ClassicNotificationCacheIoError: cache I/O failure.
-///     ClassicNotificationError: unsupported notification manifest version.
+///     ClassicNotificationError: invalid or unsupported notification manifest.
 ///     ClassicUpdateError: non-notification update-subsystem error.
 #[pyfunction]
 fn check_app_notification(

@@ -544,6 +544,6 @@ def check_app_notification(
         ClassicNotificationInstalledVersionParseError: Installed-version
             string failed semver parsing.
         ClassicNotificationCacheIoError: Cache I/O failure.
-        ClassicNotificationError: Unsupported notification manifest version.
+        ClassicNotificationError: Invalid or unsupported notification manifest.
         ClassicUpdateError: Non-notification update-subsystem error.
     """
