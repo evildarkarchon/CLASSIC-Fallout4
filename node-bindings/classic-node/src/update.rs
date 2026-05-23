@@ -5,7 +5,7 @@
 //!
 //! ## Async Pattern
 //! All async functions respect the ONE RUNTIME RULE by spawning work on the shared
-//! Tokio runtime via `classic_shared_core::get_runtime()`.
+//! Tokio runtime via the crate-local shared-runtime helper.
 //!
 //! ## Exported API
 //!
@@ -32,6 +32,7 @@
 //! - `applyYamlUpdate(request)` — Fetch + download + install the approved set.
 //! - `rollbackYamlUpdate(fileName)` — Swap cache entry with its `.prev` sibling.
 
+use crate::runtime::spawn_result;
 use classic_settings_core::{SchemaCompat, SchemaVersion};
 use classic_update_core as core;
 use std::path::PathBuf;
@@ -259,14 +260,13 @@ impl GithubClient {
     #[allow(deprecated)] // compat wrapper over GithubClient::get_latest_release (design D-08).
     pub async fn get_latest_release(&self) -> napi::Result<JsGithubRelease> {
         let client = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move { client.get_latest_release().await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map(|r| core_release_to_js(&r))
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { client.get_latest_release().await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
+        .map(|release| core_release_to_js(&release))
     }
 
     /// Fetch all releases for this repository.
@@ -284,14 +284,13 @@ impl GithubClient {
         let client = self.inner.clone();
         let prereleases = include_prereleases.unwrap_or(false);
         let drafts = include_drafts.unwrap_or(false);
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move { client.get_all_releases(prereleases, drafts).await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map(|releases| releases.iter().map(core_release_to_js).collect())
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { client.get_all_releases(prereleases, drafts).await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
+        .map(|releases| releases.iter().map(core_release_to_js).collect())
     }
 }
 
@@ -326,14 +325,13 @@ pub fn has_update(current_version: String, latest_version: String) -> napi::Resu
 #[allow(deprecated)] // compat wrapper over GithubClient::get_latest_release (design D-08).
 pub async fn get_latest_release(owner: String, repo: String) -> napi::Result<JsGithubRelease> {
     let client = core::GithubClient::new(owner, repo).map_err(to_napi_err)?;
-    let handle = classic_shared_core::get_runtime().handle().clone();
-
-    handle
-        .spawn(async move { client.get_latest_release().await })
-        .await
-        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-        .map(|r| core_release_to_js(&r))
-        .map_err(to_napi_err)
+    spawn_result(
+        async move { client.get_latest_release().await },
+        |error| to_napi_err(format!("Runtime error: {error}")),
+        to_napi_err,
+    )
+    .await
+    .map(|release| core_release_to_js(&release))
 }
 
 /// Check for updates in a single call: fetches the latest release and compares versions.
@@ -353,14 +351,13 @@ pub async fn check_for_updates(
     current_version: String,
 ) -> napi::Result<JsUpdateCheckResult> {
     let client = core::GithubClient::new(&owner, &repo).map_err(to_napi_err)?;
-    let handle = classic_shared_core::get_runtime().handle().clone();
-
     let current = current_version.clone();
-    let release = handle
-        .spawn(async move { client.get_latest_release().await })
-        .await
-        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-        .map_err(to_napi_err)?;
+    let release = spawn_result(
+        async move { client.get_latest_release().await },
+        |error| to_napi_err(format!("Runtime error: {error}")),
+        to_napi_err,
+    )
+    .await?;
 
     // Compare versions (synchronous, no network)
     let temp_client = core::GithubClient::new("_", "_").map_err(to_napi_err)?;

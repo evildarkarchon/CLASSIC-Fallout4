@@ -73,6 +73,9 @@ jobs:
       - name: Run clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
+      - name: Run runtime/GIL pattern guard
+        run: python tools/runtime_gil_patterns/check_runtime_gil_patterns.py --repo-root .
+
   build:
     name: Build
     runs-on: windows-latest

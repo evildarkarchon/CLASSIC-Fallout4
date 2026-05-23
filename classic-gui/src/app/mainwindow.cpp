@@ -304,8 +304,18 @@ MainWindow::MainWindow(QWidget* parent)
     setupUi();
     loadStylesheet();
     loadSettings();
+    initializeControllers();
+    connectSignals();
+    runStartupWorkflows();
+}
 
-    // Create core infrastructure
+MainWindow::~MainWindow()
+{
+    saveSettings();
+}
+
+void MainWindow::initializeControllers()
+{
     m_signalHub = &SignalHub::instance();
     m_threadManager = new ThreadManager(this);
     m_scanController = new ScanController(m_signalHub, m_threadManager, this);
@@ -314,24 +324,17 @@ MainWindow::MainWindow(QWidget* parent)
     m_resultsController =
         new ResultsController(m_signalHub, m_tabWidget, m_reportList, m_markdownViewer, m_reportMetadata, this);
     m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
+}
 
-    connectSignals();
-
-    // Initialize results report directory from settings
+void MainWindow::runStartupWorkflows()
+{
     initResultsReportDir();
-
-    // Check if first-run path detection is needed
     checkFirstRunPaths();
 
     // Startup update check (silent unless update/error), matching PySide6 behavior.
     if (m_updateCheckOnStartup) {
         QTimer::singleShot(0, this, [this]() { checkForUpdates(false); });
     }
-}
-
-MainWindow::~MainWindow()
-{
-    saveSettings();
 }
 
 // ── Public interface ───────────────────────────────────────────────

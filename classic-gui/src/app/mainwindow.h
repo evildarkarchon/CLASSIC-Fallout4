@@ -43,7 +43,9 @@ private:
     void setupArticlesTab();
     void setupResultsTab();
     void loadStylesheet();
+    void initializeControllers();
     void connectSignals();
+    void runStartupWorkflows();
     void loadSettings();
     void saveSettings();
     void initResultsReportDir();

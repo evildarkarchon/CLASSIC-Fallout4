@@ -118,6 +118,7 @@ pub mod papyrus;
 pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
+mod py_adapters;
 pub mod record_scanner;
 pub mod report;
 pub mod settings_validator;

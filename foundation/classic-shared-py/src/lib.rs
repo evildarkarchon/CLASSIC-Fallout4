@@ -22,6 +22,7 @@ use pyo3::exceptions::{
 };
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
+use std::future::Future;
 use std::path::{Path, PathBuf};
 
 // Module declarations
@@ -202,8 +203,23 @@ where
     F: FnOnce() -> R + Send,
     R: Send,
 {
-    // PyO3 0.27: detach() takes a closure
+    // PyO3 0.28: detach() takes a closure and releases the GIL while it runs.
     py.detach(f)
+}
+
+/// Helper to run async Rust from a synchronous Python API while detached from the GIL.
+///
+/// Use this only for synchronous Python methods that must block until async Rust
+/// work completes. Extract all Python-owned data before calling this helper. For
+/// true Python async APIs, return a coroutine with `future_into_py(...)` instead.
+#[inline]
+pub fn without_gil_block_on<F, Fut, R>(py: Python<'_>, f: F) -> R
+where
+    F: FnOnce() -> Fut + Send,
+    Fut: Future<Output = R>,
+    R: Send,
+{
+    without_gil(py, || get_runtime().block_on(f()))
 }
 
 fn parent_dir_from_python_path(candidate: &str) -> Option<PathBuf> {

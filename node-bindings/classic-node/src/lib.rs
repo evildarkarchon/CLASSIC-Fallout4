@@ -23,6 +23,7 @@ extern crate napi_derive;
 mod crashgen_rules;
 mod logging_contract;
 mod message;
+mod runtime;
 mod shared;
 mod version;
 

@@ -1,13 +1,11 @@
 //! Python bindings for SettingsValidator - Thin wrapper over classic-scanlog-core
 
-use classic_scanlog_core::CrashgenEntry;
-use classic_scanlog_core::crashgen_registry::CheckId;
 use classic_scanlog_core::settings_validator::SettingsValidator;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyDict};
+use pyo3::types::PyAny;
 use std::collections::{HashMap, HashSet};
 
-use crate::crashgen_rules::parse_settings_rules;
+use crate::py_adapters::crashgen_entry_from_py;
 
 /// Python wrapper for SettingsValidator
 #[pyclass(name = "SettingsValidator")]
@@ -23,41 +21,8 @@ impl PySettingsValidator {
     /// and optional `settings_rules`.
     #[new]
     pub fn new(crashgen_name: String, crashgen_entry: &Bound<'_, PyAny>) -> Self {
-        let entry_dict = crashgen_entry.cast::<PyDict>().ok();
-
-        let display_section = entry_dict
-            .and_then(|d| d.get_item("display_section").ok().flatten())
-            .and_then(|v| v.extract::<String>().ok())
-            .unwrap_or_default();
-
-        let ignore_keys = entry_dict
-            .and_then(|d| d.get_item("ignore_keys").ok().flatten())
-            .and_then(|v| v.extract::<Vec<String>>().ok())
-            .unwrap_or_default()
-            .into_iter()
-            .collect();
-
-        let checks = entry_dict
-            .and_then(|d| d.get_item("checks").ok().flatten())
-            .and_then(|v| v.extract::<Vec<String>>().ok())
-            .unwrap_or_default()
-            .into_iter()
-            .filter_map(|name| CheckId::parse(&name))
-            .collect();
-
-        let settings_rules = entry_dict
-            .and_then(|d| d.get_item("settings_rules").ok().flatten())
-            .and_then(|v| parse_settings_rules(&v));
-
-        let entry = CrashgenEntry {
-            display_section,
-            ignore_keys,
-            checks,
-            settings_rules,
-        };
-
         Self {
-            inner: SettingsValidator::new(crashgen_name, entry),
+            inner: SettingsValidator::new(crashgen_name, crashgen_entry_from_py(crashgen_entry)),
         }
     }
 

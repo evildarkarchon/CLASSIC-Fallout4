@@ -3,13 +3,13 @@
 //! Bridges `classic_file_io_core` for backup management, game files,
 //! log collection, file similarity, and encoding-aware file I/O.
 
+use crate::runtime_support::{block_on, block_on_result};
 use classic_file_io_core::FileIOCore;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::game_files::GameFilesManager;
 use classic_file_io_core::hash::FileHasher;
 use classic_file_io_core::log_collection::LogCollector;
 use classic_file_io_core::similarity::calculate_similarity;
-use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around BackupManager.
@@ -49,32 +49,24 @@ fn backup_manager_new(game_root: &str) -> Box<CxxBackupManager> {
 
 fn backup_manager_exists(mgr: &CxxBackupManager, backup_type: &str) -> Result<bool, String> {
     let bt = backup_type_from_str(backup_type)?;
-    get_runtime()
-        .block_on(mgr.inner.backup_exists(bt))
-        .map_err(|e| format!("{e}"))
+    block_on_result(mgr.inner.backup_exists(bt))
 }
 
 fn backup_manager_create(mgr: &CxxBackupManager, backup_type: &str) -> Result<String, String> {
     let bt = backup_type_from_str(backup_type)?;
-    let info = get_runtime()
-        .block_on(mgr.inner.create_backup(bt))
-        .map_err(|e| format!("{e}"))?;
+    let info = block_on_result(mgr.inner.create_backup(bt))?;
     Ok(format!("Backed up {} files", info.file_count))
 }
 
 fn backup_manager_restore(mgr: &CxxBackupManager, backup_type: &str) -> Result<u32, String> {
     let bt = backup_type_from_str(backup_type)?;
-    let count = get_runtime()
-        .block_on(mgr.inner.restore_backup(bt))
-        .map_err(|e| format!("{e}"))?;
+    let count = block_on_result(mgr.inner.restore_backup(bt))?;
     Ok(count as u32)
 }
 
 fn backup_manager_remove(mgr: &CxxBackupManager, backup_type: &str) -> Result<(), String> {
     let bt = backup_type_from_str(backup_type)?;
-    get_runtime()
-        .block_on(mgr.inner.remove_backup(bt))
-        .map_err(|e| format!("{e}"))
+    block_on_result(mgr.inner.remove_backup(bt))
 }
 
 // ── GameFilesManager ────────────────────────────────────────────────
@@ -90,9 +82,7 @@ fn game_files_backup(
     label: &str,
     patterns: &[String],
 ) -> Result<String, String> {
-    let result = get_runtime()
-        .block_on(mgr.inner.backup(label, patterns))
-        .map_err(|e| format!("{e}"))?;
+    let result = block_on_result(mgr.inner.backup(label, patterns))?;
     Ok(format!(
         "{} files affected, {} errors",
         result.files_affected,
@@ -105,9 +95,7 @@ fn game_files_restore(
     label: &str,
     patterns: &[String],
 ) -> Result<String, String> {
-    let result = get_runtime()
-        .block_on(mgr.inner.restore(label, patterns))
-        .map_err(|e| format!("{e}"))?;
+    let result = block_on_result(mgr.inner.restore(label, patterns))?;
     Ok(format!(
         "{} files affected, {} errors",
         result.files_affected,
@@ -120,9 +108,7 @@ fn game_files_remove(
     label: &str,
     patterns: &[String],
 ) -> Result<String, String> {
-    let result = get_runtime()
-        .block_on(mgr.inner.remove(label, patterns))
-        .map_err(|e| format!("{e}"))?;
+    let result = block_on_result(mgr.inner.remove(label, patterns))?;
     Ok(format!(
         "{} files affected, {} errors",
         result.files_affected,
@@ -153,9 +139,7 @@ fn log_collector_new(
 }
 
 fn log_collector_collect_all(collector: &CxxLogCollector) -> Result<Vec<String>, String> {
-    let paths = get_runtime()
-        .block_on(collector.inner.collect_all())
-        .map_err(|e| format!("{e}"))?;
+    let paths = block_on_result(collector.inner.collect_all())?;
     Ok(paths
         .into_iter()
         .map(|p| p.to_string_lossy().to_string())
@@ -163,9 +147,7 @@ fn log_collector_collect_all(collector: &CxxLogCollector) -> Result<Vec<String>,
 }
 
 fn log_collector_collect_crash_logs(collector: &CxxLogCollector) -> Result<Vec<String>, String> {
-    let paths = get_runtime()
-        .block_on(collector.inner.collect_crash_logs())
-        .map_err(|e| format!("{e}"))?;
+    let paths = block_on_result(collector.inner.collect_crash_logs())?;
     Ok(paths
         .into_iter()
         .map(|p| p.to_string_lossy().to_string())
@@ -176,8 +158,7 @@ fn log_collector_collect_crash_logs(collector: &CxxLogCollector) -> Result<Vec<S
 
 fn resolve_targeted_inputs(input_paths: &[String]) -> ffi::TargetedResolutionDto {
     let paths: Vec<PathBuf> = input_paths.iter().map(PathBuf::from).collect();
-    let resolution = get_runtime()
-        .block_on(classic_file_io_core::log_collection::resolve_targeted_inputs(paths));
+    let resolution = block_on(classic_file_io_core::log_collection::resolve_targeted_inputs(paths));
     ffi::TargetedResolutionDto {
         logs: resolution
             .logs
@@ -201,16 +182,12 @@ fn calculate_file_similarity(path1: &str, path2: &str) -> Result<f64, String> {
 
 fn read_file_with_encoding(path: &str) -> Result<String, String> {
     let io = FileIOCore::new("utf-8", "replace", 4, 8);
-    get_runtime()
-        .block_on(io.read_file(Path::new(path)))
-        .map_err(|e| format!("{e}"))
+    block_on_result(io.read_file(Path::new(path)))
 }
 
 fn write_file_string(path: &str, content: &str) -> Result<(), String> {
     let io = FileIOCore::new("utf-8", "replace", 4, 8);
-    get_runtime()
-        .block_on(io.write_file(Path::new(path), content))
-        .map_err(|e| format!("{e}"))
+    block_on_result(io.write_file(Path::new(path), content))
 }
 
 // ── Report file helpers ───────────────────────────────────────────
@@ -230,9 +207,7 @@ fn write_autoscan_report(log_path: &str, content: &str) -> Result<String, String
     let autoscan_path = log_path.with_file_name(autoscan_name);
 
     let io = FileIOCore::new("utf-8", "replace", 4, 8);
-    get_runtime()
-        .block_on(io.write_file(&autoscan_path, content))
-        .map_err(|e| format!("{e}"))?;
+    block_on_result(io.write_file(&autoscan_path, content))?;
 
     Ok(autoscan_path.to_string_lossy().to_string())
 }
