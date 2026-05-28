@@ -392,6 +392,10 @@ pub async fn check_app_notification(
 /// empty `%LOCALAPPDATA%` degrades to the next fallback rather than
 /// producing an empty path. That matches
 /// [`classic_path_core::notification_cache_dir_with_env`]'s contract.
+///
+/// Caller-input validation runs before client/cache setup so an
+/// unparseable `installed_version` remains deterministic even on
+/// machines whose notification cache cannot be materialized.
 pub async fn check_app_notification_with_env<F>(
     owner: &str,
     repo: &str,
@@ -401,6 +405,11 @@ pub async fn check_app_notification_with_env<F>(
 where
     F: Fn(&str) -> Option<String>,
 {
+    // Keep public callers on the same deterministic error path as
+    // `check_app_notification_with`: bad caller input wins before any
+    // client construction or cache directory materialization.
+    validate_installed_version(installed_version)?;
+
     let client = GithubClient::new(owner, repo)?;
     let cache_dir = map_ensure_cache_result(
         classic_path_core::ensure_notification_cache_dir_with_env(owner, repo, env),

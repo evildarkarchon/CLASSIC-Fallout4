@@ -30,12 +30,13 @@
 //!
 //! # What it does NOT cover
 //!
-//! The production `check_app_notification` short-circuits before any
-//! network call when cache-dir materialization fails (the `?` sits
-//! above `check_app_notification_with`), so this test does not need a
+//! With a well-formed `installed_version`, the production
+//! `check_app_notification` short-circuits before any network call when
+//! cache-dir materialization fails (the `?` sits above
+//! `check_app_notification_with`), so this test does not need a
 //! `mockito` server. That also means it stays green in fully-offline
-//! CI where outbound HTTPS is blocked — the CacheIo branch is the
-//! first unconditional failure and nothing downstream runs.
+//! CI where outbound HTTPS is blocked — the CacheIo branch fires before
+//! anything downstream runs.
 
 use classic_update_core::{UpdateError, check_app_notification_with_env};
 use std::collections::HashMap;
@@ -114,6 +115,30 @@ async fn cache_dir_creation_failure_surfaces_as_notification_cache_io() {
             );
         }
         other => panic!("expected NotificationCacheIo, got {other:?}"),
+    }
+}
+
+/// Bad caller input must win before cache materialization, even when the
+/// user's cache root is genuinely unwritable.
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_installed_version_surfaces_before_cache_dir_creation_failure() {
+    let tmp = TempDir::new().expect("tempdir");
+    std::fs::write(tmp.path().join("CLASSIC"), b"not a directory").expect("plant blocking file");
+
+    let env = sandbox_env(tmp.path().to_path_buf());
+
+    let err = check_app_notification_with_env("owner", "repo", "not-a-semver", env)
+        .await
+        .expect_err("unparseable installed_version must still error");
+
+    match err {
+        UpdateError::NotificationInstalledVersionParse { input, .. } => {
+            assert_eq!(input, "not-a-semver");
+        }
+        UpdateError::NotificationCacheIo { .. } => {
+            panic!("installed_version validation must run before cache materialization")
+        }
+        other => panic!("expected NotificationInstalledVersionParse, got {other:?}"),
     }
 }
 
