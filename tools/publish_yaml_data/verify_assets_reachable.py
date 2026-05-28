@@ -109,7 +109,7 @@ def _load_download_urls(manifest_path: Path) -> list[tuple[str, str]]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument(
         "--manifest",
         type=Path,

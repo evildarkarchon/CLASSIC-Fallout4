@@ -40,9 +40,10 @@ Use this directory in this order:
 29. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
 30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
-32. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
-33. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
-34. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
+32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
+33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
+34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
+35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
 Need a path translation? Start with the shared [`workspace migration matrix`](../workspace-migration-matrix.md), then return here for the active API pages.
 
@@ -80,6 +81,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `binding-parity-overview.md` provides the complete per-crate binding surface reference for all shared Rust crates across C++, Node, and Python
 - `node-python-contract-map.md` points contributors to the active Node and Python contract files, wrapper modules, and parity-report entry points
 - `binding-contract-refresh-note.md` explains the current maintainer expectation for refreshing C++ baseline, Node `index.d.ts`, and Python `.pyi` contract artifacts separately or in the same change
+- `binding-compliance-suite.md` documents the canonical binding compliance command, execution profiles, structured reports, and staged known-gap handling
 - `classic-scanlog-core` consumes config data, crashgen rules, and optional DB lookups while treating OG/VR selection as a Version Registry-backed config-building concern
 - `binding-parity-policy.md` states the one-tier parity policy, gate ownership, and the step-by-step workflow for adding a new public Rust API across all three bindings
 - `error-contract.md` documents the intentionally different error shapes used by each binding surface (C++ empty-string sentinels, Node error codes, Python typed exceptions) with concrete source examples

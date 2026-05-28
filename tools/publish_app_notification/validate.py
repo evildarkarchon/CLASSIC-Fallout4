@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from ruamel.yaml import YAML, YAMLError
+from ruamel.yaml import YAML, YAMLError # type: ignore
 
 # Mirror the `^\d+\.\d+$` contract in
 # `classic_update_core::notification::is_major_minor`. Two numeric segments.
@@ -294,7 +294,7 @@ def validate_path(path: Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument(
         "--source",
         type=Path,

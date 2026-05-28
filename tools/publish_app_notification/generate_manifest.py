@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ruamel.yaml import YAML, YAMLError
+from ruamel.yaml import YAML, YAMLError # type: ignore
 
 _YAML = YAML(typ="safe", pure=True)
 
@@ -112,7 +112,7 @@ def build_manifest(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument(
         "--source",
         type=Path,

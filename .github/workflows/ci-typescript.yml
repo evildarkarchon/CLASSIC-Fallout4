@@ -76,20 +76,17 @@ jobs:
             exit 1
           }
 
-      - name: Run Tier-1 parity and runtime coverage gate
-        working-directory: node-bindings/classic-node
-        run: bun run parity:gate
-
-      - name: Run index.d.ts freshness gate
-        working-directory: node-bindings/classic-node
-        run: bun run dts:freshness:ci
+      - name: Run Node binding compliance profile
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile node-ci
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: node-parity-diagnostics
-          path: node-bindings/classic-node/parity-artifacts/
+          path: |
+            tools/binding_compliance/artifacts/
+            node-bindings/classic-node/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 

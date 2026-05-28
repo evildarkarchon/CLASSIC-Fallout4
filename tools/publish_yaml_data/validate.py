@@ -23,7 +23,7 @@ import re
 import sys
 from pathlib import Path
 
-from ruamel.yaml import YAML, YAMLError
+from ruamel.yaml import YAML, YAMLError # type: ignore
 
 try:
     from tools.publish_yaml_data.cache_names import (
@@ -31,7 +31,7 @@ try:
         windows_normalized_cache_file_key,
     )
 except ModuleNotFoundError:
-    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key
+    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key # type: ignore
 
 # `pure=True` forces the pure-Python parser; the libyaml-backed C parser
 # rejects the `foo::bar` bare-scalar pattern used by several
@@ -177,7 +177,7 @@ def validate_file(path: Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument(
         "--databases-dir",
         type=Path,

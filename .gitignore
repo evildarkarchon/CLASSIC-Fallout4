@@ -110,6 +110,7 @@ test-results.txt
 # Ephemeral parity gate artifacts (baselines are committed separately)
 ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/
 ClassicLib-rs/node-bindings/classic-node/parity-artifacts/
+tools/binding_compliance/artifacts/
 
 # Code signing certificates (auto-generated, contains private key)
 tools/certs/

@@ -77,7 +77,7 @@ def _sha256(data: bytes) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument("--owner", required=True, help='The "<owner>" segment of the repo')
     parser.add_argument("--repo", required=True, help='The "<repo>" segment (no owner prefix)')
     match_group = parser.add_mutually_exclusive_group(required=True)

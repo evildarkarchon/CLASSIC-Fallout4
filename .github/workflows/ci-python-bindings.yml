@@ -29,33 +29,17 @@ jobs:
           enable-cache: true
           cache-dependency-glob: python-bindings/uv.lock
 
-      # The parity-gates job only needs the drift-guard tooling (ruamel.yaml);
-      # everything else in check_parity_gate.py / validate_stubs.py is stdlib.
-      # `--inexact` is a safety net if a prior step ever seeded the venv with
-      # maturin-built wheels; it keeps extraneous packages untouched.
-      # `--locked` fails if committed uv.lock drifts from pyproject.toml.
-      - name: Install Python parity-gate tooling
-        run: uv sync --project python-bindings --inexact --group drift-guards --locked
-
-      - name: Run Tier-1 Python parity and runtime coverage gate
-        run: uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
-
-      - name: Run Python stub validation gate
-        run: uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-
-      # Drift guard: checked-in YAML `schema_version` headers vs the
-      # `client_schemas::*` constants in classic-config-core. Fails when a
-      # shippable YAML file's header would be refused at load time by the
-      # current client binary — i.e., the two sides of the contract drifted.
-      - name: Run YAML schema-version drift guard
-        run: uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
+      - name: Run Python binding compliance profile
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile python-ci
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: python-parity-diagnostics
-          path: python-bindings/parity-artifacts/
+          path: |
+            tools/binding_compliance/artifacts/
+            python-bindings/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 
