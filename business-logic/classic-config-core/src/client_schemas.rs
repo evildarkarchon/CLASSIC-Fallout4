@@ -20,12 +20,22 @@
 //! The drift-guard CI step (Section 13 of the yaml-update-delivery change)
 //! will compare bundled YAML headers against these constants and fail the
 //! build if a checked-in file would be refused at load time.
+//!
+//! # Migration history
+//!
+//! - **MAIN_YAML 1 → 2 (2026-04)** — `CLASSIC_Info.version` dropped the
+//!   `CLASSIC v` display prefix and is now a bare SemVer string (e.g.,
+//!   `v9.1.0`). Consumers that previously stripped the prefix read the
+//!   value directly; the one consumer that needed the decorated form
+//!   (scanlog report header) now prepends `CLASSIC ` at format time. See
+//!   `openspec/changes/yaml-version-drop-classic-prefix/` for the full
+//!   contract.
 
 use classic_settings_core::SchemaCompat;
 
 /// Schema range the client accepts for `CLASSIC Main.yaml` (and any future
 /// global metadata file under `CLASSIC Data/databases/CLASSIC Main.yaml`).
-pub const MAIN_YAML: SchemaCompat = SchemaCompat::new(1, 0);
+pub const MAIN_YAML: SchemaCompat = SchemaCompat::new(2, 0);
 
 /// Schema range the client accepts for `CLASSIC Fallout4.yaml` (and any
 /// parallel per-game shippable file under

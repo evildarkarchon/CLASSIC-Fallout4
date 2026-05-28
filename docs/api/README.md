@@ -19,6 +19,7 @@ Use this directory in this order:
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer
 11. [`classic-update-core.md`](classic-update-core.md) - async GitHub release/update-check client and DTO layer
 11a. [`yaml-update-delivery.md`](yaml-update-delivery.md) - cross-crate YAML-data update flow: schema_version contract, client load-precedence, manifest format, Pages-mirrored publish workflow
+11b. [`app-update-notification-delivery.md`](app-update-notification-delivery.md) - payload-free app-update notification channel: manifest schema, Pages-first + Releases fallback, classification model, maintainer publish workflow
 12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
 13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for settings discovery, merged YAML semantics, and consumed schema keys
 14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, validation, and backup helpers
@@ -39,9 +40,10 @@ Use this directory in this order:
 29. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
 30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
-32. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
-33. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
-34. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
+32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
+33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
+34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
+35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
 Need a path translation? Start with the shared [`workspace migration matrix`](../workspace-migration-matrix.md), then return here for the active API pages.
 
@@ -59,6 +61,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime
 - `yaml-update-delivery.md` documents the cross-crate YAML-data update channel: the `schema_version` contract in `classic-settings-core`, `client_schemas::*` and `shippable::load_shippable_yaml` in `classic-config-core`, atomic install/rollback in `classic-file-io-core`, the `yaml_update` orchestrator in `classic-update-core`, and the Pages-mirrored maintainer publish workflow
+- `app-update-notification-delivery.md` documents the payload-free app-update notification channel: the `notification` module in `classic-update-core`, `notification_cache_dir` in `classic-path-core`, disjoint Pages path under `app-notification/`, and the `publish-app-notification.yml` maintainer workflow
 - `classic-config-core` loads YAML and uses Version Registry metadata to build config data; the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (historical note: this owner absorbed the former `classic-crashgen-settings-core` crate during v9.1.0 Phase 2)
 - `classic-config-core-yaml-schema.md` captures the runtime YAML contract for merged settings files and the Main/Game/Ignore sections that `classic-config-core` actually consumes
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups
@@ -78,6 +81,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `binding-parity-overview.md` provides the complete per-crate binding surface reference for all shared Rust crates across C++, Node, and Python
 - `node-python-contract-map.md` points contributors to the active Node and Python contract files, wrapper modules, and parity-report entry points
 - `binding-contract-refresh-note.md` explains the current maintainer expectation for refreshing C++ baseline, Node `index.d.ts`, and Python `.pyi` contract artifacts separately or in the same change
+- `binding-compliance-suite.md` documents the canonical binding compliance command, execution profiles, structured reports, and staged known-gap handling
 - `classic-scanlog-core` consumes config data, crashgen rules, and optional DB lookups while treating OG/VR selection as a Version Registry-backed config-building concern
 - `binding-parity-policy.md` states the one-tier parity policy, gate ownership, and the step-by-step workflow for adding a new public Rust API across all three bindings
 - `error-contract.md` documents the intentionally different error shapes used by each binding surface (C++ empty-string sentinels, Node error codes, Python typed exceptions) with concrete source examples

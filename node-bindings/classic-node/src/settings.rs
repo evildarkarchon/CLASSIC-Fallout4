@@ -355,10 +355,14 @@ pub fn yaml_get_value(content: String, key_path: String) -> Result<serde_json::V
 
 /// Extract a string value from YAML using dot-notation, with a default fallback.
 #[napi]
-pub fn yaml_get_string_value(content: String, key_path: String, default: String) -> Result<String> {
+pub fn yaml_get_string_value(
+    content: String,
+    key_path: String,
+    default_value: String,
+) -> Result<String> {
     let ops = YamlOperations::new();
     let yaml = ops.parse_yaml(&content).map_err(yaml_err_to_napi)?;
-    Ok(ops.get_string_value(&yaml, &key_path, &default))
+    Ok(ops.get_string_value(&yaml, &key_path, &default_value))
 }
 
 /// Extract a string array from YAML using dot-notation key path.
@@ -420,8 +424,9 @@ impl YamlDocument {
 
     /// Extract a string value at the given dot-notation key path, with a default fallback.
     #[napi]
-    pub fn get_string_value(&self, key_path: String, default: String) -> String {
-        self.ops.get_string_value(&self.yaml, &key_path, &default)
+    pub fn get_string_value(&self, key_path: String, default_value: String) -> String {
+        self.ops
+            .get_string_value(&self.yaml, &key_path, &default_value)
     }
 
     /// Extract a string array at the given dot-notation key path.

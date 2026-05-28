@@ -53,6 +53,7 @@
 use pyo3::prelude::*;
 
 mod github;
+mod notification;
 mod yaml_update;
 
 /// Python module for CLASSIC update checking.
@@ -89,6 +90,9 @@ fn classic_update(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register YAML update-delivery components (check/apply/rollback + DTOs)
     yaml_update::register(m)?;
+
+    // Register app-notification components (check + DTOs + exception hierarchy)
+    notification::register(m)?;
 
     Ok(())
 }

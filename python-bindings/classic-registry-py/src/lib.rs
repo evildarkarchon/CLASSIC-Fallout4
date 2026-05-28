@@ -237,10 +237,11 @@ fn get_game(py: Python) -> String {
 /// registry.set_game("Skyrim")
 /// ```
 #[pyfunction]
-fn set_game(py: Python, game_name: String) {
+fn set_game(py: Python, game_name: String) -> PyResult<()> {
     // Store as PyObjectWrapper so get() and get_game() can both retrieve it
-    let py_str = PyObjectWrapper::new(game_name.into_pyobject(py).unwrap().into_any().unbind());
+    let py_str = PyObjectWrapper::new(game_name.into_pyobject(py)?.into_any().unbind());
     classic_registry_core::register(classic_registry_core::Keys::GAME.to_string(), py_str);
+    Ok(())
 }
 
 /// Check if the application is running in GUI mode.

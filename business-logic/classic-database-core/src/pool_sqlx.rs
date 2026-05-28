@@ -250,114 +250,16 @@ struct ConnectionAllocationPlan {
     allocations: Vec<(PathBuf, usize)>,
 }
 
-/// Database pool with sqlx - true async support
-///
-/// Provides high-performance asynchronous database access with connection pooling,
-/// query caching, and FormID lookup optimization.
-#[derive(Clone)]
-pub struct DatabasePool {
-    /// Map of database paths to sqlx connection pools
-    pools: Arc<DashMap<PathBuf, SqlitePool>>,
-    /// Query result cache with TTL-based expiration
-    query_cache: Arc<DashMap<CacheKey, CacheEntry>>,
-    /// Reusable query templates keyed by (table, stable bucket size, collation mode)
-    query_template_cache: Arc<DashMap<(String, usize, bool), String>>,
-    /// Maximum number of entries allowed in query cache
-    cache_capacity: Arc<AtomicUsize>,
-    /// Number of lookup operations before cleanup is considered
-    cache_cleanup_threshold: Arc<AtomicU64>,
-    /// Minimum duration between proactive cleanup runs
-    cache_cleanup_interval: Arc<RwLock<Duration>>,
-    /// Number of lookup operations since the last cleanup run
-    cache_ops_since_cleanup: Arc<AtomicU64>,
-    /// Timestamp of last proactive cleanup run
-    last_cleanup_at: Arc<RwLock<Instant>>,
-    /// Time-to-live duration for cached queries
-    cache_ttl: Arc<RwLock<Duration>>,
-    /// Maximum number of connections per pool
-    max_connections: Arc<RwLock<Option<usize>>>,
-    /// Effective per-database allocations for the currently active pools
-    pool_allocations: Arc<RwLock<HashMap<PathBuf, usize>>>,
-    /// Total number of queries executed
-    stat_total_queries: Arc<AtomicU64>,
-    /// Number of queries served from cache
-    stat_cache_hits: Arc<AtomicU64>,
-    /// Number of queries that required database access
-    stat_cache_misses: Arc<AtomicU64>,
-    /// Total number of connections created
-    stat_total_connections: Arc<AtomicU64>,
-    /// Number of currently active connections
-    stat_active_connections: Arc<AtomicU64>,
-    /// Number of cache entries evicted due to capacity pressure
-    stat_cache_evictions: Arc<AtomicU64>,
-    /// Number of proactive cleanup runs performed
-    stat_cleanup_runs: Arc<AtomicU64>,
-    /// Number of entries removed by proactive cleanup
-    stat_cleanup_removed: Arc<AtomicU64>,
-    /// Total elapsed nanoseconds spent running proactive cleanup sweeps
-    stat_cleanup_elapsed_total_ns: Arc<AtomicU64>,
-    /// Maximum elapsed nanoseconds observed for a single proactive cleanup run
-    stat_cleanup_elapsed_max_ns: Arc<AtomicU64>,
-    /// Total elapsed nanoseconds spent in eviction maintenance
-    stat_eviction_elapsed_total_ns: Arc<AtomicU64>,
-    /// Maximum elapsed nanoseconds observed for a single eviction maintenance pass
-    stat_eviction_elapsed_max_ns: Arc<AtomicU64>,
-    /// Number of stable-shape bucket selections in batch path
-    stat_stable_shape_selections: Arc<AtomicU64>,
-    /// Number of padded pair slots used to satisfy stable shapes
-    stat_stable_shape_padding_pairs: Arc<AtomicU64>,
-    /// Stable bucket usage counters
-    stat_stable_shape_bucket_8: Arc<AtomicU64>,
-    stat_stable_shape_bucket_16: Arc<AtomicU64>,
-    stat_stable_shape_bucket_32: Arc<AtomicU64>,
-    stat_stable_shape_bucket_64: Arc<AtomicU64>,
-    stat_stable_shape_bucket_128: Arc<AtomicU64>,
-    stat_stable_shape_bucket_256: Arc<AtomicU64>,
-    stat_stable_shape_bucket_512: Arc<AtomicU64>,
-    stat_stable_shape_bucket_1024: Arc<AtomicU64>,
-    /// Active game table name (e.g., "Fallout4", "Skyrim")
-    game_table: Arc<RwLock<String>>,
-    /// List of database file paths currently loaded
-    db_paths: Arc<RwLock<Vec<PathBuf>>>,
-}
+struct ConnectionAllocator;
 
-impl DatabasePool {
-    /// Calculate optimal pool size based on CPU cores
+impl ConnectionAllocator {
     fn calculate_max_connections() -> usize {
         let cpus = num_cpus::get();
         let optimal = cpus * 4; // 4 connections per CPU core for async I/O
         optimal.clamp(8, 64) // Higher bounds for async operations
     }
 
-    fn clamp_cache_capacity(capacity: usize) -> usize {
-        capacity.clamp(MIN_QUERY_CACHE_CAPACITY, MAX_QUERY_CACHE_CAPACITY)
-    }
-
-    fn clamp_cleanup_threshold(threshold: u64) -> u64 {
-        threshold.clamp(
-            MIN_CACHE_CLEANUP_OP_THRESHOLD,
-            MAX_CACHE_CLEANUP_OP_THRESHOLD,
-        )
-    }
-
-    fn clamp_cleanup_interval(interval: Duration) -> Duration {
-        interval.clamp(
-            Duration::from_secs(MIN_CACHE_CLEANUP_INTERVAL_SECS),
-            Duration::from_secs(MAX_CACHE_CLEANUP_INTERVAL_SECS),
-        )
-    }
-
-    fn configured_connection_budget(&self) -> usize {
-        self.max_connections
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("max_connections lock was poisoned - recovering");
-                poisoned.into_inner()
-            })
-            .unwrap_or_else(Self::calculate_max_connections)
-    }
-
-    fn derive_connection_allocation(
+    fn derive_allocation(
         configured_budget: usize,
         db_paths: &[PathBuf],
     ) -> ConnectionAllocationPlan {
@@ -393,13 +295,598 @@ impl DatabasePool {
             allocations,
         }
     }
+}
 
-    async fn close_active_pools(&self) {
-        let existing_pools: Vec<(PathBuf, SqlitePool)> = self
-            .pools
+#[derive(Clone)]
+struct PoolStats {
+    total_queries: Arc<AtomicU64>,
+    cache_hits: Arc<AtomicU64>,
+    cache_misses: Arc<AtomicU64>,
+    total_connections: Arc<AtomicU64>,
+    active_connections: Arc<AtomicU64>,
+    cache_evictions: Arc<AtomicU64>,
+    cleanup_runs: Arc<AtomicU64>,
+    cleanup_removed: Arc<AtomicU64>,
+    cleanup_elapsed_total_ns: Arc<AtomicU64>,
+    cleanup_elapsed_max_ns: Arc<AtomicU64>,
+    eviction_elapsed_total_ns: Arc<AtomicU64>,
+    eviction_elapsed_max_ns: Arc<AtomicU64>,
+    stable_shape_selections: Arc<AtomicU64>,
+    stable_shape_padding_pairs: Arc<AtomicU64>,
+    stable_shape_bucket_8: Arc<AtomicU64>,
+    stable_shape_bucket_16: Arc<AtomicU64>,
+    stable_shape_bucket_32: Arc<AtomicU64>,
+    stable_shape_bucket_64: Arc<AtomicU64>,
+    stable_shape_bucket_128: Arc<AtomicU64>,
+    stable_shape_bucket_256: Arc<AtomicU64>,
+    stable_shape_bucket_512: Arc<AtomicU64>,
+    stable_shape_bucket_1024: Arc<AtomicU64>,
+}
+
+impl PoolStats {
+    fn new() -> Self {
+        Self {
+            total_queries: Arc::new(AtomicU64::new(0)),
+            cache_hits: Arc::new(AtomicU64::new(0)),
+            cache_misses: Arc::new(AtomicU64::new(0)),
+            total_connections: Arc::new(AtomicU64::new(0)),
+            active_connections: Arc::new(AtomicU64::new(0)),
+            cache_evictions: Arc::new(AtomicU64::new(0)),
+            cleanup_runs: Arc::new(AtomicU64::new(0)),
+            cleanup_removed: Arc::new(AtomicU64::new(0)),
+            cleanup_elapsed_total_ns: Arc::new(AtomicU64::new(0)),
+            cleanup_elapsed_max_ns: Arc::new(AtomicU64::new(0)),
+            eviction_elapsed_total_ns: Arc::new(AtomicU64::new(0)),
+            eviction_elapsed_max_ns: Arc::new(AtomicU64::new(0)),
+            stable_shape_selections: Arc::new(AtomicU64::new(0)),
+            stable_shape_padding_pairs: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_8: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_16: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_32: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_64: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_128: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_256: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_512: Arc::new(AtomicU64::new(0)),
+            stable_shape_bucket_1024: Arc::new(AtomicU64::new(0)),
+        }
+    }
+
+    fn increment_total_queries(&self, count: u64) {
+        self.total_queries.fetch_add(count, Ordering::Relaxed);
+    }
+
+    fn increment_cache_hits(&self, count: u64) {
+        self.cache_hits.fetch_add(count, Ordering::Relaxed);
+    }
+
+    fn increment_cache_misses(&self, count: u64) {
+        self.cache_misses.fetch_add(count, Ordering::Relaxed);
+    }
+
+    fn record_connection_created(&self) {
+        self.total_connections.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn set_active_connections(&self, count: u64) {
+        self.active_connections.store(count, Ordering::Relaxed);
+    }
+
+    fn active_connections(&self) -> u64 {
+        self.active_connections.load(Ordering::Relaxed)
+    }
+
+    fn total_queries(&self) -> u64 {
+        self.total_queries.load(Ordering::Relaxed)
+    }
+
+    fn record_elapsed_ns(total: &AtomicU64, max: &AtomicU64, elapsed: Duration) {
+        let elapsed_ns = elapsed.as_nanos().min(u64::MAX as u128) as u64;
+        total.fetch_add(elapsed_ns, Ordering::Relaxed);
+        max.fetch_max(elapsed_ns, Ordering::Relaxed);
+    }
+
+    fn record_eviction_pass(&self, evicted: u64, elapsed: Duration) {
+        if evicted > 0 {
+            self.cache_evictions.fetch_add(evicted, Ordering::Relaxed);
+        }
+        Self::record_elapsed_ns(
+            &self.eviction_elapsed_total_ns,
+            &self.eviction_elapsed_max_ns,
+            elapsed,
+        );
+    }
+
+    fn record_cleanup_run(&self, removed: u64, elapsed: Duration) {
+        Self::record_elapsed_ns(
+            &self.cleanup_elapsed_total_ns,
+            &self.cleanup_elapsed_max_ns,
+            elapsed,
+        );
+        self.cleanup_runs.fetch_add(1, Ordering::Relaxed);
+        self.cleanup_removed.fetch_add(removed, Ordering::Relaxed);
+    }
+
+    fn record_stable_shape_selection(&self, bucket_len: usize, padded_pairs: usize) {
+        self.stable_shape_selections.fetch_add(1, Ordering::Relaxed);
+        if padded_pairs > 0 {
+            self.stable_shape_padding_pairs
+                .fetch_add(padded_pairs as u64, Ordering::Relaxed);
+        }
+
+        let bucket_counter = match bucket_len {
+            8 => &self.stable_shape_bucket_8,
+            16 => &self.stable_shape_bucket_16,
+            32 => &self.stable_shape_bucket_32,
+            64 => &self.stable_shape_bucket_64,
+            128 => &self.stable_shape_bucket_128,
+            256 => &self.stable_shape_bucket_256,
+            512 => &self.stable_shape_bucket_512,
+            1024 => &self.stable_shape_bucket_1024,
+            _ => return,
+        };
+
+        bucket_counter.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn maintenance_snapshot(&self) -> (u64, u64, u64, u64, u64) {
+        (
+            self.cleanup_runs.load(Ordering::Relaxed),
+            self.cleanup_elapsed_total_ns.load(Ordering::Relaxed),
+            self.cleanup_elapsed_max_ns.load(Ordering::Relaxed),
+            self.eviction_elapsed_total_ns.load(Ordering::Relaxed),
+            self.eviction_elapsed_max_ns.load(Ordering::Relaxed),
+        )
+    }
+
+    fn snapshot(
+        &self,
+        configured_budget: u64,
+        allocations_snapshot: &HashMap<PathBuf, usize>,
+    ) -> PoolStatistics {
+        let active_pool_count = allocations_snapshot.len() as u64;
+        let effective_connection_budget: u64 = allocations_snapshot
+            .values()
+            .copied()
+            .map(|value| value as u64)
+            .sum();
+        let min_pool_allocation = allocations_snapshot
+            .values()
+            .copied()
+            .min()
+            .map_or(0_u64, |value| value as u64);
+        let max_pool_allocation = allocations_snapshot
+            .values()
+            .copied()
+            .max()
+            .map_or(0_u64, |value| value as u64);
+        let allocation_spread = max_pool_allocation.saturating_sub(min_pool_allocation);
+
+        PoolStatistics {
+            total_queries: self.total_queries.load(Ordering::Relaxed),
+            cache_hits: self.cache_hits.load(Ordering::Relaxed),
+            cache_misses: self.cache_misses.load(Ordering::Relaxed),
+            total_connections: self.total_connections.load(Ordering::Relaxed),
+            active_connections: self.active_connections.load(Ordering::Relaxed),
+            cache_evictions: self.cache_evictions.load(Ordering::Relaxed),
+            cleanup_runs: self.cleanup_runs.load(Ordering::Relaxed),
+            cleanup_removed: self.cleanup_removed.load(Ordering::Relaxed),
+            cleanup_elapsed_total_ns: self.cleanup_elapsed_total_ns.load(Ordering::Relaxed),
+            cleanup_elapsed_max_ns: self.cleanup_elapsed_max_ns.load(Ordering::Relaxed),
+            eviction_elapsed_total_ns: self.eviction_elapsed_total_ns.load(Ordering::Relaxed),
+            eviction_elapsed_max_ns: self.eviction_elapsed_max_ns.load(Ordering::Relaxed),
+            configured_connection_budget: configured_budget,
+            effective_connection_budget,
+            active_pool_count,
+            min_pool_allocation,
+            max_pool_allocation,
+            allocation_spread,
+            stable_shape_selections: self.stable_shape_selections.load(Ordering::Relaxed),
+            stable_shape_padding_pairs: self.stable_shape_padding_pairs.load(Ordering::Relaxed),
+            stable_shape_bucket_8: self.stable_shape_bucket_8.load(Ordering::Relaxed),
+            stable_shape_bucket_16: self.stable_shape_bucket_16.load(Ordering::Relaxed),
+            stable_shape_bucket_32: self.stable_shape_bucket_32.load(Ordering::Relaxed),
+            stable_shape_bucket_64: self.stable_shape_bucket_64.load(Ordering::Relaxed),
+            stable_shape_bucket_128: self.stable_shape_bucket_128.load(Ordering::Relaxed),
+            stable_shape_bucket_256: self.stable_shape_bucket_256.load(Ordering::Relaxed),
+            stable_shape_bucket_512: self.stable_shape_bucket_512.load(Ordering::Relaxed),
+            stable_shape_bucket_1024: self.stable_shape_bucket_1024.load(Ordering::Relaxed),
+        }
+    }
+}
+
+#[derive(Clone)]
+struct QueryCache {
+    entries: Arc<DashMap<CacheKey, CacheEntry>>,
+    templates: Arc<DashMap<(String, usize, bool), String>>,
+    capacity: Arc<AtomicUsize>,
+    cleanup_threshold: Arc<AtomicU64>,
+    cleanup_interval: Arc<RwLock<Duration>>,
+    ops_since_cleanup: Arc<AtomicU64>,
+    last_cleanup_at: Arc<RwLock<Instant>>,
+    ttl: Arc<RwLock<Duration>>,
+}
+
+impl QueryCache {
+    fn new(cache_ttl: Duration) -> Self {
+        Self {
+            entries: Arc::new(DashMap::new()),
+            templates: Arc::new(DashMap::new()),
+            capacity: Arc::new(AtomicUsize::new(DEFAULT_QUERY_CACHE_CAPACITY)),
+            cleanup_threshold: Arc::new(AtomicU64::new(DEFAULT_CACHE_CLEANUP_OP_THRESHOLD)),
+            cleanup_interval: Arc::new(RwLock::new(Duration::from_secs(
+                DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
+            ))),
+            ops_since_cleanup: Arc::new(AtomicU64::new(0)),
+            last_cleanup_at: Arc::new(RwLock::new(Instant::now())),
+            ttl: Arc::new(RwLock::new(cache_ttl)),
+        }
+    }
+
+    fn clamp_capacity(capacity: usize) -> usize {
+        capacity.clamp(MIN_QUERY_CACHE_CAPACITY, MAX_QUERY_CACHE_CAPACITY)
+    }
+
+    fn clamp_cleanup_threshold(threshold: u64) -> u64 {
+        threshold.clamp(
+            MIN_CACHE_CLEANUP_OP_THRESHOLD,
+            MAX_CACHE_CLEANUP_OP_THRESHOLD,
+        )
+    }
+
+    fn clamp_cleanup_interval(interval: Duration) -> Duration {
+        interval.clamp(
+            Duration::from_secs(MIN_CACHE_CLEANUP_INTERVAL_SECS),
+            Duration::from_secs(MAX_CACHE_CLEANUP_INTERVAL_SECS),
+        )
+    }
+
+    fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    fn clear_entries(&self) {
+        self.entries.clear();
+    }
+
+    fn get_entry(&self, cache_key: &CacheKey) -> Option<CacheEntry> {
+        self.entries.get(cache_key).map(|entry| entry.clone())
+    }
+
+    fn remove_entry(&self, cache_key: &CacheKey) {
+        self.entries.remove(cache_key);
+    }
+
+    #[cfg(test)]
+    fn insert_entry(&self, cache_key: CacheKey, entry: CacheEntry) {
+        self.entries.insert(cache_key, entry);
+    }
+
+    #[cfg(test)]
+    fn contains_key(&self, cache_key: &CacheKey) -> bool {
+        self.entries.contains_key(cache_key)
+    }
+
+    #[cfg(test)]
+    fn template_count(&self) -> usize {
+        self.templates.len()
+    }
+
+    fn current_ttl(&self) -> Duration {
+        *self.ttl.read().unwrap_or_else(|poisoned| {
+            warn!("cache_ttl lock was poisoned - recovering");
+            poisoned.into_inner()
+        })
+    }
+
+    fn set_ttl(&self, ttl: Duration) {
+        if let Ok(mut t) = self.ttl.write() {
+            *t = ttl;
+        }
+    }
+
+    fn capacity(&self) -> usize {
+        self.capacity.load(Ordering::Relaxed)
+    }
+
+    fn set_capacity(&self, capacity: usize, stats: &PoolStats) {
+        self.capacity
+            .store(Self::clamp_capacity(capacity), Ordering::Relaxed);
+        self.evict_to_capacity(stats);
+    }
+
+    fn cleanup_threshold(&self) -> u64 {
+        self.cleanup_threshold.load(Ordering::Relaxed)
+    }
+
+    fn set_cleanup_threshold(&self, threshold: u64) {
+        self.cleanup_threshold
+            .store(Self::clamp_cleanup_threshold(threshold), Ordering::Relaxed);
+    }
+
+    fn cleanup_interval(&self) -> Duration {
+        *self.cleanup_interval.read().unwrap_or_else(|poisoned| {
+            warn!("cache_cleanup_interval lock was poisoned - recovering");
+            poisoned.into_inner()
+        })
+    }
+
+    fn set_cleanup_interval(&self, interval: Duration) {
+        if let Ok(mut i) = self.cleanup_interval.write() {
+            *i = Self::clamp_cleanup_interval(interval);
+        }
+    }
+
+    fn preferred_eviction_target(capacity: usize) -> usize {
+        if capacity < BULK_EVICTION_MIN_CAPACITY {
+            return capacity;
+        }
+
+        let bulk_window = (capacity / BULK_EVICTION_DIVISOR)
+            .clamp(BULK_EVICTION_MIN_BATCH, BULK_EVICTION_MAX_BATCH);
+        capacity.saturating_sub(bulk_window)
+    }
+
+    fn insert_with_eviction(
+        &self,
+        cache_key: CacheKey,
+        value: String,
+        cache_ttl: Duration,
+        stats: &PoolStats,
+    ) {
+        self.entries
+            .insert(cache_key, CacheEntry::new(value, cache_ttl));
+
+        let capacity = self.capacity.load(Ordering::Relaxed);
+        if self.entries.len() <= capacity {
+            return;
+        }
+
+        self.evict_to_target(Self::preferred_eviction_target(capacity), stats);
+    }
+
+    fn insert_many_with_eviction(
+        &self,
+        entries: Vec<(CacheKey, String)>,
+        cache_ttl: Duration,
+        stats: &PoolStats,
+    ) {
+        if entries.is_empty() {
+            return;
+        }
+
+        for (cache_key, value) in entries {
+            self.entries
+                .insert(cache_key, CacheEntry::new(value, cache_ttl));
+        }
+
+        let capacity = self.capacity.load(Ordering::Relaxed);
+        if self.entries.len() <= capacity {
+            return;
+        }
+
+        self.evict_to_target(Self::preferred_eviction_target(capacity), stats);
+    }
+
+    fn evict_to_capacity(&self, stats: &PoolStats) {
+        let capacity = self.capacity.load(Ordering::Relaxed);
+        self.evict_to_target(capacity, stats);
+    }
+
+    fn evict_to_target(&self, target_size: usize, stats: &PoolStats) {
+        if self.entries.len() <= target_size {
+            return;
+        }
+
+        let maintenance_start = Instant::now();
+        let mut total_evicted = 0_u64;
+
+        // Policy step 1: purge expired entries first in one pass.
+        let before_expired_clear = self.entries.len();
+        self.entries.retain(|_, value| !value.is_expired());
+        let after_expired_clear = self.entries.len();
+        total_evicted = total_evicted
+            .saturating_add(before_expired_clear.saturating_sub(after_expired_clear) as u64);
+
+        // Policy step 2: if still over target, evict oldest entries in bulk.
+        while self.entries.len() > target_size {
+            let overflow_count = self.entries.len().saturating_sub(target_size);
+            if overflow_count == 0 {
+                break;
+            }
+
+            // Tie-break by cache key for deterministic behavior.
+            let mut eviction_candidates: Vec<(Instant, CacheKey)> = self
+                .entries
+                .iter()
+                .map(|entry| (entry.value().created_at, entry.key().clone()))
+                .collect();
+
+            if eviction_candidates.is_empty() {
+                break;
+            }
+
+            eviction_candidates.sort_unstable_by(|(left_at, left_key), (right_at, right_key)| {
+                left_at
+                    .cmp(right_at)
+                    .then_with(|| left_key.tie_break_key().cmp(&right_key.tie_break_key()))
+            });
+
+            let mut removed_in_pass = 0_u64;
+            for (_, key) in eviction_candidates.into_iter().take(overflow_count) {
+                if self.entries.remove(&key).is_some() {
+                    removed_in_pass += 1;
+                }
+            }
+
+            if removed_in_pass == 0 {
+                break;
+            }
+
+            total_evicted = total_evicted.saturating_add(removed_in_pass);
+        }
+
+        stats.record_eviction_pass(total_evicted, maintenance_start.elapsed());
+    }
+
+    fn maybe_run_proactive_cleanup(&self, operation_count: u64, stats: &PoolStats) {
+        let updated_ops = self
+            .ops_since_cleanup
+            .fetch_add(operation_count, Ordering::Relaxed)
+            .saturating_add(operation_count);
+
+        let threshold = self.cleanup_threshold.load(Ordering::Relaxed);
+        if updated_ops < threshold {
+            return;
+        }
+
+        let interval = *self.cleanup_interval.read().unwrap_or_else(|poisoned| {
+            warn!("cache_cleanup_interval lock was poisoned - recovering");
+            poisoned.into_inner()
+        });
+
+        let elapsed_ok = {
+            let last_cleanup = self.last_cleanup_at.read().unwrap_or_else(|poisoned| {
+                warn!("last_cleanup_at lock was poisoned - recovering");
+                poisoned.into_inner()
+            });
+            last_cleanup.elapsed() >= interval
+        };
+
+        if !elapsed_ok {
+            return;
+        }
+
+        let cleanup_start = Instant::now();
+        let removed = self.clear(true) as u64;
+        stats.record_cleanup_run(removed, cleanup_start.elapsed());
+        self.ops_since_cleanup.store(0, Ordering::Relaxed);
+
+        if let Ok(mut last_cleanup) = self.last_cleanup_at.write() {
+            *last_cleanup = Instant::now();
+        }
+    }
+
+    fn clear(&self, expired_only: bool) -> usize {
+        let initial_size = self.entries.len();
+        if expired_only {
+            self.entries.retain(|_, v| !v.is_expired());
+        } else {
+            self.entries.clear();
+        }
+        initial_size - self.entries.len()
+    }
+
+    fn get_or_build_template(
+        &self,
+        game_table: &str,
+        bucket_len: usize,
+        case_insensitive: bool,
+    ) -> String {
+        let template_key = (game_table.to_string(), bucket_len, case_insensitive);
+
+        if let Some(existing) = self.templates.get(&template_key) {
+            return existing.clone();
+        }
+
+        let template =
+            DatabasePool::build_union_all_query(game_table, bucket_len, case_insensitive);
+        self.templates.insert(template_key, template.clone());
+        template
+    }
+}
+
+#[derive(Clone)]
+struct PoolRegistry {
+    pools: Arc<DashMap<PathBuf, SqlitePool>>,
+    max_connections: Arc<RwLock<Option<usize>>>,
+    allocations: Arc<RwLock<HashMap<PathBuf, usize>>>,
+    db_paths: Arc<RwLock<Vec<PathBuf>>>,
+}
+
+impl PoolRegistry {
+    fn new(max_connections: usize) -> Self {
+        Self {
+            pools: Arc::new(DashMap::new()),
+            max_connections: Arc::new(RwLock::new(Some(max_connections))),
+            allocations: Arc::new(RwLock::new(HashMap::new())),
+            db_paths: Arc::new(RwLock::new(Vec::new())),
+        }
+    }
+
+    fn configured_connection_budget(&self) -> usize {
+        self.max_connections
+            .read()
+            .unwrap_or_else(|poisoned| {
+                warn!("max_connections lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
+            .unwrap_or_else(ConnectionAllocator::calculate_max_connections)
+    }
+
+    fn get_max_connections(&self) -> Option<usize> {
+        *self.max_connections.read().unwrap_or_else(|poisoned| {
+            warn!("max_connections lock was poisoned - recovering");
+            poisoned.into_inner()
+        })
+    }
+
+    fn set_max_connections(&self, max_connections: usize) {
+        if let Ok(mut m) = self.max_connections.write() {
+            *m = Some(max_connections);
+        }
+    }
+
+    fn tracked_paths(&self) -> Vec<PathBuf> {
+        self.db_paths
+            .read()
+            .unwrap_or_else(|poisoned| {
+                warn!("db_paths lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
+            .clone()
+    }
+
+    fn allocations_snapshot(&self) -> HashMap<PathBuf, usize> {
+        self.allocations
+            .read()
+            .unwrap_or_else(|poisoned| {
+                warn!("pool_allocations lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
+            .clone()
+    }
+
+    fn pool_snapshots(&self) -> Vec<(PathBuf, SqlitePool)> {
+        self.pools
             .iter()
             .map(|entry| (entry.key().clone(), entry.value().clone()))
-            .collect();
+            .collect()
+    }
+
+    fn len(&self) -> usize {
+        self.pools.len()
+    }
+
+    fn is_available(&self) -> bool {
+        !self.pools.is_empty()
+    }
+
+    #[cfg(test)]
+    fn pool_arc_strong_count(&self) -> usize {
+        Arc::strong_count(&self.pools)
+    }
+
+    #[cfg(test)]
+    fn shares_pool_storage_with(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.pools, &other.pools)
+    }
+
+    fn is_last_handle_with_open_pools(&self) -> bool {
+        Arc::strong_count(&self.pools) == 1 && !self.pools.is_empty()
+    }
+
+    async fn close_active_pools(&self, stats: &PoolStats) {
+        let existing_pools = self.pool_snapshots();
 
         for (db_path, pool) in existing_pools {
             pool.close().await;
@@ -407,12 +894,35 @@ impl DatabasePool {
         }
 
         self.pools.clear();
-        self.stat_active_connections.store(0, Ordering::Relaxed);
+        stats.set_active_connections(0);
     }
 
-    async fn rebuild_allocated_pools(&self, db_paths: Vec<PathBuf>) -> Result<(), DatabaseError> {
+    fn clear_tracking(&self) {
+        if let Ok(mut paths) = self.db_paths.write() {
+            paths.clear();
+        }
+        if let Ok(mut allocations) = self.allocations.write() {
+            allocations.clear();
+        }
+    }
+
+    fn set_tracking(&self, paths: Vec<PathBuf>, allocations: HashMap<PathBuf, usize>) {
+        if let Ok(mut tracked_paths) = self.db_paths.write() {
+            *tracked_paths = paths;
+        }
+        if let Ok(mut tracked_allocations) = self.allocations.write() {
+            *tracked_allocations = allocations;
+        }
+    }
+
+    async fn rebuild_allocated_pools(
+        &self,
+        db_paths: Vec<PathBuf>,
+        query_cache: &QueryCache,
+        stats: &PoolStats,
+    ) -> Result<(), DatabaseError> {
         let configured_budget = self.configured_connection_budget();
-        let plan = Self::derive_connection_allocation(configured_budget, &db_paths);
+        let plan = ConnectionAllocator::derive_allocation(configured_budget, &db_paths);
 
         info!(
             "Applying global connection budget: configured={}, effective={}, active_pools={}",
@@ -421,16 +931,11 @@ impl DatabasePool {
             plan.allocations.len()
         );
 
-        self.close_active_pools().await;
-        self.query_cache.clear();
+        self.close_active_pools(stats).await;
+        query_cache.clear_entries();
 
         if plan.allocations.is_empty() {
-            if let Ok(mut paths) = self.db_paths.write() {
-                paths.clear();
-            }
-            if let Ok(mut allocations) = self.pool_allocations.write() {
-                allocations.clear();
-            }
+            self.clear_tracking();
             return Ok(());
         }
 
@@ -462,184 +967,128 @@ impl DatabasePool {
                 "Created sqlx pool for {:?} with allocation {} (global budget mode)",
                 path, allocation
             );
-            self.stat_total_connections.fetch_add(1, Ordering::Relaxed);
+            stats.record_connection_created();
         }
 
-        self.stat_active_connections
-            .store(applied_paths.len() as u64, Ordering::Relaxed);
-
-        if let Ok(mut paths) = self.db_paths.write() {
-            *paths = applied_paths;
-        }
-        if let Ok(mut allocations) = self.pool_allocations.write() {
-            *allocations = applied_allocations;
-        }
+        stats.set_active_connections(applied_paths.len() as u64);
+        self.set_tracking(applied_paths, applied_allocations);
 
         Ok(())
     }
+}
 
-    fn preferred_eviction_target(capacity: usize) -> usize {
-        if capacity < BULK_EVICTION_MIN_CAPACITY {
-            return capacity;
+#[derive(Clone)]
+struct ActiveGameTable {
+    name: Arc<RwLock<String>>,
+}
+
+impl ActiveGameTable {
+    fn new(name: String) -> Self {
+        Self {
+            name: Arc::new(RwLock::new(name)),
         }
+    }
 
-        let bulk_window = (capacity / BULK_EVICTION_DIVISOR)
-            .clamp(BULK_EVICTION_MIN_BATCH, BULK_EVICTION_MAX_BATCH);
-        capacity.saturating_sub(bulk_window)
+    fn set(&self, table: &str) {
+        if let Ok(mut t) = self.name.write() {
+            *t = table.to_string();
+        }
+    }
+
+    fn get(&self) -> String {
+        self.name
+            .read()
+            .unwrap_or_else(|poisoned| {
+                warn!("game_table lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
+            .clone()
+    }
+
+    fn resolve(&self, table: Option<&str>) -> String {
+        table.map_or_else(|| self.get(), str::to_string)
+    }
+}
+
+/// Database pool with sqlx - true async support
+///
+/// Provides high-performance asynchronous database access with connection pooling,
+/// query caching, and FormID lookup optimization.
+#[derive(Clone)]
+pub struct DatabasePool {
+    /// Connection pools, allocation policy, and tracked database paths.
+    registry: PoolRegistry,
+    /// Query result cache, stable query templates, and cache policy.
+    query_cache: QueryCache,
+    /// Shared counters used for public pool statistics and close diagnostics.
+    stats: PoolStats,
+    /// Active game table name (e.g., "Fallout4", "Skyrim").
+    game_table: ActiveGameTable,
+}
+
+impl DatabasePool {
+    /// Calculate optimal pool size based on CPU cores
+    fn calculate_max_connections() -> usize {
+        ConnectionAllocator::calculate_max_connections()
+    }
+
+    fn configured_connection_budget(&self) -> usize {
+        self.registry.configured_connection_budget()
+    }
+
+    async fn close_active_pools(&self) {
+        self.registry.close_active_pools(&self.stats).await;
+    }
+
+    async fn rebuild_allocated_pools(&self, db_paths: Vec<PathBuf>) -> Result<(), DatabaseError> {
+        self.registry
+            .rebuild_allocated_pools(db_paths, &self.query_cache, &self.stats)
+            .await
     }
 
     fn insert_with_eviction(&self, cache_key: CacheKey, value: String, cache_ttl: Duration) {
         self.query_cache
-            .insert(cache_key, CacheEntry::new(value, cache_ttl));
-
-        let capacity = self.cache_capacity.load(Ordering::Relaxed);
-        if self.query_cache.len() <= capacity {
-            return;
-        }
-
-        self.evict_to_target(Self::preferred_eviction_target(capacity));
+            .insert_with_eviction(cache_key, value, cache_ttl, &self.stats);
     }
 
     fn insert_many_with_eviction(&self, entries: Vec<(CacheKey, String)>, cache_ttl: Duration) {
-        if entries.is_empty() {
-            return;
-        }
-
-        for (cache_key, value) in entries {
-            self.query_cache
-                .insert(cache_key, CacheEntry::new(value, cache_ttl));
-        }
-
-        let capacity = self.cache_capacity.load(Ordering::Relaxed);
-        if self.query_cache.len() <= capacity {
-            return;
-        }
-
-        self.evict_to_target(Self::preferred_eviction_target(capacity));
+        self.query_cache
+            .insert_many_with_eviction(entries, cache_ttl, &self.stats);
     }
 
-    fn record_elapsed_ns(total: &AtomicU64, max: &AtomicU64, elapsed: Duration) {
-        let elapsed_ns = elapsed.as_nanos().min(u64::MAX as u128) as u64;
-        total.fetch_add(elapsed_ns, Ordering::Relaxed);
-        max.fetch_max(elapsed_ns, Ordering::Relaxed);
-    }
-
-    fn evict_to_capacity(&self) {
-        let capacity = self.cache_capacity.load(Ordering::Relaxed);
-        self.evict_to_target(capacity);
-    }
-
-    fn evict_to_target(&self, target_size: usize) {
-        if self.query_cache.len() <= target_size {
-            return;
-        }
-
-        let maintenance_start = Instant::now();
-        let mut total_evicted = 0_u64;
-
-        // Policy step 1: purge expired entries first in one pass.
-        let before_expired_clear = self.query_cache.len();
-        self.query_cache.retain(|_, value| !value.is_expired());
-        let after_expired_clear = self.query_cache.len();
-        total_evicted = total_evicted
-            .saturating_add(before_expired_clear.saturating_sub(after_expired_clear) as u64);
-
-        // Policy step 2: if still over target, evict oldest entries in bulk.
-        while self.query_cache.len() > target_size {
-            let overflow_count = self.query_cache.len().saturating_sub(target_size);
-            if overflow_count == 0 {
-                break;
-            }
-
-            // Tie-break by cache key for deterministic behavior.
-            let mut eviction_candidates: Vec<(Instant, CacheKey)> = self
-                .query_cache
-                .iter()
-                .map(|entry| (entry.value().created_at, entry.key().clone()))
-                .collect();
-
-            if eviction_candidates.is_empty() {
-                break;
-            }
-
-            eviction_candidates.sort_unstable_by(|(left_at, left_key), (right_at, right_key)| {
-                left_at
-                    .cmp(right_at)
-                    .then_with(|| left_key.tie_break_key().cmp(&right_key.tie_break_key()))
-            });
-
-            let mut removed_in_pass = 0_u64;
-            for (_, key) in eviction_candidates.into_iter().take(overflow_count) {
-                if self.query_cache.remove(&key).is_some() {
-                    removed_in_pass += 1;
-                }
-            }
-
-            if removed_in_pass == 0 {
-                break;
-            }
-
-            total_evicted = total_evicted.saturating_add(removed_in_pass);
-        }
-
-        if total_evicted > 0 {
-            self.stat_cache_evictions
-                .fetch_add(total_evicted, Ordering::Relaxed);
-        }
-
-        Self::record_elapsed_ns(
-            &self.stat_eviction_elapsed_total_ns,
-            &self.stat_eviction_elapsed_max_ns,
-            maintenance_start.elapsed(),
-        );
+    #[cfg(test)]
+    fn preferred_eviction_target(capacity: usize) -> usize {
+        QueryCache::preferred_eviction_target(capacity)
     }
 
     fn maybe_run_proactive_cleanup(&self, operation_count: u64) {
-        let updated_ops = self
-            .cache_ops_since_cleanup
-            .fetch_add(operation_count, Ordering::Relaxed)
-            .saturating_add(operation_count);
+        self.query_cache
+            .maybe_run_proactive_cleanup(operation_count, &self.stats);
+    }
 
-        let threshold = self.cache_cleanup_threshold.load(Ordering::Relaxed);
-        if updated_ops < threshold {
-            return;
-        }
+    #[cfg(test)]
+    fn pool_registry_strong_count(&self) -> usize {
+        self.registry.pool_arc_strong_count()
+    }
 
-        let interval = *self
-            .cache_cleanup_interval
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("cache_cleanup_interval lock was poisoned - recovering");
-                poisoned.into_inner()
-            });
+    #[cfg(test)]
+    fn shares_pool_registry_with(&self, other: &Self) -> bool {
+        self.registry.shares_pool_storage_with(&other.registry)
+    }
 
-        let elapsed_ok = {
-            let last_cleanup = self.last_cleanup_at.read().unwrap_or_else(|poisoned| {
-                warn!("last_cleanup_at lock was poisoned - recovering");
-                poisoned.into_inner()
-            });
-            last_cleanup.elapsed() >= interval
-        };
+    #[cfg(test)]
+    fn insert_cache_entry(&self, cache_key: CacheKey, entry: CacheEntry) {
+        self.query_cache.insert_entry(cache_key, entry);
+    }
 
-        if !elapsed_ok {
-            return;
-        }
+    #[cfg(test)]
+    fn cache_contains_key(&self, cache_key: &CacheKey) -> bool {
+        self.query_cache.contains_key(cache_key)
+    }
 
-        let cleanup_start = Instant::now();
-        let removed = self.clear_cache(true) as u64;
-        Self::record_elapsed_ns(
-            &self.stat_cleanup_elapsed_total_ns,
-            &self.stat_cleanup_elapsed_max_ns,
-            cleanup_start.elapsed(),
-        );
-        self.stat_cleanup_runs.fetch_add(1, Ordering::Relaxed);
-        self.stat_cleanup_removed
-            .fetch_add(removed, Ordering::Relaxed);
-        self.cache_ops_since_cleanup.store(0, Ordering::Relaxed);
-
-        if let Ok(mut last_cleanup) = self.last_cleanup_at.write() {
-            *last_cleanup = Instant::now();
-        }
+    #[cfg(test)]
+    fn query_template_cache_size(&self) -> usize {
+        self.query_cache.template_count()
     }
 
     /// Create a new database pool
@@ -652,43 +1101,10 @@ impl DatabasePool {
         );
 
         Self {
-            pools: Arc::new(DashMap::new()),
-            query_cache: Arc::new(DashMap::new()),
-            query_template_cache: Arc::new(DashMap::new()),
-            cache_capacity: Arc::new(AtomicUsize::new(DEFAULT_QUERY_CACHE_CAPACITY)),
-            cache_cleanup_threshold: Arc::new(AtomicU64::new(DEFAULT_CACHE_CLEANUP_OP_THRESHOLD)),
-            cache_cleanup_interval: Arc::new(RwLock::new(Duration::from_secs(
-                DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
-            ))),
-            cache_ops_since_cleanup: Arc::new(AtomicU64::new(0)),
-            last_cleanup_at: Arc::new(RwLock::new(Instant::now())),
-            cache_ttl: Arc::new(RwLock::new(cache_ttl)),
-            max_connections: Arc::new(RwLock::new(Some(max_conn))),
-            pool_allocations: Arc::new(RwLock::new(HashMap::new())),
-            stat_total_queries: Arc::new(AtomicU64::new(0)),
-            stat_cache_hits: Arc::new(AtomicU64::new(0)),
-            stat_cache_misses: Arc::new(AtomicU64::new(0)),
-            stat_total_connections: Arc::new(AtomicU64::new(0)),
-            stat_active_connections: Arc::new(AtomicU64::new(0)),
-            stat_cache_evictions: Arc::new(AtomicU64::new(0)),
-            stat_cleanup_runs: Arc::new(AtomicU64::new(0)),
-            stat_cleanup_removed: Arc::new(AtomicU64::new(0)),
-            stat_cleanup_elapsed_total_ns: Arc::new(AtomicU64::new(0)),
-            stat_cleanup_elapsed_max_ns: Arc::new(AtomicU64::new(0)),
-            stat_eviction_elapsed_total_ns: Arc::new(AtomicU64::new(0)),
-            stat_eviction_elapsed_max_ns: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_selections: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_padding_pairs: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_8: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_16: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_32: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_64: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_128: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_256: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_512: Arc::new(AtomicU64::new(0)),
-            stat_stable_shape_bucket_1024: Arc::new(AtomicU64::new(0)),
-            game_table: Arc::new(RwLock::new(game_table)),
-            db_paths: Arc::new(RwLock::new(Vec::new())),
+            registry: PoolRegistry::new(max_conn),
+            query_cache: QueryCache::new(cache_ttl),
+            stats: PoolStats::new(),
+            game_table: ActiveGameTable::new(game_table),
         }
     }
 
@@ -720,37 +1136,27 @@ impl DatabasePool {
     ) -> Result<Option<String>, DatabaseError> {
         self.maybe_run_proactive_cleanup(1);
 
-        let game_table = match table {
-            Some(t) => t.to_string(),
-            None => self
-                .game_table
-                .read()
-                .unwrap_or_else(|poisoned| {
-                    warn!("game_table lock was poisoned - recovering");
-                    poisoned.into_inner()
-                })
-                .clone(),
-        };
+        let game_table = self.game_table.resolve(table);
 
         let cache_key = CacheKey::new(&game_table, formid, plugin);
 
         // Check cache first
-        if let Some(entry) = self.query_cache.get(&cache_key) {
+        if let Some(entry) = self.query_cache.get_entry(&cache_key) {
             if !entry.is_expired() {
-                self.stat_cache_hits.fetch_add(1, Ordering::Relaxed);
-                self.stat_total_queries.fetch_add(1, Ordering::Relaxed);
+                self.stats.increment_cache_hits(1);
+                self.stats.increment_total_queries(1);
                 debug!("Cache hit for FormID: {} Plugin: {}", formid, plugin);
-                return Ok(Some(entry.value.clone()));
+                return Ok(Some(entry.value));
             } else {
                 // Expired entry: evict and fall through — counted as a cache miss below.
-                self.query_cache.remove(&cache_key);
+                self.query_cache.remove_entry(&cache_key);
                 debug!("Cache expired for FormID: {} Plugin: {}", formid, plugin);
             }
         }
 
         // Covers both cold-miss and expired-miss paths.
-        self.stat_cache_misses.fetch_add(1, Ordering::Relaxed);
-        self.stat_total_queries.fetch_add(1, Ordering::Relaxed);
+        self.stats.increment_cache_misses(1);
+        self.stats.increment_total_queries(1);
 
         // Query databases using sqlx (TRUE ASYNC - no spawn_blocking!).
         // Stage 1: exact-case plugin match for full composite-index utilization.
@@ -765,23 +1171,17 @@ impl DatabasePool {
         );
 
         for (query_label, query) in [("exact", &exact_query), ("nocase", &nocase_query)] {
-            for entry in self.pools.iter() {
-                let db_path = entry.key().clone();
-                let pool = entry.value();
-
+            for (db_path, pool) in self.registry.pool_snapshots() {
                 // TRUE ASYNC QUERY - no blocking!
                 match sqlx::query(query)
                     .bind(formid)
                     .bind(plugin)
-                    .fetch_optional(pool)
+                    .fetch_optional(&pool)
                     .await
                 {
                     Ok(Some(row)) => {
                         let value: String = row.try_get(0)?;
-                        let cache_ttl = *self.cache_ttl.read().unwrap_or_else(|poisoned| {
-                            warn!("cache_ttl lock was poisoned - recovering");
-                            poisoned.into_inner()
-                        });
+                        let cache_ttl = self.query_cache.current_ttl();
                         self.insert_with_eviction(cache_key.clone(), value.clone(), cache_ttl);
                         debug!(
                             "Found FormID {} in database {:?} via {} query",
@@ -870,10 +1270,9 @@ impl DatabasePool {
         padded.extend(batch.iter().cloned());
 
         let pad_needed = bucket_len.saturating_sub(batch.len());
-        let pad_source = batch
-            .last()
-            .expect("batch.is_empty() is handled before padding")
-            .clone();
+        let Some(pad_source) = batch.last().cloned() else {
+            return batch.to_vec();
+        };
         for _ in 0..pad_needed {
             padded.push(pad_source.clone());
         }
@@ -887,39 +1286,13 @@ impl DatabasePool {
         bucket_len: usize,
         case_insensitive: bool,
     ) -> String {
-        let template_key = (game_table.to_string(), bucket_len, case_insensitive);
-
-        if let Some(existing) = self.query_template_cache.get(&template_key) {
-            return existing.clone();
-        }
-
-        let template = Self::build_union_all_query(game_table, bucket_len, case_insensitive);
-        self.query_template_cache
-            .insert(template_key, template.clone());
-        template
+        self.query_cache
+            .get_or_build_template(game_table, bucket_len, case_insensitive)
     }
 
     fn record_stable_shape_selection(&self, bucket_len: usize, padded_pairs: usize) {
-        self.stat_stable_shape_selections
-            .fetch_add(1, Ordering::Relaxed);
-        if padded_pairs > 0 {
-            self.stat_stable_shape_padding_pairs
-                .fetch_add(padded_pairs as u64, Ordering::Relaxed);
-        }
-
-        let bucket_counter = match bucket_len {
-            8 => &self.stat_stable_shape_bucket_8,
-            16 => &self.stat_stable_shape_bucket_16,
-            32 => &self.stat_stable_shape_bucket_32,
-            64 => &self.stat_stable_shape_bucket_64,
-            128 => &self.stat_stable_shape_bucket_128,
-            256 => &self.stat_stable_shape_bucket_256,
-            512 => &self.stat_stable_shape_bucket_512,
-            1024 => &self.stat_stable_shape_bucket_1024,
-            _ => return,
-        };
-
-        bucket_counter.fetch_add(1, Ordering::Relaxed);
+        self.stats
+            .record_stable_shape_selection(bucket_len, padded_pairs);
     }
 
     async fn execute_parallel_batch_query(
@@ -928,14 +1301,12 @@ impl DatabasePool {
         bindings: &[(String, String)],
     ) -> Vec<(String, String, String)> {
         // Collect all pools for parallel querying
-        let pool_entries: Vec<_> = self.pools.iter().collect();
+        let pool_entries = self.registry.pool_snapshots();
 
         // Create futures for parallel database queries
         let query_futures: Vec<_> = pool_entries
-            .iter()
-            .map(|entry| {
-                let db_path = entry.key().clone();
-                let pool = entry.value().clone();
+            .into_iter()
+            .map(|(db_path, pool)| {
                 let query_clone = query.to_string();
                 let bindings_clone = bindings.to_vec();
 
@@ -1042,17 +1413,7 @@ impl DatabasePool {
     ) -> Result<HashMap<String, String>, DatabaseError> {
         self.maybe_run_proactive_cleanup(formid_plugin_pairs.len() as u64);
 
-        let game_table = match table {
-            Some(t) => t.to_string(),
-            None => self
-                .game_table
-                .read()
-                .unwrap_or_else(|poisoned| {
-                    warn!("game_table lock was poisoned - recovering");
-                    poisoned.into_inner()
-                })
-                .clone(),
-        };
+        let game_table = self.game_table.resolve(table);
 
         info!(
             "Starting optimized batch lookup for {} FormID/plugin pairs (parallel + UNION ALL)",
@@ -1068,36 +1429,33 @@ impl DatabasePool {
             let cache_key =
                 CacheKey::from_normalized_plugin(&game_table, formid, &normalized_plugin);
 
-            if let Some(entry) = self.query_cache.get(&cache_key) {
+            if let Some(entry) = self.query_cache.get_entry(&cache_key) {
                 if !entry.is_expired() {
                     let result_key = format!("{}:{}", formid, plugin);
-                    results.insert(result_key, entry.value.clone());
-                    self.stat_cache_hits.fetch_add(1, Ordering::Relaxed);
+                    results.insert(result_key, entry.value);
+                    self.stats.increment_cache_hits(1);
                     continue;
                 } else {
                     // Expired entry: evict and fall through — counted as a cache miss below.
-                    self.query_cache.remove(&cache_key);
+                    self.query_cache.remove_entry(&cache_key);
                 }
             }
 
             uncached_pairs.push((formid.clone(), plugin.clone(), normalized_plugin));
             // Covers both cold-miss and expired-miss paths.
-            self.stat_cache_misses.fetch_add(1, Ordering::Relaxed);
+            self.stats.increment_cache_misses(1);
         }
 
-        // stat_total_queries counts every pair in the batch regardless of cache status,
+        // total_queries counts every pair in the batch regardless of cache status,
         // so total = cache_hits + cache_misses = formid_plugin_pairs.len().
-        self.stat_total_queries
-            .fetch_add(formid_plugin_pairs.len() as u64, Ordering::Relaxed);
+        self.stats
+            .increment_total_queries(formid_plugin_pairs.len() as u64);
 
         if uncached_pairs.is_empty() {
             return Ok(results);
         }
 
-        let cache_ttl = *self.cache_ttl.read().unwrap_or_else(|poisoned| {
-            warn!("cache_ttl lock was poisoned - recovering");
-            poisoned.into_inner()
-        });
+        let cache_ttl = self.query_cache.current_ttl();
 
         // Keep caller-provided chunking contract while enforcing stable-shape bounds.
         let effective_batch_size = batch_size.clamp(1, MAX_STABLE_BATCH_BUCKET);
@@ -1207,20 +1565,12 @@ impl DatabasePool {
     /// # Arguments
     /// * `table` - Table name (e.g., "Fallout4", "Skyrim")
     pub fn set_game_table(&self, table: &str) {
-        if let Ok(mut t) = self.game_table.write() {
-            *t = table.to_string();
-        }
+        self.game_table.set(table);
     }
 
     /// Get the current game table name
     pub fn get_game_table(&self) -> String {
-        self.game_table
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("game_table lock was poisoned - recovering");
-                poisoned.into_inner()
-            })
-            .clone()
+        self.game_table.get()
     }
 
     /// Clear the query cache
@@ -1231,13 +1581,7 @@ impl DatabasePool {
     /// # Returns
     /// Number of cache entries removed
     pub fn clear_cache(&self, expired_only: bool) -> usize {
-        let initial_size = self.query_cache.len();
-        if expired_only {
-            self.query_cache.retain(|_, v| !v.is_expired());
-        } else {
-            self.query_cache.clear();
-        }
-        initial_size - self.query_cache.len()
+        self.query_cache.clear(expired_only)
     }
 
     /// Set the cache time-to-live duration
@@ -1245,72 +1589,53 @@ impl DatabasePool {
     /// # Arguments
     /// * `ttl` - New TTL duration for cached queries
     pub fn set_cache_ttl(&self, ttl: Duration) {
-        if let Ok(mut t) = self.cache_ttl.write() {
-            *t = ttl;
-        }
+        self.query_cache.set_ttl(ttl);
     }
 
     /// Get the current cache time-to-live duration.
     pub fn get_cache_ttl(&self) -> Duration {
-        *self.cache_ttl.read().unwrap_or_else(|poisoned| {
-            warn!("cache_ttl lock was poisoned - recovering");
-            poisoned.into_inner()
-        })
+        self.query_cache.current_ttl()
     }
 
     /// Get the maximum number of cache entries allowed.
     pub fn get_cache_capacity(&self) -> usize {
-        self.cache_capacity.load(Ordering::Relaxed)
+        self.query_cache.capacity()
     }
 
     /// Set the maximum number of cache entries allowed.
     ///
     /// Value is clamped to configured min/max bounds.
     pub fn set_cache_capacity(&self, capacity: usize) {
-        self.cache_capacity
-            .store(Self::clamp_cache_capacity(capacity), Ordering::Relaxed);
-        self.evict_to_capacity();
+        self.query_cache.set_capacity(capacity, &self.stats);
     }
 
     /// Get proactive cleanup operation threshold.
     pub fn get_cache_cleanup_threshold(&self) -> u64 {
-        self.cache_cleanup_threshold.load(Ordering::Relaxed)
+        self.query_cache.cleanup_threshold()
     }
 
     /// Set proactive cleanup operation threshold.
     ///
     /// Value is clamped to configured min/max bounds.
     pub fn set_cache_cleanup_threshold(&self, threshold: u64) {
-        self.cache_cleanup_threshold
-            .store(Self::clamp_cleanup_threshold(threshold), Ordering::Relaxed);
+        self.query_cache.set_cleanup_threshold(threshold);
     }
 
     /// Get proactive cleanup interval.
     pub fn get_cache_cleanup_interval(&self) -> Duration {
-        *self
-            .cache_cleanup_interval
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("cache_cleanup_interval lock was poisoned - recovering");
-                poisoned.into_inner()
-            })
+        self.query_cache.cleanup_interval()
     }
 
     /// Set proactive cleanup interval.
     ///
     /// Value is clamped to configured min/max bounds.
     pub fn set_cache_cleanup_interval(&self, interval: Duration) {
-        if let Ok(mut i) = self.cache_cleanup_interval.write() {
-            *i = Self::clamp_cleanup_interval(interval);
-        }
+        self.query_cache.set_cleanup_interval(interval);
     }
 
     /// Get the configured global connection budget.
     pub fn get_max_connections(&self) -> Option<usize> {
-        *self.max_connections.read().unwrap_or_else(|poisoned| {
-            warn!("max_connections lock was poisoned - recovering");
-            poisoned.into_inner()
-        })
+        self.registry.get_max_connections()
     }
 
     /// Set the configured global connection budget.
@@ -1318,9 +1643,7 @@ impl DatabasePool {
     /// This updates configuration for the next `initialize()` or explicit
     /// `rebalance_connections()` call. Existing pools are not rebuilt implicitly.
     pub fn set_max_connections(&self, max_connections: usize) {
-        if let Ok(mut m) = self.max_connections.write() {
-            *m = Some(max_connections);
-        }
+        self.registry.set_max_connections(max_connections);
     }
 
     /// Recalculate optimal global connection budget based on current CPU cores.
@@ -1336,83 +1659,23 @@ impl DatabasePool {
     /// This is the explicit runtime path for immediate allocation changes after
     /// `set_max_connections()`/`recalculate_max_connections()`.
     pub async fn rebalance_connections(&self) -> Result<(), DatabaseError> {
-        let tracked_paths = self
-            .db_paths
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("db_paths lock was poisoned - recovering");
-                poisoned.into_inner()
-            })
-            .clone();
+        let tracked_paths = self.registry.tracked_paths();
         self.initialize(tracked_paths).await
     }
 
     /// Get current performance statistics
     pub fn get_stats(&self) -> Result<PoolStatistics, DatabaseError> {
         let configured_budget = self.configured_connection_budget() as u64;
-        let allocations_snapshot = self
-            .pool_allocations
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("pool_allocations lock was poisoned - recovering");
-                poisoned.into_inner()
-            })
-            .clone();
-        let active_pool_count = allocations_snapshot.len() as u64;
-        let effective_connection_budget: u64 = allocations_snapshot
-            .values()
-            .copied()
-            .map(|value| value as u64)
-            .sum();
-        let min_pool_allocation = allocations_snapshot
-            .values()
-            .copied()
-            .min()
-            .map_or(0_u64, |value| value as u64);
-        let max_pool_allocation = allocations_snapshot
-            .values()
-            .copied()
-            .max()
-            .map_or(0_u64, |value| value as u64);
-        let allocation_spread = max_pool_allocation.saturating_sub(min_pool_allocation);
+        let allocations_snapshot = self.registry.allocations_snapshot();
 
-        Ok(PoolStatistics {
-            total_queries: self.stat_total_queries.load(Ordering::Relaxed),
-            cache_hits: self.stat_cache_hits.load(Ordering::Relaxed),
-            cache_misses: self.stat_cache_misses.load(Ordering::Relaxed),
-            total_connections: self.stat_total_connections.load(Ordering::Relaxed),
-            active_connections: self.stat_active_connections.load(Ordering::Relaxed),
-            cache_evictions: self.stat_cache_evictions.load(Ordering::Relaxed),
-            cleanup_runs: self.stat_cleanup_runs.load(Ordering::Relaxed),
-            cleanup_removed: self.stat_cleanup_removed.load(Ordering::Relaxed),
-            cleanup_elapsed_total_ns: self.stat_cleanup_elapsed_total_ns.load(Ordering::Relaxed),
-            cleanup_elapsed_max_ns: self.stat_cleanup_elapsed_max_ns.load(Ordering::Relaxed),
-            eviction_elapsed_total_ns: self.stat_eviction_elapsed_total_ns.load(Ordering::Relaxed),
-            eviction_elapsed_max_ns: self.stat_eviction_elapsed_max_ns.load(Ordering::Relaxed),
-            configured_connection_budget: configured_budget,
-            effective_connection_budget,
-            active_pool_count,
-            min_pool_allocation,
-            max_pool_allocation,
-            allocation_spread,
-            stable_shape_selections: self.stat_stable_shape_selections.load(Ordering::Relaxed),
-            stable_shape_padding_pairs: self
-                .stat_stable_shape_padding_pairs
-                .load(Ordering::Relaxed),
-            stable_shape_bucket_8: self.stat_stable_shape_bucket_8.load(Ordering::Relaxed),
-            stable_shape_bucket_16: self.stat_stable_shape_bucket_16.load(Ordering::Relaxed),
-            stable_shape_bucket_32: self.stat_stable_shape_bucket_32.load(Ordering::Relaxed),
-            stable_shape_bucket_64: self.stat_stable_shape_bucket_64.load(Ordering::Relaxed),
-            stable_shape_bucket_128: self.stat_stable_shape_bucket_128.load(Ordering::Relaxed),
-            stable_shape_bucket_256: self.stat_stable_shape_bucket_256.load(Ordering::Relaxed),
-            stable_shape_bucket_512: self.stat_stable_shape_bucket_512.load(Ordering::Relaxed),
-            stable_shape_bucket_1024: self.stat_stable_shape_bucket_1024.load(Ordering::Relaxed),
-        })
+        Ok(self
+            .stats
+            .snapshot(configured_budget, &allocations_snapshot))
     }
 
     /// Check if any database pools are available
     pub fn is_available(&self) -> bool {
-        !self.pools.is_empty()
+        self.registry.is_available()
     }
 
     /// Get the current number of entries in the query cache
@@ -1422,44 +1685,26 @@ impl DatabasePool {
 
     /// Close all connections and clear caches
     pub async fn close(&self) -> Result<(), DatabaseError> {
-        let pool_count = self.pools.len();
+        let pool_count = self.registry.len();
         let cache_size = self.query_cache.len();
 
         // Capture current stats before closing for logging
-        let active_before = self.stat_active_connections.load(Ordering::Relaxed);
-        let total_queries = self.stat_total_queries.load(Ordering::Relaxed);
-        let cleanup_runs = self.stat_cleanup_runs.load(Ordering::Relaxed);
-        let cleanup_ns_total = self.stat_cleanup_elapsed_total_ns.load(Ordering::Relaxed);
-        let cleanup_ns_max = self.stat_cleanup_elapsed_max_ns.load(Ordering::Relaxed);
-        let eviction_ns_total = self.stat_eviction_elapsed_total_ns.load(Ordering::Relaxed);
-        let eviction_ns_max = self.stat_eviction_elapsed_max_ns.load(Ordering::Relaxed);
+        let active_before = self.stats.active_connections();
+        let total_queries = self.stats.total_queries();
+        let (cleanup_runs, cleanup_ns_total, cleanup_ns_max, eviction_ns_total, eviction_ns_max) =
+            self.stats.maintenance_snapshot();
 
         info!(
             "Closing all database connections: {} pool(s), {} cached queries, {} active connection(s)",
             pool_count, cache_size, active_before
         );
 
-        // Clear caches
-        self.query_cache.clear();
+        // Clear query result cache but keep reusable SQL templates.
+        self.query_cache.clear_entries();
 
-        // Close all pools
-        for entry in self.pools.iter() {
-            let db_path = entry.key().clone();
-            let pool = entry.value();
-            pool.close().await;
-            debug!("Closed connection pool for {:?}", db_path);
-        }
-
-        self.pools.clear();
-        if let Ok(mut paths) = self.db_paths.write() {
-            paths.clear();
-        }
-        if let Ok(mut allocations) = self.pool_allocations.write() {
-            allocations.clear();
-        }
-
-        // Reset connection stats (queries stats preserved for debugging)
-        self.stat_active_connections.store(0, Ordering::Relaxed);
+        // Close all pools and clear tracked connection metadata.
+        self.close_active_pools().await;
+        self.registry.clear_tracking();
 
         info!(
             "Database pool closed successfully. Total queries processed: {}",
@@ -1481,13 +1726,10 @@ impl DatabasePool {
     pub async fn optimize(&self) -> Result<(), DatabaseError> {
         info!("Optimizing database connections");
 
-        for entry in self.pools.iter() {
-            let db_path = entry.key().clone();
-            let pool = entry.value();
-
+        for (db_path, pool) in self.registry.pool_snapshots() {
             // Note: VACUUM cannot be run on read-only databases
             // We'll just run ANALYZE which is allowed in read-only mode
-            match sqlx::query("ANALYZE").execute(pool).await {
+            match sqlx::query("ANALYZE").execute(&pool).await {
                 Ok(_) => {
                     info!("Analyzed database {:?}", db_path);
                 }
@@ -1522,9 +1764,9 @@ impl Drop for DatabasePool {
     fn drop(&mut self) {
         // Only warn if this is the last Arc reference AND pools weren't closed.
         // When multiple clones exist, other clones may still call close() later.
-        if Arc::strong_count(&self.pools) == 1 && !self.pools.is_empty() {
-            let pool_count = self.pools.len();
-            let active_connections = self.stat_active_connections.load(Ordering::Relaxed);
+        if self.registry.is_last_handle_with_open_pools() {
+            let pool_count = self.registry.len();
+            let active_connections = self.stats.active_connections();
 
             warn!(
                 "DatabasePool dropped without calling close(). \

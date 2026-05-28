@@ -21,9 +21,10 @@
 use classic_settings_core::{SchemaCompat, SchemaVersion};
 use classic_shared_core::get_runtime;
 use classic_update_core::{
-    ApprovedUpdate, ClientSchemaSet, FileInstallOutcome, GithubClient, RollbackOutcome,
-    UpdateCheckConfig, UpdateError, YamlManifestFile, YamlUpdateStatus,
-    apply_yaml_update_with_decision, check_yaml_update, rollback_yaml_update,
+    ApprovedUpdate, Classification, ClientSchemaSet, FileInstallOutcome, GithubClient,
+    NotificationStatus, RollbackOutcome, UpdateCheckConfig, UpdateError, YamlManifestFile,
+    YamlUpdateStatus, apply_yaml_update_with_decision,
+    check_app_notification as core_check_app_notification, check_yaml_update, rollback_yaml_update,
 };
 
 // ---------------------------------------------------------------------------
@@ -38,6 +39,7 @@ fn github_has_update(current: &str, latest: &str) -> bool {
     client.has_update(current, latest).unwrap_or_default()
 }
 
+#[allow(deprecated)] // compat bridge to GithubClient::get_latest_release (design D-08); migrate in notification-bridge task 3.2.
 fn github_check_for_updates(
     owner: &str,
     repo: &str,
@@ -334,6 +336,81 @@ fn install_outcome_to_dto(outcome: &FileInstallOutcome) -> ffi::YamlUpdateFileOu
     }
 }
 
+// ---------------------------------------------------------------------------
+// App-notification bridge (app-update-manifest-notification change, §3)
+// ---------------------------------------------------------------------------
+//
+// Surface contract: empty-string sentinels + `classification` string for the
+// discriminator, matching `docs/api/error-contract.md`. Error case sets
+// `classification = "error"` with `error_message` populated; every other
+// field carries an empty-string sentinel. On success, the Rust
+// `NotificationStatus` is flattened (optional `display` sub-object becomes
+// `display_title` / `display_body` / `display_cta_url` with empty strings
+// where the source was `None`).
+
+/// Discriminator string values in [`ffi::NotificationStatusDto::classification`].
+const CLASSIFICATION_UP_TO_DATE: &str = "up_to_date";
+const CLASSIFICATION_UPDATE_AVAILABLE: &str = "update_available";
+const CLASSIFICATION_DEPRECATED: &str = "deprecated_client";
+const CLASSIFICATION_UNKNOWN: &str = "unknown";
+const CLASSIFICATION_ERROR: &str = "error";
+
+fn classification_label(c: Classification) -> &'static str {
+    match c {
+        Classification::UpToDate => CLASSIFICATION_UP_TO_DATE,
+        Classification::UpdateAvailable => CLASSIFICATION_UPDATE_AVAILABLE,
+        Classification::DeprecatedClient => CLASSIFICATION_DEPRECATED,
+        Classification::Unknown => CLASSIFICATION_UNKNOWN,
+    }
+}
+
+fn notification_status_to_dto(status: &NotificationStatus) -> ffi::NotificationStatusDto {
+    let (display_title, display_body, display_cta_url) = match status.display.as_ref() {
+        Some(d) => (
+            d.title.clone(),
+            d.body.clone(),
+            d.cta_url.clone().unwrap_or_default(),
+        ),
+        None => (String::new(), String::new(), String::new()),
+    };
+    ffi::NotificationStatusDto {
+        classification: classification_label(status.classification).to_string(),
+        latest_version: status.latest_version.clone(),
+        published_at: status.published_at.clone(),
+        min_supported_version: status.min_supported_version.clone().unwrap_or_default(),
+        display_title,
+        display_body,
+        display_cta_url,
+        parse_error: status.parse_error.clone().unwrap_or_default(),
+        error_message: String::new(),
+    }
+}
+
+fn notification_error_dto(error: &UpdateError) -> ffi::NotificationStatusDto {
+    ffi::NotificationStatusDto {
+        classification: CLASSIFICATION_ERROR.to_string(),
+        latest_version: String::new(),
+        published_at: String::new(),
+        min_supported_version: String::new(),
+        display_title: String::new(),
+        display_body: String::new(),
+        display_cta_url: String::new(),
+        parse_error: String::new(),
+        error_message: error.to_string(),
+    }
+}
+
+fn check_app_notification(
+    owner: &str,
+    repo: &str,
+    installed_version: &str,
+) -> ffi::NotificationStatusDto {
+    match get_runtime().block_on(core_check_app_notification(owner, repo, installed_version)) {
+        Ok(status) => notification_status_to_dto(&status),
+        Err(err) => notification_error_dto(&err),
+    }
+}
+
 fn yaml_rollback_update(file_name: &str) -> ffi::YamlRollbackOutcomeDto {
     match rollback_yaml_update(file_name) {
         Ok(RollbackOutcome::RolledBack { file_name: f }) => ffi::YamlRollbackOutcomeDto {
@@ -454,6 +531,40 @@ mod ffi {
         error_message: String,
     }
 
+    /// Result of [`check_app_notification`]. C++ callers inspect
+    /// `classification` first:
+    ///
+    /// - `"up_to_date"` — installed `>=` manifest `latest_version`.
+    /// - `"update_available"` — installed `<` manifest `latest_version`; the
+    ///   display fields (`display_title`, `display_body`, `display_cta_url`)
+    ///   may be populated and SHOULD be surfaced to the user.
+    /// - `"deprecated_client"` — installed `<` manifest `min_supported_version`.
+    ///   `min_supported_version` carries the publisher's declared floor.
+    /// - `"unknown"` — the installed-version string could not be parsed as
+    ///   semver; `parse_error` carries the diagnostic. The caller MUST NOT
+    ///   treat this as `up_to_date`.
+    /// - `"error"` — both Pages and Releases fallbacks failed (or the
+    ///   manifest body was structurally invalid). `error_message` carries
+    ///   the `Display` rendering of the underlying `UpdateError`, and every
+    ///   other string field is an empty-string sentinel per
+    ///   `docs/api/error-contract.md`.
+    ///
+    /// Optional Rust fields are flattened with empty-string sentinels:
+    /// `min_supported_version == ""` means the manifest omitted the field;
+    /// `display_title == ""` means there was no display payload (in which
+    /// case `display_body` and `display_cta_url` will also be empty).
+    struct NotificationStatusDto {
+        classification: String,
+        latest_version: String,
+        published_at: String,
+        min_supported_version: String,
+        display_title: String,
+        display_body: String,
+        display_cta_url: String,
+        parse_error: String,
+        error_message: String,
+    }
+
     extern "Rust" {
         fn github_has_update(current: &str, latest: &str) -> bool;
         fn github_check_for_updates(
@@ -501,6 +612,27 @@ mod ffi {
         fn yaml_apply_update(request: &YamlApplyRequestDto) -> YamlUpdateReportDto;
 
         fn yaml_rollback_update(file_name: &str) -> YamlRollbackOutcomeDto;
+
+        /// Check for a published CLASSIC binary-release notification.
+        ///
+        /// Fetches the payload-free notification manifest Pages-first
+        /// (`https://<owner>.github.io/<repo>/app-notification/manifest-latest.json`)
+        /// with an ETag cache and falls back to listing releases filtered
+        /// by the `app-notification-v*` tag prefix. Returns a
+        /// [`NotificationStatusDto`] whose `classification` field names
+        /// the outcome; on failure, `classification = "error"` and
+        /// `error_message` is populated (empty-string sentinels on every
+        /// other string field per `docs/api/error-contract.md`).
+        ///
+        /// `owner` and `repo` identify the GitHub org / repo slug
+        /// (e.g. `"evildarkarchon"` / `"CLASSIC-Fallout4"`).
+        /// `installed_version` is the caller's current client semver; a
+        /// leading `v` or `V` is tolerated.
+        fn check_app_notification(
+            owner: &str,
+            repo: &str,
+            installed_version: &str,
+        ) -> NotificationStatusDto;
     }
 }
 

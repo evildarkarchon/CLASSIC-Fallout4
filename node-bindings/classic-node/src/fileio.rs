@@ -9,6 +9,7 @@
 //! - Only handles JavaScript <-> Rust type conversions
 //! - Respects the ONE RUNTIME RULE via `classic_shared_core::get_runtime()`
 
+use crate::runtime::spawn_result;
 use classic_file_io_core::FileIOCore;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::encoding::EncodingDetector;
@@ -80,12 +81,12 @@ impl JsFileIO {
     #[napi]
     pub async fn read_file(&self, path: String) -> Result<String> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.read_file(Path::new(&path)).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.read_file(Path::new(&path)).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Write string content to a file.
@@ -94,24 +95,24 @@ impl JsFileIO {
     #[napi]
     pub async fn write_file(&self, path: String, content: String) -> Result<()> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.write_file(Path::new(&path), &content).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.write_file(Path::new(&path), &content).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Read a file and return its lines as an array of strings.
     #[napi]
     pub async fn read_lines(&self, path: String) -> Result<Vec<String>> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.read_lines(Path::new(&path)).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.read_lines(Path::new(&path)).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Write an array of strings as lines to a file.
@@ -120,12 +121,12 @@ impl JsFileIO {
     #[napi]
     pub async fn write_lines(&self, path: String, lines: Vec<String>) -> Result<()> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.write_lines(Path::new(&path), lines).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.write_lines(Path::new(&path), lines).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Read a file as raw bytes (Buffer).
@@ -134,12 +135,12 @@ impl JsFileIO {
     #[napi]
     pub async fn read_bytes(&self, path: String) -> Result<Vec<u8>> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.read_bytes(Path::new(&path)).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.read_bytes(Path::new(&path)).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Write raw bytes to a file.
@@ -148,12 +149,12 @@ impl JsFileIO {
     #[napi]
     pub async fn write_bytes(&self, path: String, content: Vec<u8>) -> Result<()> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.write_bytes(Path::new(&path), content).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.write_bytes(Path::new(&path), content).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Append string content to a file.
@@ -162,27 +163,27 @@ impl JsFileIO {
     #[napi]
     pub async fn append_file(&self, path: String, content: String) -> Result<()> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.append_file(Path::new(&path), &content).await })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.append_file(Path::new(&path), &content).await },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Clear all internal caches (read cache, metadata cache, path cache, DDS cache).
     #[napi]
     pub async fn clear_cache(&self) -> Result<()> {
         let inner = self.inner.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 inner.clear_cache().await;
                 Ok::<(), classic_file_io_core::FileIOError>(())
-            })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+            },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Read multiple files concurrently with controlled parallelism.
@@ -193,10 +194,8 @@ impl JsFileIO {
     pub async fn read_multiple_files(&self, paths: Vec<String>) -> Result<HashMap<String, String>> {
         let inner = self.inner.clone();
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 let results = inner.read_multiple_files(path_bufs).await;
                 let mut map = HashMap::new();
                 for (path, result) in results {
@@ -211,10 +210,11 @@ impl JsFileIO {
                     }
                 }
                 Ok::<HashMap<String, String>, classic_file_io_core::FileIOError>(map)
-            })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+            },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     /// Write multiple files concurrently with controlled parallelism.
@@ -228,19 +228,18 @@ impl JsFileIO {
             .into_iter()
             .map(|(path, content)| (PathBuf::from(path), content))
             .collect();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 let results = inner.write_multiple_files(file_pairs).await;
                 for (_path, result) in results {
                     result?;
                 }
                 Ok::<(), classic_file_io_core::FileIOError>(())
-            })
-            .await
-            .map_err(to_napi_err)?
-            .map_err(to_napi_err)
+            },
+            to_napi_err,
+            to_napi_err,
+        )
+        .await
     }
 
     // ---- Sync file operations ----
@@ -437,10 +436,8 @@ impl JsBackupManager {
     pub async fn create_backup(&self, backup_type: String) -> Result<JsBackupInfo> {
         let bt = parse_backup_type(&backup_type)?;
         let game_root = self.game_root.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 let manager = BackupManager::new(PathBuf::from(&game_root), None);
                 let info = manager.create_backup(bt).await.map_err(to_napi_err)?;
                 Ok(JsBackupInfo {
@@ -449,9 +446,11 @@ impl JsBackupManager {
                     file_count: info.file_count as u32,
                     exists: info.exists,
                 })
-            })
-            .await
-            .map_err(to_napi_err)?
+            },
+            to_napi_err,
+            |error| error,
+        )
+        .await
     }
 
     /// Restore a backup of the specified type.
@@ -462,16 +461,16 @@ impl JsBackupManager {
     pub async fn restore_backup(&self, backup_type: String) -> Result<u32> {
         let bt = parse_backup_type(&backup_type)?;
         let game_root = self.game_root.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 let manager = BackupManager::new(PathBuf::from(&game_root), None);
                 let count = manager.restore_backup(bt).await.map_err(to_napi_err)?;
                 Ok(count as u32)
-            })
-            .await
-            .map_err(to_napi_err)?
+            },
+            to_napi_err,
+            |error| error,
+        )
+        .await
     }
 
     /// Check if a backup of the specified type exists.
@@ -481,15 +480,15 @@ impl JsBackupManager {
     pub async fn backup_exists(&self, backup_type: String) -> Result<bool> {
         let bt = parse_backup_type(&backup_type)?;
         let game_root = self.game_root.clone();
-        let handle = classic_shared_core::get_runtime().handle().clone();
-
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 let manager = BackupManager::new(PathBuf::from(&game_root), None);
                 manager.backup_exists(bt).await.map_err(to_napi_err)
-            })
-            .await
-            .map_err(to_napi_err)?
+            },
+            to_napi_err,
+            |error| error,
+        )
+        .await
     }
 }
 
@@ -563,12 +562,12 @@ impl JsDDSAnalyzer {
     /// @param paths - Array of absolute paths to DDS files.
     /// @returns Array of `{ path, issues }` objects for files with issues.
     #[napi]
-    pub fn validate_batch(&self, paths: Vec<String>) -> Vec<JsDDSBatchResult> {
+    pub fn validate_batch(&self, paths: Vec<String>) -> Vec<JsDdsBatchResult> {
         let path_bufs: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
         self.inner
             .validate_batch(&path_bufs)
             .into_iter()
-            .map(|(path, issues)| JsDDSBatchResult {
+            .map(|(path, issues)| JsDdsBatchResult {
                 path: path.to_string_lossy().to_string(),
                 issues: issues
                     .into_iter()
@@ -598,7 +597,7 @@ impl JsDDSAnalyzer {
 
 /// Result from batch DDS validation for a single file.
 #[napi(object)]
-pub struct JsDDSBatchResult {
+pub struct JsDdsBatchResult {
     /// Path to the DDS file that had issues.
     pub path: String,
     /// Validation issues found.

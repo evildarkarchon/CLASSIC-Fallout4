@@ -13,10 +13,20 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::LazyLock;
 
+fn compile_static_regex(pattern: &str, name: &str) -> Regex {
+    match Regex::new(pattern) {
+        Ok(regex) => regex,
+        Err(error) => panic!("invalid static regex {name}: {error}"),
+    }
+}
+
 /// Precompiled plugin pattern - exact match to Python's pattern
 /// Pattern: r"\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)"
 static PLUGIN_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)").unwrap()
+    compile_static_regex(
+        r"(?i)\s*\[(FE:([0-9A-F]{3})|[0-9A-F]{2})\]\s*(.+?(?:\.es[pml])+)",
+        "PLUGIN_PATTERN",
+    )
 });
 
 /// Plugin origin markers

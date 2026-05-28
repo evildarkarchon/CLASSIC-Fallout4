@@ -1,3 +1,4 @@
+#include "app_update.h"
 #include "cli_args.h"
 #include "scanner.h"
 #include "yaml_update.h"
@@ -34,9 +35,13 @@ static void setup_console() {
 
 /// Print version string using the YAML-loaded classic_version.
 static void print_version() {
-    // We need to load config to get the version, but for a lightweight
-    // version print we'll use a hardcoded format with build info
-    fmt::print("CLASSIC CLI Scanner v9.0.0\n");
+    // `CLASSIC_CLI_VERSION` is defined by CMake (see `classic-cli/CMakeLists.txt`)
+    // from the top-level `project(... VERSION ...)` call — the sole source of
+    // truth for the CLI version string.
+#ifndef CLASSIC_CLI_VERSION
+#    error "CLASSIC_CLI_VERSION must be defined by the build system (see CMakeLists.txt)"
+#endif
+    fmt::print("CLASSIC CLI Scanner v{}\n", CLASSIC_CLI_VERSION);
     fmt::print("C++ native build using Rust CXX bindings\n");
 }
 
@@ -61,6 +66,11 @@ int main(int argc, char* argv[]) {
     if (args.check_yaml_updates) {
         return run_check_yaml_updates(args);
     }
+    // app-update-manifest-notification: binary-release notification check.
+    // Also short-circuits the scan pipeline.
+    if (args.check_app_update) {
+        return run_check_app_update(args);
+    }
 
     // Print banner
     std::string mode_suffix;
@@ -70,7 +80,7 @@ int main(int argc, char* argv[]) {
     if (args.fcx_mode)
         mode_suffix += " [FCX]";
 
-    fmt::print("CLASSIC v9.0.0 - Crash Log Scanner ({}{})\n\n", args.game, mode_suffix);
+    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, args.game, mode_suffix);
 
     // Run the scan pipeline
     return run_scan(args);

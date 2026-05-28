@@ -9,12 +9,13 @@
 //! C++ Qt App  <-->  CXX FFI  <-->  classic-cpp-bridge (staticlib)  <-->  ~20 -core crates
 //!                                   14 bridge modules
 //!                                   Opaque types + shared DTOs
-//!                                   block_on() for async wrapping
+//!                                   shared-runtime helpers for async wrapping
 //! ```
 //!
 //! # ONE RUNTIME RULE
 //!
-//! All async operations use `classic_shared_core::get_runtime().block_on()`.
+//! Synchronous bridge adapters use shared-runtime helpers such as
+//! `runtime_support::block_on()` / `runtime_support::block_on_result()`.
 //! Never create additional Tokio runtimes.
 //!
 //! # Modules
@@ -65,6 +66,8 @@ pub mod perf;
 pub mod registry;
 #[cfg(windows)]
 pub mod runtime;
+#[cfg(windows)]
+pub(crate) mod runtime_support;
 #[cfg(windows)]
 pub mod scangame;
 #[cfg(windows)]

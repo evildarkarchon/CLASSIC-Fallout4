@@ -202,8 +202,8 @@ impl BackupManager {
         // Parse version from log
         // Looking for lines like: "F4SE version = 0.6.23"
         // or "runtime version = 1.10.163.0"
-        let version_regex =
-            Regex::new(r"(?i)(?:runtime )?version\s*[=:]\s*(\d+(?:\.\d+)+)").unwrap();
+        let version_regex = Regex::new(r"(?i)(?:runtime )?version\s*[=:]\s*(\d+(?:\.\d+)+)")
+            .map_err(|error| BackupError::InvalidVersionFormat(error.to_string()))?;
 
         for line in content.lines() {
             if let Some(captures) = version_regex.captures(line) {

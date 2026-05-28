@@ -3,8 +3,9 @@
 use crate::core_mod_convert::exclude_when_from_pydict;
 use classic_config_core::{CoreModEntry, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry};
 use classic_scanlog_core::FormIDAnalyzerCore;
-use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
-use classic_shared_core::get_runtime;
+use classic_shared::{
+    pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil_block_on,
+};
 use pyo3::exceptions::PyDeprecationWarning;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList};
@@ -185,14 +186,12 @@ impl PyFormIDAnalyzerCore {
         crashlog_plugins: &Bound<'_, PyDict>,
     ) -> PyResult<Vec<String>> {
         let plugins_map = pydict_to_indexmap_str(crashlog_plugins)?;
-        // Use without_gil to release GIL while running async operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner
-                    .formid_match(formids, &plugins_map)
-                    .await
-                    .map_err(crate::to_pyerr)
-            })
+        // Release the GIL while running async FormID matching on the shared runtime.
+        without_gil_block_on(py, || async {
+            self.inner
+                .formid_match(formids, &plugins_map)
+                .await
+                .map_err(crate::to_pyerr)
         })
     }
 }

@@ -24,13 +24,20 @@ impl PyRecordScanner {
     }
 
     /// Scan named records from callstack segment
-    pub fn scan_named_records(&self, segment_callstack: Vec<String>) -> (Vec<String>, Vec<String>) {
-        self.inner.scan_named_records(&segment_callstack)
+    pub fn scan_named_records(
+        &self,
+        segment_callstack: Vec<String>,
+    ) -> PyResult<(Vec<String>, Vec<String>)> {
+        self.inner
+            .try_scan_named_records(&segment_callstack)
+            .map_err(crate::to_pyerr)
     }
 
     /// Extract records from callstack segment
-    pub fn extract_records(&self, segment_callstack: Vec<String>) -> Vec<String> {
-        self.inner.extract_records(&segment_callstack)
+    pub fn extract_records(&self, segment_callstack: Vec<String>) -> PyResult<Vec<String>> {
+        self.inner
+            .try_extract_records(&segment_callstack)
+            .map_err(crate::to_pyerr)
     }
 
     /// Clear scanner cache
@@ -46,11 +53,8 @@ pub fn scan_records_batch(
     target_records: Vec<String>,
     ignore_records: Vec<String>,
 ) -> PyResult<Vec<Vec<String>>> {
-    Ok(classic_scanlog_core::scan_records_batch(
-        segments,
-        target_records,
-        ignore_records,
-    ))
+    classic_scanlog_core::try_scan_records_batch(segments, target_records, ignore_records)
+        .map_err(crate::to_pyerr)
 }
 
 /// Check if a line contains a record (standalone function)

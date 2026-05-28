@@ -9,12 +9,12 @@ use std::collections::HashSet;
 
 /// Convert IndexMap to Python dict, preserving insertion order
 /// Python 3.7+ dicts maintain insertion order, so this is safe
-fn indexmap_to_pydict(py: Python<'_>, map: IndexMap<String, String>) -> Py<PyDict> {
+fn indexmap_to_pydict(py: Python<'_>, map: IndexMap<String, String>) -> PyResult<Py<PyDict>> {
     let dict = PyDict::new(py);
     for (k, v) in map {
-        dict.set_item(k, v).expect("Failed to set dict item");
+        dict.set_item(k, v)?;
     }
-    dict.into()
+    Ok(dict.into())
 }
 
 /// Python wrapper for PluginAnalyzer
@@ -117,7 +117,7 @@ impl PyPluginAnalyzer {
         .map_err(crate::to_pyerr)?;
         // Convert IndexMap to Python dict preserving order
         Ok((
-            indexmap_to_pydict(py, plugins),
+            indexmap_to_pydict(py, plugins)?,
             limit_triggered,
             limit_disabled,
         ))
@@ -171,7 +171,7 @@ impl PyPluginAnalyzer {
         // Release GIL during filtering
         let filtered = without_gil(py, || self.inner.filter_ignored_plugins(plugins_map))
             .map_err(crate::to_pyerr)?;
-        Ok(indexmap_to_pydict(py, filtered))
+        indexmap_to_pydict(py, filtered)
     }
 }
 
@@ -181,7 +181,7 @@ impl PyPluginAnalyzer {
 /// The order of plugins within each dict is preserved from the crash log.
 /// Releases GIL during batch detection to allow concurrent Python threads.
 #[pyfunction]
-pub fn detect_plugins_batch(py: Python<'_>, logs: Vec<String>) -> Vec<Py<PyDict>> {
+pub fn detect_plugins_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<PyDict>>> {
     // Release GIL during batch detection
     let results = without_gil(py, || classic_scanlog_core::detect_plugins_batch(logs));
     results

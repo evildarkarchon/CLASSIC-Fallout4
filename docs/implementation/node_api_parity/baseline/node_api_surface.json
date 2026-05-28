@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-12T23:03:44.743161+00:00",
+  "generated_at_utc": "2026-04-21T23:39:22.583792+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -173,6 +173,14 @@
       "signature": "export interface JsAnalysisResult {"
     },
     {
+      "export": "JsApprovedUpdate",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsApprovedUpdate {"
+    },
+    {
       "export": "JsBa2Issues",
       "kind": "interface",
       "owner_module": "aux",
@@ -219,6 +227,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsBatchEntry {"
+    },
+    {
+      "export": "JsCheckAppNotificationOptions",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCheckAppNotificationOptions {"
     },
     {
       "export": "JsCheckResult",
@@ -701,6 +717,22 @@
       "signature": "export interface JsModSolutionEntry {"
     },
     {
+      "export": "JsNotificationDisplay",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNotificationDisplay {"
+    },
+    {
+      "export": "JsNotificationStatus",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNotificationStatus {"
+    },
+    {
       "export": "JsPapyrusStats",
       "kind": "interface",
       "owner_module": "scanlog",
@@ -925,6 +957,22 @@
       "signature": "export declare const enum JsXseType {"
     },
     {
+      "export": "JsYamlApplyRequest",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlApplyRequest {"
+    },
+    {
+      "export": "JsYamlClientSchemaEntry",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlClientSchemaEntry {"
+    },
+    {
       "export": "JsYamlFile",
       "kind": "const_enum",
       "owner_module": "config",
@@ -933,12 +981,60 @@
       "signature": "export declare const enum JsYamlFile {"
     },
     {
+      "export": "JsYamlRejectedFile",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlRejectedFile {"
+    },
+    {
+      "export": "JsYamlRollbackOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlRollbackOutcome {"
+    },
+    {
       "export": "JsYamlSource",
       "kind": "const_enum",
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsYamlSource {"
+    },
+    {
+      "export": "JsYamlUpdateFile",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlUpdateFile {"
+    },
+    {
+      "export": "JsYamlUpdateFileOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlUpdateFileOutcome {"
+    },
+    {
+      "export": "JsYamlUpdateReport",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlUpdateReport {"
+    },
+    {
+      "export": "JsYamlUpdateStatus",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlUpdateStatus {"
     },
     {
       "export": "MAX_CACHE_TTL",
@@ -1038,6 +1134,15 @@
       "arity": 1
     },
     {
+      "export": "applyYamlUpdate",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function applyYamlUpdate(request: JsYamlApplyRequest): Promise<JsYamlUpdateReport>",
+      "arity": 1
+    },
+    {
       "export": "buildUrlWithQuery",
       "kind": "function",
       "owner_module": "aux",
@@ -1063,6 +1168,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function calculateTextSimilarity(text1: string, text2: string): number",
       "arity": 2
+    },
+    {
+      "export": "checkAppNotification",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkAppNotification(options: JsCheckAppNotificationOptions): Promise<JsNotificationStatus>",
+      "arity": 1
     },
     {
       "export": "checkCrashgenConfig",
@@ -1162,6 +1276,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string",
       "arity": 2
+    },
+    {
+      "export": "checkYamlUpdate",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateStatus>",
+      "arity": 5
     },
     {
       "export": "clearAllMetrics",
@@ -2430,6 +2553,15 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resolveEffectiveGameVersion(version?: string | undefined | null): string",
+      "arity": 1
+    },
+    {
+      "export": "rollbackYamlUpdate",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function rollbackYamlUpdate(fileName: string): JsYamlRollbackOutcome",
       "arity": 1
     },
     {

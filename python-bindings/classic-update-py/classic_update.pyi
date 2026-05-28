@@ -433,3 +433,120 @@ def rollback_yaml_update(file_name: str) -> YamlRollbackOutcome:
     Args:
         file_name: Canonical file name (e.g. ``"CLASSIC Main.yaml"``).
     """
+
+# ----------------------------------------------------------------------------
+# App-notification (app-update-manifest-notification change)
+# ----------------------------------------------------------------------------
+
+class ClassicUpdateError(Exception):
+    """Base class for every classic_update binding error.
+
+    Consumers that want to catch any update-subsystem failure can use
+    ``except ClassicUpdateError``. The notification-specific subclasses
+    under :class:`ClassicNotificationError` all inherit from this class
+    via :class:`ClassicNotificationError` → :class:`ClassicUpdateError`.
+    """
+
+class ClassicNotificationError(ClassicUpdateError):
+    """Base class for app-notification check failures.
+
+    :func:`check_app_notification` raises this base class directly for
+    shared manifest-validation failures, and raises subclasses for
+    notification-channel-specific failures:
+
+    - :class:`ClassicNotificationFetchFailed`
+    - :class:`ClassicNotificationDecodeError`
+    - :class:`ClassicNotificationInstalledVersionParseError`
+    - :class:`ClassicNotificationCacheIoError`
+
+    Invalid notification manifest invariants and unsupported
+    ``manifest_version`` values raise this base class directly because the
+    underlying Rust variants are shared with other update surfaces.
+    """
+
+class ClassicNotificationFetchFailed(ClassicNotificationError):
+    """Both Pages and Releases fallback channels failed."""
+
+class ClassicNotificationDecodeError(ClassicNotificationError):
+    """The fetched manifest body is missing a required field or otherwise malformed."""
+
+class ClassicNotificationInstalledVersionParseError(ClassicNotificationError):
+    """The caller-supplied installed_version could not be parsed as semver."""
+
+class ClassicNotificationCacheIoError(ClassicNotificationError):
+    """The notification cache file (body or ETag) could not be read, written, or created."""
+
+class AppNotificationDisplay:
+    """Optional display payload attached to a notification manifest.
+
+    Attributes:
+        title: Short heading (e.g. ``"Update available"``).
+        body: Longer body text; may include changelog highlights.
+        cta_url: Optional call-to-action URL. ``None`` when the manifest
+            omits it.
+    """
+
+    title: str
+    body: str
+    cta_url: str | None
+
+class NotificationStatus:
+    """Result of :func:`check_app_notification`.
+
+    ``classification`` is one of ``"upToDate"``, ``"updateAvailable"``,
+    ``"deprecatedClient"``, ``"unknown"``. Error outcomes are raised as
+    :class:`ClassicNotificationError` or one of its subclasses, not as an
+    additional classification value.
+
+    Attributes:
+        classification: Discriminator string (see above).
+        latest_version: Latest version from the manifest.
+        published_at: RFC 3339 publication timestamp.
+        min_supported_version: Publisher-declared minimum supported
+            version, or ``None`` when omitted.
+        display: Optional display payload, or ``None`` when the manifest
+            carried no display block.
+        parse_error: When ``classification == "unknown"``, a
+            human-readable description of the installed-version parse
+            failure. ``None`` for every other classification.
+    """
+
+    classification: str
+    latest_version: str
+    published_at: str
+    min_supported_version: str | None
+    display: AppNotificationDisplay | None
+    parse_error: str | None
+
+def check_app_notification(
+    owner: str,
+    repo: str,
+    installed_version: str,
+) -> NotificationStatus:
+    """Check for a published CLASSIC binary-release notification.
+
+    Drives the Pages-first manifest fetch with ETag caching, falling back
+    to listing releases filtered by the ``app-notification-v*`` tag
+    prefix. On success returns a :class:`NotificationStatus`; on failure
+    raises a :class:`ClassicNotificationError` directly for shared
+    manifest-validation failures, or a subclass keyed to the
+    notification-channel-specific failure.
+
+    Args:
+        owner: GitHub org / repo slug (e.g. ``"evildarkarchon"``).
+        repo: Repository name (e.g. ``"CLASSIC-Fallout4"``).
+        installed_version: Caller's current client semver; a leading
+            ``v`` or ``V`` is tolerated.
+
+    Returns:
+        NotificationStatus: Structured classification + display payload.
+
+    Raises:
+        ClassicNotificationFetchFailed: Both channels failed.
+        ClassicNotificationDecodeError: Manifest is missing a required field.
+        ClassicNotificationInstalledVersionParseError: Installed-version
+            string failed semver parsing.
+        ClassicNotificationCacheIoError: Cache I/O failure.
+        ClassicNotificationError: Invalid or unsupported notification manifest.
+        ClassicUpdateError: Non-notification update-subsystem error.
+    """

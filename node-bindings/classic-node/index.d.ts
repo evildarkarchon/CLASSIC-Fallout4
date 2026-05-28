@@ -679,7 +679,7 @@ export declare class JsDdsAnalyzer {
    * @param paths - Array of absolute paths to DDS files.
    * @returns Array of `{ path, issues }` objects for files with issues.
    */
-  validateBatch(paths: Array<string>): Array<JsDDSBatchResult>
+  validateBatch(paths: Array<string>): Array<JsDdsBatchResult>
   /**
    * Validate DDS dimensions from width/height only (fallback for non-parseable files).
    *
@@ -1268,7 +1268,7 @@ export declare class YamlDocument {
    */
   getValue(keyPath: string): any
   /** Extract a string value at the given dot-notation key path, with a default fallback. */
-  getStringValue(keyPath: string, default: string): string
+  getStringValue(keyPath: string, defaultValue: string): string
   /**
    * Extract a string array at the given dot-notation key path.
    *
@@ -1363,6 +1363,32 @@ export declare function calculateFileSimilarity(path1: string, path2: string): n
  * @returns Similarity ratio (0.0 to 1.0).
  */
 export declare function calculateTextSimilarity(text1: string, text2: string): number
+
+/**
+ * Check for a published CLASSIC binary-release notification.
+ *
+ * Drives the Pages-first manifest fetch with ETag caching, falling back
+ * to listing releases filtered by the `app-notification-v*` tag prefix.
+ * On success resolves to a [`JsNotificationStatus`]; on total failure
+ * the returned promise rejects with an `Error` whose `message` is
+ * prefixed with the variant-keyed code (`"FETCH_FAILED: …"`,
+ * `"DECODE: …"`, `"INSTALLED_VERSION_PARSE: …"`, `"CACHE_IO: …"`, or
+ * `"UPDATE_ERROR: …"`). Consumers discriminate via
+ * `err.message.startsWith("FETCH_FAILED:")`.
+ *
+ * The `code`-in-`message`-prefix shape is a napi-rs 3.x stable-API
+ * limitation — `napi::Error<String>` supports custom codes at the FFI
+ * layer but the async macro still threads `Error<Status>` through
+ * `execute_tokio_future_with_finalize_callback`, so we pick the best
+ * representation that round-trips through the async bridge.
+ *
+ * @param options Options object with required `owner`, `repo`, and
+ *                `installedVersion` fields.
+ * @returns A promise resolving to `JsNotificationStatus`.
+ * @throws an `Error` whose message starts with the variant-keyed code
+ *         followed by `": "`.
+ */
+export declare function checkAppNotification(options: JsCheckAppNotificationOptions): Promise<JsNotificationStatus>
 
 /**
  * Convenience function to check crashgen config without creating an instance.
@@ -2478,6 +2504,16 @@ export interface JsBatchEntry {
   entry?: string
 }
 
+/** Options-object parameter for `checkAppNotification`. */
+export interface JsCheckAppNotificationOptions {
+  /** GitHub org / repo slug (e.g. `"evildarkarchon"`). */
+  owner: string
+  /** GitHub repository name (e.g. `"CLASSIC-Fallout4"`). */
+  repo: string
+  /** Caller's current client semver; a leading `v` or `V` is tolerated. */
+  installedVersion: string
+}
+
 /** Result of a single check task. */
 export interface JsCheckResult {
   /** Name of the check. */
@@ -3049,6 +3085,41 @@ export interface JsModSolutionEntry {
   description: string
 }
 
+/** Optional display payload attached to a notification manifest. */
+export interface JsNotificationDisplay {
+  /** Short heading (e.g. `"Update available"`). */
+  title: string
+  /** Longer body text; may include changelog highlights. */
+  body: string
+  /** Optional call-to-action URL. */
+  ctaUrl?: string
+}
+
+/**
+ * Result of `checkAppNotification`. `classification` is one of:
+ * `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`.
+ * Error outcomes are surfaced as rejected promises (see NAPI
+ * `Error.code` constants in the module docs), not as an additional
+ * classification value.
+ */
+export interface JsNotificationStatus {
+  /** Discriminator. See module doc for possible values. */
+  classification: string
+  /** Latest version from the manifest. */
+  latestVersion: string
+  /** RFC 3339 `published_at` from the manifest. */
+  publishedAt: string
+  /** Minimum supported version, when the manifest declares one. */
+  minSupportedVersion?: string
+  /** Optional display payload for user-facing presentation. */
+  display?: JsNotificationDisplay
+  /**
+   * When `classification === "unknown"`, a human-readable description
+   * of the installed-version parse failure.
+   */
+  parseError?: string
+}
+
 /** Papyrus log analysis statistics. */
 export interface JsPapyrusStats {
   /** Number of "Dumping Stacks" entries (plural) */
@@ -3581,6 +3652,34 @@ export declare function loadBatchAsync(paths: Array<string>): Promise<number>
  * Returns the number of files successfully loaded and cached.
  */
 export declare function loadBatchSync(paths: Array<string>): number
+
+/**
+ * Load `CLASSIC Main.yaml` with `MAIN_YAML` schema gating and return
+ * `CLASSIC_Info.version`.
+ *
+ * Rejects stale `schema_version: 1.x` files (which still carry the legacy
+ * `CLASSIC v...` decoration) before the version ever reaches downstream
+ * update-check classification — the schema gate is the whole reason this
+ * reader exists. Callers MUST NOT fall back to a raw YAML read on error,
+ * since that reintroduces the silent-degradation behavior the gate
+ * prevents.
+ *
+ * `bundledYamlDir` empty / null keeps the default relative path
+ * (`CLASSIC Data/databases`, resolved against `process.cwd()`). Non-empty
+ * values are the explicit install-tree `CLASSIC Data/databases` directory
+ * — Node hosts run inside `node.exe` / `bun.exe`, so `process.cwd()`
+ * resolution is unreliable unless the caller controls it; prefer an
+ * explicit path in that case.
+ *
+ * @param bundledYamlDir Directory containing `CLASSIC Main.yaml`. Pass
+ *                       `null` or `""` to use the default relative path.
+ * @returns The trimmed `CLASSIC_Info.version` value (never empty).
+ * @throws an `Error` whose message starts with the variant-keyed code
+ *         followed by `": "`. Codes: `LOAD:`, `VERSION_KEY_MISSING:`,
+ *         `VERSION_EMPTY:`, `VERSION_NOT_STRING:`, `VERSION_INVALID:`,
+ *         `UNKNOWN:`.
+ */
+export declare function loadMainYamlVersion(bundledYamlDir?: string | undefined | null): Promise<string>
 
 /**
  * Load a YAML file asynchronously, cache it under the given key, and return
@@ -4185,7 +4284,7 @@ export declare function yamlGetIndexmapValue(content: string, keyPath: string): 
 export declare function yamlGetSettingsBatch(content: string, keyPaths: Array<string>): any
 
 /** Extract a string value from YAML using dot-notation, with a default fallback. */
-export declare function yamlGetStringValue(content: string, keyPath: string, default: string): string
+export declare function yamlGetStringValue(content: string, keyPath: string, defaultValue: string): string
 
 /** Extract a value from a YAML string using dot-notation key path. */
 export declare function yamlGetValue(content: string, keyPath: string): any

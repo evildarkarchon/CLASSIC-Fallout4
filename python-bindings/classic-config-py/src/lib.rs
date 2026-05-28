@@ -79,6 +79,8 @@
 //!     t.join()
 //! ```
 
+mod main_yaml_version;
+
 use classic_config_core::{
     CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
 };
@@ -87,8 +89,9 @@ use classic_config_core::{
     PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
 };
 use classic_settings_core::SettingsError;
-use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};
-use classic_shared_core::get_runtime;
+use classic_shared::{
+    ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil_block_on,
+};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::collections::HashMap;
@@ -495,8 +498,8 @@ impl PyClassicConfig {
     #[staticmethod]
     fn load_from_yaml(py: Python<'_>, path: String) -> PyResult<Self> {
         let path_buf = PathBuf::from(path);
-        let inner = without_gil(py, || {
-            get_runtime().block_on(async { CoreClassicConfig::load_from_yaml(&path_buf).await })
+        let inner = without_gil_block_on(py, || async {
+            CoreClassicConfig::load_from_yaml(&path_buf).await
         })
         .map_err(runtime_to_pyerr)?;
         Ok(Self { inner })
@@ -504,19 +507,16 @@ impl PyClassicConfig {
 
     #[staticmethod]
     fn load_or_default(py: Python<'_>) -> PyResult<Self> {
-        let inner = without_gil(py, || {
-            get_runtime().block_on(async { CoreClassicConfig::load_or_default().await })
-        })
-        .map_err(runtime_to_pyerr)?;
+        let inner =
+            without_gil_block_on(py, || async { CoreClassicConfig::load_or_default().await })
+                .map_err(runtime_to_pyerr)?;
         Ok(Self { inner })
     }
 
     fn save_to_yaml(&self, py: Python<'_>, path: String) -> PyResult<()> {
         let path_buf = PathBuf::from(path);
-        without_gil(py, || {
-            get_runtime().block_on(async { self.inner.save_to_yaml(&path_buf).await })
-        })
-        .map_err(runtime_to_pyerr)
+        without_gil_block_on(py, || async { self.inner.save_to_yaml(&path_buf).await })
+            .map_err(runtime_to_pyerr)
     }
 
     fn get_config_path(&self) -> String {
@@ -528,8 +528,8 @@ impl PyClassicConfig {
     }
 
     fn load_local_yaml_paths(&mut self, py: Python<'_>, game: String) -> PyResult<()> {
-        without_gil(py, || {
-            get_runtime().block_on(async { self.inner.load_local_yaml_paths(&game).await })
+        without_gil_block_on(py, || async {
+            self.inner.load_local_yaml_paths(&game).await
         })
         .map_err(runtime_to_pyerr)
     }
@@ -702,10 +702,8 @@ impl PyYamlData {
         game_version: String,
     ) -> PyResult<Self> {
         // Call pure Rust core using shared runtime, releasing GIL during blocking I/O
-        let core = without_gil(py, || {
-            get_runtime().block_on(async {
-                YamlDataCore::load_from_yaml_files(yaml_dirs, game, game_version).await
-            })
+        let core = without_gil_block_on(py, || async {
+            YamlDataCore::load_from_yaml_files(yaml_dirs, game, game_version).await
         })
         .map_err(PyConfigError)
         .map_pyerr()?;
@@ -1127,6 +1125,14 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);
 
+    // Register the schema-gated `CLASSIC_Info.version` reader and its
+    // variant-keyed exception hierarchy. Own module because the
+    // exceptions here are narrower than the generic `RustConfig*`
+    // hierarchy above and consumers need to discriminate between
+    // schema-incompat, missing-key, empty-value, and non-string-value
+    // failures.
+    main_yaml_version::register(m)?;
+
     Ok(())
 }
 
@@ -1146,6 +1152,9 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);
+
+    // See the matching comment in the `classic_config` pymodule above.
+    main_yaml_version::register(m)?;
 
     Ok(())
 }

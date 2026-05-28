@@ -8,9 +8,10 @@
 //! are isolated and can't share opaque types across modules.
 
 use classic_config_core::{
-    ClassicConfig, ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
-    SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
-    YamlDataCore,
+    ClassicConfig, MainYamlVersionError, ModSolutionCriteria,
+    SuspectErrorRule as CoreSuspectErrorRule, SuspectStackCountRule as CoreSuspectStackCountRule,
+    SuspectStackRule as CoreSuspectStackRule, YamlDataCore,
+    load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
 };
 use classic_settings_core::{
     cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
@@ -63,6 +64,71 @@ fn save_local_yaml_paths(
     get_runtime()
         .block_on(config.save_local_yaml_paths_to(Path::new(local_yaml_path)))
         .map_err(|e| format!("{e}"))
+}
+
+// ── Main YAML version (schema-gated) ────────────────────────────────
+//
+// Unlike `yaml_data_load`, this helper is scoped to exactly one field
+// (`CLASSIC_Info.version`) and is intentionally schema-gated by
+// `client_schemas::MAIN_YAML`. Native frontends call it on startup to
+// populate `QApplication::applicationVersion()` (GUI) or the
+// binary-release update-check input (CLI) without ever trusting a
+// partially-updated or legacy `schema_version: 1.x` file that would
+// otherwise degrade downstream notification classification to `unknown`.
+//
+// Error shape follows the app-notification precedent in `update.rs`:
+// empty-string sentinels on success, a structured `error_kind` plus
+// human-readable `error_message` on failure. This lets Qt callers map
+// each kind to an actionable dialog ("upgrade client", "fix version
+// field", etc.) without parsing free-form strings.
+
+/// Load `CLASSIC Main.yaml` with `client_schemas::MAIN_YAML` schema gating
+/// and return the trimmed `CLASSIC_Info.version`.
+///
+/// `bundled_yaml_dir` empty string keeps the default relative path
+/// (`CLASSIC Data/databases/CLASSIC Main.yaml`, resolved against process
+/// CWD — correct for the CLI/GUI launched next to `CLASSIC Data/`). A
+/// non-empty value is the explicit install-tree directory holding the
+/// shippable YAML files (pass this from contexts where `current_exe()`
+/// would yield the wrong parent).
+fn load_main_yaml_version(bundled_yaml_dir: &str) -> ffi::MainYamlVersionDto {
+    let bundled = if bundled_yaml_dir.is_empty() {
+        None
+    } else {
+        Some(Path::new(bundled_yaml_dir))
+    };
+    match get_runtime().block_on(core_load_main_yaml_version_with_bundled_dir(bundled)) {
+        Ok(version) => ffi::MainYamlVersionDto {
+            version,
+            error_kind: String::new(),
+            error_message: String::new(),
+        },
+        Err(err) => ffi::MainYamlVersionDto {
+            version: String::new(),
+            error_kind: main_yaml_version_error_kind(&err).to_string(),
+            error_message: format!("{err}"),
+        },
+    }
+}
+
+/// Stable `error_kind` discriminator values for
+/// [`ffi::MainYamlVersionDto`]. Kept as a dedicated function so the
+/// string constants stay adjacent to the match and any future variants
+/// (the core error is `#[non_exhaustive]`) show up here as a compile
+/// error that forces the bridge to acknowledge them.
+fn main_yaml_version_error_kind(err: &MainYamlVersionError) -> &'static str {
+    match err {
+        MainYamlVersionError::Load(_) => "load",
+        MainYamlVersionError::VersionKeyMissing { .. } => "version_key_missing",
+        MainYamlVersionError::VersionEmpty { .. } => "version_empty",
+        MainYamlVersionError::VersionNotString { .. } => "version_not_string",
+        MainYamlVersionError::VersionInvalid { .. } => "version_invalid",
+        // `MainYamlVersionError` is `#[non_exhaustive]`; when a new
+        // variant is added in the core crate this arm forces the bridge
+        // to pick a new `error_kind` string instead of silently folding
+        // into a catch-all.
+        _ => "unknown",
+    }
 }
 
 // ── String getters ──────────────────────────────────────────────────
@@ -478,6 +544,29 @@ mod ffi {
         count: u32,
     }
 
+    /// Result of [`load_main_yaml_version`].
+    ///
+    /// Empty-string sentinel contract per `docs/api/error-contract.md`:
+    ///
+    /// - On success: `version` is the trimmed `CLASSIC_Info.version`
+    ///   (never empty); `error_kind` and `error_message` are `""`.
+    /// - On failure: `version` is `""`; `error_kind` carries one of
+    ///   `"load"`, `"version_key_missing"`, `"version_empty"`,
+    ///   `"version_not_string"`, or `"unknown"` (reserved for future
+    ///   `MainYamlVersionError` variants); `error_message` carries the
+    ///   `Display` rendering of the underlying error, suitable for a
+    ///   Qt message box.
+    ///
+    /// C++ callers check `error_kind.empty()` first; a non-empty
+    /// `error_kind` MUST be surfaced (do not fall back to
+    /// `QApplication::applicationVersion()` — that would reintroduce
+    /// the silent-degradation behavior this bridge exists to prevent).
+    struct MainYamlVersionDto {
+        version: String,
+        error_kind: String,
+        error_message: String,
+    }
+
     extern "Rust" {
         type YamlData;
 
@@ -494,6 +583,16 @@ mod ffi {
             game_root: &str,
             docs_root: &str,
         ) -> Result<()>;
+
+        /// Schema-gated `CLASSIC_Info.version` reader for native startup
+        /// paths. See [`MainYamlVersionDto`] for the success/failure
+        /// contract.
+        ///
+        /// `bundled_yaml_dir` empty → default relative path resolved
+        /// against process CWD (correct when launched next to
+        /// `CLASSIC Data/`). Non-empty → explicit install-tree
+        /// `CLASSIC Data/databases` directory.
+        fn load_main_yaml_version(bundled_yaml_dir: &str) -> MainYamlVersionDto;
 
         // String getters
         fn yaml_data_classic_version(data: &YamlData) -> &str;

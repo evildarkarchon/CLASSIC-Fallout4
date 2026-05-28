@@ -107,9 +107,10 @@ def test_node_target_paths_use_repo_root_layout_only() -> None:
         encoding="utf-8"
     )
     for expected in (
+        '"dts:refresh": "bun x napi build --platform --manifest-path ./Cargo.toml --dts index.d.ts --no-js"',
         "../../tools/node_api_parity/check_parity_gate.py --repo-root ../..",
         '"dts:freshness:check": "python ../../tools/node_api_parity/check_dts_freshness.py --repo-root ../.."',
-        '"dts:freshness:ci": "python ../../tools/node_api_parity/check_dts_freshness.py --repo-root ../.. --check-only"',
+        '"dts:freshness:ci": "python ../../tools/node_api_parity/check_dts_freshness.py --repo-root ../.."',
         "../../tools/enter_vs_dev_shell.ps1",
     ):
         assert expected in source

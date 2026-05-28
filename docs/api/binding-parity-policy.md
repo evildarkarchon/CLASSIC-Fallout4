@@ -12,7 +12,21 @@ When a new `pub fn` or `pub struct` is added to a `-core` crate's `lib.rs`, all 
 
 ---
 
-## Gate Ownership
+## Canonical Compliance Gate
+
+The canonical binding gate is the compliance suite:
+
+```powershell
+python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
+```
+
+The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
+
+See [`binding-compliance-suite.md`](binding-compliance-suite.md).
+
+---
+
+## Lower-Level Gate Ownership
 
 ### CXX Gate
 

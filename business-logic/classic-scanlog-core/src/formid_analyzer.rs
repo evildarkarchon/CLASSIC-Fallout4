@@ -14,10 +14,18 @@ use rustc_hash::FxHashMap; // Optimization 1.2: Faster hasher for FormID countin
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock};
 
+fn compile_static_regex(pattern: &str, name: &str) -> Regex {
+    match Regex::new(pattern) {
+        Ok(regex) => regex,
+        Err(error) => panic!("invalid static regex {name}: {error}"),
+    }
+}
+
 /// Precompiled FormID pattern - exact match to Python's pattern
 /// Pattern: r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})" with case-insensitive flag
-static FORMID_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
+static FORMID_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    compile_static_regex(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b", "FORMID_PATTERN")
+});
 
 /// Default bounded batch size for FormID value lookups.
 const FORMID_BATCH_LOOKUP_SIZE: usize = 128;

@@ -27,6 +27,7 @@
 //! await pool.close();
 //! ```
 
+use crate::runtime::spawn_result;
 use classic_database_core::{
     BATCH_CACHE_TTL_SECS,
     DEFAULT_CACHE_CLEANUP_INTERVAL_SECS as CORE_DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
@@ -240,12 +241,12 @@ impl JsDatabasePool {
         let inner = self.inner.clone();
         let paths: Vec<PathBuf> = db_paths.into_iter().map(PathBuf::from).collect();
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.initialize(paths).await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.initialize(paths).await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
     }
 
     /// Look up a single FormID entry in the database.
@@ -265,12 +266,12 @@ impl JsDatabasePool {
     ) -> Result<Option<String>> {
         let inner = self.inner.clone();
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.get_entry(&form_id, &plugin, table.as_deref()).await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.get_entry(&form_id, &plugin, table.as_deref()).await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
     }
 
     /// Batch lookup for multiple FormID/plugin pairs.
@@ -306,16 +307,16 @@ impl JsDatabasePool {
 
         let batch_sz = batch_size.map(|s| s as usize).unwrap_or(100);
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move {
+        spawn_result(
+            async move {
                 inner
                     .get_entries_batch(typed_pairs, table.as_deref(), batch_sz)
                     .await
-            })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)
+            },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
     }
 
     /// Batch lookup returning structured results with found/not-found status.
@@ -348,16 +349,16 @@ impl JsDatabasePool {
         // Keep a copy for building results
         let input_pairs = typed_pairs.clone();
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        let results = handle
-            .spawn(async move {
+        let results = spawn_result(
+            async move {
                 inner
                     .get_entries_batch(typed_pairs, table.as_deref(), 100)
                     .await
-            })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)?;
+            },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await?;
 
         // Build structured result preserving input order
         let entries = input_pairs
@@ -485,12 +486,12 @@ impl JsDatabasePool {
     pub async fn rebalance_connections(&self) -> Result<()> {
         let inner = self.inner.clone();
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.rebalance_connections().await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.rebalance_connections().await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
     }
 
     /// Check if any database pools are available.
@@ -543,12 +544,12 @@ impl JsDatabasePool {
     pub async fn optimize(&self) -> Result<()> {
         let inner = self.inner.clone();
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.optimize().await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.optimize().await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
     }
 
     /// Close all database connections and clear caches.
@@ -559,11 +560,11 @@ impl JsDatabasePool {
     pub async fn close(&self) -> Result<()> {
         let inner = self.inner.clone();
 
-        let handle = classic_shared_core::get_runtime().handle().clone();
-        handle
-            .spawn(async move { inner.close().await })
-            .await
-            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
-            .map_err(to_napi_err)
+        spawn_result(
+            async move { inner.close().await },
+            |error| to_napi_err(format!("Runtime error: {error}")),
+            to_napi_err,
+        )
+        .await
     }
 }

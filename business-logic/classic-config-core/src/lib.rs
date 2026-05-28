@@ -20,8 +20,9 @@ pub use crashgen_rules::*;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
 pub use shippable::{
-    CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError,
-    load_shippable_yaml, load_shippable_yaml_with_env,
+    CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,
+    YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir,
+    load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env,
 };
 pub use yamldata::{
     ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry,

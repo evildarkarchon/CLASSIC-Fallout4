@@ -35,7 +35,7 @@ rust::Vec<classic::update::YamlClientSchemaEntryDto> buildDefaultEntries()
 
     classic::update::YamlClientSchemaEntryDto main{};
     main.name = "CLASSIC Main.yaml";
-    main.accepted_major = 1u;
+    main.accepted_major = 2u;
     main.accepted_minimum_minor = 0u;
     main.has_installed = false;
     entries.push_back(std::move(main));

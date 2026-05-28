@@ -1,27 +1,28 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_config_core::{
-    CoreModEntry, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry,
-    SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore,
+    ModSolutionCriteria, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore,
 };
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
     resolve_batch_concurrency,
 };
-use classic_shared::without_gil;
-use classic_shared_core::get_runtime;
+use classic_shared::without_gil_block_on;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use crate::core_mod_convert::{exclude_when_from_pydict, exclude_when_to_pydict};
-use crate::crashgen_rules::parse_settings_rules;
+use crate::core_mod_convert::exclude_when_to_pydict;
+use crate::py_adapters::{
+    core_mod_entries_from_attr, core_mod_entries_from_py, mod_conflict_entries_from_attr,
+    mod_conflict_entries_from_py, mod_solution_entries_from_attr, mod_solution_entries_from_py,
+    parse_crashgen_registry_from_py, string_attr_or_default, vec_string_attr_or_default,
+};
 
 macro_rules! required_field {
     ($dict:expr, $key:literal, $context:expr, $ty:ty) => {{
@@ -35,88 +36,45 @@ macro_rules! required_field {
     }};
 }
 
-fn parse_crashgen_registry_from_py(
-    registry_any: &Bound<'_, PyAny>,
-) -> HashMap<String, CrashgenEntryRaw> {
-    let Ok(registry_dict) = registry_any.cast::<PyDict>() else {
-        return HashMap::new();
+macro_rules! analysis_config_pymethods {
+    (
+        clone: [$(($clone_getter:ident, $clone_setter:ident, $clone_field:ident, $clone_ty:ty, $clone_getter_doc:literal, $clone_setter_doc:literal)),+ $(,)?],
+        copy: [$(($copy_getter:ident, $copy_setter:ident, $copy_field:ident, $copy_ty:ty, $copy_getter_doc:literal, $copy_setter_doc:literal)),+ $(,)?],
+        $($method:item)*
+    ) => {
+        #[pymethods]
+        impl PyAnalysisConfig {
+            $(
+                #[doc = $clone_getter_doc]
+                #[getter]
+                pub fn $clone_getter(&self) -> $clone_ty {
+                    self.inner.$clone_field.clone()
+                }
+
+                #[doc = $clone_setter_doc]
+                #[setter]
+                pub fn $clone_setter(&mut self, value: $clone_ty) {
+                    self.inner.$clone_field = value;
+                }
+            )+
+
+            $(
+                #[doc = $copy_getter_doc]
+                #[getter]
+                pub fn $copy_getter(&self) -> $copy_ty {
+                    self.inner.$copy_field
+                }
+
+                #[doc = $copy_setter_doc]
+                #[setter]
+                pub fn $copy_setter(&mut self, value: $copy_ty) {
+                    self.inner.$copy_field = value;
+                }
+            )+
+
+            $($method)*
+        }
     };
-    let mut entries: HashMap<String, CrashgenEntryRaw> = HashMap::new();
-
-    for (name_any, entry_any) in registry_dict.iter() {
-        let name = match name_any.extract::<String>() {
-            Ok(n) => n,
-            Err(_) => continue,
-        };
-
-        let entry_dict = match entry_any.cast::<PyDict>() {
-            Ok(d) => d,
-            Err(_) => continue,
-        };
-
-        let display_section = entry_dict
-            .get_item("display_section")
-            .ok()
-            .flatten()
-            .and_then(|v| v.extract::<String>().ok())
-            .unwrap_or_default();
-
-        let ignore_keys = entry_dict
-            .get_item("ignore_keys")
-            .ok()
-            .flatten()
-            .and_then(|v| v.extract::<Vec<String>>().ok())
-            .unwrap_or_default()
-            .into_iter()
-            .collect();
-
-        let checks: Vec<String> = entry_dict
-            .get_item("checks")
-            .ok()
-            .flatten()
-            .and_then(|v| v.extract::<Vec<String>>().ok())
-            .unwrap_or_default();
-
-        let settings_rules_version = entry_dict
-            .get_item("settings_rules_version")
-            .ok()
-            .flatten()
-            .and_then(|v| v.extract::<u32>().ok());
-
-        let settings_rules = entry_dict
-            .get_item("settings_rules")
-            .ok()
-            .flatten()
-            .and_then(|v| parse_settings_rules(&v));
-
-        let entry = CrashgenEntryRaw {
-            display_section,
-            ignore_keys,
-            checks,
-            settings_rules_version,
-            settings_rules,
-        };
-
-        entries.insert(name, entry);
-    }
-
-    entries
-}
-
-fn extract_string_attr(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> String {
-    yamldata
-        .getattr(attr_name)
-        .ok()
-        .and_then(|attr| attr.extract::<String>().ok())
-        .unwrap_or_default()
-}
-
-fn extract_vec_string_attr(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<String> {
-    yamldata
-        .getattr(attr_name)
-        .ok()
-        .and_then(|attr| attr.extract::<Vec<String>>().ok())
-        .unwrap_or_default()
 }
 
 fn extract_suspect_error_rules(
@@ -257,163 +215,40 @@ fn pyany_to_suspect_stack_rules(value: &Bound<'_, PyAny>) -> PyResult<Vec<Suspec
     parse_suspect_stack_rules(&list, "suspect_stack_rules")
 }
 
-fn extract_mod_conflict_entries(
-    yamldata: &Bound<'_, PyAny>,
-    attr_name: &str,
-) -> Vec<ModConflictEntry> {
-    let Ok(attr) = yamldata.getattr(attr_name) else {
-        return Vec::new();
-    };
-    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
-        return Vec::new();
-    };
-    list.iter()
-        .filter_map(|item| {
-            let dict = item.cast::<PyDict>().ok()?;
-            Some(ModConflictEntry {
-                mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
-                mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
-                name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
-                name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
-                description: dict
-                    .get_item("description")
-                    .ok()??
-                    .extract::<String>()
-                    .ok()?,
-                fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
-                link: dict
-                    .get_item("link")
-                    .ok()
-                    .flatten()
-                    .and_then(|v| v.extract::<String>().ok()),
-            })
-        })
-        .collect()
-}
-
-fn extract_core_mod_entries(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<CoreModEntry> {
-    let Ok(attr) = yamldata.getattr(attr_name) else {
-        return Vec::new();
-    };
-    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
-        return Vec::new();
-    };
-    list.iter()
-        .filter_map(|item| {
-            let dict = item.cast::<PyDict>().ok()?;
-            Some(CoreModEntry {
-                detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
-                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                description: dict
-                    .get_item("description")
-                    .ok()??
-                    .extract::<String>()
-                    .ok()?,
-                gpu: dict
-                    .get_item("gpu")
-                    .ok()
-                    .flatten()
-                    .and_then(|v| v.extract::<String>().ok()),
-                gpu_mismatch_warning: dict
-                    .get_item("gpu_mismatch_warning")
-                    .ok()
-                    .flatten()
-                    .and_then(|v| v.extract::<String>().ok()),
-                exclude_when: exclude_when_from_pydict(dict),
-            })
-        })
-        .collect()
-}
-
-fn extract_mod_solution_entries(
-    yamldata: &Bound<'_, PyAny>,
-    attr_name: &str,
-) -> Vec<ModSolutionEntry> {
-    let Ok(attr) = yamldata.getattr(attr_name) else {
-        return Vec::new();
-    };
-    let Ok(list) = attr.extract::<Vec<Bound<'_, PyAny>>>() else {
-        return Vec::new();
-    };
-    list.iter()
-        .filter_map(|item| {
-            let dict = item.cast::<PyDict>().ok()?;
-            let criteria_value = dict.get_item("criteria").ok()??;
-            let criteria_dict = criteria_value.cast::<PyDict>().ok()?;
-            let criteria = if let Some(any_values) = criteria_dict
-                .get_item("any")
-                .ok()
-                .flatten()
-                .and_then(|v| v.extract::<Vec<String>>().ok())
-                .filter(|values| !values.is_empty())
-            {
-                ModSolutionCriteria::Any(any_values)
-            } else if let Some(all_values) = criteria_dict
-                .get_item("all")
-                .ok()
-                .flatten()
-                .and_then(|v| v.extract::<Vec<String>>().ok())
-                .filter(|values| !values.is_empty())
-            {
-                ModSolutionCriteria::All(all_values)
-            } else {
-                return None;
-            };
-
-            Some(ModSolutionEntry {
-                id: dict.get_item("id").ok()??.extract::<String>().ok()?,
-                criteria,
-                exceptions: dict
-                    .get_item("exceptions")
-                    .ok()
-                    .flatten()
-                    .and_then(|v| v.extract::<Vec<String>>().ok())
-                    .unwrap_or_default(),
-                name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                description: dict
-                    .get_item("description")
-                    .ok()??
-                    .extract::<String>()
-                    .ok()?,
-            })
-        })
-        .collect()
-}
-
 fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> PyResult<YamlDataCore> {
     let crashgen_registry = yamldata
         .getattr("crashgen_registry")
         .ok()
         .map(|attr| parse_crashgen_registry_from_py(&attr))
         .unwrap_or_default();
-    let mut classic_version = extract_string_attr(yamldata, "classic_version");
+    let mut classic_version = string_attr_or_default(yamldata, "classic_version");
     if classic_version.is_empty() {
         classic_version = "CLASSIC".to_string();
     }
 
     Ok(YamlDataCore {
-        classic_game_hints: extract_vec_string_attr(yamldata, "classic_game_hints"),
-        classic_records_list: extract_vec_string_attr(yamldata, "classic_records_list"),
+        classic_game_hints: vec_string_attr_or_default(yamldata, "classic_game_hints"),
+        classic_records_list: vec_string_attr_or_default(yamldata, "classic_records_list"),
         classic_version,
-        classic_version_date: extract_string_attr(yamldata, "classic_version_date"),
-        crashgen_name: extract_string_attr(yamldata, "crashgen_name"),
-        crashgen_latest_og: extract_string_attr(yamldata, "crashgen_latest_og"),
-        crashgen_ignore: extract_vec_string_attr(yamldata, "crashgen_ignore"),
-        warn_noplugins: extract_string_attr(yamldata, "warn_noplugins"),
-        warn_outdated: extract_string_attr(yamldata, "warn_outdated"),
-        xse_acronym: extract_string_attr(yamldata, "xse_acronym"),
-        game_ignore_plugins: extract_vec_string_attr(yamldata, "game_ignore_plugins"),
-        game_ignore_records: extract_vec_string_attr(yamldata, "game_ignore_records"),
-        ignore_list: extract_vec_string_attr(yamldata, "ignore_list"),
+        classic_version_date: string_attr_or_default(yamldata, "classic_version_date"),
+        crashgen_name: string_attr_or_default(yamldata, "crashgen_name"),
+        crashgen_latest_og: string_attr_or_default(yamldata, "crashgen_latest_og"),
+        crashgen_ignore: vec_string_attr_or_default(yamldata, "crashgen_ignore"),
+        warn_noplugins: string_attr_or_default(yamldata, "warn_noplugins"),
+        warn_outdated: string_attr_or_default(yamldata, "warn_outdated"),
+        xse_acronym: string_attr_or_default(yamldata, "xse_acronym"),
+        game_ignore_plugins: vec_string_attr_or_default(yamldata, "game_ignore_plugins"),
+        game_ignore_records: vec_string_attr_or_default(yamldata, "game_ignore_records"),
+        ignore_list: vec_string_attr_or_default(yamldata, "ignore_list"),
         suspect_error_rules: extract_suspect_error_rules(yamldata, "suspect_error_rules")?,
         suspect_stack_rules: extract_suspect_stack_rules(yamldata, "suspect_stack_rules")?,
-        game_mods_conf: extract_mod_conflict_entries(yamldata, "game_mods_conf"),
-        game_mods_core: extract_core_mod_entries(yamldata, "game_mods_core"),
-        game_mods_freq: extract_mod_solution_entries(yamldata, "game_mods_freq"),
-        game_mods_solu: extract_mod_solution_entries(yamldata, "game_mods_solu"),
-        autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
-        game_version: extract_string_attr(yamldata, "game_version"),
-        game_root_name: extract_string_attr(yamldata, "game_root_name"),
+        game_mods_conf: mod_conflict_entries_from_attr(yamldata, "game_mods_conf"),
+        game_mods_core: core_mod_entries_from_attr(yamldata, "game_mods_core"),
+        game_mods_freq: mod_solution_entries_from_attr(yamldata, "game_mods_freq"),
+        game_mods_solu: mod_solution_entries_from_attr(yamldata, "game_mods_solu"),
+        autoscan_text: string_attr_or_default(yamldata, "autoscan_text"),
+        game_version: string_attr_or_default(yamldata, "game_version"),
+        game_root_name: string_attr_or_default(yamldata, "game_root_name"),
         crashgen_registry,
     })
 }
@@ -498,8 +333,142 @@ pub struct PyAnalysisConfig {
     pub(crate) inner: AnalysisConfig,
 }
 
-#[pymethods]
-impl PyAnalysisConfig {
+analysis_config_pymethods! {
+    clone: [
+        (game, set_game, game, String, "Get the game identifier", "Set the game identifier"),
+        (
+            crashgen_name,
+            set_crashgen_name,
+            crashgen_name,
+            String,
+            "Get the crash generator name",
+            "Set the crash generator name"
+        ),
+        (
+            crashgen_latest,
+            set_crashgen_latest,
+            crashgen_latest,
+            String,
+            "Get the latest crash generator version",
+            "Set the latest crash generator version"
+        ),
+        (
+            game_version,
+            set_game_version,
+            game_version,
+            String,
+            "Get the game version",
+            "Set the game version"
+        ),
+        (
+            game_version_vr,
+            set_game_version_vr,
+            game_version_vr,
+            String,
+            "Get the VR game version",
+            "Set the VR game version"
+        ),
+        (
+            xse_acronym,
+            set_xse_acronym,
+            xse_acronym,
+            String,
+            "Get the XSE (script extender) acronym",
+            "Set the XSE (script extender) acronym"
+        ),
+        (
+            ignore_plugins,
+            set_ignore_plugins,
+            ignore_plugins,
+            Vec<String>,
+            "Get the list of plugins to ignore during analysis",
+            "Set the list of plugins to ignore during analysis"
+        ),
+        (
+            ignore_records,
+            set_ignore_records,
+            ignore_records,
+            Vec<String>,
+            "Get the list of records to ignore during analysis",
+            "Set the list of records to ignore during analysis"
+        ),
+        (
+            ignore_list,
+            set_ignore_list,
+            ignore_list,
+            Vec<String>,
+            "Get the general ignore list",
+            "Set the general ignore list"
+        ),
+        (
+            crashgen_latest_vr,
+            set_crashgen_latest_vr,
+            crashgen_latest_vr,
+            String,
+            "Get the latest VR crashgen version",
+            "Set the latest VR crashgen version"
+        ),
+        (
+            game_root_name,
+            set_game_root_name,
+            game_root_name,
+            String,
+            "Get the game root name (e.g., Fallout4)",
+            "Set the game root name"
+        ),
+        (
+            classic_version,
+            set_classic_version,
+            classic_version,
+            String,
+            "Get the CLASSIC version string",
+            "Set the CLASSIC version string"
+        ),
+        (
+            remove_list,
+            set_remove_list,
+            remove_list,
+            Vec<String>,
+            "Get the list of strings to remove when simplifying logs",
+            "Set the list of strings to remove when simplifying logs"
+        ),
+        (
+            classic_records_list,
+            set_classic_records_list,
+            classic_records_list,
+            Vec<String>,
+            "Get the list of named records to scan for",
+            "Set the list of named records to scan for"
+        ),
+    ],
+    copy: [
+        (
+            show_formid_values,
+            set_show_formid_values,
+            show_formid_values,
+            bool,
+            "Get whether to show FormID values in reports",
+            "Set whether to show FormID values in reports"
+        ),
+        (
+            fcx_mode,
+            set_fcx_mode,
+            fcx_mode,
+            bool,
+            "Get whether FCX mode is enabled",
+            "Set whether FCX mode is enabled"
+        ),
+        (
+            simplify_logs,
+            set_simplify_logs,
+            simplify_logs,
+            bool,
+            "Get whether to simplify logs by removing strings",
+            "Set whether to simplify logs"
+        ),
+    ],
+
+
     /// Create a new analysis configuration
     ///
     /// # Arguments
@@ -551,126 +520,6 @@ impl PyAnalysisConfig {
             remove_list,
         );
         Ok(Self { inner: config })
-    }
-
-    /// Get the game identifier
-    #[getter]
-    pub fn game(&self) -> String {
-        self.inner.game.clone()
-    }
-
-    /// Set the game identifier
-    #[setter]
-    pub fn set_game(&mut self, value: String) {
-        self.inner.game = value;
-    }
-
-    /// Get the crash generator name
-    #[getter]
-    pub fn crashgen_name(&self) -> String {
-        self.inner.crashgen_name.clone()
-    }
-
-    /// Set the crash generator name
-    #[setter]
-    pub fn set_crashgen_name(&mut self, value: String) {
-        self.inner.crashgen_name = value;
-    }
-
-    /// Get the latest crash generator version
-    #[getter]
-    pub fn crashgen_latest(&self) -> String {
-        self.inner.crashgen_latest.clone()
-    }
-
-    /// Set the latest crash generator version
-    #[setter]
-    pub fn set_crashgen_latest(&mut self, value: String) {
-        self.inner.crashgen_latest = value;
-    }
-
-    /// Get the game version
-    #[getter]
-    pub fn game_version(&self) -> String {
-        self.inner.game_version.clone()
-    }
-
-    /// Set the game version
-    #[setter]
-    pub fn set_game_version(&mut self, value: String) {
-        self.inner.game_version = value;
-    }
-
-    /// Get the VR game version
-    #[getter]
-    pub fn game_version_vr(&self) -> String {
-        self.inner.game_version_vr.clone()
-    }
-
-    /// Set the VR game version
-    #[setter]
-    pub fn set_game_version_vr(&mut self, value: String) {
-        self.inner.game_version_vr = value;
-    }
-
-    /// Get the XSE (script extender) acronym
-    #[getter]
-    pub fn xse_acronym(&self) -> String {
-        self.inner.xse_acronym.clone()
-    }
-
-    /// Set the XSE (script extender) acronym
-    #[setter]
-    pub fn set_xse_acronym(&mut self, value: String) {
-        self.inner.xse_acronym = value;
-    }
-
-    /// Get the list of plugins to ignore during analysis
-    #[getter]
-    pub fn ignore_plugins(&self) -> Vec<String> {
-        self.inner.ignore_plugins.clone()
-    }
-
-    /// Set the list of plugins to ignore during analysis
-    #[setter]
-    pub fn set_ignore_plugins(&mut self, value: Vec<String>) {
-        self.inner.ignore_plugins = value;
-    }
-
-    /// Get the list of records to ignore during analysis
-    #[getter]
-    pub fn ignore_records(&self) -> Vec<String> {
-        self.inner.ignore_records.clone()
-    }
-
-    /// Set the list of records to ignore during analysis
-    #[setter]
-    pub fn set_ignore_records(&mut self, value: Vec<String>) {
-        self.inner.ignore_records = value;
-    }
-
-    /// Get the general ignore list
-    #[getter]
-    pub fn ignore_list(&self) -> Vec<String> {
-        self.inner.ignore_list.clone()
-    }
-
-    /// Set the general ignore list
-    #[setter]
-    pub fn set_ignore_list(&mut self, value: Vec<String>) {
-        self.inner.ignore_list = value;
-    }
-
-    /// Get whether to show FormID values in reports
-    #[getter]
-    pub fn show_formid_values(&self) -> bool {
-        self.inner.show_formid_values
-    }
-
-    /// Set whether to show FormID values in reports
-    #[setter]
-    pub fn set_show_formid_values(&mut self, value: bool) {
-        self.inner.show_formid_values = value;
     }
 
     /// Get the structured suspect error rules.
@@ -759,33 +608,8 @@ impl PyAnalysisConfig {
     /// Set the core mods database from a list of dicts
     #[setter]
     pub fn set_mods_core(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
-            self.inner.mods_core = list
-                .iter()
-                .filter_map(|item| {
-                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
-                    Some(CoreModEntry {
-                        detect: dict.get_item("detect").ok()??.extract::<String>().ok()?,
-                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                        description: dict
-                            .get_item("description")
-                            .ok()??
-                            .extract::<String>()
-                            .ok()?,
-                        gpu: dict
-                            .get_item("gpu")
-                            .ok()
-                            .flatten()
-                            .and_then(|v| v.extract::<String>().ok()),
-                        gpu_mismatch_warning: dict
-                            .get_item("gpu_mismatch_warning")
-                            .ok()
-                            .flatten()
-                            .and_then(|v| v.extract::<String>().ok()),
-                        exclude_when: exclude_when_from_pydict(dict),
-                    })
-                })
-                .collect();
+        if let Some(entries) = core_mod_entries_from_py(value) {
+            self.inner.mods_core = entries;
         }
     }
 
@@ -813,51 +637,8 @@ impl PyAnalysisConfig {
     /// Set the frequently problematic mods database (preserves insertion order)
     #[setter]
     pub fn set_mods_freq(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
-            self.inner.mods_freq = list
-                .iter()
-                .filter_map(|item| {
-                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
-                    let criteria_value = dict.get_item("criteria").ok()??;
-                    let criteria_dict = criteria_value.cast::<pyo3::types::PyDict>().ok()?;
-                    let criteria = if let Some(any_values) = criteria_dict
-                        .get_item("any")
-                        .ok()
-                        .flatten()
-                        .and_then(|v| v.extract::<Vec<String>>().ok())
-                        .filter(|values| !values.is_empty())
-                    {
-                        ModSolutionCriteria::Any(any_values)
-                    } else if let Some(all_values) = criteria_dict
-                        .get_item("all")
-                        .ok()
-                        .flatten()
-                        .and_then(|v| v.extract::<Vec<String>>().ok())
-                        .filter(|values| !values.is_empty())
-                    {
-                        ModSolutionCriteria::All(all_values)
-                    } else {
-                        return None;
-                    };
-
-                    Some(ModSolutionEntry {
-                        id: dict.get_item("id").ok()??.extract::<String>().ok()?,
-                        criteria,
-                        exceptions: dict
-                            .get_item("exceptions")
-                            .ok()
-                            .flatten()
-                            .and_then(|v| v.extract::<Vec<String>>().ok())
-                            .unwrap_or_default(),
-                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                        description: dict
-                            .get_item("description")
-                            .ok()??
-                            .extract::<String>()
-                            .ok()?,
-                    })
-                })
-                .collect();
+        if let Some(entries) = mod_solution_entries_from_py(value) {
+            self.inner.mods_freq = entries;
         }
     }
 
@@ -882,33 +663,7 @@ impl PyAnalysisConfig {
     /// Set the mod conflicts database from a list of dicts
     #[setter]
     pub fn set_mods_conf(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() else {
-            self.inner.mods_conf = Vec::new();
-            return;
-        };
-        self.inner.mods_conf = list
-            .iter()
-            .filter_map(|item| {
-                let dict = item.cast::<pyo3::types::PyDict>().ok()?;
-                Some(ModConflictEntry {
-                    mod_a: dict.get_item("mod_a").ok()??.extract::<String>().ok()?,
-                    mod_b: dict.get_item("mod_b").ok()??.extract::<String>().ok()?,
-                    name_a: dict.get_item("name_a").ok()??.extract::<String>().ok()?,
-                    name_b: dict.get_item("name_b").ok()??.extract::<String>().ok()?,
-                    description: dict
-                        .get_item("description")
-                        .ok()??
-                        .extract::<String>()
-                        .ok()?,
-                    fix: dict.get_item("fix").ok()??.extract::<String>().ok()?,
-                    link: dict
-                        .get_item("link")
-                        .ok()
-                        .flatten()
-                        .and_then(|v| v.extract::<String>().ok()),
-                })
-            })
-            .collect();
+        self.inner.mods_conf = mod_conflict_entries_from_py(value).unwrap_or_default();
     }
 
     /// Get the mod solutions database
@@ -935,143 +690,10 @@ impl PyAnalysisConfig {
     /// Set the mod solutions database (preserves insertion order)
     #[setter]
     pub fn set_mods_solu(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
-        if let Ok(list) = value.extract::<Vec<Bound<'_, pyo3::types::PyAny>>>() {
-            self.inner.mods_solu = list
-                .iter()
-                .filter_map(|item| {
-                    let dict = item.cast::<pyo3::types::PyDict>().ok()?;
-                    let criteria_value = dict.get_item("criteria").ok()??;
-                    let criteria_dict = criteria_value.cast::<pyo3::types::PyDict>().ok()?;
-                    let criteria = if let Some(any_values) = criteria_dict
-                        .get_item("any")
-                        .ok()
-                        .flatten()
-                        .and_then(|v| v.extract::<Vec<String>>().ok())
-                        .filter(|values| !values.is_empty())
-                    {
-                        ModSolutionCriteria::Any(any_values)
-                    } else if let Some(all_values) = criteria_dict
-                        .get_item("all")
-                        .ok()
-                        .flatten()
-                        .and_then(|v| v.extract::<Vec<String>>().ok())
-                        .filter(|values| !values.is_empty())
-                    {
-                        ModSolutionCriteria::All(all_values)
-                    } else {
-                        return None;
-                    };
-
-                    Some(ModSolutionEntry {
-                        id: dict.get_item("id").ok()??.extract::<String>().ok()?,
-                        criteria,
-                        exceptions: dict
-                            .get_item("exceptions")
-                            .ok()
-                            .flatten()
-                            .and_then(|v| v.extract::<Vec<String>>().ok())
-                            .unwrap_or_default(),
-                        name: dict.get_item("name").ok()??.extract::<String>().ok()?,
-                        description: dict
-                            .get_item("description")
-                            .ok()??
-                            .extract::<String>()
-                            .ok()?,
-                    })
-                })
-                .collect();
-        } else {
-            self.inner.mods_solu = Vec::new();
-        }
+        self.inner.mods_solu = mod_solution_entries_from_py(value).unwrap_or_default();
     }
 
-    // ============================================================================
-    // New fields added for Python-Rust parity
-    // ============================================================================
 
-    /// Get the latest VR crashgen version
-    #[getter]
-    pub fn crashgen_latest_vr(&self) -> String {
-        self.inner.crashgen_latest_vr.clone()
-    }
-
-    /// Set the latest VR crashgen version
-    #[setter]
-    pub fn set_crashgen_latest_vr(&mut self, value: String) {
-        self.inner.crashgen_latest_vr = value;
-    }
-
-    /// Get the game root name (e.g., "Fallout4")
-    #[getter]
-    pub fn game_root_name(&self) -> String {
-        self.inner.game_root_name.clone()
-    }
-
-    /// Set the game root name
-    #[setter]
-    pub fn set_game_root_name(&mut self, value: String) {
-        self.inner.game_root_name = value;
-    }
-
-    /// Get the CLASSIC version string
-    #[getter]
-    pub fn classic_version(&self) -> String {
-        self.inner.classic_version.clone()
-    }
-
-    /// Set the CLASSIC version string
-    #[setter]
-    pub fn set_classic_version(&mut self, value: String) {
-        self.inner.classic_version = value;
-    }
-
-    /// Get whether FCX mode is enabled
-    #[getter]
-    pub fn fcx_mode(&self) -> bool {
-        self.inner.fcx_mode
-    }
-
-    /// Set whether FCX mode is enabled
-    #[setter]
-    pub fn set_fcx_mode(&mut self, value: bool) {
-        self.inner.fcx_mode = value;
-    }
-
-    /// Get whether to simplify logs by removing strings
-    #[getter]
-    pub fn simplify_logs(&self) -> bool {
-        self.inner.simplify_logs
-    }
-
-    /// Set whether to simplify logs
-    #[setter]
-    pub fn set_simplify_logs(&mut self, value: bool) {
-        self.inner.simplify_logs = value;
-    }
-
-    /// Get the list of strings to remove when simplifying logs
-    #[getter]
-    pub fn remove_list(&self) -> Vec<String> {
-        self.inner.remove_list.clone()
-    }
-
-    /// Set the list of strings to remove when simplifying logs
-    #[setter]
-    pub fn set_remove_list(&mut self, value: Vec<String>) {
-        self.inner.remove_list = value;
-    }
-
-    /// Get the list of named records to scan for
-    #[getter]
-    pub fn classic_records_list(&self) -> Vec<String> {
-        self.inner.classic_records_list.clone()
-    }
-
-    /// Set the list of named records to scan for
-    #[setter]
-    pub fn set_classic_records_list(&mut self, value: Vec<String>) {
-        self.inner.classic_records_list = value;
-    }
 }
 
 /// Python wrapper for AnalysisResult
@@ -1207,11 +829,8 @@ impl PyRustOrchestrator {
     /// Analysis result containing report lines and statistics
     pub fn process_log(&self, py: Python<'_>, log_path: String) -> PyResult<PyAnalysisResult> {
         // Release GIL during log processing
-        let result = without_gil(py, || {
-            get_runtime()
-                .block_on(async { self.inner.process_log(log_path).await })
-                .map_err(crate::to_pyerr)
-        })?;
+        let result = without_gil_block_on(py, || async { self.inner.process_log(log_path).await })
+            .map_err(crate::to_pyerr)?;
         Ok(PyAnalysisResult { inner: result })
     }
 
@@ -1271,54 +890,52 @@ impl PyRustOrchestrator {
         let log_paths_clone = log_paths.clone();
 
         // Release GIL during parallel batch processing
-        let indexed_results: HashMap<usize, AnalysisResult> = without_gil(py, || {
-            get_runtime().block_on(async {
-                // Process with index tracking for order preservation
-                stream::iter(log_paths.into_iter().enumerate())
-                    .map(|(index, log_path)| {
-                        let cancellation = cancellation.clone();
-                        let callback = callback.clone();
-                        let log_path_clone = log_path.clone();
-                        async move {
-                            // Check cancellation before processing each log
-                            if let Some(ref cancel) = cancellation {
-                                if cancel.load(Ordering::Relaxed) {
-                                    return (
-                                        index,
-                                        AnalysisResult::failure(
-                                            log_path_clone,
-                                            "Cancelled by user".to_string(),
-                                        ),
-                                    );
-                                }
+        let indexed_results: HashMap<usize, AnalysisResult> = without_gil_block_on(py, || async {
+            // Process with index tracking for order preservation
+            stream::iter(log_paths.into_iter().enumerate())
+                .map(|(index, log_path)| {
+                    let cancellation = cancellation.clone();
+                    let callback = callback.clone();
+                    let log_path_clone = log_path.clone();
+                    async move {
+                        // Check cancellation before processing each log
+                        if let Some(ref cancel) = cancellation {
+                            if cancel.load(Ordering::Relaxed) {
+                                return (
+                                    index,
+                                    AnalysisResult::failure(
+                                        log_path_clone,
+                                        "Cancelled by user".to_string(),
+                                    ),
+                                );
                             }
-
-                            // Process the log
-                            let result = match self.inner.process_log(log_path.clone()).await {
-                                Ok(r) => r,
-                                Err(e) => {
-                                    AnalysisResult::failure(log_path_clone.clone(), e.to_string())
-                                }
-                            };
-
-                            // Report progress after each log completes (with GIL)
-                            if let Some(ref cb) = callback {
-                                let current = index + 1;
-                                let filename = log_path_clone.clone();
-                                // Re-acquire GIL to call Python callback
-                                Python::attach(|py_inner| {
-                                    // Best-effort callback invocation - don't fail batch on callback error
-                                    let _ = cb.call1(py_inner, (current, total, filename));
-                                });
-                            }
-
-                            (index, result)
                         }
-                    })
-                    .buffer_unordered(concurrency)
-                    .collect()
-                    .await
-            })
+
+                        // Process the log
+                        let result = match self.inner.process_log(log_path.clone()).await {
+                            Ok(r) => r,
+                            Err(e) => {
+                                AnalysisResult::failure(log_path_clone.clone(), e.to_string())
+                            }
+                        };
+
+                        // Report progress after each log completes (with GIL)
+                        if let Some(ref cb) = callback {
+                            let current = index + 1;
+                            let filename = log_path_clone.clone();
+                            // Re-acquire GIL to call Python callback
+                            Python::attach(|py_inner| {
+                                // Best-effort callback invocation - don't fail batch on callback error
+                                let _ = cb.call1(py_inner, (current, total, filename));
+                            });
+                        }
+
+                        (index, result)
+                    }
+                })
+                .buffer_unordered(concurrency)
+                .collect()
+                .await
         });
 
         // Reconstruct results in input order with placeholders for any missing entries
@@ -1383,15 +1000,11 @@ impl PyRustOrchestrator {
         let paths: Vec<PathBuf> = db_paths.iter().map(PathBuf::from).collect();
 
         // Initialize the pool (async) with GIL released
-        without_gil(py, || {
-            get_runtime()
-                .block_on(async { pool.initialize(paths).await })
-                .map_err(|e| {
-                    pyo3::exceptions::PyRuntimeError::new_err(format!(
-                        "Database initialization failed: {}",
-                        e
-                    ))
-                })
+        without_gil_block_on(py, || async { pool.initialize(paths).await }).map_err(|e| {
+            pyo3::exceptions::PyRuntimeError::new_err(format!(
+                "Database initialization failed: {}",
+                e
+            ))
         })?;
 
         self.inner
@@ -1439,11 +1052,10 @@ impl PyRustOrchestrator {
             .collect();
 
         // Release GIL during file I/O
-        let result = without_gil(py, || {
-            get_runtime()
-                .block_on(async { self.inner.write_reports_batch(reports_pathbuf).await })
-                .map_err(crate::to_pyerr)
-        })?;
+        let result = without_gil_block_on(py, || async {
+            self.inner.write_reports_batch(reports_pathbuf).await
+        })
+        .map_err(crate::to_pyerr)?;
 
         // Convert PathBuf back to String
         Ok(result
@@ -1480,11 +1092,9 @@ impl PyRustOrchestrator {
     ) -> PyResult<(std::collections::HashMap<String, String>, Vec<String>)> {
         let path = std::path::Path::new(&loadorder_path);
 
-        let result = without_gil(py, || {
-            get_runtime()
-                .block_on(async { self.inner.load_loadorder_async(path).await })
-                .map_err(crate::to_pyerr)
-        })?;
+        let result =
+            without_gil_block_on(py, || async { self.inner.load_loadorder_async(path).await })
+                .map_err(crate::to_pyerr)?;
 
         Ok((result.0, result.1.to_list()))
     }

@@ -62,7 +62,9 @@ pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};
 pub use patterns::PatternMatcher;
 pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};
-pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};
+pub use record_scanner::{
+    RecordScanner, contains_record, scan_records_batch, try_scan_records_batch,
+};
 pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;

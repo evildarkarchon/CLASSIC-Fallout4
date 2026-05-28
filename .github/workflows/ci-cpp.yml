@@ -12,7 +12,7 @@ env:
 
 jobs:
   cxx-parity-gate:
-    name: CXX Parity Gate
+    name: Binding Compliance Gate (C++)
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
@@ -23,15 +23,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run CXX parity gate
-        run: python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+      - name: Run CXX binding compliance profile
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile cxx-ci
 
-      - name: Upload CXX parity diagnostics
+      - name: Upload CXX binding compliance diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: cxx-parity-diagnostics
-          path: cpp-bindings/classic-cpp-bridge/parity-artifacts/
+          path: |
+            tools/binding_compliance/artifacts/
+            cpp-bindings/classic-cpp-bridge/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 

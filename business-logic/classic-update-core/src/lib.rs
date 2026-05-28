@@ -56,11 +56,19 @@
 
 pub mod error;
 pub mod github;
+pub(crate) mod manifest_fetch;
+pub mod notification;
 pub mod yaml_update;
 
 // Re-export key types for convenience
 pub use error::{Result, UpdateError};
 pub use github::{GithubAsset, GithubClient, GithubRelease};
+pub use notification::{
+    AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus,
+    build_app_notification_pages_url, check_app_notification, check_app_notification_with,
+    check_app_notification_with_env, classify, fetch_app_notification_manifest,
+    fetch_via_releases_fallback,
+};
 pub use yaml_update::{
     ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME,
     FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome,

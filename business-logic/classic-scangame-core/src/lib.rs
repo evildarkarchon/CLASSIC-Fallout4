@@ -70,7 +70,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub(crate) fn encode_hex(bytes: &[u8]) -> String {
     let mut hex = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
-        write!(&mut hex, "{byte:02x}").expect("writing to String cannot fail");
+        let _ = write!(&mut hex, "{byte:02x}");
     }
     hex
 }

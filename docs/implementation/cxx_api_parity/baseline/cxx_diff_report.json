@@ -1,13 +1,21 @@
 {
   "summary": {
-    "contract_total": 344,
-    "current_total": 344,
-    "matched": 344,
+    "contract_total": 348,
+    "current_total": 348,
+    "matched": 348,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
   },
   "contract_results": [
+    {
+      "id": "b0d609f9ed78e468",
+      "rustSymbol": "load_main_yaml_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
     {
       "id": "583bb255b5c8b9ef",
       "rustSymbol": "reset_settings_cache_stats",
@@ -387,6 +395,14 @@
     {
       "id": "5be115198cf789f5",
       "rustSymbol": "CacheStats",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e4c0636b37aa1f97",
+      "rustSymbol": "MainYamlVersionDto",
       "kind": "struct",
       "bridgeModule": "config",
       "status": "matched",
@@ -2289,6 +2305,14 @@
       "reason": "-"
     },
     {
+      "id": "20888c90002f9464",
+      "rustSymbol": "check_app_notification",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "5b0f082531a28c27",
       "rustSymbol": "github_check_for_updates",
       "kind": "function",
@@ -2331,6 +2355,14 @@
     {
       "id": "f0ae26428d3c795b",
       "rustSymbol": "ApprovedUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0fd15da635276348",
+      "rustSymbol": "NotificationStatusDto",
       "kind": "struct",
       "bridgeModule": "update",
       "status": "matched",

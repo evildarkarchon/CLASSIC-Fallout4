@@ -64,26 +64,18 @@ use classic_settings_core::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 use tokio::io::AsyncWriteExt;
 
 /// Highest `manifest_version` this client can parse. Bumped only when the
 /// manifest shape actually changes in a way existing clients cannot tolerate.
 pub const MAX_MANIFEST_VERSION: u32 = 1;
 
-/// File name used to persist the last-seen Pages manifest ETag inside
-/// [`yaml_cache_dir`]. Held relative so tests can point at a temp dir via
-/// the env-injection seam.
-pub const ETAG_FILENAME: &str = "manifest.etag";
-
-/// File name used to persist the last-seen canonicalized manifest body so a
-/// `304 Not Modified` from Pages can still return a parsed manifest without
-/// an additional round-trip.
-pub const CACHED_MANIFEST_FILENAME: &str = "manifest-latest.json";
-
-/// Default HTTP timeout for Pages GETs, intentionally shorter than the
-/// GitHub API client's 30s so we fall back quickly when Pages is slow.
-const PAGES_TIMEOUT: Duration = Duration::from_secs(5);
+// Pages-cache constants live in [`crate::manifest_fetch`] now that two
+// channels (yaml-data and app-notification) both fetch through the shared
+// helper. Re-exported here so existing `classic_update_core::yaml_update::ETAG_FILENAME`
+// call sites and the crate-root `pub use` statement in `lib.rs` keep working
+// without adjustment.
+pub use crate::manifest_fetch::{CACHED_MANIFEST_FILENAME, ETAG_FILENAME};
 
 // ---------------------------------------------------------------------------
 // DTOs
@@ -509,18 +501,33 @@ pub async fn fetch_yaml_manifest(
     tag_prefix: &str,
     cache_dir: Option<&Path>,
 ) -> Result<YamlManifest> {
-    match try_pages(client, pages_url, tag_prefix, cache_dir).await {
+    let owner = client.owner().to_string();
+    let repo = client.repo().to_string();
+    let tag_prefix_owned = tag_prefix.to_string();
+    match crate::manifest_fetch::try_pages(
+        client,
+        pages_url,
+        cache_dir,
+        parse_manifest,
+        |manifest: &YamlManifest| {
+            validate_manifest(manifest, &owner, &repo)?;
+            validate_release_tag_prefix(&manifest.release_tag, &tag_prefix_owned)
+        },
+    )
+    .await
+    {
         Ok(manifest) => {
             return Ok(manifest);
         }
-        Err(PagesError::UnsupportedVersion(err)) => {
+        Err(crate::manifest_fetch::PagesError::UnsupportedVersion(err)) => {
             // The manifest parsed but declares a version this client cannot
             // interpret. Falling back to the Releases API would almost
             // certainly hit the same asset and fail identically, so surface
             // the structural error directly instead of racing the API leg.
             return Err(err);
         }
-        Err(PagesError::Transport(err)) | Err(PagesError::Invalid(err)) => {
+        Err(crate::manifest_fetch::PagesError::Transport(err))
+        | Err(crate::manifest_fetch::PagesError::Invalid(err)) => {
             log::warn!(
                 "pages manifest fetch failed for `{pages_url}`: {err}; falling back to anonymous releases API"
             );
@@ -531,159 +538,6 @@ pub async fn fetch_yaml_manifest(
     validate_manifest(&manifest, client.owner(), client.repo())?;
     validate_release_tag_prefix(&manifest.release_tag, tag_prefix)?;
     Ok(manifest)
-}
-
-/// Internal error wrapper for the Pages leg so [`fetch_yaml_manifest`] can
-/// distinguish retryable failures (transport, malformed body) — which should
-/// fall through to the Releases API — from structural refusals
-/// (`manifest_version` too new) that would fail identically on any leg.
-enum PagesError {
-    /// HTTP / I/O / 4xx-5xx failure. Fall back to the API.
-    Transport(UpdateError),
-    /// Body parsed but failed `validate_manifest`. Fall back to the API —
-    /// a bad Pages publish or a poisoned 304-cached body must not prevent
-    /// update checks when the release-asset manifest is healthy.
-    Invalid(UpdateError),
-    /// `manifest_version` exceeds this client's `MAX_MANIFEST_VERSION`.
-    /// Surface directly; the API leg cannot rescue this.
-    UnsupportedVersion(UpdateError),
-}
-
-impl From<UpdateError> for PagesError {
-    fn from(err: UpdateError) -> Self {
-        match err {
-            UpdateError::ManifestUnsupportedVersion { .. } => PagesError::UnsupportedVersion(err),
-            UpdateError::ManifestInvalid { .. } => PagesError::Invalid(err),
-            UpdateError::JsonError(_) => PagesError::Invalid(err),
-            other => PagesError::Transport(other),
-        }
-    }
-}
-
-/// Try the Pages leg exactly once. Returns `Ok` only if the response
-/// produces a parsed AND validated manifest; `Err` tells the caller whether
-/// to fall back to the API ([`PagesError::Transport`] / [`PagesError::Invalid`])
-/// or surface the structural refusal directly
-/// ([`PagesError::UnsupportedVersion`]).
-async fn try_pages(
-    client: &GithubClient,
-    pages_url: &str,
-    tag_prefix: &str,
-    cache_dir: Option<&Path>,
-) -> std::result::Result<YamlManifest, PagesError> {
-    // When `cache_dir` is `None`, manifest-cache read/write is disabled:
-    // we neither read a stored ETag (no `If-None-Match`) nor persist the
-    // 200 body. This is deliberately different from the previous
-    // `PathBuf::new()` sentinel which caused `path.join()` to produce
-    // relative cache files under the process working directory.
-    let etag_path = cache_dir.map(|d| d.join(ETAG_FILENAME));
-    let cached_manifest_path = cache_dir.map(|d| d.join(CACHED_MANIFEST_FILENAME));
-
-    let mut req = client.http_client().get(pages_url).timeout(PAGES_TIMEOUT);
-    let cached_etag = etag_path.as_deref().and_then(read_etag);
-    if let Some(etag) = &cached_etag {
-        req = req.header("If-None-Match", etag.as_str());
-    }
-
-    let response = req
-        .send()
-        .await
-        .map_err(|e| PagesError::Transport(UpdateError::HttpError(e)))?;
-
-    if response.status() == reqwest::StatusCode::NOT_MODIFIED {
-        // Pages says our ETag still matches — load the cached body.
-        let cached_path = cached_manifest_path.as_deref().ok_or_else(|| {
-            // Should never happen: we only send If-None-Match when an ETag
-            // was read from `etag_path`, which requires `cache_dir` to be
-            // Some. Surface as Transport so the caller falls back to the
-            // API leg rather than panicking on a poisoned server response.
-            PagesError::Transport(UpdateError::Generic(
-                "Pages returned 304 but no cache directory was available for the stored body"
-                    .into(),
-            ))
-        })?;
-        let bytes = std::fs::read(cached_path).map_err(|e| {
-            PagesError::Transport(UpdateError::Generic(format!(
-                "Pages returned 304 but cached manifest at {} could not be read: {e}",
-                cached_path.display(),
-            )))
-        })?;
-        let manifest = parse_manifest(&bytes).map_err(PagesError::from)?;
-        // Validate the cached body too: a poisoned 304-cached manifest must
-        // fall through to the API rather than being returned verbatim.
-        validate_manifest(&manifest, client.owner(), client.repo()).map_err(PagesError::from)?;
-        validate_release_tag_prefix(&manifest.release_tag, tag_prefix).map_err(PagesError::from)?;
-        return Ok(manifest);
-    }
-
-    if !response.status().is_success() {
-        return Err(PagesError::Transport(UpdateError::GithubError(format!(
-            "pages GET returned {}",
-            response.status()
-        ))));
-    }
-
-    let etag_header = response
-        .headers()
-        .get(reqwest::header::ETAG)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string());
-
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|e| PagesError::Transport(UpdateError::HttpError(e)))?
-        .to_vec();
-
-    let manifest = parse_manifest(&bytes).map_err(PagesError::from)?;
-
-    // Validate BEFORE persisting so we never cache an invalid body that a
-    // future 304 would then return from the cached-body branch.
-    validate_manifest(&manifest, client.owner(), client.repo()).map_err(PagesError::from)?;
-    validate_release_tag_prefix(&manifest.release_tag, tag_prefix).map_err(PagesError::from)?;
-
-    // Persist the body + ETag so a future 304 can reuse them. Only reached
-    // once parse+validate have both succeeded. Skipped entirely when
-    // `cache_dir` is `None` — no relative-cwd fallback.
-    if let Some(cached_path) = cached_manifest_path.as_deref() {
-        if let Some(parent) = cached_path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        if let Err(e) = std::fs::write(cached_path, &bytes) {
-            log::warn!(
-                "failed to persist cached manifest body to {}: {e}",
-                cached_path.display(),
-            );
-        }
-    }
-    if let Some(etag_p) = etag_path.as_deref() {
-        if let Some(etag) = etag_header {
-            if let Err(e) = std::fs::write(etag_p, etag.as_bytes()) {
-                log::warn!(
-                    "failed to persist manifest ETag to {}: {e}",
-                    etag_p.display(),
-                );
-            }
-        } else {
-            // Server served a body but no ETag — clear any stale cached one
-            // so a future If-None-Match doesn't reference bytes we no
-            // longer hold.
-            let _ = std::fs::remove_file(etag_p);
-        }
-    }
-
-    Ok(manifest)
-}
-
-fn read_etag(etag_path: &Path) -> Option<String> {
-    std::fs::read_to_string(etag_path).ok().and_then(|s| {
-        let trimmed = s.trim();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed.to_string())
-        }
-    })
 }
 
 fn parse_manifest(bytes: &[u8]) -> Result<YamlManifest> {
@@ -1913,14 +1767,12 @@ pub async fn apply_yaml_update_with_decision(
                         UpdateError::Generic(format!("cache dir unavailable: {e}"))
                     })?);
             }
-            match install_one(
-                client,
-                entry,
-                cache_dir.as_deref().expect("cache dir initialized"),
-                &manifest.release_tag,
-            )
-            .await
-            {
+            let Some(cache_dir) = cache_dir.as_deref() else {
+                return Err(UpdateError::Generic(
+                    "cache dir unavailable after initialization".to_string(),
+                ));
+            };
+            match install_one(client, entry, cache_dir, &manifest.release_tag).await {
                 Ok(outcome) => report.installed.push(outcome),
                 Err(failure) => report.failed.push(failure),
             }

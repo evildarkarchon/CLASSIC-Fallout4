@@ -1,6 +1,6 @@
 ---
 name: classic-project-guide
-description: CLASSIC-specific repository guidance for architecture routing, repo-approved build/test/parity/publish commands, Windows/MSVC constraints, PyO3 environment setup, and repo-specific docs or CI follow-up. Use when work depends on where code belongs in CLASSIC, which local validation or parity gates apply, which tracked artifacts or docs must change, or how repo-specific runtime/platform rules affect implementation. Skip for generic coding, debugging, design, or language-only tasks that do not depend on CLASSIC-specific workflow or architecture.
+description: CLASSIC-specific repository guidance for architecture routing, repo-approved build/test/parity/publish commands, YAML/app-update notification publish workflows, Windows/MSVC constraints, PyO3 environment setup, and repo-specific docs or CI follow-up. Use when work depends on where code belongs in CLASSIC, which local validation or parity gates apply, which tracked artifacts or docs must change, or how repo-specific runtime/platform rules affect implementation. Skip for generic coding, debugging, design, or language-only tasks that do not depend on CLASSIC-specific workflow or architecture.
 ---
 
 Use this skill only when the task depends on CLASSIC-specific repository policy or structure.
@@ -24,6 +24,7 @@ Load `references/repo-guide.md` selectively.
 - Read `Node API Parity Workflow` when Node-exposed Rust APIs or generated TypeScript artifacts may change.
 - Read `Python API Parity Workflow` when Python-exposed Rust APIs, stubs, tracked parity artifacts, or PyO3 build flows may change.
 - Read `YAML Data Publish Workflow` when changing `CLASSIC Data/databases/`, `schema_version` behavior, or YAML-data release automation.
+- Read `App Update Notification Publish Workflow` when changing `CLASSIC Data/app-notification.yaml`, notification manifest semantics, or app-notification release automation.
 - Read `CI and Platform Notes` when workflow expectations, portability, submodules, Windows/MSVC constraints, or release workflows matter.
 
 ## Apply Repo Guardrails
@@ -43,8 +44,9 @@ Load `references/repo-guide.md` selectively.
 - For Rust workspace changes, use the repo-root `cargo fmt`, `cargo clippy`, and relevant `cargo test` commands from the reference guide. If the command touches PyO3, set `PYO3_PYTHON` first.
 - For C++ bridge changes, run `python tools/cxx_api_parity/check_parity_gate.py --repo-root .` and refresh the committed baseline only when the drift is intentional.
 - For Node binding changes, treat `docs/implementation/node_api_parity/baseline/`, `node-bindings/classic-node/index.d.ts`, the runtime coverage registry, and the Bun/Node test flows as part of the same change. `node-bindings/classic-node/parity-artifacts/` are local diagnostics and should not be committed.
-- For Python binding changes, use `python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, schema-version drift guard when relevant, rebuild, and pytest sequence from the reference guide. `python-bindings/parity-artifacts/` are tracked and may need refreshing in the same change.
+- For Python binding changes, use `python-bindings/.venv` rather than a repo-root virtual environment, then run the parity gate, stub validation, schema-version drift guard when relevant, rebuild, and pytest sequence from the reference guide. Use `python -m pytest`, not the `pytest.exe` console-script entrypoint. `python-bindings/parity-artifacts/` are tracked and may need refreshing in the same change.
 - For YAML-data or `schema_version` changes, run the schema drift guard and publish validation commands from the reference guide, and account for the `publish-yaml-data.yml` workflow when describing release impact.
+- For app-update notification changes, validate `CLASSIC Data/app-notification.yaml` with `tools/publish_app_notification/`, keep `docs/api/app-update-notification-delivery.md` in sync for contract changes, and keep the `app-notification-v*` publish channel disjoint from `yaml-data-v*` and binary `v*` releases.
 - For Linux or cloud validation, prefer Rust-only subsets or source-only parity gates when native Windows-focused surfaces are not practical to build.
 
 ## State Repo-Specific Follow-Up Explicitly

@@ -1,10 +1,10 @@
 //! FormID database bridge for CXX FFI.
 //!
 //! Bridges `classic_database_core::DatabasePool` for SQLite-backed FormID lookups
-//! with caching. All async operations are wrapped with `get_runtime().block_on()`.
+//! with caching. Async operations are wrapped through shared-runtime helpers.
 
+use crate::runtime_support::{block_on, block_on_result};
 use classic_database_core::DatabasePool;
-use classic_shared_core::get_runtime;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -31,13 +31,11 @@ fn db_pool_new(game_table: &str, max_connections: u32, cache_ttl_secs: u64) -> B
 
 fn db_pool_initialize(pool: &DbPool, db_paths: &[String]) -> Result<(), String> {
     let paths: Vec<PathBuf> = db_paths.iter().map(PathBuf::from).collect();
-    get_runtime()
-        .block_on(pool.inner.initialize(paths))
-        .map_err(|e| format!("{e}"))
+    block_on_result(pool.inner.initialize(paths))
 }
 
 fn db_pool_get_entry(pool: &DbPool, formid: &str, plugin: &str) -> String {
-    match get_runtime().block_on(pool.inner.get_entry(formid, plugin, None)) {
+    match block_on(pool.inner.get_entry(formid, plugin, None)) {
         Ok(Some(entry)) => entry,
         Ok(None) => String::new(),
         Err(_) => String::new(),
@@ -50,7 +48,7 @@ fn db_pool_get_entries_batch(pool: &DbPool, formids: &[String], plugins: &[Strin
         .zip(plugins.iter())
         .map(|(f, p)| (f.clone(), p.clone()))
         .collect();
-    let result = get_runtime().block_on(pool.inner.get_entries_batch(pairs, None, 50));
+    let result = block_on(pool.inner.get_entries_batch(pairs, None, 50));
     match result {
         Ok(map) => {
             // Return as "formid\tvalue" pairs for C++ to parse
@@ -73,9 +71,7 @@ fn db_pool_clear_cache(pool: &DbPool, expired_only: bool) -> usize {
 }
 
 fn db_pool_close(pool: &DbPool) -> Result<(), String> {
-    get_runtime()
-        .block_on(pool.inner.close())
-        .map_err(|e| format!("{e}"))
+    block_on_result(pool.inner.close())
 }
 
 fn db_pool_game_table(pool: &DbPool) -> String {
@@ -99,7 +95,7 @@ fn db_pool_game_table(pool: &DbPool) -> String {
 /// `Ok(Some(_))` — so an `Ok(None)` miss or any `Err` both produce
 /// `found: false`.
 fn db_pool_get_entry_typed(pool: &DbPool, formid: &str, plugin: &str) -> ffi::FormIdEntryDto {
-    let result = get_runtime().block_on(pool.inner.get_entry(formid, plugin, None));
+    let result = block_on(pool.inner.get_entry(formid, plugin, None));
     let (value, found) = match result {
         Ok(Some(v)) => (v, true),
         Ok(None) => (String::new(), false),
@@ -148,9 +144,7 @@ fn db_pool_get_entries_batch_typed(
 
     // Core API: get_entries_batch(formid_plugin_pairs, table, batch_size)
     // Returns HashMap<String, String> keyed by "formid:plugin", hit-only.
-    let map = get_runtime()
-        .block_on(pool.inner.get_entries_batch(pairs.clone(), None, 100))
-        .unwrap_or_default();
+    let map = block_on(pool.inner.get_entries_batch(pairs.clone(), None, 100)).unwrap_or_default();
 
     // Positional repackaging — one DTO per input pair, result[i] == (formids[i], plugins[i]).
     // Misses (absent from hit-only map) get found: false.

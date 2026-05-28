@@ -39,7 +39,7 @@ Those concerns live in callers, binding layers, or other crates such as [`classi
 
 ## Module And API Map
 
-This crate exposes two public modules plus a small root-level convenience surface.
+This crate exposes four public modules plus a small root-level convenience surface.
 
 ## Root-level API
 
@@ -47,6 +47,7 @@ This crate exposes two public modules plus a small root-level convenience surfac
 - `Result<T>` - `std::result::Result<T, UpdateError>` re-export
 - `UpdateError` - crate-wide error enum re-export
 - `GithubClient`, `GithubRelease`, `GithubAsset` - GitHub API types re-exported from `github`
+- `AppNotificationDisplay`, `AppNotificationManifest`, `Classification`, `NotificationStatus`, `check_app_notification`, `check_app_notification_with`, `classify`, `fetch_app_notification_manifest`, `fetch_via_releases_fallback`, `build_app_notification_pages_url` - app-update notification surface re-exported from `notification`
 
 ## Public modules
 
@@ -57,14 +58,34 @@ This crate exposes two public modules plus a small root-level convenience surfac
 
 ### `github`
 
+**Compat-only surface.** User-facing update checks go through the `notification` module; `github` is retained for diagnostic tooling and legacy test harnesses. `GithubClient::get_latest_release` carries `#[deprecated(note = "Use classic_update_core::notification::check_app_notification instead")]` and will emit a warning at every use site.
+
 - `GithubClient` - async GitHub releases client
 - `GithubRelease` - deserializable release DTO
 - `GithubAsset` - deserializable asset DTO
 
+### `notification`
+
+Payload-free app-update notification channel: fetches a published JSON manifest from GitHub Pages (with ETag caching) or falls back to the `app-notification-v*` Releases namespace. See [`app-update-notification-delivery.md`](app-update-notification-delivery.md) for the full cross-crate delivery contract.
+
+- `AppNotificationManifest` - decoded manifest DTO (`manifest_version`, `release_tag`, `latest_version`, `published_at`, optional `min_supported_version`, optional `display`)
+- `AppNotificationDisplay` - optional display payload (`title`, `body`, `cta_url`)
+- `Classification` - discriminated outcome (`UpToDate`, `UpdateAvailable`, `DeprecatedClient`, `Unknown`)
+- `NotificationStatus` - classification + echoed manifest fields
+- `check_app_notification(owner, repo, installed_version)` - orchestrator; Pages-first with Releases fallback
+- `check_app_notification_with(client, pages_url, cache_dir, installed)` - testable form that takes a caller-built `GithubClient` and explicit cache dir
+- `classify(installed, &manifest)` - pure classifier
+- `fetch_app_notification_manifest(client, pages_url, cache_dir)` - low-level Pages fetch
+- `fetch_via_releases_fallback(client)` - low-level Releases-API fallback
+- `build_app_notification_pages_url(client)` - canonical Pages URL builder (shared with binding layers)
+
+Error variants for notification failures live on `UpdateError` as `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, and `NotificationCacheIo` (design D-05 — nested on `UpdateError` rather than a sibling enum so the per-binding error mapping does not double). Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface directly from the notification path when a fetched notification manifest violates cross-field invariants or advertises a newer `manifest_version` major. See [`error-contract.md`](error-contract.md) for per-binding shapes.
+
 Contributor note:
 
 - there are no public traits in this crate today
-- almost all contributor-relevant behavior lives in [`src/github.rs`](../../business-logic/classic-update-core/src/github.rs)
+- the `notification` module is implemented in [`src/notification.rs`](../../business-logic/classic-update-core/src/notification.rs); the shared Pages-first + ETag helper it uses lives in [`src/manifest_fetch.rs`](../../business-logic/classic-update-core/src/manifest_fetch.rs)
+- almost all legacy GitHub-API behavior lives in [`src/github.rs`](../../business-logic/classic-update-core/src/github.rs); the module header flags it as compat-only
 
 ---
 

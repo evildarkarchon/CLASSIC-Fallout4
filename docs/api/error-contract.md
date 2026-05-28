@@ -56,6 +56,34 @@ Tests verify both `error.message` and `error.code` to ensure the structured erro
 
 ---
 
+## `CLASSIC Main.yaml` version-reader errors (`schema-gated startup read`)
+
+The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) is the native-frontend startup path that replaced the raw `yaml_ops` read in `classic-gui/src/main.cpp`. Its typed core error (`MainYamlVersionError`) projects onto each binding according to the per-language idiom below. Same-family, different-shape-per-binding, just like the notification channel.
+
+| Binding | Shape on failure |
+| --- | --- |
+| C++ (CXX) | `MainYamlVersionDto { version: "", error_kind: "<kind>", error_message: "<Display of MainYamlVersionError>" }`. Empty-string sentinel on the `version` field when `error_kind` is non-empty. `error_kind` values: `"load"` (schema-incompatible or file missing / unparseable), `"version_key_missing"`, `"version_empty"`, `"version_not_string"`, `"version_invalid"` (schema-2.0 shape violation: legacy `CLASSIC ` prefix, prerelease/build suffix, or non-semver garbage), or `"unknown"` (reserved for future `#[non_exhaustive]` variants). See [`cpp-bindings/classic-cpp-bridge/src/config.rs::main_yaml_version_error_kind`](../../cpp-bindings/classic-cpp-bridge/src/config.rs). |
+| Node (NAPI-RS) | `Promise.reject(new Error(...))` whose `message` is prefixed with one of `"LOAD: "`, `"VERSION_KEY_MISSING: "`, `"VERSION_EMPTY: "`, `"VERSION_NOT_STRING: "`, `"VERSION_INVALID: "`, or `"UNKNOWN: "`. **Shape matches the notification channel**: the `#[napi] async fn` surface threads `napi::Error<Status>`, where `Status` is a fixed C-style enum with no room for per-variant codes — the message prefix is the only representation that round-trips through the async bridge while preserving a stable discriminator. See [`node-bindings/classic-node/src/config.rs::main_yaml_version_error_to_napi`](../../node-bindings/classic-node/src/config.rs). |
+| Python (PyO3) | Raises a `ClassicMainYamlVersionError` subclass whose name encodes the variant (`ClassicMainYamlVersionLoadError`, `ClassicMainYamlVersionKeyMissingError`, `ClassicMainYamlVersionEmptyError`, `ClassicMainYamlVersionNotStringError`, `ClassicMainYamlVersionInvalidError`). Consumers that want to catch any failure use `except ClassicMainYamlVersionError`. See [`python-bindings/classic-config-py/src/main_yaml_version.rs`](../../python-bindings/classic-config-py/src/main_yaml_version.rs). |
+
+Callers MUST NOT fall back to a raw YAML read on any of these errors — that defeats the whole point of the schema gate. Cross-crate background: [`classic-config-core.md`](classic-config-core.md#schema-gated-classic-mainyaml-version-reader).
+
+---
+
+## Notification errors (`app-update-manifest-notification`)
+
+The notification check exposes a different-shape-per-binding failure path while sharing a single underlying Rust error family. Variants on `UpdateError` (`NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`) project onto each binding according to the per-language idiom below. Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface from this channel when a notification manifest violates cross-field invariants or advertises a newer `manifest_version` major; bindings treat those as notification-channel failures while preserving their existing catch-all shape.
+
+| Binding | Shape on failure |
+| --- | --- |
+| C++ (CXX) | `NotificationStatusDto { classification: "error", error_message: "<Display of UpdateError>", …empty-string sentinels on every other string field… }`. See [`cpp-bindings/classic-cpp-bridge/src/update.rs::notification_error_dto`](../../cpp-bindings/classic-cpp-bridge/src/update.rs). |
+| Node (NAPI-RS) | `Promise.reject(new Error(...))` whose `message` is prefixed with one of `"FETCH_FAILED: "`, `"DECODE: "`, `"INSTALLED_VERSION_PARSE: "`, `"CACHE_IO: "`, or `"UPDATE_ERROR: "` (catch-all). Consumers discriminate with `err.message.startsWith("FETCH_FAILED:")`. **Shape divergence from the general Node-binding rule is intentional**: the `#[napi] async fn` surface threads `napi::Error<Status>` through `execute_tokio_future_with_finalize_callback`, and `Status` is a fixed C-style enum with no room for custom per-variant codes. A message prefix is the only representation that round-trips through the async bridge while preserving the variant-keyed discriminator the spec promises. See [`node-bindings/classic-node/src/update.rs::notification_error_to_napi`](../../node-bindings/classic-node/src/update.rs) and the matching JSDoc in [`node-bindings/classic-node/index.d.ts`](../../node-bindings/classic-node/index.d.ts). |
+| Python (PyO3) | Raises a `ClassicNotificationError` subclass whose name encodes the variant (e.g. `ClassicNotificationFetchFailed`), or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestInvalid` and `ManifestUnsupportedVersion`. Subclass of `ClassicUpdateError` so existing catch blocks keep working. |
+
+Full cross-crate flow context: [`app-update-notification-delivery.md`](app-update-notification-delivery.md) §3.
+
+---
+
 ## Why They Differ
 
 The three binding surfaces intentionally use different error shapes because each consumer ecosystem has established idioms:

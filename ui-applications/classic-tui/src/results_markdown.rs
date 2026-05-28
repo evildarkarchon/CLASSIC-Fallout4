@@ -311,7 +311,9 @@ fn list_prefix(stack: &mut [ListContext]) -> String {
 
     let depth = stack.len();
     let indent = "  ".repeat(depth.saturating_sub(1));
-    let current = stack.last_mut().expect("list stack not empty");
+    let Some(current) = stack.last_mut() else {
+        return "• ".to_string();
+    };
 
     if current.ordered {
         let number = current.next_number;

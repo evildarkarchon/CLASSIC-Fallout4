@@ -5,6 +5,7 @@ import {
   // Async functions exist but will fail without network; we test they are callable
   getLatestRelease,
   checkForUpdates,
+  checkAppNotification,
 } from "../index.js";
 
 // ============================================================================
@@ -267,5 +268,106 @@ describe("Update free functions", () => {
       expect(result).toBeInstanceOf(Promise);
       result.catch(() => {});
     });
+  });
+});
+
+// ============================================================================
+// App-notification (app-update-manifest-notification change, §4.8)
+// ============================================================================
+
+describe("checkAppNotification", () => {
+  test("is a function", () => {
+    expect(typeof checkAppNotification).toBe("function");
+  });
+
+  test("accepts options object and returns a promise", () => {
+    const result = checkAppNotification({
+      owner: "test",
+      repo: "nonexistent-repo-12345",
+      installedVersion: "1.0.0",
+    });
+    expect(result).toBeInstanceOf(Promise);
+    // Suppress unhandled rejection — we just want to verify the shape.
+    result.catch(() => {});
+  });
+
+  // ── Error path: both channels unreachable ───────────────────────────────
+  //
+  // `nonexistent-owner/nonexistent-repo-12345` resolves to neither
+  // a Pages URL nor a Releases API hit, so the check must reject
+  // with an Error whose message starts with one of the variant-keyed
+  // prefixes. We can't depend on which exact code fires (the Pages
+  // resolver might return 404 for different reasons across
+  // environments), so we check for the common prefix shape.
+
+  test("rejects with a code-prefixed message when both channels fail", async () => {
+    // Guard: real network required. Skip silently if sandbox rejects
+    // outbound traffic.
+    let err: unknown = null;
+    try {
+      await checkAppNotification({
+        owner: "evildarkarchon-nonexistent",
+        repo: "also-nonexistent-repo-xyzzy",
+        installedVersion: "9.2.0",
+      });
+    } catch (e) {
+      err = e;
+    }
+    if (err === null) {
+      // Shouldn't happen, but don't force-fail a fully-offline runner.
+      return;
+    }
+    expect(err).toBeInstanceOf(Error);
+    const msg = (err as Error).message;
+    // The message is prefixed with the variant-keyed code followed by ": ".
+    const validPrefixes = [
+      "FETCH_FAILED:",
+      "DECODE:",
+      "INSTALLED_VERSION_PARSE:",
+      "CACHE_IO:",
+      "UPDATE_ERROR:",
+    ];
+    const matched = validPrefixes.some((p) => msg.startsWith(p));
+    expect(matched).toBe(true);
+  }, 30_000);
+
+  // ── Error path: invalid installed version ──────────────────────────────
+  //
+  // The orchestrator validates `installedVersion` eagerly, before any
+  // network or cache I/O. So an unparseable string surfaces
+  // deterministically as a rejected promise whose message starts with
+  // `"INSTALLED_VERSION_PARSE: "`, regardless of whether the test
+  // runner has outbound network access. This is the reachable path
+  // the spec and `docs/api/error-contract.md` document.
+
+  test("rejects with INSTALLED_VERSION_PARSE prefix when installedVersion is not semver", async () => {
+    let err: unknown = null;
+    try {
+      await checkAppNotification({
+        owner: "evildarkarchon",
+        repo: "CLASSIC-Fallout4",
+        installedVersion: "not-a-semver",
+      });
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(Error);
+    const msg = (err as Error).message;
+    expect(msg.startsWith("INSTALLED_VERSION_PARSE: ")).toBe(true);
+    // The offending input must be echoed back so UIs can point at the
+    // bad value in situ.
+    expect(msg).toContain("not-a-semver");
+  });
+
+  test("preserves the options-object shape across the FFI boundary", () => {
+    // Reject if napi-rs dropped a field.
+    const opts = {
+      owner: "evildarkarchon",
+      repo: "CLASSIC-Fallout4",
+      installedVersion: "v0.0.1",
+    };
+    const promise = checkAppNotification(opts);
+    expect(promise).toBeInstanceOf(Promise);
+    promise.catch(() => {});
   });
 });

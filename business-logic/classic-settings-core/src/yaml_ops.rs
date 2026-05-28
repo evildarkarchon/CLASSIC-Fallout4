@@ -211,8 +211,7 @@ pub fn yaml_cache_stats() -> YamlCacheStats {
             0.0
         },
         size: YAML_CACHE.len(),
-        capacity: usize::try_from(YAML_CACHE.capacity())
-            .expect("quick_cache capacity should fit in usize"),
+        capacity: usize::try_from(YAML_CACHE.capacity()).unwrap_or(usize::MAX),
     }
 }
 

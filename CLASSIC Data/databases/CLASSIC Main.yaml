@@ -3,14 +3,14 @@
 # File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
 # - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
 # - MINOR bumps are additive (new optional keys older clients ignore)
-schema_version: "1.0"
+schema_version: "2.0"
 
 CLASSIC_Info:
   # ========================================================================================
   # CAUTION: DO NOT CHANGE YOUR SETTINGS HERE! OPEN & EDIT CLASSIC Settings.yaml instead!
   # ========================================================================================
-  version: CLASSIC v9.1.0
-  version_date: 26.04.19 #YY/MM/DD
+  version: v9.1.0
+  version_date: 26.04.19 #YY.MM.DD
   is_prerelease: false
 
   default_settings: |
@@ -424,7 +424,7 @@ Version_Registry:
           name: "Buffout 4"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
-        - version: "1.2.0"
+        - version: "1.3.0"
           name: "Addictol"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
@@ -491,7 +491,7 @@ Version_Registry:
           compatible_range:
             min: "1.10.984.0"
             max: "1.10.999.999"
-        - version: "1.2.0"
+        - version: "1.3.0"
           name: "Addictol"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
@@ -545,7 +545,7 @@ Version_Registry:
     - id: FO4_AE
       game: Fallout4
       is_vr: false
-      version: "1.11.191.0"
+      version: "1.11.221.0"
       display_name: Fallout 4 Anniversary Edition
       short_name: AE
       description: Anniversary Edition version (active development branch)
@@ -558,7 +558,7 @@ Version_Registry:
           compatible_range:
             min: "1.11.137.0"
             max: "1.11.999.999"
-        - version: "1.2.0"
+        - version: "1.3.0"
           name: "Addictol"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"

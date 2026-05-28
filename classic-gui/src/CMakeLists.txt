@@ -101,6 +101,19 @@ target_include_directories(ClassicGui PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# ── App version macro ────────────────────────────────────────────────
+# `CLASSIC_APP_VERSION` is set by the parent CMakeLists.txt by parsing
+# `CLASSIC_Info.version` from `CLASSIC Main.yaml` at configure time.
+# `main.cpp` reads it through the `CLASSIC_GUI_VERSION` macro to set
+# `QApplication::applicationVersion()`, which feeds the app-update
+# notification check. Sourcing the version this way (instead of the
+# runtime cache-preferring `load_main_yaml_version` loader) keeps a
+# per-user YAML data update from moving the broadcast version ahead of
+# the actual installed binary.
+target_compile_definitions(ClassicGui PRIVATE
+    CLASSIC_GUI_VERSION="${CLASSIC_APP_VERSION}"
+)
+
 # ── Link libraries ───────────────────────────────────────────────────
 target_link_libraries(ClassicGui PRIVATE
     Qt6::Widgets

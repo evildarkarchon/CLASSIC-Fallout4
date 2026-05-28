@@ -4,6 +4,8 @@
 
 This guide demonstrates how to use `pyo3-async-runtimes` to create **true async Python functions** backed by Rust's Tokio runtime. This eliminates blocking and enables native async/await integration between Python and Rust.
 
+For the repo-wide decision table that distinguishes true async Python APIs from synchronous GIL-detached wrappers, see [`../development/runtime_gil_patterns.md`](../development/runtime_gil_patterns.md).
+
 ## Table of Contents
 
 1. [Basic Concepts](#basic-concepts)
@@ -604,7 +606,7 @@ use std::sync::Arc;
 ✅ Use `future_into_py(py, async { ... })` to create Python coroutines
 ✅ Clone Arc-wrapped data before moving into async blocks
 ✅ Return type must be `PyResult<Bound<'py, PyAny>>`
-✅ No more `block_on()` - functions return immediately
+✅ No `block_on()` in true async Python APIs - functions return immediately
 ✅ True async concurrency with Python's event loop
 ✅ Full Tokio power with Python's async/await syntax
 

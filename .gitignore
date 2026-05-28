@@ -4,6 +4,8 @@ __pycache__/
 .ruff_cache/
 .venv
 *.lock
+# uv project lockfiles must be committed for reproducible `uv sync --locked`.
+!uv.lock
 *.py[cod]
 *$py.class
 poetry.toml
@@ -108,6 +110,7 @@ test-results.txt
 # Ephemeral parity gate artifacts (baselines are committed separately)
 ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/
 ClassicLib-rs/node-bindings/classic-node/parity-artifacts/
+tools/binding_compliance/artifacts/
 
 # Code signing certificates (auto-generated, contains private key)
 tools/certs/
@@ -346,3 +349,5 @@ opencode.json
 .claude/worktrees
 *.pfx
 .kilocode/package-lock.json
+graphify-out/
+.pi-lens/

@@ -213,15 +213,21 @@ fn results_empty_scan_button_switches_to_main_tab() {
 }
 
 static COPY_CALLED: AtomicBool = AtomicBool::new(false);
-static URL_CALLED: AtomicBool = AtomicBool::new(false);
+static KEYBOARD_URL_CALLED: AtomicBool = AtomicBool::new(false);
+static MOUSE_URL_CALLED: AtomicBool = AtomicBool::new(false);
 
 fn copy_writer_test(_text: &str) -> Result<(), String> {
     COPY_CALLED.store(true, Ordering::SeqCst);
     Ok(())
 }
 
-fn url_opener_test(_url: &str) -> Result<(), String> {
-    URL_CALLED.store(true, Ordering::SeqCst);
+fn keyboard_url_opener_test(_url: &str) -> Result<(), String> {
+    KEYBOARD_URL_CALLED.store(true, Ordering::SeqCst);
+    Ok(())
+}
+
+fn mouse_url_opener_test(_url: &str) -> Result<(), String> {
+    MOUSE_URL_CALLED.store(true, Ordering::SeqCst);
     Ok(())
 }
 
@@ -313,10 +319,10 @@ fn results_scroll_wheel_updates_scroll_offset_in_viewer() {
 
 #[test]
 fn results_keyboard_link_navigation_and_open() {
-    URL_CALLED.store(false, Ordering::SeqCst);
+    KEYBOARD_URL_CALLED.store(false, Ordering::SeqCst);
 
     let mut app = App::new_for_testing();
-    app.set_url_opener(url_opener_test);
+    app.set_url_opener(keyboard_url_opener_test);
     app.active_tab = TabIndex::Results;
     app.results.focus = classic_tui::app::ResultsFocus::Viewer;
     app.results.rendered_lines = vec![
@@ -359,18 +365,18 @@ fn results_keyboard_link_navigation_and_open() {
         KeyCode::Enter,
         KeyModifiers::NONE,
     )));
-    assert!(URL_CALLED.load(Ordering::SeqCst));
+    assert!(KEYBOARD_URL_CALLED.load(Ordering::SeqCst));
     assert!(app.scan_status.contains("Opened link:"));
 }
 
 #[test]
 fn results_mouse_click_link_opens_url() {
-    URL_CALLED.store(false, Ordering::SeqCst);
+    MOUSE_URL_CALLED.store(false, Ordering::SeqCst);
 
     let backend = TestBackend::new(120, 40);
     let mut terminal = Terminal::new(backend).expect("terminal");
     let mut app = App::new_for_testing();
-    app.set_url_opener(url_opener_test);
+    app.set_url_opener(mouse_url_opener_test);
     app.active_tab = TabIndex::Results;
     app.results.reports = vec![ReportEntry::new(
         "link-click.md".to_string(),
@@ -408,6 +414,6 @@ fn results_mouse_click_link_opens_url() {
         modifiers: KeyModifiers::NONE,
     }));
 
-    assert!(URL_CALLED.load(Ordering::SeqCst));
+    assert!(MOUSE_URL_CALLED.load(Ordering::SeqCst));
     assert!(app.scan_status.contains("Opened link:"));
 }

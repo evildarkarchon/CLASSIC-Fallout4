@@ -607,15 +607,34 @@ void SettingsDialog::onCheckForUpdates()
 
     try {
         const QString currentVersion = QApplication::applicationVersion();
-        auto result = classic::update::github_check_for_updates("evildarkarchon", "CLASSIC-Fallout4",
-                                                                classic::toRustString(currentVersion));
+        auto status = classic::update::check_app_notification(
+            rust::Str("evildarkarchon"),
+            rust::Str("CLASSIC-Fallout4"),
+            classic::toRustString(currentVersion));
 
-        if (!result.error_message.empty()) {
-            m_lblUpdateStatus->setText(QStringLiteral("Error: ") + classic::toQString(result.error_message));
-        } else if (result.has_update) {
-            m_lblUpdateStatus->setText(QStringLiteral("Update available: v") +
-                                       classic::toQString(result.latest_version));
+        const std::string classification(status.classification);
+        if (classification == "error") {
+            const std::string errorMessage(status.error_message);
+            m_lblUpdateStatus->setText(QStringLiteral("Error: ") +
+                                       (errorMessage.empty() ? QStringLiteral("unknown error")
+                                                             : QString::fromUtf8(errorMessage)));
+        } else if (classification == "update_available") {
+            const std::string title(status.display_title);
+            QString text = QStringLiteral("Update available: v") + classic::toQString(status.latest_version);
+            if (!title.empty()) {
+                text += QStringLiteral(" — ") + QString::fromUtf8(title);
+            }
+            m_lblUpdateStatus->setText(text);
+        } else if (classification == "deprecated_client") {
+            m_lblUpdateStatus->setText(QStringLiteral("Deprecated build; upgrade to v") +
+                                       classic::toQString(status.latest_version));
+        } else if (classification == "unknown") {
+            const std::string parseError(status.parse_error);
+            m_lblUpdateStatus->setText(QStringLiteral("Update check inconclusive: ") +
+                                       (parseError.empty() ? QStringLiteral("unknown reason")
+                                                           : QString::fromUtf8(parseError)));
         } else {
+            // "up_to_date" or any unexpected classification.
             m_lblUpdateStatus->setText(QStringLiteral("You are up to date."));
         }
     } catch (const std::exception& e) {
@@ -643,8 +662,9 @@ constexpr const char* kYamlTagPrefix = "yaml-data-v";
 
 // The two shippable files the client knows about today. The accepted ranges
 // mirror `client_schemas::MAIN_YAML` and `client_schemas::GAME_FALLOUT4_YAML`
-// on the Rust side (both `SchemaCompat::new(1, 0)`); the schema-version gate
-// in tools/schema_version_gate.py keeps them in sync with the bundled YAML.
+// on the Rust side (`SchemaCompat::new(2, 0)` for Main, `SchemaCompat::new(1, 0)`
+// for Fallout4); the schema-version gate in tools/schema_version_gate.py keeps
+// them in sync with the bundled YAML.
 //
 // We deliberately send `has_installed = false` for both entries: the Rust
 // orchestrator (`check_yaml_update`) reads each file from the yaml-cache
@@ -658,7 +678,7 @@ rust::Vec<classic::update::YamlClientSchemaEntryDto> buildYamlSchemaEntries()
 
     classic::update::YamlClientSchemaEntryDto main{};
     main.name = "CLASSIC Main.yaml";
-    main.accepted_major = 1u;
+    main.accepted_major = 2u;
     main.accepted_minimum_minor = 0u;
     main.has_installed = false;
     entries.push_back(std::move(main));

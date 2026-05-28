@@ -80,6 +80,12 @@ Typical triggers already documented in the repo include:
 
 In practice, if a Node export name, signature, DTO shape, or async/sync contract changes, refresh and commit `index.d.ts` in the same change.
 
+From `node-bindings/classic-node`, the repo-owned refresh command is:
+
+```powershell
+bun run dts:refresh
+```
+
 ---
 
 ## When To Refresh Python `.pyi` Stubs
@@ -124,6 +130,7 @@ When Node `index.d.ts` changes, the important checks are:
 
 ```powershell
 # From node-bindings/classic-node
+bun run dts:refresh
 bun run parity:gate
 bun run parity:gate:update-baseline   # only if the plain gate shows intentional source-backed drift
 bun run parity:gate
@@ -141,12 +148,13 @@ Relevant Node artifacts/checks:
 When Python `.pyi` files change, the important checks are:
 
 ```powershell
-uv venv python-bindings/.venv
-uv pip install --python python-bindings/.venv/Scripts/python.exe -r python-bindings/requirements-ci.txt
-python tools/python_api_parity/check_parity_gate.py --repo-root .
-python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# `--inexact` stops uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
+uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
+uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
+uv run --project python-bindings python -m pytest python-bindings/tests -q
 ```
 
 Relevant Python artifacts/checks:

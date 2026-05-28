@@ -72,7 +72,7 @@ fn test_database_pool_clone_arc_count() {
 
     // Initially, strong count should be 1
     assert_eq!(
-        Arc::strong_count(&pool.pools),
+        pool.pool_registry_strong_count(),
         1,
         "Initial pool should have strong_count of 1"
     );
@@ -80,21 +80,21 @@ fn test_database_pool_clone_arc_count() {
     // After cloning, strong count should be 2
     let clone1 = pool.clone();
     assert_eq!(
-        Arc::strong_count(&pool.pools),
+        pool.pool_registry_strong_count(),
         2,
         "After cloning, strong_count should be 2"
     );
 
     // Both references point to the same Arc
     assert!(
-        Arc::ptr_eq(&pool.pools, &clone1.pools),
+        pool.shares_pool_registry_with(&clone1),
         "Clones should share the same underlying Arc"
     );
 
     // After another clone, strong count should be 3
     let clone2 = pool.clone();
     assert_eq!(
-        Arc::strong_count(&pool.pools),
+        pool.pool_registry_strong_count(),
         3,
         "After second clone, strong_count should be 3"
     );
@@ -102,7 +102,7 @@ fn test_database_pool_clone_arc_count() {
     // Drop one clone - strong count should decrease to 2
     drop(clone1);
     assert_eq!(
-        Arc::strong_count(&pool.pools),
+        pool.pool_registry_strong_count(),
         2,
         "After dropping one clone, strong_count should be 2"
     );
@@ -110,14 +110,14 @@ fn test_database_pool_clone_arc_count() {
     // The warning condition should be false when other clones exist
     // (strong_count > 1, so condition is false regardless of pools.is_empty())
     assert!(
-        Arc::strong_count(&pool.pools) > 1,
+        pool.pool_registry_strong_count() > 1,
         "With remaining clones, strong_count should be > 1"
     );
 
     // Drop another clone - strong count should decrease to 1
     drop(clone2);
     assert_eq!(
-        Arc::strong_count(&pool.pools),
+        pool.pool_registry_strong_count(),
         1,
         "After dropping all clones, strong_count should be 1"
     );
@@ -134,7 +134,7 @@ fn test_drop_warning_condition_logic() {
 
     // With no pools initialized, the warning condition should be false
     // even when this is the last reference
-    let should_warn_empty = Arc::strong_count(&pool.pools) == 1 && !pool.pools.is_empty();
+    let should_warn_empty = pool.pool_registry_strong_count() == 1 && pool.is_available();
     assert!(
         !should_warn_empty,
         "Should not warn when pools are empty (even if last reference)"
@@ -142,7 +142,7 @@ fn test_drop_warning_condition_logic() {
 
     // Clone and verify warning condition is false for non-last references
     let clone = pool.clone();
-    let should_warn_with_clone = Arc::strong_count(&pool.pools) == 1 && !pool.pools.is_empty();
+    let should_warn_with_clone = pool.pool_registry_strong_count() == 1 && pool.is_available();
     assert!(
         !should_warn_with_clone,
         "Should not warn when other clones exist"
@@ -152,7 +152,7 @@ fn test_drop_warning_condition_logic() {
     drop(clone);
 
     // Now it's the last reference, but pools are still empty
-    let should_warn_last_empty = Arc::strong_count(&pool.pools) == 1 && !pool.pools.is_empty();
+    let should_warn_last_empty = pool.pool_registry_strong_count() == 1 && pool.is_available();
     assert!(
         !should_warn_last_empty,
         "Should not warn when pools are empty"
@@ -593,11 +593,11 @@ async fn test_cache_clear_expired_only() {
     let expired_key = CacheKey::new("TestTable", "expired", "plugin");
     let fresh_key = CacheKey::new("TestTable", "fresh", "plugin");
 
-    pool.query_cache.insert(
+    pool.insert_cache_entry(
         expired_key,
         CacheEntry::new("expired_value".to_string(), Duration::from_millis(1)),
     );
-    pool.query_cache.insert(
+    pool.insert_cache_entry(
         fresh_key.clone(),
         CacheEntry::new("fresh_value".to_string(), Duration::from_secs(300)),
     );
@@ -614,7 +614,7 @@ async fn test_cache_clear_expired_only() {
 
     // Verify fresh entry is still there
     assert!(
-        pool.query_cache.contains_key(&fresh_key),
+        pool.cache_contains_key(&fresh_key),
         "Fresh entry should remain"
     );
 }
@@ -679,19 +679,11 @@ fn test_cache_eviction_deterministic_oldest_first() {
         "Cache size must respect configured cap"
     );
     assert!(
-        !pool
-            .query_cache
-            .contains_key(&CacheKey::new("TestTable", "00000001", "plugin.esp")),
+        !pool.cache_contains_key(&CacheKey::new("TestTable", "00000001", "plugin.esp")),
         "Oldest key should be evicted first"
     );
-    assert!(
-        pool.query_cache
-            .contains_key(&CacheKey::new("TestTable", "00000002", "plugin.esp"))
-    );
-    assert!(
-        pool.query_cache
-            .contains_key(&CacheKey::new("TestTable", "00000003", "plugin.esp"))
-    );
+    assert!(pool.cache_contains_key(&CacheKey::new("TestTable", "00000002", "plugin.esp")));
+    assert!(pool.cache_contains_key(&CacheKey::new("TestTable", "00000003", "plugin.esp")));
 
     let stats = pool.get_stats().unwrap();
     assert_eq!(stats.cache_evictions, 1, "Should record one eviction");
@@ -747,11 +739,11 @@ fn test_hybrid_proactive_cleanup_threshold_and_interval() {
     pool.set_cache_cleanup_threshold(3);
     pool.set_cache_cleanup_interval(Duration::from_secs(1));
 
-    pool.query_cache.insert(
+    pool.insert_cache_entry(
         CacheKey::new("TestTable", "expired1", "plugin"),
         CacheEntry::new("expired1".to_string(), Duration::from_millis(1)),
     );
-    pool.query_cache.insert(
+    pool.insert_cache_entry(
         CacheKey::new("TestTable", "expired2", "plugin"),
         CacheEntry::new("expired2".to_string(), Duration::from_millis(1)),
     );
@@ -1171,7 +1163,7 @@ fn test_query_template_reuse_by_bucket_and_table() {
         "different collation mode should produce different query text"
     );
     assert_eq!(
-        pool.query_template_cache.len(),
+        pool.query_template_cache_size(),
         3,
         "cache should contain one template per (table, bucket, collation mode)"
     );

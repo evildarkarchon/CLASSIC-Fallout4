@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-21T08:28:50.549699+00:00",
+  "generated_at_utc": "2026-04-23T02:34:56.586553+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -59,7 +59,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::CandidateRejection",
       "tier": "tier1"
     },
@@ -254,7 +254,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::LoadSource",
       "tier": "tier1"
     },
@@ -264,7 +264,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::LoadedShippable",
       "tier": "tier1"
     },
@@ -284,6 +284,25 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
       "source_decl": "pub const MAIN_YAML",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MainYamlVersionError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable.rs",
+      "source_decl": "pub enum MainYamlVersionError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MainYamlVersionError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_expr": "shippable::MainYamlVersionError",
       "tier": "tier1"
     },
     {
@@ -449,7 +468,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::ShippableFile",
       "tier": "tier1"
     },
@@ -562,7 +581,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::YamlLoadError",
       "tier": "tier1"
     },
@@ -723,12 +742,42 @@
       "tier": "tier1"
     },
     {
+      "symbol": "load_main_yaml_version",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_expr": "shippable::load_main_yaml_version",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_main_yaml_version_with_bundled_dir",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_expr": "shippable::load_main_yaml_version_with_bundled_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_main_yaml_version_with_env",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_expr": "shippable::load_main_yaml_version_with_env",
+      "tier": "tier1"
+    },
+    {
       "symbol": "load_shippable_yaml",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::load_shippable_yaml",
       "tier": "tier1"
     },
@@ -738,7 +787,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "shippable::load_shippable_yaml_with_env",
       "tier": "tier1"
     },
@@ -3661,6 +3710,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ensure_notification_cache_dir",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/notification_cache.rs",
+      "source_decl": "pub fn ensure_notification_cache_dir(owner: &str, repo: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ensure_notification_cache_dir",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use notification_cache::{ ensure_notification_cache_dir, ensure_notification_cache_dir_with_env, notification_cache_dir, notification_cache_dir_with_env, };",
+      "source_expr": "notification_cache::ensure_notification_cache_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ensure_notification_cache_dir_with_env",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use notification_cache::{ ensure_notification_cache_dir, ensure_notification_cache_dir_with_env, notification_cache_dir, notification_cache_dir_with_env, };",
+      "source_expr": "notification_cache::ensure_notification_cache_dir_with_env",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ensure_yaml_cache_dir",
       "kind": "function",
       "arity": 0,
@@ -4027,6 +4106,36 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/docs_path.rs",
       "source_decl": "pub fn new(relative_path: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "notification_cache_dir",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/notification_cache.rs",
+      "source_decl": "pub fn notification_cache_dir(owner: &str, repo: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "notification_cache_dir",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use notification_cache::{ ensure_notification_cache_dir, ensure_notification_cache_dir_with_env, notification_cache_dir, notification_cache_dir_with_env, };",
+      "source_expr": "notification_cache::notification_cache_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "notification_cache_dir_with_env",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use notification_cache::{ ensure_notification_cache_dir, ensure_notification_cache_dir_with_env, notification_cache_dir, notification_cache_dir_with_env, };",
+      "source_expr": "notification_cache::notification_cache_dir_with_env",
       "tier": "tier1"
     },
     {
@@ -12521,6 +12630,44 @@
       "tier": "tier1"
     },
     {
+      "symbol": "AppNotificationDisplay",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::AppNotificationDisplay",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AppNotificationDisplay",
+      "kind": "struct",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/notification.rs",
+      "source_decl": "pub struct AppNotificationDisplay",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AppNotificationManifest",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::AppNotificationManifest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AppNotificationManifest",
+      "kind": "struct",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/notification.rs",
+      "source_decl": "pub struct AppNotificationManifest",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ApprovedUpdate",
       "kind": "reexport",
       "crate": "classic-update-core",
@@ -12541,11 +12688,12 @@
     },
     {
       "symbol": "CACHED_MANIFEST_FILENAME",
-      "kind": "const",
+      "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
-      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
-      "source_decl": "pub const CACHED_MANIFEST_FILENAME",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use yaml_update::{ ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME, FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome, SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport, YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update, classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update, validate_manifest, };",
+      "source_expr": "yaml_update::CACHED_MANIFEST_FILENAME",
       "tier": "tier1"
     },
     {
@@ -12553,9 +12701,28 @@
       "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
+      "source_decl": "pub use crate::manifest_fetch::{CACHED_MANIFEST_FILENAME, ETAG_FILENAME};",
+      "source_expr": "crate::manifest_fetch::CACHED_MANIFEST_FILENAME",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Classification",
+      "kind": "enum",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/notification.rs",
+      "source_decl": "pub enum Classification",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Classification",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use yaml_update::{ ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME, FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome, SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport, YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update, classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update, validate_manifest, };",
-      "source_expr": "yaml_update::CACHED_MANIFEST_FILENAME",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::Classification",
       "tier": "tier1"
     },
     {
@@ -12598,11 +12765,12 @@
     },
     {
       "symbol": "ETAG_FILENAME",
-      "kind": "const",
+      "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
-      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
-      "source_decl": "pub const ETAG_FILENAME",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use yaml_update::{ ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME, FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome, SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport, YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update, classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update, validate_manifest, };",
+      "source_expr": "yaml_update::ETAG_FILENAME",
       "tier": "tier1"
     },
     {
@@ -12610,9 +12778,9 @@
       "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
-      "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use yaml_update::{ ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME, FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome, SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport, YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update, classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update, validate_manifest, };",
-      "source_expr": "yaml_update::ETAG_FILENAME",
+      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
+      "source_decl": "pub use crate::manifest_fetch::{CACHED_MANIFEST_FILENAME, ETAG_FILENAME};",
+      "source_expr": "crate::manifest_fetch::ETAG_FILENAME",
       "tier": "tier1"
     },
     {
@@ -12708,6 +12876,25 @@
       "source_file": "business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use yaml_update::{ ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME, FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome, SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport, YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update, classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update, validate_manifest, };",
       "source_expr": "yaml_update::MAX_MANIFEST_VERSION",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NotificationStatus",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::NotificationStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NotificationStatus",
+      "kind": "struct",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/notification.rs",
+      "source_decl": "pub struct NotificationStatus",
       "tier": "tier1"
     },
     {
@@ -12930,6 +13117,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "build_app_notification_pages_url",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/notification.rs",
+      "source_decl": "pub fn build_app_notification_pages_url(client: &GithubClient)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "build_app_notification_pages_url",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::build_app_notification_pages_url",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_app_notification",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::check_app_notification",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_app_notification_with",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::check_app_notification_with",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_yaml_update",
       "kind": "reexport",
       "crate": "classic-update-core",
@@ -12937,6 +13164,26 @@
       "source_file": "business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub use yaml_update::{ ApprovedUpdate, CACHED_MANIFEST_FILENAME, ClientSchemaEntry, ClientSchemaSet, ETAG_FILENAME, FileInstallOutcome, MAX_MANIFEST_VERSION, RejectedManifestFile, RollbackOutcome, SignatureDescriptor, UpdateCheckConfig, YamlManifest, YamlManifestFile, YamlUpdateReport, YamlUpdateStatus, apply_yaml_update, apply_yaml_update_with_decision, check_yaml_update, classify_manifest, download_release_asset, fetch_yaml_manifest, rollback_yaml_update, validate_manifest, };",
       "source_expr": "yaml_update::check_yaml_update",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "classify",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/notification.rs",
+      "source_decl": "pub fn classify(installed_version: &str, manifest: &AppNotificationManifest)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "classify",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::classify",
       "tier": "tier1"
     },
     {
@@ -12966,6 +13213,26 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub mod error;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fetch_app_notification_manifest",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::fetch_app_notification_manifest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fetch_via_releases_fallback",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::fetch_via_releases_fallback",
       "tier": "tier1"
     },
     {
@@ -13083,6 +13350,15 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "notification",
+      "kind": "module",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub mod notification;",
       "tier": "tier1"
     },
     {

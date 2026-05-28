@@ -4,8 +4,7 @@
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use classic_file_io_core::FileIOCore;
-use classic_shared::{PathLike, without_gil};
-use classic_shared_core::get_runtime;
+use classic_shared::{PathLike, without_gil, without_gil_block_on};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use pyo3_async_runtimes::tokio::future_into_py;
@@ -255,10 +254,8 @@ impl PyFileIOCore {
     /// Clear all caches
     pub fn clear_cache(&self, py: Python<'_>) -> PyResult<()> {
         // Release GIL during blocking cache clear operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                self.inner.clear_cache().await;
-            });
+        without_gil_block_on(py, || async {
+            self.inner.clear_cache().await;
         });
         Ok(())
     }
@@ -361,14 +358,12 @@ impl PyFileIOCore {
     pub fn read_dds_header(&self, py: Python<'_>, path: PathLike) -> PyResult<Option<(u32, u32)>> {
         let path_buf: PathBuf = path.into();
         // Release GIL during blocking file I/O operation
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                match self.inner.read_dds_header(&path_buf).await {
-                    Ok(Some(header)) => Ok(Some((header.width, header.height))),
-                    Ok(None) => Ok(None),
-                    Err(e) => Err(to_pyerr(e)),
-                }
-            })
+        without_gil_block_on(py, || async {
+            match self.inner.read_dds_header(&path_buf).await {
+                Ok(Some(header)) => Ok(Some((header.width, header.height))),
+                Ok(None) => Ok(None),
+                Err(e) => Err(to_pyerr(e)),
+            }
         })
     }
 

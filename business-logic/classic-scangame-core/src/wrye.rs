@@ -116,7 +116,9 @@ impl WryeBashParser {
     /// Vector of `WryeIssue` structs, one per section found (excluding "Active Plugins:")
     pub fn parse(&self, html_content: &str) -> Vec<WryeIssue> {
         let document = Html::parse_document(html_content);
-        let h3_selector = Selector::parse("h3").expect("valid h3 selector");
+        let Ok(h3_selector) = Selector::parse("h3") else {
+            return Vec::new();
+        };
 
         let mut issues = Vec::new();
 

@@ -72,9 +72,16 @@ Analysis helpers used by the orchestrator and usable independently.
 
 - `PluginAnalyzer` - plugin extraction, plugin-limit checks, plugin suspect matching
 - `FormIDAnalyzerCore` - async FormID correlation and optional DB-backed value lookup
-- `RecordScanner` - named-record detection with per-instance `OnceLock<AhoCorasick>` matcher caches built on first use
+- `RecordScanner` - named-record detection with per-instance fallible `OnceLock<AhoCorasick>` matcher caches built on first use
 - `SuspectScanner` - known error/stack suspect matching
 - `detect_mods_single()`, `detect_mods_double()`, `detect_mods_important()` - standalone mod checks
+
+`record_scanner` contributor note:
+
+- `RecordScanner` now exposes additive fallible APIs for matcher-building/search paths: `try_scan_named_records()`, `try_scan_named_records_with_crashgen_name()`, `try_scan_named_records_with_crashgen_name_and_lowercase()`, and `try_extract_records()`.
+- The free function `try_scan_records_batch()` is the fallible counterpart to `scan_records_batch()`.
+- Existing infallible methods and `scan_records_batch()` remain compatibility wrappers with unchanged success output shapes; callers that need to distinguish invalid input or Aho-Corasick matcher-build failures should use the `try_*` variants.
+- The lowercase-reuse fallible API returns `ScanLogError::InvalidInput` when the original and lowercased slices are not index-aligned instead of panicking.
 
 `mod_detector` contributor note:
 

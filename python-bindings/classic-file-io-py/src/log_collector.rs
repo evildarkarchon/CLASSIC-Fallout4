@@ -5,8 +5,7 @@
 
 use crate::to_pyerr;
 use classic_file_io_core::LogCollector;
-use classic_shared::without_gil;
-use classic_shared_core::get_runtime;
+use classic_shared::without_gil_block_on;
 use pyo3::prelude::*;
 use std::path::PathBuf;
 
@@ -86,14 +85,12 @@ impl PyLogCollector {
     #[pyo3(name = "collect_all")]
     pub fn py_collect_all(&self, py: Python<'_>) -> PyResult<Vec<String>> {
         // Release GIL during async I/O to avoid blocking Python threads
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                let paths = self.inner.collect_all().await.map_err(to_pyerr)?;
-                Ok(paths
-                    .into_iter()
-                    .map(|p| p.to_string_lossy().to_string())
-                    .collect())
-            })
+        without_gil_block_on(py, || async {
+            let paths = self.inner.collect_all().await.map_err(to_pyerr)?;
+            Ok(paths
+                .into_iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect())
         })
     }
 
@@ -104,9 +101,8 @@ impl PyLogCollector {
     #[pyo3(name = "move_from_base_folder")]
     pub fn py_move_from_base_folder(&self, py: Python<'_>) -> PyResult<usize> {
         // Release GIL during async I/O to avoid blocking Python threads
-        without_gil(py, || {
-            get_runtime()
-                .block_on(async { self.inner.move_from_base_folder().await.map_err(to_pyerr) })
+        without_gil_block_on(py, || async {
+            self.inner.move_from_base_folder().await.map_err(to_pyerr)
         })
     }
 
@@ -120,9 +116,8 @@ impl PyLogCollector {
     #[pyo3(name = "copy_from_xse_folder")]
     pub fn py_copy_from_xse_folder(&self, py: Python<'_>) -> PyResult<usize> {
         // Release GIL during async I/O to avoid blocking Python threads
-        without_gil(py, || {
-            get_runtime()
-                .block_on(async { self.inner.copy_from_xse_folder().await.map_err(to_pyerr) })
+        without_gil_block_on(py, || async {
+            self.inner.copy_from_xse_folder().await.map_err(to_pyerr)
         })
     }
 
@@ -137,14 +132,12 @@ impl PyLogCollector {
     #[pyo3(name = "collect_crash_logs")]
     pub fn py_collect_crash_logs(&self, py: Python<'_>) -> PyResult<Vec<String>> {
         // Release GIL during async I/O to avoid blocking Python threads
-        without_gil(py, || {
-            get_runtime().block_on(async {
-                let paths = self.inner.collect_crash_logs().await.map_err(to_pyerr)?;
-                Ok(paths
-                    .into_iter()
-                    .map(|p| p.to_string_lossy().to_string())
-                    .collect())
-            })
+        without_gil_block_on(py, || async {
+            let paths = self.inner.collect_crash_logs().await.map_err(to_pyerr)?;
+            Ok(paths
+                .into_iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect())
         })
     }
 

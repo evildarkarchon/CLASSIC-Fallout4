@@ -119,7 +119,12 @@ class YamlData:
     # CLASSIC version information
     @property
     def classic_version(self) -> str:
-        """CLASSIC version string (e.g., '8.0.0')."""
+        """Bare SemVer string from `CLASSIC_Info.version` (e.g., 'v9.1.0' or '8.0.0').
+
+        Consumers that need a display-decorated form (e.g., 'CLASSIC v9.1.0')
+        should prepend the product-name prefix at format time; the YAML stores
+        the raw SemVer per schema_version 2.0.
+        """
 
     @property
     def classic_version_date(self) -> str:
@@ -530,3 +535,105 @@ def set_application_dir(path: str | Path) -> None:
 
 def get_application_dir() -> str | None:
     """Return the current application directory override, or ``None``."""
+
+# ---------------------------------------------------------------------------
+# Schema-gated CLASSIC Main.yaml version reader
+# ---------------------------------------------------------------------------
+
+class ClassicMainYamlVersionError(Exception):
+    """Base class for :func:`load_main_yaml_version` failures.
+
+    Consumers that want to catch any failure use
+    ``except ClassicMainYamlVersionError``. Callers that want to branch on
+    the specific cause (e.g. "re-show the installer" vs "prompt to upgrade
+    CLASSIC") catch one of the subclasses below.
+    """
+
+class ClassicMainYamlVersionLoadError(ClassicMainYamlVersionError):
+    """CLASSIC Main.yaml could not be loaded or passed the schema gate.
+
+    Raised when neither the per-user cache copy nor the bundled
+    install-tree copy is both loadable and compatible with
+    ``client_schemas.MAIN_YAML``. Typical causes: file missing from
+    disk, YAML parse failure, or a ``schema_version`` header that is
+    outside the client's accepted MAJOR/MINOR range (e.g. a stale
+    ``schema_version: 1.x`` payload still carrying the legacy
+    ``CLASSIC v…`` decoration).
+    """
+
+class ClassicMainYamlVersionKeyMissingError(ClassicMainYamlVersionError):
+    """``CLASSIC_Info.version`` (or the ``CLASSIC_Info`` section) is absent.
+
+    The YAML loaded and passed the schema gate, but the specific key
+    the reader wants is not present in the document.
+    """
+
+class ClassicMainYamlVersionEmptyError(ClassicMainYamlVersionError):
+    """``CLASSIC_Info.version`` is present but empty or whitespace-only.
+
+    Trimming the value produced an empty string; the reader refuses to
+    propagate this through to ``QApplication.applicationVersion()`` (or
+    its Python equivalent) because downstream update-check
+    classification would silently degrade to ``"unknown"``.
+    """
+
+class ClassicMainYamlVersionNotStringError(ClassicMainYamlVersionError):
+    """``CLASSIC_Info.version`` is present but not a YAML scalar string.
+
+    For example, a YAML sequence or mapping where a string was
+    expected. Distinct from :class:`ClassicMainYamlVersionKeyMissingError`
+    so callers can emit a more actionable diagnostic.
+    """
+
+class ClassicMainYamlVersionInvalidError(ClassicMainYamlVersionError):
+    """``CLASSIC_Info.version`` is a non-empty string but its shape does
+    not match the schema-2.0 contract.
+
+    The schema-2.0 contract is an optional leading ``v``/``V`` followed
+    by strict release SemVer (``MAJOR.MINOR.PATCH`` only, no prerelease
+    suffix, no build metadata, no legacy ``CLASSIC `` decoration).
+    CLASSIC ships release-only versions by policy; the loader enforces
+    that here so a malformed publish fails fast instead of silently
+    degrading to ``Classification.UNKNOWN`` in
+    :func:`check_app_notification`.
+    """
+
+def load_main_yaml_version(bundled_yaml_dir: str | None = None) -> str:
+    """Load ``CLASSIC Main.yaml`` and return ``CLASSIC_Info.version``, schema-gated.
+
+    The loader enforces ``client_schemas.MAIN_YAML`` so a stale
+    ``schema_version: 1.x`` file with the legacy ``CLASSIC v…`` decoration
+    is rejected at this boundary instead of flowing through to
+    downstream update-check classification. Callers MUST NOT fall back
+    to a raw YAML read on error — that reintroduces the silent-
+    degradation behavior this reader exists to prevent.
+
+    Both the per-user YAML cache (``yaml_cache_dir``) and the bundled
+    copy under ``<bundled_yaml_dir>/CLASSIC Main.yaml`` are considered,
+    preferring a compatible cache copy over an older bundled copy.
+
+    Args:
+        bundled_yaml_dir: Directory that contains ``CLASSIC Main.yaml``
+            (typically ``<install>/CLASSIC Data/databases``). ``None``
+            or ``""`` keeps the default relative path resolved against
+            the process working directory, which is unreliable for
+            Python hosts run from arbitrary cwds — prefer an explicit
+            path in that case.
+
+    Returns:
+        The trimmed ``CLASSIC_Info.version`` value. Never empty.
+
+    Raises:
+        ClassicMainYamlVersionLoadError: Both the cache and bundled
+            copies failed to load or passed the schema gate.
+        ClassicMainYamlVersionKeyMissingError: ``CLASSIC_Info.version``
+            (or the ``CLASSIC_Info`` section) is absent.
+        ClassicMainYamlVersionEmptyError: ``CLASSIC_Info.version`` is
+            present but empty or whitespace-only.
+        ClassicMainYamlVersionNotStringError: ``CLASSIC_Info.version``
+            is present but not a YAML scalar string.
+        ClassicMainYamlVersionInvalidError: ``CLASSIC_Info.version`` is
+            a non-empty string but its shape does not match the
+            schema-2.0 contract (legacy ``CLASSIC `` prefix, prerelease
+            suffix, build metadata, or non-semver garbage).
+    """

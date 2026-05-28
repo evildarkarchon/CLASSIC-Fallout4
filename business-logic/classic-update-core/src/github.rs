@@ -1,5 +1,16 @@
 //! GitHub API integration for checking releases and updates.
 //!
+//! # Compat-only surface
+//!
+//! User-facing update checks SHOULD go through
+//! [`crate::notification::check_app_notification`] (the manifest-driven,
+//! Pages-first, rate-limit-resilient path). This module is retained for
+//! diagnostic tooling and a gradual binding migration (see design decision
+//! D-08 in `openspec/changes/app-update-manifest-notification/design.md`).
+//! [`GithubClient::get_latest_release`] is annotated `#[deprecated]` to
+//! flag accidental new use sites — existing in-tree callers keep working
+//! until their owning crate migrates to the notification API.
+//!
 //! This module provides functionality to interact with the GitHub API
 //! to check for new releases, download updates, and manage version information.
 //!
@@ -302,6 +313,7 @@ impl GithubClient {
     /// # Ok(())
     /// # }
     /// ```
+    #[deprecated(note = "Use classic_update_core::notification::check_app_notification instead")]
     pub async fn get_latest_release(&self) -> Result<GithubRelease> {
         let url = format!(
             "{}/repos/{}/{}/releases/latest",

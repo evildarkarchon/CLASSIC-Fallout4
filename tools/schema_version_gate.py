@@ -24,7 +24,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML # type: ignore
 
 _YAML = YAML(typ="safe", pure=True)
 
@@ -87,7 +87,7 @@ def read_file_schema(yaml_path: Path) -> tuple[int, int] | None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument(
         "--repo-root",
         type=Path,

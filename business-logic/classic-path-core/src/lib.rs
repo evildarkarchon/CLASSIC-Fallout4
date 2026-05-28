@@ -57,6 +57,7 @@ mod checker;
 mod docs_path;
 mod game_path;
 mod ini_parser;
+mod notification_cache;
 mod yaml_cache;
 
 pub use backup::{BackupManager, XseVersion};
@@ -68,6 +69,10 @@ pub use error::{
 };
 pub use game_path::{GamePathFinder, parse_xse_log};
 pub use ini_parser::IniFile;
+pub use notification_cache::{
+    ensure_notification_cache_dir, ensure_notification_cache_dir_with_env, notification_cache_dir,
+    notification_cache_dir_with_env,
+};
 pub use validator::{
     check_drive_exists,
     check_read_permissions,
