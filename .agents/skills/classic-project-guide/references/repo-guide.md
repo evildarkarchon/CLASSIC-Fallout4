@@ -324,7 +324,7 @@ Required follow-up in the same change:
 2. Run `python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"`.
 3. If loader, manifest, or delivery behavior changes, update `docs/api/yaml-update-delivery.md` and any affected crate API docs in `docs/api/`.
 4. Remember `publish-yaml-data.yml` is maintainer-triggered only on pushed `yaml-data-v*` tags; PRs do not publish YAML data.
-5. Account for the workflow's downstream effects: GitHub release assets are validated before publish, then Pages manifests are pushed under `gh-pages` `yaml-data/` entries.
+5. Account for the workflow's downstream effects: GitHub release assets are validated before publish, then Pages manifests are pushed under `gh-pages` `yaml-data/` entries. The YAML-data and app-notification workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.
 
 ## App Update Notification Publish Workflow
 
@@ -345,9 +345,9 @@ Required follow-up in the same change:
 2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and generate a disposable manifest preview with `uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py`.
 3. If manifest fields, validation rules, cache/fallback behavior, or delivery sequencing changes, update `docs/api/app-update-notification-delivery.md` and any affected crate API docs under `docs/api/`.
 4. Do not commit generated `manifest.json` previews or `gh-pages` publish outputs; the workflow owns those artifacts.
-5. Preserve tag namespace separation: `app-notification-v*` triggers the notification publish workflow, `yaml-data-v*` triggers YAML-data publishes, and binary `v*` releases remain the advertised install target. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the binary `v*` tag being advertised, not the `app-notification-v*` workflow tag.
+5. Preserve tag namespace separation: `app-notification-v*` wakes the notification publish workflow, which validates the stricter `app-notification-v<SEMVER>` shape before publishing; `yaml-data-v*` triggers YAML-data publishes, and binary `v*` releases remain the advertised install target. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the binary `v*` tag being advertised, not the `app-notification-v*` workflow tag. The notification and YAML-data workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.
 6. Preserve `--latest=false` on app-notification GitHub release operations so the repository's "latest" pointer stays on the newest binary `v*` release.
-7. Remember `publish-app-notification.yml` is maintainer-triggered only on pushed `app-notification-v*` tags; PRs do not publish app notifications.
+7. Remember `publish-app-notification.yml` is maintainer-triggered only on pushed `app-notification-v*` tags and rejects non-SemVer suffixes; PRs do not publish app notifications.
 
 Reference: `docs/api/app-update-notification-delivery.md`.
 

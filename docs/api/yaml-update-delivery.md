@@ -202,7 +202,7 @@ A YAML-data release is triggered by pushing a tag matching `yaml-data-v<YYYY>.<M
 4. **Promotes the release to live as a PRERELEASE.** `gh release edit --draft=false --prerelease=true` flips the release into a state where anonymous asset downloads work (required for the next step) but the API-fallback client path cannot discover it — `fetch_from_releases_api` in `classic-update-core` calls `get_all_releases(include_drafts=false, include_prereleases=false)` and filters prereleases out.
 5. **Verifies anonymous asset reachability** (`python tools/publish_yaml_data/verify_assets_reachable.py …`). Ranged `GET` on every `files[].download_url` without credentials. Failure here keeps the release in its invisible prerelease state so API-fallback clients never observe a release with 404'ing assets.
 6. **Clears the prerelease flag** (`gh release edit --prerelease=false …`). Only at this point is the release discoverable via API fallback, and by now every asset URL is proven warm.
-7. **Deploys the manifest to GitHub Pages** — checks out (or initializes) the `gh-pages` branch, writes `yaml-data/manifest-latest.json` and `yaml-data/manifest-<tag>.json`, commits, pushes. Any `git push` failure fails the workflow so release + Pages never diverge.
+7. **Deploys the manifest to GitHub Pages** — checks out (or initializes) the `gh-pages` branch, writes `yaml-data/manifest-latest.json` and `yaml-data/manifest-<tag>.json`, commits, pushes. The YAML-data and app-notification publishers share the `publish-gh-pages-${{ github.repository }}` concurrency group so only one maintainer job mutates the branch at a time. If the push or smoke test fails, the workflow exits non-zero for maintainer follow-up, but the matching release is already visible to fallback clients before any Pages pointer can advance.
 8. **Smoke-tests** `https://<owner>.github.io/<repo>/yaml-data/manifest-latest.json` via `python tools/publish_yaml_data/smoke_test_pages.py …`, retrying for up to 180s to absorb Pages propagation lag.
 
 ### One-time Pages setup (per repository)
@@ -226,6 +226,7 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 - **Interrupted install** — if power is lost between the two renames in `install_atomic`, startup self-heal promotes `.prev` → canonical so the client never observes a missing shippable file.
 - **Checksum failure** — on sha256 mismatch during `install_atomic`, the temp file is deleted; the target and any existing `.prev` are untouched.
 - **Rollback to bundled** — removing `<cache>/<file>` AND `<cache>/<file>.prev` forces the loader to fall back to the bundled copy on next load. Contributors generally should not recommend this to users since manual cache mutation is outside the atomic-install contract.
+- **Publish smoke failure** — if the Pages smoke test fails after the release becomes fallback-discoverable, maintainers should inspect Pages propagation and the `gh-pages` commit. Because the prerelease flag was cleared before the Pages push, a later-propagating `manifest-latest.json` cannot point at a release hidden from API-fallback clients.
 
 ---
 

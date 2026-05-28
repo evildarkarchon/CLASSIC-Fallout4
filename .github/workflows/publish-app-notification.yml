@@ -13,7 +13,10 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-app-notification-${{ github.ref }}
+  # Shared with publish-yaml-data.yml because both workflows push gh-pages.
+  # Without a cross-channel lock, one publish can push after the other cloned
+  # the branch and make that later push fail non-fast-forward.
+  group: publish-gh-pages-${{ github.repository }}
   cancel-in-progress: false
 
 jobs:
@@ -44,6 +47,14 @@ jobs:
         # but using the same parser across both publish workflows keeps
         # maintenance predictable.
         run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
+      # GitHub Actions tag globs cannot express SemVer, so `app-notification-v*`
+      # is only the wake-up filter. Validate the stricter documented shape
+      # before creating a release or deploying Pages.
+      - name: Validate app-notification workflow tag
+        run: |
+          python tools/publish_app_notification/validate.py \
+            --workflow-tag "$TAG"
 
       # Task 7.2: validation step. Fails the workflow before any release is
       # created if `manifest_version`, `release_tag`, `latest_version`, or

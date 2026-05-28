@@ -1,4 +1,4 @@
-"""Validate the app-notification source artifact before publish.
+"""Validate app-notification publish inputs before publish.
 
 Run from ``.github/workflows/publish-app-notification.yml``. Parses
 ``CLASSIC Data/app-notification.yaml`` and asserts:
@@ -22,6 +22,11 @@ Run from ``.github/workflows/publish-app-notification.yml``. Parses
   string.
 - ``display`` is either absent / ``null`` or a mapping with a ``title`` and
   ``body`` string plus optional ``cta_url`` string.
+
+It can also validate the workflow tag itself. GitHub Actions can only glob the
+trigger as ``app-notification-v*``, so the workflow calls ``--workflow-tag`` to
+enforce the documented ``app-notification-v<SEMVER>`` shape before creating a
+release or deploying Pages.
 
 The rule set deliberately matches the Rust runtime exactly. Drift in either
 direction is a no-ship: a Python-only laxity lets unreadable manifests
@@ -68,6 +73,11 @@ SEMVER_RE = re.compile(rf"^{_SEMVER_BODY}$")
 # workflow always emits the lowercase `v` prefix; bare semver is not the
 # tag the Rust client expects.
 RELEASE_TAG_RE = re.compile(rf"^v{_SEMVER_BODY}$")
+
+# Workflow tag shape. The trigger remains `app-notification-v*` because GitHub
+# Actions tag globs cannot encode SemVer; this regex is the load-bearing
+# publish guard that keeps malformed prefix matches from becoming releases.
+NOTIFICATION_WORKFLOW_TAG_RE = re.compile(rf"^app-notification-v{_SEMVER_BODY}$")
 
 # Shape-only RFC 3339 mirroring the Rust `is_rfc3339` byte-walker. The
 # explicit `[Zz]|[+-]\d{2}:\d{2}` tail is the load-bearing part: naive
@@ -293,22 +303,45 @@ def validate_path(path: Path) -> list[str]:
     return _validate_document(doc)
 
 
+def validate_workflow_tag(tag: str) -> list[str]:
+    """Return validation errors for an app-notification workflow tag."""
+    if NOTIFICATION_WORKFLOW_TAG_RE.match(tag):
+        return []
+    return [
+        "workflow tag must match app-notification-v<SEMVER> "
+        f"(for example app-notification-v9.2.0; got {tag!r})"
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     parser.add_argument(
         "--source",
         type=Path,
-        required=True,
         help="Path to the app-notification.yaml source artifact",
+    )
+    parser.add_argument(
+        "--workflow-tag",
+        help="Git tag that triggered the app-notification publish workflow",
     )
     args = parser.parse_args()
 
-    errors = validate_path(args.source)
+    if args.source is None and args.workflow_tag is None:
+        parser.error("at least one of --source or --workflow-tag is required")
+
+    errors: list[str] = []
+    if args.workflow_tag is not None:
+        errors.extend(validate_workflow_tag(args.workflow_tag))
+    if args.source is not None:
+        errors.extend(validate_path(args.source))
     if errors:
         for err in errors:
             _fail(err)
         return 1
-    print(f"OK: {args.source} passes app-notification validation")
+    if args.workflow_tag is not None:
+        print(f"OK: {args.workflow_tag} passes app-notification tag validation")
+    if args.source is not None:
+        print(f"OK: {args.source} passes app-notification validation")
     return 0
 
 

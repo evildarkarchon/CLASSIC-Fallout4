@@ -119,7 +119,7 @@ Full precedent + examples: [`error-contract.md`](error-contract.md).
 
 The maintainer workflow is [`.github/workflows/publish-app-notification.yml`](../../.github/workflows/publish-app-notification.yml). Trigger surface is narrow by spec:
 
-- Trigger: `push` of a tag matching `app-notification-v*` (e.g. `app-notification-v9.2.0`).
+- Trigger: `push` of a tag matching `app-notification-v*` (e.g. `app-notification-v9.2.0`); the workflow then rejects any tag that does not match the stricter `app-notification-v<SEMVER>` shape before release or Pages publish steps run.
 - **No** `pull_request` trigger. **No** `workflow_dispatch` inputs that mutate content.
 
 ### Source artifact
@@ -128,14 +128,15 @@ The workflow reads its inputs from [`CLASSIC Data/app-notification.yaml`](../../
 
 ### Workflow stages
 
-1. **Validate** — `tools/publish_app_notification/validate.py` rejects malformed source fields (missing `release_tag`, unparseable `latest_version`, non-RFC3339 `published_at`, typo'd display keys, non-HTTPS `display.cta_url`).
-2. **Generate** — `tools/publish_app_notification/generate_manifest.py` projects the validated source into `manifest.json`, substituting the tag's UTC publication timestamp when the source leaves `published_at: null`.
-3. **Draft release** — `gh release create --draft --latest=false` uploads `manifest.json` as the sole asset. `--latest=false` is applied at every `gh release edit` point so the repo's `latest` pointer stays on the most recent `v*` binary release (spec scenario "Latest pointer preserved").
-4. **Promote to prerelease** — `gh release edit --draft=false --prerelease=true` makes the asset URL anonymously reachable (draft asset URLs 404 anonymously). `fetch_via_releases_fallback` passes `include_prereleases=false` to `get_all_releases`, so no API-fallback client sees the release yet.
-5. **Anonymous-reachability probe** — `tools/publish_app_notification/verify_release_asset.py` fetches the asset URL anonymously with a retry budget. Closes the Codex-reviewed race window where a client could discover the release before the CDN has warmed the asset URL.
-6. **Pages deploy** — writes `app-notification/manifest-latest.json` and `app-notification/manifest-<tag>.json` to `gh-pages`. The `app-notification/` path is disjoint from `yaml-data/` so the two publishers never collide. Runs while the release is still a prerelease so a Pages failure cannot leave the Releases-API fallback advertising a tag Pages does not serve.
-7. **Pages smoke-test** — reuses `tools/publish_yaml_data/smoke_test_pages.py --pages-path app-notification/manifest-latest.json`; polls the Pages URL until its JSON `release_tag` matches the binary-release tag carried in the staged `manifest.json` (NOT the `app-notification-v*` workflow tag — those two deliberately diverge in this channel, so the workflow extracts the expected value from the staged manifest before invoking the helper).
-8. **Clear prerelease flag** — `gh release edit --prerelease=false --latest=false` runs LAST, only after Pages has been proven to serve the new tag. Only now does the release become visible to `fetch_via_releases_fallback`. Running this step last keeps the Pages-first and Releases-API fallback channels on the same tag at every instant: a failure of step 6 or 7 leaves the release as a prerelease (invisible to fallback) while Pages-first clients still read the previous `manifest-latest.json`.
+1. **Validate workflow tag** — `tools/publish_app_notification/validate.py --workflow-tag "$TAG"` rejects malformed `app-notification-v*` prefix matches such as `app-notification-vnext` before any release or Pages publish work runs.
+2. **Validate source** — `tools/publish_app_notification/validate.py` rejects malformed source fields (missing `release_tag`, unparseable `latest_version`, non-RFC3339 `published_at`, typo'd display keys, non-HTTPS `display.cta_url`).
+3. **Generate** — `tools/publish_app_notification/generate_manifest.py` projects the validated source into `manifest.json`, substituting the tag's UTC publication timestamp when the source leaves `published_at: null`.
+4. **Draft release** — `gh release create --draft --latest=false` uploads `manifest.json` as the sole asset. `--latest=false` is applied at every `gh release edit` point so the repo's `latest` pointer stays on the most recent `v*` binary release (spec scenario "Latest pointer preserved").
+5. **Promote to prerelease** — `gh release edit --draft=false --prerelease=true` makes the asset URL anonymously reachable (draft asset URLs 404 anonymously). `fetch_via_releases_fallback` passes `include_prereleases=false` to `get_all_releases`, so no API-fallback client sees the release yet.
+6. **Anonymous-reachability probe** — `tools/publish_app_notification/verify_release_asset.py` fetches the asset URL anonymously with a retry budget. Closes the Codex-reviewed race window where a client could discover the release before the CDN has warmed the asset URL.
+7. **Pages deploy** — writes `app-notification/manifest-latest.json` and `app-notification/manifest-<tag>.json` to `gh-pages`. The `app-notification/` path is disjoint from `yaml-data/`, and both publish workflows share the `publish-gh-pages-${{ github.repository }}` concurrency group so only one maintainer job mutates the branch at a time. Runs while the release is still a prerelease so a Pages failure cannot leave the Releases-API fallback advertising a tag Pages does not serve.
+8. **Pages smoke-test** — reuses `tools/publish_yaml_data/smoke_test_pages.py --pages-path app-notification/manifest-latest.json`; compares the live Pages response body against the staged `manifest.json` so notification-only republishes cannot pass against an older payload.
+9. **Clear prerelease flag** — `gh release edit --prerelease=false --latest=false` runs LAST, only after Pages has been proven to serve the new tag. Only now does the release become visible to `fetch_via_releases_fallback`. Running this step last keeps the Pages-first and Releases-API fallback channels on the same tag at every instant: a failure of step 7 or 8 leaves the release as a prerelease (invisible to fallback) while Pages-first clients still read the previous `manifest-latest.json`.
 
 ### Rollback
 

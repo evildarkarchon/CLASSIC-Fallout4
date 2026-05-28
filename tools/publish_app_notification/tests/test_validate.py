@@ -20,7 +20,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-from tools.publish_app_notification.validate import validate_path  # noqa: E402
+from tools.publish_app_notification.validate import (  # noqa: E402
+    validate_path,
+    validate_workflow_tag,
+)
 
 _BASE_VALID_MANIFEST = """\
 manifest_version: "1.0"
@@ -108,6 +111,29 @@ def test_prerelease_semver_is_accepted(tmp_path: Path) -> None:
     )
     path = _write_manifest(tmp_path, body)
     assert validate_path(path) == []
+
+
+def test_workflow_tag_with_strict_semver_is_accepted() -> None:
+    assert validate_workflow_tag("app-notification-v9.2.0") == []
+
+
+def test_workflow_tag_with_prerelease_and_build_is_accepted() -> None:
+    assert validate_workflow_tag("app-notification-v9.2.0-rc.1+build.5") == []
+
+
+def test_workflow_tag_with_unparseable_suffix_is_rejected() -> None:
+    errors = validate_workflow_tag("app-notification-vnext")
+    assert any("app-notification-v<SEMVER>" in err for err in errors), errors
+
+
+def test_workflow_tag_with_leading_zero_semver_is_rejected() -> None:
+    errors = validate_workflow_tag("app-notification-v01.2.3")
+    assert any("app-notification-v<SEMVER>" in err for err in errors), errors
+
+
+def test_workflow_tag_requires_notification_prefix() -> None:
+    errors = validate_workflow_tag("v9.2.0")
+    assert any("app-notification-v<SEMVER>" in err for err in errors), errors
 
 
 def test_min_supported_above_latest_is_rejected(tmp_path: Path) -> None:
