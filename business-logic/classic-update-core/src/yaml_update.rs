@@ -1767,14 +1767,12 @@ pub async fn apply_yaml_update_with_decision(
                         UpdateError::Generic(format!("cache dir unavailable: {e}"))
                     })?);
             }
-            match install_one(
-                client,
-                entry,
-                cache_dir.as_deref().expect("cache dir initialized"),
-                &manifest.release_tag,
-            )
-            .await
-            {
+            let Some(cache_dir) = cache_dir.as_deref() else {
+                return Err(UpdateError::Generic(
+                    "cache dir unavailable after initialization".to_string(),
+                ));
+            };
+            match install_one(client, entry, cache_dir, &manifest.release_tag).await {
                 Ok(outcome) => report.installed.push(outcome),
                 Err(failure) => report.failed.push(failure),
             }

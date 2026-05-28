@@ -178,7 +178,7 @@ impl VersionRegistry {
                     yaml_ops
                         .get_string_value(&al_yaml, "format", "bin")
                         .parse()
-                        .unwrap(),
+                        .unwrap_or_default(),
                     yaml_ops.get_string_value(&al_yaml, "nexus_url", ""),
                 )
             });
@@ -354,12 +354,12 @@ impl VersionRegistry {
         let strategy: UnknownVersionStrategy = yaml_ops
             .get_string_value(yaml, "strategy", "nearest_match")
             .parse()
-            .unwrap();
+            .unwrap_or_default();
 
         let log_level: LogLevel = yaml_ops
             .get_string_value(yaml, "log_level", "warning")
             .parse()
-            .unwrap();
+            .unwrap_or_default();
 
         // Parse defaults hashmap
         let defaults_map = yaml_ops.get_hashmap_value(yaml, "defaults");

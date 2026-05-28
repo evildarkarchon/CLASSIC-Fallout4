@@ -643,7 +643,10 @@ where
     // Pre-compiled regex pattern to extract module name (everything up to .dll)
     // Pattern: (.*?\.dll)\s*v?.* - captures filename.dll, ignoring version info
     static MODULE_PATTERN: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"(?i)(.*?\.dll)\s*v?.*").unwrap());
+        LazyLock::new(|| match Regex::new(r"(?i)(.*?\.dll)\s*v?.*") {
+            Ok(regex) => regex,
+            Err(error) => panic!("invalid static regex MODULE_PATTERN: {error}"),
+        });
 
     let mut result = HashSet::new();
 
@@ -1429,11 +1432,11 @@ impl OrchestratorCore {
         if let Some(ref record_scanner) = self.record_scanner {
             if !context.combined_crash_lines.is_empty() {
                 let (record_report, _matches) = record_scanner
-                    .scan_named_records_with_crashgen_name_and_lowercase(
+                    .try_scan_named_records_with_crashgen_name_and_lowercase(
                         &context.combined_crash_lines,
                         &context.combined_crash_lower_lines,
                         &effective_crashgen_name,
-                    );
+                    )?;
                 if !record_report.is_empty() {
                     composer.add(report_gen.generate_record_section_header());
                     composer.add(ReportFragment::from_lines(record_report));

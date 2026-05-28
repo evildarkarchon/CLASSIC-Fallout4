@@ -144,7 +144,7 @@ impl FileIOCore {
     /// an LRU read cache size of 128, and a limit of 10 concurrent I/O operations.
     pub fn new(encoding: &str, errors: &str, cache_size: usize, max_concurrent_io: usize) -> Self {
         let cache_size = cache_size.max(1);
-        let dds_cache_size = NonZeroUsize::new(1000).unwrap();
+        let dds_cache_size = NonZeroUsize::new(1000).unwrap_or(NonZeroUsize::MIN);
 
         // Optimization 1.3: Use lock-free Cache instead of RwLock<LruCache>
         // Expected impact: 15-25% faster reads, 3-5x better concurrency
@@ -1282,8 +1282,17 @@ impl FileIOCore {
                 let semaphore = semaphore.clone();
                 let self_clone = self.clone_refs();
                 async move {
-                    let _permit = semaphore.acquire().await.expect("semaphore closed");
+                    let permit = match semaphore.acquire().await {
+                        Ok(permit) => permit,
+                        Err(_) => {
+                            return (
+                                path,
+                                Err(FileIOError::Io("read semaphore closed".to_string())),
+                            );
+                        }
+                    };
                     let result = self_clone.read_file(&path).await;
+                    drop(permit);
                     (path, result)
                 }
             })
@@ -1361,7 +1370,15 @@ impl FileIOCore {
             .map(|(path, content)| {
                 let semaphore = semaphore.clone();
                 async move {
-                    let _permit = semaphore.acquire().await.expect("semaphore closed");
+                    let permit = match semaphore.acquire().await {
+                        Ok(permit) => permit,
+                        Err(_) => {
+                            return (
+                                path,
+                                Err(FileIOError::Io("write semaphore closed".to_string())),
+                            );
+                        }
+                    };
 
                     // Ensure parent directory exists
                     if let Some(parent) = path.parent() {
@@ -1373,6 +1390,7 @@ impl FileIOCore {
                     let result = fs::write(&path, content.as_bytes())
                         .await
                         .map_err(|e| e.into());
+                    drop(permit);
                     (path, result)
                 }
             })

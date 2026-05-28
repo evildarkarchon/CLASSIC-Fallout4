@@ -218,6 +218,23 @@ fn test_scan_named_records_with_crashgen_name_override_uses_effective_name() {
     assert!(!output.contains("caught by Buffout 4"));
 }
 
+#[test]
+fn test_try_scan_named_records_success() {
+    let scanner = RecordScanner::new(
+        vec!["ActorBase".to_string()],
+        vec![],
+        "Buffout 4".to_string(),
+    );
+
+    let callstack = vec!["ActorBase_Player reference".to_string()];
+    let (report, matches) = scanner
+        .try_scan_named_records(&callstack)
+        .expect("fallible scan should succeed for valid patterns");
+
+    assert_eq!(matches, vec!["ActorBase_Player reference".to_string()]);
+    assert!(report.join("").contains("caught by Buffout 4"));
+}
+
 // ============================================
 // extract_records tests
 // ============================================
@@ -245,6 +262,18 @@ fn test_extract_records_simple() {
 }
 
 #[test]
+fn test_try_extract_records_success() {
+    let scanner = RecordScanner::new(vec!["Weapon".to_string()], vec![], "Buffout 4".to_string());
+
+    let callstack = vec!["Weapon_Pistol reference".to_string()];
+
+    let records = scanner
+        .try_extract_records(&callstack)
+        .expect("fallible extract should succeed for valid patterns");
+    assert_eq!(records, vec!["Weapon_Pistol reference".to_string()]);
+}
+
+#[test]
 fn test_extract_records_rsp_format() {
     let scanner = RecordScanner::new(vec!["Weapon".to_string()], vec![], "Buffout 4".to_string());
 
@@ -257,7 +286,7 @@ fn test_extract_records_rsp_format() {
 }
 
 #[test]
-fn test_scan_named_records_with_misaligned_lowercase_input_panics() {
+fn test_scan_named_records_with_misaligned_lowercase_input_returns_error() {
     let scanner = RecordScanner::new(
         vec!["ActorBase".to_string(), "Weapon".to_string()],
         vec![],
@@ -267,15 +296,34 @@ fn test_scan_named_records_with_misaligned_lowercase_input_panics() {
     let callstack = vec!["ActorBase_Player".to_string(), "Weapon_Pistol".to_string()];
     let lowered = vec!["actorbase_player".to_string()];
 
-    let result = std::panic::catch_unwind(|| {
-        scanner.scan_named_records_with_crashgen_name_and_lowercase(
-            &callstack,
-            &lowered,
-            "Buffout 4",
-        )
-    });
+    let result = scanner.try_scan_named_records_with_crashgen_name_and_lowercase(
+        &callstack,
+        &lowered,
+        "Buffout 4",
+    );
 
-    assert!(result.is_err());
+    assert!(matches!(result, Err(ScanLogError::InvalidInput(_))));
+}
+
+#[test]
+fn test_scan_named_records_with_misaligned_lowercase_wrapper_fails_soft() {
+    let scanner = RecordScanner::new(
+        vec!["ActorBase".to_string(), "Weapon".to_string()],
+        vec![],
+        "Buffout 4".to_string(),
+    );
+
+    let callstack = vec!["ActorBase_Player".to_string(), "Weapon_Pistol".to_string()];
+    let lowered = vec!["actorbase_player".to_string()];
+
+    let (report, matches) = scanner.scan_named_records_with_crashgen_name_and_lowercase(
+        &callstack,
+        &lowered,
+        "Buffout 4",
+    );
+
+    assert!(matches.is_empty());
+    assert!(report.join("").contains("COULDN'T FIND"));
 }
 
 #[test]
@@ -320,11 +368,15 @@ fn test_matchers_are_built_lazily_once_per_scanner_instance() {
     let record_matcher = scanner
         .record_matcher
         .get()
-        .expect("record matcher should initialize on first scan");
+        .expect("record matcher should initialize on first scan")
+        .as_ref()
+        .expect("record matcher should build successfully");
     let ignore_matcher = scanner
         .ignore_matcher
         .get()
-        .expect("ignore matcher should initialize on first scan");
+        .expect("ignore matcher should initialize on first scan")
+        .as_ref()
+        .expect("ignore matcher should build successfully");
 
     let record_matcher_ptr = std::ptr::from_ref(record_matcher);
     let ignore_matcher_ptr = std::ptr::from_ref(ignore_matcher);
@@ -337,6 +389,8 @@ fn test_matchers_are_built_lazily_once_per_scanner_instance() {
                 .record_matcher
                 .get()
                 .expect("record matcher should stay cached")
+                .as_ref()
+                .expect("record matcher should stay buildable")
         ),
         record_matcher_ptr,
     );
@@ -346,6 +400,8 @@ fn test_matchers_are_built_lazily_once_per_scanner_instance() {
                 .ignore_matcher
                 .get()
                 .expect("ignore matcher should stay cached")
+                .as_ref()
+                .expect("ignore matcher should stay buildable")
         ),
         ignore_matcher_ptr,
     );
@@ -393,6 +449,18 @@ fn test_scan_records_batch_single_segment() {
 }
 
 #[test]
+fn test_try_scan_records_batch_single_segment() {
+    let segments = vec![vec!["ActorBase_Player".to_string()]];
+    let targets = vec!["ActorBase".to_string()];
+    let ignores: Vec<String> = vec![];
+
+    let result = try_scan_records_batch(segments, targets, ignores)
+        .expect("fallible batch scan should succeed for valid patterns");
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0], vec!["ActorBase_Player".to_string()]);
+}
+
+#[test]
 fn test_scan_records_batch_multiple_segments() {
     let segments = vec![
         vec!["ActorBase_Player".to_string()],
@@ -427,7 +495,7 @@ fn test_scan_records_batch_with_ignores() {
 #[test]
 fn test_scan_records_batch_rsp_format() {
     let segments = vec![vec![
-        "[RSP+50] 0x12345678 0xABCD ActorBase_Player".to_string(),
+        "[RSP+50] 0x12345678 0xABCD ActorBase_Player".to_string()
     ]];
     let targets = vec!["ActorBase".to_string()];
     let ignores: Vec<String> = vec![];

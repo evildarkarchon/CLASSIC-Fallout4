@@ -679,7 +679,7 @@ export declare class JsDdsAnalyzer {
    * @param paths - Array of absolute paths to DDS files.
    * @returns Array of `{ path, issues }` objects for files with issues.
    */
-  validateBatch(paths: Array<string>): Array<JsDDSBatchResult>
+  validateBatch(paths: Array<string>): Array<JsDdsBatchResult>
   /**
    * Validate DDS dimensions from width/height only (fallback for non-parseable files).
    *
@@ -1268,7 +1268,7 @@ export declare class YamlDocument {
    */
   getValue(keyPath: string): any
   /** Extract a string value at the given dot-notation key path, with a default fallback. */
-  getStringValue(keyPath: string, default: string): string
+  getStringValue(keyPath: string, defaultValue: string): string
   /**
    * Extract a string array at the given dot-notation key path.
    *
@@ -4284,7 +4284,7 @@ export declare function yamlGetIndexmapValue(content: string, keyPath: string): 
 export declare function yamlGetSettingsBatch(content: string, keyPaths: Array<string>): any
 
 /** Extract a string value from YAML using dot-notation, with a default fallback. */
-export declare function yamlGetStringValue(content: string, keyPath: string, default: string): string
+export declare function yamlGetStringValue(content: string, keyPath: string, defaultValue: string): string
 
 /** Extract a value from a YAML string using dot-notation key path. */
 export declare function yamlGetValue(content: string, keyPath: string): any

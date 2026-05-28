@@ -55,7 +55,7 @@ fn test_get_all() {
     let all = registry.get_all();
 
     assert_eq!(all.len(), 4); // OG, NG, AE, VR
-    // Should be sorted by priority (AE has highest priority at 300)
+                              // Should be sorted by priority (AE has highest priority at 300)
     assert_eq!(all[0].id, "FO4_AE");
 }
 

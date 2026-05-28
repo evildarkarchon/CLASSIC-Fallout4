@@ -71,13 +71,11 @@ fn test_parse_with_warnings() {
     let issues = parser.parse(sample_html());
 
     assert!(issues[0].warning_message.is_some());
-    assert!(
-        issues[0]
-            .warning_message
-            .as_ref()
-            .unwrap()
-            .contains("missing")
-    );
+    assert!(issues[0]
+        .warning_message
+        .as_ref()
+        .unwrap()
+        .contains("missing"));
     // ESL Capable has no warning
     assert!(issues[1].warning_message.is_none());
 }

@@ -228,11 +228,9 @@ fn test_all_sections_unknown_header_same_structure_as_known() {
     }
 
     // Unknown header [NewForkHeader] ends up in settings segment
-    assert!(
-        unknown[segment_key::SETTINGS]
-            .iter()
-            .any(|l| l.contains("[NewForkHeader]"))
-    );
+    assert!(unknown[segment_key::SETTINGS]
+        .iter()
+        .any(|l| l.contains("[NewForkHeader]")));
 }
 
 #[test]
@@ -331,17 +329,13 @@ fn test_all_sections_anchor_whitespace_insensitive() {
     let sections = parser.parse_all_sections_arc(&log);
     use crate::segment_key;
     // System section should have CPU line
-    assert!(
-        sections[segment_key::SYSTEM]
-            .iter()
-            .any(|l| l.contains("CPU"))
-    );
+    assert!(sections[segment_key::SYSTEM]
+        .iter()
+        .any(|l| l.contains("CPU")));
     // Callstack should have frame
-    assert!(
-        sections[segment_key::CALLSTACK]
-            .iter()
-            .any(|l| l.contains("[0]"))
-    );
+    assert!(sections[segment_key::CALLSTACK]
+        .iter()
+        .any(|l| l.contains("[0]")));
 }
 
 #[test]
@@ -369,11 +363,9 @@ fn test_addictol_patches_header_in_settings_segment() {
     // Settings segment should contain both [Patches] and bThreads lines
     let settings = &sections[segment_key::SETTINGS];
     assert!(!settings.is_empty(), "Settings segment should not be empty");
-    assert!(
-        settings
-            .iter()
-            .any(|l| l.trim() == "[Patches]" || l.contains("[Patches]"))
-    );
+    assert!(settings
+        .iter()
+        .any(|l| l.trim() == "[Patches]" || l.contains("[Patches]")));
     assert!(settings.iter().any(|l| l.contains("bThreads")));
 }
 
@@ -398,11 +390,9 @@ fn test_get_section_stack_alias_returns_callstack() {
     let section = parser.get_section(&log_lines, "STACK");
     assert!(section.is_some());
     let section = section.unwrap();
-    assert!(
-        section
-            .iter()
-            .any(|line| line.contains("Fallout4.exe+0123456"))
-    );
+    assert!(section
+        .iter()
+        .any(|line| line.contains("Fallout4.exe+0123456")));
 }
 
 #[test]

@@ -16,6 +16,13 @@ use semver::Version;
 use std::cmp::Ordering;
 use std::sync::LazyLock;
 
+fn compile_static_regex(pattern: &str, name: &str) -> Regex {
+    match Regex::new(pattern) {
+        Ok(regex) => regex,
+        Err(error) => panic!("invalid static regex {name}: {error}"),
+    }
+}
+
 /// Status of a crash generator version relative to valid versions.
 ///
 /// This enum represents the result of checking a crash generator version
@@ -34,7 +41,7 @@ pub enum CrashgenVersionStatus {
 
 /// Pattern to extract version numbers from strings like "Buffout 4 v1.28.0"
 static VERSION_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"v?(\d+)\.(\d+)\.?(\d*)").expect("Invalid version regex pattern"));
+    LazyLock::new(|| compile_static_regex(r"v?(\d+)\.(\d+)\.?(\d*)", "VERSION_PATTERN"));
 
 /// Represents a crashgen version that can be compared
 ///
@@ -124,7 +131,11 @@ impl CrashgenVersion {
                 .get(3)
                 .and_then(|m| {
                     let s = m.as_str();
-                    if s.is_empty() { None } else { s.parse().ok() }
+                    if s.is_empty() {
+                        None
+                    } else {
+                        s.parse().ok()
+                    }
                 })
                 .unwrap_or(0);
 

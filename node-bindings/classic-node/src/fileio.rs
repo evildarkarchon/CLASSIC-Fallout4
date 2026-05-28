@@ -562,12 +562,12 @@ impl JsDDSAnalyzer {
     /// @param paths - Array of absolute paths to DDS files.
     /// @returns Array of `{ path, issues }` objects for files with issues.
     #[napi]
-    pub fn validate_batch(&self, paths: Vec<String>) -> Vec<JsDDSBatchResult> {
+    pub fn validate_batch(&self, paths: Vec<String>) -> Vec<JsDdsBatchResult> {
         let path_bufs: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
         self.inner
             .validate_batch(&path_bufs)
             .into_iter()
-            .map(|(path, issues)| JsDDSBatchResult {
+            .map(|(path, issues)| JsDdsBatchResult {
                 path: path.to_string_lossy().to_string(),
                 issues: issues
                     .into_iter()
@@ -597,7 +597,7 @@ impl JsDDSAnalyzer {
 
 /// Result from batch DDS validation for a single file.
 #[napi(object)]
-pub struct JsDDSBatchResult {
+pub struct JsDdsBatchResult {
     /// Path to the DDS file that had issues.
     pub path: String,
     /// Validation issues found.

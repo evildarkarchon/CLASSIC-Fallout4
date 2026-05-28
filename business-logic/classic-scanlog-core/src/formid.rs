@@ -10,14 +10,25 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
+fn compile_static_regex(pattern: &str, name: &str) -> Regex {
+    match Regex::new(pattern) {
+        Ok(regex) => regex,
+        Err(error) => panic!("invalid static regex {name}: {error}"),
+    }
+}
+
 /// Precompiled FormID regex pattern matching Python's format
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})"
-static FORMID_EXTRACTION_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
+static FORMID_EXTRACTION_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    compile_static_regex(
+        r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b",
+        "FORMID_EXTRACTION_PATTERN",
+    )
+});
 
 /// Generic FormID parsing pattern (for parse_formid method)
 static FORMID_PARSE_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)^(?:0x)?([0-9a-f]{1,8})$").unwrap());
+    LazyLock::new(|| compile_static_regex(r"(?i)^(?:0x)?([0-9a-f]{1,8})$", "FORMID_PARSE_PATTERN"));
 
 /// High-performance FormID analyzer
 ///

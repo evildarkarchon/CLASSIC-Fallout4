@@ -4,7 +4,7 @@ use std::io::Write;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use tempfile::{NamedTempFile, tempdir};
+use tempfile::{tempdir, NamedTempFile};
 
 // ============================================================================
 // Basic Parse/Dump Tests (existing)

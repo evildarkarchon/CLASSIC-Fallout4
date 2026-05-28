@@ -545,7 +545,7 @@ Version_Registry:
     - id: FO4_AE
       game: Fallout4
       is_vr: false
-      version: "1.11.191.0"
+      version: "1.11.221.0"
       display_name: Fallout 4 Anniversary Edition
       short_name: AE
       description: Anniversary Edition version (active development branch)

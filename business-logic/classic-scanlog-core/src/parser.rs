@@ -30,38 +30,68 @@ type PatternCache = Arc<RwLock<LruCache<String, Vec<(usize, String, String)>>>>;
 /// Snapshot of custom patterns as (name, compiled_regex) pairs for lock-free iteration
 type CustomPatternsSnapshot = Arc<RwLock<Vec<(Arc<str>, Arc<Regex>)>>>;
 
+fn compile_static_regex(pattern: &str, name: &str) -> Regex {
+    match Regex::new(pattern) {
+        Ok(regex) => regex,
+        Err(error) => panic!("invalid static regex {name}: {error}"),
+    }
+}
+
 /// Pre-compiled regex patterns for common crash log patterns
 static COMMON_PATTERNS: LazyLock<HashMap<&'static str, Regex>> = LazyLock::new(|| {
     let mut patterns = HashMap::new();
     patterns.insert(
         "error",
-        Regex::new(r"(?i)\b(error|exception|crash|fault|violation)\b").unwrap(),
+        compile_static_regex(
+            r"(?i)\b(error|exception|crash|fault|violation)\b",
+            "COMMON_PATTERNS.error",
+        ),
     );
     patterns.insert(
         "formid",
-        Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b").unwrap(),
+        compile_static_regex(
+            r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b",
+            "COMMON_PATTERNS.formid",
+        ),
     );
     patterns.insert(
         "plugin",
-        Regex::new(r"(?i)\[([0-9a-f]{2,})\]\s+(.+\.es[lmp])").unwrap(),
+        compile_static_regex(
+            r"(?i)\[([0-9a-f]{2,})\]\s+(.+\.es[lmp])",
+            "COMMON_PATTERNS.plugin",
+        ),
     );
-    patterns.insert("address", Regex::new(r"0x[0-9A-Fa-f]{8,16}").unwrap());
-    patterns.insert("module", Regex::new(r"(\w+\.dll)\s+v?([0-9.]+)?").unwrap());
+    patterns.insert(
+        "address",
+        compile_static_regex(r"0x[0-9A-Fa-f]{8,16}", "COMMON_PATTERNS.address"),
+    );
+    patterns.insert(
+        "module",
+        compile_static_regex(r"(\w+\.dll)\s+v?([0-9.]+)?", "COMMON_PATTERNS.module"),
+    );
     patterns.insert(
         "stack_frame",
-        Regex::new(r"\[([0-9]+)\]\s+0x[0-9A-Fa-f]+").unwrap(),
+        compile_static_regex(
+            r"\[([0-9]+)\]\s+0x[0-9A-Fa-f]+",
+            "COMMON_PATTERNS.stack_frame",
+        ),
     );
     patterns.insert(
         "register",
-        Regex::new(r"(RAX|RBX|RCX|RDX|RSI|RDI|RBP|RSP|R[0-9]{1,2})\s*:\s*0x[0-9A-Fa-f]+").unwrap(),
+        compile_static_regex(
+            r"(RAX|RBX|RCX|RDX|RSI|RDI|RBP|RSP|R[0-9]{1,2})\s*:\s*0x[0-9A-Fa-f]+",
+            "COMMON_PATTERNS.register",
+        ),
     );
     patterns
 });
 
 /// Pattern for crash generator header lines like "Addictol v1.0.0".
 static CRASHGEN_HEADER_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[A-Za-z][A-Za-z0-9 _.\-]{1,80}\s+v\d+\.\d+(?:\.\d+){0,2}\b")
-        .expect("Invalid crashgen header regex")
+    compile_static_regex(
+        r"^[A-Za-z][A-Za-z0-9 _.\-]{1,80}\s+v\d+\.\d+(?:\.\d+){0,2}\b",
+        "CRASHGEN_HEADER_PATTERN",
+    )
 });
 
 /// High-performance log parser with parallel processing and SIMD optimizations
@@ -118,8 +148,8 @@ impl LogParser {
         let patterns: Vec<Regex> = COMMON_PATTERNS.values().cloned().collect();
 
         // Bounded caches to prevent memory leaks in long-running processes
-        let segment_cache_size = NonZeroUsize::new(100).unwrap(); // ~10-50MB typical
-        let pattern_cache_size = NonZeroUsize::new(500).unwrap(); // ~5-20MB typical
+        let segment_cache_size = NonZeroUsize::new(100).unwrap_or(NonZeroUsize::MIN); // ~10-50MB typical
+        let pattern_cache_size = NonZeroUsize::new(500).unwrap_or(NonZeroUsize::MIN); // ~5-20MB typical
 
         Ok(Self {
             compiled_patterns: Arc::new(patterns),
@@ -337,7 +367,9 @@ impl LogParser {
                 Section::StackDump => segment_key::STACK_DUMP,
             };
 
-            result.get_mut(key).unwrap().push(Arc::clone(line));
+            if let Some(lines) = result.get_mut(key) {
+                lines.push(Arc::clone(line));
+            }
         }
 
         result
@@ -1405,14 +1437,19 @@ where
     where
         I: 'static,
     {
-        let formid_pattern = Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b")
-            .expect("FormID pattern should compile");
+        let formid_pattern =
+            Regex::new(r"(?i)\b(?:form\s*id|formid)[:\s]+(?:0x)?([0-9a-f]{8})\b").ok();
 
         self.inner.flat_map(move |line| {
             formid_pattern
-                .captures_iter(&line)
-                .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
-                .collect::<Vec<_>>()
+                .as_ref()
+                .map(|pattern| {
+                    pattern
+                        .captures_iter(&line)
+                        .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default()
         })
     }
 

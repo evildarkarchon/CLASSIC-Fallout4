@@ -1270,10 +1270,9 @@ impl DatabasePool {
         padded.extend(batch.iter().cloned());
 
         let pad_needed = bucket_len.saturating_sub(batch.len());
-        let pad_source = batch
-            .last()
-            .expect("batch.is_empty() is handled before padding")
-            .clone();
+        let Some(pad_source) = batch.last().cloned() else {
+            return batch.to_vec();
+        };
         for _ in 0..pad_needed {
             padded.push(pad_source.clone());
         }

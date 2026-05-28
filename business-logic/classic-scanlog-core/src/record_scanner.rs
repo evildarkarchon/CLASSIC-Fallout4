@@ -3,19 +3,24 @@
 //! This module handles named record detection with high performance.
 //! No PyO3 dependencies - accepts plain data structures.
 
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
+use crate::error::{Result as ScanLogResult, ScanLogError};
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder, BuildError};
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
+
+type MatcherBuildResult = std::result::Result<AhoCorasick, BuildError>;
 
 /// Record scanner for detecting and analyzing named records in crash logs
 pub struct RecordScanner {
     lower_records: HashSet<String>,
     lower_ignore: HashSet<String>,
     crashgen_name: String,
-    // Aho-Corasick automaton for efficient multi-pattern matching
-    record_matcher: OnceLock<AhoCorasick>,
-    ignore_matcher: OnceLock<AhoCorasick>,
+    // Aho-Corasick automatons for efficient multi-pattern matching.
+    // Build failures are cached too so pathological config does not retry work
+    // or panic on every scan.
+    record_matcher: OnceLock<MatcherBuildResult>,
+    ignore_matcher: OnceLock<MatcherBuildResult>,
 }
 
 impl RecordScanner {
@@ -114,7 +119,18 @@ impl RecordScanner {
     /// let (report, matches) = scanner.scan_named_records(&callstack);
     /// ```
     pub fn scan_named_records(&self, segment_callstack: &[String]) -> (Vec<String>, Vec<String>) {
-        self.scan_named_records_with_crashgen_name(segment_callstack, &self.crashgen_name)
+        match self.try_scan_named_records(segment_callstack) {
+            Ok(result) => result,
+            Err(_) => Self::no_records_result(),
+        }
+    }
+
+    /// Fallible variant of [`Self::scan_named_records`].
+    pub fn try_scan_named_records(
+        &self,
+        segment_callstack: &[String],
+    ) -> ScanLogResult<(Vec<String>, Vec<String>)> {
+        self.try_scan_named_records_with_crashgen_name(segment_callstack, &self.crashgen_name)
     }
 
     /// Like [`Self::scan_named_records`] but allows overriding the crashgen label in report text.
@@ -123,11 +139,23 @@ impl RecordScanner {
         segment_callstack: &[String],
         crashgen_name: &str,
     ) -> (Vec<String>, Vec<String>) {
+        match self.try_scan_named_records_with_crashgen_name(segment_callstack, crashgen_name) {
+            Ok(result) => result,
+            Err(_) => Self::no_records_result(),
+        }
+    }
+
+    /// Fallible variant of [`Self::scan_named_records_with_crashgen_name`].
+    pub fn try_scan_named_records_with_crashgen_name(
+        &self,
+        segment_callstack: &[String],
+        crashgen_name: &str,
+    ) -> ScanLogResult<(Vec<String>, Vec<String>)> {
         let segment_callstack_lower: Vec<String> = segment_callstack
             .iter()
             .map(|line| line.to_lowercase())
             .collect();
-        self.scan_named_records_with_crashgen_name_and_lowercase(
+        self.try_scan_named_records_with_crashgen_name_and_lowercase(
             segment_callstack,
             &segment_callstack_lower,
             crashgen_name,
@@ -136,32 +164,50 @@ impl RecordScanner {
 
     /// Like [`Self::scan_named_records_with_crashgen_name`] but reuses pre-lowercased input.
     ///
-    /// # Panics
-    ///
-    /// Panics if `segment_callstack_lower` is not kept index-aligned with `segment_callstack`.
+    /// This compatibility wrapper returns the standard "no named records" report when matcher
+    /// construction fails or the lowercased input is not index-aligned. Prefer
+    /// [`Self::try_scan_named_records_with_crashgen_name_and_lowercase`] when the caller needs to
+    /// distinguish those errors from a real no-match result.
     pub fn scan_named_records_with_crashgen_name_and_lowercase(
         &self,
         segment_callstack: &[String],
         segment_callstack_lower: &[String],
         crashgen_name: &str,
     ) -> (Vec<String>, Vec<String>) {
+        match self.try_scan_named_records_with_crashgen_name_and_lowercase(
+            segment_callstack,
+            segment_callstack_lower,
+            crashgen_name,
+        ) {
+            Ok(result) => result,
+            Err(_) => Self::no_records_result(),
+        }
+    }
+
+    /// Fallible variant of [`Self::scan_named_records_with_crashgen_name_and_lowercase`].
+    pub fn try_scan_named_records_with_crashgen_name_and_lowercase(
+        &self,
+        segment_callstack: &[String],
+        segment_callstack_lower: &[String],
+        crashgen_name: &str,
+    ) -> ScanLogResult<(Vec<String>, Vec<String>)> {
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
 
-        let records_matches = self.find_matching_records_internal(
+        let records_matches = self.try_find_matching_records_internal(
             segment_callstack,
             segment_callstack_lower,
             RSP_MARKER,
             RSP_OFFSET,
-        );
+        )?;
 
         let report_lines = if !records_matches.is_empty() {
             self.generate_found_records_lines(&records_matches, crashgen_name)
         } else {
-            vec!["* COULDN'T FIND ANY NAMED RECORDS *\n\n".to_string()]
+            Self::no_records_report()
         };
 
-        (report_lines, records_matches)
+        Ok((report_lines, records_matches))
     }
 
     /// Extracts named records from callstack without generating a report.
@@ -193,6 +239,12 @@ impl RecordScanner {
     /// let records = scanner.extract_records(&callstack);
     /// ```
     pub fn extract_records(&self, segment_callstack: &[String]) -> Vec<String> {
+        self.try_extract_records(segment_callstack)
+            .unwrap_or_default()
+    }
+
+    /// Fallible variant of [`Self::extract_records`].
+    pub fn try_extract_records(&self, segment_callstack: &[String]) -> ScanLogResult<Vec<String>> {
         const RSP_MARKER: &str = "[RSP+";
         const RSP_OFFSET: usize = 30;
         let segment_callstack_lower: Vec<String> = segment_callstack
@@ -200,7 +252,7 @@ impl RecordScanner {
             .map(|line| line.to_lowercase())
             .collect();
 
-        self.find_matching_records_internal(
+        self.try_find_matching_records_internal(
             segment_callstack,
             &segment_callstack_lower,
             RSP_MARKER,
@@ -227,61 +279,88 @@ impl RecordScanner {
         // Currently no caching beyond OnceLock, but provided for API compatibility
     }
 
+    fn no_records_result() -> (Vec<String>, Vec<String>) {
+        (Self::no_records_report(), Vec::new())
+    }
+
+    fn no_records_report() -> Vec<String> {
+        vec!["* COULDN'T FIND ANY NAMED RECORDS *\n\n".to_string()]
+    }
+
+    fn build_matcher(patterns: &HashSet<String>) -> MatcherBuildResult {
+        let patterns: Vec<String> = patterns.iter().cloned().collect();
+        AhoCorasickBuilder::new()
+            .ascii_case_insensitive(true)
+            .build(&patterns)
+    }
+
+    fn matcher_from_lock<'a>(
+        lock: &'a OnceLock<MatcherBuildResult>,
+        patterns: &HashSet<String>,
+    ) -> ScanLogResult<&'a AhoCorasick> {
+        lock.get_or_init(|| Self::build_matcher(patterns))
+            .as_ref()
+            .map_err(|err| ScanLogError::PatternError(err.clone()))
+    }
+
+    fn record_matcher(&self) -> ScanLogResult<&AhoCorasick> {
+        Self::matcher_from_lock(&self.record_matcher, &self.lower_records)
+    }
+
+    fn ignore_matcher(&self) -> ScanLogResult<&AhoCorasick> {
+        Self::matcher_from_lock(&self.ignore_matcher, &self.lower_ignore)
+    }
+
     /// Internal method to find matching records
-    fn find_matching_records_internal(
+    fn try_find_matching_records_internal(
         &self,
         segment_callstack: &[String],
         segment_callstack_lower: &[String],
         rsp_marker: &str,
         rsp_offset: usize,
-    ) -> Vec<String> {
-        assert_eq!(
-            segment_callstack.len(),
-            segment_callstack_lower.len(),
-            "lowercased callstack slice should stay aligned with the original callstack",
-        );
+    ) -> ScanLogResult<Vec<String>> {
+        if segment_callstack.len() != segment_callstack_lower.len() {
+            return Err(ScanLogError::InvalidInput(
+                "lowercased callstack slice should stay aligned with the original callstack"
+                    .to_string(),
+            ));
+        }
 
         let mut records_matches = Vec::new();
 
-        // Build Aho-Corasick automaton for efficient multi-pattern matching if not already built
-        let record_matcher = self.record_matcher.get_or_init(|| {
-            let patterns: Vec<String> = self.lower_records.iter().cloned().collect();
-            AhoCorasickBuilder::new()
-                .ascii_case_insensitive(true)
-                .build(&patterns)
-                .unwrap()
-        });
+        // Build Aho-Corasick automatons for efficient multi-pattern matching if not already built.
+        let record_matcher = self.record_matcher()?;
+        let ignore_matcher = self.ignore_matcher()?;
 
-        let ignore_matcher = self.ignore_matcher.get_or_init(|| {
-            let patterns: Vec<String> = self.lower_ignore.iter().cloned().collect();
-            AhoCorasickBuilder::new()
-                .ascii_case_insensitive(true)
-                .build(&patterns)
-                .unwrap()
-        });
-
-        for (index, line) in segment_callstack.iter().enumerate() {
-            let lower_line = segment_callstack_lower[index].as_str();
-
+        for (line, lower_line) in segment_callstack.iter().zip(segment_callstack_lower) {
             // Check if line contains any target record
-            let has_target = record_matcher.is_match(lower_line);
+            let has_target = record_matcher.is_match(lower_line.as_str());
 
             // Check if line contains any ignored terms
-            let has_ignored = ignore_matcher.is_match(lower_line);
+            let has_ignored = ignore_matcher.is_match(lower_line.as_str());
 
-            if has_target && !has_ignored {
-                // Extract the relevant part of the line based on format
-                if line.contains(rsp_marker) {
-                    if line.len() > rsp_offset {
-                        records_matches.push(line[rsp_offset..].trim().to_string());
-                    }
-                } else {
-                    records_matches.push(line.trim().to_string());
-                }
+            if has_target
+                && !has_ignored
+                && let Some(record) = Self::extract_record_line(line, rsp_marker, rsp_offset)
+            {
+                records_matches.push(record);
             }
         }
 
-        records_matches
+        Ok(records_matches)
+    }
+
+    fn extract_record_line(line: &str, rsp_marker: &str, rsp_offset: usize) -> Option<String> {
+        if line.contains(rsp_marker) {
+            if line.len() > rsp_offset {
+                return line
+                    .get(rsp_offset..)
+                    .map(|record| record.trim().to_string());
+            }
+            None
+        } else {
+            Some(line.trim().to_string())
+        }
     }
 
     /// Generate report lines for found records
@@ -371,6 +450,15 @@ pub fn scan_records_batch(
     target_records: Vec<String>,
     ignore_records: Vec<String>,
 ) -> Vec<Vec<String>> {
+    try_scan_records_batch(segments, target_records, ignore_records).unwrap_or_default()
+}
+
+/// Fallible variant of [`scan_records_batch`].
+pub fn try_scan_records_batch(
+    segments: Vec<Vec<String>>,
+    target_records: Vec<String>,
+    ignore_records: Vec<String>,
+) -> ScanLogResult<Vec<Vec<String>>> {
     const RSP_MARKER: &str = "[RSP+";
     const RSP_OFFSET: usize = 30;
 
@@ -380,20 +468,11 @@ pub fn scan_records_batch(
     let lower_ignores: HashSet<String> = ignore_records.iter().map(|s| s.to_lowercase()).collect();
 
     // Build Aho-Corasick automatons for efficiency
-    let target_patterns: Vec<_> = lower_targets.iter().cloned().collect();
-    let target_matcher = AhoCorasickBuilder::new()
-        .ascii_case_insensitive(true)
-        .build(&target_patterns)
-        .unwrap();
-
-    let ignore_patterns: Vec<_> = lower_ignores.iter().cloned().collect();
-    let ignore_matcher = AhoCorasickBuilder::new()
-        .ascii_case_insensitive(true)
-        .build(&ignore_patterns)
-        .unwrap();
+    let target_matcher = RecordScanner::build_matcher(&lower_targets)?;
+    let ignore_matcher = RecordScanner::build_matcher(&lower_ignores)?;
 
     // Process segments in parallel
-    segments
+    Ok(segments
         .par_iter()
         .map(|segment| {
             let mut matches = Vec::new();
@@ -402,20 +481,18 @@ pub fn scan_records_batch(
                 let lower_line = line.to_lowercase();
 
                 // Check patterns
-                if target_matcher.is_match(&lower_line) && !ignore_matcher.is_match(&lower_line) {
-                    if line.contains(RSP_MARKER) {
-                        if line.len() > RSP_OFFSET {
-                            matches.push(line[RSP_OFFSET..].trim().to_string());
-                        }
-                    } else {
-                        matches.push(line.trim().to_string());
-                    }
+                if target_matcher.is_match(&lower_line)
+                    && !ignore_matcher.is_match(&lower_line)
+                    && let Some(record) =
+                        RecordScanner::extract_record_line(line, RSP_MARKER, RSP_OFFSET)
+                {
+                    matches.push(record);
                 }
             }
 
             matches
         })
-        .collect()
+        .collect())
 }
 
 /// Checks if a line contains any target record while not containing ignore terms.

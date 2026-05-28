@@ -40,8 +40,8 @@ use std::fmt::Write as _;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::LazyLock;
 use tracing::{debug, warn};
 
 /// Optimal chunk size for reading files during hashing (64KB).
@@ -322,7 +322,7 @@ impl FileHasher {
 fn encode_hex(bytes: &[u8]) -> String {
     let mut hex = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
-        write!(&mut hex, "{byte:02x}").expect("writing to String cannot fail");
+        let _ = write!(&mut hex, "{byte:02x}");
     }
     hex
 }
