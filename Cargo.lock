@@ -1208,6 +1208,7 @@ version = "9.1.0"
 dependencies = [
  "classic-settings-core",
  "classic-shared-core",
+ "classic-shared-py",
  "classic-update-core",
  "pyo3",
  "pyo3-async-runtimes",

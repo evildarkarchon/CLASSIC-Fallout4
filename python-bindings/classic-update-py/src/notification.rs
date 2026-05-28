@@ -32,10 +32,12 @@
 //!   discriminate (e.g., "show a retry button only on FetchFailed")
 //!   catch the specific subclass.
 
+use classic_shared::without_gil_block_on;
 use classic_update_core as core;
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use std::future::Future;
 
 #[cfg(test)]
 #[path = "notification_tests.rs"]
@@ -207,6 +209,20 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
     }
 }
 
+/// Run a notification future on the shared runtime without holding Python's GIL.
+///
+/// Notification checks can wait on network timeouts and API fallback calls, so
+/// synchronous Python callers must not block unrelated Python threads while the
+/// Rust future is pending.
+fn block_on_notification_future<F, Fut, R>(py: Python<'_>, f: F) -> R
+where
+    F: FnOnce() -> Fut + Send,
+    Fut: Future<Output = R>,
+    R: Send,
+{
+    without_gil_block_on(py, f)
+}
+
 /// Check for a published CLASSIC binary-release notification.
 ///
 /// Drives the Pages-first manifest fetch with ETag caching, falling back
@@ -237,13 +253,15 @@ fn update_error_to_py(err: core::UpdateError) -> PyErr {
 ///     ClassicUpdateError: non-notification update-subsystem error.
 #[pyfunction]
 fn check_app_notification(
+    py: Python<'_>,
     owner: &str,
     repo: &str,
     installed_version: &str,
 ) -> PyResult<PyNotificationStatus> {
-    let status = classic_shared_core::get_runtime()
-        .block_on(core::check_app_notification(owner, repo, installed_version))
-        .map_err(update_error_to_py)?;
+    let status = block_on_notification_future(py, || async {
+        core::check_app_notification(owner, repo, installed_version).await
+    })
+    .map_err(update_error_to_py)?;
     Ok(core_status_to_py(status))
 }
 

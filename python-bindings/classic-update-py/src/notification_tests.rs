@@ -1,5 +1,7 @@
 use super::*;
 use pyo3::Python;
+use std::sync::mpsc;
+use std::time::Duration;
 
 #[test]
 fn manifest_unsupported_version_maps_to_notification_base() {
@@ -49,6 +51,31 @@ fn manifest_invalid_maps_directly_to_notification_base_with_reason() {
         assert!(
             message.contains(reason),
             "invalid notification manifest reason must survive in the Python exception message: {message}",
+        );
+    });
+}
+
+#[test]
+fn notification_block_on_releases_gil_while_waiting() {
+    Python::initialize();
+    Python::attach(|py| {
+        let other_thread_obtained_gil = super::block_on_notification_future(py, || async {
+            let (tx, rx) = mpsc::channel();
+
+            std::thread::spawn(move || {
+                Python::attach(|_| {
+                    let _ = tx.send(());
+                });
+            });
+
+            tokio::task::spawn_blocking(move || rx.recv_timeout(Duration::from_millis(500)).is_ok())
+                .await
+                .expect("GIL observer task should run to completion")
+        });
+
+        assert!(
+            other_thread_obtained_gil,
+            "notification block_on must release the GIL so other Python threads can run during network waits",
         );
     });
 }
