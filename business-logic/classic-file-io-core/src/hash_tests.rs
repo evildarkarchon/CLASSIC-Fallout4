@@ -159,8 +159,8 @@ fn test_hash_cache_stats_reset_preserves_cache_entries() -> Result<(), Box<dyn s
 
 #[test]
 #[serial]
-fn test_hash_clear_cache_empties_entries_without_resetting_stats(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn test_hash_clear_cache_empties_entries_without_resetting_stats()
+-> Result<(), Box<dyn std::error::Error>> {
     FileHasher::clear_cache();
     FileHasher::reset_cache_stats();
 
