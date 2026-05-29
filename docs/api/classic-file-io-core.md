@@ -83,7 +83,7 @@ Crash-log organization helpers.
 
 - `LogCollector` - moves/copies logs into the standard `Crash Logs` layout
 - `CRASH_LOG_PATTERN` and `CRASH_AUTOSCAN_PATTERN` - glob patterns used by collection helpers
-- `resolve_targeted_inputs(inputs)` - resolves explicit user-supplied file and directory paths into a deduplicated crash-log list without moving files or creating directories
+- `resolve_targeted_inputs(inputs)` - resolves explicit user-supplied file and directory paths into a deduplicated targeted log list without moving files or creating directories
 - `TargetedResolution` - result struct with accepted `logs` and `rejected` inputs
 - `RejectedInput` - rejected input with `path` and human-readable `reason`
 
@@ -301,13 +301,13 @@ Behavior worth knowing:
 
 ## `resolve_targeted_inputs`
 
-Standalone async function for targeted scan mode. Accepts explicit user-supplied file and directory paths and resolves them into a deduplicated crash-log list.
+Standalone async function for targeted scan mode. Accepts explicit user-supplied file and directory paths and resolves them into a deduplicated targeted log list.
 
 - `resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution`
 
 `TargetedResolution` fields:
 
-- `logs: Vec<PathBuf>` - deduplicated crash-log paths in first-seen order
+- `logs: Vec<PathBuf>` - deduplicated targeted log paths in first-seen order
 - `rejected: Vec<RejectedInput>` - inputs that could not be resolved
 
 `RejectedInput` fields:
@@ -317,10 +317,10 @@ Standalone async function for targeted scan mode. Accepts explicit user-supplied
 
 Behavior worth knowing:
 
-- file inputs matching `crash-*.log` are accepted directly
+- explicit regular file inputs are accepted directly regardless of file name
 - directory inputs are searched recursively with `**/crash-*.log`
 - paths are canonicalized for deduplication while preserving first-seen order
-- non-existent paths, non-crash-log files, and empty directories are rejected with specific reasons
+- non-existent paths, non-file/non-directory paths, unreadable paths, and empty directories are rejected with specific reasons
 - no directories are created and no files are moved or copied
 
 ## Backup and game-file management APIs

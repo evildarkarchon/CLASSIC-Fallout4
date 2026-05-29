@@ -121,10 +121,19 @@ async fn test_targeted_directory_recursive() {
     tokio::fs::write(temp.path().join("crash-2024-01-01-13-00-00.log"), b"log2")
         .await
         .unwrap();
+    tokio::fs::write(sub.join("Buffout4.log"), b"explicit files only")
+        .await
+        .unwrap();
 
     let res = resolve_targeted_inputs(vec![temp.path().to_path_buf()]).await;
     assert_eq!(res.logs.len(), 2);
     assert!(res.rejected.is_empty());
+    assert!(
+        res.logs
+            .iter()
+            .all(|path| matches_crash_log_pattern(path.as_path())),
+        "directory inputs should still resolve only crash-*.log files"
+    );
 }
 
 #[tokio::test]
@@ -166,15 +175,14 @@ async fn test_targeted_file_plus_parent_dir_deduplicates() {
 }
 
 #[tokio::test]
-async fn test_targeted_non_crash_log_rejected() {
+async fn test_targeted_explicit_regular_file_accepts_any_name() {
     let temp = TempDir::new().unwrap();
     let txt = temp.path().join("notes.txt");
     tokio::fs::write(&txt, b"not a log").await.unwrap();
 
     let res = resolve_targeted_inputs(vec![txt.clone()]).await;
-    assert!(res.logs.is_empty());
-    assert_eq!(res.rejected.len(), 1);
-    assert!(res.rejected[0].reason.contains("crash-*.log"));
+    assert_eq!(res.logs, vec![txt]);
+    assert!(res.rejected.is_empty());
 }
 
 #[tokio::test]

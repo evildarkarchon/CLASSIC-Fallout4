@@ -29,6 +29,7 @@ private slots:
     void mainwindow_enables_drag_and_drop();
     void mainwindow_passes_targeted_inputs_to_scan_controller();
     void scan_controller_routes_targeted_inputs_through_bridge_resolver();
+    void scan_controller_appends_targeted_resolved_logs_without_filename_filter();
     void mainwindow_has_clear_targeted_inputs_slot();
     void scan_controller_surfaces_targeted_rejections_to_gui();
     void scan_controller_logs_targeted_rejections_with_reason_fallback();
@@ -481,6 +482,29 @@ void ScanSettingsWiringTests::scan_controller_routes_targeted_inputs_through_bri
              "ScanController::startScan should accept targetedInputs parameter");
     QVERIFY2(sourceText.contains(QStringLiteral("log_collector_collect_all")),
              "ScanController should still use log_collector_collect_all for default discovery");
+}
+
+void ScanSettingsWiringTests::scan_controller_appends_targeted_resolved_logs_without_filename_filter()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype targetedStart = sourceText.indexOf(QStringLiteral("if (targetedMode)"));
+    QVERIFY2(targetedStart >= 0, "ScanController should have a targeted-mode branch");
+
+    const qsizetype defaultStart = sourceText.indexOf(QStringLiteral("} else {"), targetedStart);
+    QVERIFY2(defaultStart > targetedStart, "ScanController should separate targeted mode from default discovery");
+
+    const QString targetedBranch = sourceText.mid(targetedStart, defaultStart - targetedStart);
+    QVERIFY2(targetedBranch.contains(QStringLiteral("resolve_targeted_inputs")),
+             "Targeted mode should use the Rust resolver before appending logs");
+    QVERIFY2(targetedBranch.contains(QStringLiteral("logPathsList.append(qpath);")),
+             "Targeted mode should append every path returned by the Rust resolver");
+    QVERIFY2(!targetedBranch.contains(QStringLiteral("isCrashLogPath")),
+             "Targeted mode should not reapply the GUI crash-*.log filename filter");
 }
 
 void ScanSettingsWiringTests::mainwindow_has_clear_targeted_inputs_slot()

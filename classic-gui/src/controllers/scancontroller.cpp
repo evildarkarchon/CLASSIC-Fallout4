@@ -142,9 +142,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
             logPathsList.reserve(static_cast<int>(resolution.logs.size()));
             for (const auto& rpath : resolution.logs) {
                 const QString qpath = classic::toQString(rpath);
-                if (isCrashLogPath(qpath)) {
-                    logPathsList.append(qpath);
-                }
+                logPathsList.append(qpath);
             }
 
             targetedRejectionMessage =

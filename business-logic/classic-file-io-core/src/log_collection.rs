@@ -412,7 +412,7 @@ impl LogCollector {
     }
 }
 
-/// A user-supplied input path that could not be resolved to a crash log.
+/// A user-supplied input path that could not be resolved for targeted scanning.
 #[derive(Debug, Clone)]
 pub struct RejectedInput {
     /// The original path the user supplied.
@@ -421,15 +421,16 @@ pub struct RejectedInput {
     pub reason: String,
 }
 
-/// The result of resolving explicit user-supplied paths into crash logs.
+/// The result of resolving explicit user-supplied paths for targeted scanning.
 #[derive(Debug, Clone)]
 pub struct TargetedResolution {
-    /// Deduplicated crash-log paths in first-seen order.
+    /// Deduplicated targeted log paths in first-seen order.
     pub logs: Vec<PathBuf>,
-    /// Inputs that did not resolve to any crash logs.
+    /// Inputs that did not resolve to any targeted log paths.
     pub rejected: Vec<RejectedInput>,
 }
 
+#[cfg(test)]
 fn matches_crash_log_pattern(path: &Path) -> bool {
     path.file_name()
         .and_then(|n| n.to_str())
@@ -440,10 +441,10 @@ fn matches_crash_log_pattern(path: &Path) -> bool {
 }
 
 /// Resolve explicit user-supplied file and directory paths into a deduplicated
-/// list of crash logs without creating directories or moving files.
+/// list of targeted log paths without creating directories or moving files.
 ///
 /// For each input:
-/// - If it is a file matching `crash-*.log`, accept it directly.
+/// - If it is a regular file, accept it directly.
 /// - If it is a directory, recursively search for `**/crash-*.log`.
 /// - Otherwise record as rejected with a reason.
 ///
@@ -474,16 +475,9 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
         };
 
         if metadata.is_file() {
-            if matches_crash_log_pattern(&input) {
-                let canonical = input.canonicalize().unwrap_or_else(|_| input.clone());
-                if seen.insert(canonical) {
-                    logs.push(input);
-                }
-            } else {
-                rejected.push(RejectedInput {
-                    reason: "file does not match crash-*.log pattern".to_string(),
-                    path: input,
-                });
+            let canonical = input.canonicalize().unwrap_or_else(|_| input.clone());
+            if seen.insert(canonical) {
+                logs.push(input);
             }
         } else if metadata.is_dir() {
             let escaped_input = glob::Pattern::escape(input.to_string_lossy().as_ref());
