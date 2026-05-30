@@ -12,10 +12,12 @@
 #include <QFileInfo>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QLayout>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QSaveFile>
 #include <QSet>
+#include <QSizePolicy>
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QTextStream>
@@ -447,13 +449,15 @@ void MainWindow::setupMainOptionsTab()
 
         m_btnClearTargeted = new QPushButton(QStringLiteral("Clear"));
         m_btnClearTargeted->setObjectName(QStringLiteral("btnClearTargeted"));
-        m_btnClearTargeted->setFixedWidth(60);
+        m_btnClearTargeted->setMinimumWidth(qMax(80, m_btnClearTargeted->sizeHint().width()));
+        m_btnClearTargeted->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         m_btnClearTargeted->setVisible(false);
         headerRow->addWidget(m_btnClearTargeted);
         containerLayout->addLayout(headerRow);
 
         m_targetedInputList = new QListWidget();
-        m_targetedInputList->setMaximumHeight(90);
+        m_targetedInputList->setFixedHeight(90);
+        m_targetedInputList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         m_targetedInputList->setVisible(false);
         containerLayout->addWidget(m_targetedInputList);
 
@@ -2258,5 +2262,23 @@ void MainWindow::updateTargetedInputUi()
     } else {
         m_targetedInputLabel->setText(QStringLiteral("Targeted Scan: drop files or folders here"));
         m_targetedInputLabel->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
+    }
+
+    m_targetedInputList->updateGeometry();
+    m_btnClearTargeted->updateGeometry();
+    m_targetedInputContainer->updateGeometry();
+    if (auto* central = centralWidget()) {
+        central->updateGeometry();
+        if (central->layout()) {
+            central->layout()->activate();
+        }
+    }
+
+    if (hasInputs && !isMaximized() && !isFullScreen()) {
+        const QSize requestedSize = sizeHint().expandedTo(minimumSize());
+        const QSize currentSize = size();
+        if (requestedSize.width() > currentSize.width() || requestedSize.height() > currentSize.height()) {
+            resize(qMax(currentSize.width(), requestedSize.width()), qMax(currentSize.height(), requestedSize.height()));
+        }
     }
 }

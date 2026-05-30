@@ -22,6 +22,15 @@
 #include "classic_cxx_bridge/files.h"
 #include "rust/cxx.h"
 
+namespace {
+
+QString reportPathKey(const QString& path)
+{
+    return QDir::cleanPath(QFileInfo(path).absoluteFilePath()).toLower();
+}
+
+} // namespace
+
 // ── Construction ───────────────────────────────────────────────────
 
 ResultsController::ResultsController(SignalHub* signalHub, QTabWidget* tabWidget, ReportListWidget* reportList,
@@ -111,7 +120,22 @@ void ResultsController::refreshReports()
     }
 
     QStringList reports = discoverReports();
-    m_reportList->setReports(reports);
+
+    if (!m_baselineCaptured) {
+        for (const auto& path : reports) {
+            m_baselineReports.insert(reportPathKey(path));
+        }
+        m_baselineCaptured = true;
+    }
+
+    QSet<QString> newPaths;
+    for (const auto& path : reports) {
+        if (!m_baselineReports.contains(reportPathKey(path))) {
+            newPaths.insert(path);
+        }
+    }
+
+    m_reportList->setReports(reports, newPaths);
 
     // Clear the viewer if the list is empty
     if (reports.isEmpty()) {

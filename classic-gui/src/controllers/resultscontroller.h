@@ -2,6 +2,7 @@
 
 #include <QFileSystemWatcher>
 #include <QObject>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -49,5 +50,7 @@ private:
     QStringList m_reportDirs;
     QString m_primaryReportDir;
     bool m_autoSwitchToResults = true;
+    QSet<QString> m_baselineReports;
+    bool m_baselineCaptured = false;
     static constexpr int kResultsTabIndex = 3;
 };

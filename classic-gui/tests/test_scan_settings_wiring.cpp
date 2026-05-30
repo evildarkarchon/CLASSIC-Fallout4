@@ -34,6 +34,8 @@ private slots:
     void scan_controller_routes_targeted_inputs_through_bridge_resolver();
     void scan_controller_appends_targeted_resolved_logs_without_filename_filter();
     void mainwindow_has_clear_targeted_inputs_slot();
+    void mainwindow_sizes_clear_targeted_button_to_fit_text();
+    void mainwindow_refreshes_layout_when_targeted_list_visibility_changes();
     void scan_controller_surfaces_targeted_rejections_to_gui();
     void scan_controller_logs_targeted_rejections_with_reason_fallback();
     void mainwindow_wires_scan_warnings_to_user_feedback();
@@ -585,6 +587,46 @@ void ScanSettingsWiringTests::mainwindow_has_clear_targeted_inputs_slot()
              "MainWindow should have an onClearTargetedInputs slot");
     QVERIFY2(sourceText.contains(QStringLiteral("m_targetedInputPaths.clear()")),
              "onClearTargetedInputs should clear the targeted input paths list");
+}
+
+void ScanSettingsWiringTests::mainwindow_sizes_clear_targeted_button_to_fit_text()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(!sourceText.contains(QStringLiteral("m_btnClearTargeted->setFixedWidth(60)")),
+             "The targeted input Clear button should not be locked to a clipping-prone 60px width");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_btnClearTargeted->setMinimumWidth(")),
+             "The targeted input Clear button should use a minimum width that can grow with text metrics");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_btnClearTargeted->setSizePolicy(QSizePolicy::Minimum")),
+             "The targeted input Clear button should keep a button-sized minimum while allowing theme/font growth");
+}
+
+void ScanSettingsWiringTests::mainwindow_refreshes_layout_when_targeted_list_visibility_changes()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const QString marker = QStringLiteral("void MainWindow::updateTargetedInputUi()");
+    const qsizetype start = sourceText.indexOf(marker);
+    QVERIFY2(start >= 0, "Could not locate MainWindow::updateTargetedInputUi()");
+
+    const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+    const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+    const QString body = sourceText.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("updateGeometry()")),
+             "updateTargetedInputUi should notify layouts after the file list visibility changes");
+    QVERIFY2(body.contains(QStringLiteral("layout()->activate()")),
+             "updateTargetedInputUi should force the main layout to react when the file list is populated");
+    QVERIFY2(body.contains(QStringLiteral("sizeHint()")),
+             "updateTargetedInputUi should resize the window upward when visible targeted inputs need more room");
 }
 
 void ScanSettingsWiringTests::scan_controller_surfaces_targeted_rejections_to_gui()

@@ -1,5 +1,6 @@
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QListWidget>
 #include <QPushButton>
 #include <QTabWidget>
@@ -30,6 +31,9 @@ private slots:
     void open_folder_falls_back_to_crash_logs_when_no_selection();
     void open_folder_falls_back_to_crash_logs_when_selected_report_missing();
     void open_folder_does_not_launch_browser_when_no_report_dirs_exist();
+    void baseline_reports_at_startup_are_not_flagged_new();
+    void report_appearing_after_baseline_is_flagged_new();
+    void baseline_report_overwritten_is_not_flagged_new();
 };
 
 namespace {
@@ -53,6 +57,20 @@ QString writeTextFile(const QString& filePath, const QString& content)
 QListWidget* findReportList(ReportListWidget& widget)
 {
     return widget.findChild<QListWidget*>();
+}
+
+bool listItemIsNew(QListWidget* list, const QString& reportPath)
+{
+    const QString key = QDir::cleanPath(QFileInfo(reportPath).absoluteFilePath()).toLower();
+    for (int i = 0; i < list->count(); ++i) {
+        auto* item = list->item(i);
+        const QString itemKey =
+            QDir::cleanPath(QFileInfo(item->data(Qt::UserRole).toString()).absoluteFilePath()).toLower();
+        if (itemKey == key) {
+            return item->data(ReportListWidget::NewReportRole).toBool();
+        }
+    }
+    return false;
 }
 
 class TestableResultsController final : public ResultsController {
@@ -145,7 +163,7 @@ void ResultsControllerTests::setReportDirectories_creates_primary_and_discovers_
 
     QTRY_COMPARE(list->count(), 2);
     for (int i = 0; i < list->count(); ++i) {
-        QVERIFY(list->item(i)->text().endsWith(QStringLiteral("-AUTOSCAN.md")));
+        QVERIFY(list->item(i)->text().contains(QStringLiteral("-AUTOSCAN.md")));
     }
 }
 
@@ -457,6 +475,104 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_selected_
     QTRY_COMPARE(controller.openFolderCalls, 1);
     QCOMPARE(controller.openedFolderPath, QDir::cleanPath(crashDir));
     QCOMPARE(controller.revealFileCalls, 0);
+}
+
+void ResultsControllerTests::baseline_reports_at_startup_are_not_flagged_new()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    QVERIFY(QDir().mkpath(crashDir));
+
+    const QString baselineReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-04-01-00-00-00-AUTOSCAN.md"),
+                                                 QStringLiteral("NO ISSUES FOUND\n"));
+    QVERIFY(!baselineReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
+
+    controller.setReportDirectories({crashDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+    QVERIFY(!list->item(0)->data(Qt::ForegroundRole).isValid());
+}
+
+void ResultsControllerTests::report_appearing_after_baseline_is_flagged_new()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    QVERIFY(QDir().mkpath(crashDir));
+
+    const QString baselineReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-04-01-00-00-00-AUTOSCAN.md"),
+                                                 QStringLiteral("NO ISSUES FOUND\n"));
+    QVERIFY(!baselineReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
+
+    controller.setReportDirectories({crashDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+
+    const QString newReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-04-01-00-00-01-AUTOSCAN.md"),
+                                            QStringLiteral("SUSPECT: plugin\n"));
+    QVERIFY(!newReport.isEmpty());
+
+    QTRY_COMPARE(list->count(), 2);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+    QVERIFY(listItemIsNew(list, newReport));
+}
+
+void ResultsControllerTests::baseline_report_overwritten_is_not_flagged_new()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    QVERIFY(QDir().mkpath(crashDir));
+
+    const QString baselineReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-04-01-00-00-00-AUTOSCAN.md"),
+                                                 QStringLiteral("NO ISSUES FOUND\n"));
+    QVERIFY(!baselineReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
+
+    controller.setReportDirectories({crashDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+
+    QVERIFY(!writeTextFile(baselineReport, QStringLiteral("Report is INCOMPLETE\nre-scanned content\n")).isEmpty());
+
+    controller.refreshReports();
+
+    QTRY_COMPARE(list->count(), 1);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+    QVERIFY(!list->item(0)->data(Qt::ForegroundRole).isValid());
 }
 
 QTEST_MAIN(ResultsControllerTests)
