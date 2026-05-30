@@ -207,7 +207,9 @@ async fn test_targeted_empty_dir_rejected() {
 async fn test_targeted_explicit_file_and_directory_resolve_independently() {
     let temp = TempDir::new().unwrap();
     let arbitrary = temp.path().join("my-notes.txt");
-    tokio::fs::write(&arbitrary, b"explicit file intent").await.unwrap();
+    tokio::fs::write(&arbitrary, b"explicit file intent")
+        .await
+        .unwrap();
 
     let nested = temp.path().join("logs");
     tokio::fs::create_dir_all(&nested).await.unwrap();
@@ -215,9 +217,19 @@ async fn test_targeted_explicit_file_and_directory_resolve_independently() {
     tokio::fs::write(&crash_log, b"crash data").await.unwrap();
 
     let res = resolve_targeted_inputs(vec![arbitrary.clone(), nested]).await;
-    assert_eq!(res.logs.len(), 2, "explicit file and directory crash log should both resolve");
-    assert!(res.logs.contains(&arbitrary), "explicit files keep arbitrary names");
-    assert!(res.logs.contains(&crash_log), "directories still filter to crash-*.log");
+    assert_eq!(
+        res.logs.len(),
+        2,
+        "explicit file and directory crash log should both resolve"
+    );
+    assert!(
+        res.logs.contains(&arbitrary),
+        "explicit files keep arbitrary names"
+    );
+    assert!(
+        res.logs.contains(&crash_log),
+        "directories still filter to crash-*.log"
+    );
     assert!(res.rejected.is_empty());
 }
 
