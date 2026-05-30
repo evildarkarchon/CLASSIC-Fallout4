@@ -27,6 +27,9 @@ private slots:
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
     void mainwindow_enables_drag_and_drop();
+    void mainwindow_forwards_drops_through_targeted_child_event_filter();
+    void mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops();
+    void mainwindow_reports_wrong_tab_drops();
     void mainwindow_passes_targeted_inputs_to_scan_controller();
     void scan_controller_routes_targeted_inputs_through_bridge_resolver();
     void scan_controller_appends_targeted_resolved_logs_without_filename_filter();
@@ -39,6 +42,7 @@ private slots:
     void mainwindow_deduplicates_report_dirs_before_results_setup();
     void scan_controller_disables_unsolved_relocation_for_targeted_runs();
     void scan_worker_skips_unsolved_relocation_for_targeted_runs();
+    void scan_worker_counts_per_log_failures_without_scan_level_error();
 };
 
 void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config()
@@ -448,12 +452,74 @@ void ScanSettingsWiringTests::mainwindow_enables_drag_and_drop()
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("setAcceptDrops(true)")),
              "MainWindow should enable drag-and-drop via setAcceptDrops(true)");
-    QVERIFY2(sourceText.contains(QStringLiteral("dropEvent")),
-             "MainWindow should override dropEvent to handle dropped files");
-    QVERIFY2(sourceText.contains(QStringLiteral("dragEnterEvent")),
-             "MainWindow should override dragEnterEvent to accept file drops");
+    QVERIFY2(sourceText.contains(QStringLiteral("handleTargetedDrop")),
+             "MainWindow should route drop handling through a shared targeted-drop helper");
+    QVERIFY2(sourceText.contains(QStringLiteral("handleTargetedDragEnter")),
+             "MainWindow should route drag-enter handling through a shared targeted-drop helper");
     QVERIFY2(sourceText.contains(QStringLiteral("currentIndex() == 0")),
              "Drag-and-drop should be restricted to the Main Options tab (index 0)");
+}
+
+void ScanSettingsWiringTests::mainwindow_forwards_drops_through_targeted_child_event_filter()
+{
+    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.h");
+    QFile headerFile(headerPath);
+    QVERIFY2(headerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
+
+    const QString headerText = QString::fromUtf8(headerFile.readAll());
+    QVERIFY2(headerText.contains(QStringLiteral("bool eventFilter(QObject* watched, QEvent* event) override;")),
+             "MainWindow should override eventFilter to forward targeted-area drops from child widgets");
+
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("installTargetedDropForwarding")),
+             "MainWindow should install targeted drop forwarding after creating the drop zone");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_targetedInputContainer->installEventFilter(this)")) ||
+                 sourceText.contains(QStringLiteral("installEventFilter(this)")),
+             "MainWindow should install itself as the event filter for targeted drop widgets");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_targetedInputLabel")) &&
+                 sourceText.contains(QStringLiteral("m_targetedInputList")) &&
+                 sourceText.contains(QStringLiteral("m_btnClearTargeted")),
+             "MainWindow should forward drops from all visible targeted-input child widgets");
+}
+
+void ScanSettingsWiringTests::mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("acknowledgeTargetedDrop")),
+             "MainWindow should acknowledge targeted drops that do not add new paths");
+    QVERIFY2(sourceText.contains(QStringLiteral("duplicateCount")),
+             "MainWindow should track duplicate targeted drops for user acknowledgement");
+    QVERIFY2(sourceText.contains(QStringLiteral("nonLocalCount")),
+             "MainWindow should track non-local URL drops for user acknowledgement");
+    QVERIFY2(sourceText.contains(QStringLiteral("unsupportedPayload")),
+             "MainWindow should acknowledge unsupported drop payloads");
+    QVERIFY2(sourceText.contains(QStringLiteral("Skipped %1 duplicate path%2 already in the list.")),
+             "MainWindow should surface duplicate-drop acknowledgement in the status bar");
+    QVERIFY2(sourceText.contains(QStringLiteral("Skipped %1 non-local URL%2; only local files are supported.")),
+             "MainWindow should surface non-local URL acknowledgement in the status bar");
+}
+
+void ScanSettingsWiringTests::mainwindow_reports_wrong_tab_drops()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("Switch to the Main Options tab to add targeted scan inputs.")),
+             "MainWindow should tell users to switch tabs when dropping on a non-main tab");
 }
 
 void ScanSettingsWiringTests::mainwindow_passes_targeted_inputs_to_scan_controller()
@@ -676,6 +742,32 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("moveUnsolvedLogs && !targetedMode")),
              "ScanWorker should skip unsolved-log relocation when running a targeted scan");
+}
+
+void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_level_error()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    const QRegularExpression perLogCatchRegex(QStringLiteral(
+        R"(catch\s*\(\s*const\s+rust::Error&\s*\)\s*\{(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(i,\s*false)"));
+    QVERIFY2(perLogCatchRegex.match(sourceText).hasMatch(),
+             "ScanWorker should treat orchestrator_process_log failures as per-log failures");
+
+    const qsizetype outerCatchStart = sourceText.indexOf(QStringLiteral("} catch (const rust::Error& e) {"));
+    QVERIFY2(outerCatchStart > 0, "ScanWorker should have an outer rust::Error handler for setup failures");
+    const qsizetype outerCatchEnd = sourceText.indexOf(QStringLiteral("} catch (const std::exception& e)"),
+                                                       outerCatchStart);
+    const QString outerCatchBlock = sourceText.mid(outerCatchStart, outerCatchEnd - outerCatchStart);
+    QVERIFY2(outerCatchBlock.contains(QStringLiteral("emit error(")),
+             "ScanWorker should reserve scan-level error emission for setup failures outside per-log work");
+    QVERIFY2(!outerCatchBlock.contains(QStringLiteral("logScanned")),
+             "ScanWorker outer error handler should not masquerade as a completed per-log result");
+    QVERIFY2(sourceText.contains(QStringLiteral("emit finished(total, successCount, errorCount);")),
+             "ScanWorker should finish targeted scans with failed counts instead of aborting the whole scan");
 }
 
 QTEST_MAIN(ScanSettingsWiringTests)

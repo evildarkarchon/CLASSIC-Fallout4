@@ -443,10 +443,11 @@ fn matches_crash_log_pattern(path: &Path) -> bool {
 /// Resolve explicit user-supplied file and directory paths into a deduplicated
 /// list of targeted log paths without creating directories or moving files.
 ///
-/// For each input:
-/// - If it is a regular file, accept it directly.
-/// - If it is a directory, recursively search for `**/crash-*.log`.
-/// - Otherwise record as rejected with a reason.
+/// Resolution policy (intentional split):
+/// - **Regular file**: accept the path as-is — the user explicitly chose this file to analyze,
+///   regardless of name or extension.
+/// - **Directory**: recursively discover only `**/crash-*.log` files under the folder.
+/// - **Other**: reject with a human-readable reason.
 ///
 /// Paths are canonicalized and deduplicated while preserving first-seen order.
 pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution {

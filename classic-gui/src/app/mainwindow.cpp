@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -459,6 +460,7 @@ void MainWindow::setupMainOptionsTab()
         mainLayout->addWidget(m_targetedInputContainer);
 
         connect(m_btnClearTargeted, &QPushButton::clicked, this, &MainWindow::onClearTargetedInputs);
+        installTargetedDropForwarding();
     }
 
     // Spacer before primary buttons
@@ -2085,30 +2087,150 @@ void MainWindow::onTogglePapyrusMonitor()
 
 // ── Drag-and-drop for targeted scan inputs ─────────────────────────
 
+void MainWindow::installTargetedDropForwarding()
+{
+    const auto enableDropTarget = [this](QWidget* widget) {
+        if (widget) {
+            widget->setAcceptDrops(true);
+            widget->installEventFilter(this);
+        }
+    };
+
+    enableDropTarget(m_targetedInputContainer);
+    enableDropTarget(m_targetedInputLabel);
+    enableDropTarget(m_targetedInputList);
+    enableDropTarget(m_btnClearTargeted);
+}
+
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == m_targetedInputContainer || watched == m_targetedInputLabel || watched == m_targetedInputList ||
+        watched == m_btnClearTargeted) {
+        switch (event->type()) {
+        case QEvent::DragEnter:
+            if (handleTargetedDragEnter(static_cast<QDragEnterEvent*>(event))) {
+                return true;
+            }
+            break;
+        case QEvent::Drop:
+            if (handleTargetedDrop(static_cast<QDropEvent*>(event))) {
+                return true;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    return QMainWindow::eventFilter(watched, event);
+}
+
+bool MainWindow::handleTargetedDragEnter(QDragEnterEvent* event)
+{
+    if (!event->mimeData()->hasUrls()) {
+        return false;
+    }
+
+    if (m_tabWidget && m_tabWidget->currentIndex() == 0) {
+        event->acceptProposedAction();
+    } else {
+        event->ignore();
+    }
+    return true;
+}
+
+bool MainWindow::handleTargetedDrop(QDropEvent* event)
+{
+    const bool wrongTab = !m_tabWidget || m_tabWidget->currentIndex() != 0;
+    const bool unsupportedPayload = !event->mimeData()->hasUrls();
+
+    if (unsupportedPayload) {
+        acknowledgeTargetedDrop(0, 0, 0, true, wrongTab);
+        event->ignore();
+        return true;
+    }
+
+    if (wrongTab) {
+        acknowledgeTargetedDrop(0, 0, 0, false, true);
+        event->ignore();
+        return true;
+    }
+
+    int addedCount = 0;
+    int duplicateCount = 0;
+    int nonLocalCount = 0;
+
+    for (const QUrl& url : event->mimeData()->urls()) {
+        if (!url.isLocalFile()) {
+            ++nonLocalCount;
+            continue;
+        }
+
+        const QString path = QDir::toNativeSeparators(url.toLocalFile());
+        if (m_targetedInputPaths.contains(path)) {
+            ++duplicateCount;
+            continue;
+        }
+
+        m_targetedInputPaths.append(path);
+        ++addedCount;
+    }
+
+    if (addedCount > 0) {
+        updateTargetedInputUi();
+    }
+
+    acknowledgeTargetedDrop(addedCount, duplicateCount, nonLocalCount, false, false);
+    event->acceptProposedAction();
+    return true;
+}
+
+void MainWindow::acknowledgeTargetedDrop(int addedCount, int duplicateCount, int nonLocalCount, bool unsupportedPayload,
+                                         bool wrongTab)
+{
+    if (wrongTab) {
+        setStatusMessage(QStringLiteral("Switch to the Main Options tab to add targeted scan inputs."));
+        return;
+    }
+
+    if (unsupportedPayload) {
+        setStatusMessage(QStringLiteral("Drop ignored: only local file paths are supported for targeted scans."));
+        return;
+    }
+
+    QStringList parts;
+    if (addedCount > 0) {
+        parts.append(QStringLiteral("Added %1 targeted input%2.")
+                         .arg(addedCount)
+                         .arg(addedCount == 1 ? "" : "s"));
+    }
+    if (duplicateCount > 0) {
+        parts.append(QStringLiteral("Skipped %1 duplicate path%2 already in the list.")
+                         .arg(duplicateCount)
+                         .arg(duplicateCount == 1 ? "" : "s"));
+    }
+    if (nonLocalCount > 0) {
+        parts.append(QStringLiteral("Skipped %1 non-local URL%2; only local files are supported.")
+                         .arg(nonLocalCount)
+                         .arg(nonLocalCount == 1 ? "" : "s"));
+    }
+
+    if (parts.isEmpty()) {
+        setStatusMessage(QStringLiteral("Drop ignored: no local file paths were found."));
+        return;
+    }
+
+    setStatusMessage(parts.join(QStringLiteral(" ")));
+}
+
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
-    if (m_tabWidget && m_tabWidget->currentIndex() == 0 && event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
-    }
+    handleTargetedDragEnter(event);
 }
 
 void MainWindow::dropEvent(QDropEvent* event)
 {
-    if (!m_tabWidget || m_tabWidget->currentIndex() != 0) {
-        return;
-    }
-
-    const auto urls = event->mimeData()->urls();
-    for (const auto& url : urls) {
-        if (url.isLocalFile()) {
-            const QString path = QDir::toNativeSeparators(url.toLocalFile());
-            if (!m_targetedInputPaths.contains(path)) {
-                m_targetedInputPaths.append(path);
-            }
-        }
-    }
-    updateTargetedInputUi();
-    event->acceptProposedAction();
+    handleTargetedDrop(event);
 }
 
 void MainWindow::onClearTargetedInputs()
