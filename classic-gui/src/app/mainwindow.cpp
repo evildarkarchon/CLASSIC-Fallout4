@@ -5,6 +5,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QDragEnterEvent>
+#include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QEvent>
 #include <QFile>
@@ -2103,16 +2104,27 @@ void MainWindow::installTargetedDropForwarding()
     enableDropTarget(m_targetedInputContainer);
     enableDropTarget(m_targetedInputLabel);
     enableDropTarget(m_targetedInputList);
+    // QListWidget routes drops over its item area through the internal viewport.
+    enableDropTarget(m_targetedInputList ? m_targetedInputList->viewport() : nullptr);
     enableDropTarget(m_btnClearTargeted);
 }
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == m_targetedInputContainer || watched == m_targetedInputLabel || watched == m_targetedInputList ||
-        watched == m_btnClearTargeted) {
+    const bool isTargetedDropSurface = watched == m_targetedInputContainer || watched == m_targetedInputLabel ||
+                                       watched == m_targetedInputList ||
+                                       (m_targetedInputList && watched == m_targetedInputList->viewport()) ||
+                                       watched == m_btnClearTargeted;
+
+    if (isTargetedDropSurface) {
         switch (event->type()) {
         case QEvent::DragEnter:
             if (handleTargetedDragEnter(static_cast<QDragEnterEvent*>(event))) {
+                return true;
+            }
+            break;
+        case QEvent::DragMove:
+            if (handleTargetedDragMove(static_cast<QDragMoveEvent*>(event))) {
                 return true;
             }
             break;
@@ -2130,6 +2142,20 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 }
 
 bool MainWindow::handleTargetedDragEnter(QDragEnterEvent* event)
+{
+    if (!event->mimeData()->hasUrls()) {
+        return false;
+    }
+
+    if (m_tabWidget && m_tabWidget->currentIndex() == 0) {
+        event->acceptProposedAction();
+    } else {
+        event->ignore();
+    }
+    return true;
+}
+
+bool MainWindow::handleTargetedDragMove(QDragMoveEvent* event)
 {
     if (!event->mimeData()->hasUrls()) {
         return false;
@@ -2230,6 +2256,11 @@ void MainWindow::acknowledgeTargetedDrop(int addedCount, int duplicateCount, int
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
     handleTargetedDragEnter(event);
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent* event)
+{
+    handleTargetedDragMove(event);
 }
 
 void MainWindow::dropEvent(QDropEvent* event)

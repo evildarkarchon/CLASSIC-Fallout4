@@ -13,6 +13,7 @@
 #include <QTabWidget>
 #include <QUrl>
 
+#include "core/reportpathkey.h"
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
 #include "widgets/markdownviewer.h"
@@ -21,15 +22,6 @@
 
 #include "classic_cxx_bridge/files.h"
 #include "rust/cxx.h"
-
-namespace {
-
-QString reportPathKey(const QString& path)
-{
-    return QDir::cleanPath(QFileInfo(path).absoluteFilePath()).toLower();
-}
-
-} // namespace
 
 // ── Construction ───────────────────────────────────────────────────
 
@@ -123,14 +115,14 @@ void ResultsController::refreshReports()
 
     if (!m_baselineCaptured) {
         for (const auto& path : reports) {
-            m_baselineReports.insert(reportPathKey(path));
+            m_baselineReports.insert(classic::gui::reportPathKey(path));
         }
         m_baselineCaptured = true;
     }
 
     QSet<QString> newPaths;
     for (const auto& path : reports) {
-        if (!m_baselineReports.contains(reportPathKey(path))) {
+        if (!m_baselineReports.contains(classic::gui::reportPathKey(path))) {
             newPaths.insert(path);
         }
     }

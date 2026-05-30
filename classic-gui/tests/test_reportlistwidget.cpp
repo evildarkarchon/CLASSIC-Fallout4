@@ -1,4 +1,6 @@
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
@@ -15,6 +17,7 @@ class ReportListWidgetTests : public QObject {
 private slots:
     void setReports_sorts_reports_and_sets_tooltip_without_status_coloring();
     void setReports_with_new_set_applies_new_badge_to_marked_rows();
+    void setReports_new_set_matches_alternate_path_format();
     void setReports_preserves_current_selection_when_selected_path_still_exists();
     void search_filter_rebuilds_visible_items();
     void selection_and_toolbar_buttons_emit_expected_signals();
@@ -121,6 +124,53 @@ void ReportListWidgetTests::setReports_with_new_set_applies_new_badge_to_marked_
     QVERIFY(freshItem->data(Qt::ForegroundRole).isValid());
     QVERIFY(freshItem->text().endsWith(QStringLiteral("✨")));
     QVERIFY(freshItem->toolTip().contains(QStringLiteral("new this session")));
+}
+
+void ReportListWidgetTests::setReports_new_set_matches_alternate_path_format()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString baseline =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-15-08-30-45-AUTOSCAN.md"), QStringLiteral("NO ISSUES FOUND\n"));
+    const QString fresh =
+        writeReportFile(tempDir, QStringLiteral("crash-2024-01-16-09-00-00-AUTOSCAN.md"), QStringLiteral("SUSPECT: plugin\n"));
+
+    QVERIFY(!baseline.isEmpty());
+    QVERIFY(!fresh.isEmpty());
+
+    QString freshAlternate = fresh;
+    bool swappedCase = false;
+    for (int i = 0; i < freshAlternate.size(); ++i) {
+        const QChar ch = freshAlternate.at(i);
+        if (!ch.isLetter()) {
+            continue;
+        }
+        freshAlternate[i] = ch.isUpper() ? ch.toLower() : ch.toUpper();
+        swappedCase = true;
+        break;
+    }
+    QVERIFY(swappedCase);
+    QVERIFY(freshAlternate != fresh);
+
+    ReportListWidget widget;
+    auto* list = widget.findChild<QListWidget*>();
+    QVERIFY(list);
+
+    widget.setReports({baseline, fresh}, {freshAlternate});
+
+    QListWidgetItem* freshItem = nullptr;
+    for (int i = 0; i < list->count(); ++i) {
+        auto* item = list->item(i);
+        if (item->data(Qt::UserRole).toString() == fresh) {
+            freshItem = item;
+            break;
+        }
+    }
+
+    QVERIFY(freshItem);
+    QVERIFY(freshItem->data(ReportListWidget::NewReportRole).toBool());
+    QVERIFY(freshItem->text().endsWith(QStringLiteral("✨")));
 }
 
 void ReportListWidgetTests::setReports_preserves_current_selection_when_selected_path_still_exists()

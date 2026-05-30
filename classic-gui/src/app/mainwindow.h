@@ -12,6 +12,7 @@
 #include <QTabWidget>
 
 class QDragEnterEvent;
+class QDragMoveEvent;
 class QDropEvent;
 
 class SignalHub;
@@ -60,6 +61,7 @@ private:
     void updateTargetedInputUi();
     void installTargetedDropForwarding();
     bool handleTargetedDragEnter(QDragEnterEvent* event);
+    bool handleTargetedDragMove(QDragMoveEvent* event);
     bool handleTargetedDrop(QDropEvent* event);
     void acknowledgeTargetedDrop(int addedCount, int duplicateCount, int nonLocalCount, bool unsupportedPayload,
                                  bool wrongTab);
@@ -67,6 +69,7 @@ private:
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
     void dropEvent(QDropEvent* event) override;
 
 private slots:

@@ -10,6 +10,7 @@
 #include <QWidget>
 
 #include "controllers/resultscontroller.h"
+#include "core/reportpathkey.h"
 #include "core/signalhub.h"
 #include "widgets/markdownviewer.h"
 #include "widgets/reportlistwidget.h"
@@ -61,11 +62,10 @@ QListWidget* findReportList(ReportListWidget& widget)
 
 bool listItemIsNew(QListWidget* list, const QString& reportPath)
 {
-    const QString key = QDir::cleanPath(QFileInfo(reportPath).absoluteFilePath()).toLower();
+    const QString key = classic::gui::reportPathKey(reportPath);
     for (int i = 0; i < list->count(); ++i) {
         auto* item = list->item(i);
-        const QString itemKey =
-            QDir::cleanPath(QFileInfo(item->data(Qt::UserRole).toString()).absoluteFilePath()).toLower();
+        const QString itemKey = classic::gui::reportPathKey(item->data(Qt::UserRole).toString());
         if (itemKey == key) {
             return item->data(ReportListWidget::NewReportRole).toBool();
         }

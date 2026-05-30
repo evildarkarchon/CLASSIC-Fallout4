@@ -28,6 +28,7 @@ private slots:
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
     void mainwindow_enables_drag_and_drop();
     void mainwindow_forwards_drops_through_targeted_child_event_filter();
+    void mainwindow_forwards_drag_moves_through_targeted_child_event_filter();
     void mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops();
     void mainwindow_reports_wrong_tab_drops();
     void mainwindow_passes_targeted_inputs_to_scan_controller();
@@ -488,6 +489,34 @@ void ScanSettingsWiringTests::mainwindow_forwards_drops_through_targeted_child_e
                  sourceText.contains(QStringLiteral("m_targetedInputList")) &&
                  sourceText.contains(QStringLiteral("m_btnClearTargeted")),
              "MainWindow should forward drops from all visible targeted-input child widgets");
+    QVERIFY2(sourceText.contains(QStringLiteral("m_targetedInputList ? m_targetedInputList->viewport() : nullptr")) &&
+                 sourceText.contains(QStringLiteral("watched == m_targetedInputList->viewport()")),
+             "MainWindow should forward drops that land on the QListWidget viewport");
+}
+
+void ScanSettingsWiringTests::mainwindow_forwards_drag_moves_through_targeted_child_event_filter()
+{
+    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.h");
+    QFile headerFile(headerPath);
+    QVERIFY2(headerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
+
+    const QString headerText = QString::fromUtf8(headerFile.readAll());
+    QVERIFY2(headerText.contains(QStringLiteral("bool handleTargetedDragMove(QDragMoveEvent* event)")),
+             "MainWindow should expose a shared targeted drag-move helper");
+    QVERIFY2(headerText.contains(QStringLiteral("void dragMoveEvent(QDragMoveEvent* event) override")),
+             "MainWindow should override dragMoveEvent for top-level targeted drags");
+
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("case QEvent::DragMove:")),
+             "MainWindow eventFilter should handle DragMove on targeted drop surfaces");
+    QVERIFY2(sourceText.contains(QStringLiteral("handleTargetedDragMove")),
+             "MainWindow should route drag-move handling through a shared targeted-drop helper");
 }
 
 void ScanSettingsWiringTests::mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops()

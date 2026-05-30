@@ -1,18 +1,15 @@
 #include "widgets/reportlistwidget.h"
 
 #include <algorithm>
-#include <QDir>
+
+#include "core/reportpathkey.h"
+
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QRegularExpression>
 #include <QVBoxLayout>
 
 namespace {
-
-QString reportPathKey(const QString& path)
-{
-    return QDir::cleanPath(QFileInfo(path).absoluteFilePath()).toLower();
-}
 
 const QString kNewReportMarker = QStringLiteral(" ✨");
 
@@ -91,7 +88,7 @@ void ReportListWidget::setReports(const QStringList& reportPaths, const QSet<QSt
 
     m_newReportPaths.clear();
     for (const auto& path : newReportPaths) {
-        m_newReportPaths.insert(reportPathKey(path));
+        m_newReportPaths.insert(classic::gui::reportPathKey(path));
     }
 
     // Sort newest first by filename (crash-YYYY-MM-DD-HH-MM-SS sorts lexicographically)
@@ -157,7 +154,7 @@ void ReportListWidget::rebuildListItems(const QString& filter)
             item->setToolTip(QStringLiteral("Crash: ") + timestamp);
         }
 
-        if (m_newReportPaths.contains(reportPathKey(path))) {
+        if (m_newReportPaths.contains(classic::gui::reportPathKey(path))) {
             item->setData(NewReportRole, true);
 
             QFont font = item->font();
