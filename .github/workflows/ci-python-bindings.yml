@@ -117,3 +117,9 @@ jobs:
       # pytest package file, preserving the expected script-directory shape.
       - name: Run Python bindings smoke tests
         run: uv run --project python-bindings python -m pytest python-bindings/tests -q
+
+      - name: Run Python CLI diagnostics
+        run: |
+          uv run --project python-bindings classic-py --fixture-root python-bindings/tests/fixtures doctor
+          uv run --project python-bindings classic-py --json bindings list
+          uv run --project python-bindings classic-py compliance run --profile smoke
