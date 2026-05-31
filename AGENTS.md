@@ -4,8 +4,6 @@ This file provides always-on guidance for GitHub Copilot and other AI coding age
 
 ## Project Skills
 
-Repo-owned agent skills live under `.agents/skills/` (plural). Do not add new skills under `.agent/skills/` (singular); that path is retired.
-
 For CLASSIC-specific guidance that does not need to be injected on every prompt, use the project skill at `.agents/skills/classic-project-guide/`.
 
 - Skill entrypoint: `.agents/skills/classic-project-guide/SKILL.md`
