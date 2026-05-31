@@ -5,14 +5,71 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
-from .binding_loader import EXPECTED_BINDINGS, list_bindings, require_binding
+from .binding_loader import list_bindings, require_binding
 from .context import CommandContext
 from .exit_codes import ExitCode, worst_exit_code
 from .output import CommandResult, binding_exception, failure, success
 from .scenarios import Scenario, all_scenarios, get_scenario, scenarios_for_profile
+
+
+class _ComplianceExplainArgs(Protocol):
+    """Arguments supplied by the `compliance explain` parser."""
+
+    scenario_id: str
+
+
+class _ComplianceRunArgs(Protocol):
+    """Arguments supplied by the `compliance run` parser."""
+
+    profile: str
+
+
+class _VersionParseArgs(Protocol):
+    """Arguments supplied by the `version parse` parser."""
+
+    version: str
+
+
+class _PathArg(Protocol):
+    """Arguments supplied by parser commands that require a path."""
+
+    path: str
+
+
+class _OptionalPathArg(Protocol):
+    """Arguments supplied by parser commands that accept an optional path."""
+
+    path: str | None
+
+
+class _XseParseTypeArgs(Protocol):
+    """Arguments supplied by the `xse parse-type` parser."""
+
+    type_name: str
+
+
+class _UpdateValidateUrlArgs(Protocol):
+    """Arguments supplied by the `update validate-url` parser."""
+
+    url: str
+
+
+@dataclass
+class _VersionParseCommandArgs:
+    """Synthetic args for catalog-dispatched version scenarios."""
+
+    version: str
+
+
+@dataclass
+class _PathCommandArgs:
+    """Synthetic args for catalog-dispatched path scenarios."""
+
+    path: str
 
 
 def _relative_or_absolute(path: Path, root: Path) -> str:
@@ -98,12 +155,13 @@ def compliance_list(args: object, context: CommandContext) -> CommandResult:
     return success("compliance list", f"{len(scenarios)} scenarios", {"scenarios": scenarios}, text_lines=lines)
 
 
-def compliance_explain(args: object, context: CommandContext) -> CommandResult:
+def compliance_explain(args: _ComplianceExplainArgs, context: CommandContext) -> CommandResult:
     """Explain one compliance scenario by stable ID."""
 
-    scenario = get_scenario(args.scenario_id)
+    scenario_id = args.scenario_id
+    scenario = get_scenario(scenario_id)
     if scenario is None:
-        return failure("compliance explain", f"Unknown scenario: {args.scenario_id}", int(ExitCode.USAGE))
+        return failure("compliance explain", f"Unknown scenario: {scenario_id}", int(ExitCode.USAGE))
     data = scenario.to_dict()
     lines = [
         f"{scenario.id}: {scenario.purpose}",
@@ -117,7 +175,7 @@ def compliance_explain(args: object, context: CommandContext) -> CommandResult:
     return success("compliance explain", scenario.purpose, {"scenario": data}, text_lines=lines)
 
 
-def compliance_run(args: object, context: CommandContext) -> CommandResult:
+def compliance_run(args: _ComplianceRunArgs, context: CommandContext) -> CommandResult:
     """Run a compliance profile and write JSON and Markdown reports."""
 
     profile = args.profile
@@ -126,7 +184,9 @@ def compliance_run(args: object, context: CommandContext) -> CommandResult:
         return failure("compliance run", f"No scenarios match profile {profile!r}", int(ExitCode.USAGE))
     scenario_results = [_run_scenario(scenario, context) for scenario in scenarios]
     delegated = _run_python_ci_delegates(context) if profile == "python-ci" else []
-    exit_code = worst_exit_code([result["exitCode"] for result in scenario_results] + [gate["exitCode"] for gate in delegated])
+    aggregate_codes = [result["exitCode"] for result in scenario_results] + [gate["exitCode"] for gate in delegated]
+    aggregate_codes.extend(int(ExitCode.PRODUCT_FAILURE) for result in scenario_results if result["status"] != "passed")
+    exit_code = worst_exit_code(aggregate_codes)
     report = {
         "schemaVersion": "1.0",
         "profile": profile,
@@ -139,10 +199,9 @@ def compliance_run(args: object, context: CommandContext) -> CommandResult:
     artifacts = _write_reports(report, context)
     summary = f"Compliance profile {profile} {'passed' if exit_code == 0 else 'failed'}"
     lines = [summary, *(f"  {item['id']}: {item['status']}" for item in scenario_results)]
-    result_factory = success if exit_code == 0 else failure
     if exit_code == 0:
-        return result_factory("compliance run", summary, {"report": report}, artifacts=artifacts, text_lines=lines)
-    return result_factory("compliance run", summary, exit_code, data={"report": report}, artifacts=artifacts, text_lines=lines)
+        return success("compliance run", summary, {"report": report}, artifacts=artifacts, text_lines=lines)
+    return failure("compliance run", summary, exit_code, data={"report": report}, artifacts=artifacts, text_lines=lines)
 
 
 def _run_scenario(scenario: Scenario, context: CommandContext) -> dict[str, Any]:
@@ -171,7 +230,7 @@ def _run_python_ci_delegates(context: CommandContext) -> list[dict[str, Any]]:
     ]
     gates: list[dict[str, Any]] = []
     for command in commands:
-        completed = subprocess.run(command, cwd=context.repo_root, check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        completed = subprocess.run(command, cwd=context.repo_root, check=False, text=True, capture_output=True)
         gates.append({"commandLine": command, "exitCode": completed.returncode, "stdout": completed.stdout[-4000:], "stderr": completed.stderr[-4000:]})
     return gates
 
@@ -184,7 +243,7 @@ def _write_reports(report: dict[str, Any], context: CommandContext) -> list[str]
     json_path = output_dir / "classic_python_cli_report.json"
     md_path = output_dir / "classic_python_cli_report.md"
     json_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
-    md_lines = [f"# CLASSIC Python CLI Report", "", f"Profile: `{report['profile']}`", "", "## Scenarios"]
+    md_lines = ["# CLASSIC Python CLI Report", "", f"Profile: `{report['profile']}`", "", "## Scenarios"]
     md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']})" for item in report["scenarioResults"])
     if report["delegatedGates"]:
         md_lines.extend(["", "## Delegated Gates"])
@@ -193,7 +252,7 @@ def _write_reports(report: dict[str, Any], context: CommandContext) -> list[str]
     return [_relative_or_absolute(json_path, context.repo_root), _relative_or_absolute(md_path, context.repo_root)]
 
 
-def version_parse(args: object, context: CommandContext) -> CommandResult:
+def version_parse(args: _VersionParseArgs, context: CommandContext) -> CommandResult:
     """Parse and format a version through the classic_version binding."""
 
     try:
@@ -220,7 +279,7 @@ def config_main_version(args: object, context: CommandContext) -> CommandResult:
     return success("config main-version", f"CLASSIC main YAML version: {version}", {"version": version})
 
 
-def config_inspect(args: object, context: CommandContext) -> CommandResult:
+def config_inspect(args: _PathArg, context: CommandContext) -> CommandResult:
     """Inspect a CLASSIC config file through classic_config."""
 
     try:
@@ -234,7 +293,7 @@ def config_inspect(args: object, context: CommandContext) -> CommandResult:
     return success("config inspect", f"Loaded config {args.path}", data)
 
 
-def path_validate(args: object, context: CommandContext) -> CommandResult:
+def path_validate(args: _PathArg, context: CommandContext) -> CommandResult:
     """Validate a path through classic_path.PathValidator."""
 
     target = Path(args.path)
@@ -252,7 +311,7 @@ def path_validate(args: object, context: CommandContext) -> CommandResult:
     return success("path validate", f"Path is valid: {target}", {"path": str(target), "valid": True})
 
 
-def file_hash(args: object, context: CommandContext) -> CommandResult:
+def file_hash(args: _PathArg, context: CommandContext) -> CommandResult:
     """Hash a file through classic_file_io.FileHasher."""
 
     target = Path(args.path)
@@ -279,7 +338,7 @@ def database_info(args: object, context: CommandContext) -> CommandResult:
     return success("database info", "Database binding constants loaded", data)
 
 
-def xse_parse_type(args: object, context: CommandContext) -> CommandResult:
+def xse_parse_type(args: _XseParseTypeArgs, context: CommandContext) -> CommandResult:
     """Parse an XSE type through classic_xse when available."""
 
     try:
@@ -292,7 +351,7 @@ def xse_parse_type(args: object, context: CommandContext) -> CommandResult:
     return success("xse parse-type", f"Parsed XSE type: {value}", {"type": str(value)})
 
 
-def update_validate_url(args: object, context: CommandContext) -> CommandResult:
+def update_validate_url(args: _UpdateValidateUrlArgs, context: CommandContext) -> CommandResult:
     """Validate update URL shape through classic_web to avoid live network access."""
 
     try:
@@ -305,7 +364,7 @@ def update_validate_url(args: object, context: CommandContext) -> CommandResult:
     return success("update validate-url", f"URL valid: {valid}", {"url": args.url, "valid": valid})
 
 
-def resource_detect(args: object, context: CommandContext) -> CommandResult:
+def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
     """Detect a resource type through classic_resource when available."""
 
     try:
@@ -318,7 +377,7 @@ def resource_detect(args: object, context: CommandContext) -> CommandResult:
     return success("resource detect", f"Resource type: {resource_type}", {"path": args.path, "resourceType": str(resource_type)})
 
 
-def scan_logs(args: object, context: CommandContext) -> CommandResult:
+def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     """Run a deterministic scanlog binding path over an explicit log directory."""
 
     scan_path = Path(args.path or context.fixture_root)
@@ -339,7 +398,7 @@ def scan_logs(args: object, context: CommandContext) -> CommandResult:
     return success("scan logs", "Scanlog binding completed", {"scanPath": str(scan_path), "processedLogs": len(paths), "result": str(result)})
 
 
-def scan_game(args: object, context: CommandContext) -> CommandResult:
+def scan_game(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     """Run fixture-backed game setup checks through classic_scangame when available."""
 
     root_path = Path(args.path or context.fixture_root)
@@ -361,11 +420,11 @@ def dispatch_scenario_command(command: list[str], context: CommandContext) -> Co
     if command[:2] == ["bindings", "list"]:
         return bindings_list(object(), context)
     if command[:2] == ["version", "parse"]:
-        return version_parse(type("Args", (), {"version": command[2]})(), context)
+        return version_parse(_VersionParseCommandArgs(command[2]), context)
     if command[:2] == ["config", "main-version"]:
         return config_main_version(object(), context)
     if command[:2] == ["path", "validate"]:
-        return path_validate(type("Args", (), {"path": command[2]})(), context)
+        return path_validate(_PathCommandArgs(command[2]), context)
     if command[:2] == ["file", "hash"]:
-        return file_hash(type("Args", (), {"path": command[2]})(), context)
+        return file_hash(_PathCommandArgs(command[2]), context)
     return failure(" ".join(command), "Scenario command is not implemented", int(ExitCode.USAGE))

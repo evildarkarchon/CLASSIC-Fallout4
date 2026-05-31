@@ -162,6 +162,41 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     assert payload["data"]["report"]["profile"] == "smoke"
 
 
+def test_compliance_run_fails_when_scenario_expectation_missed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Compliance run fails when a handler exits 0 but the scenario expected a nonzero exit."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+    from classic_py_cli.scenarios import Scenario
+
+    mismatched = Scenario(
+        "expect-failure",
+        "Expect a failure that did not occur.",
+        "classic_py_cli",
+        ["bindings.list"],
+        ["bindings", "list"],
+        [],
+        1,
+        ["mismatch-test"],
+        ["true-binding-compliance-gap"],
+    )
+    monkeypatch.setattr(
+        "classic_py_cli.commands.scenarios_for_profile",
+        lambda profile: [mismatched] if profile == "mismatch-test" else [],
+    )
+
+    code = main(["--json", "--output", str(tmp_path), "compliance", "run", "--profile", "mismatch-test"])
+    payload = json.loads(capsys.readouterr().out)
+    scenario_results = payload["data"]["report"]["scenarioResults"]
+
+    assert code != 0
+    assert payload["success"] is False
+    assert len(scenario_results) == 1
+    assert scenario_results[0]["status"] == "failed"
+    assert scenario_results[0]["exitCode"] == 0
+    assert scenario_results[0]["expectedExitCode"] == 1
+
+
 def test_product_stubs_and_scan_commands_are_registered() -> None:
     """Representative product command groups are available from help output."""
 
