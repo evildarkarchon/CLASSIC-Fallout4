@@ -63,6 +63,33 @@ def test_json_stdout_is_parseable_for_bindings_list() -> None:
     assert completed.stderr == ""
 
 
+def test_json_invalid_command_returns_failure_envelope() -> None:
+    """JSON mode maps argparse failures to a structured envelope on stdout."""
+
+    completed = _run_module("--json", "no-such-command")
+    assert completed.returncode == 2
+    payload = json.loads(completed.stdout)
+    assert payload["schemaVersion"] == "1.0"
+    assert payload["success"] is False
+    assert payload["exitCode"] == 2
+    assert payload["command"] == "usage"
+    assert payload["error"]["classification"] == "parse-error"
+    assert "no-such-command" in payload["error"]["message"]
+    assert completed.stderr == ""
+
+
+def test_json_invalid_command_accepts_global_flag_after_subcommand() -> None:
+    """Global --json after an invalid token still produces JSON output."""
+
+    completed = _run_module("no-such-command", "--json")
+    assert completed.returncode == 2
+    payload = json.loads(completed.stdout)
+    assert payload["success"] is False
+    assert payload["exitCode"] == 2
+    assert payload["error"]["classification"] == "parse-error"
+    assert completed.stderr == ""
+
+
 def test_invalid_global_path_returns_configuration_exit_status(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     """Invalid global path options map to exit status 2 with a JSON failure envelope."""
 
