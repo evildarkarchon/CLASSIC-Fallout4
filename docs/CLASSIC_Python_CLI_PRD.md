@@ -214,7 +214,7 @@ The implemented flag name is `--tracebacks` to make Python-boundary behavior exp
 
 | Command | Purpose |
 | --- | --- |
-| `classic-py scan logs` | Run crash-log scanning through `classic_scanlog`. |
+| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog` and report per-log failures in structured output. |
 | `classic-py scan game` | Run game setup checks through `classic_scangame` and related bindings. |
 | `classic-py config inspect` | Load and summarize CLASSIC YAML/config state through `classic_config`. |
 | `classic-py config main-version` | Read the schema-gated main YAML version through the binding contract. |
@@ -305,13 +305,15 @@ Reports should include command lines, profile, environment summary, scenario res
 
 | Exit Code | Meaning |
 | ---: | --- |
-| 0 | Command succeeded. For scans, no fatal failure occurred; "no logs found" is success. |
-| 1 | Command completed but found product/compliance failures. Examples: scan errors, failed scenarios, validation findings. |
+| 0 | Command succeeded. For Python CLI scans, no fatal workflow failure occurred; "no logs found" and fail-soft per-log scan failures are success with structured failure counts. |
+| 1 | Command completed but found product/compliance failures for commands that define findings as process failures. Examples: failed scenarios and validation findings. |
 | 2 | Usage, configuration, or startup failure before the product workflow could run. |
 | 3 | Python binding import/build failure, including missing PyO3 wheels. |
 | 4 | Interrupted or cancelled by the user. |
 
 Commands must not silently return success after failing to load a required binding.
+
+`classic-py scan logs` intentionally follows the scanlog binding's fail-soft batch contract: malformed, missing, or otherwise failed logs appear in the JSON summary as per-log failures, but a completed batch still exits `0`. Automation that wants strict CI behavior should inspect the structured failure count rather than relying on the process status.
 
 ---
 
@@ -519,7 +521,7 @@ uv run --project python-bindings python tools/binding_compliance/check_complianc
 
 - `scan logs` with custom scan path, scan options, JSON summary, and report artifact listing.
 - `scan game` with game path/mod path checks and structured findings.
-- Stable exit semantics for no logs, partial scan failures, and startup failures.
+- Stable exit semantics for no logs, fail-soft per-log scan failures, and fatal startup failures.
 
 ### Phase 5: Compliance Profiles
 

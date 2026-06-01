@@ -121,7 +121,7 @@ The Python CLI SHALL provide selected product command groups for configuration, 
 
 #### Scenario: Contributor scans crash logs through Python bindings
 - **WHEN** a contributor runs `classic-py scan logs` with a fixture or explicit scan path
-- **THEN** the CLI invokes the maintained scanlog binding workflow, summarizes processed logs and report artifacts, and applies stable scan exit semantics
+- **THEN** the CLI invokes the maintained scanlog binding workflow, summarizes processed logs and report artifacts, reports per-log failures in structured output, and exits successfully when the batch itself completes
 
 #### Scenario: Network-dependent update checks are outside default smoke
 - **WHEN** the default smoke profile runs

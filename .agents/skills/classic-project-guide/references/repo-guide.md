@@ -199,7 +199,8 @@ Run these from the repo root when changing `CLASSIC Data/app-notification.yaml`,
 ```powershell
 uv sync --project python-bindings --inexact --group drift-guards
 uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
-uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at "2026-05-23T00:00:00Z"
+$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
 uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q
 ```
 
@@ -342,7 +343,7 @@ Trigger paths usually include:
 Required follow-up in the same change:
 
 1. Run `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"`.
-2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and generate a disposable manifest preview with `uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at "2026-05-23T00:00:00Z"`.
+2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and generate a disposable manifest preview using a current UTC timestamp, for example by setting `$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` and passing `--published-at $publishedAt`.
 3. If manifest fields, validation rules, cache/fallback behavior, or delivery sequencing changes, update `docs/api/app-update-notification-delivery.md` and any affected crate API docs under `docs/api/`.
 4. Do not commit generated `manifest.json` previews or `gh-pages` publish outputs; the workflow owns those artifacts.
 5. Preserve tag namespace separation: `app-notification-v*` wakes the notification publish workflow, which validates the stricter `app-notification-v<SEMVER>` shape before publishing; `yaml-data-v*` triggers YAML-data publishes, and binary `v*` releases remain the advertised install target. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the binary `v*` tag being advertised, not the `app-notification-v*` workflow tag. The notification and YAML-data workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.

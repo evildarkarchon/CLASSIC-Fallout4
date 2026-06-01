@@ -144,6 +144,49 @@ def test_fake_version_binding_command(monkeypatch: pytest.MonkeyPatch, capsys: p
     assert payload["data"]["formatted"] == "v1.2.3"
 
 
+def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Per-log scan failures are visible in JSON without failing the completed batch."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    scan_dir = tmp_path / "logs"
+    scan_dir.mkdir()
+    (scan_dir / "good.log").write_text("good log\n", encoding="utf-8")
+    (scan_dir / "bad.log").write_text("bad log\n", encoding="utf-8")
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    fake.AnalysisConfig = lambda game, game_version: (game, game_version)
+
+    class FakeOrchestrator:
+        def __init__(self, config: object) -> None:
+            self.config = config
+
+        def process_logs_batch(self, paths: list[str]) -> list[types.SimpleNamespace]:
+            return [
+                types.SimpleNamespace(
+                    log_path=path,
+                    success=Path(path).name != "bad.log",
+                    error="malformed log" if Path(path).name == "bad.log" else None,
+                )
+                for path in paths
+            ]
+
+    fake.Orchestrator = FakeOrchestrator
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+
+    code = main(["--json", "scan", "logs", "--path", str(scan_dir)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["success"] is True
+    assert payload["data"]["processedLogs"] == 2
+    assert payload["data"]["successfulLogs"] == 1
+    assert payload["data"]["failedLogs"] == 1
+    assert payload["data"]["failures"] == [{"logPath": str(scan_dir / "bad.log"), "error": "malformed log"}]
+
+
 def test_catalog_validation() -> None:
     """Every scenario carries the metadata required by reports and listing."""
 

@@ -377,6 +377,26 @@ def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
     return success("resource detect", f"Resource type: {resource_type}", {"path": args.path, "resourceType": str(resource_type)})
 
 
+def _scan_result_success(result: object) -> bool:
+    """Return the per-log success flag from a scanlog AnalysisResult-like object."""
+
+    value = getattr(result, "success", False)
+    if callable(value):
+        value = value()
+    return bool(value)
+
+
+def _scan_failure_summary(result: object) -> dict[str, str]:
+    """Return a JSON-safe summary for a failed per-log scan result."""
+
+    log_path = getattr(result, "log_path", getattr(result, "logPath", ""))
+    error = getattr(result, "error", None)
+    summary = {"logPath": str(log_path)}
+    if error is not None:
+        summary["error"] = str(error)
+    return summary
+
+
 def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     """Run a deterministic scanlog binding path over an explicit log directory."""
 
@@ -395,7 +415,21 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return failure("scan logs", "classic_scanlog does not expose Orchestrator.process_logs_batch", int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan logs", "classic_scanlog", exc)
-    return success("scan logs", "Scanlog binding completed", {"scanPath": str(scan_path), "processedLogs": len(paths), "result": str(result)})
+    results = list(result)
+    failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
+    successful_logs = len(results) - len(failures)
+    return success(
+        "scan logs",
+        f"Scanlog binding completed: {successful_logs} succeeded, {len(failures)} failed",
+        {
+            "scanPath": str(scan_path),
+            "processedLogs": len(results),
+            "successfulLogs": successful_logs,
+            "failedLogs": len(failures),
+            "failures": failures,
+            "result": str(result),
+        },
+    )
 
 
 def scan_game(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
