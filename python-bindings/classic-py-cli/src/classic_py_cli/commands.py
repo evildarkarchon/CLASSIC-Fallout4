@@ -361,6 +361,8 @@ def update_validate_url(args: _UpdateValidateUrlArgs, context: CommandContext) -
         return failure("update validate-url", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("update validate-url", "classic_web", exc)
+    if not valid:
+        return failure("update validate-url", f"URL is not valid: {args.url}", int(ExitCode.PRODUCT_FAILURE), data={"url": args.url, "valid": False})
     return success("update validate-url", f"URL valid: {valid}", {"url": args.url, "valid": valid})
 
 

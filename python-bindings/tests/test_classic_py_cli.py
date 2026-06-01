@@ -144,6 +144,26 @@ def test_fake_version_binding_command(monkeypatch: pytest.MonkeyPatch, capsys: p
     assert payload["data"]["formatted"] == "v1.2.3"
 
 
+def test_update_validate_url_returns_product_failure_for_invalid_url(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    """Invalid update URLs are validation findings, not successful commands."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_web")
+    fake.__version__ = "test"
+    fake.is_valid_url = lambda url: False
+    monkeypatch.setitem(sys.modules, "classic_web", fake)
+
+    code = main(["--json", "update", "validate-url", "not-a-url"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 1
+    assert payload["success"] is False
+    assert payload["exitCode"] == 1
+    assert payload["data"] == {"url": "not-a-url", "valid": False}
+
+
 def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Per-log scan failures are visible in JSON without failing the completed batch."""
 
