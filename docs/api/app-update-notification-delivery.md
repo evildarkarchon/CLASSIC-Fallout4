@@ -138,6 +138,19 @@ The workflow reads its inputs from [`CLASSIC Data/app-notification.yaml`](../../
 8. **Pages smoke-test** — reuses `tools/publish_yaml_data/smoke_test_pages.py --pages-path app-notification/manifest-latest.json`; compares the live Pages response body against the staged `manifest.json` so notification-only republishes cannot pass against an older payload.
 9. **Clear prerelease flag** — `gh release edit --prerelease=false --latest=false` runs LAST, only after Pages has been proven to serve the new tag. Only now does the release become visible to `fetch_via_releases_fallback`. Running this step last keeps the Pages-first and Releases-API fallback channels on the same tag at every instant: a failure of step 7 or 8 leaves the release as a prerelease (invisible to fallback) while Pages-first clients still read the previous `manifest-latest.json`.
 
+### Local dry run
+
+Maintainers can exercise the publish ordering without pushing an `app-notification-v*` tag:
+
+```powershell
+$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v9.2.0 --published-at $publishedAt
+```
+
+The harness validates the workflow tag before reading the source artifact, validates [`CLASSIC Data/app-notification.yaml`](../../CLASSIC%20Data/app-notification.yaml), generates the same `manifest.json` bytes as the workflow, stages a local `releases/download/<tag>/manifest.json`, and stages `gh-pages/app-notification/manifest-latest.json` plus `manifest-<tag>.json` under the reported output directory. It then serves those files from localhost and reuses `tools/publish_app_notification/verify_release_asset.py` and `tools/publish_yaml_data/smoke_test_pages.py --base-url` against the staged bytes.
+
+Use `--simulate-release-asset-mismatch` to prove a stale release asset fails before Pages staging, or `--simulate-pages-mismatch` to prove a stale Pages payload fails before the live workflow would clear the prerelease flag. The dry run never creates, edits, deletes, or publishes a GitHub Release, and it never pushes `gh-pages`.
+
 ### Rollback
 
 The notification channel is stateless beyond the ETag file, so rollback is trivial:

@@ -2,9 +2,11 @@
 
 GitHub Pages deployment is eventually consistent — the new content can take
 a minute or two to propagate after the workflow pushes to the `gh-pages`
-branch. This script polls
-``https://<owner>.github.io/<repo>/<pages-path>`` with fixed-interval
-backoff until the remote body matches what the workflow staged, then exits 0.
+branch. This script polls the Pages URL with fixed-interval backoff until the
+remote body matches what the workflow staged, then exits 0. Workflow callers
+use ``https://<owner>.github.io/<repo>/<pages-path>``; local dry-run harnesses
+can pass ``--base-url`` to point the same smoke-test logic at a temporary
+server.
 
 Two match modes are supported:
 
@@ -40,6 +42,26 @@ from pathlib import Path
 
 DEFAULT_TIMEOUT_SECONDS = 180
 DEFAULT_POLL_INTERVAL_SECONDS = 10
+
+
+def build_pages_url(
+    owner: str | None,
+    repo: str | None,
+    pages_path: str,
+    base_url: str | None = None,
+) -> str:
+    """Return the URL that the Pages smoke test should poll.
+
+    ``base_url`` is for local dry-runs that serve a staged Pages tree from a
+    temporary localhost HTTP server. Without it, ``owner`` and ``repo`` are
+    required and the live GitHub Pages URL shape is preserved.
+    """
+    normalized_path = pages_path.lstrip("/")
+    if base_url:
+        return f"{base_url.rstrip('/')}/{normalized_path}"
+    if not owner or not repo:
+        raise ValueError("--owner and --repo are required unless --base-url is provided")
+    return f"https://{owner}.github.io/{repo}/{normalized_path}"
 
 
 def _fetch_bytes(url: str, socket_timeout: float) -> bytes | None:
@@ -78,8 +100,14 @@ def _sha256(data: bytes) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
-    parser.add_argument("--owner", required=True, help='The "<owner>" segment of the repo')
-    parser.add_argument("--repo", required=True, help='The "<repo>" segment (no owner prefix)')
+    parser.add_argument(
+        "--owner",
+        help='The "<owner>" segment of the repo. Required unless --base-url is provided.',
+    )
+    parser.add_argument(
+        "--repo",
+        help='The "<repo>" segment (no owner prefix). Required unless --base-url is provided.',
+    )
     match_group = parser.add_mutually_exclusive_group(required=True)
     match_group.add_argument(
         "--tag",
@@ -110,9 +138,22 @@ def main() -> int:
         default="yaml-data/manifest-latest.json",
         help="Path under the Pages root (default: yaml-data/manifest-latest.json)",
     )
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help=(
+            "Override the Pages root URL, for example a localhost server used "
+            "by dry-run tooling. When omitted, owner/repo build the live "
+            "GitHub Pages URL."
+        ),
+    )
     args = parser.parse_args()
 
-    url = f"https://{args.owner}.github.io/{args.repo}/{args.pages_path}"
+    try:
+        url = build_pages_url(args.owner, args.repo, args.pages_path, args.base_url)
+    except ValueError as err:
+        parser.error(str(err))
+
     deadline = time.monotonic() + args.timeout_seconds
 
     expected_digest: str | None = None

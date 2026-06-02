@@ -126,7 +126,7 @@ def main() -> int:
     parser.add_argument(
         "--url",
         required=True,
-        help="HTTPS URL of the release asset manifest.json",
+        help="URL of the release asset manifest.json (HTTPS in CI, localhost for dry runs)",
     )
     parser.add_argument(
         "--expected-body-path",

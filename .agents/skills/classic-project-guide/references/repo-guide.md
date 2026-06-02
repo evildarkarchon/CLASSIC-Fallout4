@@ -203,10 +203,11 @@ uv sync --project python-bindings --inexact --group drift-guards
 uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
+uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v9.2.0 --published-at $publishedAt
 uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q
 ```
 
-The generator command writes a disposable local preview; do not commit generated `manifest.json` or `gh-pages` outputs. The `uv` commands use the bindings-local tool environment so `ruamel.yaml` and pytest are available without relying on whatever `python` happens to resolve in the shell.
+The generator command writes a disposable local preview. The dry-run command validates the stricter `app-notification-v<SEMVER>` workflow tag, stages the same release-asset and `gh-pages` manifest files under a local output directory, and reuses the release-asset probe plus Pages smoke-test helper against a temporary localhost server. Add `--simulate-release-asset-mismatch` or `--simulate-pages-mismatch` when you need to verify failure ordering. Do not commit generated `manifest.json` or `gh-pages` outputs. The `uv` commands use the bindings-local tool environment so `ruamel.yaml` and pytest are available without relying on whatever `python` happens to resolve in the shell.
 
 The maintainer publish workflow lives in `.github/workflows/publish-app-notification.yml` and runs only for pushed `app-notification-v*` tags. This channel is disjoint from `yaml-data-v*` data publishes and binary `v*` releases.
 
@@ -347,7 +348,7 @@ Trigger paths usually include:
 Required follow-up in the same change:
 
 1. Run `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"`.
-2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and generate a disposable manifest preview using a current UTC timestamp, for example by setting `$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` and passing `--published-at $publishedAt`.
+2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and run the local dry-run harness using a current UTC timestamp, for example by setting `$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` and passing `--workflow-tag app-notification-v9.2.0 --published-at $publishedAt`.
 3. If manifest fields, validation rules, cache/fallback behavior, or delivery sequencing changes, update `docs/api/app-update-notification-delivery.md` and any affected crate API docs under `docs/api/`.
 4. Do not commit generated `manifest.json` previews or `gh-pages` publish outputs; the workflow owns those artifacts.
 5. Preserve tag namespace separation: `app-notification-v*` wakes the notification publish workflow, which validates the stricter `app-notification-v<SEMVER>` shape before publishing; `yaml-data-v*` triggers YAML-data publishes, and binary `v*` releases remain the advertised install target. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the binary `v*` tag being advertised, not the `app-notification-v*` workflow tag. The notification and YAML-data workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.
