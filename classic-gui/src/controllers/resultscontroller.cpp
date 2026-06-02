@@ -23,6 +23,15 @@
 #include "classic_cxx_bridge/files.h"
 #include "rust/cxx.h"
 
+namespace {
+
+QString reportDirKey(const QString& path)
+{
+    return QDir::cleanPath(QFileInfo(path).absoluteFilePath()).toLower();
+}
+
+} // namespace
+
 // ── Construction ───────────────────────────────────────────────────
 
 ResultsController::ResultsController(SignalHub* signalHub, QTabWidget* tabWidget, ReportListWidget* reportList,
@@ -45,6 +54,7 @@ ResultsController::ResultsController(SignalHub* signalHub, QTabWidget* tabWidget
     if (m_signalHub) {
         connect(m_signalHub, &SignalHub::scanStarted, this, &ResultsController::onScanStarted);
         connect(m_signalHub, &SignalHub::scanCompleted, this, &ResultsController::onScanCompleted);
+        connect(m_signalHub, &SignalHub::scanError, this, &ResultsController::onScanError);
     }
 
     // File system watcher
@@ -89,7 +99,7 @@ void ResultsController::setReportDirectories(const QStringList& dirPaths, const 
         seen.insert(key);
         m_reportDirs.append(cleaned);
 
-        if (QDir(cleaned).exists()) {
+        if (!m_fileWatchingPaused && QDir(cleaned).exists()) {
             m_watcher.addPath(cleaned);
         }
     }
@@ -111,14 +121,8 @@ void ResultsController::refreshReports()
         return;
     }
 
+    seedBaselinesForCurrentDirectories();
     QStringList reports = discoverReports();
-
-    if (!m_baselineCaptured) {
-        for (const auto& path : reports) {
-            m_baselineReports.insert(classic::gui::reportPathKey(path));
-        }
-        m_baselineCaptured = true;
-    }
 
     QSet<QString> newPaths;
     for (const auto& path : reports) {
@@ -217,6 +221,7 @@ void ResultsController::onCopyAll()
 void ResultsController::onScanStarted()
 {
     // Pause file watching during scans to avoid spurious refreshes
+    m_fileWatchingPaused = true;
     auto dirs = m_watcher.directories();
     if (!dirs.isEmpty()) {
         m_watcher.removePaths(dirs);
@@ -225,12 +230,7 @@ void ResultsController::onScanStarted()
 
 void ResultsController::onScanCompleted()
 {
-    // Resume file watching
-    for (const auto& dir : m_reportDirs) {
-        if (QDir(dir).exists()) {
-            m_watcher.addPath(dir);
-        }
-    }
+    resumeFileWatching();
 
     // Refresh the report list
     refreshReports();
@@ -239,6 +239,13 @@ void ResultsController::onScanCompleted()
     if (m_autoSwitchToResults && m_tabWidget && m_tabWidget->count() > kResultsTabIndex) {
         m_tabWidget->setCurrentIndex(kResultsTabIndex);
     }
+}
+
+void ResultsController::onScanError(const QString& message)
+{
+    Q_UNUSED(message);
+    resumeFileWatching();
+    refreshReports();
 }
 
 void ResultsController::onDirectoryChanged()
@@ -257,10 +264,8 @@ QStringList ResultsController::discoverReports() const
 
     for (const auto& dir : m_reportDirs) {
         try {
-            auto rustPaths = classic::files::discover_report_files(classic::toRustString(dir));
-            for (const auto& rpath : rustPaths) {
-                const QString path = QDir::cleanPath(classic::toQString(rpath));
-                const QString key = path.toLower();
+            for (const auto& path : discoverReportsInDirectory(dir)) {
+                const QString key = classic::gui::reportPathKey(path);
                 if (seen.contains(key)) {
                     continue;
                 }
@@ -278,6 +283,51 @@ QStringList ResultsController::discoverReports() const
     });
 
     return paths;
+}
+
+QStringList ResultsController::discoverReportsInDirectory(const QString& dir) const
+{
+    QStringList paths;
+
+    auto rustPaths = classic::files::discover_report_files(classic::toRustString(dir));
+    for (const auto& rpath : rustPaths) {
+        paths.append(QDir::cleanPath(classic::toQString(rpath)));
+    }
+
+    return paths;
+}
+
+void ResultsController::seedBaselinesForCurrentDirectories()
+{
+    for (const auto& dir : m_reportDirs) {
+        const QString key = reportDirKey(dir);
+        if (m_baselinedReportDirs.contains(key)) {
+            continue;
+        }
+
+        try {
+            for (const auto& path : discoverReportsInDirectory(dir)) {
+                m_baselineReports.insert(classic::gui::reportPathKey(path));
+            }
+            m_baselinedReportDirs.insert(key);
+        } catch (const rust::Error&) {
+            // Retry baseline seeding on the next refresh.
+        }
+    }
+}
+
+void ResultsController::resumeFileWatching()
+{
+    if (!m_fileWatchingPaused) {
+        return;
+    }
+
+    m_fileWatchingPaused = false;
+    for (const auto& dir : m_reportDirs) {
+        if (QDir(dir).exists()) {
+            m_watcher.addPath(dir);
+        }
+    }
 }
 
 bool ResultsController::openFolderInFileBrowser(const QString& folderPath)

@@ -213,7 +213,7 @@ impl CompatibleRange {
 /// use classic_version_registry_core::CrashgenConfig;
 ///
 /// // Simple config with just version
-/// let simple = CrashgenConfig::from_version_string("1.37.0");
+/// let simple = CrashgenConfig::from_version_string("1.38.1");
 ///
 /// // Full config with all metadata
 /// let full = CrashgenConfig::new(
@@ -227,7 +227,7 @@ impl CompatibleRange {
 /// ```
 #[derive(Debug, Clone)]
 pub struct CrashgenConfig {
-    /// Version string of the crash generator (e.g., "1.28.6", "1.37.0").
+    /// Version string of the crash generator (e.g., "1.28.6", "1.38.1").
     pub version: String,
     /// Display name (e.g., "Buffout 4", "Buffout 4 NG").
     pub name: String,
@@ -405,8 +405,9 @@ pub struct VersionInfo {
     ///
     /// Each `CrashgenConfig` contains version, name, description, download_url,
     /// and optional compatible_range. For example, FO4_OG supports both
-    /// Buffout 4 (1.28.6) and Buffout 4 NG (1.37.0), while FO4_NG only
-    /// supports Buffout 4 NG (1.37.0). An empty Vec means no crash
+    /// Buffout 4 (1.28.6), Buffout 4 NG (1.38.1), and Addictol (1.3.0),
+    /// while FO4_NG supports Buffout 4 NG (1.38.1) and Addictol (1.3.0).
+    /// An empty Vec means no crash
     /// generator is configured yet.
     pub crashgen_versions: Vec<CrashgenConfig>,
 }
@@ -447,7 +448,7 @@ impl VersionInfo {
     /// let registry = get_version_registry();
     /// if let Some(og) = registry.get_by_id("FO4_OG") {
     ///     let versions = og.get_crashgen_version_strings();
-    ///     // Returns ["1.28.6", "1.37.0"]
+    ///     // Returns ["1.28.6", "1.38.1", "1.3.0"]
     /// }
     /// ```
     #[must_use]

@@ -31,10 +31,14 @@ private slots:
     void onCopyAll();
     void onScanStarted();
     void onScanCompleted();
+    void onScanError(const QString& message);
     void onDirectoryChanged();
 
 private:
     QStringList discoverReports() const;
+    QStringList discoverReportsInDirectory(const QString& dir) const;
+    void seedBaselinesForCurrentDirectories();
+    void resumeFileWatching();
     virtual bool openFolderInFileBrowser(const QString& folderPath);
     virtual bool revealFileInFileBrowser(const QString& filePath);
     virtual bool startDetachedProcess(const QString& program, const QStringList& arguments = {},
@@ -51,6 +55,7 @@ private:
     QString m_primaryReportDir;
     bool m_autoSwitchToResults = true;
     QSet<QString> m_baselineReports;
-    bool m_baselineCaptured = false;
+    QSet<QString> m_baselinedReportDirs;
+    bool m_fileWatchingPaused = false;
     static constexpr int kResultsTabIndex = 3;
 };

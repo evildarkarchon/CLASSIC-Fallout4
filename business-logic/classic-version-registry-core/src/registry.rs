@@ -2,7 +2,7 @@
 //!
 //! This module provides the main `VersionRegistry` type that manages game version
 //! metadata. It implements a thread-safe singleton pattern using `OnceLock` and
-//! supports loading from YAML with fallback to hardcoded defaults.
+//! supports loading from YAML with fallback to the embedded `CLASSIC Main.yaml`.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -10,13 +10,15 @@ use std::sync::OnceLock;
 
 use classic_settings_core::YamlOperations;
 
-use crate::defaults;
 use crate::matching::{MatchResult, VersionMatcher};
 use crate::models::{
     AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling,
     UnknownVersionStrategy, VersionInfo, XseConfig,
 };
 use crate::{GameVersion, VersionRegistryError};
+
+const EMBEDDED_CLASSIC_MAIN_YAML: &str =
+    include_str!("../../../CLASSIC Data/databases/CLASSIC Main.yaml");
 
 /// Global singleton registry instance.
 static REGISTRY: OnceLock<VersionRegistry> = OnceLock::new();
@@ -25,7 +27,7 @@ static REGISTRY: OnceLock<VersionRegistry> = OnceLock::new();
 ///
 /// The registry is implemented as a singleton that is automatically
 /// initialized on first access. It loads version data from YAML
-/// configuration, falling back to hardcoded defaults if loading fails.
+/// configuration, falling back to the embedded `CLASSIC Main.yaml` if loading fails.
 ///
 /// # Usage
 ///
@@ -55,7 +57,7 @@ impl VersionRegistry {
     /// # Panics
     ///
     /// This function should not panic under normal circumstances.
-    /// If initialization fails, it falls back to hardcoded defaults.
+    /// If runtime YAML loading fails, it falls back to the embedded `CLASSIC Main.yaml`.
     #[must_use]
     pub fn get_instance() -> &'static Self {
         REGISTRY.get_or_init(Self::initialize)
@@ -68,8 +70,8 @@ impl VersionRegistry {
             return registry;
         }
 
-        // Fall back to hardcoded defaults
-        Self::load_defaults()
+        // Fall back to the same YAML data embedded at compile time.
+        Self::load_embedded_defaults().expect("embedded CLASSIC Main.yaml fallback must be valid")
     }
 
     /// Try to load the registry from YAML configuration.
@@ -100,9 +102,31 @@ impl VersionRegistry {
         let yaml_ops = YamlOperations::new();
         let yaml = yaml_ops.load_yaml_file(yaml_path)?;
 
+        Self::load_from_parsed_yaml(&yaml, true)
+    }
+
+    fn load_from_yaml_str(
+        yaml_content: &str,
+        use_embedded_unknown_fallback: bool,
+    ) -> Result<Self, VersionRegistryError> {
+        let yaml_ops = YamlOperations::new();
+        let yaml = yaml_ops.parse_yaml(yaml_content)?;
+        Self::load_from_parsed_yaml(&yaml, use_embedded_unknown_fallback)
+    }
+
+    pub(crate) fn load_embedded_defaults() -> Result<Self, VersionRegistryError> {
+        Self::load_from_yaml_str(EMBEDDED_CLASSIC_MAIN_YAML, false)
+    }
+
+    fn load_from_parsed_yaml(
+        yaml: &yaml_rust2::Yaml,
+        use_embedded_unknown_fallback: bool,
+    ) -> Result<Self, VersionRegistryError> {
+        let yaml_ops = YamlOperations::new();
+
         // Try to get Version_Registry.versions
         let versions_yaml = yaml_ops
-            .get_setting(&yaml, "Version_Registry.versions")
+            .get_setting(yaml, "Version_Registry.versions")
             .ok_or_else(|| {
                 VersionRegistryError::NotFound("Version_Registry.versions not found".to_string())
             })?;
@@ -141,11 +165,15 @@ impl VersionRegistry {
 
         // Load unknown version handling
         let unknown_handling = if let Some(handling_yaml) =
-            yaml_ops.get_setting(&yaml, "Version_Registry.unknown_version_handling")
+            yaml_ops.get_setting(yaml, "Version_Registry.unknown_version_handling")
         {
             Self::parse_unknown_handling_yaml(&handling_yaml)
+        } else if use_embedded_unknown_fallback {
+            Self::load_embedded_defaults()?.unknown_handling
         } else {
-            defaults::get_default_unknown_handling()
+            return Err(VersionRegistryError::NotFound(
+                "Version_Registry.unknown_version_handling not found".to_string(),
+            ));
         };
 
         Ok(Self {
@@ -278,7 +306,7 @@ impl VersionRegistry {
     /// Parse crashgen_versions from YAML.
     ///
     /// Supports two formats:
-    /// 1. Simple string list: `["1.28.6", "1.37.0"]`
+    /// 1. Simple string list: `["1.28.6", "1.38.1"]`
     /// 2. Structured format: `[{ version: "1.28.6", name: "Buffout 4", ... }]`
     fn parse_crashgen_versions_yaml(
         yaml: &yaml_rust2::Yaml,
@@ -367,23 +395,6 @@ impl VersionRegistry {
         UnknownVersionHandling::new(strategy, defaults_map, log_level)
     }
 
-    /// Load the registry with hardcoded defaults.
-    fn load_defaults() -> Self {
-        let versions = defaults::get_default_versions();
-        let unknown_handling = defaults::get_default_unknown_handling();
-
-        let mut by_version = HashMap::new();
-        for version in versions.values() {
-            by_version.insert(version.version_string(), version.clone());
-        }
-
-        Self {
-            versions,
-            by_version,
-            unknown_handling,
-        }
-    }
-
     /// Create a registry for testing (bypasses singleton).
     #[cfg(test)]
     pub fn new_for_testing(
@@ -396,6 +407,16 @@ impl VersionRegistry {
             by_version,
             unknown_handling,
         }
+    }
+
+    pub(crate) fn into_parts(
+        self,
+    ) -> (
+        HashMap<String, VersionInfo>,
+        HashMap<String, VersionInfo>,
+        UnknownVersionHandling,
+    ) {
+        (self.versions, self.by_version, self.unknown_handling)
     }
 
     // === Public Lookup API ===
@@ -605,7 +626,7 @@ impl VersionRegistry {
     ///
     /// let registry = get_version_registry();
     /// let versions = registry.get_crashgen_version_strings("FO4_OG");
-    /// // Returns ["1.28.6", "1.37.0"]
+    /// // Returns ["1.28.6", "1.38.1", "1.3.0"]
     /// ```
     #[must_use]
     pub fn get_crashgen_version_strings(&self, id: &str) -> Vec<&str> {

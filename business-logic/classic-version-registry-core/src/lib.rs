@@ -9,7 +9,7 @@
 //! - **Version Lookup**: Find version info by ID, exact version, or short name
 //! - **Version Matching**: Match unknown versions to nearest known version
 //! - **YAML Loading**: Load version data from CLASSIC Main.yaml
-//! - **Hardcoded Defaults**: Fallback to built-in Fallout 4 versions
+//! - **Embedded YAML Fallback**: Use the checked-in CLASSIC Main.yaml when runtime loading fails
 //!
 //! ## Architecture
 //!

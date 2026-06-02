@@ -1761,6 +1761,7 @@ void MainWindow::onScanWarning(const QString& message)
 void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
 {
     m_lastScanReportDirs = reportDirs;
+    initResultsReportDir();
 }
 
 void MainWindow::onShowSettings()

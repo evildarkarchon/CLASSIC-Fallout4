@@ -35,6 +35,7 @@ private slots:
     void baseline_reports_at_startup_are_not_flagged_new();
     void report_appearing_after_baseline_is_flagged_new();
     void baseline_report_overwritten_is_not_flagged_new();
+    void reports_in_later_directory_are_seeded_before_new_paths();
 };
 
 namespace {
@@ -573,6 +574,56 @@ void ResultsControllerTests::baseline_report_overwritten_is_not_flagged_new()
     QTRY_COMPARE(list->count(), 1);
     QVERIFY(!listItemIsNew(list, baselineReport));
     QVERIFY(!list->item(0)->data(Qt::ForegroundRole).isValid());
+}
+
+void ResultsControllerTests::reports_in_later_directory_are_seeded_before_new_paths()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString crashDir = tempDir.filePath(QStringLiteral("Crash Logs"));
+    const QString customDir = tempDir.filePath(QStringLiteral("Custom Folder"));
+    QVERIFY(QDir().mkpath(crashDir));
+    QVERIFY(QDir().mkpath(customDir));
+
+    const QString baselineReport = writeTextFile(crashDir + QStringLiteral("/crash-2025-04-01-00-00-00-AUTOSCAN.md"),
+                                                 QStringLiteral("NO ISSUES FOUND\n"));
+    const QString oldCustomReport =
+        writeTextFile(customDir + QStringLiteral("/crash-2025-04-01-00-00-01-AUTOSCAN.md"),
+                      QStringLiteral("SUSPECT: old custom\n"));
+    QVERIFY(!baselineReport.isEmpty());
+    QVERIFY(!oldCustomReport.isEmpty());
+
+    QTabWidget tabWidget;
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ResultsController controller(&SignalHub::instance(), &tabWidget, &reportList, &markdownViewer, &metadata);
+
+    controller.setReportDirectories({crashDir}, crashDir);
+
+    auto* list = findReportList(reportList);
+    QVERIFY(list);
+    QTRY_COMPARE(list->count(), 1);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+
+    controller.setReportDirectories({crashDir, customDir}, crashDir);
+
+    QTRY_COMPARE(list->count(), 2);
+    QVERIFY(!listItemIsNew(list, baselineReport));
+    QVERIFY(!listItemIsNew(list, oldCustomReport));
+
+    const QString newCustomReport =
+        writeTextFile(customDir + QStringLiteral("/crash-2025-04-01-00-00-02-AUTOSCAN.md"),
+                      QStringLiteral("SUSPECT: new custom\n"));
+    QVERIFY(!newCustomReport.isEmpty());
+
+    controller.refreshReports();
+
+    QTRY_COMPARE(list->count(), 3);
+    QVERIFY(!listItemIsNew(list, oldCustomReport));
+    QVERIFY(listItemIsNew(list, newCustomReport));
 }
 
 QTEST_MAIN(ResultsControllerTests)

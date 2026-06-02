@@ -42,6 +42,7 @@ private slots:
     void mainwindow_wires_scan_warnings_to_user_feedback();
     void scan_controller_emits_targeted_report_directories();
     void mainwindow_includes_last_scan_report_dirs_in_results_setup();
+    void mainwindow_seeds_targeted_report_dirs_before_scan_finishes();
     void mainwindow_deduplicates_report_dirs_before_results_setup();
     void scan_controller_disables_unsolved_relocation_for_targeted_runs();
     void scan_worker_skips_unsolved_relocation_for_targeted_runs();
@@ -761,6 +762,26 @@ void ScanSettingsWiringTests::mainwindow_includes_last_scan_report_dirs_in_resul
              "MainWindow should listen for resolved report directories from ScanController");
     QVERIFY2(sourceText.contains(QStringLiteral("m_lastScanReportDirs")),
              "MainWindow::initResultsReportDir should include last scan report directories");
+}
+
+void ScanSettingsWiringTests::mainwindow_seeds_targeted_report_dirs_before_scan_finishes()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    const QRegularExpression slotRegex(QStringLiteral(
+        R"(void MainWindow::onScanReportDirectoriesResolved\(const QStringList& reportDirs\)\s*\{(?<body>(?:.|\n)*?)\n\})"));
+    const QRegularExpressionMatch match = slotRegex.match(sourceText);
+    QVERIFY2(match.hasMatch(), "MainWindow::onScanReportDirectoriesResolved() should exist");
+
+    const QString body = match.captured(QStringLiteral("body"));
+    QVERIFY2(body.contains(QStringLiteral("m_lastScanReportDirs = reportDirs;")),
+             "MainWindow should retain targeted report directories");
+    QVERIFY2(body.contains(QStringLiteral("initResultsReportDir();")),
+             "MainWindow should seed targeted report directory baselines before scan completion");
 }
 
 void ScanSettingsWiringTests::mainwindow_deduplicates_report_dirs_before_results_setup()

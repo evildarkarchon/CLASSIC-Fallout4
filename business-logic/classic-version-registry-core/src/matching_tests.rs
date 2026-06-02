@@ -1,18 +1,9 @@
 use super::*;
-use crate::defaults;
-use std::collections::HashMap;
+use crate::registry::VersionRegistry;
 
 // Helper to create a test registry
 fn create_test_registry() -> VersionRegistry {
-    let versions = defaults::get_default_versions();
-    let unknown_handling = defaults::get_default_unknown_handling();
-
-    let mut by_version = HashMap::new();
-    for version in versions.values() {
-        by_version.insert(version.version_string(), version.clone());
-    }
-
-    VersionRegistry::new_for_testing(versions, by_version, unknown_handling)
+    VersionRegistry::load_embedded_defaults().expect("embedded CLASSIC Main.yaml should load")
 }
 
 #[test]

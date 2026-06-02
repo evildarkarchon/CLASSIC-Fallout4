@@ -15,12 +15,14 @@
 
 .PARAMETER CTestName
     Run only the specified CTest unit test name or names. Requires -Test.
+    Accepts PowerShell arrays and comma-separated strings.
 
 .PARAMETER CTestArgs
     Additional arguments to pass to the CTest unit test run command. Requires -Test.
 
 .PARAMETER IntegrationTestName
     Run only the specified classic-cli integration scenario name or names. Requires -Test.
+    Accepts PowerShell arrays and comma-separated strings.
 
 .PARAMETER Debug
     Build using the CMake debug preset (build-debug directory).
@@ -41,6 +43,7 @@
     .\build_cli.ps1 -Clean -Test -Install
     .\build_cli.ps1 -Package
     .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+    .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks","Yaml update bridge returns status"
     .\build_cli.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
     .\build_cli.ps1 -Test -IntegrationTestName help,version
 #>
@@ -61,7 +64,7 @@ $ErrorActionPreference = "Stop"
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
 
-    $normalized = @($TestNames | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $normalized = @(Normalize-TestNameList -TestNames $TestNames)
     if ($normalized.Count -eq 0) {
         return $null
     }
@@ -70,12 +73,36 @@ function New-ExactTestNameRegex {
     return "^($($escaped -join '|'))$"
 }
 
+<#
+.SYNOPSIS
+    Normalizes selected test names from PowerShell arrays or comma-separated strings.
+#>
+function Normalize-TestNameList {
+    param([string[]]$TestNames)
+
+    $normalized = @()
+    foreach ($testName in $TestNames) {
+        if ($null -eq $testName) {
+            continue
+        }
+
+        foreach ($candidate in ($testName -split ",")) {
+            $trimmed = $candidate.Trim()
+            if ($trimmed) {
+                $normalized += $trimmed
+            }
+        }
+    }
+
+    return $normalized
+}
+
 # -Package implies -Install
 if ($Package) { $Install = $true }
 
-$CTestName = @($CTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$CTestName = @(Normalize-TestNameList -TestNames $CTestName)
 $CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-$IntegrationTestName = @($IntegrationTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$IntegrationTestName = @(Normalize-TestNameList -TestNames $IntegrationTestName)
 
 if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0 -or $IntegrationTestName.Count -gt 0) -and -not $Test) {
     Write-Error "-CTestName, -CTestArgs, and -IntegrationTestName require -Test."
