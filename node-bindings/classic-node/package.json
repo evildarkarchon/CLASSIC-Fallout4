@@ -34,8 +34,8 @@
     "test": "bun run test:bun"
   },
   "devDependencies": {
-    "@types/node": "^22.13.10",
     "@napi-rs/cli": "^3.0.0",
+    "@types/node": "^22.19.19",
     "bun-types": "latest",
     "typescript": "^5.8.2"
   },

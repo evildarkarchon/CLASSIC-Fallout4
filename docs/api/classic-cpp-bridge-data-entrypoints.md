@@ -324,7 +324,7 @@ Forwards to `classic_file_io_core::log_collection::resolve_targeted_inputs(...)`
 
 Bridge DTO shape (`TargetedResolutionDto`):
 
-- `logs: Vec<String>` - deduplicated crash-log paths that were accepted
+- `logs: Vec<String>` - deduplicated targeted log paths that were accepted
 - `rejected_paths: Vec<String>` - original paths of rejected inputs (parallel with `rejected_reasons`)
 - `rejected_reasons: Vec<String>` - human-readable rejection reasons (parallel with `rejected_paths`)
 
@@ -333,6 +333,7 @@ Current bridge behavior:
 - converts `&[String]` input paths to `Vec<PathBuf>` for the Rust call
 - runs the async resolver on the shared runtime with `block_on(...)`
 - returned paths are lossy UTF-8 strings
+- explicit regular file paths are accepted regardless of file name; directory inputs remain recursively constrained to `**/crash-*.log`
 - `RejectedInput` structs are flattened into parallel path and reason vectors, matching the bridge's existing pattern for map-like data
 
 ## Standalone file helpers

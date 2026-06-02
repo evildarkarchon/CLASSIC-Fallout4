@@ -4,6 +4,10 @@
 - Overhaul the update system to use GitHub Pages instead of GitHub API.
 - Add YAML update delivery system to allow for dynamic updates to the program's databases.
 - Change interface font to "Inter" and enable antialiasing.
+- Remove restrictions for drag-and-dropped logs for the GUI and explicitly specified logs on the CLI.
+- Add a **NEW** badge on the GUI Results tab for reports generated during the current session (compared against a startup snapshot of existing `*-AUTOSCAN.md` files, not file modification times).
+- Fix drag-and-drop widget not expanding layout as well as sizing of the clear button.
+- Fix drag-and-drop showing a 🚫 indicator in certain circumstances
 
 ### 9.0.0 CHANGES
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.

@@ -187,7 +187,7 @@ fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing()
     assert!(!config.crashgen_latest.is_empty());
     assert_eq!(config.xse_acronym, "F4SE");
     // Auto mode resolves to the configured registry default for Fallout4.
-    assert_eq!(config.game_version, "1.11.191");
+    assert_eq!(config.game_version, "1.11.221");
     assert_eq!(config.game_version_vr, "1.2.72");
     assert!(
         !config
@@ -218,7 +218,7 @@ fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_nam
     );
 
     assert_eq!(config.crashgen_name, "Buffout 4");
-    assert_eq!(config.game_version, "1.11.191");
+    assert_eq!(config.game_version, "1.11.221");
     assert_eq!(config.game_version_vr, "1.2.72");
 }
 
@@ -285,7 +285,7 @@ fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
 }
 
 #[test]
-fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
+fn check_crashgen_version_for_detected_game_rejects_addictol_below_ae_floor() {
     let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     let orchestrator = OrchestratorCore::new(config).unwrap();
 
@@ -294,7 +294,144 @@ fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
         "Fallout 4 v1.11.191",
     );
 
-    assert_eq!(status, crate::version::CrashgenVersionStatus::Valid);
+    assert_eq!(status, crate::version::CrashgenVersionStatus::Outdated);
+}
+
+#[test]
+fn check_crashgen_version_for_detected_game_rejects_buffout_below_og_floor() {
+    let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let (_parsed, status) = orchestrator
+        .check_crashgen_version_for_detected_game("Buffout 4 v1.3.1", "Fallout 4 v1.10.163");
+
+    assert_eq!(status, crate::version::CrashgenVersionStatus::Outdated);
+}
+
+#[test]
+fn process_log_accepts_addictol_versions_newer_than_registry_floor() {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let log_contents = [
+        "Fallout 4 v1.11.191",
+        "Addictol v1.3.1 Feb 16 2026 08:02:06",
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+        "",
+        "SYSTEM SPECS:",
+        "GPU #1: NVIDIA GeForce RTX 4090",
+        "PROBABLE CALL STACK:",
+        "stack frame",
+        "MODULES:",
+        "kernel32.dll v10.0.0",
+        "F4SE PLUGINS:",
+        "addictol.dll v1.3.1",
+        "PLUGINS:",
+        "[00] Fallout4.esm",
+        "REGISTERS:",
+        "RAX 0x0",
+        "STACK:",
+        "stack dump line",
+    ]
+    .join("\n");
+    let fixture = write_fixture_log("addictol-newer-than-floor.log", &log_contents);
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("addictol fixture should process");
+    let report_text = result.report_lines.join("");
+
+    assert!(result.success);
+    assert!(report_text.contains("✅ *You have a valid version of Addictol!*"));
+    assert!(!report_text.contains("OUTDATED"));
+}
+
+#[test]
+fn crashgen_version_strings_for_name_filters_mixed_generator_entries() {
+    let version_info = classic_version_registry_core::VersionInfo {
+        id: "FO4_TEST".to_string(),
+        game: "Fallout4".to_string(),
+        is_vr: false,
+        version: classic_version_registry_core::GameVersion::new(1, 10, 984, 0),
+        display_name: "Test".to_string(),
+        short_name: "TEST".to_string(),
+        description: String::new(),
+        docs_name: "Fallout4".to_string(),
+        steam_id: 377160,
+        address_library: None,
+        xse: None,
+        compatible_range: None,
+        priority: 100,
+        deprecated: false,
+        exe_hash: None,
+        crashgen_versions: vec![
+            classic_version_registry_core::CrashgenConfig::new(
+                "1.38.1",
+                "Buffout 4",
+                "BO4",
+                "buffout4.dll",
+                "Buffout floor",
+                "https://example.invalid/buffout",
+            ),
+            classic_version_registry_core::CrashgenConfig::new(
+                "1.3.0",
+                "Addictol",
+                "Addictol",
+                "addictol.dll",
+                "Addictol floor",
+                "https://example.invalid/addictol",
+            ),
+        ],
+    };
+
+    let buffout_versions =
+        OrchestratorCore::crashgen_version_strings_for_name(&version_info, "Buffout 4");
+    let addictol_versions =
+        OrchestratorCore::crashgen_version_strings_for_name(&version_info, "Addictol");
+
+    assert_eq!(buffout_versions, vec!["1.38.1"]);
+    assert_eq!(addictol_versions, vec!["1.3.0"]);
+}
+
+#[test]
+fn process_log_does_not_validate_old_buffout_against_addictol_floor() {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let log_contents = [
+        "Fallout 4 v1.10.984",
+        "Buffout 4 v1.30.0",
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+        "",
+        "[Compatibility]",
+        "Achievements: true",
+        "SYSTEM SPECS:",
+        "GPU #1: NVIDIA GeForce RTX 4090",
+        "PROBABLE CALL STACK:",
+        "stack frame",
+        "MODULES:",
+        "kernel32.dll v10.0.0",
+        "F4SE PLUGINS:",
+        "buffout4.dll v1.30.0",
+        "PLUGINS:",
+        "[00] Fallout4.esm",
+        "REGISTERS:",
+        "RAX 0x0",
+        "STACK:",
+        "stack dump line",
+    ]
+    .join("\n");
+    let fixture = write_fixture_log("buffout-older-than-own-floor.log", &log_contents);
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("buffout fixture should process");
+    let report_text = result.report_lines.join("");
+
+    assert!(result.success);
+    assert!(report_text.contains("***❌ WARNING: YOUR Buffout 4 IS OUTDATED!"));
 }
 
 #[test]
@@ -584,7 +721,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
 
     let log_contents = [
         "Fallout 4 v1.11.191",
-        "Addictol v1.0.0 Feb 16 2026 08:02:06",
+        "Addictol v1.3.1 Feb 16 2026 08:02:06",
         "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
         "",
         "[Patches]",
@@ -596,7 +733,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
         "MODULES:",
         "kernel32.dll v10.0.0",
         "F4SE PLUGINS:",
-        "addictol.dll v1.0.0",
+        "addictol.dll v1.3.1",
         "buffout4.dll v1.28.6",
         "PLUGINS:",
         "[00] Fallout4.esm",

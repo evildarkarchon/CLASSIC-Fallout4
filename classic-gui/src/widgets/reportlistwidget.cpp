@@ -1,10 +1,19 @@
 #include "widgets/reportlistwidget.h"
 
 #include <algorithm>
+
+#include "core/reportpathkey.h"
+
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QRegularExpression>
 #include <QVBoxLayout>
+
+namespace {
+
+const QString kNewReportMarker = QStringLiteral(" ✨");
+
+} // namespace
 
 // ── Construction ───────────────────────────────────────────────────
 
@@ -70,7 +79,17 @@ void ReportListWidget::setupUi()
 
 void ReportListWidget::setReports(const QStringList& reportPaths)
 {
+    setReports(reportPaths, {});
+}
+
+void ReportListWidget::setReports(const QStringList& reportPaths, const QSet<QString>& newReportPaths)
+{
     m_reportPaths = reportPaths;
+
+    m_newReportPaths.clear();
+    for (const auto& path : newReportPaths) {
+        m_newReportPaths.insert(classic::gui::reportPathKey(path));
+    }
 
     // Sort newest first by filename (crash-YYYY-MM-DD-HH-MM-SS sorts lexicographically)
     std::sort(m_reportPaths.begin(), m_reportPaths.end(),
@@ -82,6 +101,7 @@ void ReportListWidget::setReports(const QStringList& reportPaths)
 void ReportListWidget::clearReports()
 {
     m_reportPaths.clear();
+    m_newReportPaths.clear();
     m_listWidget->clear();
 }
 
@@ -132,6 +152,23 @@ void ReportListWidget::rebuildListItems(const QString& filter)
         QString timestamp = extractTimestamp(filename);
         if (!timestamp.isEmpty()) {
             item->setToolTip(QStringLiteral("Crash: ") + timestamp);
+        }
+
+        if (m_newReportPaths.contains(classic::gui::reportPathKey(path))) {
+            item->setData(NewReportRole, true);
+
+            QFont font = item->font();
+            font.setBold(true);
+            item->setFont(font);
+            item->setForeground(palette().highlight().color());
+            item->setText(filename + kNewReportMarker);
+
+            const QString newSuffix = QStringLiteral(" ✨ (new this session)");
+            if (item->toolTip().isEmpty()) {
+                item->setToolTip(newSuffix.trimmed());
+            } else {
+                item->setToolTip(item->toolTip() + newSuffix);
+            }
         }
 
         m_listWidget->addItem(item);

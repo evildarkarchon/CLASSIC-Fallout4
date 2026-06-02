@@ -31,6 +31,8 @@ qt_add_executable(ClassicGui WIN32
     core/featurecontext.cpp
     core/threadmanager.h
     core/threadmanager.cpp
+    core/reportpathkey.h
+    core/reportpathkey.cpp
 
     # Workers (QThread worker objects)
     workers/scanprogressmodel.h

@@ -169,11 +169,12 @@ Typical local workflow from the repo root:
 # locked tooling (maturin, pytest). `--inexact` is load-bearing: it stops
 # uv from pruning the maturin-built `classic-*-py` wheels on re-sync.
 # Add `--group drift-guards` when you need `ruamel.yaml` for schema_version_gate.py.
-uv sync --project python-bindings --inexact --group drift-guards
+uv sync --project python-bindings --inexact
+
+$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
 
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 uv run --project python-bindings python -m pytest python-bindings/tests -q
@@ -186,8 +187,9 @@ Before `uv run --project python-bindings python -m pytest python-bindings/tests 
 Run these from the repo root when changing `CLASSIC Data/databases/`, schema-version behavior, or YAML publish tooling.
 
 ```powershell
-python tools/schema_version_gate.py --repo-root .
-python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
+uv sync --project python-bindings --inexact --group drift-guards
+uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
+uv run --project python-bindings python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
 ```
 
 The maintainer publish workflow lives in `.github/workflows/publish-yaml-data.yml` and runs only for pushed `yaml-data-v*` tags.
@@ -199,7 +201,8 @@ Run these from the repo root when changing `CLASSIC Data/app-notification.yaml`,
 ```powershell
 uv sync --project python-bindings --inexact --group drift-guards
 uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
-uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at "2026-05-23T00:00:00Z"
+$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
 uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q
 ```
 
@@ -295,12 +298,14 @@ Required follow-up in the same change:
 2. Update `python-bindings/tests/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
 3. Refresh and commit the touched `python-bindings/*-py/*.pyi` files when the public Python surface changes.
 4. Refresh and commit the tracked outputs under `python-bindings/parity-artifacts/` and any affected checked-in baseline reports under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
-5. Run:
-   - `uv sync --project python-bindings --inexact --group drift-guards` (creates/refreshes `python-bindings/.venv` from the locked tooling set; `--inexact` preserves the maturin-built `classic-*-py` wheels)
+5. Before the first `uv sync`, decide whether the change touches shippable YAML data (`CLASSIC Data/databases/`) or schema-version constants. That choice is fixed for the rest of this checklist: `schema_version_gate.py` needs `ruamel.yaml`, which is only installed via `--group drift-guards` on the initial sync — adding the group later still works, but deciding now avoids a venv that cannot run the gate.
+   Run:
+   - **Python-only change:** `uv sync --project python-bindings --inexact` (creates/refreshes `python-bindings/.venv` from the locked tooling set; `--inexact` preserves the maturin-built `classic-*-py` wheels).
+   - **YAML or schema-version change:** `uv sync --project python-bindings --inexact --group drift-guards` (same as above, plus `ruamel.yaml` for `schema_version_gate.py`).
    - `$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"`
    - `uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .`
    - `uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
-   - `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .` when the change touches shippable YAML data or schema-version constants
+   - **YAML or schema-version change (same preflight decision):** `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .`
    - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python`
    - `uv run --project python-bindings python -m pytest python-bindings/tests -q`
 6. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
@@ -320,8 +325,8 @@ Trigger paths usually include:
 
 Required follow-up in the same change:
 
-1. Run `python tools/schema_version_gate.py --repo-root .` to verify checked-in YAML `schema_version` headers still match the Rust-side acceptance contract.
-2. Run `python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"`.
+1. Run `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .` to verify checked-in YAML `schema_version` headers still match the Rust-side acceptance contract.
+2. Run `uv run --project python-bindings python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"`.
 3. If loader, manifest, or delivery behavior changes, update `docs/api/yaml-update-delivery.md` and any affected crate API docs in `docs/api/`.
 4. Remember `publish-yaml-data.yml` is maintainer-triggered only on pushed `yaml-data-v*` tags; PRs do not publish YAML data.
 5. Account for the workflow's downstream effects: GitHub release assets are validated before publish, then Pages manifests are pushed under `gh-pages` `yaml-data/` entries. The YAML-data and app-notification workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.
@@ -342,7 +347,7 @@ Trigger paths usually include:
 Required follow-up in the same change:
 
 1. Run `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"`.
-2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and generate a disposable manifest preview with `uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py`.
+2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and generate a disposable manifest preview using a current UTC timestamp, for example by setting `$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` and passing `--published-at $publishedAt`.
 3. If manifest fields, validation rules, cache/fallback behavior, or delivery sequencing changes, update `docs/api/app-update-notification-delivery.md` and any affected crate API docs under `docs/api/`.
 4. Do not commit generated `manifest.json` previews or `gh-pages` publish outputs; the workflow owns those artifacts.
 5. Preserve tag namespace separation: `app-notification-v*` wakes the notification publish workflow, which validates the stricter `app-notification-v<SEMVER>` shape before publishing; `yaml-data-v*` triggers YAML-data publishes, and binary `v*` releases remain the advertised install target. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the binary `v*` tag being advertised, not the `app-notification-v*` workflow tag. The notification and YAML-data workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.

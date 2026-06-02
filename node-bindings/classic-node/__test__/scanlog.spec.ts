@@ -31,7 +31,14 @@ import {
   type JsLogErrorEntry,
   type JsLogSegments,
   type JsPapyrusStats,
+  type JsCrashgenVersionStatus,
 } from "../index.js";
+
+const CRASHGEN_VERSION_STATUS = {
+  Valid: "Valid" as JsCrashgenVersionStatus,
+  Outdated: "Outdated" as JsCrashgenVersionStatus,
+  NoSupportedVersion: "NoSupportedVersion" as JsCrashgenVersionStatus,
+};
 
 // ============================================================================
 // Sample crash log content for testing
@@ -824,7 +831,7 @@ describe("checkCrashgenVersionStatus", () => {
       "1.28.6",
       "1.37.0",
     ]);
-    expect(status).toBe("Valid");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.Valid);
   });
 
   test("returns Valid for second valid version", () => {
@@ -832,7 +839,7 @@ describe("checkCrashgenVersionStatus", () => {
       "1.28.6",
       "1.37.0",
     ]);
-    expect(status).toBe("Valid");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.Valid);
   });
 
   test("returns Outdated for old version", () => {
@@ -840,20 +847,20 @@ describe("checkCrashgenVersionStatus", () => {
       "1.28.6",
       "1.37.0",
     ]);
-    expect(status).toBe("Outdated");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.Outdated);
   });
 
-  test("returns NewerThanKnown for newer version", () => {
+  test("returns Valid for version newer than configured floor", () => {
     const status = checkCrashgenVersionStatus("1.40.0", [
       "1.28.6",
       "1.37.0",
     ]);
-    expect(status).toBe("NewerThanKnown");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.Valid);
   });
 
   test("returns NoSupportedVersion for empty valid list", () => {
     const status = checkCrashgenVersionStatus("1.28.6", []);
-    expect(status).toBe("NoSupportedVersion");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.NoSupportedVersion);
   });
 
   test("handles version with crashgen prefix", () => {
@@ -861,7 +868,7 @@ describe("checkCrashgenVersionStatus", () => {
       "1.28.6",
       "1.37.0",
     ]);
-    expect(status).toBe("Valid");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.Valid);
   });
 
   test("treats unparsable detected version as Outdated", () => {
@@ -869,7 +876,7 @@ describe("checkCrashgenVersionStatus", () => {
       "1.28.6",
       "1.37.0",
     ]);
-    expect(status).toBe("Outdated");
+    expect(status).toBe(CRASHGEN_VERSION_STATUS.Outdated);
   });
 });
 

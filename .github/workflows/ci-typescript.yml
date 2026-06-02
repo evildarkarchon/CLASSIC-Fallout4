@@ -2,9 +2,9 @@ name: CI — TypeScript
 
 on:
   push:
-    branches: [main, classic-next, develop, classic-9.1]
+    branches: [main, classic-next, dev, classic-9.1]  
   pull_request:
-    branches: [main, classic-next, develop, classic-9.1]
+    branches: [main, classic-next, dev, classic-9.1]
 
 env:
   RUST_BACKTRACE: 1

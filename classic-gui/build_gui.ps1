@@ -19,6 +19,7 @@
 
 .PARAMETER CTestName
     Run only the specified CTest test name or names. Requires -Test.
+    Accepts PowerShell arrays and comma-separated strings.
 
 .PARAMETER CTestArgs
     Additional arguments to pass to the CTest run command. Requires -Test.
@@ -69,7 +70,7 @@ $ErrorActionPreference = "Stop"
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
 
-    $normalized = @($TestNames | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $normalized = @(Normalize-TestNameList -TestNames $TestNames)
     if ($normalized.Count -eq 0) {
         return $null
     }
@@ -78,10 +79,34 @@ function New-ExactTestNameRegex {
     return "^($($escaped -join '|'))$"
 }
 
+<#
+.SYNOPSIS
+    Normalizes selected test names from PowerShell arrays or comma-separated strings.
+#>
+function Normalize-TestNameList {
+    param([string[]]$TestNames)
+
+    $normalized = @()
+    foreach ($testName in $TestNames) {
+        if ($null -eq $testName) {
+            continue
+        }
+
+        foreach ($candidate in ($testName -split ",")) {
+            $trimmed = $candidate.Trim()
+            if ($trimmed) {
+                $normalized += $trimmed
+            }
+        }
+    }
+
+    return $normalized
+}
+
 # -Package implies -Install (windeployqt must populate the install dir first)
 if ($Package) { $Install = $true }
 
-$CTestName = @($CTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$CTestName = @(Normalize-TestNameList -TestNames $CTestName)
 $CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0) -and -not $Test) {
     Write-Error "-CTestName and -CTestArgs require -Test."

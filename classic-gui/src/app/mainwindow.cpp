@@ -5,16 +5,20 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QDragEnterEvent>
+#include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QLayout>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QSaveFile>
 #include <QSet>
+#include <QSizePolicy>
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QTextStream>
@@ -446,19 +450,22 @@ void MainWindow::setupMainOptionsTab()
 
         m_btnClearTargeted = new QPushButton(QStringLiteral("Clear"));
         m_btnClearTargeted->setObjectName(QStringLiteral("btnClearTargeted"));
-        m_btnClearTargeted->setFixedWidth(60);
+        m_btnClearTargeted->setMinimumWidth(qMax(80, m_btnClearTargeted->sizeHint().width()));
+        m_btnClearTargeted->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         m_btnClearTargeted->setVisible(false);
         headerRow->addWidget(m_btnClearTargeted);
         containerLayout->addLayout(headerRow);
 
         m_targetedInputList = new QListWidget();
-        m_targetedInputList->setMaximumHeight(90);
+        m_targetedInputList->setFixedHeight(90);
+        m_targetedInputList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         m_targetedInputList->setVisible(false);
         containerLayout->addWidget(m_targetedInputList);
 
         mainLayout->addWidget(m_targetedInputContainer);
 
         connect(m_btnClearTargeted, &QPushButton::clicked, this, &MainWindow::onClearTargetedInputs);
+        installTargetedDropForwarding();
     }
 
     // Spacer before primary buttons
@@ -1754,6 +1761,7 @@ void MainWindow::onScanWarning(const QString& message)
 void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
 {
     m_lastScanReportDirs = reportDirs;
+    initResultsReportDir();
 }
 
 void MainWindow::onShowSettings()
@@ -2085,30 +2093,180 @@ void MainWindow::onTogglePapyrusMonitor()
 
 // ── Drag-and-drop for targeted scan inputs ─────────────────────────
 
+void MainWindow::installTargetedDropForwarding()
+{
+    const auto enableDropTarget = [this](QWidget* widget) {
+        if (widget) {
+            widget->setAcceptDrops(true);
+            widget->installEventFilter(this);
+        }
+    };
+
+    enableDropTarget(m_targetedInputContainer);
+    enableDropTarget(m_targetedInputLabel);
+    enableDropTarget(m_targetedInputList);
+    // QListWidget routes drops over its item area through the internal viewport.
+    enableDropTarget(m_targetedInputList ? m_targetedInputList->viewport() : nullptr);
+    enableDropTarget(m_btnClearTargeted);
+}
+
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
+{
+    const bool isTargetedDropSurface = watched == m_targetedInputContainer || watched == m_targetedInputLabel ||
+                                       watched == m_targetedInputList ||
+                                       (m_targetedInputList && watched == m_targetedInputList->viewport()) ||
+                                       watched == m_btnClearTargeted;
+
+    if (isTargetedDropSurface) {
+        switch (event->type()) {
+        case QEvent::DragEnter:
+            if (handleTargetedDragEnter(static_cast<QDragEnterEvent*>(event))) {
+                return true;
+            }
+            break;
+        case QEvent::DragMove:
+            if (handleTargetedDragMove(static_cast<QDragMoveEvent*>(event))) {
+                return true;
+            }
+            break;
+        case QEvent::Drop:
+            if (handleTargetedDrop(static_cast<QDropEvent*>(event))) {
+                return true;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    return QMainWindow::eventFilter(watched, event);
+}
+
+bool MainWindow::handleTargetedDragEnter(QDragEnterEvent* event)
+{
+    if (!event->mimeData()->hasUrls()) {
+        return false;
+    }
+
+    if (m_tabWidget && m_tabWidget->currentIndex() == 0) {
+        event->acceptProposedAction();
+    } else {
+        event->ignore();
+    }
+    return true;
+}
+
+bool MainWindow::handleTargetedDragMove(QDragMoveEvent* event)
+{
+    if (!event->mimeData()->hasUrls()) {
+        return false;
+    }
+
+    if (m_tabWidget && m_tabWidget->currentIndex() == 0) {
+        event->acceptProposedAction();
+    } else {
+        event->ignore();
+    }
+    return true;
+}
+
+bool MainWindow::handleTargetedDrop(QDropEvent* event)
+{
+    const bool wrongTab = !m_tabWidget || m_tabWidget->currentIndex() != 0;
+    const bool unsupportedPayload = !event->mimeData()->hasUrls();
+
+    if (unsupportedPayload) {
+        acknowledgeTargetedDrop(0, 0, 0, true, wrongTab);
+        event->ignore();
+        return true;
+    }
+
+    if (wrongTab) {
+        acknowledgeTargetedDrop(0, 0, 0, false, true);
+        event->ignore();
+        return true;
+    }
+
+    int addedCount = 0;
+    int duplicateCount = 0;
+    int nonLocalCount = 0;
+
+    for (const QUrl& url : event->mimeData()->urls()) {
+        if (!url.isLocalFile()) {
+            ++nonLocalCount;
+            continue;
+        }
+
+        const QString path = QDir::toNativeSeparators(url.toLocalFile());
+        if (m_targetedInputPaths.contains(path)) {
+            ++duplicateCount;
+            continue;
+        }
+
+        m_targetedInputPaths.append(path);
+        ++addedCount;
+    }
+
+    if (addedCount > 0) {
+        updateTargetedInputUi();
+    }
+
+    acknowledgeTargetedDrop(addedCount, duplicateCount, nonLocalCount, false, false);
+    event->acceptProposedAction();
+    return true;
+}
+
+void MainWindow::acknowledgeTargetedDrop(int addedCount, int duplicateCount, int nonLocalCount, bool unsupportedPayload,
+                                         bool wrongTab)
+{
+    if (wrongTab) {
+        setStatusMessage(QStringLiteral("Switch to the Main Options tab to add targeted scan inputs."));
+        return;
+    }
+
+    if (unsupportedPayload) {
+        setStatusMessage(QStringLiteral("Drop ignored: only local file paths are supported for targeted scans."));
+        return;
+    }
+
+    QStringList parts;
+    if (addedCount > 0) {
+        parts.append(QStringLiteral("Added %1 targeted input%2.")
+                         .arg(addedCount)
+                         .arg(addedCount == 1 ? "" : "s"));
+    }
+    if (duplicateCount > 0) {
+        parts.append(QStringLiteral("Skipped %1 duplicate path%2 already in the list.")
+                         .arg(duplicateCount)
+                         .arg(duplicateCount == 1 ? "" : "s"));
+    }
+    if (nonLocalCount > 0) {
+        parts.append(QStringLiteral("Skipped %1 non-local URL%2; only local files are supported.")
+                         .arg(nonLocalCount)
+                         .arg(nonLocalCount == 1 ? "" : "s"));
+    }
+
+    if (parts.isEmpty()) {
+        setStatusMessage(QStringLiteral("Drop ignored: no local file paths were found."));
+        return;
+    }
+
+    setStatusMessage(parts.join(QStringLiteral(" ")));
+}
+
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
-    if (m_tabWidget && m_tabWidget->currentIndex() == 0 && event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
-    }
+    handleTargetedDragEnter(event);
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent* event)
+{
+    handleTargetedDragMove(event);
 }
 
 void MainWindow::dropEvent(QDropEvent* event)
 {
-    if (!m_tabWidget || m_tabWidget->currentIndex() != 0) {
-        return;
-    }
-
-    const auto urls = event->mimeData()->urls();
-    for (const auto& url : urls) {
-        if (url.isLocalFile()) {
-            const QString path = QDir::toNativeSeparators(url.toLocalFile());
-            if (!m_targetedInputPaths.contains(path)) {
-                m_targetedInputPaths.append(path);
-            }
-        }
-    }
-    updateTargetedInputUi();
-    event->acceptProposedAction();
+    handleTargetedDrop(event);
 }
 
 void MainWindow::onClearTargetedInputs()
@@ -2136,5 +2294,23 @@ void MainWindow::updateTargetedInputUi()
     } else {
         m_targetedInputLabel->setText(QStringLiteral("Targeted Scan: drop files or folders here"));
         m_targetedInputLabel->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
+    }
+
+    m_targetedInputList->updateGeometry();
+    m_btnClearTargeted->updateGeometry();
+    m_targetedInputContainer->updateGeometry();
+    if (auto* central = centralWidget()) {
+        central->updateGeometry();
+        if (central->layout()) {
+            central->layout()->activate();
+        }
+    }
+
+    if (hasInputs && !isMaximized() && !isFullScreen()) {
+        const QSize requestedSize = sizeHint().expandedTo(minimumSize());
+        const QSize currentSize = size();
+        if (requestedSize.width() > currentSize.width() || requestedSize.height() > currentSize.height()) {
+            resize(qMax(currentSize.width(), requestedSize.width()), qMax(currentSize.height(), requestedSize.height()));
+        }
     }
 }

@@ -200,7 +200,7 @@ Crashgen-specific helpers:
 Behavior worth knowing from the source:
 
 - the global registry is initialized lazily through `OnceLock`
-- initialization tries to load YAML first, then falls back to hardcoded defaults
+- initialization tries runtime YAML first, then falls back to the embedded copy of `CLASSIC Main.yaml`
 - `get_all()` and `get_all_for_game()` sort by `priority` descending
 - `get_correct_versions()` and `get_wrong_versions()` filter `HashMap` values directly and do not apply an explicit sort
 - `get_by_short_name()` compares `short_name` exactly; it is not case-insensitive
@@ -258,7 +258,7 @@ The source-visible flow is:
    - `databases/CLASSIC Main.yaml`
    - `CLASSIC Main.yaml`
 3. If loading succeeds, it reads `Version_Registry.versions` and optionally `Version_Registry.unknown_version_handling`.
-4. If loading fails or no valid entries are parsed, the crate falls back to hardcoded Fallout 4 defaults.
+4. If runtime YAML loading fails or no valid entries are parsed, the crate parses the checked-in `CLASSIC Data/databases/CLASSIC Main.yaml` embedded at compile time.
 5. Matching then proceeds in this order:
    - exact version lookup
    - `compatible_range` match
@@ -285,20 +285,21 @@ Contributor-relevant keys for each `Version_Registry.versions[]` entry include:
 
 `crashgen_versions` supports two formats:
 
-- simple strings like `"1.37.0"`
+- simple strings like `"1.38.1"`
 - structured objects with fields such as `version`, `name`, `acronym`, `dll_file`, `description`, `download_url`, and optional `compatible_range`
 
 Fallback rules visible in source:
 
 - invalid or missing `compatible_range` values are ignored with `.ok()` rather than failing the whole entry
 - structured crashgen entries without `version` are skipped
-- if `Version_Registry.unknown_version_handling` is missing, built-in defaults are used
-- if YAML loading/parsing fails entirely, the crate loads built-in Fallout 4 defaults for `FO4_OG`, `FO4_NG`, `FO4_AE`, and `FO4_VR`
+- invalid runtime YAML causes the singleton path to use the embedded `CLASSIC Main.yaml` fallback
+- if runtime YAML omits `Version_Registry.unknown_version_handling`, the embedded `CLASSIC Main.yaml` fallback supplies that section
+- if the embedded `CLASSIC Main.yaml` fallback is invalid or omits required registry sections, initialization fails fast because the checked-in source-of-truth file no longer matches the parser
 
-The current built-in defaults include these notable priorities/defaults:
+The embedded YAML fallback inherits these notable priorities/defaults from `CLASSIC Main.yaml`:
 
 - `FO4_AE` has the highest non-VR priority and therefore becomes the default non-VR fallback
-- `Fallout4 -> FO4_AE` and `Fallout4VR -> FO4_VR` are the built-in unknown-version defaults
+- `Fallout4 -> FO4_AE` and `Fallout4VR -> FO4_VR` are the YAML-owned unknown-version defaults
 
 ---
 
@@ -317,8 +318,8 @@ Variants:
 What contributors should know:
 
 - `GameVersion::parse()` returns `InvalidVersion` for malformed version strings
-- public registry access through `get_version_registry()` does not expose initialization failure because it silently falls back to built-in defaults
-- YAML parsing failures matter mainly to internal initialization logic and tests; production callers usually observe fallback behavior instead of an error
+- public registry access through `get_version_registry()` does not expose runtime YAML initialization failure because it falls back to embedded YAML
+- runtime YAML parsing failures matter mainly to internal initialization logic and tests; production callers usually observe embedded fallback behavior instead of an error
 
 Source-observed limitation:
 
@@ -380,7 +381,7 @@ if let Some(info) = &matched.version_info {
 # Ok::<(), classic_version_registry_core::VersionRegistryError>(())
 ```
 
-On built-in defaults, `1.10.500.0` resolves to the `FO4_OG` entry as the nearest same-major non-VR match.
+On the embedded YAML fallback, `1.10.500.0` resolves to the `FO4_OG` entry as the nearest same-major non-VR match.
 
 ---
 
@@ -388,7 +389,7 @@ On built-in defaults, `1.10.500.0` resolves to the `FO4_OG` entry as the nearest
 
 - The public API is entirely re-export based; adding or removing re-exports in `src/lib.rs` changes the crate surface.
 - YAML loading functions such as `load_from_yaml()` and YAML parsing helpers in `registry.rs` are internal, not public extension points.
-- The built-in defaults are Fallout 4-specific today even though some APIs are named generically by `game`.
+- The embedded fallback is Fallout 4-specific today because `CLASSIC Main.yaml` currently owns Fallout 4 registry data, even though some APIs are named generically by `game`.
 - `get_correct_versions()` and `get_wrong_versions()` do not guarantee sorted output.
 - `unknown_version_handling.defaults` is used by downstream config code, but the core matcher itself does not currently honor `strategy` or `log_level` as behavioral switches.
 - `VersionRegistryError::NotInitialized` is public but does not appear in the normal singleton path because `get_instance()` always initializes.
@@ -399,5 +400,5 @@ If you extend this crate, update this document when you change:
 - re-exports in `src/lib.rs`
 - version matching order or priority rules
 - YAML schema expectations for `Version_Registry`
-- built-in defaults or unknown-version defaults
+- embedded fallback behavior or unknown-version defaults
 - the relationship between Version Registry, config building, and scanlog OG/VR selection

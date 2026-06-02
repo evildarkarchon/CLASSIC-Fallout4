@@ -76,15 +76,15 @@ fn test_check_version_status_vr_matches_valid() {
 }
 
 #[test]
-fn test_check_version_status_vr_newer_than_known() {
-    // VR version 1.30.0 is newer than all known VR valid versions [1.27.0, 1.28.0]
+fn test_check_version_status_vr_newer_than_floor_is_valid() {
+    // VR version 1.30.0 is newer than the data-file floor [1.27.0, 1.28.0]
     let current = CrashgenVersion::new(1, 30, 0);
     let valid = vec![
         CrashgenVersion::new(1, 27, 0),
         CrashgenVersion::new(1, 28, 0),
     ];
     let status = current.check_version_status(&valid);
-    assert_eq!(status, CrashgenVersionStatus::NewerThanKnown);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
 }
 
 #[test]
@@ -107,14 +107,14 @@ fn test_check_version_status_vr_single_valid() {
 
 #[test]
 fn test_check_version_status_vr_between_entries() {
-    // VR version 1.27.5 between valid entries [1.27.0, 1.28.0] is not in list, below max
+    // VR version 1.27.5 between entries [1.27.0, 1.28.0] is above the configured floor.
     let current = CrashgenVersion::new(1, 27, 5);
     let valid = vec![
         CrashgenVersion::new(1, 27, 0),
         CrashgenVersion::new(1, 28, 0),
     ];
     let status = current.check_version_status(&valid);
-    assert_eq!(status, CrashgenVersionStatus::Outdated);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
 }
 
 #[test]
@@ -167,7 +167,7 @@ fn test_check_version_status_outdated() {
 }
 
 #[test]
-fn test_check_version_status_newer_than_known() {
+fn test_check_version_status_newer_than_floor_is_valid() {
     let current = CrashgenVersion::new(1, 40, 0);
     let valid = vec![
         CrashgenVersion::new(1, 28, 6),
@@ -175,7 +175,17 @@ fn test_check_version_status_newer_than_known() {
     ];
 
     let status = current.check_version_status(&valid);
-    assert_eq!(status, CrashgenVersionStatus::NewerThanKnown);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
+}
+
+#[test]
+fn test_check_version_status_addictol_patch_above_floor_is_valid() {
+    let current = CrashgenVersion::parse("Addictol v1.3.1 Feb 16 2026 08:02:06").unwrap();
+    let valid = vec![CrashgenVersion::parse("1.3.0").unwrap()];
+
+    let status = current.check_version_status(&valid);
+
+    assert_eq!(status, CrashgenVersionStatus::Valid);
 }
 
 #[test]
@@ -197,9 +207,9 @@ fn test_check_crashgen_version_status_convenience() {
     let status = check_crashgen_version_status("1.26.0", &["1.28.6", "1.37.0"]);
     assert_eq!(status, CrashgenVersionStatus::Outdated);
 
-    // Newer than known
+    // Newer than the data-file floor
     let status = check_crashgen_version_status("1.40.0", &["1.28.6", "1.37.0"]);
-    assert_eq!(status, CrashgenVersionStatus::NewerThanKnown);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
 
     // No supported version
     let status = check_crashgen_version_status("1.28.6", &[]);
@@ -208,17 +218,15 @@ fn test_check_crashgen_version_status_convenience() {
 
 #[test]
 fn test_check_version_status_between_valid_versions() {
-    // Version 1.30.0 is between 1.28.6 and 1.37.0 but not in the list
+    // Version 1.30.0 is between 1.28.6 and 1.37.0 but still above the floor
     let current = CrashgenVersion::new(1, 30, 0);
     let valid = vec![
         CrashgenVersion::new(1, 28, 6),
         CrashgenVersion::new(1, 37, 0),
     ];
 
-    // This should be outdated because it's not in the valid list
-    // and is less than the max valid version
     let status = current.check_version_status(&valid);
-    assert_eq!(status, CrashgenVersionStatus::Outdated);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
 }
 
 #[test]
@@ -260,6 +268,9 @@ fn test_check_crashgen_version_status_with_crashgen_prefix() {
     assert_eq!(status, CrashgenVersionStatus::Valid);
 
     let status = check_crashgen_version_status("Buffout 4 v1.37.0", &["1.28.6", "1.37.0"]);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
+
+    let status = check_crashgen_version_status("Buffout 4 v1.30.0", &["1.28.6", "1.37.0"]);
     assert_eq!(status, CrashgenVersionStatus::Valid);
 
     let status = check_crashgen_version_status("Buffout 4 v1.26.0", &["1.28.6", "1.37.0"]);

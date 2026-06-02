@@ -1,0 +1,18 @@
+Fallout 4 v1.11.191
+Addictol v1.3.1 Feb 16 2026 08:02:06
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x0 Fallout4.exe+0000000
+
+SYSTEM SPECS:
+GPU #1: NVIDIA GeForce RTX 4090
+PROBABLE CALL STACK:
+stack frame
+MODULES:
+kernel32.dll v10.0.0
+F4SE PLUGINS:
+addictol.dll v1.3.1
+PLUGINS:
+[00] Fallout4.esm
+REGISTERS:
+RAX 0x0
+STACK:
+stack dump line

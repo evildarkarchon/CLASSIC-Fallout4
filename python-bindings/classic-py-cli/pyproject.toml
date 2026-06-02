@@ -1,0 +1,13 @@
+[project]
+name = "classic-py-cli"
+version = "0.1.0"
+description = "CLASSIC Python binding command line diagnostics and compliance runner."
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+classic-py = "classic_py_cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

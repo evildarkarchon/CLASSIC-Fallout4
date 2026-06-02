@@ -2,6 +2,7 @@
 
 #include <QFileSystemWatcher>
 #include <QObject>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -30,10 +31,14 @@ private slots:
     void onCopyAll();
     void onScanStarted();
     void onScanCompleted();
+    void onScanError(const QString& message);
     void onDirectoryChanged();
 
 private:
     QStringList discoverReports() const;
+    QStringList discoverReportsInDirectory(const QString& dir) const;
+    void seedBaselinesForCurrentDirectories();
+    void resumeFileWatching();
     virtual bool openFolderInFileBrowser(const QString& folderPath);
     virtual bool revealFileInFileBrowser(const QString& filePath);
     virtual bool startDetachedProcess(const QString& program, const QStringList& arguments = {},
@@ -49,5 +54,8 @@ private:
     QStringList m_reportDirs;
     QString m_primaryReportDir;
     bool m_autoSwitchToResults = true;
+    QSet<QString> m_baselineReports;
+    QSet<QString> m_baselinedReportDirs;
+    bool m_fileWatchingPaused = false;
     static constexpr int kResultsTabIndex = 3;
 };

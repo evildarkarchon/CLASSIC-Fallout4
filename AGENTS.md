@@ -2,12 +2,14 @@
 
 This file provides always-on guidance for GitHub Copilot and other AI coding agents working in this repository.
 
-## Project Skill
+## Project Skills
 
 For CLASSIC-specific guidance that does not need to be injected on every prompt, use the project skill at `.agents/skills/classic-project-guide/`.
 
 - Skill entrypoint: `.agents/skills/classic-project-guide/SKILL.md`
 - Detailed reference: `references/repo-guide.md` relative to that `SKILL.md`
+
+OpenSpec workflow skills (for example `openspec-apply-change`, `openspec-archive-change`) also live under `.agents/skills/`. Cursor may mirror them under `.cursor/skills/`.
 
 If your environment does not support project skills, read the reference file next to the skill entrypoint before doing repo-specific build, test, parity, or architecture work.
 

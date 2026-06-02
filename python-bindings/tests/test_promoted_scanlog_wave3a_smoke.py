@@ -312,6 +312,12 @@ def test_check_crashgen_version_status_reports_valid_for_matching() -> None:
     assert status == "valid"
 
 
+def test_check_crashgen_version_status_reports_valid_above_floor() -> None:
+    """Versions newer than the configured floor remain valid."""
+    status = classic_scanlog.check_crashgen_version_status("1.40.0", ["1.28.6", "1.37.0"])
+    assert status == "valid"
+
+
 def test_check_crashgen_version_status_reports_outdated() -> None:
     """Version below the min valid entry reports ``outdated``."""
     status = classic_scanlog.check_crashgen_version_status("1.20.0", ["1.28.6", "1.37.0"])

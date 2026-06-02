@@ -2,9 +2,9 @@ name: CI - C++
 
 on:
   push:
-    branches: [main, classic-next, develop, classic-9.1]
+    branches: [main, classic-next, dev, classic-9.1]
   pull_request:
-    branches: [main, classic-next, develop, classic-9.1]
+    branches: [main, classic-next, dev, classic-9.1]
 
 env:
   RUST_BACKTRACE: 1
@@ -51,11 +51,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Set up MSVC dev environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -105,8 +100,10 @@ jobs:
           path: |
             classic-cli/build/Testing/
             classic-cli/build-debug/Testing/
-            classic-cli/build/CMakeFiles/CMakeError.log
-            classic-cli/build/CMakeFiles/CMakeOutput.log
+            classic-cli/build*/CMakeFiles/CMake*.log
+            classic-cli/build*/CMakeFiles/CMakeConfigureLog.yaml
+            classic-cli/build*/vcpkg*.log
+            classic-cli/build*/**/vcpkg*.log
           if-no-files-found: warn
           retention-days: 7
 
@@ -123,11 +120,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Set up MSVC dev environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -204,7 +196,10 @@ jobs:
           path: |
             classic-gui/build/Testing/
             classic-gui/build-debug/Testing/
-            classic-gui/build/CMakeFiles/CMakeError.log
-            classic-gui/build/CMakeFiles/CMakeOutput.log
+            classic-gui/build-qt-policy-check/
+            classic-gui/build*/CMakeFiles/CMake*.log
+            classic-gui/build*/CMakeFiles/CMakeConfigureLog.yaml
+            classic-gui/build*/vcpkg*.log
+            classic-gui/build*/**/vcpkg*.log
           if-no-files-found: warn
           retention-days: 7

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-23T02:34:56.586553+00:00",
+  "generated_at_utc": "2026-05-31T09:21:38.010825+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8021,7 +8021,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
+      "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::RecordScanner",
       "tier": "tier1"
     },
@@ -8594,7 +8594,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
+      "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::contains_record",
       "tier": "tier1"
     },
@@ -9950,7 +9950,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};",
+      "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::scan_records_batch",
       "tier": "tier1"
     },
@@ -10089,6 +10089,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/version.rs",
       "source_decl": "pub fn to_tuple(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "try_extract_records",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn try_extract_records(&self, segment_callstack: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "try_scan_records_batch",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
+      "source_expr": "record_scanner::try_scan_records_batch",
       "tier": "tier1"
     },
     {
@@ -12635,7 +12655,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::AppNotificationDisplay",
       "tier": "tier1"
     },
@@ -12654,7 +12674,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::AppNotificationManifest",
       "tier": "tier1"
     },
@@ -12721,7 +12741,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::Classification",
       "tier": "tier1"
     },
@@ -12884,7 +12904,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::NotificationStatus",
       "tier": "tier1"
     },
@@ -13132,7 +13152,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::build_app_notification_pages_url",
       "tier": "tier1"
     },
@@ -13142,7 +13162,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::check_app_notification",
       "tier": "tier1"
     },
@@ -13152,8 +13172,18 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::check_app_notification_with",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_app_notification_with_env",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_expr": "notification::check_app_notification_with_env",
       "tier": "tier1"
     },
     {
@@ -13182,7 +13212,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::classify",
       "tier": "tier1"
     },
@@ -13221,7 +13251,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::fetch_app_notification_manifest",
       "tier": "tier1"
     },
@@ -13231,7 +13261,7 @@
       "crate": "classic-update-core",
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
-      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
+      "source_decl": "pub use notification::{ AppNotificationDisplay, AppNotificationManifest, Classification, NotificationStatus, build_app_notification_pages_url, check_app_notification, check_app_notification_with, check_app_notification_with_env, classify, fetch_app_notification_manifest, fetch_via_releases_fallback, };",
       "source_expr": "notification::fetch_via_releases_fallback",
       "tier": "tier1"
     },

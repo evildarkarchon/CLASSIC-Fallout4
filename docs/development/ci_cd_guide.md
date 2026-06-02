@@ -20,8 +20,8 @@ The main CI workflow (`.github/workflows/ci.yml`) consists of several jobs:
 ## Trigger Conditions
 
 The CI workflow runs automatically on:
-- Pull requests to `main`, `classic-next`, or `develop` branches
-- Direct pushes to `main`, `classic-next`, or `develop` branches
+- Pull requests to `main`, `classic-next`, or `dev` branches
+- Direct pushes to `main`, `classic-next`, or `dev` branches
 
 ## Job Details
 

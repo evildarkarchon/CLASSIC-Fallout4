@@ -3,6 +3,7 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 #include <QWidget>
@@ -13,7 +14,10 @@ class ReportListWidget : public QWidget {
 public:
     explicit ReportListWidget(QWidget* parent = nullptr);
 
+    static constexpr int NewReportRole = Qt::UserRole + 1;
+
     void setReports(const QStringList& reportPaths);
+    void setReports(const QStringList& reportPaths, const QSet<QString>& newReportPaths);
     void clearReports();
     QString currentReportPath() const;
 
@@ -39,4 +43,5 @@ private:
     QPushButton* m_btnOpenFolder = nullptr;
 
     QStringList m_reportPaths;
+    QSet<QString> m_newReportPaths;
 };
