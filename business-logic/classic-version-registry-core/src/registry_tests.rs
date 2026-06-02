@@ -25,6 +25,96 @@ fn test_get_by_id() {
 }
 
 #[test]
+fn test_embedded_yaml_metadata_fields_are_populated() {
+    let registry = create_test_registry();
+
+    for (id, docs_name, steam_id) in [
+        ("FO4_OG", "Fallout4", 377160),
+        ("FO4_NG", "Fallout4", 377160),
+        ("FO4_AE", "Fallout4", 377160),
+        ("FO4_VR", "Fallout4VR", 611660),
+    ] {
+        let info = registry.get_by_id(id).expect("version entry");
+        assert_eq!(info.docs_name.as_str(), docs_name);
+        assert_eq!(info.steam_id, steam_id);
+
+        let xse = info.xse.as_ref().expect("XSE metadata");
+        assert!(!xse.full_name.is_empty(), "{id} XSE full name is empty");
+        assert_eq!(xse.file_count, 29, "{id} XSE file count changed");
+
+        for crashgen in &info.crashgen_versions {
+            assert!(
+                !crashgen.acronym.is_empty(),
+                "{id} crashgen {} acronym is empty",
+                crashgen.version
+            );
+            assert!(
+                !crashgen.dll_file.is_empty(),
+                "{id} crashgen {} DLL file is empty",
+                crashgen.version
+            );
+        }
+    }
+
+    assert_eq!(
+        registry
+            .get_by_id("FO4_OG")
+            .unwrap()
+            .xse
+            .as_ref()
+            .unwrap()
+            .script_hashes
+            .len(),
+        29
+    );
+    assert_eq!(
+        registry
+            .get_by_id("FO4_NG")
+            .unwrap()
+            .xse
+            .as_ref()
+            .unwrap()
+            .script_hashes
+            .len(),
+        29
+    );
+    assert_eq!(
+        registry
+            .get_by_id("FO4_AE")
+            .unwrap()
+            .xse
+            .as_ref()
+            .unwrap()
+            .script_hashes
+            .len(),
+        0
+    );
+    assert_eq!(
+        registry
+            .get_by_id("FO4_VR")
+            .unwrap()
+            .xse
+            .as_ref()
+            .unwrap()
+            .script_hashes
+            .len(),
+        29
+    );
+
+    let og_legacy = registry
+        .get_crashgen_for_version("FO4_OG", "1.28.6")
+        .expect("OG legacy crashgen");
+    assert_eq!(og_legacy.acronym.as_str(), "BO4");
+    assert_eq!(og_legacy.dll_file.as_str(), "buffout4.dll");
+
+    let vr_crashgen = registry
+        .get_crashgen_for_version("FO4_VR", "1.38.1")
+        .expect("VR crashgen");
+    assert_eq!(vr_crashgen.acronym.as_str(), "BO4 NG");
+    assert_eq!(vr_crashgen.dll_file.as_str(), "buffout4.dll");
+}
+
+#[test]
 fn test_get_by_version() {
     let registry = create_test_registry();
 
