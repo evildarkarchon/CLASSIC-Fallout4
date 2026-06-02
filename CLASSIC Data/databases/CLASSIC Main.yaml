@@ -420,7 +420,7 @@ Version_Registry:
           compatible_range:
             min: "1.10.163.0"
             max: "1.10.163.999"
-        - version: "1.37.0"
+        - version: "1.38.1"
           name: "Buffout 4"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
@@ -484,7 +484,7 @@ Version_Registry:
       description: Next-Gen Update version
       exe_hash: bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2
       crashgen_versions:
-        - version: "1.37.0"
+        - version: "1.38.1"
           name: "Buffout 4"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
@@ -571,7 +571,7 @@ Version_Registry:
         nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
       xse:
         acronym: F4SE
-        compatible_version: "0.7.7"
+        compatible_version: "0.7.8"
         loader: f4se_loader.exe
       compatible_range:
         min: "1.11.137.0"
@@ -589,7 +589,7 @@ Version_Registry:
       description: Virtual Reality version
       exe_hash: # Placeholder - hash not yet available for VR version
       crashgen_versions:
-        - version: "1.37.0"
+        - version: "1.38.1"
           name: "Buffout 4"
           description: "NG-compatible version for VR"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
