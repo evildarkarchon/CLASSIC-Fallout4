@@ -72,7 +72,7 @@ export const unknownVersionLogLevels = ["debug", "warning", "error"] as const;
 export const crashgenStatusCases = [
   { detected: "1.28.6", validVersions: ["1.28.6", "1.37.0"], expected: "Valid" },
   { detected: "1.26.0", validVersions: ["1.28.6", "1.37.0"], expected: "Outdated" },
-  { detected: "1.40.0", validVersions: ["1.28.6", "1.37.0"], expected: "NewerThanKnown" },
+  { detected: "1.40.0", validVersions: ["1.28.6", "1.37.0"], expected: "Valid" },
   { detected: "1.28.6", validVersions: [], expected: "NoSupportedVersion" },
 ] as const;
 

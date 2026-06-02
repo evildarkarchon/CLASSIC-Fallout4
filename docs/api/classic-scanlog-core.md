@@ -317,7 +317,7 @@ The report module is designed around Python-parity text output, not a stable int
 
 ## Other public utilities
 
-- `version`: `CrashgenVersion`, `CrashgenVersionStatus`, `crashgen_version_gen()`, `check_crashgen_version_status()`
+- `version`: `CrashgenVersion`, `CrashgenVersionStatus`, `crashgen_version_gen()`, `check_crashgen_version_status()`. Configured crash generator versions are treated as minimum supported floors; detected versions equal to or newer than the relevant floor are valid.
 - `gpu_detector`: `GpuVendor`, `GpuInfo`, `GpuDetector`
 - `papyrus`: `PapyrusAnalyzer`, `PapyrusStats`, `PapyrusError`
 - `fcx_handler`: `FcxModeHandler`, `FcxResetError`, `ConfigIssue`, `GLOBAL_FCX_HANDLER`

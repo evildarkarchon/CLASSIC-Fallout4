@@ -5,11 +5,11 @@
 //!
 //! Crash generator versions typically follow semver format (e.g., "1.28.0", "1.29.1").
 //!
-//! # List-based Version Checking
+//! # Floor-based Version Checking
 //!
-//! The new `check_version_status` function supports list-based version validation,
-//! where multiple versions can be valid for a single game version (e.g., FO4_OG
-//! supports both 1.28.6 and 1.37.0).
+//! The `check_version_status` function treats configured crash generator versions
+//! as minimum supported floors. A detected version at or above the lowest configured
+//! version is valid, allowing newer crash generators without a data-file update.
 
 use regex::Regex;
 use semver::Version;
@@ -23,17 +23,17 @@ fn compile_static_regex(pattern: &str, name: &str) -> Regex {
     }
 }
 
-/// Status of a crash generator version relative to valid versions.
+/// Status of a crash generator version relative to supported version floors.
 ///
 /// This enum represents the result of checking a crash generator version
-/// against a list of valid versions for a specific game version.
+/// against supported versions for a specific game version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CrashgenVersionStatus {
-    /// The version is in the list of valid versions.
+    /// The version is supported by the configured version floor.
     Valid,
-    /// The version is older than all valid versions.
+    /// The version is older than the configured version floor.
     Outdated,
-    /// The version is newer than the highest known valid version.
+    /// The version is newer than the highest known version.
     NewerThanKnown,
     /// No crash generator is supported for this game version.
     NoSupportedVersion,
@@ -170,14 +170,14 @@ impl CrashgenVersion {
         (self.major as u32, self.minor as u32, self.patch as u32)
     }
 
-    /// Checks this version against a list of valid versions.
+    /// Checks this version against supported version floors.
     ///
-    /// This is the new list-based version validation that supports multiple valid
-    /// versions per game version (e.g., FO4_OG supports both 1.28.6 and 1.37.0).
+    /// Configured versions are treated as minimum supported floors, so a detected
+    /// version greater than or equal to the lowest configured version is valid.
     ///
     /// # Arguments
     ///
-    /// * `valid_versions` - Slice of valid versions for the game version
+    /// * `valid_versions` - Slice of supported version floors for the game version
     ///
     /// # Returns
     ///
@@ -202,10 +202,10 @@ impl CrashgenVersion {
     /// let status = outdated.check_version_status(&valid);
     /// assert_eq!(status, CrashgenVersionStatus::Outdated);
     ///
-    /// // Newer than known
+    /// // Newer than the configured floor
     /// let newer = CrashgenVersion::new(1, 40, 0);
     /// let status = newer.check_version_status(&valid);
-    /// assert_eq!(status, CrashgenVersionStatus::NewerThanKnown);
+    /// assert_eq!(status, CrashgenVersionStatus::Valid);
     ///
     /// // No supported version
     /// let empty: Vec<CrashgenVersion> = vec![];
@@ -221,16 +221,10 @@ impl CrashgenVersion {
             return CrashgenVersionStatus::NoSupportedVersion;
         }
 
-        // Check if version is in the valid list (exact match)
-        if valid_versions.iter().any(|v| v == self) {
-            return CrashgenVersionStatus::Valid;
-        }
-
-        // Find the maximum valid version
-        let max_valid = valid_versions.iter().max();
-
-        match max_valid {
-            Some(max) if self > max => CrashgenVersionStatus::NewerThanKnown,
+        // Treat configured versions as floors: any detected version at or above
+        // the lowest supported version is acceptable.
+        match valid_versions.iter().min() {
+            Some(floor) if self >= floor => CrashgenVersionStatus::Valid,
             _ => CrashgenVersionStatus::Outdated,
         }
     }
@@ -298,15 +292,15 @@ pub fn crashgen_version_gen(version_str: &str) -> CrashgenVersion {
     CrashgenVersion::parse(version_str).unwrap_or_default()
 }
 
-/// Checks a version string against a list of valid version strings.
+/// Checks a version string against supported version floor strings.
 ///
 /// This is a convenience function that parses the version strings and
-/// performs list-based version validation.
+/// performs floor-based version validation.
 ///
 /// # Arguments
 ///
 /// * `detected_version` - The detected crash generator version string
-/// * `valid_versions` - Slice of valid version strings
+/// * `valid_versions` - Slice of supported version floor strings
 ///
 /// # Returns
 ///

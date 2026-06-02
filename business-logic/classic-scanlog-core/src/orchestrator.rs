@@ -35,7 +35,7 @@ use classic_config_core::{
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
-    GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
+    CrashgenConfig, GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
 use indexmap::IndexMap;
 use regex::Regex;
@@ -745,6 +745,34 @@ impl OrchestratorCore {
         self.config.crashgen_name.clone()
     }
 
+    fn crashgen_config_matches_name(config: &CrashgenConfig, crashgen_name: &str) -> bool {
+        config.name.eq_ignore_ascii_case(crashgen_name)
+            || (!config.acronym.is_empty() && config.acronym.eq_ignore_ascii_case(crashgen_name))
+    }
+
+    fn crashgen_version_strings_for_name<'a>(
+        version_info: &'a VersionInfo,
+        crashgen_name: &str,
+    ) -> Vec<&'a str> {
+        let crashgen_name = crashgen_name.trim();
+        if crashgen_name.is_empty() {
+            return version_info.get_crashgen_version_strings();
+        }
+
+        let matching_versions: Vec<&str> = version_info
+            .crashgen_versions
+            .iter()
+            .filter(|config| Self::crashgen_config_matches_name(config, crashgen_name))
+            .map(|config| config.version.as_str())
+            .collect();
+
+        if matching_versions.is_empty() {
+            version_info.get_crashgen_version_strings()
+        } else {
+            matching_versions
+        }
+    }
+
     /// Creates a new crash log analysis orchestrator with the specified configuration.
     ///
     /// This constructor initializes the orchestrator with:
@@ -1134,7 +1162,7 @@ impl OrchestratorCore {
         // Generate header
         composer.add(report_gen.generate_header(crashlog_filename));
 
-        // Get detected game version from header info (used for list-based version validation)
+        // Get detected game version from header info (used for floor-based version validation)
         let detected_game_version_str =
             header_info.get("game_version").cloned().unwrap_or_default();
 
@@ -1149,15 +1177,17 @@ impl OrchestratorCore {
                 .unwrap_or_default()
         });
 
-        // Check crashgen version status using list-based validation for the detected game version
+        // Check crashgen version status using floor-based validation for the detected game version
         let crashgen_status = if crashgen_version_str.trim().is_empty() || fake_bot_compatible_mode
         {
             None
         } else {
-            let (_parsed, status) = self.check_crashgen_version_for_detected_game(
-                &crashgen_version_str,
-                &detected_game_version_str,
-            );
+            let (_parsed, status) = self
+                .check_crashgen_version_for_detected_game_with_crashgen_name(
+                    &crashgen_version_str,
+                    &detected_game_version_str,
+                    &effective_crashgen_name,
+                );
             Some(status)
         };
 
@@ -1810,15 +1840,14 @@ impl OrchestratorCore {
         FcxModeHandler::new(self.config.fcx_mode)
     }
 
-    /// Checks crashgen version against a list of valid versions.
+    /// Checks crashgen version against a list of supported version floors.
     ///
-    /// This is the new list-based version validation that supports multiple valid
-    /// versions per game version (e.g., FO4_OG supports both 1.28.6 and 1.37.0).
+    /// This supports multiple configured version floors per game version.
     ///
     /// # Arguments
     ///
     /// * `crashgen_version_str` - The crashgen version string from the crash log
-    /// * `valid_versions` - Slice of valid version strings for the game version
+    /// * `valid_versions` - Slice of supported version floor strings for the game version
     ///
     /// # Returns
     ///
@@ -1833,11 +1862,37 @@ impl OrchestratorCore {
         (current, status)
     }
 
-    /// Checks crashgen version using the detected game version and registry-backed valid versions.
+    /// Checks crashgen version using the detected game version and registry-backed version floors.
     pub fn check_crashgen_version_for_detected_game(
         &self,
         crashgen_version_str: &str,
         detected_game_version_str: &str,
+    ) -> (CrashgenVersion, CrashgenVersionStatus) {
+        self.check_crashgen_version_for_detected_game_with_name(
+            crashgen_version_str,
+            detected_game_version_str,
+            None,
+        )
+    }
+
+    fn check_crashgen_version_for_detected_game_with_crashgen_name(
+        &self,
+        crashgen_version_str: &str,
+        detected_game_version_str: &str,
+        crashgen_name: &str,
+    ) -> (CrashgenVersion, CrashgenVersionStatus) {
+        self.check_crashgen_version_for_detected_game_with_name(
+            crashgen_version_str,
+            detected_game_version_str,
+            Some(crashgen_name),
+        )
+    }
+
+    fn check_crashgen_version_for_detected_game_with_name(
+        &self,
+        crashgen_version_str: &str,
+        detected_game_version_str: &str,
+        crashgen_name: Option<&str>,
     ) -> (CrashgenVersion, CrashgenVersionStatus) {
         let current = crashgen_version_gen(crashgen_version_str);
 
@@ -1858,7 +1913,10 @@ impl OrchestratorCore {
         );
 
         let valid_versions: Vec<&str> = match match_result.version_info {
-            Some(ref version_info) => version_info.get_crashgen_version_strings(),
+            Some(ref version_info) => crashgen_name.map_or_else(
+                || version_info.get_crashgen_version_strings(),
+                |name| Self::crashgen_version_strings_for_name(version_info, name),
+            ),
             None => Vec::new(),
         };
 

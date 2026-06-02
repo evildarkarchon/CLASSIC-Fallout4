@@ -171,6 +171,8 @@ Typical local workflow from the repo root:
 # Add `--group drift-guards` when you need `ruamel.yaml` for schema_version_gate.py.
 uv sync --project python-bindings --inexact
 
+$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
+
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 
@@ -296,12 +298,14 @@ Required follow-up in the same change:
 2. Update `python-bindings/tests/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
 3. Refresh and commit the touched `python-bindings/*-py/*.pyi` files when the public Python surface changes.
 4. Refresh and commit the tracked outputs under `python-bindings/parity-artifacts/` and any affected checked-in baseline reports under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
-5. Run:
-   - `uv sync --project python-bindings --inexact` (creates/refreshes `python-bindings/.venv` from the locked tooling set; `--inexact` preserves the maturin-built `classic-*-py` wheels)
+5. Before the first `uv sync`, decide whether the change touches shippable YAML data (`CLASSIC Data/databases/`) or schema-version constants. That choice is fixed for the rest of this checklist: `schema_version_gate.py` needs `ruamel.yaml`, which is only installed via `--group drift-guards` on the initial sync — adding the group later still works, but deciding now avoids a venv that cannot run the gate.
+   Run:
+   - **Python-only change:** `uv sync --project python-bindings --inexact` (creates/refreshes `python-bindings/.venv` from the locked tooling set; `--inexact` preserves the maturin-built `classic-*-py` wheels).
+   - **YAML or schema-version change:** `uv sync --project python-bindings --inexact --group drift-guards` (same as above, plus `ruamel.yaml` for `schema_version_gate.py`).
    - `$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"`
    - `uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .`
    - `uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
-   - When the change touches shippable YAML data or schema-version constants: `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .`
+   - **YAML or schema-version change (same preflight decision):** `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .`
    - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python`
    - `uv run --project python-bindings python -m pytest python-bindings/tests -q`
 6. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
