@@ -571,7 +571,7 @@ Version_Registry:
       description: Anniversary Edition version (active development branch)
       docs_name: Fallout4
       steam_id: 377160
-      exe_hash: 81694b37816c8045855905a52c5fb13583c5803121fabb5024760892014e9bc6n
+      exe_hash: 81694b37816c8045855905a52c5fb13583c5803121fabb5024760892014e9bc6
       crashgen_versions:
         - version: "1.7.1"
           name: "Buffout 4"
