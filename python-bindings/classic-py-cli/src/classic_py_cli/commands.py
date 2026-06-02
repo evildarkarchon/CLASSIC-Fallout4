@@ -72,6 +72,13 @@ class _PathCommandArgs:
     path: str
 
 
+@dataclass
+class _OptionalPathCommandArgs:
+    """Synthetic args for catalog-dispatched commands with optional paths."""
+
+    path: str | None = None
+
+
 def _relative_or_absolute(path: Path, root: Path) -> str:
     """Return a readable path relative to the repo root when possible."""
 
@@ -208,7 +215,7 @@ def _run_scenario(scenario: Scenario, context: CommandContext) -> dict[str, Any]
     """Execute one scenario through the same handler surface used by users."""
 
     result = dispatch_scenario_command(scenario.command, context)
-    return {
+    scenario_result = {
         "id": scenario.id,
         "owner": scenario.owner,
         "commandLine": ["classic-py", *scenario.command],
@@ -218,6 +225,25 @@ def _run_scenario(scenario: Scenario, context: CommandContext) -> dict[str, Any]
         "summary": result.summary,
         "coveredExports": scenario.covered_exports,
         "failureClassifications": scenario.failure_classifications if result.exit_code != scenario.expected_exit_code else [],
+    }
+    report_data = _scenario_report_data(result)
+    if report_data:
+        scenario_result["data"] = report_data
+    return scenario_result
+
+
+def _scenario_report_data(result: CommandResult) -> dict[str, Any]:
+    """Return compact command data worth preserving in compliance reports."""
+
+    if result.command != "scan logs":
+        return {}
+    return {
+        "scanPath": result.data.get("scanPath"),
+        "processedLogs": result.data.get("processedLogs"),
+        "successfulLogs": result.data.get("successfulLogs"),
+        "failedLogs": result.data.get("failedLogs"),
+        "failures": result.data.get("failures", []),
+        "reportEvidence": result.data.get("reportEvidence", []),
     }
 
 
@@ -244,7 +270,7 @@ def _write_reports(report: dict[str, Any], context: CommandContext) -> list[str]
     md_path = output_dir / "classic_python_cli_report.md"
     json_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
     md_lines = ["# CLASSIC Python CLI Report", "", f"Profile: `{report['profile']}`", "", "## Scenarios"]
-    md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']})" for item in report["scenarioResults"])
+    md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']}) - {item['summary']}" for item in report["scenarioResults"])
     if report["delegatedGates"]:
         md_lines.extend(["", "## Delegated Gates"])
         md_lines.extend(f"- `{' '.join(item['commandLine'])}`: exit {item['exitCode']}" for item in report["delegatedGates"])
@@ -399,6 +425,32 @@ def _scan_failure_summary(result: object) -> dict[str, str]:
     return summary
 
 
+def _scan_report_text(result: object) -> str:
+    """Return report text from an AnalysisResult-like object."""
+
+    get_report_text = getattr(result, "get_report_text", None)
+    if callable(get_report_text):
+        return str(get_report_text())
+    report_lines = getattr(result, "report_lines", [])
+    return "".join(str(line) for line in report_lines)
+
+
+def _scan_report_evidence(result: object) -> dict[str, Any]:
+    """Summarize version-validation evidence from one successful scan report."""
+
+    report_text = _scan_report_text(result)
+    evidence: dict[str, Any] = {
+        "logPath": str(getattr(result, "log_path", getattr(result, "logPath", ""))),
+        "outdatedWarningPresent": "OUTDATED" in report_text.upper(),
+    }
+    for line in report_text.splitlines():
+        stripped = line.strip()
+        if "valid version" in stripped.lower():
+            evidence["validVersionLine"] = stripped
+            break
+    return evidence
+
+
 def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     """Run a deterministic scanlog binding path over an explicit log directory."""
 
@@ -419,6 +471,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return binding_exception("scan logs", "classic_scanlog", exc)
     results = list(result)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
+    report_evidence = [_scan_report_evidence(item) for item in results if _scan_result_success(item)]
     successful_logs = len(results) - len(failures)
     return success(
         "scan logs",
@@ -429,6 +482,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "successfulLogs": successful_logs,
             "failedLogs": len(failures),
             "failures": failures,
+            "reportEvidence": report_evidence,
             "result": str(result),
         },
     )
@@ -463,4 +517,11 @@ def dispatch_scenario_command(command: list[str], context: CommandContext) -> Co
         return path_validate(_PathCommandArgs(command[2]), context)
     if command[:2] == ["file", "hash"]:
         return file_hash(_PathCommandArgs(command[2]), context)
+    if command[:2] == ["scan", "logs"]:
+        if "--path" in command:
+            path_index = command.index("--path") + 1
+            if path_index >= len(command):
+                return failure(" ".join(command), "Scenario command is missing a --path value", int(ExitCode.USAGE))
+            return scan_logs(_OptionalPathCommandArgs(command[path_index]), context)
+        return scan_logs(_OptionalPathCommandArgs(), context)
     return failure(" ".join(command), "Scenario command is not implemented", int(ExitCode.USAGE))

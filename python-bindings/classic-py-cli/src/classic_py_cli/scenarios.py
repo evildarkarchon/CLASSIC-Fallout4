@@ -32,6 +32,17 @@ SCENARIOS = [
     Scenario("config-main-version", "Read the bundled main YAML version through classic_config.", "classic_config", ["load_main_yaml_version"], ["config", "main-version"], ["CLASSIC Data/databases"], 0, ["smoke", "python-ci", "surface:classic_config"], ["stale-generated-artifact", "policy-source-contradiction"]),
     Scenario("path-validate-fixture", "Validate a deterministic fixture path through classic_path.", "classic_path", ["PathValidator.is_valid_path"], ["path", "validate", "python-bindings/tests/fixtures"], ["python-bindings/tests/fixtures"], 0, ["smoke", "python-ci", "surface:classic_path"], ["local-environment-failure"]),
     Scenario("file-hash", "Hash a deterministic repository file through classic_file_io.", "classic_file_io", ["FileHasher.hash_file"], ["file", "hash", "Cargo.toml"], [], 0, ["smoke", "python-ci", "surface:classic_file_io"], ["true-binding-compliance-gap"]),
+    Scenario(
+        "scanlog-addictol-newer-than-floor",
+        "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",
+        "classic_scanlog",
+        ["AnalysisConfig", "Orchestrator.process_logs_batch", "AnalysisResult.report_lines"],
+        ["scan", "logs", "--path", "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
+        ["python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
+        0,
+        ["smoke", "python-ci", "surface:classic_scanlog"],
+        ["missing-runtime-coverage", "true-binding-compliance-gap"],
+    ),
 ]
 
 

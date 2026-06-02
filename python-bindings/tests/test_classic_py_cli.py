@@ -222,6 +222,8 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     sys.path.insert(0, str(CLI_SRC))
     from classic_py_cli.app import main
 
+    scan_fixture = REPO_ROOT / "python-bindings" / "tests" / "fixtures" / "scanlogs" / "addictol-newer-than-floor.log"
+    assert scan_fixture.exists()
 
     fake_version = types.ModuleType("classic_version")
     fake_version.__version__ = "test"
@@ -236,20 +238,60 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     fake_file = types.ModuleType("classic_file_io")
     fake_file.__version__ = "test"
     fake_file.FileHasher = type("FileHasher", (), {"hash_file": staticmethod(lambda path: "a" * 64)})
+    fake_scanlog = types.ModuleType("classic_scanlog")
+    fake_scanlog.__version__ = "test"
+    fake_scanlog.AnalysisConfig = lambda game, game_version: (game, game_version)
+
+    class FakeOrchestrator:
+        def __init__(self, config: object) -> None:
+            self.config = config
+
+        def process_logs_batch(self, paths: list[str]) -> list[types.SimpleNamespace]:
+            assert paths == [str(scan_fixture)]
+            assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
+            return [
+                types.SimpleNamespace(
+                    log_path=str(scan_fixture),
+                    success=True,
+                    error=None,
+                    report_lines=["*You have a valid version of Addictol!*\n"],
+                )
+            ]
+
+    fake_scanlog.Orchestrator = FakeOrchestrator
     for name, module in {
         "classic_version": fake_version,
         "classic_config": fake_config,
         "classic_path": fake_path,
         "classic_file_io": fake_file,
+        "classic_scanlog": fake_scanlog,
     }.items():
         monkeypatch.setitem(sys.modules, name, module)
 
     code = main(["--json", "--output", str(tmp_path), "compliance", "run", "--profile", "smoke"])
     payload = json.loads(capsys.readouterr().out)
+    scenario_results = payload["data"]["report"]["scenarioResults"]
+    scanlog_result = next(item for item in scenario_results if item["id"] == "scanlog-addictol-newer-than-floor")
+
     assert code == 0
     assert (tmp_path / "classic_python_cli_report.json").exists()
     assert (tmp_path / "classic_python_cli_report.md").exists()
     assert payload["data"]["report"]["profile"] == "smoke"
+    assert scanlog_result["commandLine"] == [
+        "classic-py",
+        "scan",
+        "logs",
+        "--path",
+        "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log",
+    ]
+    assert scanlog_result["data"]["processedLogs"] == 1
+    assert scanlog_result["data"]["reportEvidence"] == [
+        {
+            "logPath": str(scan_fixture),
+            "validVersionLine": "*You have a valid version of Addictol!*",
+            "outdatedWarningPresent": False,
+        }
+    ]
 
 
 def test_compliance_run_fails_when_scenario_expectation_missed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
