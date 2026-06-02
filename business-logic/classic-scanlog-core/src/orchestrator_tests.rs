@@ -285,7 +285,7 @@ fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
 }
 
 #[test]
-fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
+fn check_crashgen_version_for_detected_game_rejects_addictol_below_ae_floor() {
     let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     let orchestrator = OrchestratorCore::new(config).unwrap();
 
@@ -294,7 +294,18 @@ fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
         "Fallout 4 v1.11.191",
     );
 
-    assert_eq!(status, crate::version::CrashgenVersionStatus::Valid);
+    assert_eq!(status, crate::version::CrashgenVersionStatus::Outdated);
+}
+
+#[test]
+fn check_crashgen_version_for_detected_game_rejects_buffout_below_og_floor() {
+    let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let (_parsed, status) = orchestrator
+        .check_crashgen_version_for_detected_game("Buffout 4 v1.3.1", "Fallout 4 v1.10.163");
+
+    assert_eq!(status, crate::version::CrashgenVersionStatus::Outdated);
 }
 
 #[test]
@@ -710,7 +721,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
 
     let log_contents = [
         "Fallout 4 v1.11.191",
-        "Addictol v1.0.0 Feb 16 2026 08:02:06",
+        "Addictol v1.3.1 Feb 16 2026 08:02:06",
         "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
         "",
         "[Patches]",
@@ -722,7 +733,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
         "MODULES:",
         "kernel32.dll v10.0.0",
         "F4SE PLUGINS:",
-        "addictol.dll v1.0.0",
+        "addictol.dll v1.3.1",
         "buffout4.dll v1.28.6",
         "PLUGINS:",
         "[00] Fallout4.esm",

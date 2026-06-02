@@ -174,6 +174,7 @@ Behavior worth knowing:
 - Batch result order is not guaranteed to match input order because it uses unordered buffering.
 - `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
+- `check_crashgen_version_for_detected_game()` filters registry-backed crashgen floors by the detected or configured crashgen product before comparing versions.
 - `mods_solu` detection is no longer routed through the legacy single-map matcher; it evaluates grouped `any` / `all` criteria, suppresses matches through optional exceptions, and renders report titles/bodies from the structured `name` / `description` fields.
 - `is_feature_complete()` currently means plugin analyzer and suspect scanner are present; a database pool is optional.
 

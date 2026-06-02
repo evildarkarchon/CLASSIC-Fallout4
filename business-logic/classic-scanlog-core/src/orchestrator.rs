@@ -750,6 +750,44 @@ impl OrchestratorCore {
             || (!config.acronym.is_empty() && config.acronym.eq_ignore_ascii_case(crashgen_name))
     }
 
+    /// Returns a non-empty crashgen name after trimming caller-provided whitespace.
+    fn trimmed_crashgen_name(crashgen_name: &str) -> Option<&str> {
+        let crashgen_name = crashgen_name.trim();
+        if crashgen_name.is_empty() {
+            None
+        } else {
+            Some(crashgen_name)
+        }
+    }
+
+    /// Reports whether a registry product label appears in a normalized crashgen header.
+    fn crashgen_label_matches_version_string(label: &str, crashgen_version_str: &str) -> bool {
+        let label = label.trim();
+        !label.is_empty() && crashgen_version_str.contains(&label.to_ascii_lowercase())
+    }
+
+    /// Infers the crashgen product name from the detected crashgen version header.
+    ///
+    /// The public version helper does not receive the scan path's resolved effective name, so
+    /// this derives the registry name from labels already embedded in normal crash log headers.
+    fn crashgen_name_from_version_string<'a>(
+        version_info: &'a VersionInfo,
+        crashgen_version_str: &str,
+    ) -> Option<&'a str> {
+        let crashgen_version_str = crashgen_version_str.to_ascii_lowercase();
+        version_info
+            .crashgen_versions
+            .iter()
+            .find(|config| {
+                Self::crashgen_label_matches_version_string(&config.name, &crashgen_version_str)
+                    || Self::crashgen_label_matches_version_string(
+                        &config.acronym,
+                        &crashgen_version_str,
+                    )
+            })
+            .map(|config| config.name.as_str())
+    }
+
     fn crashgen_version_strings_for_name<'a>(
         version_info: &'a VersionInfo,
         crashgen_name: &str,
@@ -1913,10 +1951,19 @@ impl OrchestratorCore {
         );
 
         let valid_versions: Vec<&str> = match match_result.version_info {
-            Some(ref version_info) => crashgen_name.map_or_else(
-                || version_info.get_crashgen_version_strings(),
-                |name| Self::crashgen_version_strings_for_name(version_info, name),
-            ),
+            Some(ref version_info) => {
+                let effective_crashgen_name = crashgen_name
+                    .and_then(Self::trimmed_crashgen_name)
+                    .or_else(|| {
+                        Self::crashgen_name_from_version_string(version_info, crashgen_version_str)
+                    })
+                    .or_else(|| Self::trimmed_crashgen_name(&self.config.crashgen_name));
+
+                effective_crashgen_name.map_or_else(
+                    || version_info.get_crashgen_version_strings(),
+                    |name| Self::crashgen_version_strings_for_name(version_info, name),
+                )
+            }
             None => Vec::new(),
         };
 
