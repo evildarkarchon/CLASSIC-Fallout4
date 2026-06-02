@@ -59,7 +59,7 @@ describe("Version Registry bindings", () => {
       expect(info).not.toBeNull();
       expect(info!.id).toBe("FO4_AE");
       expect(info!.shortName).toBe("AE");
-      expect(info!.version).toBe("1.11.191.0");
+      expect(info!.version).toBe("1.11.221.0");
       expect(info!.priority).toBe(300);
     });
 

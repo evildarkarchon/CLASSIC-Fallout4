@@ -962,7 +962,7 @@ fn test_from_yaml_content_registry_selected_mode_resolves_expected_versions() {
 
     assert_eq!(original.game_version, "1.10.163");
     assert_eq!(next_gen.game_version, "1.10.984");
-    assert_eq!(anniversary.game_version, "1.11.191");
+    assert_eq!(anniversary.game_version, "1.11.221");
     assert_eq!(anniversary_alias.game_version, anniversary.game_version);
     assert_eq!(vr.game_version, "1.2.72");
 }

@@ -187,7 +187,7 @@ fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing()
     assert!(!config.crashgen_latest.is_empty());
     assert_eq!(config.xse_acronym, "F4SE");
     // Auto mode resolves to the configured registry default for Fallout4.
-    assert_eq!(config.game_version, "1.11.191");
+    assert_eq!(config.game_version, "1.11.221");
     assert_eq!(config.game_version_vr, "1.2.72");
     assert!(
         !config
@@ -218,7 +218,7 @@ fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_nam
     );
 
     assert_eq!(config.crashgen_name, "Buffout 4");
-    assert_eq!(config.game_version, "1.11.191");
+    assert_eq!(config.game_version, "1.11.221");
     assert_eq!(config.game_version_vr, "1.2.72");
 }
 
