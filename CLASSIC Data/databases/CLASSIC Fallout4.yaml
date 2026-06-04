@@ -690,8 +690,8 @@ Crashlog_Stack_Check:
     name: Body Physics Crash
     severity: 4
     main_error_required_any: []
-    main_error_optional_any: [cbp.dll]
-    stack_contains_any: [skeleton.nif, cbp.dll]
+    main_error_optional_any: [cbp.dll, cbp_ae.dll]
+    stack_contains_any: [skeleton.nif, cbp.dll, cbp_ae.dll]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
