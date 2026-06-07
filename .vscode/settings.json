@@ -39,5 +39,5 @@
 			"packageManager": "ms-python.python:pip"
 		}
 	],
-	"cmake.sourceDirectory": "J:/CLASSIC-Fallout4/classic-gui",
+	"cmake.sourceDirectory": "D:/repos/CLASSIC-Fallout4/classic-gui",
 }

@@ -1012,6 +1012,7 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-config-core",
+ "classic-config-py",
  "classic-file-io-core",
  "classic-scangame-core",
  "classic-shared-core",
@@ -1066,6 +1067,7 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-config-core",
+ "classic-config-py",
  "classic-database-core",
  "classic-registry-core",
  "classic-scangame-core",
