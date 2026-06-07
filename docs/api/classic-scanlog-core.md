@@ -44,6 +44,7 @@ Top-level scan pipeline and the main integration surface.
 
 - `AnalysisConfig` - assembled scan configuration for a game/version mode
 - `AnalysisResult` - result payload for one analyzed log
+- `BatchScanOptions`, `BatchScanEvent`, `BatchScanEventKind`, `IndexedAnalysisResult` - indexed/evented batch scan primitives for thin bindings
 - `OrchestratorCore` - async scan runner and report writer
 - `ScanProgressPhase` - coarse phase callbacks for progress reporting
 - `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core)
@@ -152,6 +153,7 @@ Important methods:
 - `process_log(log_path) -> Result<AnalysisResult, ScanLogError>`
 - `process_log_with_progress(log_path, on_phase) -> Result<AnalysisResult, ScanLogError>`
 - `process_logs_batch(log_paths, max_concurrent) -> Vec<AnalysisResult>`
+- `process_logs_batch_with_events(log_paths, options, on_event) -> Vec<IndexedAnalysisResult>`
 - `write_reports_batch(reports) -> Result<Vec<PathBuf>, ScanLogError>`
 
 Useful helpers that are part of the public surface:
@@ -172,6 +174,7 @@ Behavior worth knowing:
 
 - `process_logs_batch()` is fail-soft: per-log failures become `AnalysisResult::failure(...)` entries instead of aborting the batch.
 - Batch result order is not guaranteed to match input order because it uses unordered buffering.
+- `process_logs_batch_with_events()` is the richer core batch primitive used by bindings that need stable input indices, optional input-order result restoration, cancellation checks before each log starts, and queued/started/phase/terminal events.
 - `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
 - `check_crashgen_version_for_detected_game()` filters registry-backed crashgen floors by the detected or configured crashgen product before comparing versions.

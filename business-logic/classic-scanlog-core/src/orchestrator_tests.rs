@@ -1160,3 +1160,46 @@ fn resolve_batch_concurrency_honors_manual_override() {
 fn resolve_batch_concurrency_handles_empty_batches() {
     assert_eq!(resolve_batch_concurrency(0, None), 1);
 }
+
+#[test]
+fn process_logs_batch_with_events_can_preserve_input_order() {
+    let orchestrator = make_fixture_orchestrator();
+    let results = get_runtime().block_on(orchestrator.process_logs_batch_with_events(
+        vec!["missing-a.log".to_string(), "missing-b.log".to_string()],
+        BatchScanOptions {
+            max_concurrent: Some(2),
+            preserve_order: true,
+            cancellation: None,
+        },
+        |_| {},
+    ));
+
+    assert_eq!(results.len(), 2);
+    assert_eq!(results[0].input_index, 0);
+    assert_eq!(results[0].result.log_path, "missing-a.log");
+    assert_eq!(results[1].input_index, 1);
+    assert_eq!(results[1].result.log_path, "missing-b.log");
+    assert!(results.iter().all(|result| !result.result.success));
+}
+
+#[test]
+fn process_logs_batch_with_events_emits_queued_started_and_terminal_events() {
+    let orchestrator = make_fixture_orchestrator();
+    let mut events = Vec::new();
+
+    let results = get_runtime().block_on(orchestrator.process_logs_batch_with_events(
+        vec!["missing-a.log".to_string()],
+        BatchScanOptions {
+            max_concurrent: Some(1),
+            preserve_order: false,
+            cancellation: None,
+        },
+        |event| events.push((event.input_index, event.kind, event.phase, event.completed)),
+    ));
+
+    assert_eq!(results.len(), 1);
+    assert!(events.contains(&(0, BatchScanEventKind::Queued, ScanProgressPhase::Setup, 0)));
+    assert!(events.contains(&(0, BatchScanEventKind::Started, ScanProgressPhase::Setup, 0)));
+    assert!(events.contains(&(0, BatchScanEventKind::Phase, ScanProgressPhase::Setup, 0)));
+    assert!(events.contains(&(0, BatchScanEventKind::Failed, ScanProgressPhase::Setup, 1)));
+}

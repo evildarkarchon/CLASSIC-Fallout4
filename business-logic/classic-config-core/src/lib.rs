@@ -12,6 +12,7 @@
 
 pub mod client_schemas;
 pub mod config;
+pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
 pub mod shippable;
 pub mod yamldata;

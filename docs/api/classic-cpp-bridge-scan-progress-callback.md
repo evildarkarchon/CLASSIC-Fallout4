@@ -7,7 +7,7 @@ Contributor-facing documentation for the current batch scan progress callback co
 
 This page documents the callback behavior visible in source today for the active Rust/C++ scan path.
 
-It is intentionally narrower than [`classic-scanlog-core.md`](classic-scanlog-core.md): the lower-level crate exposes per-log phase progress through `OrchestratorCore::process_log_with_progress(...)`, while the batch callback contract described here is bridge-local coordination built around that lower-level API.
+It is intentionally narrower than [`classic-scanlog-core.md`](classic-scanlog-core.md): the lower-level crate exposes per-log phase progress through `OrchestratorCore::process_log_with_progress(...)` and now owns the indexed/evented batch driver, while the callback contract described here is the C++ bridge mapping of those core events into bridge DTOs.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -51,9 +51,8 @@ The bridge-local batch callback contract is defined inside the `#[cxx::bridge(na
 
 The main consumer is `orchestrator_process_logs_batch_with_progress(...)`, which:
 
-- emits `Queued` events before starting batch work
-- runs per-log scan tasks with `OrchestratorCore::process_log_with_progress(...)`
-- converts lower-level `ScanProgressPhase` values into bridge `BatchProgressPhase` values
+- calls `OrchestratorCore::process_logs_batch_with_events(...)`
+- converts core `BatchScanEventKind` and `ScanProgressPhase` values into bridge event DTOs
 - emits bridge-level terminal `Completed` or `Failed` events
 - returns `Vec<BatchScanResult>` in completion order after callback emission finishes
 

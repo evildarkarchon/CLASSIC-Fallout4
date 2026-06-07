@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-05-31T09:21:38.010825+00:00",
+  "generated_at_utc": "2026-06-07T06:11:39.420779+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -7548,7 +7548,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisConfig",
       "tier": "tier1"
     },
@@ -7567,7 +7567,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::AnalysisResult",
       "tier": "tier1"
     },
@@ -7578,6 +7578,63 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
       "source_decl": "pub struct AnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BatchScanEvent",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::BatchScanEvent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BatchScanEvent",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub struct BatchScanEvent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BatchScanEventKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub enum BatchScanEventKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BatchScanEventKind",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::BatchScanEventKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BatchScanOptions",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::BatchScanOptions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "BatchScanOptions",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub struct BatchScanOptions",
       "tier": "tier1"
     },
     {
@@ -7856,6 +7913,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "IndexedAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_expr": "orchestrator::IndexedAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "IndexedAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub struct IndexedAnalysisResult",
+      "tier": "tier1"
+    },
+    {
       "symbol": "LogParser",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -7889,7 +7965,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::OrchestratorCore",
       "tier": "tier1"
     },
@@ -8180,7 +8256,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::ScanProgressPhase",
       "tier": "tier1"
     },
@@ -8384,7 +8460,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::build_analysis_config_from_yaml",
       "tier": "tier1"
     },
@@ -9930,7 +10006,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
+      "source_decl": "pub use orchestrator::{ AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml, resolve_batch_concurrency, };",
       "source_expr": "orchestrator::resolve_batch_concurrency",
       "tier": "tier1"
     },
@@ -14065,46 +14141,6 @@
       "owner_module": "version_registry",
       "source_file": "business-logic/classic-version-registry-core/src/models.rs",
       "source_decl": "pub fn contains(&self, version: &GameVersion)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "create_fo4_ae",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-version-registry-core",
-      "owner_module": "version_registry",
-      "source_file": "business-logic/classic-version-registry-core/src/defaults.rs",
-      "source_decl": "pub fn create_fo4_ae()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "create_fo4_ng",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-version-registry-core",
-      "owner_module": "version_registry",
-      "source_file": "business-logic/classic-version-registry-core/src/defaults.rs",
-      "source_decl": "pub fn create_fo4_ng()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "create_fo4_og",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-version-registry-core",
-      "owner_module": "version_registry",
-      "source_file": "business-logic/classic-version-registry-core/src/defaults.rs",
-      "source_decl": "pub fn create_fo4_og()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "create_fo4_vr",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-version-registry-core",
-      "owner_module": "version_registry",
-      "source_file": "business-logic/classic-version-registry-core/src/defaults.rs",
-      "source_decl": "pub fn create_fo4_vr()",
       "tier": "tier1"
     },
     {
