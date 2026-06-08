@@ -169,7 +169,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: classic-gui/vcpkg_installed
-          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-installed-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-installed-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', 'vcpkg-triplets/**', 'cmake/toolchains/**', '.github/scripts/setup-vcpkg.ps1') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-installed-gui-
 
@@ -177,7 +177,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~\AppData\Local\vcpkg\archives
-          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-archives-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-archives-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', 'vcpkg-triplets/**', 'cmake/toolchains/**', '.github/scripts/setup-vcpkg.ps1') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-archives-gui-
 

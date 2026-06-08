@@ -29,7 +29,7 @@
 
 .PARAMETER Compiler
     C++ compiler toolchain to use. Default: msvc. Use clang-cl to build with
-    clang-cl against the Visual Studio/MSVC ABI toolchain.
+    clang-cl and lld-link against the Visual Studio/MSVC ABI toolchain.
 
 .PARAMETER Install
     Run cmake --install to create a deployable layout.
@@ -174,18 +174,22 @@ if (-not $clFound) {
 # Validate required toolchain components before CMake configure.
 $clFound = Get-Tool "cl.exe"
 $clangClFound = Get-Tool "clang-cl.exe"
+$lldLinkFound = Get-Tool "lld-link.exe"
 $ninjaFound = Get-Tool "ninja"
-if (-not $clFound -or ($Compiler -eq "clang-cl" -and -not $clangClFound) -or -not $ninjaFound) {
+if (-not $clFound -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -not $lldLinkFound)) -or -not $ninjaFound) {
     if (-not $clFound) {
         Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
     }
     if ($Compiler -eq "clang-cl" -and -not $clangClFound) {
         Write-Host "Missing required tool: clang-cl.exe" -ForegroundColor Red
     }
+    if ($Compiler -eq "clang-cl" -and -not $lldLinkFound) {
+        Write-Host "Missing required tool: lld-link.exe" -ForegroundColor Red
+    }
     if (-not $ninjaFound) {
         Write-Host "Missing required tool: ninja" -ForegroundColor Red
     }
-    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload, optional clang-cl component, and Ninja/CMake components are installed."
+    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload, optional clang-cl/lld-link components, and Ninja/CMake components are installed."
     exit 1
 }
 
@@ -202,6 +206,8 @@ $buildDir = Join-Path $ScriptDir $buildDirName
 
 if ($Compiler -eq "clang-cl") {
     Add-ClangClCargoCxxFlags
+    $env:CLASSIC_CLANG_CL = $clangClFound.Source
+    $env:CLASSIC_LLD_LINK = $lldLinkFound.Source
 }
 
 if ($Clean -and (Test-Path $buildDir)) {

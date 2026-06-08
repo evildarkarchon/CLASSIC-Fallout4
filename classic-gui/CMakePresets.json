@@ -30,7 +30,12 @@
             "binaryDir": "${sourceDir}/build-clang-cl",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_COMPILER": "clang-cl"
+                "CMAKE_C_COMPILER": "clang-cl",
+                "CMAKE_CXX_COMPILER": "clang-cl",
+                "CMAKE_LINKER": "lld-link",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/../vcpkg-triplets",
+                "VCPKG_HOST_TRIPLET": "x64-windows-classic-clang-cl",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-classic-clang-cl"
             }
         },
         {
@@ -84,7 +89,10 @@
             "inherits": "default",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/../vcpkg-triplets",
+                "VCPKG_HOST_TRIPLET": "x64-windows-classic-msvc-ci",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-classic-msvc-ci"
             }
         },
         {
@@ -93,7 +101,9 @@
             "inherits": "ci",
             "binaryDir": "${sourceDir}/build-debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VCPKG_HOST_TRIPLET": "x64-windows",
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
             }
         },
         {
@@ -102,7 +112,9 @@
             "inherits": "default-clang-cl",
             "binaryDir": "${sourceDir}/build-clang-cl",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "VCPKG_HOST_TRIPLET": "x64-windows-classic-clang-cl-ci",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-classic-clang-cl-ci"
             }
         },
         {
@@ -111,7 +123,9 @@
             "inherits": "ci-clang-cl",
             "binaryDir": "${sourceDir}/build-debug-clang-cl",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VCPKG_HOST_TRIPLET": "x64-windows-classic-clang-cl",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-classic-clang-cl"
             }
         }
     ],

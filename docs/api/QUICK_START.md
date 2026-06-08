@@ -4,7 +4,7 @@ This quick start reflects the active CLASSIC architecture: **C++ frontends + Rus
 
 ## 1) Prerequisites (Windows-focused)
 
-- Visual Studio with C++ Desktop workload (MSVC; optional LLVM/clang-cl component for clang-cl builds)
+- Visual Studio with C++ Desktop workload (MSVC; optional LLVM clang-cl/lld-link components for clang-cl builds)
 - `VCPKG_ROOT` configured (example: `C:\vcpkg`)
 - CMake 3.25+
 - Ninja

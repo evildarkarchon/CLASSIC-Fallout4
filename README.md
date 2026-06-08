@@ -61,7 +61,7 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 
 #### Prerequisites
 
-- Visual Studio with C++ Desktop workload (MSVC toolchain; optional LLVM/clang-cl component for clang-cl builds)
+- Visual Studio with C++ Desktop workload (MSVC toolchain; optional LLVM clang-cl/lld-link components for clang-cl builds)
 - [vcpkg](https://vcpkg.io/)
 - `VCPKG_ROOT` environment variable configured (example: `C:\vcpkg`)
 - Rust toolchain (`cargo`)

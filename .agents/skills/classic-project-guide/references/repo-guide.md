@@ -82,7 +82,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 
 Prerequisites:
 
-- Visual Studio with the C++ Desktop workload; install the optional LLVM/clang-cl component for clang-cl builds.
+- Visual Studio with the C++ Desktop workload; install the optional LLVM clang-cl/lld-link components for clang-cl builds.
 - `VCPKG_ROOT` configured, for example `C:\vcpkg`.
 - Ninja available in the VS developer shell.
 - Qt 6 installed for GUI work; see `classic-gui/CMakePresets.json`.
@@ -380,6 +380,7 @@ Platform notes:
 - `classic-cli` and `classic-gui` are Windows-focused and require MSVC.
 - `node-bindings/classic-node` currently targets `x86_64-pc-windows-msvc`.
 - CLI integration tests need `sample_logs/FO4` checked out from submodules.
+- Regular CLI/GUI clang-cl presets use `x64-windows-classic-clang-cl` for both target and host vcpkg packages, chainloaded through `cmake/toolchains/vcpkg-clang-cl.cmake` so vcpkg uses clang-cl/lld-link too. GUI CI Release presets override to release-only `x64-windows-classic-msvc-ci` or `x64-windows-classic-clang-cl-ci` so CI does not build an unused debug Qt dependency tree.
 - The CXX parity gate, YAML publish validation helpers, and app-notification publish validation helpers are source-only and do not require MSVC.
 - Some Rust crates depend on DirectX-related tooling via transitive `ba2` paths and may need subset builds on Linux.
 - On Linux or cloud environments, prefer Rust-only crate subsets plus source-only parity gates when the full workspace is not portable.
