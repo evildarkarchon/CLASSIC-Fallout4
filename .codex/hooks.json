@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\Scripts\\graphify.EXE hook-check"
+            "command": "graphify hook-check"
           }
         ]
       }
