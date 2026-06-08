@@ -132,7 +132,7 @@ uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m
 
 ## CI Workflow Mapping
 
-- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test pipeline
+- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test pipeline for MSVC and clang-cl
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): Rust format/lint/build/test
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity and runtime tests
 - [`ci-python-bindings.yml`](../../.github/workflows/ci-python-bindings.yml): Python parity and runtime smoke tests

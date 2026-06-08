@@ -47,18 +47,22 @@ Placement guidance:
 
 ### Native C++ builds
 
-Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja.
+Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja. MSVC is the default compiler; pass `-Compiler clang-cl` to use clang-cl against the Visual Studio/MSVC ABI toolchain.
 
 ```powershell
 # Build CLI
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 
 # Build GUI
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 
 # Build plus tests
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 
 # Build plus selected tests
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
@@ -78,7 +82,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 
 Prerequisites:
 
-- Visual Studio with the C++ Desktop workload.
+- Visual Studio with the C++ Desktop workload; install the optional LLVM/clang-cl component for clang-cl builds.
 - `VCPKG_ROOT` configured, for example `C:\vcpkg`.
 - Ninja available in the VS developer shell.
 - Qt 6 installed for GUI work; see `classic-gui/CMakePresets.json`.
@@ -91,6 +95,8 @@ Policy: NEVER run C++ tests by invoking test binaries or raw `ctest` directly. A
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring

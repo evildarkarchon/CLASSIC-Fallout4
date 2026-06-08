@@ -11,6 +11,8 @@ Need the old-to-new path translation first? Use the [Workspace Migration Matrix]
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 ```
 
 CLI integration test wrapper:
@@ -36,7 +38,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 ## 2) CI workflow mapping
 
 - [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml)
-  - C++ CLI/GUI build + test jobs on Windows
+  - C++ CLI/GUI build + test jobs on Windows for MSVC and clang-cl
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml)
   - Rust format/lint/build/test jobs
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml)

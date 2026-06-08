@@ -27,6 +27,10 @@
 .PARAMETER Debug
     Build using the CMake debug preset (build-debug directory).
 
+.PARAMETER Compiler
+    C++ compiler toolchain to use. Default: msvc. Use clang-cl to build with
+    clang-cl against the Visual Studio/MSVC ABI toolchain.
+
 .PARAMETER Install
     Run cmake --install to create a deployable layout.
 
@@ -42,6 +46,8 @@
     .\build_cli.ps1 -Debug -Install
     .\build_cli.ps1 -Clean -Test -Install
     .\build_cli.ps1 -Package
+    .\build_cli.ps1 -Compiler clang-cl
+    .\build_cli.ps1 -Debug -Compiler clang-cl
     .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
     .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks","Yaml update bridge returns status"
     .\build_cli.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
@@ -54,6 +60,8 @@ param(
     [switch]$Debug,
     [switch]$Install,
     [switch]$Package,
+    [ValidateSet("msvc", "clang-cl")]
+    [string]$Compiler = "msvc",
     [string[]]$CTestName = @(),
     [string[]]$CTestArgs = @(),
     [string[]]$IntegrationTestName = @()
@@ -123,6 +131,19 @@ function Get-Tool([string]$ToolName) {
     return Get-Command $ToolName -ErrorAction SilentlyContinue
 }
 
+function Add-ClangClCargoCxxFlags {
+    $exceptionFlag = "/EHsc"
+    foreach ($name in @("CXXFLAGS_x86_64_pc_windows_msvc", "CXXFLAGS_x86_64-pc-windows-msvc")) {
+        $current = [Environment]::GetEnvironmentVariable($name, "Process")
+        if ([string]::IsNullOrWhiteSpace($current)) {
+            [Environment]::SetEnvironmentVariable($name, $exceptionFlag, "Process")
+        }
+        elseif ($current -notmatch '(^|\s)/EH') {
+            [Environment]::SetEnvironmentVariable($name, "$current $exceptionFlag", "Process")
+        }
+    }
+}
+
 # Verify VCPKG_ROOT is set
 if (-not $env:VCPKG_ROOT) {
     Write-Error "VCPKG_ROOT environment variable is not set. Install vcpkg and set VCPKG_ROOT."
@@ -152,22 +173,36 @@ if (-not $clFound) {
 
 # Validate required toolchain components before CMake configure.
 $clFound = Get-Tool "cl.exe"
+$clangClFound = Get-Tool "clang-cl.exe"
 $ninjaFound = Get-Tool "ninja"
-if (-not $clFound -or -not $ninjaFound) {
+if (-not $clFound -or ($Compiler -eq "clang-cl" -and -not $clangClFound) -or -not $ninjaFound) {
     if (-not $clFound) {
         Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $clangClFound) {
+        Write-Host "Missing required tool: clang-cl.exe" -ForegroundColor Red
     }
     if (-not $ninjaFound) {
         Write-Host "Missing required tool: ninja" -ForegroundColor Red
     }
-    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload + Ninja/CMake components are installed."
+    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload, optional clang-cl component, and Ninja/CMake components are installed."
     exit 1
 }
 
 # ── Step 1: Clean (optional) ─────────────────────────────────────
-$buildPreset = if ($Debug) { "debug" } else { "default" }
-$buildDirName = if ($Debug) { "build-debug" } else { "build" }
+if ($Compiler -eq "clang-cl") {
+    $buildPreset = if ($Debug) { "debug-clang-cl" } else { "default-clang-cl" }
+    $buildDirName = if ($Debug) { "build-debug-clang-cl" } else { "build-clang-cl" }
+}
+else {
+    $buildPreset = if ($Debug) { "debug" } else { "default" }
+    $buildDirName = if ($Debug) { "build-debug" } else { "build" }
+}
 $buildDir = Join-Path $ScriptDir $buildDirName
+
+if ($Compiler -eq "clang-cl") {
+    Add-ClangClCargoCxxFlags
+}
 
 if ($Clean -and (Test-Path $buildDir)) {
     Write-Host "Cleaning build directory..." -ForegroundColor Yellow
@@ -273,7 +308,12 @@ try {
 
     # ── Step 5: Install (optional) ───────────────────────────────
     if ($Install) {
-        $installDirName = if ($Debug) { "install-debug" } else { "install" }
+        if ($Compiler -eq "clang-cl") {
+            $installDirName = if ($Debug) { "install-debug-clang-cl" } else { "install-clang-cl" }
+        }
+        else {
+            $installDirName = if ($Debug) { "install-debug" } else { "install" }
+        }
         $installDir = Join-Path $ScriptDir $installDirName
         Write-Host "`n=== Installing to $installDir ===" -ForegroundColor Cyan
         & cmake --install $buildDirName --prefix $installDir

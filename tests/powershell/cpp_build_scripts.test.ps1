@@ -3,7 +3,9 @@ param(
     [string]$CliBuildScriptPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/build_cli.ps1"),
     [string]$CliIntegrationScriptPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/test_cli.ps1"),
     [string]$CliCmakePath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/CMakeLists.txt"),
+    [string]$CliCmakePresetsPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-cli/CMakePresets.json"),
     [string]$GuiCmakePath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-gui/CMakeLists.txt"),
+    [string]$GuiCmakePresetsPath = (Join-Path (Join-Path $PSScriptRoot "../..") "classic-gui/CMakePresets.json"),
     [string]$TuiMainPath = (Join-Path (Join-Path $PSScriptRoot "../..") "ui-applications/classic-tui/src/main.rs")
 )
 
@@ -87,6 +89,60 @@ function Assert-TestNameNormalizerAcceptsCommaLists {
     }
 }
 
+function Get-ConfigurePresetNames {
+    param([string]$PresetsPath)
+
+    if (-not (Test-Path $PresetsPath)) {
+        throw "Expected CMake presets file at '$PresetsPath'."
+    }
+
+    $presetJson = Get-Content -Path (Resolve-Path $PresetsPath) -Raw | ConvertFrom-Json
+    return @($presetJson.configurePresets | ForEach-Object { $_.name })
+}
+
+function Assert-ConfigurePresetsExist {
+    param(
+        [string[]]$ActualNames,
+        [string[]]$ExpectedNames,
+        [string]$PresetLabel
+    )
+
+    foreach ($expectedName in $ExpectedNames) {
+        if ($expectedName -notin $ActualNames) {
+            throw "Expected $PresetLabel to define configure preset '$expectedName'."
+        }
+    }
+}
+
+function Assert-BuildScriptSupportsCompilerSelection {
+    param(
+        [System.Management.Automation.Language.Ast]$Ast,
+        [string]$ScriptText,
+        [string]$ScriptLabel
+    )
+
+    $parameterNames = Get-ParameterNames -Ast $Ast
+    if ("Compiler" -notin $parameterNames) {
+        throw "Expected $ScriptLabel to expose -Compiler for selecting msvc or clang-cl."
+    }
+
+    if ($ScriptText -notmatch '\[ValidateSet\([^\)]*msvc[^\)]*clang-cl[^\)]*\)\]') {
+        throw "Expected $ScriptLabel to validate -Compiler values as msvc and clang-cl."
+    }
+
+    if ($ScriptText -notmatch 'clang-cl\.exe') {
+        throw "Expected $ScriptLabel to check clang-cl.exe availability when -Compiler clang-cl is selected."
+    }
+
+    if ($ScriptText -notmatch 'default-clang-cl') {
+        throw "Expected $ScriptLabel to map clang-cl builds to clang-cl CMake presets."
+    }
+
+    if ($ScriptText -notmatch 'CXXFLAGS_x86_64-pc-windows-msvc' -or $ScriptText -notmatch '/EHsc') {
+        throw "Expected $ScriptLabel to enable C++ exceptions for clang-cl Cargo cc-rs builds."
+    }
+}
+
 $guiAst = Get-ScriptAst -ScriptPath $GuiBuildScriptPath
 $guiText = Get-Content -Path (Resolve-Path $GuiBuildScriptPath) -Raw
 $guiParamNames = Get-ParameterNames -Ast $guiAst
@@ -106,6 +162,7 @@ if ($guiText -notmatch '\$ctestRunArgs\s*\+=\s*\$CTestArgs') {
 }
 
 Assert-TestNameNormalizerAcceptsCommaLists -Ast $guiAst -ScriptLabel "classic-gui/build_gui.ps1"
+Assert-BuildScriptSupportsCompilerSelection -Ast $guiAst -ScriptText $guiText -ScriptLabel "classic-gui/build_gui.ps1"
 
 $cliAst = Get-ScriptAst -ScriptPath $CliBuildScriptPath
 $cliText = Get-Content -Path (Resolve-Path $CliBuildScriptPath) -Raw
@@ -130,6 +187,23 @@ if ($cliText -notmatch '&\s*\$integrationScript[\s\S]*-TestName\s+\$IntegrationT
 }
 
 Assert-TestNameNormalizerAcceptsCommaLists -Ast $cliAst -ScriptLabel "classic-cli/build_cli.ps1"
+Assert-BuildScriptSupportsCompilerSelection -Ast $cliAst -ScriptText $cliText -ScriptLabel "classic-cli/build_cli.ps1"
+
+$cliPresetNames = Get-ConfigurePresetNames -PresetsPath $CliCmakePresetsPath
+Assert-ConfigurePresetsExist -ActualNames $cliPresetNames -ExpectedNames @(
+    "default-clang-cl",
+    "debug-clang-cl"
+) -PresetLabel "classic-cli/CMakePresets.json"
+
+$guiPresetNames = Get-ConfigurePresetNames -PresetsPath $GuiCmakePresetsPath
+Assert-ConfigurePresetsExist -ActualNames $guiPresetNames -ExpectedNames @(
+    "default-clang-cl",
+    "debug-clang-cl",
+    "system-fallback-clang-cl",
+    "system-fallback-debug-clang-cl",
+    "ci-clang-cl",
+    "ci-debug-clang-cl"
+) -PresetLabel "classic-gui/CMakePresets.json"
 
 $integrationAst = Get-ScriptAst -ScriptPath $CliIntegrationScriptPath
 $integrationText = Get-Content -Path (Resolve-Path $CliIntegrationScriptPath) -Raw

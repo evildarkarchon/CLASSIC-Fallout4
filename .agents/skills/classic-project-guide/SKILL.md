@@ -35,7 +35,7 @@ Load `references/repo-guide.md` selectively.
 - NEVER run C++ tests by invoking test binaries or raw `ctest` directly. Always use the repo PowerShell C++ wrappers for test execution.
 - Before local cargo commands that touch PyO3 or `rebuild_rust.ps1 -Target python`, set `$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"` for the current shell. `.cargo/config.toml` intentionally does not pin it globally.
 - Keep Rust unit tests in sibling `*_tests.rs` files declared with `#[cfg(test)] #[path = "<name>_tests.rs"] mod tests;`. Do not introduce inline `#[cfg(test)] mod tests { ... }` blocks.
-- If running Rust or MSVC-targeted C++ commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it so Git's `usr/bin/link.exe` does not shadow the Visual Studio linker.
+- If running Rust or MSVC-targeted C++ commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it so Git's `usr/bin/link.exe` does not shadow the MSVC-compatible linker.
 - Never write to `NUL` or `nul` as if it were a normal file path on Windows.
 
 ## Match Validation To The Touched Surface

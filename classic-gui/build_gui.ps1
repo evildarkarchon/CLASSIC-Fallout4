@@ -27,6 +27,10 @@
 .PARAMETER Debug
     Build using a debug preset (build-debug directory).
 
+.PARAMETER Compiler
+    C++ compiler toolchain to use. Default: msvc. Use clang-cl to build with
+    clang-cl against the Visual Studio/MSVC ABI toolchain.
+
 .PARAMETER Install
     Run cmake --install to create a deployable layout with windeployqt.
 
@@ -48,6 +52,9 @@
     .\build_gui.ps1 -Clean -Package
     .\build_gui.ps1 -Preset system-fallback
     .\build_gui.ps1 -Debug -Preset system-fallback
+    .\build_gui.ps1 -Compiler clang-cl
+    .\build_gui.ps1 -Debug -Compiler clang-cl
+    .\build_gui.ps1 -Preset system-fallback -Compiler clang-cl
     .\build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
     .\build_gui.ps1 -Test -CTestName classic-gui-test-resultscontroller,classic-gui-test-markdownviewer
     .\build_gui.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
@@ -60,6 +67,8 @@ param(
     [switch]$Install,
     [switch]$Package,
     [string]$Preset = "default",
+    [ValidateSet("msvc", "clang-cl")]
+    [string]$Compiler = "msvc",
     [string[]]$CTestName = @(),
     [string[]]$CTestArgs = @(),
     [int]$TestTimeoutSec = 600
@@ -103,6 +112,19 @@ function Normalize-TestNameList {
     return $normalized
 }
 
+function Add-ClangClCargoCxxFlags {
+    $exceptionFlag = "/EHsc"
+    foreach ($name in @("CXXFLAGS_x86_64_pc_windows_msvc", "CXXFLAGS_x86_64-pc-windows-msvc")) {
+        $current = [Environment]::GetEnvironmentVariable($name, "Process")
+        if ([string]::IsNullOrWhiteSpace($current)) {
+            [Environment]::SetEnvironmentVariable($name, $exceptionFlag, "Process")
+        }
+        elseif ($current -notmatch '(^|\s)/EH') {
+            [Environment]::SetEnvironmentVariable($name, "$current $exceptionFlag", "Process")
+        }
+    }
+}
+
 # -Package implies -Install (windeployqt must populate the install dir first)
 if ($Package) { $Install = $true }
 
@@ -118,6 +140,20 @@ $ctestRegex = New-ExactTestNameRegex -TestNames $CTestName
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $effectivePreset = $Preset
 
+function Convert-ToClangClPreset {
+    param([string]$PresetName)
+
+    switch ($PresetName) {
+        "default" { return "default-clang-cl" }
+        "debug" { return "debug-clang-cl" }
+        "system-fallback" { return "system-fallback-clang-cl" }
+        "system-fallback-debug" { return "system-fallback-debug-clang-cl" }
+        "ci" { return "ci-clang-cl" }
+        "ci-debug" { return "ci-debug-clang-cl" }
+        default { return $PresetName }
+    }
+}
+
 if ($Debug) {
     switch ($Preset) {
         "default" { $effectivePreset = "debug" }
@@ -126,22 +162,50 @@ if ($Debug) {
         "ci-debug" { $effectivePreset = "ci-debug" }
         "system-fallback" { $effectivePreset = "system-fallback-debug" }
         "system-fallback-debug" { $effectivePreset = "system-fallback-debug" }
+        "default-clang-cl" { $effectivePreset = "debug-clang-cl" }
+        "ci-clang-cl" { $effectivePreset = "ci-debug-clang-cl" }
+        "debug-clang-cl" { $effectivePreset = "debug-clang-cl" }
+        "ci-debug-clang-cl" { $effectivePreset = "ci-debug-clang-cl" }
+        "system-fallback-clang-cl" { $effectivePreset = "system-fallback-debug-clang-cl" }
+        "system-fallback-debug-clang-cl" { $effectivePreset = "system-fallback-debug-clang-cl" }
         default {
-            Write-Error "Debug mode supports -Preset default, ci, debug, ci-debug, system-fallback, or system-fallback-debug. Received: '$Preset'."
+            Write-Error "Debug mode supports -Preset default, ci, debug, ci-debug, system-fallback, system-fallback-debug, and their -clang-cl variants. Received: '$Preset'."
             exit 1
         }
     }
 }
 
-$isDebugPreset = $effectivePreset -in @("debug", "ci-debug", "system-fallback-debug")
+if ($Compiler -eq "clang-cl") {
+    $effectivePreset = Convert-ToClangClPreset -PresetName $effectivePreset
+}
+
+$usesClangCl = $effectivePreset.EndsWith("-clang-cl")
+$isDebugPreset = $effectivePreset -in @(
+    "debug",
+    "ci-debug",
+    "system-fallback-debug",
+    "debug-clang-cl",
+    "ci-debug-clang-cl",
+    "system-fallback-debug-clang-cl"
+)
 $buildDirName = switch ($effectivePreset) {
     "system-fallback" { "build-system-fallback" }
     "system-fallback-debug" { "build-system-fallback-debug" }
+    "default-clang-cl" { "build-clang-cl" }
+    "debug-clang-cl" { "build-debug-clang-cl" }
+    "ci-clang-cl" { "build-clang-cl" }
+    "ci-debug-clang-cl" { "build-debug-clang-cl" }
+    "system-fallback-clang-cl" { "build-system-fallback-clang-cl" }
+    "system-fallback-debug-clang-cl" { "build-system-fallback-debug-clang-cl" }
     default {
         if ($isDebugPreset) { "build-debug" } else { "build" }
     }
 }
 $buildDir = Join-Path $ScriptDir $buildDirName
+
+if ($usesClangCl) {
+    Add-ClangClCargoCxxFlags
+}
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
 $clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
@@ -162,10 +226,21 @@ if (-not $clFound) {
     }
 }
 
-# ── Verify Ninja is available ────────────────────────────────────
+# ── Verify required toolchain components are available ───────────
+$clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
+$clangClFound = Get-Command clang-cl.exe -ErrorAction SilentlyContinue
 $ninjaFound = Get-Command ninja.exe -ErrorAction SilentlyContinue
-if (-not $ninjaFound) {
-    Write-Error "Ninja not found in PATH. Install Ninja or run from a VS Dev Shell that includes it."
+if (-not $clFound -or ($usesClangCl -and -not $clangClFound) -or -not $ninjaFound) {
+    if (-not $clFound) {
+        Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
+    }
+    if ($usesClangCl -and -not $clangClFound) {
+        Write-Host "Missing required tool: clang-cl.exe" -ForegroundColor Red
+    }
+    if (-not $ninjaFound) {
+        Write-Host "Missing required tool: ninja" -ForegroundColor Red
+    }
+    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload, optional clang-cl component, and Ninja/CMake components are installed."
     exit 1
 }
 
@@ -247,7 +322,12 @@ try {
 
     # ── Step 5: Install (optional) ───────────────────────────────
     if ($Install) {
-        $installDirName = if ($isDebugPreset) { "install-debug" } else { "install" }
+        if ($usesClangCl) {
+            $installDirName = if ($isDebugPreset) { "install-debug-clang-cl" } else { "install-clang-cl" }
+        }
+        else {
+            $installDirName = if ($isDebugPreset) { "install-debug" } else { "install" }
+        }
         $installDir = Join-Path $ScriptDir $installDirName
         Write-Host "`n=== Installing to $installDir ===" -ForegroundColor Cyan
         & cmake --install $buildDirName --prefix $installDir

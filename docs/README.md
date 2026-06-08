@@ -41,9 +41,13 @@ Need the legacy-to-current translation table first? Open the [Workspace Migratio
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
@@ -90,7 +94,7 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 
 ## CI Workflow Mapping
 
-- [`ci-cpp.yml`](../.github/workflows/ci-cpp.yml) — C++ CLI/GUI build + test on Windows
+- [`ci-cpp.yml`](../.github/workflows/ci-cpp.yml) — C++ CLI/GUI build + test on Windows for MSVC and clang-cl
 - [`ci-rust.yml`](../.github/workflows/ci-rust.yml) — Rust format/lint/build/test
 - [`ci-typescript.yml`](../.github/workflows/ci-typescript.yml) — Node parity gates + Bun/Node runtime tests
 - [`ci-python-bindings.yml`](../.github/workflows/ci-python-bindings.yml) — Python parity gates + binding smoke tests

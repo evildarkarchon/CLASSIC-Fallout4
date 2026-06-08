@@ -61,7 +61,7 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 
 #### Prerequisites
 
-- Visual Studio with C++ Desktop workload (MSVC toolchain)
+- Visual Studio with C++ Desktop workload (MSVC toolchain; optional LLVM/clang-cl component for clang-cl builds)
 - [vcpkg](https://vcpkg.io/)
 - `VCPKG_ROOT` environment variable configured (example: `C:\vcpkg`)
 - Rust toolchain (`cargo`)
@@ -73,12 +73,14 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 ```
 
 #### Build GUI
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
 #### Build with tests
@@ -86,6 +88,8 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 
 # Selected C++ tests through the wrappers
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
@@ -131,9 +135,11 @@ Need the full old-to-new mapping? Start with the [Workspace Migration Matrix](do
 ```powershell
 # CLI
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 
 # GUI
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
 Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test executable launches so VS Dev Shell and C++ test environment setup stay correct.
@@ -144,7 +150,7 @@ Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test
 
 GitHub Actions workflows:
 
-- `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest`
+- `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest` for MSVC and clang-cl
 - `ci-rust.yml` - Rust format/lint/build/test
 - `ci-typescript.yml` - Node bindings parity gates + Bun/Node runtime tests
 - `ci-python-bindings.yml` - Python bindings parity gates + smoke tests

@@ -1,8 +1,8 @@
-# Verify that the linker CMake selected for an MSVC configure is really
-# Microsoft's linker, not Git for Windows' coreutils `link.exe`. Git
-# ships `<git>\usr\bin\link.exe` (a GNU `link` that only creates POSIX
-# hardlinks), and shells that prepend Git's `usr/bin` can still confuse
-# ad hoc PATH-based checks.
+# Verify that the linker CMake selected for an MSVC-ABI configure is a
+# real MSVC-compatible linker, not Git for Windows' coreutils `link.exe`.
+# Git ships `<git>\usr\bin\link.exe` (a GNU `link` that only creates
+# POSIX hardlinks), and shells that prepend Git's `usr/bin` can still
+# confuse ad hoc PATH-based checks.
 #
 # Prefer the concrete linker CMake already resolved (`CMAKE_LINKER`, or
 # the compiler-adjacent `link.exe`) because generated Ninja rules use
@@ -13,7 +13,17 @@ function(classic_assert_msvc_linker)
     if(NOT WIN32)
         return()
     endif()
-    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+
+    set(_classic_msvc_abi_compiler FALSE)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        set(_classic_msvc_abi_compiler TRUE)
+    elseif(CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
+        set(_classic_msvc_abi_compiler TRUE)
+    elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        set(_classic_msvc_abi_compiler TRUE)
+    endif()
+
+    if(NOT _classic_msvc_abi_compiler)
         return()
     endif()
 
@@ -51,11 +61,13 @@ function(classic_assert_msvc_linker)
             "tools/use_msvc_from_git_bash.sh from Git Bash).")
     endif()
 
-    # Behavioral probe: MSVC's linker always emits `Microsoft (R)` on its
-    # banner. Git's coreutils `link` emits `link: missing operand`. A
-    # path heuristic (e.g. looking for `Hostx64\x64`) is fragile across
-    # MSVC versions, side-by-side toolsets, and vcvarsall variants -- the
-    # behavioral check is identity-based and survives all of those.
+    # Behavioral probe: Microsoft's linker emits `Microsoft (R)` on its
+    # banner, while LLVM's MSVC-compatible linker emits `lld-link`.
+    # Git's coreutils `link` emits `link: missing operand`. A path
+    # heuristic (e.g. looking for `Hostx64\x64`) is fragile across MSVC
+    # versions, side-by-side toolsets, vcvarsall variants, and clang-cl
+    # installs -- the behavioral check is identity-based and survives all
+    # of those.
     execute_process(
         COMMAND "${_classic_link_exe}"
         OUTPUT_VARIABLE _classic_link_stdout
@@ -70,14 +82,20 @@ function(classic_assert_msvc_linker)
             "${_classic_link_exe}")
         return()
     endif()
+    if(_classic_link_combined MATCHES "(^|[\r\n])lld-link:")
+        message(STATUS
+            "LLVM lld-link verified via ${_classic_link_resolution}: "
+            "${_classic_link_exe}")
+        return()
+    endif()
 
     get_filename_component(_classic_link_dir "${_classic_link_exe}" DIRECTORY)
     if(_classic_link_resolution STREQUAL "PATH")
-        set(_classic_resolution_details
-            "PATH resolved to a non-MSVC linker. This is almost certainly "
-            "Git for Windows' coreutils `link.exe` shadowing the Visual "
-            "Studio toolset during configure.")
-        set(_classic_remediation_lines
+        string(CONCAT _classic_resolution_details
+            "PATH resolved to a non-MSVC-compatible linker. This is almost "
+            "certainly Git for Windows' coreutils `link.exe` shadowing the "
+            "Visual Studio toolset during configure.")
+        string(CONCAT _classic_remediation_lines
             "  - Run from a Visual Studio Developer PowerShell (cl.exe, "
             "link.exe, lib.exe all on PATH from MSVC).\n"
             "  - From Git Bash, source `tools/use_msvc_from_git_bash.sh` "
@@ -85,19 +103,19 @@ function(classic_assert_msvc_linker)
             "  - Or remove `<git>\\usr\\bin` from PATH for this shell, or "
             "move it after `<VS>\\VC\\Tools\\MSVC\\<ver>\\bin\\Hostx64\\x64`.")
     else()
-        set(_classic_resolution_details
+        string(CONCAT _classic_resolution_details
             "CMake resolved a concrete linker path, but that executable "
-            "does not identify itself as the Microsoft linker.")
-        set(_classic_remediation_lines
+            "does not identify itself as Microsoft link.exe or LLVM lld-link.")
+        string(CONCAT _classic_remediation_lines
             "  - Inspect the active CMake preset, kit, and toolchain file.\n"
             "  - Make sure CMAKE_LINKER (or the selected compiler path) "
-            "points at the Visual Studio toolset.\n"
+            "points at the Visual Studio or LLVM MSVC-compatible linker.\n"
             "  - From Git Bash, source `tools/use_msvc_from_git_bash.sh` "
             "first if you expect PATH-based discovery.")
     endif()
 
     message(FATAL_ERROR
-        "Resolved linker is NOT the MSVC linker:\n"
+        "Resolved linker is NOT an MSVC-compatible linker:\n"
         "  ${_classic_link_exe}\n"
         "  (parent: ${_classic_link_dir})\n"
         "Resolution source: ${_classic_link_resolution}\n"

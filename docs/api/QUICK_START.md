@@ -4,7 +4,7 @@ This quick start reflects the active CLASSIC architecture: **C++ frontends + Rus
 
 ## 1) Prerequisites (Windows-focused)
 
-- Visual Studio with C++ Desktop workload (MSVC)
+- Visual Studio with C++ Desktop workload (MSVC; optional LLVM/clang-cl component for clang-cl builds)
 - `VCPKG_ROOT` configured (example: `C:\vcpkg`)
 - CMake 3.25+
 - Ninja
@@ -38,12 +38,14 @@ git submodule update --init --recursive
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 ```
 
 ### Build GUI
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
 Use these scripts instead of ad-hoc CMake commands so VS environment detection and preset wiring remain consistent.
@@ -57,6 +59,8 @@ Use these scripts instead of ad-hoc CMake commands so VS environment detection a
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 ```
 
 CLI integration tests (requires built CLI binary):
@@ -110,7 +114,7 @@ bun run test:node
 
 ## 7) CI mapping
 
-- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test
+- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test for MSVC and clang-cl
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): Rust format/lint/build/test
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity/runtime tests
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml): benchmark regression checks
