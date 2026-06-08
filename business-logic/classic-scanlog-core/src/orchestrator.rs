@@ -116,6 +116,32 @@ pub struct IndexedAnalysisResult {
     pub result: AnalysisResult,
 }
 
+const READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS: usize = 2;
+
+async fn drain_ready_batch_progress_events(
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<BatchScanEvent>,
+) -> Vec<BatchScanEvent> {
+    let mut events = Vec::new();
+    let mut empty_yields_remaining = READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+
+    loop {
+        match progress_rx.try_recv() {
+            Ok(event) => {
+                events.push(event);
+                empty_yields_remaining = READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) if empty_yields_remaining > 0 => {
+                empty_yields_remaining -= 1;
+                tokio::task::yield_now().await;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => break,
+            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => break,
+        }
+    }
+
+    events
+}
+
 struct ScanAnalysisContext {
     processed_lines: Vec<String>,
     combined_crash_lines: Vec<String>,
@@ -1516,6 +1542,9 @@ impl OrchestratorCore {
                     let Some((input_index, scanned_path, last_phase, result)) = maybe_result else {
                         break;
                     };
+                    for event in drain_ready_batch_progress_events(&mut progress_rx).await {
+                        on_event(event);
+                    }
                     completed += 1;
                     completed_counter.store(completed, Ordering::Relaxed);
                     on_event(BatchScanEvent {

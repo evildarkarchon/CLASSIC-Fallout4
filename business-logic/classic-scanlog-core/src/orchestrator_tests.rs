@@ -15,6 +15,18 @@ fn make_fixture_orchestrator() -> OrchestratorCore {
     OrchestratorCore::new(config).expect("fixture orchestrator should build")
 }
 
+fn batch_test_event(kind: BatchScanEventKind, phase: ScanProgressPhase) -> BatchScanEvent {
+    BatchScanEvent {
+        input_index: 0,
+        log_path: "test.log".to_string(),
+        kind,
+        phase,
+        completed: 0,
+        total: 1,
+        success: false,
+    }
+}
+
 struct FixtureLog {
     _temp: tempfile::TempDir,
     path: String,
@@ -1202,4 +1214,66 @@ fn process_logs_batch_with_events_emits_queued_started_and_terminal_events() {
     assert!(events.contains(&(0, BatchScanEventKind::Started, ScanProgressPhase::Setup, 0)));
     assert!(events.contains(&(0, BatchScanEventKind::Phase, ScanProgressPhase::Setup, 0)));
     assert!(events.contains(&(0, BatchScanEventKind::Failed, ScanProgressPhase::Setup, 1)));
+}
+
+#[test]
+fn drain_ready_batch_progress_events_flushes_phase_before_terminal_event() {
+    use tokio::sync::mpsc;
+
+    get_runtime().block_on(async {
+        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+        progress_tx
+            .send(batch_test_event(
+                BatchScanEventKind::Phase,
+                ScanProgressPhase::Finalize,
+            ))
+            .expect("phase event should send");
+
+        let mut events = drain_ready_batch_progress_events(&mut progress_rx).await;
+        events.push(BatchScanEvent {
+            kind: BatchScanEventKind::Completed,
+            completed: 1,
+            success: true,
+            ..batch_test_event(BatchScanEventKind::Completed, ScanProgressPhase::Finalize)
+        });
+
+        let kinds: Vec<_> = events.iter().map(|event| event.kind).collect();
+        let completed_counts: Vec<_> = events.iter().map(|event| event.completed).collect();
+        assert_eq!(
+            kinds,
+            vec![BatchScanEventKind::Phase, BatchScanEventKind::Completed]
+        );
+        assert_eq!(completed_counts, vec![0, 1]);
+
+        drop(progress_tx);
+    });
+}
+
+#[test]
+fn drain_ready_batch_progress_events_flushes_phase_scheduled_for_next_tick() {
+    use tokio::sync::mpsc;
+    use tokio::task::LocalSet;
+
+    get_runtime().block_on(async {
+        LocalSet::new()
+            .run_until(async {
+                let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+                tokio::task::spawn_local(async move {
+                    tokio::task::yield_now().await;
+                    progress_tx
+                        .send(batch_test_event(
+                            BatchScanEventKind::Phase,
+                            ScanProgressPhase::Finalize,
+                        ))
+                        .expect("scheduled phase event should send");
+                });
+
+                let events = drain_ready_batch_progress_events(&mut progress_rx).await;
+                assert_eq!(events.len(), 1);
+                assert_eq!(events[0].kind, BatchScanEventKind::Phase);
+                assert_eq!(events[0].phase, ScanProgressPhase::Finalize);
+                assert_eq!(events[0].completed, 0);
+            })
+            .await;
+    });
 }
