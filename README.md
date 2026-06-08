@@ -76,6 +76,8 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 ```
 
+The clang-cl option keeps the MSVC ABI target but also directs Cargo `cc-rs`/`cxx_build` bridge glue compilation to use clang-cl instead of the default `cl.exe`.
+
 #### Build GUI
 
 ```powershell
@@ -143,6 +145,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
 Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test executable launches so VS Dev Shell and C++ test environment setup stay correct.
+When `-Compiler clang-cl` is selected, the scripts also pass clang-cl to Cargo `cc-rs` build scripts for the CXX bridge glue.
 
 ---
 

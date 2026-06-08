@@ -48,7 +48,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
-Use these scripts instead of ad-hoc CMake commands so VS environment detection and preset wiring remain consistent.
+Use these scripts instead of ad-hoc CMake commands so VS environment detection and preset wiring remain consistent. With `-Compiler clang-cl`, the scripts keep the MSVC ABI target while routing Cargo `cc-rs`/`cxx_build` bridge glue through clang-cl too.
 
 ---
 

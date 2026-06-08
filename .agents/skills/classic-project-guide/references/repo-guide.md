@@ -47,7 +47,7 @@ Placement guidance:
 
 ### Native C++ builds
 
-Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja. MSVC is the default compiler; pass `-Compiler clang-cl` to use clang-cl against the Visual Studio/MSVC ABI toolchain.
+Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja. MSVC is the default compiler; pass `-Compiler clang-cl` to use clang-cl against the Visual Studio/MSVC ABI toolchain, including Cargo `cc-rs`/`cxx_build` C++ bridge glue compiled during Corrosion builds.
 
 ```powershell
 # Build CLI

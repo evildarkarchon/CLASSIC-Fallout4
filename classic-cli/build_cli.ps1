@@ -156,7 +156,36 @@ function Get-WindowsResourceCompiler {
     return $rcCommands | Select-Object -First 1
 }
 
-function Add-ClangClCargoCxxFlags {
+<#
+.SYNOPSIS
+    Checks that the Visual Studio environment exposes Windows SDK variables.
+#>
+function Test-WindowsSdkEnvironment {
+    return -not [string]::IsNullOrWhiteSpace($env:WindowsSDKVersion) -and
+        -not [string]::IsNullOrWhiteSpace($env:WindowsSdkDir)
+}
+
+<#
+.SYNOPSIS
+    Configures Cargo cc-rs build scripts to use clang-cl for MSVC-targeted C/C++ glue.
+#>
+function Set-ClangClCargoCcEnvironment {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ClangClPath
+    )
+
+    # cc-rs defaults to cl.exe for -msvc targets unless target-specific
+    # compiler selectors override the built-in tool lookup.
+    foreach ($name in @(
+            "CC_x86_64_pc_windows_msvc",
+            "CC_x86_64-pc-windows-msvc",
+            "CXX_x86_64_pc_windows_msvc",
+            "CXX_x86_64-pc-windows-msvc"
+        )) {
+        [Environment]::SetEnvironmentVariable($name, $ClangClPath, "Process")
+    }
+
     $exceptionFlag = "/EHsc"
     foreach ($name in @("CXXFLAGS_x86_64_pc_windows_msvc", "CXXFLAGS_x86_64-pc-windows-msvc")) {
         $current = [Environment]::GetEnvironmentVariable($name, "Process")
@@ -176,9 +205,10 @@ if (-not $env:VCPKG_ROOT) {
 }
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
-# Check if cl.exe is already in PATH (i.e., we're in a VS Dev Shell)
+# Some vcpkg Windows ports read SDK env vars during manifest install, so a
+# PATH-only compiler environment is not enough.
 $clFound = Get-Tool "cl.exe"
-if (-not $clFound) {
+if (-not $clFound -or -not (Test-WindowsSdkEnvironment)) {
     Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
     $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
         -latest -property installationPath 2>$null
@@ -200,17 +230,24 @@ if (-not $clFound) {
 $clFound = Get-Tool "cl.exe"
 $clangClFound = Get-Tool "clang-cl.exe"
 $lldLinkFound = Get-Tool "lld-link.exe"
+$dumpbinFound = Get-Tool "dumpbin.exe"
 $rcFound = Get-WindowsResourceCompiler -ClangClPath $clangClFound.Source
 $ninjaFound = Get-Tool "ninja"
-if (-not $clFound -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -not $lldLinkFound -or -not $rcFound)) -or -not $ninjaFound) {
+if (-not $clFound -or -not (Test-WindowsSdkEnvironment) -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -not $lldLinkFound -or -not $dumpbinFound -or -not $rcFound)) -or -not $ninjaFound) {
     if (-not $clFound) {
         Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
+    }
+    if (-not (Test-WindowsSdkEnvironment)) {
+        Write-Host "Missing required environment: WindowsSDKVersion and WindowsSdkDir" -ForegroundColor Red
     }
     if ($Compiler -eq "clang-cl" -and -not $clangClFound) {
         Write-Host "Missing required tool: clang-cl.exe" -ForegroundColor Red
     }
     if ($Compiler -eq "clang-cl" -and -not $lldLinkFound) {
         Write-Host "Missing required tool: lld-link.exe" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $dumpbinFound) {
+        Write-Host "Missing required tool: dumpbin.exe" -ForegroundColor Red
     }
     if ($Compiler -eq "clang-cl" -and -not $rcFound) {
         Write-Host "Missing required tool: rc.exe or llvm-rc.exe" -ForegroundColor Red
@@ -234,9 +271,10 @@ else {
 $buildDir = Join-Path $ScriptDir $buildDirName
 
 if ($Compiler -eq "clang-cl") {
-    Add-ClangClCargoCxxFlags
+    Set-ClangClCargoCcEnvironment -ClangClPath $clangClFound.Source
     $env:CLASSIC_CLANG_CL = $clangClFound.Source
     $env:CLASSIC_LLD_LINK = $lldLinkFound.Source
+    $env:CLASSIC_DUMPBIN = $dumpbinFound.Source
     $env:CLASSIC_RC = $rcFound.Source
 }
 

@@ -44,7 +44,7 @@ For old-to-new path and command translations, see `docs/workspace-migration-matr
 ## Quick Notes
 
 - The canonical Cargo workspace shell now lives at repo root (`Cargo.toml`, `.cargo/config.toml`, and `Cargo.lock`), and the live Rust crate tree now uses the repo-root layer directories (`foundation/`, `business-logic/`, `cpp-bindings/`, `node-bindings/`, `python-bindings/`, and `ui-applications/`).
-- Native C++ targets are Windows-focused and MSVC-ABI-based; the build wrappers default to MSVC and also support `-Compiler clang-cl`.
+- Native C++ targets are Windows-focused and MSVC-ABI-based; the build wrappers default to MSVC and also support `-Compiler clang-cl`, which keeps the MSVC ABI while using clang-cl for CMake, vcpkg, and Cargo `cc-rs`/`cxx_build` C++ bridge glue.
 - When running Rust or C++ MSVC-targeted commands from Git Bash, source `tools/use_msvc_from_git_bash.sh` first, or run commands through it, so Git's `usr/bin/link.exe` does not override the MSVC-compatible linker.
 - Belt-and-suspenders for the above: `cmake/ClassicLinkerCheck.cmake` is included by both `classic-gui/CMakeLists.txt` and `classic-cli/CMakeLists.txt` and validates the linker CMake resolved for the active MSVC/MSVC-ABI configure (falling back to PATH only when CMake has not resolved one yet). The guard still fails fast with `FATAL_ERROR` when it detects Git for Windows' `link.exe` or any other non-MSVC-compatible linker, but it no longer rejects a valid VS Code/CMake Tools configure just because Git's `usr/bin` appears earlier on PATH.
 - Python bindings under `python-bindings/` should stay in sync with Rust core logic.

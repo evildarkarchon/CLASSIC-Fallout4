@@ -141,6 +141,17 @@ function Assert-BuildScriptSupportsCompilerSelection {
     if ($ScriptText -notmatch 'CXXFLAGS_x86_64-pc-windows-msvc' -or $ScriptText -notmatch '/EHsc') {
         throw "Expected $ScriptLabel to enable C++ exceptions for clang-cl Cargo cc-rs builds."
     }
+
+    foreach ($toolEnvName in @(
+            "CC_x86_64_pc_windows_msvc",
+            "CC_x86_64-pc-windows-msvc",
+            "CXX_x86_64_pc_windows_msvc",
+            "CXX_x86_64-pc-windows-msvc"
+        )) {
+        if ($ScriptText -notmatch [regex]::Escape($toolEnvName)) {
+            throw "Expected $ScriptLabel to set $toolEnvName so Cargo cc-rs build scripts use clang-cl."
+        }
+    }
 }
 
 $guiAst = Get-ScriptAst -ScriptPath $GuiBuildScriptPath
