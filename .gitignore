@@ -334,6 +334,9 @@ Qt6/
 # the source-of-truth QSS and markdown CSS.
 /styles/
 classic-gui/install/
+classic-gui/install-debug/
+classic-gui/install-clang-cl/
+classic-gui/install-debug-clang-cl/
 qt.conf
 !classic-gui/**/qt.conf
 *.pyinstaller
