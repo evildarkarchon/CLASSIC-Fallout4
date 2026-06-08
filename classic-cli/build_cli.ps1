@@ -131,6 +131,31 @@ function Get-Tool([string]$ToolName) {
     return Get-Command $ToolName -ErrorAction SilentlyContinue
 }
 
+<#
+.SYNOPSIS
+    Finds the resource compiler CMake should use for MSVC-style manifest links.
+#>
+function Get-WindowsResourceCompiler {
+    param([string]$ClangClPath)
+
+    $rcCommands = @(Get-Command rc.exe -All -ErrorAction SilentlyContinue | Where-Object { $_.Source })
+    $windowsSdkRc = $rcCommands |
+        Where-Object { $_.Source -match '\\Windows Kits\\10\\bin\\[^\\]+\\x64\\rc\.exe$' } |
+        Select-Object -First 1
+    if ($windowsSdkRc) {
+        return $windowsSdkRc
+    }
+
+    if ($ClangClPath) {
+        $llvmRcPath = Join-Path (Split-Path -Parent $ClangClPath) "llvm-rc.exe"
+        if (Test-Path $llvmRcPath) {
+            return Get-Command $llvmRcPath -ErrorAction SilentlyContinue
+        }
+    }
+
+    return $rcCommands | Select-Object -First 1
+}
+
 function Add-ClangClCargoCxxFlags {
     $exceptionFlag = "/EHsc"
     foreach ($name in @("CXXFLAGS_x86_64_pc_windows_msvc", "CXXFLAGS_x86_64-pc-windows-msvc")) {
@@ -175,8 +200,9 @@ if (-not $clFound) {
 $clFound = Get-Tool "cl.exe"
 $clangClFound = Get-Tool "clang-cl.exe"
 $lldLinkFound = Get-Tool "lld-link.exe"
+$rcFound = Get-WindowsResourceCompiler -ClangClPath $clangClFound.Source
 $ninjaFound = Get-Tool "ninja"
-if (-not $clFound -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -not $lldLinkFound)) -or -not $ninjaFound) {
+if (-not $clFound -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -not $lldLinkFound -or -not $rcFound)) -or -not $ninjaFound) {
     if (-not $clFound) {
         Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
     }
@@ -185,6 +211,9 @@ if (-not $clFound -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -no
     }
     if ($Compiler -eq "clang-cl" -and -not $lldLinkFound) {
         Write-Host "Missing required tool: lld-link.exe" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $rcFound) {
+        Write-Host "Missing required tool: rc.exe or llvm-rc.exe" -ForegroundColor Red
     }
     if (-not $ninjaFound) {
         Write-Host "Missing required tool: ninja" -ForegroundColor Red
@@ -208,6 +237,7 @@ if ($Compiler -eq "clang-cl") {
     Add-ClangClCargoCxxFlags
     $env:CLASSIC_CLANG_CL = $clangClFound.Source
     $env:CLASSIC_LLD_LINK = $lldLinkFound.Source
+    $env:CLASSIC_RC = $rcFound.Source
 }
 
 if ($Clean -and (Test-Path $buildDir)) {
