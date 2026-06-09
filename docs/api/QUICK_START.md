@@ -114,7 +114,7 @@ bun run test:node
 
 ## 7) CI mapping
 
-- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test for MSVC and clang-cl
+- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test for MSVC and clang-cl. GUI CI uses prebuilt Qt with the `ci-system-qt` presets; local/default GUI presets remain vcpkg-first.
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): Rust format/lint/build/test
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity/runtime tests
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml): benchmark regression checks

@@ -153,33 +153,28 @@ jobs:
             ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-gui-
 
-      - name: Cache vcpkg root
-        uses: actions/cache@v5
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
         with:
-          path: ~\vcpkg
-          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-root-
+          version: "6.10.0"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          archives: qtbase
+          cache: true
+          cache-key-prefix: classic-gui-qt
 
-      - name: Set up vcpkg (resilient)
+      - name: Configure Qt CMake path
         shell: pwsh
-        run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
-
-      - name: Cache GUI vcpkg installed
-        uses: actions/cache@v5
-        with:
-          path: classic-gui/vcpkg_installed
-          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-installed-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', 'vcpkg-triplets/**', 'cmake/toolchains/**', '.github/scripts/setup-vcpkg.ps1') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-installed-gui-
-
-      - name: Cache GUI vcpkg archives
-        uses: actions/cache@v5
-        with:
-          path: ~\AppData\Local\vcpkg\archives
-          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-archives-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', 'vcpkg-triplets/**', 'cmake/toolchains/**', '.github/scripts/setup-vcpkg.ps1') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-archives-gui-
+        run: |
+          if (-not $env:QT_ROOT_DIR) {
+            throw "QT_ROOT_DIR was not set by install-qt-action."
+          }
+          $prefixes = @($env:QT_ROOT_DIR)
+          if ($env:CMAKE_PREFIX_PATH) {
+            $prefixes += $env:CMAKE_PREFIX_PATH
+          }
+          "CMAKE_PREFIX_PATH=$($prefixes -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: GUI test preflight diagnostics
         shell: pwsh
@@ -187,13 +182,16 @@ jobs:
           cmake --version
           ctest --version
           Write-Host "QT_QPA_PLATFORM=$env:QT_QPA_PLATFORM"
+          Write-Host "QT_ROOT_DIR=$env:QT_ROOT_DIR"
+          Write-Host "Qt6_DIR=$env:Qt6_DIR"
+          Write-Host "CMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH"
 
       - name: Verify Qt resolution policy
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/verify_qt_resolution.ps1
 
       - name: Build and test GUI
-        run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
+        run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
 
       - name: Upload GUI diagnostics
         if: failure()

@@ -380,7 +380,7 @@ Platform notes:
 - `classic-cli` and `classic-gui` are Windows-focused and require MSVC.
 - `node-bindings/classic-node` currently targets `x86_64-pc-windows-msvc`.
 - CLI integration tests need `sample_logs/FO4` checked out from submodules.
-- Regular CLI/GUI clang-cl presets use `x64-windows-classic-clang-cl` for both target and host vcpkg packages, chainloaded through `cmake/toolchains/vcpkg-clang-cl.cmake` so vcpkg uses clang-cl/lld-link too. GUI CI Release presets override to release-only `x64-windows-classic-msvc-ci` or `x64-windows-classic-clang-cl-ci` so CI does not build an unused debug Qt dependency tree.
+- Regular CLI/GUI clang-cl presets use `x64-windows-classic-clang-cl` for both target and host vcpkg packages, chainloaded through `cmake/toolchains/vcpkg-clang-cl.cmake` so vcpkg uses clang-cl/lld-link too. CLI CI still uses release-only vcpkg triplets. GUI CI installs prebuilt Qt and uses the `ci-system-qt` / `ci-system-qt-clang-cl` presets so the test job does not spend its timeout compiling Qt from source.
 - The CXX parity gate, YAML publish validation helpers, and app-notification publish validation helpers are source-only and do not require MSVC.
 - Some Rust crates depend on DirectX-related tooling via transitive `ba2` paths and may need subset builds on Linux.
 - On Linux or cloud environments, prefer Rust-only crate subsets plus source-only parity gates when the full workspace is not portable.

@@ -127,6 +127,28 @@
                 "VCPKG_HOST_TRIPLET": "x64-windows-classic-clang-cl",
                 "VCPKG_TARGET_TRIPLET": "x64-windows-classic-clang-cl"
             }
+        },
+        {
+            "name": "ci-system-qt",
+            "displayName": "CI (prebuilt/system Qt6 + Ninja)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_PREFIX_PATH": "$env{CMAKE_PREFIX_PATH}",
+                "CLASSIC_GUI_ALLOW_SYSTEM_QT_FALLBACK": "ON"
+            }
+        },
+        {
+            "name": "ci-system-qt-clang-cl",
+            "displayName": "CI (prebuilt/system Qt6 + Ninja + clang-cl)",
+            "inherits": "ci-system-qt",
+            "binaryDir": "${sourceDir}/build-clang-cl",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang-cl",
+                "CMAKE_CXX_COMPILER": "clang-cl",
+                "CMAKE_LINKER": "lld-link"
+            }
         }
     ],
     "buildPresets": [
@@ -177,6 +199,14 @@
         {
             "name": "ci-debug-clang-cl",
             "configurePreset": "ci-debug-clang-cl"
+        },
+        {
+            "name": "ci-system-qt",
+            "configurePreset": "ci-system-qt"
+        },
+        {
+            "name": "ci-system-qt-clang-cl",
+            "configurePreset": "ci-system-qt-clang-cl"
         }
     ]
 }

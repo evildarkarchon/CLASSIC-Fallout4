@@ -10,6 +10,8 @@
     The default presets expect Qt 6 to come from vcpkg via VCPKG_ROOT.
     Use the system-fallback presets only when you intentionally want a
     non-vcpkg Qt install, typically alongside CMAKE_PREFIX_PATH or Qt6_DIR.
+    The ci-system-qt presets are CI-oriented release presets for prebuilt Qt
+    installs and intentionally avoid vcpkg manifest mode.
 
 .PARAMETER Clean
     Remove build directory before building.
@@ -52,6 +54,7 @@
     .\build_gui.ps1 -Clean -Package
     .\build_gui.ps1 -Preset system-fallback
     .\build_gui.ps1 -Debug -Preset system-fallback
+    .\build_gui.ps1 -Preset ci-system-qt
     .\build_gui.ps1 -Compiler clang-cl
     .\build_gui.ps1 -Debug -Compiler clang-cl
     .\build_gui.ps1 -Preset system-fallback -Compiler clang-cl
@@ -204,6 +207,7 @@ function Convert-ToClangClPreset {
         "system-fallback-debug" { return "system-fallback-debug-clang-cl" }
         "ci" { return "ci-clang-cl" }
         "ci-debug" { return "ci-debug-clang-cl" }
+        "ci-system-qt" { return "ci-system-qt-clang-cl" }
         default { return $PresetName }
     }
 }
@@ -249,6 +253,8 @@ $buildDirName = switch ($effectivePreset) {
     "debug-clang-cl" { "build-debug-clang-cl" }
     "ci-clang-cl" { "build-clang-cl" }
     "ci-debug-clang-cl" { "build-debug-clang-cl" }
+    "ci-system-qt" { "build" }
+    "ci-system-qt-clang-cl" { "build-clang-cl" }
     "system-fallback-clang-cl" { "build-system-fallback-clang-cl" }
     "system-fallback-debug-clang-cl" { "build-system-fallback-debug-clang-cl" }
     default {
