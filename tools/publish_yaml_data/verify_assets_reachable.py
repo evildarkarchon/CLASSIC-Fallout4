@@ -47,6 +47,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -60,6 +61,18 @@ DEFAULT_POLL_INTERVAL_SECONDS = 8
 DEFAULT_SOCKET_TIMEOUT_SECONDS = 15
 
 _READ_CHUNK_SIZE = 65536
+_SHA256_HEX_RE = re.compile(r"^[0-9a-fA-F]{64}$")
+
+
+def _parse_manifest_sha256(raw: str) -> str:
+    """Return a normalized lowercase SHA-256 hex digest from a manifest field."""
+    normalized = raw.strip()
+    if not _SHA256_HEX_RE.fullmatch(normalized):
+        raise SystemExit(
+            "FAIL: manifest entry sha256 must be a 64-character hex digest "
+            f"(got {raw!r})"
+        )
+    return normalized.lower()
 
 
 def probe_asset_once(
@@ -101,7 +114,7 @@ def probe_asset_once(
             return None
     except urllib.error.HTTPError as exc:
         return f"HTTP {exc.code}"
-    except (urllib.error.URLError, TimeoutError) as exc:
+    except OSError as exc:
         return f"network error: {exc!r}"
 
 
@@ -111,6 +124,8 @@ def _load_manifest_assets(
     """Return ``[(name, download_url, expected_sha256), ...]`` from manifest.json."""
     with manifest_path.open("r", encoding="utf-8") as f:
         doc = json.load(f)
+    if not isinstance(doc, dict):
+        raise SystemExit(f"FAIL: {manifest_path} root is not a JSON object")
     files = doc.get("files")
     if not isinstance(files, list) or not files:
         raise SystemExit(
@@ -127,11 +142,11 @@ def _load_manifest_assets(
             raise SystemExit(
                 f"FAIL: manifest entry missing string name/download_url: {entry!r}"
             )
-        if not isinstance(digest, str) or not digest.strip():
+        if not isinstance(digest, str):
             raise SystemExit(
-                f"FAIL: manifest entry missing non-empty string sha256: {entry!r}"
+                f"FAIL: manifest entry missing string sha256: {entry!r}"
             )
-        assets.append((name, url, digest))
+        assets.append((name, url, _parse_manifest_sha256(digest)))
     return assets
 
 

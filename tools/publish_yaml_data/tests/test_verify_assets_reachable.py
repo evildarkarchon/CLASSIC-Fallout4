@@ -62,6 +62,10 @@ def patch_urlopen(
                 "urlopen called without a queued response — test bug"
             )
         status, body = responses.pop(0)
+        if status >= 400:
+            raise verify_assets_reachable.urllib.error.HTTPError(
+                "https://example.test", status, "Error", {}, None
+            )
         return _FakeResponse(status=status, body=body)
 
     monkeypatch.setattr(
@@ -117,6 +121,14 @@ def test_probe_asset_once_rejects_non_200_status(
     assert "HTTP 404" in err
 
 
+def test_load_manifest_assets_rejects_non_object_root(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps(["not", "an", "object"]), encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="root is not a JSON object"):
+        verify_assets_reachable._load_manifest_assets(manifest)
+
+
 def test_load_manifest_assets_requires_sha256(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
@@ -135,6 +147,63 @@ def test_load_manifest_assets_requires_sha256(tmp_path: Path) -> None:
 
     with pytest.raises(SystemExit, match="sha256"):
         verify_assets_reachable._load_manifest_assets(manifest)
+
+
+@pytest.mark.parametrize(
+    "digest",
+    [
+        "",
+        "   ",
+        "not-a-digest",
+        _STAGED_DIGEST[:32],
+        f"{_STAGED_DIGEST}deadbeef",
+    ],
+)
+def test_load_manifest_assets_rejects_malformed_sha256(
+    tmp_path: Path, digest: str
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "files": [
+                    {
+                        "name": "CLASSIC Fallout4.yaml",
+                        "download_url": "https://example.test/file.yaml",
+                        "sha256": digest,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="64-character hex digest"):
+        verify_assets_reachable._load_manifest_assets(manifest)
+
+
+def test_load_manifest_assets_trims_sha256_whitespace(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "files": [
+                    {
+                        "name": "CLASSIC Fallout4.yaml",
+                        "download_url": "https://example.test/file.yaml",
+                        "sha256": f"  {_STAGED_DIGEST.upper()}  ",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assets = verify_assets_reachable._load_manifest_assets(manifest)
+
+    assert assets == [
+        ("CLASSIC Fallout4.yaml", "https://example.test/file.yaml", _STAGED_DIGEST)
+    ]
 
 
 def test_load_manifest_assets_returns_triples(tmp_path: Path) -> None:
