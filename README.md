@@ -39,7 +39,7 @@ Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>
 
 - [Skyrim Script Extender](https://www.nexusmods.com/skyrimspecialedition/mods/30379?tab=files)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files)
-- [Crash Logger AE for VR](https://www.nexusmods.com/skyrimspecialedition/mods/59818?tab=files)
+- [Crash Logger SSE AE VR - PDB support](https://www.nexusmods.com/skyrimspecialedition/mods/59818?tab=files)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files)
 
 ---
@@ -67,7 +67,7 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 - Rust toolchain (`cargo`)
 - CMake 3.25+
 - Ninja
-- Qt 6 (for GUI)
+- Qt 6 (for GUI, installed with vcpkg)
 
 #### Build CLI
 

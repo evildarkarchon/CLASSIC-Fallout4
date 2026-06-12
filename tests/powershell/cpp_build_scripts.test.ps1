@@ -54,17 +54,17 @@ function Invoke-TestNameNormalizer {
     $normalizer = $Ast.Find({
             param($Node)
             $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
-            $Node.Name -eq "Normalize-TestNameList"
+            $Node.Name -eq "ConvertTo-TestNameList"
         }, $true)
 
     if (-not $normalizer) {
-        throw "Expected $ScriptLabel to define Normalize-TestNameList."
+        throw "Expected $ScriptLabel to define ConvertTo-TestNameList."
     }
 
     $runner = [scriptblock]::Create(@"
 param([string[]]`$Names)
 $($normalizer.Extent.Text)
-Normalize-TestNameList -TestNames `$Names
+ConvertTo-TestNameList -TestNames `$Names
 "@)
 
     return @(& $runner -Names $TestNames)

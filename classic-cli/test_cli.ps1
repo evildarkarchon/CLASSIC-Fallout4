@@ -56,7 +56,7 @@ $TestDataScenarioNames = @("single-scan", "multi-scan", "max-concurrent", "repor
 .SYNOPSIS
     Normalizes selected integration scenario names from arrays or comma-separated strings.
 #>
-function Normalize-TestNameList {
+function ConvertTo-TestNameList {
     param([string[]]$TestNames)
 
     $normalized = @()
@@ -76,7 +76,7 @@ function Normalize-TestNameList {
     return $normalized
 }
 
-$TestName = @(Normalize-TestNameList -TestNames $TestName)
+$TestName = @(ConvertTo-TestNameList -TestNames $TestName)
 
 if ($TestName.Count -gt 0) {
     $unknownScenarioNames = @($TestName | Where-Object { $_ -notin $AvailableScenarioNames } | Select-Object -Unique)

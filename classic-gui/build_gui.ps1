@@ -82,7 +82,7 @@ $ErrorActionPreference = "Stop"
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
 
-    $normalized = @(Normalize-TestNameList -TestNames $TestNames)
+    $normalized = @(ConvertTo-TestNameList -TestNames $TestNames)
     if ($normalized.Count -eq 0) {
         return $null
     }
@@ -95,7 +95,7 @@ function New-ExactTestNameRegex {
 .SYNOPSIS
     Normalizes selected test names from PowerShell arrays or comma-separated strings.
 #>
-function Normalize-TestNameList {
+function ConvertTo-TestNameList {
     param([string[]]$TestNames)
 
     $normalized = @()
@@ -185,7 +185,7 @@ function Set-ClangClCargoCcEnvironment {
 # -Package implies -Install (windeployqt must populate the install dir first)
 if ($Package) { $Install = $true }
 
-$CTestName = @(Normalize-TestNameList -TestNames $CTestName)
+$CTestName = @(ConvertTo-TestNameList -TestNames $CTestName)
 $CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0) -and -not $Test) {
     Write-Error "-CTestName and -CTestArgs require -Test."
