@@ -2,12 +2,12 @@
 
 Contributor-facing documentation for the current batch scan progress callback contract declared and used by:
 
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs)
-- [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h)
+- [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs)
+- [`cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h)
 
 This page documents the callback behavior visible in source today for the active Rust/C++ scan path.
 
-It is intentionally narrower than [`classic-scanlog-core.md`](classic-scanlog-core.md): the lower-level crate exposes per-log phase progress through `OrchestratorCore::process_log_with_progress(...)`, while the batch callback contract described here is bridge-local coordination built around that lower-level API.
+It is intentionally narrower than [`classic-scanlog-core.md`](classic-scanlog-core.md): the lower-level crate exposes per-log phase progress through `OrchestratorCore::process_log_with_progress(...)` and now owns the indexed/evented batch driver, while the callback contract described here is the C++ bridge mapping of those core events into bridge DTOs.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -33,7 +33,7 @@ For the broader `classic::scanner` entry points, see [`classic-cpp-bridge-data-e
 
 ## C++ declaration
 
-The callback interface itself is declared in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h):
+The callback interface itself is declared in [`cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h`](../../cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h):
 
 ```cpp
 class ScanBatchProgressCallback {
@@ -43,17 +43,16 @@ public:
 };
 ```
 
-The header forward-declares `BatchProgressEvent`; the concrete shared DTO and enums are declared in the Rust CXX bridge in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs).
+The header forward-declares `BatchProgressEvent`; the concrete shared DTO and enums are declared in the Rust CXX bridge in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
 ## Rust declaration and use
 
-The bridge-local batch callback contract is defined inside the `#[cxx::bridge(namespace = "classic::scanner")]` module in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs).
+The bridge-local batch callback contract is defined inside the `#[cxx::bridge(namespace = "classic::scanner")]` module in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
 The main consumer is `orchestrator_process_logs_batch_with_progress(...)`, which:
 
-- emits `Queued` events before starting batch work
-- runs per-log scan tasks with `OrchestratorCore::process_log_with_progress(...)`
-- converts lower-level `ScanProgressPhase` values into bridge `BatchProgressPhase` values
+- calls `OrchestratorCore::process_logs_batch_with_events(...)`
+- converts core `BatchScanEventKind` and `ScanProgressPhase` values into bridge event DTOs
 - emits bridge-level terminal `Completed` or `Failed` events
 - returns `Vec<BatchScanResult>` in completion order after callback emission finishes
 
@@ -88,7 +87,7 @@ The bridge declares four phases:
 
 ## `BatchProgressEvent`
 
-Current shared DTO shape from [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs):
+Current shared DTO shape from [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs):
 
 ```cpp
 struct BatchProgressEvent {
@@ -120,9 +119,9 @@ Practical contributor note:
 
 ## Current Lifecycle And Ordering
 
-## Per-log lifecycle the bridge is trying to preserve
+## Per-log lifecycle the core and bridge preserve
 
-The bridge has an explicit event ranking helper in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs) and tests that assert monotonic successful and failed lifecycles.
+The core batch coordinator emits lifecycle events in [`business-logic/classic-scanlog-core/src/orchestrator.rs`](../../business-logic/classic-scanlog-core/src/orchestrator.rs). The bridge maps those core events into C++ DTOs in [`cpp-bindings/classic-cpp-bridge/src/scanner/orchestrator.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner/orchestrator.rs), and bridge-side tests still assert monotonic successful and failed lifecycles.
 
 For one log, the intended lifecycle is:
 
@@ -135,58 +134,57 @@ The bridge tests explicitly verify monotonic ordering for both successful and fa
 
 ## Batch-level ordering rules visible in source
 
-Current bridge behavior in `orchestrator_process_logs_batch_with_progress(...)`:
+Current behavior across `OrchestratorCore::process_logs_batch_with_events(...)` and `orchestrator_process_logs_batch_with_progress(...)`:
 
 - all `Queued` events are emitted first, one per input log, before tasks are started
 - `Queued` events use `completed = 0`, `phase = Setup`, and `success = false`
 - per-log tasks then run with unordered async buffering, so logs advance concurrently
+- the C++ bridge forwards mapped core events directly through the callback
 - terminal results and callback events are therefore not globally input-ordered
 - returned `BatchScanResult` items are also in completion order, not input order
 
 Important distinction:
 
-- the bridge tries to preserve monotonic ordering per log
+- the core event stream preserves monotonic ordering per log
 - it does not guarantee a globally grouped event stream by input order when multiple logs are active
 
 ## Queueing and tie-breaking behavior
 
-The bridge uses an unbounded Tokio MPSC channel for progress events.
+The core batch coordinator uses an unbounded Tokio MPSC channel for worker progress events.
 
 Worker tasks do not invoke the C++ callback directly. Instead they:
 
 - send `Started` and `Phase` events into the channel
 - return a per-log `AnalysisResult` when scanning finishes
 
-The coordinator loop then chooses between ready progress events and ready task results with `next_batch_update(...)`.
+The coordinator loop then chooses between ready progress events and ready task results with a biased `tokio::select!`.
 
 Source-backed tie-breaking rules:
 
-- already-buffered progress events are handled before polling results
 - when both a progress event and a task result are ready, the `tokio::select!` block is `biased` toward progress reception
 - this favors surfacing phase updates before terminal result handling when both are visible at the same time
 
 ## Drain behavior before terminal events
 
-When a task result arrives, the bridge calls `drain_ready_progress_events(...)` before emitting `Completed` or `Failed`.
+When a task result arrives, `OrchestratorCore::process_logs_batch_with_events(...)` calls `drain_ready_batch_progress_events(...)` before emitting `Completed` or `Failed`.
 
 That drain step:
 
-- flushes any already-buffered progress events first
-- then repeatedly `try_recv()`s immediately ready channel events
+- repeatedly `try_recv()`s immediately ready channel events
 - on empty channel, yields up to `2` runtime turns so same-log phase sends that were already scheduled can land
 - stops after those bounded yields or when the channel disconnects
 
-The source comment explains why: the bridge wants already-visible phase events to land before the terminal event for that finished log without paying the older, more expensive busy-poll behavior.
+The source keeps the completed counter update after this drain. As a result, drained `Started` or `Phase` events carry the pre-terminal `completed` count, and the terminal `Completed` or `Failed` event carries the incremented count.
 
 Current consequence for contributors:
 
 - same-log late phase events are usually flushed before terminal `Completed` or `Failed`
 - cross-log phase events that are already ready are also forwarded immediately during this drain
-- the bridge does not rebuffer those cross-log events to force strict per-log grouping across the whole batch
+- the core does not rebuffer those cross-log events to force strict per-log grouping across the whole batch
 
 ## Abnormal end-of-batch behavior
 
-After the main loop, the bridge still emits any leftover pending or channel-buffered progress events.
+After the main loop, the core still emits any leftover channel-buffered progress events.
 
 The source comment explicitly treats these as an abnormal-shutdown diagnostics path where some task results never surfaced. In that situation, a contributor should not assume every orphaned progress event will be followed by a terminal `Completed` or `Failed` event.
 
@@ -271,6 +269,6 @@ These are current behavior notes, not a future callback design.
 ## Contributor Rule Of Thumb
 
 - If you are changing only scan phases in `classic-scanlog-core`, check whether the bridge enum mapping and this page still match.
-- If you change `BatchProgressEvent`, `BatchProgressEventKind`, or `BatchProgressPhase` in [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs), update this page and any active C++ consumers in the same change.
+- If you change `BatchProgressEvent`, `BatchProgressEventKind`, or `BatchProgressPhase` in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs), update this page and any active C++ consumers in the same change.
 - If frontend progress looks unstable, inspect Rust diagnostics first, then the Qt-side rank and aggregation model.
 - If you need stronger guarantees than the current source provides, document them only after the bridge and tests make them real.

@@ -1,0 +1,31 @@
+# Cargo configuration for CLASSIC Rust workspace
+#
+# This file provides profiling aliases and build configuration
+# for performance analysis workflows.
+
+[alias]
+# Profiling aliases - invoke with: cargo flame, cargo flame-bench, etc.
+flame = "flamegraph"
+flame-bench = "flamegraph --bench"
+profile-build = "build --profile release-with-debug"
+
+[build]
+# Note: The release-with-debug profile is defined in Cargo.toml
+# and preserves debug symbols for profiling while maintaining
+# release-level optimizations.
+
+# Intentionally no `[env]` PYO3_PYTHON pin here. Cargo's `[env]` table is
+# global for every target this config can see, so pinning a Windows-only
+# venv path (e.g. `python-bindings/.venv/Scripts/python.exe`) would leak
+# into Linux/macOS builds — PyO3 would then try to use a path that does
+# not exist on those hosts and fail `cargo check/test/build --workspace`
+# outside the maintainer's local setup.
+#
+# Configure PyO3 per-shell instead. On Windows (PowerShell):
+#
+#   $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
+#
+# Or activate the binding-local virtualenv (see AGENTS.md) which sets
+# `VIRTUAL_ENV` and lets PyO3 pick it up automatically. CI workflows pass
+# the interpreter explicitly via `uv` / `maturin` and don't rely on this
+# file to locate one.

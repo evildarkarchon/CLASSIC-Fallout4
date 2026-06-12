@@ -1,0 +1,40 @@
+[package]
+name = "classic-version-core"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["CLASSIC Development Team"]
+description = "Version detection and parsing utilities for CLASSIC (no PyO3)"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+
+[dependencies]
+# Version handling
+semver = "1.0"
+
+# Parsing
+regex = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# PE file parsing
+pelite = { workspace = true }
+
+# Version registry access
+classic-version-registry-core = { path = "../classic-version-registry-core" }
+
+# NO PyO3 dependency!
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

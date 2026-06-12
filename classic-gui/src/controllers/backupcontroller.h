@@ -22,9 +22,7 @@ public:
     /// @param gameRoot Root directory of the game installation.
     /// @param signalHub Optional SignalHub for global event routing.
     /// @param parent Qt parent object.
-    explicit BackupController(const QString& gameRoot,
-                              SignalHub* signalHub = nullptr,
-                              QObject* parent = nullptr);
+    explicit BackupController(const QString& gameRoot, SignalHub* signalHub = nullptr, QObject* parent = nullptr);
 
     /// Check whether a backup of the given type exists.
     /// @param backupType One of: "xse", "reshade", "vulkan", "enb".

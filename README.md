@@ -8,10 +8,15 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 
 - **GUI:** `classic-gui/` (Qt 6, C++)
 - **CLI:** `classic-cli/` (C++)
-- **Business logic:** `ClassicLib-rs/` (Rust workspace)
-- **C++ ↔ Rust bridge:** `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`
+- **Rust workspace shell:** repository root (`Cargo.toml`, `Cargo.lock`, `.cargo/config.toml`)
+- **Shared/runtime crates:** `foundation/`
+- **Business logic crates:** `business-logic/`
+- **C++ ↔ Rust bridge:** `cpp-bindings/classic-cpp-bridge/`
+- **Node bindings:** `node-bindings/classic-node/`
+- **Python bindings:** `python-bindings/`
+- **Rust TUI app:** `ui-applications/classic-tui/`
 
-Maintained Python integration bindings exist under **`ClassicLib-rs/python-bindings/`** for integration scenarios.
+See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old-to-new command, path, and artifact translations.
 
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
@@ -34,7 +39,7 @@ Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>
 
 - [Skyrim Script Extender](https://www.nexusmods.com/skyrimspecialedition/mods/30379?tab=files)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files)
-- [Crash Logger AE for VR](https://www.nexusmods.com/skyrimspecialedition/mods/59818?tab=files)
+- [Crash Logger SSE AE VR - PDB support](https://www.nexusmods.com/skyrimspecialedition/mods/59818?tab=files)
 - [BSArch](https://www.nexusmods.com/newvegas/mods/64745?tab=files)
 
 ---
@@ -56,24 +61,28 @@ Release bundles include `CLASSIC Data/` and required runtime files.
 
 #### Prerequisites
 
-- Visual Studio with C++ Desktop workload (MSVC toolchain)
+- Visual Studio with C++ Desktop workload (MSVC toolchain; optional LLVM clang-cl/lld-link components for clang-cl builds)
 - [vcpkg](https://vcpkg.io/)
 - `VCPKG_ROOT` environment variable configured (example: `C:\vcpkg`)
 - Rust toolchain (`cargo`)
 - CMake 3.25+
 - Ninja
-- Qt 6 (for GUI)
+- Qt 6 (for GUI, installed with vcpkg)
 
 #### Build CLI
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 ```
+
+The clang-cl option keeps the MSVC ABI target but also directs Cargo `cc-rs`/`cxx_build` bridge glue compilation to use clang-cl instead of the default `cl.exe`.
 
 #### Build GUI
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
 #### Build with tests
@@ -81,6 +90,8 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 
 # Selected C++ tests through the wrappers
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
@@ -98,26 +109,43 @@ git submodule update --init --recursive
 
 ## Development quick reference
 
-### Rust workspace (`ClassicLib-rs/`)
+### Rust workspace (repo root)
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo build --workspace
+cargo test --workspace
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
+
+### Binding parity quick reference
+
+```powershell
+# From node-bindings/classic-node
+bun run parity:gate
+
+# From repo root
+python tools/python_api_parity/check_parity_gate.py --repo-root .
+python tools/cxx_api_parity/check_parity_gate.py --repo-root .
+python validate_stubs.py --rust-dir .
+```
+
+Need the full old-to-new mapping? Start with the [Workspace Migration Matrix](docs/workspace-migration-matrix.md).
 
 ### C++ apps
 
 ```powershell
 # CLI
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 
 # GUI
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
 Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test executable launches so VS Dev Shell and C++ test environment setup stay correct.
+When `-Compiler clang-cl` is selected, the scripts also pass clang-cl to Cargo `cc-rs` build scripts for the CXX bridge glue.
 
 ---
 
@@ -125,7 +153,7 @@ Use the build scripts instead of raw CMake commands, raw `ctest`, or direct test
 
 GitHub Actions workflows:
 
-- `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest`
+- `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest` for MSVC and clang-cl
 - `ci-rust.yml` - Rust format/lint/build/test
 - `ci-typescript.yml` - Node bindings parity gates + Bun/Node runtime tests
 - `ci-python-bindings.yml` - Python bindings parity gates + smoke tests
@@ -137,7 +165,12 @@ GitHub Actions workflows:
 
 - `classic-cli/` — C++ command-line scanner
 - `classic-gui/` — C++ Qt 6 desktop GUI
-- `ClassicLib-rs/` — Rust business logic + bindings
+- `foundation/` — shared runtime and support crates
+- `business-logic/` — Rust business logic crates
+- `cpp-bindings/classic-cpp-bridge/` — C++ bridge into Rust
+- `node-bindings/classic-node/` — Node/Bun bindings
+- `python-bindings/` — Python bindings and parity artifacts
+- `ui-applications/classic-tui/` — Rust TUI app
 - `CLASSIC Data/` — runtime data, databases, help, graphics
 
 ---
@@ -145,6 +178,8 @@ GitHub Actions workflows:
 ## Contributing
 
 1. Keep C++ changes in `classic-cli/` or `classic-gui/` focused and testable.
-2. Keep core logic in Rust crates under `ClassicLib-rs/business-logic/`.
+2. Keep core logic in Rust crates under `business-logic/`.
 3. Run relevant C++/Rust checks before opening a PR.
 4. Keep docs aligned with architecture changes (especially this README and `AGENTS.md`).
+
+> Migration note: older docs may still mention `ClassicLib-rs/...`; treat those as historical only and use the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for the live repo-root contract.

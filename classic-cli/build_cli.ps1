@@ -15,15 +15,21 @@
 
 .PARAMETER CTestName
     Run only the specified CTest unit test name or names. Requires -Test.
+    Accepts PowerShell arrays and comma-separated strings.
 
 .PARAMETER CTestArgs
     Additional arguments to pass to the CTest unit test run command. Requires -Test.
 
 .PARAMETER IntegrationTestName
     Run only the specified classic-cli integration scenario name or names. Requires -Test.
+    Accepts PowerShell arrays and comma-separated strings.
 
 .PARAMETER Debug
     Build using the CMake debug preset (build-debug directory).
+
+.PARAMETER Compiler
+    C++ compiler toolchain to use. Default: msvc. Use clang-cl to build with
+    clang-cl and lld-link against the Visual Studio/MSVC ABI toolchain.
 
 .PARAMETER Install
     Run cmake --install to create a deployable layout.
@@ -40,7 +46,10 @@
     .\build_cli.ps1 -Debug -Install
     .\build_cli.ps1 -Clean -Test -Install
     .\build_cli.ps1 -Package
+    .\build_cli.ps1 -Compiler clang-cl
+    .\build_cli.ps1 -Debug -Compiler clang-cl
     .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
+    .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks","Yaml update bridge returns status"
     .\build_cli.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
     .\build_cli.ps1 -Test -IntegrationTestName help,version
 #>
@@ -51,6 +60,8 @@ param(
     [switch]$Debug,
     [switch]$Install,
     [switch]$Package,
+    [ValidateSet("msvc", "clang-cl")]
+    [string]$Compiler = "msvc",
     [string[]]$CTestName = @(),
     [string[]]$CTestArgs = @(),
     [string[]]$IntegrationTestName = @()
@@ -61,7 +72,7 @@ $ErrorActionPreference = "Stop"
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
 
-    $normalized = @($TestNames | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $normalized = @(ConvertTo-TestNameList -TestNames $TestNames)
     if ($normalized.Count -eq 0) {
         return $null
     }
@@ -70,12 +81,36 @@ function New-ExactTestNameRegex {
     return "^($($escaped -join '|'))$"
 }
 
+<#
+.SYNOPSIS
+    Normalizes selected test names from PowerShell arrays or comma-separated strings.
+#>
+function ConvertTo-TestNameList {
+    param([string[]]$TestNames)
+
+    $normalized = @()
+    foreach ($testName in $TestNames) {
+        if ($null -eq $testName) {
+            continue
+        }
+
+        foreach ($candidate in ($testName -split ",")) {
+            $trimmed = $candidate.Trim()
+            if ($trimmed) {
+                $normalized += $trimmed
+            }
+        }
+    }
+
+    return $normalized
+}
+
 # -Package implies -Install
 if ($Package) { $Install = $true }
 
-$CTestName = @($CTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$CTestName = @(ConvertTo-TestNameList -TestNames $CTestName)
 $CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-$IntegrationTestName = @($IntegrationTestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$IntegrationTestName = @(ConvertTo-TestNameList -TestNames $IntegrationTestName)
 
 if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0 -or $IntegrationTestName.Count -gt 0) -and -not $Test) {
     Write-Error "-CTestName, -CTestArgs, and -IntegrationTestName require -Test."
@@ -96,6 +131,73 @@ function Get-Tool([string]$ToolName) {
     return Get-Command $ToolName -ErrorAction SilentlyContinue
 }
 
+<#
+.SYNOPSIS
+    Finds the resource compiler CMake should use for MSVC-style manifest links.
+#>
+function Get-WindowsResourceCompiler {
+    param([string]$ClangClPath)
+
+    $rcCommands = @(Get-Command rc.exe -All -ErrorAction SilentlyContinue | Where-Object { $_.Source })
+    $windowsSdkRc = $rcCommands |
+        Where-Object { $_.Source -match '\\Windows Kits\\10\\bin\\[^\\]+\\x64\\rc\.exe$' } |
+        Select-Object -First 1
+    if ($windowsSdkRc) {
+        return $windowsSdkRc
+    }
+
+    if ($ClangClPath) {
+        $llvmRcPath = Join-Path (Split-Path -Parent $ClangClPath) "llvm-rc.exe"
+        if (Test-Path $llvmRcPath) {
+            return Get-Command $llvmRcPath -ErrorAction SilentlyContinue
+        }
+    }
+
+    return $rcCommands | Select-Object -First 1
+}
+
+<#
+.SYNOPSIS
+    Checks that the Visual Studio environment exposes Windows SDK variables.
+#>
+function Test-WindowsSdkEnvironment {
+    return -not [string]::IsNullOrWhiteSpace($env:WindowsSDKVersion) -and
+        -not [string]::IsNullOrWhiteSpace($env:WindowsSdkDir)
+}
+
+<#
+.SYNOPSIS
+    Configures Cargo cc-rs build scripts to use clang-cl for MSVC-targeted C/C++ glue.
+#>
+function Set-ClangClCargoCcEnvironment {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ClangClPath
+    )
+
+    # cc-rs defaults to cl.exe for -msvc targets unless target-specific
+    # compiler selectors override the built-in tool lookup.
+    foreach ($name in @(
+            "CC_x86_64_pc_windows_msvc",
+            "CC_x86_64-pc-windows-msvc",
+            "CXX_x86_64_pc_windows_msvc",
+            "CXX_x86_64-pc-windows-msvc"
+        )) {
+        [Environment]::SetEnvironmentVariable($name, $ClangClPath, "Process")
+    }
+
+    $exceptionFlag = "/EHsc"
+    foreach ($name in @("CXXFLAGS_x86_64_pc_windows_msvc", "CXXFLAGS_x86_64-pc-windows-msvc")) {
+        $current = [Environment]::GetEnvironmentVariable($name, "Process")
+        if ([string]::IsNullOrWhiteSpace($current)) {
+            [Environment]::SetEnvironmentVariable($name, $exceptionFlag, "Process")
+        }
+        elseif ($current -notmatch '(^|\s)/EH') {
+            [Environment]::SetEnvironmentVariable($name, "$current $exceptionFlag", "Process")
+        }
+    }
+}
+
 # Verify VCPKG_ROOT is set
 if (-not $env:VCPKG_ROOT) {
     Write-Error "VCPKG_ROOT environment variable is not set. Install vcpkg and set VCPKG_ROOT."
@@ -103,9 +205,10 @@ if (-not $env:VCPKG_ROOT) {
 }
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
-# Check if cl.exe is already in PATH (i.e., we're in a VS Dev Shell)
+# Some vcpkg Windows ports read SDK env vars during manifest install, so a
+# PATH-only compiler environment is not enough.
 $clFound = Get-Tool "cl.exe"
-if (-not $clFound) {
+if (-not $clFound -or -not (Test-WindowsSdkEnvironment)) {
     Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
     $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
         -latest -property installationPath 2>$null
@@ -125,22 +228,55 @@ if (-not $clFound) {
 
 # Validate required toolchain components before CMake configure.
 $clFound = Get-Tool "cl.exe"
+$clangClFound = Get-Tool "clang-cl.exe"
+$lldLinkFound = Get-Tool "lld-link.exe"
+$dumpbinFound = Get-Tool "dumpbin.exe"
+$rcFound = Get-WindowsResourceCompiler -ClangClPath $clangClFound.Source
 $ninjaFound = Get-Tool "ninja"
-if (-not $clFound -or -not $ninjaFound) {
+if (-not $clFound -or -not (Test-WindowsSdkEnvironment) -or ($Compiler -eq "clang-cl" -and (-not $clangClFound -or -not $lldLinkFound -or -not $dumpbinFound -or -not $rcFound)) -or -not $ninjaFound) {
     if (-not $clFound) {
         Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
+    }
+    if (-not (Test-WindowsSdkEnvironment)) {
+        Write-Host "Missing required environment: WindowsSDKVersion and WindowsSdkDir" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $clangClFound) {
+        Write-Host "Missing required tool: clang-cl.exe" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $lldLinkFound) {
+        Write-Host "Missing required tool: lld-link.exe" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $dumpbinFound) {
+        Write-Host "Missing required tool: dumpbin.exe" -ForegroundColor Red
+    }
+    if ($Compiler -eq "clang-cl" -and -not $rcFound) {
+        Write-Host "Missing required tool: rc.exe or llvm-rc.exe" -ForegroundColor Red
     }
     if (-not $ninjaFound) {
         Write-Host "Missing required tool: ninja" -ForegroundColor Red
     }
-    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload + Ninja/CMake components are installed."
+    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload, optional clang-cl/lld-link components, and Ninja/CMake components are installed."
     exit 1
 }
 
 # ── Step 1: Clean (optional) ─────────────────────────────────────
-$buildPreset = if ($Debug) { "debug" } else { "default" }
-$buildDirName = if ($Debug) { "build-debug" } else { "build" }
+if ($Compiler -eq "clang-cl") {
+    $buildPreset = if ($Debug) { "debug-clang-cl" } else { "default-clang-cl" }
+    $buildDirName = if ($Debug) { "build-debug-clang-cl" } else { "build-clang-cl" }
+}
+else {
+    $buildPreset = if ($Debug) { "debug" } else { "default" }
+    $buildDirName = if ($Debug) { "build-debug" } else { "build" }
+}
 $buildDir = Join-Path $ScriptDir $buildDirName
+
+if ($Compiler -eq "clang-cl") {
+    Set-ClangClCargoCcEnvironment -ClangClPath $clangClFound.Source
+    $env:CLASSIC_CLANG_CL = $clangClFound.Source
+    $env:CLASSIC_LLD_LINK = $lldLinkFound.Source
+    $env:CLASSIC_DUMPBIN = $dumpbinFound.Source
+    $env:CLASSIC_RC = $rcFound.Source
+}
 
 if ($Clean -and (Test-Path $buildDir)) {
     Write-Host "Cleaning build directory..." -ForegroundColor Yellow
@@ -246,7 +382,12 @@ try {
 
     # ── Step 5: Install (optional) ───────────────────────────────
     if ($Install) {
-        $installDirName = if ($Debug) { "install-debug" } else { "install" }
+        if ($Compiler -eq "clang-cl") {
+            $installDirName = if ($Debug) { "install-debug-clang-cl" } else { "install-clang-cl" }
+        }
+        else {
+            $installDirName = if ($Debug) { "install-debug" } else { "install" }
+        }
         $installDir = Join-Path $ScriptDir $installDirName
         Write-Host "`n=== Installing to $installDir ===" -ForegroundColor Cyan
         & cmake --install $buildDirName --prefix $installDir

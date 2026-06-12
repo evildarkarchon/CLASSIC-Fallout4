@@ -2,9 +2,9 @@ name: CI - Python Bindings
 
 on:
   push:
-    branches: [main, classic-next, develop, classic-9]
+    branches: [main, classic-next, dev, classic-9.1]
   pull_request:
-    branches: [main, classic-next, develop, classic-9]
+    branches: [main, classic-next, dev, classic-9.1]
 
 env:
   RUST_BACKTRACE: 1
@@ -23,18 +23,23 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run Tier-1 Python parity and runtime coverage gate
-        run: python tools/python_api_parity/check_parity_gate.py --repo-root .
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: python-bindings/uv.lock
 
-      - name: Run Python stub validation gate
-        run: python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+      - name: Run Python binding compliance profile
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile python-ci
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: python-parity-diagnostics
-          path: ClassicLib-rs/python-bindings/parity-artifacts/
+          path: |
+            tools/binding_compliance/artifacts/
+            python-bindings/parity-artifacts/
           if-no-files-found: warn
           retention-days: 7
 
@@ -58,7 +63,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          cache-dependency-glob: ClassicLib-rs/python-bindings/requirements-ci.txt
+          cache-dependency-glob: python-bindings/uv.lock
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -79,23 +84,42 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v5
         with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          path: target
+          key: ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-python-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-python-
 
-      - name: Create Python bindings virtual environment
-        run: uv venv ClassicLib-rs/python-bindings/.venv
+      # `uv sync` creates `python-bindings/.venv` and installs the locked
+      # tooling set (`maturin`, `pytest`). `--inexact` guards against the
+      # maturin-built `classic-*-py` wheels being pruned on any re-sync.
+      # `--locked` fails the job if the committed uv.lock drifts from
+      # pyproject.toml — catches silent lock/manifest divergence.
+      - name: Install Python bindings tooling
+        run: uv sync --project python-bindings --inexact --locked
 
-      - name: Install Python build and test dependencies
-        run: uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
-
-      # `maturin` is intentionally installed into `ClassicLib-rs/python-bindings/.venv`.
-      # `rebuild_rust.ps1` targets that interpreter explicitly for Python binding builds.
-      - name: Build and install required Python bindings
+      # `maturin` is intentionally installed into `python-bindings/.venv` by
+      # the step above. `rebuild_rust.ps1` targets that interpreter explicitly
+      # for Python binding builds. Smoke-test collection imports promoted
+      # modules at import time, so CI must install the full Python binding
+      # set instead of a hand-maintained subset.
+      - name: Build and install Python bindings
         shell: pwsh
-        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
+        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 
+      # Must invoke pytest through `python -m pytest`, not the `pytest.exe`
+      # entrypoint. `classic_config.ClassicConfig.get_config_path()` anchors
+      # settings discovery to `sys.argv[0]`'s parent directory (see
+      # test_config_import_anchors_settings_to_script_directory). When pytest
+      # runs as a console-script .exe, sys.argv[0] becomes `.venv\Scripts\pytest.exe`,
+      # which `get_config_path()` treats as a script path and derives a bogus
+      # settings parent from. `-m pytest` keeps sys.argv[0] pointed at the
+      # pytest package file, preserving the expected script-directory shape.
       - name: Run Python bindings smoke tests
-        run: uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+        run: uv run --project python-bindings python -m pytest python-bindings/tests -q
+
+      - name: Run Python CLI diagnostics
+        run: |
+          uv run --project python-bindings classic-py --fixture-root python-bindings/tests/fixtures doctor
+          uv run --project python-bindings classic-py --json bindings list
+          uv run --project python-bindings classic-py compliance run --profile smoke

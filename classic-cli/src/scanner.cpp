@@ -17,7 +17,7 @@
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/scanner.h"
-#include "classic_cxx_bridge/yaml.h"
+#include "classic_cxx_bridge/settings.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -99,11 +99,11 @@ static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDi
     fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
 
     try {
-        auto yaml = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*yaml, local_yaml.string());
+        auto yaml = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*yaml, local_yaml.string());
 
         std::string key_path = "Game_Info.Docs_Folder_XSE";
-        auto xse_path = classic::yaml::yaml_ops_get_string(*yaml, key_path, "");
+        auto xse_path = classic::settings::yaml_ops_get_string(*yaml, key_path, "");
         return std::string(xse_path.data(), xse_path.size());
     } catch (const rust::Error&) {
         return "";
@@ -251,6 +251,36 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
                 ++report_failures;
             }
         }
+    }
+
+    // D-11 / CXXS-03 consumer migration (Codex HIGH correction):
+    // After the scan completes, surface any FCX configuration issues that the
+    // analysis pipeline detected. This call exercises the new bridge fn from
+    // every CLI scan run, satisfying ROADMAP.md Phase 2 success criterion 2.
+    try {
+        auto fcx_issues = classic::scanner::get_fcx_config_issues();
+        if (!fcx_issues.empty()) {
+            fmt::print("\nFCX Configuration Issues Detected ({}):\n", fcx_issues.size());
+            for (const auto& issue : fcx_issues) {
+                std::string file_path(issue.file_path.data(), issue.file_path.size());
+                std::string setting(issue.setting.data(), issue.setting.size());
+                std::string current(issue.current_value.data(), issue.current_value.size());
+                std::string recommended(issue.recommended_value.data(), issue.recommended_value.size());
+                std::string description(issue.description.data(), issue.description.size());
+                std::string severity(issue.severity.data(), issue.severity.size());
+                if (issue.has_section) {
+                    std::string section(issue.section_or_empty.data(), issue.section_or_empty.size());
+                    fmt::print("  [{}] {}/[{}] {}: {} (current: {}, recommended: {})\n", severity, file_path, section,
+                               setting, description, current, recommended);
+                } else {
+                    fmt::print("  [{}] {} {}: {} (current: {}, recommended: {})\n", severity, file_path, setting,
+                               description, current, recommended);
+                }
+            }
+        }
+    } catch (const rust::Error& e) {
+        // Fail-soft: FCX surface is non-critical for the CLI exit code
+        fmt::print(stderr, "Warning: failed to read FCX issues: {}\n", std::string(e.what()));
     }
 
     // Print summary

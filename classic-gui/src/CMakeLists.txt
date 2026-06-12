@@ -20,6 +20,8 @@ qt_add_executable(ClassicGui WIN32
     app/papyrusdialog.cpp
     app/pathdialog.h
     app/pathdialog.cpp
+    app/typography.h
+    app/typography.cpp
 
     # Core infrastructure
     core/rust_qt_bridge.h
@@ -29,6 +31,8 @@ qt_add_executable(ClassicGui WIN32
     core/featurecontext.cpp
     core/threadmanager.h
     core/threadmanager.cpp
+    core/reportpathkey.h
+    core/reportpathkey.cpp
 
     # Workers (QThread worker objects)
     workers/scanprogressmodel.h
@@ -41,6 +45,8 @@ qt_add_executable(ClassicGui WIN32
     workers/papyrusworker.cpp
     workers/updateworker.h
     workers/updateworker.cpp
+    workers/yamlupdateworker.h
+    workers/yamlupdateworker.cpp
 
     # Widgets (reusable UI components)
     widgets/reportlistwidget.h
@@ -95,6 +101,19 @@ endif()
 # Allow includes like "core/signalhub.h", "app/mainwindow.h"
 target_include_directories(ClassicGui PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# ── App version macro ────────────────────────────────────────────────
+# `CLASSIC_APP_VERSION` is set by the parent CMakeLists.txt by parsing
+# `CLASSIC_Info.version` from `CLASSIC Main.yaml` at configure time.
+# `main.cpp` reads it through the `CLASSIC_GUI_VERSION` macro to set
+# `QApplication::applicationVersion()`, which feeds the app-update
+# notification check. Sourcing the version this way (instead of the
+# runtime cache-preferring `load_main_yaml_version` loader) keeps a
+# per-user YAML data update from moving the broadcast version ahead of
+# the actual installed binary.
+target_compile_definitions(ClassicGui PRIVATE
+    CLASSIC_GUI_VERSION="${CLASSIC_APP_VERSION}"
 )
 
 # ── Link libraries ───────────────────────────────────────────────────

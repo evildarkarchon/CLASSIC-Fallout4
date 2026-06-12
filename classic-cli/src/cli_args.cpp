@@ -4,7 +4,6 @@
 #include <fmt/core.h>
 #include <thread>
 
-
 uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count) {
     auto recommended = std::max(cpu_count, 4u) - 2u;
     return std::min(recommended, 32u);
@@ -46,8 +45,14 @@ CliArgs parse_args(int argc, char* argv[]) {
 
     app.add_flag("--version", args.version_flag, "Print version and exit");
 
-    app.add_option("input_paths", args.input_paths,
-                   "Crash log files or directories to scan (targeted mode)");
+    app.add_flag("--check-yaml-updates", args.check_yaml_updates,
+                 "Check for CLASSIC data-file updates and print the result (no install)");
+    app.add_flag("--apply-yaml-updates", args.apply_yaml_updates,
+                 "Prompt for and apply any available CLASSIC data-file updates");
+    app.add_flag("--check-app-update", args.check_app_update,
+                 "Check the CLASSIC app-update notification manifest and print the result");
+
+    app.add_option("input_paths", args.input_paths, "Crash log files or directories to scan (targeted mode)");
 
     try {
         app.parse(argc, argv);

@@ -61,8 +61,7 @@ void MarkdownViewerTests::constructor_sets_default_state_and_stylesheet()
     QVERIFY(zoomLabel);
 
     QCOMPARE(zoomLabel->text(), QStringLiteral("100%"));
-    QVERIFY(browser->document()->defaultStyleSheet().contains(
-        QStringLiteral("body {")));
+    QVERIFY(browser->document()->defaultStyleSheet().contains(QStringLiteral("body {")));
 }
 
 void MarkdownViewerTests::toolbar_buttons_have_sufficient_width_for_theme_padding()
@@ -89,8 +88,7 @@ void MarkdownViewerTests::setMarkdownContent_renders_markdown_as_html()
     auto* browser = viewer.findChild<QTextBrowser*>();
     QVERIFY(browser);
 
-    viewer.setMarkdownContent(
-        QStringLiteral("# Title\n\nThis is **bold** text.\n\n- item"));
+    viewer.setMarkdownContent(QStringLiteral("# Title\n\nThis is **bold** text.\n\n- item"));
 
     const QString html = browser->toHtml();
     QVERIFY(html.contains(QStringLiteral("Title")));

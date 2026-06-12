@@ -1,6 +1,6 @@
 # `classic-path-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-path-core/`](../../ClassicLib-rs/business-logic/classic-path-core).
+Contributor-facing API documentation for [`business-logic/classic-path-core/`](../../business-logic/classic-path-core).
 
 Crate metadata:
 
@@ -33,7 +33,7 @@ Do not use this crate for:
 - higher-level game scan orchestration
 - binding-specific wrapper APIs
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core), and the C++/Node/Python binding crates.
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scangame-core`](../../business-logic/classic-scangame-core), and the C++/Node/Python binding crates.
 
 ---
 
@@ -132,6 +132,7 @@ Construction:
 Important methods:
 
 - `find_docs_path(cached_path) -> DocsPathResult<PathBuf>`
+- `with_steam_app_id(app_id: u32) -> Self (consuming builder)`
 - `validate_docs_path(path) -> DocsPathResult<()>`
 - `validate_ini_files(docs_path, required_inis) -> DocsPathResult<()>`
 - `relative_path() -> &str`
@@ -140,7 +141,7 @@ Behavior visible in source:
 
 - `find_docs_path()` tries the cached string path first
 - on Windows it queries the registry-backed documents folder and appends `relative_path`
-- on non-Windows builds it next tries a Fallout 4 Proton documents path resolved from Steam library metadata, then falls back to `home/.local/share/<relative_path>` if Proton metadata lookup fails or the Proton path is invalid
+- on non-Windows builds it uses `home/.local/share/<relative_path>` by default; if the caller opted in via `DocsPathFinder::with_steam_app_id(app_id)`, the finder first tries a Steam/Proton documents path built from the Steam library metadata for that app ID and falls back to the legacy `.local/share` location if the Proton lookup fails or the Proton path is invalid. Callers that do not opt in get NO Proton lookup at all, so a generic non-Fallout-4 consumer no longer implicitly probes Fallout 4's `compatdata/377160` prefix.
 - `validate_ini_files()` checks existence and then parses each required INI via `IniFile::load()`
 
 ## Validation helpers
@@ -262,12 +263,13 @@ The main source-visible flows are:
 ## Documents-path flow
 
 1. Construct `DocsPathFinder` with a game-relative documents suffix such as `My Games\\Fallout4`.
-2. Call `find_docs_path(cached_path)`.
-3. The crate tries the cached path first.
-4. It then falls back to:
+2. Optionally call `.with_steam_app_id(app_id)` to opt in to a Steam/Proton documents path lookup on Linux (for Fallout 4, pass `377160` or use `Fallout4Version::Original.steam_app_id()` from `classic-version-registry-core`).
+3. Call `find_docs_path(cached_path)`.
+4. The crate tries the cached path first.
+5. It then falls back to:
    - Windows registry documents path plus the relative suffix on Windows
-   - `home/.local/share/<relative_path>` on non-Windows builds
-5. Optional follow-up validation can call `validate_ini_files()` for required INIs.
+   - on non-Windows builds: if a Steam app ID was set via `with_steam_app_id`, the finder first tries the Steam/Proton compatdata path for that app ID; if no app ID is set or the Proton lookup fails, it falls back to `home/.local/share/<relative_path>`
+6. Optional follow-up validation can call `validate_ini_files()` for required INIs.
 
 ## Setup validation flow
 
@@ -390,13 +392,13 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-scangame-core`](../../ClassicLib-rs/business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
-- [`classic-xse-core`](../../ClassicLib-rs/business-logic/classic-xse-core) - converts or reuses `PathError` in its own error model
-- [`classic-resource-core`](../../ClassicLib-rs/business-logic/classic-resource-core) - re-exports `PathError` and `PathResult`
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_valid_path()`, and `is_restricted_path()` for C++ interop
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) and [`classic-path-py`](../../ClassicLib-rs/python-bindings/classic-path-py) - binding surfaces over this crate's APIs
-- [`ClassicLib-rs/ui-applications/classic-tui`](../../ClassicLib-rs/ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
+- [`classic-scangame-core`](../../business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
+- [`classic-config-core`](../../business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
+- [`classic-xse-core`](../../business-logic/classic-xse-core) - converts or reuses `PathError` in its own error model
+- [`classic-resource-core`](../../business-logic/classic-resource-core) - re-exports `PathError` and `PathResult`
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_valid_path()`, and `is_restricted_path()` for C++ interop
+- [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
+- [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
 
 In practice, `classic-path-core` sits between config-driven path settings and higher-level scan/setup orchestration.
 
@@ -442,7 +444,7 @@ If the caller only needs the raw XSE-derived path, use `parse_xse_log()` directl
 ## Contributor Notes And Known Limits
 
 - `src/lib.rs` re-exports the public surface; internal modules are private
-- `DocsPathFinder` does not currently build a Proton documents path automatically even though Linux Steam helpers exist in the crate
+- `DocsPathFinder`'s Linux Proton lookup is opt-in via `with_steam_app_id(app_id)`; the default is `home/.local/share/...` only. Game-specific callers like the CXX bridge's `detect_fallout4_docs_path` and the TUI's `resolve_xse_folder_for_scan` opt in with `Fallout4Version::Original.steam_app_id()` (377160).
 - `parse_xse_log()` assumes a fixed `.../Data/XSE/Plugins`-style suffix and pops exactly three path components
 - `is_restricted_path()` is heuristic string matching, not a canonicalized allow/deny policy
 - `check_write_permissions()` writes a temporary `.classic_test_write` file into the target directory
@@ -455,6 +457,7 @@ If you extend this crate, update this document when you change:
 
 - root re-exports in `src/lib.rs`
 - game-path or documents-path strategy order
+- the opt-in rules for the Linux Proton documents lookup
 - restricted-path heuristics or permission-probe behavior
 - INI parsing assumptions or case-normalization behavior
 - documents-check message/report rules

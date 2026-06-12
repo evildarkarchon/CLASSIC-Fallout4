@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
-project(classic-cli VERSION 9.0.0 LANGUAGES CXX)
+project(classic-cli VERSION 9.1.0 LANGUAGES CXX)
+
+# ── Linker identity guard ────────────────────────────────────────────
+# Fail fast if CMake resolves a non-MSVC linker, including PATH-shadowed
+# Git for Windows toolchains. See cmake/ClassicLinkerCheck.cmake.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+include(ClassicLinkerCheck)
+classic_assert_msvc_linker()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,7 +33,7 @@ if(CMAKE_BUILD_TYPE)
 endif()
 
 corrosion_import_crate(
-    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../ClassicLib-rs/Cargo.toml
+    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../Cargo.toml
     CRATES classic-cpp-bridge
     PROFILE ${CLASSIC_RUST_PROFILE}
 )
@@ -40,20 +47,24 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         types.rs
         runtime.rs
         registry.rs
-        yaml.rs
+        settings.rs
+        shared.rs
         config.rs
         scanner.rs
         database.rs
         files.rs
         scangame.rs
         game.rs
+        xse.rs
+        version_registry.rs
+        web.rs
         update.rs
         message.rs
         perf.rs
 )
 
 target_include_directories(classic_cxx_bridge PUBLIC
-    "${CMAKE_SOURCE_DIR}/../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include"
+    "${CMAKE_SOURCE_DIR}/../cpp-bindings/classic-cpp-bridge/include"
 )
 
 # ── CLI executable ──────────────────────────────────────────────────
@@ -64,9 +75,45 @@ add_executable(classic-cli
     src/progress.cpp
     src/thread_pool.cpp
     src/report_writer.cpp
+    src/yaml_update.cpp
+    src/app_update.cpp
 )
 
 target_include_directories(classic-cli PRIVATE src/)
+
+# ── App version single-source-of-truth ──────────────────────────────
+# `CLASSIC Data/databases/CLASSIC Main.yaml` is the documented source of
+# truth for the application version (the Qt GUI also reads CLASSIC_Info.
+# version from this file at startup and feeds it to the same
+# `check_app_notification` bridge entry point — see classic-gui/src/main.
+# cpp). Extracting the version here at configure time keeps the CLI from
+# broadcasting a stale CMake literal to the notification check.
+set(_CLASSIC_MAIN_YAML "${CMAKE_SOURCE_DIR}/../CLASSIC Data/databases/CLASSIC Main.yaml")
+include(ClassicAppVersion)
+classic_extract_main_yaml_version("${_CLASSIC_MAIN_YAML}" CLASSIC_APP_VERSION)
+
+# Guard: the CMake `project(VERSION ...)` (used by CPack and as the
+# binary's own marker) MUST match the YAML-sourced app version. They are
+# conceptually different — one stamps the CLI binary, the other is the
+# application's broadcast version — but if they diverge silently we ship
+# a binary whose self-reported version disagrees with the YAML source of
+# truth, which is exactly the drift class the YAML extraction prevents.
+if(NOT PROJECT_VERSION STREQUAL CLASSIC_APP_VERSION)
+    message(FATAL_ERROR
+        "classic-cli CMake project(VERSION ${PROJECT_VERSION}) disagrees "
+        "with CLASSIC Main.yaml CLASSIC_Info.version "
+        "(${CLASSIC_APP_VERSION}). Update the `project(... VERSION ...)` "
+        "line in classic-cli/CMakeLists.txt to match the YAML, or fix "
+        "the YAML if the CMake value is correct.")
+endif()
+
+# Single source of truth for the CLI's reported app version. Any C++ site
+# that wants to print or transmit the installed CLI version MUST use this
+# macro rather than a hardcoded literal — `app_update.cpp` consumes it
+# when calling the notification bridge.
+target_compile_definitions(classic-cli PRIVATE
+    CLASSIC_CLI_VERSION="${CLASSIC_APP_VERSION}"
+)
 
 target_link_libraries(classic-cli PRIVATE
     fmt::fmt
@@ -117,8 +164,12 @@ set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 include(CPack)
 
 # ── Unit Tests (Catch2) ──────────────────────────────────────────────
-# Only built when Catch2 is available. These tests cover components
-# that don't depend on the Rust CXX bridge (ThreadPool, Progress, CliArgs).
+# Only built when Catch2 is available. Two test executables:
+#   - classic-cli-tests: bridge-free unit tests for ThreadPool / Progress /
+#     CliArgs. Fast to build, no Rust link dependency.
+#   - classic-cli-bridge-tests: tests that exercise the Rust CXX bridge FFI
+#     (e.g. the yaml-update-delivery entry points). Links against
+#     classic_cxx_bridge.
 find_package(Catch2 3 CONFIG QUIET)
 if(Catch2_FOUND)
     enable_testing()
@@ -149,6 +200,28 @@ if(Catch2_FOUND)
     include(CTest)
     include(Catch)
     catch_discover_tests(classic-cli-tests)
+
+    # Bridge-linked tests: one entry per FFI surface that warrants a C++
+    # round-trip check. Added for the yaml-update-delivery change so C++
+    # consumers prove the discriminated DTO shape at compile AND run time.
+    add_executable(classic-cli-bridge-tests
+        tests/test_yaml_update.cpp
+        src/yaml_update.cpp
+    )
+
+    target_include_directories(classic-cli-bridge-tests PRIVATE src/)
+
+    target_link_libraries(classic-cli-bridge-tests PRIVATE
+        Catch2::Catch2WithMain
+        fmt::fmt
+        classic_cxx_bridge
+    )
+
+    if(MSVC)
+        target_compile_options(classic-cli-bridge-tests PRIVATE /utf-8 /W4)
+    endif()
+
+    catch_discover_tests(classic-cli-bridge-tests)
 
     message(STATUS "Catch2 found -- unit tests enabled")
 else()

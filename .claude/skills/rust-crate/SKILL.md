@@ -66,6 +66,22 @@ mod types;
 
 pub use error::{Error, Result};
 pub use types::*;
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;
+```
+
+Also create `src/lib_tests.rs` with a trivial smoke test in the sibling layout
+(see `openspec/specs/rust-test-module-layout/spec.md`):
+
+```rust
+use super::*;
+
+#[test]
+fn crate_compiles_and_loads() {
+    // Trivial smoke test proving the crate links.
+}
 ```
 
 ### 1.4 Add to Workspace
@@ -201,23 +217,36 @@ def is_rust_available() -> bool:
 
 ### 4.1 Rust Unit Tests
 
-In `ClassicLib-rs/business-logic/classic-<name>-core/src/lib.rs`:
+Unit tests live in a sibling `<stem>_tests.rs` file, not inside an inline
+`mod tests { ... }` block. See `openspec/specs/rust-test-module-layout/spec.md`
+for the workspace-wide rule.
+
+In `business-logic/classic-<name>-core/src/lib.rs`, declare the sibling module:
 ```rust
 #[cfg(test)]
-mod tests {
-    use super::*;
+#[path = "lib_tests.rs"]
+mod tests;
+```
 
-    #[test]
-    fn test_basic_functionality() {
-        // Test implementation
-    }
+Then put the test bodies in `business-logic/classic-<name>-core/src/lib_tests.rs`:
+```rust
+use super::*;
 
-    #[tokio::test]
-    async fn test_async_functionality() {
-        // Async test implementation
-    }
+#[test]
+fn test_basic_functionality() {
+    // Test implementation
+}
+
+#[tokio::test]
+async fn test_async_functionality() {
+    // Async test implementation
 }
 ```
+
+For additional modules with tests (`src/foo.rs`), follow the same pattern:
+declare `#[cfg(test)] #[path = "foo_tests.rs"] mod tests;` in `foo.rs` and
+put the test bodies in a sibling `foo_tests.rs`. Do NOT create fresh inline
+`#[cfg(test)] mod tests { ... }` blocks in new source files.
 
 ### 4.2 Python Integration Tests
 

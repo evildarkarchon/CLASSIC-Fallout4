@@ -3,14 +3,9 @@
 #include "workers/scanprogressmodel.h"
 
 namespace {
-classic::scanner::BatchProgressEvent makeEvent(
-    classic::scanner::BatchProgressEventKind eventKind,
-    classic::scanner::BatchProgressPhase phase,
-    std::uint32_t inputIndex,
-    std::uint32_t total,
-    bool success = false,
-    const char* path = "test.log"
-)
+classic::scanner::BatchProgressEvent makeEvent(classic::scanner::BatchProgressEventKind eventKind,
+                                               classic::scanner::BatchProgressPhase phase, std::uint32_t inputIndex,
+                                               std::uint32_t total, bool success = false, const char* path = "test.log")
 {
     classic::scanner::BatchProgressEvent event{};
     event.completed = 0;
@@ -22,7 +17,7 @@ classic::scanner::BatchProgressEvent makeEvent(
     event.success = success;
     return event;
 }
-}
+} // namespace
 
 class ScanProgressModelTests : public QObject {
     Q_OBJECT
@@ -43,8 +38,10 @@ void ScanProgressModelTests::percent_stays_monotonic_for_single_log_lifecycle()
         makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Setup, 0, 1),
         makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Parse, 0, 1),
         makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Analyze, 0, 1),
-        makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Finalize, 0, 1),
-        makeEvent(classic::scanner::BatchProgressEventKind::Completed, classic::scanner::BatchProgressPhase::Finalize, 0, 1, true),
+        makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Finalize, 0,
+                  1),
+        makeEvent(classic::scanner::BatchProgressEventKind::Completed, classic::scanner::BatchProgressPhase::Finalize,
+                  0, 1, true),
     };
 
     float previous = -1.0f;
@@ -61,25 +58,16 @@ void ScanProgressModelTests::mixed_batch_progress_advances_before_terminal_compl
 {
     BatchProgressModel model(3);
 
-    const float queued = model.update(makeEvent(
-        classic::scanner::BatchProgressEventKind::Queued,
-        classic::scanner::BatchProgressPhase::Setup,
-        0,
-        3));
+    const float queued = model.update(
+        makeEvent(classic::scanner::BatchProgressEventKind::Queued, classic::scanner::BatchProgressPhase::Setup, 0, 3));
     QCOMPARE(queued, 0.0f);
 
-    const float parseProgress = model.update(makeEvent(
-        classic::scanner::BatchProgressEventKind::Phase,
-        classic::scanner::BatchProgressPhase::Parse,
-        1,
-        3));
+    const float parseProgress = model.update(
+        makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Parse, 1, 3));
     QVERIFY2(parseProgress > 0.0f, "In-flight phase updates should advance visible batch progress");
 
-    const float analyzeProgress = model.update(makeEvent(
-        classic::scanner::BatchProgressEventKind::Phase,
-        classic::scanner::BatchProgressPhase::Analyze,
-        1,
-        3));
+    const float analyzeProgress = model.update(makeEvent(classic::scanner::BatchProgressEventKind::Phase,
+                                                         classic::scanner::BatchProgressPhase::Analyze, 1, 3));
     QVERIFY2(analyzeProgress > parseProgress, "Later phases should contribute more progress for heavy logs");
 }
 
@@ -87,17 +75,10 @@ void ScanProgressModelTests::late_phase_regressions_are_ignored_after_terminal_s
 {
     BatchProgressModel model(1);
 
-    const float completed = model.update(makeEvent(
-        classic::scanner::BatchProgressEventKind::Completed,
-        classic::scanner::BatchProgressPhase::Finalize,
-        0,
-        1,
-        true));
-    const float regressed = model.update(makeEvent(
-        classic::scanner::BatchProgressEventKind::Phase,
-        classic::scanner::BatchProgressPhase::Parse,
-        0,
-        1));
+    const float completed = model.update(makeEvent(classic::scanner::BatchProgressEventKind::Completed,
+                                                   classic::scanner::BatchProgressPhase::Finalize, 0, 1, true));
+    const float regressed = model.update(
+        makeEvent(classic::scanner::BatchProgressEventKind::Phase, classic::scanner::BatchProgressPhase::Parse, 0, 1));
 
     QCOMPARE(completed, 100.0f);
     QCOMPARE(regressed, completed);

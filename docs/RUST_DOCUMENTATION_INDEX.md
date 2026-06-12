@@ -5,12 +5,16 @@ This index tracks Rust-centric documentation for the **active** CLASSIC architec
 ## Architecture Context
 
 - Active frontends: [`classic-cli/`](../classic-cli), [`classic-gui/`](../classic-gui)
-- Active core: [`ClassicLib-rs/`](../ClassicLib-rs)
-- Active bridge to native frontends: [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`](../ClassicLib-rs/cpp-bindings/classic-cpp-bridge)
-- Maintained integration bindings: [`ClassicLib-rs/node-bindings/`](../ClassicLib-rs/node-bindings), [`ClassicLib-rs/python-bindings/`](../ClassicLib-rs/python-bindings)
+- Active workspace shell: repo root (`../Cargo.toml`, `../Cargo.lock`, `../.cargo/config.toml`)
+- Active shared/runtime crates: [`foundation/`](../foundation)
+- Active core: [`business-logic/`](../business-logic)
+- Active bridge to native frontends: [`cpp-bindings/classic-cpp-bridge/`](../cpp-bindings/classic-cpp-bridge)
+- Maintained integration bindings: [`node-bindings/classic-node/`](../node-bindings/classic-node), [`python-bindings/`](../python-bindings)
+- Active Rust TUI app: [`ui-applications/classic-tui/`](../ui-applications/classic-tui)
 - Deprecated Python runtime entrypoints/orchestration: [`deprecated/`](../deprecated)
 
 For contributor policy and canonical command expectations, see [`AGENTS.md`](../AGENTS.md).
+For old-to-new workspace translations, see the [Workspace Migration Matrix](workspace-migration-matrix.md).
 
 ---
 
@@ -21,6 +25,7 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 3. [`docs/api/QUICK_START.md`](api/QUICK_START.md) — practical setup/build/test flow
 4. [`docs/development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — integration surfaces and extension patterns
 5. [`docs/testing/TESTING_GUIDE_INDEX.md`](testing/TESTING_GUIDE_INDEX.md) — testing matrix and CI alignment
+6. [`docs/workspace-migration-matrix.md`](workspace-migration-matrix.md) — legacy `ClassicLib-rs/...` to repo-root workflow map
 
 ---
 
@@ -31,15 +36,13 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 - [`docs/api/classic-perf-core.md`](api/classic-perf-core.md) — global timing sample collection, summaries, and scoped timer helpers
 - [`docs/api/classic-registry-core.md`](api/classic-registry-core.md) — process-wide typed singleton registry and convenience key helpers
 - [`docs/api/classic-message-core.md`](api/classic-message-core.md) — shared message DTOs, routing enums, and startup/log formatting helpers
-- [`docs/api/classic-yaml-core.md`](api/classic-yaml-core.md) — shared YAML parsing, cache, and merge helpers
-- [`docs/api/classic-settings-core.md`](api/classic-settings-core.md) — YAML settings cache plus sync/async raw-document loading helpers
-- [`docs/api/classic-version-registry-core.md`](api/classic-version-registry-core.md) — version matching and registry-backed metadata
-- [`docs/api/classic-constants-core.md`](api/classic-constants-core.md) — shared game/version/YAML identifiers and small convenience enums
+- [`docs/api/classic-settings-core.md`](api/classic-settings-core.md) — YAML settings cache plus sync/async raw-document loading helpers, including the surviving owner docs for absorbed YAML parsing/cache helpers plus `YamlFile` and settings constants
+- [`docs/api/classic-version-registry-core.md`](api/classic-version-registry-core.md) — version matching and registry-backed metadata, including the surviving owner docs for `Fallout4Version` and `NULL_VERSION`
+- [`docs/api/classic-shared-core.md`](api/classic-shared-core.md) — shared runtime, error, path, performance, and string helpers, including the surviving owner docs for `GameId`
 - [`docs/api/classic-version-core.md`](api/classic-version-core.md) — version parsing, text extraction, and PE-version helpers
 - [`docs/api/classic-web-core.md`](api/classic-web-core.md) — small URL, user-agent, and mod-site helper layer
 - [`docs/api/classic-update-core.md`](api/classic-update-core.md) — async GitHub release/update-check client and DTO layer
-- [`docs/api/classic-crashgen-settings-core.md`](api/classic-crashgen-settings-core.md) — shared crashgen settings rule model and evaluator
-- [`docs/api/classic-config-core.md`](api/classic-config-core.md) — CLASSIC settings plus Main/Game/Ignore YAML loading
+- [`docs/api/classic-config-core.md`](api/classic-config-core.md) — CLASSIC settings, Main/Game/Ignore YAML loading, AND the absorbed crashgen rule model (formerly its own crate, merged in v9.1.0 Phase 2)
 - [`docs/api/classic-path-core.md`](api/classic-path-core.md) — game-path, documents-path, validation, and backup helpers
 - [`docs/api/classic-xse-core.md`](api/classic-xse-core.md) — XSE loader/version detection helpers used by setup checks and bindings
 - [`docs/api/game-setup-workflow.md`](api/game-setup-workflow.md) — cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
@@ -82,7 +85,7 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 - [`docs/rust/PyO3-0.27-migration.md`](rust/PyO3-0.27-migration.md)
 - [`docs/rust/pyo3_quick_reference.md`](rust/pyo3_quick_reference.md)
 
-> Scope note: this section documents maintained binding surfaces under [`ClassicLib-rs/python-bindings/`](../ClassicLib-rs/python-bindings), not deprecated Python app runtime entrypoints.
+> Scope note: this section documents maintained binding surfaces under [`python-bindings/`](../python-bindings), not deprecated Python app runtime entrypoints.
 
 ### Development and troubleshooting
 
@@ -101,15 +104,17 @@ For contributor policy and canonical command expectations, see [`AGENTS.md`](../
 ## Canonical Build/Test Commands (Rust)
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace
+cargo build --workspace --release
 
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
+
+Need binding-path or artifact translations as well? Start with the [Workspace Migration Matrix](workspace-migration-matrix.md).
 
 ---
 
@@ -126,7 +131,9 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 
 Older documents may still discuss hybrid Python-runtime execution or fallback-heavy flows. Treat those as historical unless they are explicitly aligned with:
 
-1. Current active architecture (`classic-cli` + `classic-gui` + `ClassicLib-rs`)
-2. Maintained binding surfaces (`python-bindings`, `node-bindings`)
+1. Current active architecture (`classic-cli` + `classic-gui` + repo-root Rust workspace layers)
+2. Maintained binding surfaces (`python-bindings`, `node-bindings/classic-node`)
 3. Deprecated runtime scope (`deprecated/`)
+
+> Migration note: a historical `ClassicLib-rs/...` mention is not live workspace guidance; translate it through the [Workspace Migration Matrix](workspace-migration-matrix.md).
 

@@ -1,0 +1,25 @@
+[project]
+name = "classic-python-bindings-tools"
+version = "0.0.0"
+description = "CLASSIC Python binding build/test tooling: maturin runner for the classic-*-py crates plus the pytest smoke-test suite."
+requires-python = ">=3.12"
+dependencies = [
+    "classic-py-cli",
+    "maturin>=1.7,<2.0",
+    "pytest>=8.0",
+]
+
+[dependency-groups]
+# Drift-guard tooling used only by the parity-gates CI job (tools/schema_version_gate.py).
+# Kept out of the default `uv sync` set so build-and-test does not pull ruamel.yaml for nothing.
+drift-guards = [
+    "ruamel.yaml>=0.18,<0.19",
+]
+
+[tool.uv]
+# This project hosts tooling, not an installable package. `package = false` tells uv
+# not to attempt to build/install the current directory into the venv.
+package = false
+
+[tool.uv.sources]
+classic-py-cli = { path = "classic-py-cli", editable = true }

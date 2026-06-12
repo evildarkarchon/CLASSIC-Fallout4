@@ -65,7 +65,7 @@ Current matching behavior:
 - cache keys normalize `plugin` to lowercase, so `Fallout4.esm` and `FALLOUT4.ESM` share cache entries
 - batch results are returned as `HashMap<String, String>` keyed by `"{formid}:{plugin}"`
 
-Important downstream detail from [`ClassicLib-rs/business-logic/classic-scanlog-core/src/formid_analyzer.rs`](../../ClassicLib-rs/business-logic/classic-scanlog-core/src/formid_analyzer.rs): scanlog does not query the full raw crash-log FormID. It strips the load-order prefix first.
+Important downstream detail from [`business-logic/classic-scanlog-core/src/formid_analyzer.rs`](../../business-logic/classic-scanlog-core/src/formid_analyzer.rs): scanlog does not query the full raw crash-log FormID. It strips the load-order prefix first.
 
 - regular plugins: first 2 hex characters are treated as the plugin prefix
 - light plugins: first 5 hex characters (`FE` plus 3-digit light index) are treated as the plugin prefix
@@ -103,7 +103,7 @@ There are two related path representations in active source.
 
 ## `classic-config-core` runtime settings model
 
-[`ClassicLib-rs/business-logic/classic-config-core/src/config.rs`](../../ClassicLib-rs/business-logic/classic-config-core/src/config.rs) exposes:
+[`business-logic/classic-config-core/src/config.rs`](../../business-logic/classic-config-core/src/config.rs) exposes:
 
 - `ClassicConfig.formid_databases: HashMap<String, Vec<PathBuf>>`
 - key: game name such as `Fallout4`
@@ -129,7 +129,7 @@ formid_databases:
 
 The current C++ bridge is what actually assembles DB paths for production scan startup.
 
-[`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/scanner.rs) resolves paths in this order:
+[`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) resolves paths in this order:
 
 1. main DB: `CLASSIC Data/databases/{game} FormIDs Main.db`
 2. hardcoded extras from `hardcoded_formid_db_relpaths(game)`

@@ -1,6 +1,6 @@
 # `classic-database-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-database-core/`](../../ClassicLib-rs/business-logic/classic-database-core).
+Contributor-facing API documentation for [`business-logic/classic-database-core/`](../../business-logic/classic-database-core).
 
 Crate metadata:
 
@@ -23,7 +23,7 @@ Use this crate when you need to:
 - look up a single `(formid, plugin)` pair or batch many pairs efficiently
 - cache lookup results with TTL and bounded-capacity eviction
 - tune connection-budget, cache, and cleanup behavior for scan workloads
-- attach a shared database pool to downstream crates such as [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core)
+- attach a shared database pool to downstream crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core)
 
 Do not use this crate for:
 
@@ -33,7 +33,7 @@ Do not use this crate for:
 - binding-specific wrapper APIs
 - crash-log analysis itself
 
-Those concerns live in related crates such as [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-database-py`](../../ClassicLib-rs/python-bindings/classic-database-py).
+Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge), [`classic-node`](../../node-bindings/classic-node), and [`classic-database-py`](../../python-bindings/classic-database-py).
 
 ---
 
@@ -258,13 +258,13 @@ Contributor rule: if you extend this crate, keep new async work compatible with 
 
 ## Related Crates And Integration Points
 
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - downstream consumer; `OrchestratorCore` can attach a `DatabasePool` for richer FormID report text
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - configures scan-time DB cache profiles and logs `PoolStatistics`
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - JavaScript/TypeScript wrapper over this crate's pool API
-- [`classic-database-py`](../../ClassicLib-rs/python-bindings/classic-database-py) - PyO3 adapter that delegates business logic to this crate
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared runtime policy used by higher-level callers and benchmarks
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer; `OrchestratorCore` can attach a `DatabasePool` for richer FormID report text
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - configures scan-time DB cache profiles and logs `PoolStatistics`
+- [`classic-node`](../../node-bindings/classic-node) - JavaScript/TypeScript wrapper over this crate's pool API
+- [`classic-database-py`](../../python-bindings/classic-database-py) - PyO3 adapter that delegates business logic to this crate
+- [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy used by higher-level callers and benchmarks
 
-This crate sits upstream of the optional FormID-enrichment path in [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core). Scanlog analysis can run without it, but richer entry descriptions depend on it.
+This crate sits upstream of the optional FormID-enrichment path in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core). Scanlog analysis can run without it, but richer entry descriptions depend on it.
 
 ---
 
@@ -336,4 +336,4 @@ If you extend this crate, update this document when you change:
 - cache TTL, cleanup, or eviction semantics
 - single or batch lookup ordering/priority rules
 - expected SQLite table shape
-- integration assumptions used by [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core)
+- integration assumptions used by [`classic-scanlog-core`](../../business-logic/classic-scanlog-core)

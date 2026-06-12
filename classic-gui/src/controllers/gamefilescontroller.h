@@ -15,18 +15,14 @@ class GameFilesController : public QObject {
     Q_OBJECT
 
 public:
-    explicit GameFilesController(SignalHub* signalHub,
-                                 ThreadManager* threadManager,
-                                 QObject* parent = nullptr);
+    explicit GameFilesController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent = nullptr);
 
     /// Start a game file scan in a background thread.
     /// @param gameExePath Full path to the game executable (e.g. Fallout4.exe).
     /// @param gameRoot    Root directory of the game installation.
     /// @param docsPath    Documents/INI folder path used for docs checks.
     /// @param gameName    Game identifier string (e.g. "Fallout4").
-    void startScan(const QString& gameExePath,
-                   const QString& gameRoot,
-                   const QString& docsPath,
+    void startScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath,
                    const QString& gameName);
 
     /// @return true if a scan is currently in progress.

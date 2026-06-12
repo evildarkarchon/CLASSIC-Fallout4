@@ -1,6 +1,6 @@
 # `classic-scanlog-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-scanlog-core/`](../../ClassicLib-rs/business-logic/classic-scanlog-core).
+Contributor-facing API documentation for [`business-logic/classic-scanlog-core/`](../../business-logic/classic-scanlog-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - exposing FFI or binding-specific wrapper types
 - front-end presentation logic
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-shared-core`](../../foundation/classic-shared-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -44,9 +44,10 @@ Top-level scan pipeline and the main integration surface.
 
 - `AnalysisConfig` - assembled scan configuration for a game/version mode
 - `AnalysisResult` - result payload for one analyzed log
+- `BatchScanOptions`, `BatchScanEvent`, `BatchScanEventKind`, `IndexedAnalysisResult` - indexed/evented batch scan primitives for thin bindings
 - `OrchestratorCore` - async scan runner and report writer
 - `ScanProgressPhase` - coarse phase callbacks for progress reporting
-- `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core)
+- `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core)
 - `resolve_batch_concurrency()` - public helper for the same batch-concurrency policy used by `process_logs_batch()`
 
 ### `parser`
@@ -72,9 +73,16 @@ Analysis helpers used by the orchestrator and usable independently.
 
 - `PluginAnalyzer` - plugin extraction, plugin-limit checks, plugin suspect matching
 - `FormIDAnalyzerCore` - async FormID correlation and optional DB-backed value lookup
-- `RecordScanner` - named-record detection with per-instance `OnceLock<AhoCorasick>` matcher caches built on first use
+- `RecordScanner` - named-record detection with per-instance fallible `OnceLock<AhoCorasick>` matcher caches built on first use
 - `SuspectScanner` - known error/stack suspect matching
 - `detect_mods_single()`, `detect_mods_double()`, `detect_mods_important()` - standalone mod checks
+
+`record_scanner` contributor note:
+
+- `RecordScanner` now exposes additive fallible APIs for matcher-building/search paths: `try_scan_named_records()`, `try_scan_named_records_with_crashgen_name()`, `try_scan_named_records_with_crashgen_name_and_lowercase()`, and `try_extract_records()`.
+- The free function `try_scan_records_batch()` is the fallible counterpart to `scan_records_batch()`.
+- Existing infallible methods and `scan_records_batch()` remain compatibility wrappers with unchanged success output shapes; callers that need to distinguish invalid input or Aho-Corasick matcher-build failures should use the `try_*` variants.
+- The lowercase-reuse fallible API returns `ScanLogError::InvalidInput` when the original and lowercased slices are not index-aligned instead of panicking.
 
 `mod_detector` contributor note:
 
@@ -126,7 +134,7 @@ Important constructors/helpers:
 
 Contributor notes:
 
-- `build_analysis_config_from_yaml()` is the canonical bridge from [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core).
+- `build_analysis_config_from_yaml()` is the canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core).
 - Version Registry data is preferred when available; YAML values are used as compatibility fallback.
 - OG/VR selection is resolved before scan-time settings validation from `selected_game_version` plus Version Registry data.
 - VR mode is still tracked internally and is not exposed as a public field; `game_version_vr` carries the VR version string when registry data provides one.
@@ -145,6 +153,7 @@ Important methods:
 - `process_log(log_path) -> Result<AnalysisResult, ScanLogError>`
 - `process_log_with_progress(log_path, on_phase) -> Result<AnalysisResult, ScanLogError>`
 - `process_logs_batch(log_paths, max_concurrent) -> Vec<AnalysisResult>`
+- `process_logs_batch_with_events(log_paths, options, on_event) -> Vec<IndexedAnalysisResult>`
 - `write_reports_batch(reports) -> Result<Vec<PathBuf>, ScanLogError>`
 
 Useful helpers that are part of the public surface:
@@ -165,8 +174,10 @@ Behavior worth knowing:
 
 - `process_logs_batch()` is fail-soft: per-log failures become `AnalysisResult::failure(...)` entries instead of aborting the batch.
 - Batch result order is not guaranteed to match input order because it uses unordered buffering.
+- `process_logs_batch_with_events()` is the richer core batch primitive used by bindings that need stable input indices, optional input-order result restoration, cancellation checks before each log starts, and queued/started/phase/terminal events.
 - `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
+- `check_crashgen_version_for_detected_game()` filters registry-backed crashgen floors by the detected or configured crashgen product before comparing versions.
 - `mods_solu` detection is no longer routed through the legacy single-map matcher; it evaluates grouped `any` / `all` criteria, suppresses matches through optional exceptions, and renders report titles/bodies from the structured `name` / `description` fields.
 - `is_feature_complete()` currently means plugin analyzer and suspect scanner are present; a database pool is optional.
 
@@ -247,7 +258,7 @@ Important methods:
 Contributor notes:
 
 - If `CrashgenEntry.settings_rules` exists, the validator prefers those rules and only falls back to legacy checks for uncovered areas.
-- Rule-driven preflight outcomes can now carry a report bucket from [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
+- Rule-driven preflight outcomes can now carry a report bucket from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
 - `check_disabled_settings()` always runs and uses `ignore_keys` as its skip set.
 - In `classic-scanlog-core`, `config_layout` is currently a coarse valid/invalid fact for settings evaluation: `derive_scanlog_config_layout()` returns `Og` for parseable detected versions and `Unknown` otherwise.
 - OG vs VR selection is handled earlier through `AnalysisConfig` construction and Version Registry data, not by `config_layout` in this crate.
@@ -310,7 +321,7 @@ The report module is designed around Python-parity text output, not a stable int
 
 ## Other public utilities
 
-- `version`: `CrashgenVersion`, `CrashgenVersionStatus`, `crashgen_version_gen()`, `check_crashgen_version_status()`
+- `version`: `CrashgenVersion`, `CrashgenVersionStatus`, `crashgen_version_gen()`, `check_crashgen_version_status()`. Configured crash generator versions are treated as minimum supported floors; detected versions equal to or newer than the relevant floor are valid.
 - `gpu_detector`: `GpuVendor`, `GpuInfo`, `GpuDetector`
 - `papyrus`: `PapyrusAnalyzer`, `PapyrusStats`, `PapyrusError`
 - `fcx_handler`: `FcxModeHandler`, `FcxResetError`, `ConfigIssue`, `GLOBAL_FCX_HANDLER`
@@ -338,11 +349,11 @@ Binding expectation:
 
 The main contributor-facing pipeline looks like this:
 
-1. Load YAML/config data with [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core).
+1. Load YAML/config data with [`classic-config-core`](../../business-logic/classic-config-core).
 2. Convert `YamlDataCore` into `AnalysisConfig` with `build_analysis_config_from_yaml()`.
 3. Construct `OrchestratorCore::new(config)`.
-4. Optionally attach a [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core) `DatabasePool` for FormID value lookups.
-5. `process_log()` reads the file with [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
+4. Optionally attach a [`classic-database-core`](../../business-logic/classic-database-core) `DatabasePool` for FormID value lookups.
+5. `process_log()` reads the file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
 6. `LogParser::parse_all_sections_arc()` builds named sections.
 7. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
 8. Analysis passes run over the prepared data:
@@ -395,7 +406,7 @@ This crate exposes async APIs but does not create its own runtime.
 
 - Async entry points include `OrchestratorCore::async_enter()`, `async_exit()`, `process_log()`, `process_log_with_progress()`, `process_logs_batch()`, `load_loadorder_async()`, `write_reports_batch()`, and `FormIDAnalyzerCore::formid_match()`.
 - The crate depends on `tokio` and `futures`, but the source does not construct a Tokio runtime in production code.
-- In CLASSIC, higher layers are expected to use the shared runtime model from [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) rather than introducing a second runtime.
+- In CLASSIC, higher layers are expected to use the shared runtime model from [`classic-shared-core`](../../foundation/classic-shared-core) rather than introducing a second runtime.
 
 Internal concurrency/performance patterns visible in the source:
 
@@ -424,13 +435,12 @@ Notes:
 
 ## Related Crates And Integration Points
 
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`
-- [`classic-crashgen-settings-core`](../../ClassicLib-rs/business-logic/classic-crashgen-settings-core) - typed settings-rule evaluation used by `SettingsValidator`
-- [`classic-version-registry-core`](../../ClassicLib-rs/business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
-- [`classic-database-core`](../../ClassicLib-rs/business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
-- [`classic-file-io-core`](../../ClassicLib-rs/business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
-- [`classic-shared-core`](../../ClassicLib-rs/foundation/classic-shared-core) - shared runtime policy used by higher layers in this repo
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - binding layers that should stay aligned with this crate's public behavior
+- [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
+- [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
+- [`classic-database-core`](../../business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
+- [`classic-file-io-core`](../../business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
+- [`classic-shared-core`](../../foundation/classic-shared-core) - shared runtime policy used by higher layers in this repo
+- [`classic-node`](../../node-bindings/classic-node) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - binding layers that should stay aligned with this crate's public behavior
 
 In practice, `classic-scanlog-core` is the downstream analysis layer that turns config/YAML data into scan results and autoscan reports.
 
@@ -438,7 +448,7 @@ In practice, `classic-scanlog-core` is the downstream analysis layer that turns 
 
 ## Usage Example
 
-This example follows the intended contributor flow: load YAML with [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), build an `AnalysisConfig`, and process a log with `OrchestratorCore`.
+This example follows the intended contributor flow: load YAML with [`classic-config-core`](../../business-logic/classic-config-core), build an `AnalysisConfig`, and process a log with `OrchestratorCore`.
 
 ```rust
 use classic_config_core::YamlDataCore;
@@ -496,7 +506,7 @@ If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool`
 - `process_logs_batch()` does not preserve input ordering.
 - `SettingsValidator::scan_addictol_settings_scaffold()` is intentionally a scaffold, not a complete Addictol rules implementation.
 - `derive_scanlog_config_layout()` is effectively a valid/invalid gate today: it returns `Og` for parseable detected versions and `Unknown` otherwise.
-- `classic-crashgen-settings-core` still defines `ConfigLayout::Vr`, but this crate no longer uses `ConfigLayout` as the OG/VR selector; that decision now lives in Version Registry-backed config building.
+- The crashgen rule model in `classic-config-core` still defines `ConfigLayout::Vr`, but this crate no longer uses `ConfigLayout` as the OG/VR selector; that decision now lives in Version Registry-backed config building.
 - Report output is designed for Python parity, so text shape matters to downstream consumers more than a stable structured schema does.
 
 If you extend this crate, update this document when you change:

@@ -1,11 +1,16 @@
 # DYNAMIC DATABASE for Crash Log Auto Scanner & Setup Integrity Checker (CLASSIC) v7.0+
 
+# File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
+# - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
+# - MINOR bumps are additive (new optional keys older clients ignore)
+schema_version: "2.0"
+
 CLASSIC_Info:
   # ========================================================================================
   # CAUTION: DO NOT CHANGE YOUR SETTINGS HERE! OPEN & EDIT CLASSIC Settings.yaml instead!
   # ========================================================================================
-  version: CLASSIC v9.0.0
-  version_date: 26.02.11 #YY/MM/DD
+  version: v9.1.0
+  version_date: 26.04.19 #YY.MM.DD
   is_prerelease: false
 
   default_settings: |
@@ -406,21 +411,30 @@ Version_Registry:
       display_name: Fallout 4 Original
       short_name: OG
       description: Pre-Next-Gen Update version
+      docs_name: Fallout4
+      steam_id: 377160
       exe_hash: 55f57947db9e05575122fae1088f0b0247442f11e566b56036caa0ac93329c36
       crashgen_versions:
         - version: "1.28.6"
           name: "Buffout 4"
+          acronym: "BO4"
+          dll_file: "buffout4.dll"
           description: "Legacy version for OG"
           download_url: "https://www.nexusmods.com/fallout4/mods/47359"
+          exact_match: true
           compatible_range:
             min: "1.10.163.0"
             max: "1.10.163.999"
-        - version: "1.37.0"
+        - version: "1.38.1"
           name: "Buffout 4"
+          acronym: "BO4 NG"
+          dll_file: "buffout4.dll"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
-        - version: "1.2.0"
+        - version: "1.3.0"
           name: "Addictol"
+          acronym: "Addictol"
+          dll_file: "addictol.dll"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
@@ -432,8 +446,10 @@ Version_Registry:
         nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
       xse:
         acronym: F4SE
+        full_name: Fallout 4 Script Extender (F4SE)
         compatible_version: "0.6.23"
         loader: f4se_loader.exe
+        file_count: 29
         script_hashes: # SHA-256 from https://f4se.silverlock.org/
           Actor.pex: 9333aa9b33d6009933afc3a1234a89ca93b5522ea186b44bc6c78846ed5a82c4
           ActorBase.pex: cb5d29fead7df77eca8674101abdc57349a8cf345f18c3ddd6ef8d94ad254da7
@@ -445,6 +461,7 @@ Version_Registry:
           DefaultObject.pex: 715dff0394599587c4596488d66aab4d91311361a3ebec24a91d0ce1ddf39d77
           EncounterZone.pex: be0efccf70adc3a6a28f2465044d4df44cf7abe409c8624f6695d9a193eb96b6
           EquipSlot.pex: 0e00da824263e60041086cc721896aeb304c7ec6d38fba1f548df96fda0c9ff3
+          F4SE.pex: 7d3b1be07259c9078c7f3f60cdf12041401024485750a303b0faec686a25047a
           FavoritesManager.pex: aed53963a5e725cea561f67525c1d50297c7a8410e6a5738b00356908d5daca7
           Form.pex: 3ac9cd7ecb22d377800ca316413eb1d8f4def3ff3721a14b4c6fa61500f9f568
           Game.pex: 19c858908f1a2054755b602121e5944dbbfb1ee0be38a24a532e6ab2f9390f4d
@@ -477,17 +494,23 @@ Version_Registry:
       display_name: Fallout 4 Next-Gen
       short_name: NG
       description: Next-Gen Update version
+      docs_name: Fallout4
+      steam_id: 377160
       exe_hash: bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2
       crashgen_versions:
-        - version: "1.37.0"
+        - version: "1.38.1"
           name: "Buffout 4"
+          acronym: "BO4 NG"
+          dll_file: "buffout4.dll"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
           compatible_range:
             min: "1.10.984.0"
             max: "1.10.999.999"
-        - version: "1.2.0"
+        - version: "1.3.0"
           name: "Addictol"
+          acronym: "Addictol"
+          dll_file: "addictol.dll"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
@@ -499,8 +522,10 @@ Version_Registry:
         nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
       xse:
         acronym: F4SE
+        full_name: Fallout 4 Script Extender (F4SE)
         compatible_version: "0.7.2"
         loader: f4se_loader.exe
+        file_count: 29
         script_hashes: # SHA-256 from https://f4se.silverlock.org/
           Actor.pex: 12175169977977bf382631272ae6dfda03f002c268434144eedf8653000b2b90
           ActorBase.pex: 6c7f6b82306ef541673ebb31142c5f69d32f574d81f932d957e3e7f3b649863f
@@ -512,6 +537,7 @@ Version_Registry:
           DefaultObject.pex: cd249af625d426878215682f76d870d0fe1ec4a5191a9f973187d11d700dc9b7
           EncounterZone.pex: bcb823d3cc4c530fcc89650a116eedfea94e69383614fe61f2daf919d5fb885b
           EquipSlot.pex: 6188c879cc982d1e9bb2d92ebc02c32545246fd0cfd0cd892a14f9d1cdb3dee2
+          F4SE.pex: 036da39002284853551bfc38dcb36c4f20ecafaf7c0e6200a18f3bc2d68841f2
           FavoritesManager.pex: 435469503cf478cb05293bc8e3fbf1945516620b52846123a55c7c89ed7a61f0
           Form.pex: 7afbf5bdf3e454dbf968c784807c6bef79fa88893083f1160bc4bb4e980228b3
           Game.pex: c0bba25948ddb5574d84d995ee71886f6aacab10f25d979145e684d9625d6cda
@@ -540,21 +566,27 @@ Version_Registry:
     - id: FO4_AE
       game: Fallout4
       is_vr: false
-      version: "1.11.191.0"
+      version: "1.11.221.0"
       display_name: Fallout 4 Anniversary Edition
       short_name: AE
       description: Anniversary Edition version (active development branch)
-      exe_hash: # Placeholder - hash not yet available for AE version
+      docs_name: Fallout4
+      steam_id: 377160
+      exe_hash: 81694b37816c8045855905a52c5fb13583c5803121fabb5024760892014e9bc6
       crashgen_versions:
         - version: "1.7.1"
           name: "Buffout 4"
+          acronym: "BO4"
+          dll_file: "buffout4.dll"
           description: "AE-compatible Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/99911"
           compatible_range:
             min: "1.11.137.0"
             max: "1.11.999.999"
-        - version: "1.2.0"
+        - version: "1.3.0"
           name: "Addictol"
+          acronym: "Addictol"
+          dll_file: "addictol.dll"
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
@@ -566,8 +598,10 @@ Version_Registry:
         nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
       xse:
         acronym: F4SE
-        compatible_version: "0.7.7"
+        full_name: Fallout 4 Script Extender (F4SE)
+        compatible_version: "0.7.8"
         loader: f4se_loader.exe
+        file_count: 29
       compatible_range:
         min: "1.11.137.0"
         max: "1.11.999.999"
@@ -582,10 +616,14 @@ Version_Registry:
       display_name: Fallout 4 VR
       short_name: VR
       description: Virtual Reality version
+      docs_name: Fallout4VR
+      steam_id: 611660
       exe_hash: # Placeholder - hash not yet available for VR version
       crashgen_versions:
-        - version: "1.37.0"
+        - version: "1.38.1"
           name: "Buffout 4"
+          acronym: "BO4 NG"
+          dll_file: "buffout4.dll"
           description: "NG-compatible version for VR"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
       address_library:
@@ -594,8 +632,40 @@ Version_Registry:
         nexus_url: https://www.nexusmods.com/fallout4/mods/64879?tab=files
       xse:
         acronym: F4SEVR
+        full_name: Fallout 4 Script Extender VR (F4SEVR)
         compatible_version: "0.6.20"
         loader: f4sevr_loader.exe
+        file_count: 29
+        script_hashes: # SHA-256 from https://f4se.silverlock.org/
+          Actor.pex: dfd7177ad93b78e3adf91a4a18ad26a9d8e4447e3dc173269798977054b82f17
+          ActorBase.pex: 659acecc1146734cf691d6d572f4c30edbbbc3ea3efb2502fd14bb91425828c8
+          Armor.pex: 3995537c4b5925b82079291d383da4bda6a284787794e65ee33a65752741f027
+          ArmorAddon.pex: 12bca4e4eddfb487c4f945fd5d6fe762475eb4d8a26ffd90fb7d0de4ddc165c7
+          Cell.pex: 34da9be5c267f599c466b9263f459b0704d7e87ccfee41fad85e93f25e76c636
+          Component.pex: 0243f0017f7190c38f17c848755a3675fb25a861dc09ef28d1dd5490a57876ff
+          ConstructibleObject.pex: 2a4de0c3190acec6ae13ee0cd936e6eefdcd5a8fb5cef8ecb845b01d67e6924e
+          DefaultObject.pex: e7d2e193c2a9bd7e2600993da256fae6186c8fe579d0dc7592f9e27638649177
+          EncounterZone.pex: facb76d19c4efdcd8f5b9e0329f214db130217e3e59154cf2568c30ff65916a1
+          EquipSlot.pex: 33858e7a68826a3afdccbe55e0cba34dbdbc21c3889eda6e6bcbb8f393f5dd40
+          F4SE.pex: 8b7de39f18695b2af5bdae2e3550291af1c72a7d0bbeefd65fcfe83b8d9d94bf
+          FavoritesManager.pex: eb616c6fd7b6e9a1874fcf8840c7dac8070d1b5cb587eaf4a5a162b7f3532c0a
+          Form.pex: bb436785aa3a8b9b6fd4c95f85982651e92dcc24cfb0a623e2dd616815bce5d8
+          Game.pex: e9baa2e483fbbda20ab476d0df53c6c62c1410c13f288f8dc48b2853c2df73a7
+          HeadPart.pex: 6a8a34cc933b4a3a2274d2c59e3d078df42fcf2531e0518c54f16fb764d5f0fa
+          Input.pex: ff7a9f5819b822867f9a3a2dea4a4ebfe31b3ed1fa013d82f6b9048fc8ae5e03
+          InstanceData.pex: 933f26d7185be5df62f44c9f47c95ad743a1605454c7aa9b01e16b696729b585
+          Location.pex: 130dd8512339a26cf57780dcfc093de19e4abaed7f0d7e07a8b5707af877c05d
+          Math.pex: 1375ffebd59f5070a07cccb6381624d4b5429ccf6a23fe0b9c464a135cd57b05
+          MatSwap.pex: fa7df6ce66abde793efb8449c0e6517beafb5c88c0813ca8b81f4ceb912857bc
+          MiscObject.pex: cec1b89d95e7ab8526dd90a1ae6f968c08c0b3b77851cc8e46e658b3049d14c6
+          ObjectMod.pex: 1385636404a733d6332cfaadd509eda8b317a319c8e3968eabae7e958c0e1522
+          ObjectReference.pex: 5f18adbfd777c6c265a46a5081c882737a350e30f336c225d509b8101f5fbecc
+          Perk.pex: 5f306d34f10168c9307d8ec98b83b3a0a49faf6c00949d5c83c8ce88791ab5d8
+          ScriptObject.pex: 6daa54faeedfefcb0da7a76ad4ab7fa48e427d5704b7367eea88c3bebc8fba4f
+          UI.pex: 523ba72eb4d17cd148ac39aaea3e5e5a64ef8484e287583987b4522b867f8414
+          Utility.pex: 9bff49b59e18636ea84033f362b45f1962c2b3740eb36ad9e9dcae94556f3490
+          WaterType.pex: 8711f4a818c1fed8b549f9cfb0fc49186bf6875cd2c8b0146c4e3154da91028f
+          Weapon.pex: e9a18d4f7e3aa6b67fb79dee501b221e62e4fbe10baad0b47fb087735f7fb7a9
       compatible_range:
         min: "1.2.0.0"
         max: "1.2.999.999"

@@ -1,9 +1,10 @@
 #pragma once
 
+#include <QFileSystemWatcher>
 #include <QObject>
+#include <QSet>
 #include <QString>
 #include <QStringList>
-#include <QFileSystemWatcher>
 
 class SignalHub;
 class QTabWidget;
@@ -15,15 +16,11 @@ class ResultsController : public QObject {
     Q_OBJECT
 
 public:
-    explicit ResultsController(SignalHub* signalHub,
-                               QTabWidget* tabWidget,
-                               ReportListWidget* reportList,
-                               MarkdownViewer* markdownViewer,
-                               ReportMetadataWidget* metadata,
+    explicit ResultsController(SignalHub* signalHub, QTabWidget* tabWidget, ReportListWidget* reportList,
+                               MarkdownViewer* markdownViewer, ReportMetadataWidget* metadata,
                                QObject* parent = nullptr);
 
-    void setReportDirectories(const QStringList& dirPaths,
-                              const QString& primaryDir = QString());
+    void setReportDirectories(const QStringList& dirPaths, const QString& primaryDir = QString());
     void setAutoSwitchToResults(bool enabled);
     void refreshReports();
 
@@ -34,12 +31,18 @@ private slots:
     void onCopyAll();
     void onScanStarted();
     void onScanCompleted();
+    void onScanError(const QString& message);
     void onDirectoryChanged();
 
 private:
     QStringList discoverReports() const;
+    QStringList discoverReportsInDirectory(const QString& dir) const;
+    void seedBaselinesForCurrentDirectories();
+    void resumeFileWatching();
     virtual bool openFolderInFileBrowser(const QString& folderPath);
     virtual bool revealFileInFileBrowser(const QString& filePath);
+    virtual bool startDetachedProcess(const QString& program, const QStringList& arguments = {},
+                                      const QString& nativeArguments = QString());
 
     SignalHub* m_signalHub = nullptr;
     QTabWidget* m_tabWidget = nullptr;
@@ -51,5 +54,8 @@ private:
     QStringList m_reportDirs;
     QString m_primaryReportDir;
     bool m_autoSwitchToResults = true;
+    QSet<QString> m_baselineReports;
+    QSet<QString> m_baselinedReportDirs;
+    bool m_fileWatchingPaused = false;
     static constexpr int kResultsTabIndex = 3;
 };

@@ -65,8 +65,7 @@ TEST_CASE("ProgressDisplay thread safety", "[progress]") {
         workers.emplace_back([&progress, w, tasks_per_worker] {
             auto tid = std::this_thread::get_id();
             for (int i = 0; i < tasks_per_worker; ++i) {
-                std::string name = "crash-w" + std::to_string(w)
-                                 + "-" + std::to_string(i) + ".log";
+                std::string name = "crash-w" + std::to_string(w) + "-" + std::to_string(i) + ".log";
                 progress.report_started(tid, name);
                 // Simulate brief work
                 std::this_thread::yield();

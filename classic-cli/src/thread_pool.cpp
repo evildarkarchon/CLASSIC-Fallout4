@@ -31,9 +31,7 @@ void ThreadPool::submit(std::function<void()> task) {
 
 void ThreadPool::wait_all() {
     std::unique_lock lock(mutex_);
-    cv_finished_.wait(lock, [this] {
-        return active_tasks_ == 0 && tasks_.empty();
-    });
+    cv_finished_.wait(lock, [this] { return active_tasks_ == 0 && tasks_.empty(); });
 }
 
 void ThreadPool::worker_loop() {

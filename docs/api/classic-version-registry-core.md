@@ -1,6 +1,6 @@
 # `classic-version-registry-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-version-registry-core/`](../../ClassicLib-rs/business-logic/classic-version-registry-core).
+Contributor-facing API documentation for [`business-logic/classic-version-registry-core/`](../../business-logic/classic-version-registry-core).
 
 Crate metadata:
 
@@ -32,7 +32,7 @@ Do not use this crate for:
 - owning or creating a Tokio runtime
 - exposing binding-specific wrapper types
 
-Those concerns live in related crates such as [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core), [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core), [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node), and [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+Those concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 ---
 
@@ -47,6 +47,8 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 
 ## Version and matching types
 
+- `NULL_VERSION` - semver `0.0.0` sentinel used by consumers that need a null/invalid version marker
+- `Fallout4Version` - contributor-facing Fallout 4 version-family enum backed by Version Registry lookups
 - `GameVersion` - 4-component game version type used throughout the crate
 - `VersionMatcher` - explicit matcher wrapper over a `VersionRegistry`
 - `MatchResult` - result payload for a version match attempt
@@ -68,6 +70,56 @@ This crate does not expose its modules directly. `lib.rs` re-exports the public 
 ---
 
 ## Public API Surface
+
+## `NULL_VERSION`
+
+`NULL_VERSION` is a plain root-level `semver::Version` constant with value `0.0.0`.
+
+Contributor note:
+
+- it is a sentinel only; it does not change registry behavior on its own
+- downstream crates such as [`classic-version-core`](classic-version-core.md) re-export it directly from this crate now that the dedicated constants crate is gone
+
+## `Fallout4Version`
+
+`Fallout4Version` is the crate's contributor-facing enum for Fallout 4 release families.
+
+Variants:
+
+- `Original`
+- `NextGen`
+- `AnniversaryEdition`
+- `Vr`
+
+Important methods and traits:
+
+- `registry_id() -> &'static str`
+- `get_version_info() -> Option<&'static VersionInfo>`
+- `is_vr() -> bool`
+- `is_standard() -> bool`
+- `exe_name() -> &'static str`
+- `docs_folder_name() -> &'static str`
+- `steam_app_id() -> u32`
+- `game_version() -> GameVersion`
+- `version_semver() -> semver::Version`
+- `xse_acronym() -> &'static str`
+- `xse_acronym_string() -> String`
+- `display_name() -> &'static str`
+- `display_name_string() -> String`
+- `short_name() -> &'static str`
+- `as_str() -> &'static str`
+- `all() -> [Fallout4Version; 4]`
+- `address_library() -> Option<&'static AddressLibraryConfig>`
+- `xse_config() -> Option<&'static XseConfig>`
+- `Serialize`, `Deserialize`, `Default`, `Display`, `FromStr`, `Clone`, `Copy`, `Hash`
+
+Behavior worth knowing:
+
+- `get_version_info()` delegates to `get_version_registry().get_by_id(...)`
+- `game_version()`, `address_library()`, and `xse_config()` all depend on a registry entry being available
+- `exe_name()`, `docs_folder_name()`, and `steam_app_id()` are still convenience mappings derived from VR/non-VR status rather than registry YAML
+- `version_semver()` drops the fourth game-version component because `semver::Version` is three-part
+- `FromStr` accepts the contributor-facing aliases `og`, `ng`, `ae`, `vr`, `auto`, and the documented version-string shortcuts
 
 ## `GameVersion`
 
@@ -106,7 +158,8 @@ Important methods:
 
 - `version_string() -> String`
 - `is_compatible_with(detected) -> bool`
-- `get_crashgen_version_strings() -> Vec<&str>`
+- `get_crashgen_version_strings() -> Vec<&str>` returns non-`exact_match` crashgen versions
+  suitable for floor-based validation
 - `get_crashgen_for_version(crashgen_version) -> Option<&CrashgenConfig>`
 - `get_compatible_crashgens(game_version) -> Vec<&CrashgenConfig>`
 
@@ -114,6 +167,10 @@ Contributor notes:
 
 - `is_compatible_with()` uses `compatible_range` when present, otherwise exact version equality
 - crashgen compatibility is finer-grained than version compatibility because each `CrashgenConfig` may also carry its own `compatible_range`
+- crashgen entries marked `exact_match` remain available through `VersionInfo.crashgen_versions`,
+  `VersionInfo::get_crashgen_for_version()`, and `VersionRegistry::get_crashgen_versions()`, but
+  are excluded from `get_crashgen_version_strings()` so legacy exception builds do not lower
+  validation floors
 
 ## `VersionRegistry`
 
@@ -142,13 +199,14 @@ Important matching/helpers:
 Crashgen-specific helpers:
 
 - `get_crashgen_versions(id) -> Vec<&CrashgenConfig>`
-- `get_crashgen_version_strings(id) -> Vec<&str>`
+- `get_crashgen_version_strings(id) -> Vec<&str>` returns non-`exact_match` crashgen versions
+  suitable for floor-based validation
 - `get_crashgen_for_version(id, crashgen_version) -> Option<&CrashgenConfig>`
 
 Behavior worth knowing from the source:
 
 - the global registry is initialized lazily through `OnceLock`
-- initialization tries to load YAML first, then falls back to hardcoded defaults
+- initialization tries runtime YAML first, then falls back to the embedded copy of `CLASSIC Main.yaml`
 - `get_all()` and `get_all_for_game()` sort by `priority` descending
 - `get_correct_versions()` and `get_wrong_versions()` filter `HashMap` values directly and do not apply an explicit sort
 - `get_by_short_name()` compares `short_name` exactly; it is not case-insensitive
@@ -206,7 +264,7 @@ The source-visible flow is:
    - `databases/CLASSIC Main.yaml`
    - `CLASSIC Main.yaml`
 3. If loading succeeds, it reads `Version_Registry.versions` and optionally `Version_Registry.unknown_version_handling`.
-4. If loading fails or no valid entries are parsed, the crate falls back to hardcoded Fallout 4 defaults.
+4. If runtime YAML loading fails or no valid entries are parsed, the crate parses the checked-in `CLASSIC Data/databases/CLASSIC Main.yaml` embedded at compile time.
 5. Matching then proceeds in this order:
    - exact version lookup
    - `compatible_range` match
@@ -233,20 +291,21 @@ Contributor-relevant keys for each `Version_Registry.versions[]` entry include:
 
 `crashgen_versions` supports two formats:
 
-- simple strings like `"1.37.0"`
-- structured objects with fields such as `version`, `name`, `acronym`, `dll_file`, `description`, `download_url`, and optional `compatible_range`
+- simple strings like `"1.38.1"`
+- structured objects with fields such as `version`, `name`, `acronym`, `dll_file`, `description`, `download_url`, optional `compatible_range`, and optional `exact_match`
 
 Fallback rules visible in source:
 
 - invalid or missing `compatible_range` values are ignored with `.ok()` rather than failing the whole entry
 - structured crashgen entries without `version` are skipped
-- if `Version_Registry.unknown_version_handling` is missing, built-in defaults are used
-- if YAML loading/parsing fails entirely, the crate loads built-in Fallout 4 defaults for `FO4_OG`, `FO4_NG`, `FO4_AE`, and `FO4_VR`
+- invalid runtime YAML causes the singleton path to use the embedded `CLASSIC Main.yaml` fallback
+- if runtime YAML omits `Version_Registry.unknown_version_handling`, the embedded `CLASSIC Main.yaml` fallback supplies that section
+- if the embedded `CLASSIC Main.yaml` fallback is invalid or omits required registry sections, initialization fails fast because the checked-in source-of-truth file no longer matches the parser
 
-The current built-in defaults include these notable priorities/defaults:
+The embedded YAML fallback inherits these notable priorities/defaults from `CLASSIC Main.yaml`:
 
 - `FO4_AE` has the highest non-VR priority and therefore becomes the default non-VR fallback
-- `Fallout4 -> FO4_AE` and `Fallout4VR -> FO4_VR` are the built-in unknown-version defaults
+- `Fallout4 -> FO4_AE` and `Fallout4VR -> FO4_VR` are the YAML-owned unknown-version defaults
 
 ---
 
@@ -258,15 +317,15 @@ Variants:
 
 - `InvalidVersion(String)`
 - `NotFound(String)`
-- `YamlError(classic_yaml_core::YamlError)`
+- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1)
 - `NotInitialized`
 - `InvalidConfig(String)`
 
 What contributors should know:
 
 - `GameVersion::parse()` returns `InvalidVersion` for malformed version strings
-- public registry access through `get_version_registry()` does not expose initialization failure because it silently falls back to built-in defaults
-- YAML parsing failures matter mainly to internal initialization logic and tests; production callers usually observe fallback behavior instead of an error
+- public registry access through `get_version_registry()` does not expose runtime YAML initialization failure because it falls back to embedded YAML
+- runtime YAML parsing failures matter mainly to internal initialization logic and tests; production callers usually observe embedded fallback behavior instead of an error
 
 Source-observed limitation:
 
@@ -280,7 +339,7 @@ This crate is synchronous.
 
 - It does not expose async APIs.
 - It does not construct a Tokio runtime.
-- Registry initialization uses synchronous YAML loading through [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core).
+- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: the former `classic-yaml-core` crate was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
 - This fits the repo rule that runtime ownership stays in shared higher layers rather than inside business-logic crates.
 
 Contributor rule: if you extend this crate, keep it runtime-agnostic and compatible with the shared-runtime assumptions used elsewhere in CLASSIC.
@@ -289,12 +348,12 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 
 ## Related Crates And Integration Points
 
-- [`classic-yaml-core`](../../ClassicLib-rs/business-logic/classic-yaml-core) - YAML loading and extraction used during registry initialization
-- [`classic-config-core`](../../ClassicLib-rs/business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
-- [`classic-scanlog-core`](../../ClassicLib-rs/business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
-- [`classic-constants-py`](../../ClassicLib-rs/python-bindings/classic-constants-py) and [`classic-version-registry-py`](../../ClassicLib-rs/python-bindings/classic-version-registry-py) - maintained Python-facing integration layers
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-config-core`](../../business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
+- [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes registry lookups to C++ frontends
+- [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py) - maintained Python-facing integration layer for registry lookups and version metadata
 
 In practice, this crate sits upstream of config-building and scanlog-analysis decisions.
 
@@ -328,7 +387,7 @@ if let Some(info) = &matched.version_info {
 # Ok::<(), classic_version_registry_core::VersionRegistryError>(())
 ```
 
-On built-in defaults, `1.10.500.0` resolves to the `FO4_OG` entry as the nearest same-major non-VR match.
+On the embedded YAML fallback, `1.10.500.0` resolves to the `FO4_OG` entry as the nearest same-major non-VR match.
 
 ---
 
@@ -336,7 +395,7 @@ On built-in defaults, `1.10.500.0` resolves to the `FO4_OG` entry as the nearest
 
 - The public API is entirely re-export based; adding or removing re-exports in `src/lib.rs` changes the crate surface.
 - YAML loading functions such as `load_from_yaml()` and YAML parsing helpers in `registry.rs` are internal, not public extension points.
-- The built-in defaults are Fallout 4-specific today even though some APIs are named generically by `game`.
+- The embedded fallback is Fallout 4-specific today because `CLASSIC Main.yaml` currently owns Fallout 4 registry data, even though some APIs are named generically by `game`.
 - `get_correct_versions()` and `get_wrong_versions()` do not guarantee sorted output.
 - `unknown_version_handling.defaults` is used by downstream config code, but the core matcher itself does not currently honor `strategy` or `log_level` as behavioral switches.
 - `VersionRegistryError::NotInitialized` is public but does not appear in the normal singleton path because `get_instance()` always initializes.
@@ -347,5 +406,5 @@ If you extend this crate, update this document when you change:
 - re-exports in `src/lib.rs`
 - version matching order or priority rules
 - YAML schema expectations for `Version_Registry`
-- built-in defaults or unknown-version defaults
+- embedded fallback behavior or unknown-version defaults
 - the relationship between Version Registry, config building, and scanlog OG/VR selection

@@ -2,8 +2,8 @@
 
 **Audited:** 2026-02-04
 **Threshold:** 1ms guideline (documented exceptions)
-**PyO3 Version:** 0.27.2
-**Helper Used:** `classic_shared_py::without_gil()`
+**PyO3 Version:** 0.28.x
+**Helpers Used:** `classic_shared::without_gil()` and `classic_shared::without_gil_block_on()`
 
 ## Summary
 
@@ -27,7 +27,7 @@
 
 | Operation | Timing | GIL Status | Notes |
 |-----------|--------|------------|-------|
-| `without_gil()` | N/A | HELPER | GIL release helper definition |
+| `without_gil()` / `without_gil_block_on()` | N/A | HELPER | GIL release helper definitions |
 | `PyStringProcessor.*` | <0.1ms | NOT NEEDED | Fast string operations |
 | `PyPathHandler.*` | <0.1ms | NOT NEEDED | Path manipulation |
 | `get_runtime_stats()` | <0.1ms | NOT NEEDED | Simple metric access |
@@ -270,13 +270,23 @@ if data.len() > 1000 {
 }
 ```
 
+### Pattern: Sync Python API Backed by Async Rust
+
+Synchronous Python methods that must wait for async Rust should detach from the GIL and use the shared runtime through the helper:
+
+```rust
+let result = without_gil_block_on(py, || async {
+    inner.async_operation().await
+})?;
+```
+
 ### Pattern: Async Operations
 
-Operations using `future_into_py` automatically handle GIL correctly:
+Operations using `future_into_py` return a true Python coroutine:
 
 ```rust
 future_into_py(py, async move {
-    // GIL is released when Python awaits the coroutine
+    // Python receives an awaitable immediately.
     inner.async_operation().await.map_err(to_pyerr)
 })
 ```
@@ -304,8 +314,6 @@ GIL release is verified through:
 2. **Integration tests** proving concurrent Python threads make progress
 3. **Timing comparisons** (concurrent vs sequential execution)
 
-See:
-- `ClassicLib-rs/python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs`
-- `ClassicLib-rs/python-bindings/classic-file-io-py/benches/gil_benchmarks.rs`
-- `ClassicLib-rs/python-bindings/classic-yaml-py/benches/gil_benchmarks.rs`
-- `tests/rust_integration/gil_release/test_concurrent_operations.py`
+See also:
+- [`runtime_gil_patterns.md`](runtime_gil_patterns.md) for current helper usage and the source guard.
+- Live Python binding smoke tests under `python-bindings/tests/`.

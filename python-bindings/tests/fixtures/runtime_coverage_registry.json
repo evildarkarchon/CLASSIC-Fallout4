@@ -1,0 +1,542 @@
+{
+  "schemaVersion": "1.0",
+  "binding": "python",
+  "entries": [
+    {
+      "coverageId": "python-tier1-config",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "config",
+        "tier": "tier1"
+      },
+      "contractCount": 43,
+      "contractIdsHash": "90a8f039181858fd8aeb5af9e0ab2d9f1b1a2256fcfe31800a2bf6f5ed04eee0",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "config-tier1-smoke",
+      "fixtureRefs": [
+        "PARITY_MAIN_YAML",
+        "PARITY_GAME_YAML",
+        "PARITY_IGNORE_YAML"
+      ]
+    },
+    {
+      "coverageId": "python-tier1-config-plan06-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_config.ClassicConfig.__init__",
+        "classic_config.ClassicConfig.__repr__",
+        "classic_config.PathConfig.__init__",
+        "classic_config.PathConfig.__repr__",
+        "classic_config.YamlData.__init__",
+        "classic_config.YamlData.__repr__",
+        "classic_config.YamlSource.__eq__",
+        "classic_config.YamlSource.__hash__",
+        "classic_config.YamlSource.__repr__",
+        "classic_config.YamlSource.__str__",
+        "classic_config.create_yamldata",
+        "classic_config.get_application_dir",
+        "classic_config.set_application_dir"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_promoted_config_smoke.py",
+      "testCaseId": "config-plan06-promoted-smoke",
+      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+    },
+    {
+      "coverageId": "python-tier1-scanlog",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scanlog",
+        "tier": "tier1"
+      },
+      "contractCount": 251,
+      "contractIdsHash": "8012b970e781c186ee9504799d989beed1095afe60032f2143ca601cbba8b62f",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "scanlog-tier1-smoke",
+      "fixtureRefs": [
+        "PARITY_MAIN_YAML",
+        "PARITY_GAME_YAML",
+        "PARITY_IGNORE_YAML"
+      ],
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added 57 Wave 2 rows (mod_detector/suspect_scanner/settings_validator/fcx_handler/gpu_detector) per R9 with GLOBAL_FCX_HANDLER excluded; Plan 04 added 50 Wave 3a rows (orchestrator/papyrus/version/crashgen_registry/segment_key/error); Plan 05 added 46 Wave 3b report rows (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor + report module marker). Supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py, test_promoted_scanlog_wave2_smoke.py, test_promoted_scanlog_wave3a_smoke.py, and test_promoted_scanlog_report_smoke.py."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave1-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.LogParser.parse_all_sections",
+        "classic_scanlog.LogParser.parse_complete",
+        "classic_scanlog.LogParser.get_stats",
+        "classic_scanlog.LogParser.add_pattern",
+        "classic_scanlog.LogParser.clear_caches",
+        "classic_scanlog.ScanOutput",
+        "classic_scanlog.FormIDAnalyzer",
+        "classic_scanlog.FormIDAnalyzerCore",
+        "classic_scanlog.RecordScanner",
+        "classic_scanlog.PluginAnalyzer",
+        "classic_scanlog.PatternMatcher",
+        "classic_scanlog.extract_formids_batch",
+        "classic_scanlog.is_valid_formid",
+        "classic_scanlog.validate_formids_batch",
+        "classic_scanlog.scan_records_batch",
+        "classic_scanlog.contains_record",
+        "classic_scanlog.detect_plugins_batch",
+        "classic_scanlog.contains_plugin"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_wave1_smoke.py",
+      "testCaseId": "scanlog-wave1-promoted-smoke",
+      "notes": "Per-class smoke tests for the 7 promoted #[pyclass] wrappers + grouped free functions added in Phase 3 Plan 02. Constructor signatures from 03-02-CONSTRUCTOR-INVENTORY.md."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave2-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.detect_mods_single",
+        "classic_scanlog.detect_mods_double",
+        "classic_scanlog.detect_mods_important",
+        "classic_scanlog.detect_mods_batch",
+        "classic_scanlog.SuspectScanner",
+        "classic_scanlog.SuspectScanner.suspect_scan_mainerror",
+        "classic_scanlog.SuspectScanner.suspect_scan_stack",
+        "classic_scanlog.SuspectScanner.scan_suspects_batch",
+        "classic_scanlog.SuspectScanner.check_dll_crash",
+        "classic_scanlog.SettingsValidator",
+        "classic_scanlog.SettingsValidator.scan_all_settings",
+        "classic_scanlog.SettingsValidator.scan_buffout_achievements_setting",
+        "classic_scanlog.SettingsValidator.scan_buffout_memorymanagement_settings",
+        "classic_scanlog.SettingsValidator.scan_archivelimit_setting",
+        "classic_scanlog.SettingsValidator.scan_buffout_looksmenu_setting",
+        "classic_scanlog.SettingsValidator.check_disabled_settings",
+        "classic_scanlog.FcxModeHandler",
+        "classic_scanlog.FcxModeHandler.get_fcx_messages",
+        "classic_scanlog.FcxModeHandler.get_fcx_status_message",
+        "classic_scanlog.FcxModeHandler.has_results",
+        "classic_scanlog.FcxModeHandler.set_main_files_result",
+        "classic_scanlog.FcxModeHandler.set_game_files_result",
+        "classic_scanlog.FcxModeHandler.reset",
+        "classic_scanlog.FcxModeHandler.add_issue",
+        "classic_scanlog.FcxModeHandler.set_detected_issues",
+        "classic_scanlog.FcxModeHandler.get_detected_issues",
+        "classic_scanlog.FcxModeHandler.reset_fcx_checks",
+        "classic_scanlog.ConfigIssue",
+        "classic_scanlog.ConfigIssue.format_report",
+        "classic_scanlog.FcxResetError",
+        "classic_scanlog.GpuDetector",
+        "classic_scanlog.GpuDetector.extract_gpu_info",
+        "classic_scanlog.GpuDetector.extract_gpu_info_batch",
+        "classic_scanlog.GpuInfo",
+        "classic_scanlog.GpuInfo.to_dict",
+        "classic_scanlog.GpuVendor"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
+      "testCaseId": "scanlog-wave2-promoted-smoke",
+      "notes": "Per-class smoke tests for the 7 Wave 2 #[pyclass] wrappers + grouped mod_detector free functions + typed FcxResetError exception class added in Phase 3 Plan 03. Constructor signatures from 03-03-CONSTRUCTOR-INVENTORY.md. GLOBAL_FCX_HANDLER excluded per R9. FCX global state reset between tests via the autouse conftest.py fixture."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave3a-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.AnalysisConfig",
+        "classic_scanlog.AnalysisConfig.__init__",
+        "classic_scanlog.AnalysisResult",
+        "classic_scanlog.CancellationToken",
+        "classic_scanlog.CancellationToken.__init__",
+        "classic_scanlog.CancellationToken.cancel",
+        "classic_scanlog.CancellationToken.is_cancelled",
+        "classic_scanlog.CancellationToken.reset",
+        "classic_scanlog.Orchestrator",
+        "classic_scanlog.Orchestrator.__init__",
+        "classic_scanlog.Orchestrator.check_loadorder_exists",
+        "classic_scanlog.Orchestrator.has_database_pool",
+        "classic_scanlog.Orchestrator.is_feature_complete",
+        "classic_scanlog.PapyrusStats",
+        "classic_scanlog.PapyrusStats.__init__",
+        "classic_scanlog.PapyrusStats.dumps_to_stacks_ratio",
+        "classic_scanlog.PapyrusAnalyzer",
+        "classic_scanlog.PapyrusAnalyzer.__init__",
+        "classic_scanlog.PapyrusAnalyzer.log_exists",
+        "classic_scanlog.PapyrusAnalyzer.log_path",
+        "classic_scanlog.PapyrusAnalyzer.stats",
+        "classic_scanlog.PapyrusAnalyzer.reset",
+        "classic_scanlog.papyrus_logging",
+        "classic_scanlog.CrashgenVersion",
+        "classic_scanlog.CrashgenVersion.__init__",
+        "classic_scanlog.CrashgenVersion.to_tuple",
+        "classic_scanlog.CrashgenVersion.__eq__",
+        "classic_scanlog.CrashgenVersion.__hash__",
+        "classic_scanlog.CrashgenVersionStatus",
+        "classic_scanlog.parse_crashgen_version",
+        "classic_scanlog.check_crashgen_version_status"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
+      "testCaseId": "scanlog-wave3a-promoted-smoke",
+      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04. Covers orchestrator/papyrus/version sub-modules (the only sub-modules with PyO3 wrappers); crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. Report sub-module is deferred to Plan 05."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave3b-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.StringPool",
+        "classic_scanlog.StringPool.__init__",
+        "classic_scanlog.StringPool.intern",
+        "classic_scanlog.StringPool.intern_batch",
+        "classic_scanlog.StringPool.get_stats",
+        "classic_scanlog.StringPool.clear",
+        "classic_scanlog.ReportFragment",
+        "classic_scanlog.ReportFragment.__init__",
+        "classic_scanlog.ReportFragment.empty",
+        "classic_scanlog.ReportFragment.from_lines",
+        "classic_scanlog.ReportFragment.with_header",
+        "classic_scanlog.ReportFragment.combine",
+        "classic_scanlog.ReportFragment.to_list",
+        "classic_scanlog.ReportFragment.len",
+        "classic_scanlog.ReportFragment.is_empty",
+        "classic_scanlog.ReportComposer",
+        "classic_scanlog.ReportComposer.__init__",
+        "classic_scanlog.ReportComposer.add",
+        "classic_scanlog.ReportComposer.add_many",
+        "classic_scanlog.ReportComposer.compose",
+        "classic_scanlog.ReportComposer.compose_optimized",
+        "classic_scanlog.ReportComposer.build_string",
+        "classic_scanlog.ReportComposer.fragment_count",
+        "classic_scanlog.ReportComposer.pool_stats",
+        "classic_scanlog.ReportGenerator",
+        "classic_scanlog.ReportGenerator.__init__",
+        "classic_scanlog.ReportGenerator.with_config",
+        "classic_scanlog.ReportGenerator.generate_header",
+        "classic_scanlog.ReportGenerator.generate_error_section",
+        "classic_scanlog.ReportGenerator.generate_suspect_section_header",
+        "classic_scanlog.ReportGenerator.generate_suspect_found_footer",
+        "classic_scanlog.ReportGenerator.generate_settings_section_header",
+        "classic_scanlog.ReportGenerator.generate_mod_check_header",
+        "classic_scanlog.ReportGenerator.generate_plugin_suspect_header",
+        "classic_scanlog.ReportGenerator.generate_formid_section_header",
+        "classic_scanlog.ReportGenerator.generate_record_section_header",
+        "classic_scanlog.ReportGenerator.generate_footer",
+        "classic_scanlog.ReportGenerator.generate_suspect_section",
+        "classic_scanlog.ParallelReportProcessor",
+        "classic_scanlog.ParallelReportProcessor.__init__",
+        "classic_scanlog.ParallelReportProcessor.combine_fragments"
+      ],
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_promoted_scanlog_report_smoke.py",
+      "testCaseId": "scanlog-wave3b-promoted-smoke",
+      "notes": "Per-class smoke tests for Wave 3b report sub-module added in Phase 3 Plan 05. Covers all 5 PyO3 report wrappers (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor). ParallelReportProcessor is a pure -py convenience class paired with ReportComposer -core proxy per Wave 3a precedent. Constructor signatures from 03-05-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface asserts StringPool/ReportFragment/ReportComposer/ReportGenerator/report module marker exist in -core surface."
+    },
+    {
+      "coverageId": "python-tier1-version-registry",
+      "classification": "runtime_verified",
+      "ownerModule": "version_registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version_registry",
+        "tier": "tier1"
+      },
+      "contractCount": 89,
+      "contractIdsHash": "0a61b1aa58ac08acb5197ddad31e4159f4d4d0dae2709d616a8c14479bd5b208",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "version-registry-tier1-smoke",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "python-tier2-config-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "classic_config.YamlData.classic_version",
+        "classic_config.YamlData.warn_outdated"
+      ],
+      "verificationMode": "field_inspection",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "config-tier2-smoke"
+    },
+    {
+      "coverageId": "python-tier1-shared",
+      "classification": "runtime_verified",
+      "ownerModule": "shared",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "shared",
+        "tier": "tier1"
+      },
+      "contractCount": 69,
+      "contractIdsHash": "8b1478fba68df7b0dad1df1e7ede1fbc02c133063490b8e4fae661177a736b65",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_classic_shared_smoke.py",
+      "testCaseId": "classic-shared-smoke-suite",
+      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 \u2014 tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
+    },
+    {
+      "coverageId": "python-tier1-file_io",
+      "classification": "runtime_verified",
+      "ownerModule": "file_io",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "file_io",
+        "tier": "tier1"
+      },
+      "contractCount": 95,
+      "contractIdsHash": "4bb08d07639ba26f99842fe935cbf20088bb72ad05ba2c954b6dc1296ead465d",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_promoted_file_io_aux_smoke.py",
+      "testCaseId": "classic-file-io-promoted-smoke",
+      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] \u2014 all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
+    },
+    {
+      "coverageId": "python-tier1-version-registry-plan07-promoted",
+      "classification": "runtime_verified",
+      "ownerModule": "version_registry",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_version_registry.VersionRegistry.__init__",
+        "classic_version_registry.GameVersion.__init__",
+        "classic_version_registry.GameVersion.__eq__",
+        "classic_version_registry.GameVersion.__hash__",
+        "classic_version_registry.GameVersion.__lt__",
+        "classic_version_registry.GameVersion.__le__",
+        "classic_version_registry.GameVersion.__gt__",
+        "classic_version_registry.GameVersion.__ge__",
+        "classic_version_registry.GameVersion.same_major",
+        "classic_version_registry.GameVersion.semantic_distance",
+        "classic_version_registry.VersionInfo.__eq__",
+        "classic_version_registry.VersionInfo.__hash__",
+        "classic_version_registry.VersionInfo.get_compatible_crashgens",
+        "classic_version_registry.VersionInfo.get_crashgen_for_version",
+        "classic_version_registry.VersionInfo.get_crashgen_version_strings",
+        "classic_version_registry.VersionInfo.is_compatible_with",
+        "classic_version_registry.AddressLibraryConfig",
+        "classic_version_registry.XseConfig",
+        "classic_version_registry.CrashgenConfig",
+        "classic_version_registry.CrashgenConfig.is_compatible_with",
+        "classic_version_registry.CompatibleRange",
+        "classic_version_registry.CompatibleRange.contains",
+        "classic_version_registry.MatchConfidence.__eq__",
+        "classic_version_registry.MatchConfidence.__hash__",
+        "classic_version_registry.MatchConfidence.is_high_confidence"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_version_registry_smoke.py",
+      "testCaseId": "version-registry-plan07-promoted-smoke",
+      "fixtureRefs": []
+    },
+    {
+      "coverageId": "python-tier1-scangame",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "scangame",
+        "tier": "tier1"
+      },
+      "contractCount": 172,
+      "contractIdsHash": "9a2359a3aba879bf6d113ea41e89f369b399dcaf6211ef1eaebf656513af031c",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scangame-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-path",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "path",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "path",
+        "tier": "tier1"
+      },
+      "contractCount": 72,
+      "contractIdsHash": "b38945a95f98447f1651736dfba82ab06b0d0eee8a22a6ac5a5413fdccd286fa",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "path-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-message",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "message",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "message",
+        "tier": "tier1"
+      },
+      "contractCount": 46,
+      "contractIdsHash": "7697bca357a98b64d6ae5f3fde5471067033738c53b41ab6bc1ed6bed4da980a",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "message-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-database",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "database",
+        "tier": "tier1"
+      },
+      "contractCount": 44,
+      "contractIdsHash": "5cc9a223e7f0758a9295722d9e758829dd81b5f4178f6b43d528767184b314a5",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-resource",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "resource",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "resource",
+        "tier": "tier1"
+      },
+      "contractCount": 36,
+      "contractIdsHash": "35c75f90d701dafcbbc2bc7a144cd8d54a617f5f45cb9ecee94019df0ab4d39e",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "resource-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-xse",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "xse",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "xse",
+        "tier": "tier1"
+      },
+      "contractCount": 36,
+      "contractIdsHash": "140099c34d2148b8fe047e883d54731fdd27f6a97671190cc160cd0dd96b4d30",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "xse-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-settings",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "settings",
+        "tier": "tier1"
+      },
+      "contractCount": 67,
+      "contractIdsHash": "b684d577b3c108223c0c9a6c2e32da27f216bce6ff3ac7e0631e45ff486baada",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "settings-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-registry",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "registry",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "registry",
+        "tier": "tier1"
+      },
+      "contractCount": 20,
+      "contractIdsHash": "ea1cd78a10bd6405d6c2588809898adf17873ad8bc7514a7ca5c55fe3c66068d",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "registry-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-web",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "web",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "web",
+        "tier": "tier1"
+      },
+      "contractCount": 23,
+      "contractIdsHash": "f0813870fa267200890c8532e34ef29eedb8611a4e18e1e7612912fc0698d2a5",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "web-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-version",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "version",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "version",
+        "tier": "tier1"
+      },
+      "contractCount": 15,
+      "contractIdsHash": "81a3f22383497f2ee83857afff467d6c2ab07e7bf339ba30c19642c442922d51",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "version-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-perf",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "perf",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "perf",
+        "tier": "tier1"
+      },
+      "contractCount": 10,
+      "contractIdsHash": "787637e8ae3e680f66699f2f5f69e578a6c5646d61eb3c96cae25736c0ac7181",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "perf-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-update",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "update",
+        "tier": "tier1"
+      },
+      "contractCount": 10,
+      "contractIdsHash": "b22849974bb596d0bead117814580140d5d6b13f7cd0744baf7b87c432dbcfbc",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "update-residuals-smoke"
+    },
+    {
+      "coverageId": "python-tier1-scanlog-wave10-residuals",
+      "classification": "runtime_verified",
+      "verificationMode": "direct_call",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "contractSelector": null,
+      "contractCount": 4,
+      "contractIdsHash": "42c5d63ff1695bd4f7978c406eacacd5c212546ee2ae1f06beee2d3b55b36f96",
+      "contractIds": [
+        "scanlog.parser.LogParser.find_errors",
+        "scanlog.parser.PatternMatcher.find_all",
+        "scanlog.parser.PatternMatcher.has_match",
+        "scanlog.version.CrashgenVersion.to_tuple"
+      ],
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scanlog-method-residuals"
+    }
+  ]
+}

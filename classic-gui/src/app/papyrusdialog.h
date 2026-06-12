@@ -16,11 +16,7 @@ public:
     explicit PapyrusDialog(QWidget* parent = nullptr);
 
     /// Update all stat labels with new values from the monitoring worker.
-    void updateStats(uint32_t dumps,
-                     uint32_t stacks,
-                     uint32_t warnings,
-                     uint32_t errors,
-                     uint32_t linesProcessed,
+    void updateStats(uint32_t dumps, uint32_t stacks, uint32_t warnings, uint32_t errors, uint32_t linesProcessed,
                      double dumpsStacksRatio);
 
     /// Set the status text ("Monitoring...", "Stopped", etc.).

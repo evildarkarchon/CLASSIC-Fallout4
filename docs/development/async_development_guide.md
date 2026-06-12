@@ -176,48 +176,42 @@ parser = get_parser()  # RustLogParser with automatic fallback
 analyzer = get_formid_analyzer(yamldata, show_values, db_exists)
 ```
 
-## Native Async Solution (No PyO3-asyncio)
+## Native Async Solution
 
-CLASSIC uses a native async solution that's more reliable and performant. The **ONE RUNTIME RULE** ensures all crates share a single global Tokio runtime to prevent deadlocks.
+CLASSIC uses one shared Tokio runtime owned by `foundation/classic-shared-core`. The **ONE RUNTIME RULE** means crates and bindings must use `classic_shared_core::get_runtime()` or a surface-specific helper that wraps it; they must not create additional runtimes.
+
+For the current decision table and helper snippets for CXX, PyO3, NAPI-RS, and UI/TUI surfaces, see [`runtime_gil_patterns.md`](runtime_gil_patterns.md).
 
 ### The ONE RUNTIME RULE
 
-**All Rust crates MUST use `classic_shared::get_runtime()` to access the shared Tokio runtime.**
+**All Rust crates MUST use the shared runtime instead of constructing their own `tokio::runtime::Runtime`.**
 
 ```rust
-// In classic-shared/src/runtime.rs - shared across all crates
-pub(crate) static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    let worker_threads = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(4);
-    tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(worker_threads)
-        .enable_all()
-        .build()
-        .expect("Failed to create Tokio runtime")
-});
-
-pub fn get_runtime() -> &'static Runtime {
+// Shared owner: foundation/classic-shared-core/src/lib.rs
+pub fn get_runtime() -> &'static tokio::runtime::Runtime {
     &RUNTIME
 }
 
-// In other crates - use classic_shared::get_runtime()
-#[pyfunction]
-fn process_data(data: String) -> PyResult<String> {
-    classic_shared::get_runtime().block_on(async move {
-        // Full async Rust operations here
+// Sync CXX bridge adapter: use the bridge helper.
+fn bridge_call(arg: &str) -> Result<String, String> {
+    crate::runtime_support::block_on_result(core_async_call(arg))
+}
+
+// Sync PyO3 adapter: release the GIL while blocking on async Rust.
+fn process_data(py: Python<'_>, data: String) -> PyResult<String> {
+    classic_shared::without_gil_block_on(py, || async move {
         async_operation(data).await
     })
+    .map_err(to_pyerr)
 }
 ```
 
 ### Benefits of Native Async Solution
 
-1. **No PyO3-asyncio dependency** - Simpler, more maintainable
-2. **Single runtime** - Prevents deadlocks and nested runtime errors
-3. **Better performance** - Direct access to Tokio runtime
-4. **Easier debugging** - No complex macro expansions
-5. **Full Rust async ecosystem** - All Tokio features available
+1. **Single runtime** - Prevents nested-runtime errors and cross-runtime deadlocks.
+2. **Thin adapters** - Bindings centralize runtime handoff without reimplementing business logic.
+3. **Better debugging** - Runtime ownership is explicit and process-wide.
+4. **Full Rust async ecosystem** - All Tokio features remain available through the shared runtime.
 
 ## Common Async Patterns
 
@@ -284,21 +278,21 @@ pub fn sync_function() -> Result<String> {
 }
 ```
 
-### Pattern 4: PyO3 Function with Async Rust
+### Pattern 4: PyO3 Sync Function with Async Rust
 
 ```rust
 // Rust PyO3 binding
 #[pyfunction]
 pub fn parse_log(py: Python<'_>, path: String) -> PyResult<AnalysisResult> {
-    py.allow_threads(|| {
-        classic_shared::get_runtime()
-            .block_on(async move {
-                parse_log_async(&PathBuf::from(path)).await
-            })
-            .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
+    let path = PathBuf::from(path);
+    classic_shared::without_gil_block_on(py, || async move {
+        parse_log_async(&path).await
     })
+    .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
 }
 ```
+
+Use `future_into_py(py, async move { ... })` instead when the Python API should return a true coroutine.
 
 ## Best Practices
 
@@ -321,12 +315,12 @@ def sync_wrapper():
     return asyncio.run(async_operation())
 ```
 
-### ✅ DO: Use get_runtime() in Rust
+### ✅ DO: Use the shared runtime through the surface helper
 
 ```rust
-// ✅ CORRECT
+// ✅ CORRECT for a synchronous adapter
 pub fn process_data(data: String) -> Result<String> {
-    classic_shared::get_runtime().block_on(async move {
+    crate::runtime_support::block_on_result(async move {
         async_operation(data).await
     })
 }
@@ -344,20 +338,16 @@ pub fn process_data(data: String) -> Result<String> {
 }
 ```
 
-### ✅ DO: Release GIL for parallel work
+### ✅ DO: Release the GIL for blocking or parallel work
 
 ```rust
-// ✅ CORRECT - Release GIL for CPU-intensive work
+// ✅ CORRECT - Release GIL for CPU-intensive or blocking async work
 #[pyfunction]
 pub fn parallel_operation(py: Python<'_>, data: Vec<String>) -> PyResult<Vec<String>> {
-    py.allow_threads(|| {
-        classic_shared::get_runtime()
-            .block_on(async move {
-                // Parallel async operations here
-                process_in_parallel(data).await
-            })
-            .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
+    classic_shared::without_gil_block_on(py, || async move {
+        process_in_parallel(data).await
     })
+    .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
 }
 ```
 
@@ -394,14 +384,11 @@ pub async fn nested_async() -> Result<String> {
 ### Issue: GIL-related performance issues
 
 **Cause**: Holding GIL during CPU-intensive operations
-**Solution**: Use `py.allow_threads()` to release GIL
+**Solution**: Use `classic_shared::without_gil(...)` or `classic_shared::without_gil_block_on(...)` after extracting Python data.
 
 ```rust
-py.allow_threads(|| {
-    // CPU-intensive work here without GIL
-    classic_shared::get_runtime().block_on(async {
-        expensive_operation().await
-    })
+classic_shared::without_gil_block_on(py, || async {
+    expensive_operation().await
 })
 ```
 
@@ -411,4 +398,4 @@ py.allow_threads(|| {
 - ❌ Multiple Tokio runtimes → ✅ `classic_shared::get_runtime()`
 - ❌ Manual event loops → ✅ AsyncBridge or get_runtime()
 - ❌ `block_on()` in async context → ✅ Direct `.await`
-- ❌ Holding GIL during async → ✅ `py.allow_threads()`
+- ❌ Holding GIL during blocking async → ✅ `classic_shared::without_gil_block_on(...)`

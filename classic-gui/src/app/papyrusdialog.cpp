@@ -1,14 +1,14 @@
 #include "papyrusdialog.h"
 
-#include <QVBoxLayout>
-#include <QGridLayout>
 #include <QCloseEvent>
+#include <QGridLayout>
+#include <QVBoxLayout>
 
 PapyrusDialog::PapyrusDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("Papyrus Monitor"));
-    setModal(false);  // Allow interaction with main window while monitoring
+    setModal(false); // Allow interaction with main window while monitoring
     setMinimumSize(380, 320);
     setupUi();
 }
@@ -38,11 +38,11 @@ void PapyrusDialog::setupUi()
         grid->addWidget(valueLabel, row, 1);
     };
 
-    addStatRow(0, QStringLiteral("Dumps:"),              m_lblDumps);
-    addStatRow(1, QStringLiteral("Stacks:"),             m_lblStacks);
-    addStatRow(2, QStringLiteral("Warnings:"),           m_lblWarnings);
-    addStatRow(3, QStringLiteral("Errors:"),             m_lblErrors);
-    addStatRow(4, QStringLiteral("Lines Processed:"),    m_lblLinesProcessed);
+    addStatRow(0, QStringLiteral("Dumps:"), m_lblDumps);
+    addStatRow(1, QStringLiteral("Stacks:"), m_lblStacks);
+    addStatRow(2, QStringLiteral("Warnings:"), m_lblWarnings);
+    addStatRow(3, QStringLiteral("Errors:"), m_lblErrors);
+    addStatRow(4, QStringLiteral("Lines Processed:"), m_lblLinesProcessed);
     addStatRow(5, QStringLiteral("Dumps/Stacks Ratio:"), m_lblDumpsStacksRatio);
 
     mainLayout->addLayout(grid);
@@ -64,12 +64,8 @@ void PapyrusDialog::setupUi()
     });
 }
 
-void PapyrusDialog::updateStats(uint32_t dumps,
-                                 uint32_t stacks,
-                                 uint32_t warnings,
-                                 uint32_t errors,
-                                 uint32_t linesProcessed,
-                                 double dumpsStacksRatio)
+void PapyrusDialog::updateStats(uint32_t dumps, uint32_t stacks, uint32_t warnings, uint32_t errors,
+                                uint32_t linesProcessed, double dumpsStacksRatio)
 {
     m_lblDumps->setText(QString::number(dumps));
     m_lblStacks->setText(QString::number(stacks));

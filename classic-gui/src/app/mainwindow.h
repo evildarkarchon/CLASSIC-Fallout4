@@ -1,17 +1,18 @@
 #pragma once
 
-#include <QMainWindow>
-#include <QTabWidget>
+#include "widgets/adaptiveprogressbar.h"
+#include <QElapsedTimer>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMainWindow>
 #include <QPushButton>
-#include <QLabel>
 #include <QStatusBar>
-#include <QElapsedTimer>
 #include <QStringList>
-#include "widgets/adaptiveprogressbar.h"
+#include <QTabWidget>
 
 class QDragEnterEvent;
+class QDragMoveEvent;
 class QDropEvent;
 
 class SignalHub;
@@ -43,7 +44,9 @@ private:
     void setupArticlesTab();
     void setupResultsTab();
     void loadStylesheet();
+    void initializeControllers();
     void connectSignals();
+    void runStartupWorkflows();
     void loadSettings();
     void saveSettings();
     void initResultsReportDir();
@@ -56,9 +59,17 @@ private:
     bool loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const;
     void checkForUpdates(bool explicitCheck);
     void updateTargetedInputUi();
+    void installTargetedDropForwarding();
+    bool handleTargetedDragEnter(QDragEnterEvent* event);
+    bool handleTargetedDragMove(QDragMoveEvent* event);
+    bool handleTargetedDrop(QDropEvent* event);
+    void acknowledgeTargetedDrop(int addedCount, int duplicateCount, int nonLocalCount, bool unsupportedPayload,
+                                 bool wrongTab);
 
 protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
     void dropEvent(QDropEvent* event) override;
 
 private slots:
@@ -150,13 +161,14 @@ private:
     bool m_geometryInitialized = false;
 
     static constexpr int TAB_COUNT = 4;
-    static constexpr struct { int minWidth; int minHeight; } kTabMinSizes[TAB_COUNT] = {
-        {640, 500},  // Main Options
-        {750, 580},  // File Backup
-        {550, 350},  // Articles
-        {750, 450},  // Results
+    static constexpr struct {
+        int minWidth;
+        int minHeight;
+    } kTabMinSizes[TAB_COUNT] = {
+        {640, 500}, // Main Options
+        {750, 580}, // File Backup
+        {550, 350}, // Articles
+        {750, 450}, // Results
     };
-    static constexpr const char* kTabNames[TAB_COUNT] = {
-        "main_tab", "backups_tab", "articles_tab", "results_tab"
-    };
+    static constexpr const char* kTabNames[TAB_COUNT] = {"main_tab", "backups_tab", "articles_tab", "results_tab"};
 };

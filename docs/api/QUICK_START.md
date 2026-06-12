@@ -4,7 +4,7 @@ This quick start reflects the active CLASSIC architecture: **C++ frontends + Rus
 
 ## 1) Prerequisites (Windows-focused)
 
-- Visual Studio with C++ Desktop workload (MSVC)
+- Visual Studio with C++ Desktop workload (MSVC; optional LLVM clang-cl/lld-link components for clang-cl builds)
 - `VCPKG_ROOT` configured (example: `C:\vcpkg`)
 - CMake 3.25+
 - Ninja
@@ -38,15 +38,17 @@ git submodule update --init --recursive
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 ```
 
 ### Build GUI
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 ```
 
-Use these scripts instead of ad-hoc CMake commands so VS environment detection and preset wiring remain consistent.
+Use these scripts instead of ad-hoc CMake commands so VS environment detection and preset wiring remain consistent. With `-Compiler clang-cl`, the scripts keep the MSVC ABI target while routing Cargo `cc-rs`/`cxx_build` bridge glue through clang-cl too.
 
 ---
 
@@ -57,6 +59,8 @@ Use these scripts instead of ad-hoc CMake commands so VS environment detection a
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 ```
 
 CLI integration tests (requires built CLI binary):
@@ -68,11 +72,11 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ### Rust tests and quality checks
 
 ```powershell
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ---
@@ -80,23 +84,28 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 ## 5) Rust workspace development
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace
+cargo build --workspace --release
 ```
 
-Core domain work belongs under [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic).
+Core domain work belongs under [`business-logic/`](../../business-logic).
+
+If you are translating older instructions that still mention `ClassicLib-rs/...`, use the shared [`workspace migration matrix`](../workspace-migration-matrix.md) instead of guessing the repo-root replacement.
 
 ---
 
 ## 6) Node bindings workflow (only when touching Node surface)
 
-From [`ClassicLib-rs/node-bindings/classic-node/`](../../ClassicLib-rs/node-bindings/classic-node):
+From [`node-bindings/classic-node/`](../../node-bindings/classic-node):
 
 ```powershell
 bun install
 bun run build
 bun run cli -- --version
-bun run parity:gate:local
+bun run parity:gate
+# only if the plain gate reports intentional source-backed drift
+bun run parity:gate:update-baseline
+bun run parity:gate
 bun run test:bun
 bun run test:node
 ```
@@ -105,7 +114,7 @@ bun run test:node
 
 ## 7) CI mapping
 
-- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test
+- [`ci-cpp.yml`](../../.github/workflows/ci-cpp.yml): C++ CLI/GUI build + test for MSVC and clang-cl. GUI CI uses prebuilt Qt with the `ci-system-qt` presets; local/default GUI presets remain vcpkg-first.
 - [`ci-rust.yml`](../../.github/workflows/ci-rust.yml): Rust format/lint/build/test
 - [`ci-typescript.yml`](../../.github/workflows/ci-typescript.yml): Node parity/runtime tests
 - [`benchmarks.yml`](../../.github/workflows/benchmarks.yml): benchmark regression checks
@@ -114,7 +123,7 @@ bun run test:node
 
 ## 8) Scope boundary: maintained vs deprecated Python
 
-- Maintained Python scope: bindings under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+- Maintained Python scope: bindings under [`python-bindings/`](../../python-bindings)
 - Deprecated runtime scope: Python entrypoints/orchestration under [`deprecated/`](../../deprecated)
 
 Do not treat legacy Python runtime paths as the default contributor flow unless the task is explicitly migration/legacy support.

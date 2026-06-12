@@ -132,6 +132,7 @@ add_classic_gui_qt_test(classic-gui-test-reportmetadata
 
 add_classic_gui_qt_test(classic-gui-test-reportlist
     test_reportlistwidget.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/reportpathkey.cpp
     ${CMAKE_SOURCE_DIR}/src/widgets/reportlistwidget.cpp
 )
 
@@ -154,6 +155,7 @@ link_classic_gui_rust_bridge(classic-gui-test-markdownviewer)
 add_classic_gui_qt_test(classic-gui-test-resultscontroller
     test_resultscontroller.cpp
     ${CMAKE_SOURCE_DIR}/src/controllers/resultscontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/reportpathkey.cpp
     ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
     ${CMAKE_SOURCE_DIR}/src/widgets/reportlistwidget.cpp
     ${CMAKE_SOURCE_DIR}/src/widgets/markdownviewer.cpp
@@ -181,3 +183,20 @@ add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)
+
+# yaml-update-delivery bridge round-trip (Section 8.4 GUI counterpart).
+# Exercises `classic::update::yaml_check_update` + `yaml_rollback_update`
+# through the same CXX header the GUI controllers in Section 12 will use.
+add_classic_gui_qt_test(classic-gui-test-yaml-update-bridge
+    test_yaml_update_bridge.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-yaml-update-bridge)
+
+# yaml-update-delivery Section 12 wiring — source-inspection tests that
+# verify SettingsDialog and classic-cli consume the bridge correctly (button
+# wiring, Update Check setting forwarding, confirm-before-apply ordering).
+# Does NOT link the Rust bridge because it reads source files rather than
+# exercising FFI at runtime.
+add_classic_gui_qt_test(classic-gui-test-yaml-update-wiring
+    test_yaml_update_wiring.cpp
+)

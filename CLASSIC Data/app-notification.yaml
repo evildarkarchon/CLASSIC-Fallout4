@@ -1,0 +1,39 @@
+# Source-of-truth artifact for the app-update notification manifest.
+#
+# The `.github/workflows/publish-app-notification.yml` workflow validates this
+# file, converts it to `manifest.json`, and publishes it to GitHub Pages at
+# `app-notification/manifest-latest.json` and as a `manifest.json` asset on
+# the `app-notification-v*` tagged GitHub Release.
+#
+# Analogous in purpose to `CLASSIC Data/databases/client-schema-ranges.yaml`
+# (source material for the yaml-data publish workflow).
+#
+# Maintainers edit this file to announce a new binary release, to declare a
+# minimum supported version, and/or to attach a display payload (title, body,
+# call-to-action URL). Fields map 1:1 onto
+# `classic_update_core::notification::AppNotificationManifest`.
+#
+# Required fields: manifest_version, release_tag, latest_version,
+# published_at. Optional: min_supported_version, display.
+#
+# Contract:
+#   - manifest_version: "MAJOR.MINOR" (regex `^\d+\.\d+$`).
+#   - release_tag: binary-release tag advertised (e.g. "v9.2.0"). This is the
+#     tag a user would install, NOT the `app-notification-v*` tag that
+#     triggers this workflow.
+#   - latest_version: SemVer string (e.g. "9.2.0").
+#   - published_at: RFC 3339 timestamp. Set to null to let the workflow fill
+#     it with the tag's UTC publication time.
+#   - min_supported_version: SemVer string or null. Omit / null to declare no
+#     minimum.
+#   - display.title / .body: plain text; keep short enough to fit in a status
+#     bar or a 80-char terminal.
+#   - display.cta_url: optional HTTPS URL pointing at changelog, download
+#     page, etc.
+
+manifest_version: "1.0"
+release_tag: "v9.1.0"
+latest_version: "9.1.0"
+published_at: null
+min_supported_version: null
+display: null

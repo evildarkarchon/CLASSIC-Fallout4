@@ -6,12 +6,9 @@
 #include <QStyleOptionProgressBar>
 
 namespace {
-QRect progressChunkRect(const QStyleOptionProgressBar& opt,
-                        const QProgressBar* progressBar)
+QRect progressChunkRect(const QStyleOptionProgressBar& opt, const QProgressBar* progressBar)
 {
-    const QRect contentsRect =
-        progressBar->style()->subElementRect(
-            QStyle::SE_ProgressBarContents, &opt, progressBar);
+    const QRect contentsRect = progressBar->style()->subElementRect(QStyle::SE_ProgressBarContents, &opt, progressBar);
     if (contentsRect.isEmpty()) {
         return QRect();
     }
@@ -23,8 +20,7 @@ QRect progressChunkRect(const QStyleOptionProgressBar& opt,
     }
 
     const int boundedValue = qBound(opt.minimum, opt.progress, opt.maximum);
-    const qreal ratio = qreal(boundedValue - opt.minimum) /
-                        qreal(opt.maximum - opt.minimum);
+    const qreal ratio = qreal(boundedValue - opt.minimum) / qreal(opt.maximum - opt.minimum);
     if (ratio <= 0.0) {
         return QRect();
     }
@@ -35,8 +31,7 @@ QRect progressChunkRect(const QStyleOptionProgressBar& opt,
     QRect chunkRect = contentsRect;
     if (progressBar->orientation() == Qt::Horizontal) {
         const int fillWidth = qMax(1, qRound(contentsRect.width() * ratio));
-        const bool reverseFill =
-            opt.invertedAppearance ^ (opt.direction == Qt::RightToLeft);
+        const bool reverseFill = opt.invertedAppearance ^ (opt.direction == Qt::RightToLeft);
         if (reverseFill) {
             chunkRect.setLeft(contentsRect.right() - fillWidth + 1);
         } else {
@@ -53,10 +48,12 @@ QRect progressChunkRect(const QStyleOptionProgressBar& opt,
 
     return chunkRect;
 }
-}  // namespace
+} // namespace
 
 AdaptiveProgressBar::AdaptiveProgressBar(QWidget* parent)
-    : QProgressBar(parent) {}
+    : QProgressBar(parent)
+{
+}
 
 void AdaptiveProgressBar::paintEvent(QPaintEvent* event)
 {
@@ -78,8 +75,7 @@ void AdaptiveProgressBar::paintEvent(QPaintEvent* event)
         return;
     }
 
-    const QRect textRect =
-        style()->subElementRect(QStyle::SE_ProgressBarLabel, &opt, this);
+    const QRect textRect = style()->subElementRect(QStyle::SE_ProgressBarLabel, &opt, this);
     if (textRect.isEmpty()) {
         return;
     }

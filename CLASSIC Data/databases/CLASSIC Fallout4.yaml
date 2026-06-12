@@ -1,5 +1,10 @@
 # FALLOUT 4 DATABASE for Crash Log Auto Scanner & Setup Integrity Checker (CLASSIC) v7.00+
 
+# File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
+# - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
+# - MINOR bumps are additive (new optional keys older clients ignore)
+schema_version: "1.0"
+
 Game_Info:
   Main_Root_Name: Fallout 4
 
@@ -594,7 +599,7 @@ Crashlog_Stack_Check:
     name: BA2 Limit Crash
     severity: 6
     main_error_required_any: []
-    main_error_optional_any: []
+    main_error_optional_any: ["1AF8F6A"]
     stack_contains_any: [LooseFileAsyncStream]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -685,8 +690,8 @@ Crashlog_Stack_Check:
     name: Body Physics Crash
     severity: 4
     main_error_required_any: []
-    main_error_optional_any: [cbp.dll]
-    stack_contains_any: [skeleton.nif, cbp.dll]
+    main_error_optional_any: [cbp.dll, cbp_ae.dll]
+    stack_contains_any: [skeleton.nif, cbp.dll, cbp_ae.dll]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 

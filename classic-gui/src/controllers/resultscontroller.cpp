@@ -1,35 +1,41 @@
 #include "controllers/resultscontroller.h"
 
+#include <algorithm>
+#include <QApplication>
+#include <QClipboard>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
-#include <QDesktopServices>
 #include <QProcess>
-#include <QUrl>
-#include <QApplication>
-#include <QClipboard>
-#include <QTabWidget>
 #include <QSet>
-#include <algorithm>
+#include <QTabWidget>
+#include <QUrl>
 
-#include "core/signalhub.h"
+#include "core/reportpathkey.h"
 #include "core/rust_qt_bridge.h"
-#include "widgets/reportlistwidget.h"
+#include "core/signalhub.h"
 #include "widgets/markdownviewer.h"
+#include "widgets/reportlistwidget.h"
 #include "widgets/reportmetadatawidget.h"
 
-#include "rust/cxx.h"
 #include "classic_cxx_bridge/files.h"
+#include "rust/cxx.h"
+
+namespace {
+
+QString reportDirKey(const QString& path)
+{
+    return QDir::cleanPath(QFileInfo(path).absoluteFilePath()).toLower();
+}
+
+} // namespace
 
 // ── Construction ───────────────────────────────────────────────────
 
-ResultsController::ResultsController(SignalHub* signalHub,
-                                     QTabWidget* tabWidget,
-                                     ReportListWidget* reportList,
-                                     MarkdownViewer* markdownViewer,
-                                     ReportMetadataWidget* metadata,
-                                     QObject* parent)
+ResultsController::ResultsController(SignalHub* signalHub, QTabWidget* tabWidget, ReportListWidget* reportList,
+                                     MarkdownViewer* markdownViewer, ReportMetadataWidget* metadata, QObject* parent)
     : QObject(parent)
     , m_signalHub(signalHub)
     , m_tabWidget(tabWidget)
@@ -38,34 +44,26 @@ ResultsController::ResultsController(SignalHub* signalHub,
     , m_metadata(metadata)
 {
     // Widget signals → controller slots
-    connect(m_reportList, &ReportListWidget::reportSelected,
-            this, &ResultsController::onReportSelected);
-    connect(m_reportList, &ReportListWidget::refreshRequested,
-            this, &ResultsController::refreshReports);
-    connect(m_reportList, &ReportListWidget::deleteRequested,
-            this, &ResultsController::onDeleteReport);
-    connect(m_reportList, &ReportListWidget::openFolderRequested,
-            this, &ResultsController::onOpenFolder);
-    connect(m_markdownViewer, &MarkdownViewer::copyAllRequested,
-            this, &ResultsController::onCopyAll);
+    connect(m_reportList, &ReportListWidget::reportSelected, this, &ResultsController::onReportSelected);
+    connect(m_reportList, &ReportListWidget::refreshRequested, this, &ResultsController::refreshReports);
+    connect(m_reportList, &ReportListWidget::deleteRequested, this, &ResultsController::onDeleteReport);
+    connect(m_reportList, &ReportListWidget::openFolderRequested, this, &ResultsController::onOpenFolder);
+    connect(m_markdownViewer, &MarkdownViewer::copyAllRequested, this, &ResultsController::onCopyAll);
 
     // SignalHub scan lifecycle
     if (m_signalHub) {
-        connect(m_signalHub, &SignalHub::scanStarted,
-                this, &ResultsController::onScanStarted);
-        connect(m_signalHub, &SignalHub::scanCompleted,
-                this, &ResultsController::onScanCompleted);
+        connect(m_signalHub, &SignalHub::scanStarted, this, &ResultsController::onScanStarted);
+        connect(m_signalHub, &SignalHub::scanCompleted, this, &ResultsController::onScanCompleted);
+        connect(m_signalHub, &SignalHub::scanError, this, &ResultsController::onScanError);
     }
 
     // File system watcher
-    connect(&m_watcher, &QFileSystemWatcher::directoryChanged,
-            this, &ResultsController::onDirectoryChanged);
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &ResultsController::onDirectoryChanged);
 }
 
 // ── Public interface ──────────────────────────────────────────────
 
-void ResultsController::setReportDirectories(const QStringList& dirPaths,
-                                             const QString& primaryDir)
+void ResultsController::setReportDirectories(const QStringList& dirPaths, const QString& primaryDir)
 {
     // Remove previous watch paths
     auto dirs = m_watcher.directories();
@@ -101,7 +99,7 @@ void ResultsController::setReportDirectories(const QStringList& dirPaths,
         seen.insert(key);
         m_reportDirs.append(cleaned);
 
-        if (QDir(cleaned).exists()) {
+        if (!m_fileWatchingPaused && QDir(cleaned).exists()) {
             m_watcher.addPath(cleaned);
         }
     }
@@ -123,8 +121,17 @@ void ResultsController::refreshReports()
         return;
     }
 
+    seedBaselinesForCurrentDirectories();
     QStringList reports = discoverReports();
-    m_reportList->setReports(reports);
+
+    QSet<QString> newPaths;
+    for (const auto& path : reports) {
+        if (!m_baselineReports.contains(classic::gui::reportPathKey(path))) {
+            newPaths.insert(path);
+        }
+    }
+
+    m_reportList->setReports(reports, newPaths);
 
     // Clear the viewer if the list is empty
     if (reports.isEmpty()) {
@@ -141,8 +148,7 @@ void ResultsController::onReportSelected(const QString& filePath)
     // may contain mixed encodings (UTF-8, UTF-16, Latin-1, etc.)
     QString content;
     try {
-        auto rustContent = classic::files::read_report_file(
-            classic::toRustString(filePath));
+        auto rustContent = classic::files::read_report_file(classic::toRustString(filePath));
         content = classic::toQString(rustContent);
     } catch (const rust::Error&) {
         m_markdownViewer->clear();
@@ -163,13 +169,9 @@ void ResultsController::onReportSelected(const QString& filePath)
 void ResultsController::onDeleteReport(const QString& filePath)
 {
     QFileInfo info(filePath);
-    auto result = QMessageBox::question(
-        qobject_cast<QWidget*>(parent()),
-        QStringLiteral("Delete Report"),
-        QStringLiteral("Delete \"%1\"?\n\nThis cannot be undone.")
-            .arg(info.fileName()),
-        QMessageBox::Yes | QMessageBox::No,
-        QMessageBox::No);
+    auto result = QMessageBox::question(qobject_cast<QWidget*>(parent()), QStringLiteral("Delete Report"),
+                                        QStringLiteral("Delete \"%1\"?\n\nThis cannot be undone.").arg(info.fileName()),
+                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
     if (result != QMessageBox::Yes) {
         return;
@@ -179,10 +181,8 @@ void ResultsController::onDeleteReport(const QString& filePath)
     if (file.remove()) {
         refreshReports();
     } else {
-        QMessageBox::warning(
-            qobject_cast<QWidget*>(parent()),
-            QStringLiteral("Delete Failed"),
-            QStringLiteral("Could not delete \"%1\".").arg(info.fileName()));
+        QMessageBox::warning(qobject_cast<QWidget*>(parent()), QStringLiteral("Delete Failed"),
+                             QStringLiteral("Could not delete \"%1\".").arg(info.fileName()));
     }
 }
 
@@ -221,6 +221,7 @@ void ResultsController::onCopyAll()
 void ResultsController::onScanStarted()
 {
     // Pause file watching during scans to avoid spurious refreshes
+    m_fileWatchingPaused = true;
     auto dirs = m_watcher.directories();
     if (!dirs.isEmpty()) {
         m_watcher.removePaths(dirs);
@@ -229,12 +230,7 @@ void ResultsController::onScanStarted()
 
 void ResultsController::onScanCompleted()
 {
-    // Resume file watching
-    for (const auto& dir : m_reportDirs) {
-        if (QDir(dir).exists()) {
-            m_watcher.addPath(dir);
-        }
-    }
+    resumeFileWatching();
 
     // Refresh the report list
     refreshReports();
@@ -243,6 +239,13 @@ void ResultsController::onScanCompleted()
     if (m_autoSwitchToResults && m_tabWidget && m_tabWidget->count() > kResultsTabIndex) {
         m_tabWidget->setCurrentIndex(kResultsTabIndex);
     }
+}
+
+void ResultsController::onScanError(const QString& message)
+{
+    Q_UNUSED(message);
+    resumeFileWatching();
+    refreshReports();
 }
 
 void ResultsController::onDirectoryChanged()
@@ -261,11 +264,8 @@ QStringList ResultsController::discoverReports() const
 
     for (const auto& dir : m_reportDirs) {
         try {
-            auto rustPaths = classic::files::discover_report_files(
-                classic::toRustString(dir));
-            for (const auto& rpath : rustPaths) {
-                const QString path = QDir::cleanPath(classic::toQString(rpath));
-                const QString key = path.toLower();
+            for (const auto& path : discoverReportsInDirectory(dir)) {
+                const QString key = classic::gui::reportPathKey(path);
                 if (seen.contains(key)) {
                     continue;
                 }
@@ -278,12 +278,56 @@ QStringList ResultsController::discoverReports() const
     }
 
     // Global newest-first ordering across all directories.
-    std::sort(paths.begin(), paths.end(),
-              [](const QString& a, const QString& b) {
-                  return QFileInfo(a).lastModified() > QFileInfo(b).lastModified();
-              });
+    std::sort(paths.begin(), paths.end(), [](const QString& a, const QString& b) {
+        return QFileInfo(a).lastModified() > QFileInfo(b).lastModified();
+    });
 
     return paths;
+}
+
+QStringList ResultsController::discoverReportsInDirectory(const QString& dir) const
+{
+    QStringList paths;
+
+    auto rustPaths = classic::files::discover_report_files(classic::toRustString(dir));
+    for (const auto& rpath : rustPaths) {
+        paths.append(QDir::cleanPath(classic::toQString(rpath)));
+    }
+
+    return paths;
+}
+
+void ResultsController::seedBaselinesForCurrentDirectories()
+{
+    for (const auto& dir : m_reportDirs) {
+        const QString key = reportDirKey(dir);
+        if (m_baselinedReportDirs.contains(key)) {
+            continue;
+        }
+
+        try {
+            for (const auto& path : discoverReportsInDirectory(dir)) {
+                m_baselineReports.insert(classic::gui::reportPathKey(path));
+            }
+            m_baselinedReportDirs.insert(key);
+        } catch (const rust::Error&) {
+            // Retry baseline seeding on the next refresh.
+        }
+    }
+}
+
+void ResultsController::resumeFileWatching()
+{
+    if (!m_fileWatchingPaused) {
+        return;
+    }
+
+    m_fileWatchingPaused = false;
+    for (const auto& dir : m_reportDirs) {
+        if (QDir(dir).exists()) {
+            m_watcher.addPath(dir);
+        }
+    }
 }
 
 bool ResultsController::openFolderInFileBrowser(const QString& folderPath)
@@ -291,12 +335,28 @@ bool ResultsController::openFolderInFileBrowser(const QString& folderPath)
     return QDesktopServices::openUrl(QUrl::fromLocalFile(folderPath));
 }
 
+bool ResultsController::startDetachedProcess(const QString& program, const QStringList& arguments,
+                                             const QString& nativeArguments)
+{
+    QProcess process;
+    process.setProgram(program);
+    process.setArguments(arguments);
+#ifdef Q_OS_WIN
+    if (!nativeArguments.isEmpty()) {
+        process.setNativeArguments(nativeArguments);
+    }
+#else
+    Q_UNUSED(nativeArguments);
+#endif
+    return process.startDetached();
+}
+
 bool ResultsController::revealFileInFileBrowser(const QString& filePath)
 {
 #ifdef Q_OS_WIN
     const QString nativePath = QDir::toNativeSeparators(QDir::cleanPath(filePath));
-    const QString selectArg = QStringLiteral("/select,%1").arg(nativePath);
-    return QProcess::startDetached(QStringLiteral("explorer.exe"), {selectArg});
+    const QString nativeArguments = QStringLiteral("/select,\"%1\"").arg(nativePath);
+    return startDetachedProcess(QStringLiteral("explorer.exe"), {}, nativeArguments);
 #else
     const QFileInfo info(filePath);
     return QDesktopServices::openUrl(QUrl::fromLocalFile(info.absolutePath()));

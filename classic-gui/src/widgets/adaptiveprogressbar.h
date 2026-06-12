@@ -11,4 +11,3 @@ public:
 protected:
     void paintEvent(QPaintEvent* event) override;
 };
-

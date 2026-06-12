@@ -17,6 +17,7 @@
     .\test_cli.ps1 -TestDataDir "D:\fixtures\classic-logs"
     .\test_cli.ps1 -MaxLogs 10
     .\test_cli.ps1 -TestName help,version
+    .\test_cli.ps1 -TestName "help, version"
     .\test_cli.ps1 -Verbose
 #>
 
@@ -50,7 +51,32 @@ $AvailableScenarioNames = @(
 )
 $WorkspaceScenarioNames = @("single-scan", "multi-scan", "max-concurrent", "empty-dir", "report-content")
 $TestDataScenarioNames = @("single-scan", "multi-scan", "max-concurrent", "report-content")
-$TestName = @($TestName | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
+<#
+.SYNOPSIS
+    Normalizes selected integration scenario names from arrays or comma-separated strings.
+#>
+function ConvertTo-TestNameList {
+    param([string[]]$TestNames)
+
+    $normalized = @()
+    foreach ($testName in $TestNames) {
+        if ($null -eq $testName) {
+            continue
+        }
+
+        foreach ($candidate in ($testName -split ",")) {
+            $trimmed = $candidate.Trim()
+            if ($trimmed) {
+                $normalized += $trimmed
+            }
+        }
+    }
+
+    return $normalized
+}
+
+$TestName = @(ConvertTo-TestNameList -TestNames $TestName)
 
 if ($TestName.Count -gt 0) {
     $unknownScenarioNames = @($TestName | Where-Object { $_ -notin $AvailableScenarioNames } | Select-Object -Unique)

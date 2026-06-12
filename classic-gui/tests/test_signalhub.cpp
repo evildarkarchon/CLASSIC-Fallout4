@@ -25,8 +25,7 @@ void SignalHubTests::scanStarted_signal_is_emitted()
     SignalHub& hub = SignalHub::instance();
     QSignalSpy spy(&hub, &SignalHub::scanStarted);
 
-    const bool invoked = QMetaObject::invokeMethod(
-        &hub, "scanStarted", Qt::DirectConnection);
+    const bool invoked = QMetaObject::invokeMethod(&hub, "scanStarted", Qt::DirectConnection);
 
     QVERIFY(invoked);
     QCOMPARE(spy.count(), 1);
@@ -37,10 +36,8 @@ void SignalHubTests::scanProgress_signal_carries_expected_payload()
     SignalHub& hub = SignalHub::instance();
     QSignalSpy spy(&hub, &SignalHub::scanProgress);
 
-    const bool invoked = QMetaObject::invokeMethod(
-        &hub, "scanProgress", Qt::DirectConnection,
-        Q_ARG(float, 42.5F),
-        Q_ARG(QString, QStringLiteral("Scanning report...")));
+    const bool invoked = QMetaObject::invokeMethod(&hub, "scanProgress", Qt::DirectConnection, Q_ARG(float, 42.5F),
+                                                   Q_ARG(QString, QStringLiteral("Scanning report...")));
 
     QVERIFY(invoked);
     QCOMPARE(spy.count(), 1);

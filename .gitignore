@@ -4,6 +4,8 @@ __pycache__/
 .ruff_cache/
 .venv
 *.lock
+# uv project lockfiles must be committed for reproducible `uv sync --locked`.
+!uv.lock
 *.py[cod]
 *$py.class
 poetry.toml
@@ -104,6 +106,11 @@ coverage_output.txt
 coverage.json
 too-many-branches.txt
 test-results.txt
+
+# Ephemeral parity gate artifacts (baselines are committed separately)
+ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/
+ClassicLib-rs/node-bindings/classic-node/parity-artifacts/
+tools/binding_compliance/artifacts/
 
 # Code signing certificates (auto-generated, contains private key)
 tools/certs/
@@ -318,11 +325,22 @@ con
 # Git Worktrees
 .worktrees/
 !**/fixtures/*.log
+!**/fixtures/**/*.log
 classic-gui/result.txt
 ClassicLib-rs/ui-applications/classic-gui-slint/CLASSIC Data/
 Qt6/
-styles/
+# Legacy flat-deployment artifact only; do not re-broaden to 'styles/'
+# because that would also ignore classic-gui/src/styles/, which holds
+# the source-of-truth QSS and markdown CSS.
+/styles/
 classic-gui/install/
+classic-gui/install-debug/
+classic-gui/install-clang-cl/
+classic-gui/install-debug-clang-cl/
+classic-cli/install/
+classic-cli/install-debug/
+classic-cli/install-clang-cl/
+classic-cli/install-debug-clang-cl/
 qt.conf
 !classic-gui/**/qt.conf
 *.pyinstaller
@@ -337,3 +355,7 @@ build-*/
 !.agents/skills/
 opencode.json
 .claude/worktrees
+*.pfx
+.kilocode/package-lock.json
+graphify-out/
+.pi-lens/

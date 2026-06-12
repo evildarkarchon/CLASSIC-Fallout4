@@ -1,6 +1,6 @@
 # `classic-message-core` API Guide
 
-Contributor-facing API documentation for [`ClassicLib-rs/business-logic/classic-message-core/`](../../ClassicLib-rs/business-logic/classic-message-core).
+Contributor-facing API documentation for [`business-logic/classic-message-core/`](../../business-logic/classic-message-core).
 
 Crate metadata:
 
@@ -342,11 +342,11 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/src/message.rs) - forwards C++ log calls and startup contract diagnostics through `Logger`
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/message.rs) - exposes `Message`, formatting helpers, and a wrapped logger to JavaScript/TypeScript
-- [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node/src/logging_contract.rs) - emits Node startup diagnostics through the structured contract helpers
-- [`classic-message-py`](../../ClassicLib-rs/python-bindings/classic-message-py/src/lib.rs) - wraps `Message`, `MessageType`, and `MessageTarget` for Python
-- [`classic-message-py`](../../ClassicLib-rs/python-bindings/classic-message-py/src/logging.rs) - wraps `Logger` for Python callers
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/message.rs) - forwards C++ log calls and startup contract diagnostics through `Logger`
+- [`classic-node`](../../node-bindings/classic-node/src/message.rs) - exposes `Message`, formatting helpers, and a wrapped logger to JavaScript/TypeScript
+- [`classic-node`](../../node-bindings/classic-node/src/logging_contract.rs) - emits Node startup diagnostics through the structured contract helpers
+- [`classic-message-py`](../../python-bindings/classic-message-py/src/lib.rs) - wraps `Message`, `MessageType`, and `MessageTarget` for Python
+- [`classic-message-py`](../../python-bindings/classic-message-py/src/logging.rs) - wraps `Logger` for Python callers
 
 Source-observed note:
 
