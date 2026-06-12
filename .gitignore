@@ -337,6 +337,10 @@ classic-gui/install/
 classic-gui/install-debug/
 classic-gui/install-clang-cl/
 classic-gui/install-debug-clang-cl/
+classic-cli/install/
+classic-cli/install-debug/
+classic-cli/install-clang-cl/
+classic-cli/install-debug-clang-cl/
 qt.conf
 !classic-gui/**/qt.conf
 *.pyinstaller
