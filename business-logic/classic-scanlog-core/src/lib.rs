@@ -70,7 +70,8 @@ pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;
 pub use version::{
-    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
+    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
+    check_crashgen_version_status_with_exceptions, crashgen_version_gen,
 };
 
 /// Detect if a crash log is from Fallout 4 VR.

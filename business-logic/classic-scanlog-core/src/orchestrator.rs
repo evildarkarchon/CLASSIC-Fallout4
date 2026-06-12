@@ -26,7 +26,8 @@ use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
-    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
+    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
+    check_crashgen_version_status_with_exceptions, crashgen_version_gen,
     is_fake_bot_compatible_buffout_version,
 };
 use classic_config_core::{
@@ -896,26 +897,25 @@ impl OrchestratorCore {
             .map(|config| config.name.as_str())
     }
 
-    fn crashgen_version_strings_for_name<'a>(
+    fn crashgen_configs_for_name<'a>(
         version_info: &'a VersionInfo,
         crashgen_name: &str,
-    ) -> Vec<&'a str> {
+    ) -> Vec<&'a CrashgenConfig> {
         let crashgen_name = crashgen_name.trim();
         if crashgen_name.is_empty() {
-            return version_info.get_crashgen_version_strings();
+            return version_info.crashgen_versions.iter().collect();
         }
 
-        let matching_versions: Vec<&str> = version_info
+        let matching_configs: Vec<&CrashgenConfig> = version_info
             .crashgen_versions
             .iter()
             .filter(|config| Self::crashgen_config_matches_name(config, crashgen_name))
-            .map(|config| config.version.as_str())
             .collect();
 
-        if matching_versions.is_empty() {
-            version_info.get_crashgen_version_strings()
+        if matching_configs.is_empty() {
+            version_info.crashgen_versions.iter().collect()
         } else {
-            matching_versions
+            matching_configs
         }
     }
 
@@ -2246,7 +2246,7 @@ impl OrchestratorCore {
                 .is_some_and(|info| info.is_vr),
         );
 
-        let valid_versions: Vec<&str> = match match_result.version_info {
+        let (floor_versions, exception_versions) = match match_result.version_info {
             Some(ref version_info) => {
                 let effective_crashgen_name = crashgen_name
                     .and_then(Self::trimmed_crashgen_name)
@@ -2255,15 +2255,31 @@ impl OrchestratorCore {
                     })
                     .or_else(|| Self::trimmed_crashgen_name(&self.config.crashgen_name));
 
-                effective_crashgen_name.map_or_else(
-                    || version_info.get_crashgen_version_strings(),
-                    |name| Self::crashgen_version_strings_for_name(version_info, name),
-                )
+                let matching_configs = effective_crashgen_name.map_or_else(
+                    || version_info.crashgen_versions.iter().collect::<Vec<_>>(),
+                    |name| Self::crashgen_configs_for_name(version_info, name),
+                );
+
+                let mut floor_versions = Vec::new();
+                let mut exception_versions = Vec::new();
+                for config in matching_configs {
+                    if config.exact_match {
+                        exception_versions.push(config.version.as_str());
+                    } else {
+                        floor_versions.push(config.version.as_str());
+                    }
+                }
+
+                (floor_versions, exception_versions)
             }
-            None => Vec::new(),
+            None => (Vec::new(), Vec::new()),
         };
 
-        let status = check_crashgen_version_status(crashgen_version_str, &valid_versions);
+        let status = check_crashgen_version_status_with_exceptions(
+            crashgen_version_str,
+            &floor_versions,
+            &exception_versions,
+        );
         (current, status)
     }
 

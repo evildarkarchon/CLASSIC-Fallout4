@@ -262,6 +262,68 @@ fn test_check_version_status_with_different_original_strings() {
 }
 
 #[test]
+fn test_check_version_status_with_exceptions_og_buffout_rule() {
+    let floor = CrashgenVersion::parse("1.38.1").unwrap();
+    let exception = CrashgenVersion::parse("1.28.6").unwrap();
+    let floors = [floor];
+    let exceptions = [exception];
+
+    let legacy = CrashgenVersion::parse("Buffout 4 v1.28.6").unwrap();
+    assert_eq!(
+        legacy.check_version_status_with_exceptions(&floors, &exceptions),
+        CrashgenVersionStatus::Valid
+    );
+
+    let between = CrashgenVersion::parse("Buffout 4 v1.30.0").unwrap();
+    assert_eq!(
+        between.check_version_status_with_exceptions(&floors, &exceptions),
+        CrashgenVersionStatus::Outdated
+    );
+
+    let outdated_ng = CrashgenVersion::parse("Buffout 4 v1.37.0").unwrap();
+    assert_eq!(
+        outdated_ng.check_version_status_with_exceptions(&floors, &exceptions),
+        CrashgenVersionStatus::Outdated
+    );
+
+    let current = CrashgenVersion::parse("Buffout 4 v1.38.1").unwrap();
+    assert_eq!(
+        current.check_version_status_with_exceptions(&floors, &exceptions),
+        CrashgenVersionStatus::Valid
+    );
+
+    let below_exception = CrashgenVersion::parse("Buffout 4 v1.28.5").unwrap();
+    assert_eq!(
+        below_exception.check_version_status_with_exceptions(&floors, &exceptions),
+        CrashgenVersionStatus::Outdated
+    );
+}
+
+#[test]
+fn test_check_crashgen_version_status_with_exceptions_convenience() {
+    let status = check_crashgen_version_status_with_exceptions(
+        "Buffout 4 v1.28.6",
+        &["1.38.1"],
+        &["1.28.6"],
+    );
+    assert_eq!(status, CrashgenVersionStatus::Valid);
+
+    let status = check_crashgen_version_status_with_exceptions(
+        "Buffout 4 v1.37.0",
+        &["1.38.1"],
+        &["1.28.6"],
+    );
+    assert_eq!(status, CrashgenVersionStatus::Outdated);
+
+    let status =
+        check_crashgen_version_status_with_exceptions("Buffout 4 v1.40.0", &["1.38.1"], &[]);
+    assert_eq!(status, CrashgenVersionStatus::Valid);
+
+    let status = check_crashgen_version_status_with_exceptions("Buffout 4 v1.30.0", &[], &[]);
+    assert_eq!(status, CrashgenVersionStatus::NoSupportedVersion);
+}
+
+#[test]
 fn test_check_crashgen_version_status_with_crashgen_prefix() {
     // Test the convenience function with real-world inputs
     let status = check_crashgen_version_status("Buffout 4 v1.28.6", &["1.28.6", "1.37.0"]);

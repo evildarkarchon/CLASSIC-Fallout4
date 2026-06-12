@@ -242,6 +242,9 @@ pub struct CrashgenConfig {
     /// Optional game version range this crash generator is compatible with.
     /// If `None`, the crash generator is valid for any game version in the parent `VersionInfo`.
     pub compatible_range: Option<CompatibleRange>,
+    /// When `true`, this version is valid only on exact equality and is excluded from floor
+    /// computation. Use for legacy builds that remain acceptable but must not lower the floor.
+    pub exact_match: bool,
 }
 
 impl CrashgenConfig {
@@ -272,6 +275,7 @@ impl CrashgenConfig {
             description: description.into(),
             download_url: download_url.into(),
             compatible_range: None,
+            exact_match: false,
         }
     }
 
@@ -304,6 +308,7 @@ impl CrashgenConfig {
             description: description.into(),
             download_url: download_url.into(),
             compatible_range: Some(compatible_range),
+            exact_match: false,
         }
     }
 
@@ -325,6 +330,7 @@ impl CrashgenConfig {
             description: String::new(),
             download_url: String::new(),
             compatible_range: None,
+            exact_match: false,
         }
     }
 

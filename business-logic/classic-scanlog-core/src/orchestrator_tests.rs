@@ -360,7 +360,7 @@ fn process_log_accepts_addictol_versions_newer_than_registry_floor() {
 }
 
 #[test]
-fn crashgen_version_strings_for_name_filters_mixed_generator_entries() {
+fn crashgen_configs_for_name_filters_mixed_generator_entries() {
     let version_info = classic_version_registry_core::VersionInfo {
         id: "FO4_TEST".to_string(),
         game: "Fallout4".to_string(),
@@ -397,13 +397,105 @@ fn crashgen_version_strings_for_name_filters_mixed_generator_entries() {
         ],
     };
 
-    let buffout_versions =
-        OrchestratorCore::crashgen_version_strings_for_name(&version_info, "Buffout 4");
-    let addictol_versions =
-        OrchestratorCore::crashgen_version_strings_for_name(&version_info, "Addictol");
+    let buffout_versions: Vec<&str> =
+        OrchestratorCore::crashgen_configs_for_name(&version_info, "Buffout 4")
+            .into_iter()
+            .map(|config| config.version.as_str())
+            .collect();
+    let addictol_versions: Vec<&str> =
+        OrchestratorCore::crashgen_configs_for_name(&version_info, "Addictol")
+            .into_iter()
+            .map(|config| config.version.as_str())
+            .collect();
 
     assert_eq!(buffout_versions, vec!["1.38.1"]);
     assert_eq!(addictol_versions, vec!["1.3.0"]);
+}
+
+#[test]
+fn process_log_marks_og_legacy_buffout_1286_valid() {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let log_contents = [
+        "Fallout 4 v1.10.163",
+        "Buffout 4 v1.28.6",
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+        "",
+        "[Compatibility]",
+        "Achievements: true",
+        "SYSTEM SPECS:",
+        "GPU #1: NVIDIA GeForce RTX 4090",
+        "PROBABLE CALL STACK:",
+        "stack frame",
+        "MODULES:",
+        "kernel32.dll v10.0.0",
+        "F4SE PLUGINS:",
+        "buffout4.dll v1.28.6",
+        "PLUGINS:",
+        "[00] Fallout4.esm",
+        "REGISTERS:",
+        "RAX 0x0",
+        "STACK:",
+        "stack dump line",
+    ]
+    .join("\n");
+    let fixture = write_fixture_log("buffout-og-legacy-valid.log", &log_contents);
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("OG legacy Buffout fixture should process");
+    let report_text = result.report_lines.join("");
+
+    assert!(result.success);
+    assert!(report_text.contains("✅ *You have a valid version of Buffout 4!*"));
+}
+
+#[test]
+fn process_log_marks_og_midrange_buffout_outdated() {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    for version in ["1.30.0", "1.37.0"] {
+        let log_contents = [
+            "Fallout 4 v1.10.163",
+            &format!("Buffout 4 v{version}"),
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Compatibility]",
+            "Achievements: true",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            &format!("buffout4.dll v{version}"),
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture =
+            write_fixture_log(&format!("buffout-og-outdated-{version}.log"), &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("OG outdated Buffout fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success, "Buffout {version} should still process");
+        assert!(
+            report_text.contains("***❌ WARNING: YOUR Buffout 4 IS OUTDATED!"),
+            "Buffout {version} on OG should be outdated"
+        );
+    }
 }
 
 #[test]

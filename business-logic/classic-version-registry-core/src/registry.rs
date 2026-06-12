@@ -350,6 +350,10 @@ impl VersionRegistry {
                 let dll_file = yaml_ops.get_string_value(yaml, "dll_file", "");
                 let description = yaml_ops.get_string_value(yaml, "description", "");
                 let download_url = yaml_ops.get_string_value(yaml, "download_url", "");
+                let exact_match = yaml_ops
+                    .get_setting(yaml, "exact_match")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
 
                 // Parse optional compatible_range
                 let compatible_range =
@@ -369,6 +373,7 @@ impl VersionRegistry {
                     description,
                     download_url,
                     compatible_range,
+                    exact_match,
                 })
             }
             _ => None,

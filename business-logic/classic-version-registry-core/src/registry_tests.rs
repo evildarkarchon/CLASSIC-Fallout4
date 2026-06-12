@@ -607,6 +607,22 @@ fn test_crashgen_config_metadata_from_embedded_yaml() {
 }
 
 #[test]
+fn test_og_legacy_buffout_exact_match_flag() {
+    let registry = create_test_registry();
+    let og = registry.get_by_id("FO4_OG").expect("FO4_OG should exist");
+
+    let legacy = og
+        .get_crashgen_for_version("1.28.6")
+        .expect("OG legacy Buffout should exist");
+    assert!(legacy.exact_match);
+
+    let ng = og
+        .get_crashgen_for_version("1.38.1")
+        .expect("OG NG Buffout should exist");
+    assert!(!ng.exact_match);
+}
+
+#[test]
 fn test_embedded_yaml_fallback_tracks_main_yaml_versions() {
     let registry = create_test_registry();
 
