@@ -150,6 +150,7 @@ bun run parity:gate:ci
 bun run parity:gate:local
 bun run parity:gate:local:vsdev
 
+bun run dts:refresh
 bun run test:bun
 bun run test:node
 bun run dts:freshness:check
@@ -270,8 +271,9 @@ Required follow-up in the same change:
 1. Update `docs/implementation/node_api_parity/baseline/parity_contract.json` when the tracked public Node surface intentionally changes.
 2. Update `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
 3. Refresh and commit the checked-in baseline reports under `docs/implementation/node_api_parity/baseline/` when gate-backed results legitimately change.
-4. Refresh and commit `node-bindings/classic-node/index.d.ts` when the public Node export surface changes.
+4. Refresh and commit `node-bindings/classic-node/index.d.ts` when the public Node export surface changes (`bun run dts:refresh`, or `bun run parity:gate:local` for intentional source-backed drift together with the tracked baseline).
 5. Run from `node-bindings/classic-node`:
+   - `bun run dts:refresh` when step 4 applies and you are not using `parity:gate:local`
    - `bun run parity:gate`
    - `bun run parity:gate:update-baseline` only when the plain gate shows intentional source-backed drift
    - `bun run parity:gate`

@@ -1,4 +1,4 @@
-"""Verify every manifest `download_url` is reachable anonymously.
+"""Verify every manifest ``download_url`` serves the advertised bytes anonymously.
 
 Runs after the GitHub release is promoted out of draft but before the
 ``manifest-latest.json`` pointer is pushed to ``gh-pages``. Anonymous
@@ -13,24 +13,31 @@ clients seeing the new ``release_tag`` will 404 on every asset download.
 That failure mode is exactly the one the yaml-update-delivery change's
 Codex adversarial review flagged as ``high`` severity.
 
-Anonymous probing
------------------
+Strict-byte mode
+----------------
+
+Reachability alone is NOT sufficient. The workflow supports operator
+delete-and-rerun on the same tag; ``releases/download/<tag>/<name>`` URLs
+reuse the same path. If GitHub's CDN happens to serve a stale copy of an
+asset from a previous release recreation, a reachability-only probe would
+pass while clients later download bytes that do not match the manifest's
+``sha256`` — every install fails with a checksum mismatch.
+
+Each URL is probed with an unauthenticated full GET (no ``Range`` header).
+The response body is streamed through SHA-256 and compared to the manifest
+entry's ``sha256`` field. Any mismatch is treated as "not ready yet" and
+the retry budget keeps ticking until the CDN serves the bytes this run
+staged.
 
 The request is deliberately unauthenticated: no ``Authorization`` header
 is attached even when ``$GITHUB_TOKEN`` is present in the environment.
-Clients consuming the published manifest will not authenticate either —
-the whole point is to catch the case where the operator happened to have
-auth available locally but a real client would not.
-
-Each URL is probed with a ranged 1-byte GET (``Range: bytes=0-0``) rather
-than HEAD. Some GitHub CDN redirects do not support HEAD reliably, but a
-ranged GET is cheap (one byte + redirect overhead) and exercises the
-exact code path clients use.
+Clients consuming the published manifest will not authenticate either.
 
 Exit status
 -----------
 
-- 0 on first attempt where every URL returns 200 or 206.
+- 0 on first attempt where every URL returns HTTP 200 and the body SHA-256
+  matches the manifest entry.
 - Non-zero after the retry budget is exhausted, with a per-URL diagnostic
   printed to stderr so the workflow log names the offending asset.
 """
@@ -38,6 +45,7 @@ Exit status
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
@@ -51,24 +59,23 @@ DEFAULT_POLL_INTERVAL_SECONDS = 8
 # without burning the whole retry budget on one stuck connection.
 DEFAULT_SOCKET_TIMEOUT_SECONDS = 15
 
-# Ranged GET for a single byte — smallest request that still exercises the
-# same redirect chain clients use. 200 is the non-redirected response (rare
-# on GitHub release assets), 206 is the expected partial-content response
-# after the CDN redirect.
-_OK_STATUS = {200, 206}
+_READ_CHUNK_SIZE = 65536
 
 
-def _anonymous_reachable(url: str, socket_timeout: float) -> tuple[bool, str]:
-    """Return ``(ok, diagnostic)`` for one URL.
+def probe_asset_once(
+    url: str, expected_sha256: str, socket_timeout: float
+) -> str | None:
+    """Single-shot probe; return ``None`` on success, an error string otherwise.
 
-    ``ok`` is True iff the URL is reachable without credentials. ``diagnostic``
-    is a short human-readable reason for workflow logs — empty on success.
+    When ``expected_sha256`` is non-empty, the SHA-256 of the fetched body
+    is compared against it. A mismatch is returned as an error string so
+    the retry loop keeps polling — on a same-tag rerun this is exactly
+    the window during which a stale CDN copy can be served.
     """
     req = urllib.request.Request(
         url,
         method="GET",
         headers={
-            "Range": "bytes=0-0",
             "Accept": "*/*",
             "User-Agent": "classic-publish-yaml-data/verify-assets",
         },
@@ -76,17 +83,32 @@ def _anonymous_reachable(url: str, socket_timeout: float) -> tuple[bool, str]:
     try:
         with urllib.request.urlopen(req, timeout=socket_timeout) as resp:
             status = resp.status
-            if status in _OK_STATUS:
-                return True, ""
-            return False, f"HTTP {status}"
+            if status != 200:
+                return f"HTTP {status}"
+            hasher = hashlib.sha256()
+            while True:
+                chunk = resp.read(_READ_CHUNK_SIZE)
+                if not chunk:
+                    break
+                hasher.update(chunk)
+            actual_sha256 = hasher.hexdigest()
+            if actual_sha256 != expected_sha256:
+                return (
+                    "SHA-256 mismatch: expected "
+                    f"{expected_sha256}, got {actual_sha256} "
+                    "(CDN likely still serving the previous same-tag asset)"
+                )
+            return None
     except urllib.error.HTTPError as exc:
-        return False, f"HTTP {exc.code}"
+        return f"HTTP {exc.code}"
     except (urllib.error.URLError, TimeoutError) as exc:
-        return False, f"network error: {exc!r}"
+        return f"network error: {exc!r}"
 
 
-def _load_download_urls(manifest_path: Path) -> list[tuple[str, str]]:
-    """Return ``[(name, download_url), ...]`` from a manifest.json file."""
+def _load_manifest_assets(
+    manifest_path: Path,
+) -> list[tuple[str, str, str]]:
+    """Return ``[(name, download_url, expected_sha256), ...]`` from manifest.json."""
     with manifest_path.open("r", encoding="utf-8") as f:
         doc = json.load(f)
     files = doc.get("files")
@@ -94,18 +116,23 @@ def _load_download_urls(manifest_path: Path) -> list[tuple[str, str]]:
         raise SystemExit(
             f"FAIL: {manifest_path} has no non-empty 'files' array"
         )
-    pairs: list[tuple[str, str]] = []
+    assets: list[tuple[str, str, str]] = []
     for entry in files:
         if not isinstance(entry, dict):
             raise SystemExit(f"FAIL: manifest entry is not a mapping: {entry!r}")
         name = entry.get("name")
         url = entry.get("download_url")
+        digest = entry.get("sha256")
         if not isinstance(name, str) or not isinstance(url, str):
             raise SystemExit(
                 f"FAIL: manifest entry missing string name/download_url: {entry!r}"
             )
-        pairs.append((name, url))
-    return pairs
+        if not isinstance(digest, str) or not digest.strip():
+            raise SystemExit(
+                f"FAIL: manifest entry missing non-empty string sha256: {entry!r}"
+            )
+        assets.append((name, url, digest))
+    return assets
 
 
 def main() -> int:
@@ -136,7 +163,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    urls = _load_download_urls(args.manifest)
+    assets = _load_manifest_assets(args.manifest)
     deadline = time.monotonic() + args.timeout_seconds
 
     # Sweep all URLs each attempt rather than failing on the first one; a
@@ -146,15 +173,17 @@ def main() -> int:
     while True:
         attempt += 1
         failures: list[tuple[str, str, str]] = []
-        for name, url in urls:
-            ok, diag = _anonymous_reachable(url, args.socket_timeout_seconds)
-            if not ok:
-                failures.append((name, url, diag))
+        for name, url, expected_sha256 in assets:
+            err = probe_asset_once(
+                url, expected_sha256, args.socket_timeout_seconds
+            )
+            if err is not None:
+                failures.append((name, url, err))
 
         if not failures:
             print(
-                f"OK: all {len(urls)} asset URL(s) reachable anonymously "
-                f"(attempt {attempt})"
+                f"OK: all {len(assets)} asset URL(s) serve manifest bytes "
+                f"anonymously (attempt {attempt})"
             )
             return 0
 
@@ -163,8 +192,8 @@ def main() -> int:
             break
 
         print(
-            f"retrying: attempt {attempt}, {len(failures)}/{len(urls)} asset(s) "
-            f"not yet reachable, {int(remaining)}s remaining",
+            f"retrying: attempt {attempt}, {len(failures)}/{len(assets)} asset(s) "
+            f"not ready, {int(remaining)}s remaining",
             file=sys.stderr,
         )
         for name, url, diag in failures:
@@ -172,8 +201,8 @@ def main() -> int:
         time.sleep(min(args.poll_interval_seconds, max(1, int(remaining))))
 
     print(
-        f"FAIL: {len(failures)} of {len(urls)} asset URL(s) still unreachable "
-        f"after {args.timeout_seconds}s:",
+        f"FAIL: {len(failures)} of {len(assets)} asset URL(s) still not serving "
+        f"expected bytes after {args.timeout_seconds}s:",
         file=sys.stderr,
     )
     for name, url, diag in failures:

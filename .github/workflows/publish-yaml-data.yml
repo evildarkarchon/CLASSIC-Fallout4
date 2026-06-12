@@ -251,10 +251,14 @@ jobs:
             git push origin "$PAGES_BRANCH"
           fi
 
-      # Task 11.8: smoke-test that the Pages manifest serves the new tag.
+      # Task 11.8: smoke-test that the Pages manifest serves the staged bytes.
       # The helper retries for up to 180s to cover Pages propagation lag.
-      # Failure here means the previous step's push succeeded but Pages has
-      # not served the new content yet — not an asset-reachability problem.
+      # For a same-tag republish, the previous manifest-latest.json may
+      # already carry the same release_tag, so comparing only release_tag
+      # can pass before gh-pages has propagated the new payload. Strict-body
+      # mode compares SHA-256 of the live Pages response against the staged
+      # manifest bytes, so the smoke test cannot pass until the new payload
+      # is actually live.
       - name: Smoke-test Pages manifest
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER}"
@@ -262,4 +266,4 @@ jobs:
           python tools/publish_yaml_data/smoke_test_pages.py \
             --owner "$OWNER" \
             --repo  "$REPO" \
-            --tag   "$TAG"
+            --expected-body-path "$RUNNER_TEMP/staging/manifest.json"
