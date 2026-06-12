@@ -28,6 +28,16 @@ fn captures_links_with_positions() {
 }
 
 #[test]
+fn captures_exact_link_columns_after_plain_prefix() {
+    let rendered = render_markdown("See [CLASSIC](https://example.com) docs");
+    let link = &rendered.links[0];
+
+    assert_eq!(link.line_index, 0);
+    assert_eq!(link.start_col, 4);
+    assert_eq!(link.end_col, 11);
+}
+
+#[test]
 fn renders_headings_lists_quotes_and_code() {
     let md = "# Title\n## Section\n- item one\n  - sub item\n> quoted\n```\ncode\n```";
     let lines = render_markdown_lines(md);

@@ -2,15 +2,15 @@ use crate::runtime_support::{block_on, block_on_result};
 use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER,
-    OrchestratorCore, build_analysis_config_from_yaml,
+    AnalysisConfig, BatchScanEventKind, BatchScanOptions, FcxModeHandler, FcxResetError,
+    GLOBAL_FCX_HANDLER, OrchestratorCore, build_analysis_config_from_yaml,
 };
 use classic_settings_core::YamlOperations;
 use log::info;
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use super::dto::{
@@ -19,9 +19,7 @@ use super::dto::{
 };
 use super::ffi;
 use super::progress::{
-    BatchProgressDiagnostics, BatchUpdate, drain_ready_progress_events,
-    effective_batch_concurrency, emit_progress_event, make_progress_event,
-    make_progress_event_with_current_completed, map_progress_phase, next_batch_update,
+    BatchProgressDiagnostics, emit_progress_event, make_progress_event, map_progress_phase,
 };
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
@@ -270,9 +268,6 @@ pub(crate) fn orchestrator_process_logs_batch_with_progress(
     max_concurrent: u32,
     callback: &ffi::ScanBatchProgressCallback,
 ) -> Vec<ffi::BatchScanResult> {
-    use futures::stream::{self, StreamExt};
-    use tokio::sync::mpsc;
-
     if let Err(error) = fcx_reset_global_state() {
         let log_path = log_paths.first().cloned().unwrap_or_default();
         return vec![batch_progress_reset_failure_result(
@@ -288,149 +283,65 @@ pub(crate) fn orchestrator_process_logs_batch_with_progress(
         return Vec::new();
     }
 
-    let concurrency = effective_batch_concurrency(total, max_concurrent);
     let diagnostics_enabled = diagnostics_enabled();
-    let indexed_paths: Vec<(u32, String)> = log_paths
-        .iter()
-        .cloned()
-        .enumerate()
-        .map(|(idx, path)| (idx as u32, path))
-        .collect();
-
+    let paths = log_paths.to_vec();
+    let max_parallel = if max_concurrent == 0 {
+        None
+    } else {
+        Some(max_concurrent as usize)
+    };
     block_on(async {
-        let mut completed = 0_u32;
-        let completed_counter = Arc::new(AtomicU32::new(0));
-        let mut batch_results = Vec::with_capacity(indexed_paths.len());
         let mut diagnostics = diagnostics_enabled.then(BatchProgressDiagnostics::default);
-        let mut pending_progress_events = VecDeque::new();
-
-        for (input_index, log_path) in &indexed_paths {
-            emit_progress_event(
-                callback,
-                diagnostics.as_mut(),
-                // Queued events announce discovered work before any log has finished, so
-                // their completed count intentionally stays at the batch-level snapshot of 0.
-                make_progress_event(
-                    ffi::BatchProgressEventKind::Queued,
-                    ffi::BatchProgressPhase::Setup,
-                    completed,
-                    total as u32,
-                    *input_index,
-                    log_path,
-                    false,
-                ),
-            );
-        }
-
-        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel::<ffi::BatchProgressEvent>();
-
-        let mut tasks = stream::iter(indexed_paths)
-            .map(|(input_index, log_path)| {
-                let log_path_for_error = log_path.clone();
-                let completed_counter = Arc::clone(&completed_counter);
-                let progress_tx = progress_tx.clone();
-                async move {
-                    let started_event = make_progress_event_with_current_completed(
-                        ffi::BatchProgressEventKind::Started,
-                        ffi::BatchProgressPhase::Setup,
-                        completed_counter.as_ref(),
-                        total as u32,
-                        input_index,
-                        &log_path,
-                        false,
-                    );
-                    let _ = progress_tx.send(started_event);
-
-                    let mut last_phase = ffi::BatchProgressPhase::Setup;
-                    let result = match orch
-                        .inner
-                        .process_log_with_progress(log_path.clone(), |phase| {
-                            last_phase = map_progress_phase(phase);
-                            let _ = progress_tx.send(make_progress_event_with_current_completed(
-                                ffi::BatchProgressEventKind::Phase,
-                                last_phase,
-                                completed_counter.as_ref(),
-                                total as u32,
-                                input_index,
-                                &log_path,
-                                false,
-                            ));
-                        })
-                        .await
-                    {
-                        Ok(result) => result,
-                        Err(e) => AnalysisResult::failure(log_path_for_error, e.to_string()),
+        let indexed_results = orch
+            .inner
+            .process_logs_batch_with_events(
+                paths,
+                BatchScanOptions {
+                    max_concurrent: max_parallel,
+                    preserve_order: false,
+                    cancellation: None,
+                },
+                |event| {
+                    let event_kind = match event.kind {
+                        BatchScanEventKind::Queued => ffi::BatchProgressEventKind::Queued,
+                        BatchScanEventKind::Started => ffi::BatchProgressEventKind::Started,
+                        BatchScanEventKind::Phase => ffi::BatchProgressEventKind::Phase,
+                        BatchScanEventKind::Completed => ffi::BatchProgressEventKind::Completed,
+                        BatchScanEventKind::Failed => ffi::BatchProgressEventKind::Failed,
                     };
-                    (input_index, log_path, last_phase, result)
-                }
-            })
-            .buffer_unordered(concurrency);
-
-        while completed < total as u32 {
-            match next_batch_update(&mut pending_progress_events, &mut progress_rx, &mut tasks)
-                .await
-            {
-                BatchUpdate::Progress(event) => {
-                    emit_progress_event(callback, diagnostics.as_mut(), event);
-                }
-                BatchUpdate::Result((input_index, scanned_path, last_phase, result)) => {
-                    for event in
-                        drain_ready_progress_events(&mut pending_progress_events, &mut progress_rx)
-                            .await
-                    {
-                        emit_progress_event(callback, diagnostics.as_mut(), event);
-                    }
-
-                    completed += 1;
-                    completed_counter.store(completed, Ordering::Relaxed);
-                    maybe_log_db_perf_counters(orch, scanned_path.as_str());
                     emit_progress_event(
                         callback,
                         diagnostics.as_mut(),
                         make_progress_event(
-                            if result.success {
-                                ffi::BatchProgressEventKind::Completed
-                            } else {
-                                ffi::BatchProgressEventKind::Failed
-                            },
-                            last_phase,
-                            completed,
-                            total as u32,
-                            input_index,
-                            &result.log_path,
-                            result.success,
+                            event_kind,
+                            map_progress_phase(event.phase),
+                            event.completed as u32,
+                            event.total as u32,
+                            event.input_index as u32,
+                            &event.log_path,
+                            event.success,
                         ),
                     );
-                    batch_results.push(analysis_result_to_batch_dto(
-                        input_index,
-                        completed,
-                        total as u32,
-                        result,
-                    ));
-                }
-                BatchUpdate::TasksExhausted => break,
-            }
-        }
-
-        drop(tasks);
-        drop(progress_tx);
-
-        // Any events left here come from an abnormal shutdown path where some task results never
-        // surfaced. Keep emitting them for diagnostics, even though they may be orphaned from a
-        // terminal Completed/Failed event; under the normal invariant, all logs finish above.
-        while let Some(event) = pending_progress_events.pop_front() {
-            emit_progress_event(callback, diagnostics.as_mut(), event);
-        }
-
-        while let Some(event) = progress_rx.recv().await {
-            emit_progress_event(callback, diagnostics.as_mut(), event);
-        }
+                },
+            )
+            .await;
 
         if let Some(diagnostics) = diagnostics.as_ref() {
             diagnostics.log_summary(total);
         }
 
-        batch_results
+        indexed_results
+            .into_iter()
+            .map(|indexed| {
+                maybe_log_db_perf_counters(orch, indexed.result.log_path.as_str());
+                analysis_result_to_batch_dto(
+                    indexed.input_index as u32,
+                    indexed.completed as u32,
+                    indexed.total as u32,
+                    indexed.result,
+                )
+            })
+            .collect()
     })
 }
 

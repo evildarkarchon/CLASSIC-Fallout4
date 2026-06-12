@@ -15,6 +15,18 @@ fn make_fixture_orchestrator() -> OrchestratorCore {
     OrchestratorCore::new(config).expect("fixture orchestrator should build")
 }
 
+fn batch_test_event(kind: BatchScanEventKind, phase: ScanProgressPhase) -> BatchScanEvent {
+    BatchScanEvent {
+        input_index: 0,
+        log_path: "test.log".to_string(),
+        kind,
+        phase,
+        completed: 0,
+        total: 1,
+        success: false,
+    }
+}
+
 struct FixtureLog {
     _temp: tempfile::TempDir,
     path: String,
@@ -348,7 +360,7 @@ fn process_log_accepts_addictol_versions_newer_than_registry_floor() {
 }
 
 #[test]
-fn crashgen_version_strings_for_name_filters_mixed_generator_entries() {
+fn crashgen_configs_for_name_filters_mixed_generator_entries() {
     let version_info = classic_version_registry_core::VersionInfo {
         id: "FO4_TEST".to_string(),
         game: "Fallout4".to_string(),
@@ -385,13 +397,105 @@ fn crashgen_version_strings_for_name_filters_mixed_generator_entries() {
         ],
     };
 
-    let buffout_versions =
-        OrchestratorCore::crashgen_version_strings_for_name(&version_info, "Buffout 4");
-    let addictol_versions =
-        OrchestratorCore::crashgen_version_strings_for_name(&version_info, "Addictol");
+    let buffout_versions: Vec<&str> =
+        OrchestratorCore::crashgen_configs_for_name(&version_info, "Buffout 4")
+            .into_iter()
+            .map(|config| config.version.as_str())
+            .collect();
+    let addictol_versions: Vec<&str> =
+        OrchestratorCore::crashgen_configs_for_name(&version_info, "Addictol")
+            .into_iter()
+            .map(|config| config.version.as_str())
+            .collect();
 
     assert_eq!(buffout_versions, vec!["1.38.1"]);
     assert_eq!(addictol_versions, vec!["1.3.0"]);
+}
+
+#[test]
+fn process_log_marks_og_legacy_buffout_1286_valid() {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    let log_contents = [
+        "Fallout 4 v1.10.163",
+        "Buffout 4 v1.28.6",
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+        "",
+        "[Compatibility]",
+        "Achievements: true",
+        "SYSTEM SPECS:",
+        "GPU #1: NVIDIA GeForce RTX 4090",
+        "PROBABLE CALL STACK:",
+        "stack frame",
+        "MODULES:",
+        "kernel32.dll v10.0.0",
+        "F4SE PLUGINS:",
+        "buffout4.dll v1.28.6",
+        "PLUGINS:",
+        "[00] Fallout4.esm",
+        "REGISTERS:",
+        "RAX 0x0",
+        "STACK:",
+        "stack dump line",
+    ]
+    .join("\n");
+    let fixture = write_fixture_log("buffout-og-legacy-valid.log", &log_contents);
+
+    let result = get_runtime()
+        .block_on(orchestrator.process_log(fixture.path.clone()))
+        .expect("OG legacy Buffout fixture should process");
+    let report_text = result.report_lines.join("");
+
+    assert!(result.success);
+    assert!(report_text.contains("✅ *You have a valid version of Buffout 4!*"));
+}
+
+#[test]
+fn process_log_marks_og_midrange_buffout_outdated() {
+    let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
+    config.crashgen_name = "Buffout 4".to_string();
+    let orchestrator = OrchestratorCore::new(config).unwrap();
+
+    for version in ["1.30.0", "1.37.0"] {
+        let log_contents = [
+            "Fallout 4 v1.10.163",
+            &format!("Buffout 4 v{version}"),
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
+            "",
+            "[Compatibility]",
+            "Achievements: true",
+            "SYSTEM SPECS:",
+            "GPU #1: NVIDIA GeForce RTX 4090",
+            "PROBABLE CALL STACK:",
+            "stack frame",
+            "MODULES:",
+            "kernel32.dll v10.0.0",
+            "F4SE PLUGINS:",
+            &format!("buffout4.dll v{version}"),
+            "PLUGINS:",
+            "[00] Fallout4.esm",
+            "REGISTERS:",
+            "RAX 0x0",
+            "STACK:",
+            "stack dump line",
+        ]
+        .join("\n");
+        let fixture =
+            write_fixture_log(&format!("buffout-og-outdated-{version}.log"), &log_contents);
+
+        let result = get_runtime()
+            .block_on(orchestrator.process_log(fixture.path.clone()))
+            .expect("OG outdated Buffout fixture should process");
+        let report_text = result.report_lines.join("");
+
+        assert!(result.success, "Buffout {version} should still process");
+        assert!(
+            report_text.contains("***❌ WARNING: YOUR Buffout 4 IS OUTDATED!"),
+            "Buffout {version} on OG should be outdated"
+        );
+    }
 }
 
 #[test]
@@ -1159,4 +1263,109 @@ fn resolve_batch_concurrency_honors_manual_override() {
 #[test]
 fn resolve_batch_concurrency_handles_empty_batches() {
     assert_eq!(resolve_batch_concurrency(0, None), 1);
+}
+
+#[test]
+fn process_logs_batch_with_events_can_preserve_input_order() {
+    let orchestrator = make_fixture_orchestrator();
+    let results = get_runtime().block_on(orchestrator.process_logs_batch_with_events(
+        vec!["missing-a.log".to_string(), "missing-b.log".to_string()],
+        BatchScanOptions {
+            max_concurrent: Some(2),
+            preserve_order: true,
+            cancellation: None,
+        },
+        |_| {},
+    ));
+
+    assert_eq!(results.len(), 2);
+    assert_eq!(results[0].input_index, 0);
+    assert_eq!(results[0].result.log_path, "missing-a.log");
+    assert_eq!(results[1].input_index, 1);
+    assert_eq!(results[1].result.log_path, "missing-b.log");
+    assert!(results.iter().all(|result| !result.result.success));
+}
+
+#[test]
+fn process_logs_batch_with_events_emits_queued_started_and_terminal_events() {
+    let orchestrator = make_fixture_orchestrator();
+    let mut events = Vec::new();
+
+    let results = get_runtime().block_on(orchestrator.process_logs_batch_with_events(
+        vec!["missing-a.log".to_string()],
+        BatchScanOptions {
+            max_concurrent: Some(1),
+            preserve_order: false,
+            cancellation: None,
+        },
+        |event| events.push((event.input_index, event.kind, event.phase, event.completed)),
+    ));
+
+    assert_eq!(results.len(), 1);
+    assert!(events.contains(&(0, BatchScanEventKind::Queued, ScanProgressPhase::Setup, 0)));
+    assert!(events.contains(&(0, BatchScanEventKind::Started, ScanProgressPhase::Setup, 0)));
+    assert!(events.contains(&(0, BatchScanEventKind::Phase, ScanProgressPhase::Setup, 0)));
+    assert!(events.contains(&(0, BatchScanEventKind::Failed, ScanProgressPhase::Setup, 1)));
+}
+
+#[test]
+fn drain_ready_batch_progress_events_flushes_phase_before_terminal_event() {
+    use tokio::sync::mpsc;
+
+    get_runtime().block_on(async {
+        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+        progress_tx
+            .send(batch_test_event(
+                BatchScanEventKind::Phase,
+                ScanProgressPhase::Finalize,
+            ))
+            .expect("phase event should send");
+
+        let mut events = drain_ready_batch_progress_events(&mut progress_rx).await;
+        events.push(BatchScanEvent {
+            kind: BatchScanEventKind::Completed,
+            completed: 1,
+            success: true,
+            ..batch_test_event(BatchScanEventKind::Completed, ScanProgressPhase::Finalize)
+        });
+
+        let kinds: Vec<_> = events.iter().map(|event| event.kind).collect();
+        let completed_counts: Vec<_> = events.iter().map(|event| event.completed).collect();
+        assert_eq!(
+            kinds,
+            vec![BatchScanEventKind::Phase, BatchScanEventKind::Completed]
+        );
+        assert_eq!(completed_counts, vec![0, 1]);
+
+        drop(progress_tx);
+    });
+}
+
+#[test]
+fn drain_ready_batch_progress_events_flushes_phase_scheduled_for_next_tick() {
+    use tokio::sync::mpsc;
+    use tokio::task::LocalSet;
+
+    get_runtime().block_on(async {
+        LocalSet::new()
+            .run_until(async {
+                let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
+                tokio::task::spawn_local(async move {
+                    tokio::task::yield_now().await;
+                    progress_tx
+                        .send(batch_test_event(
+                            BatchScanEventKind::Phase,
+                            ScanProgressPhase::Finalize,
+                        ))
+                        .expect("scheduled phase event should send");
+                });
+
+                let events = drain_ready_batch_progress_events(&mut progress_rx).await;
+                assert_eq!(events.len(), 1);
+                assert_eq!(events[0].kind, BatchScanEventKind::Phase);
+                assert_eq!(events[0].phase, ScanProgressPhase::Finalize);
+                assert_eq!(events[0].completed, 0);
+            })
+            .await;
+    });
 }

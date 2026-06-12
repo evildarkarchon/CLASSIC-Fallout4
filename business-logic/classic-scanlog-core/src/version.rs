@@ -216,14 +216,28 @@ impl CrashgenVersion {
         &self,
         valid_versions: &[CrashgenVersion],
     ) -> CrashgenVersionStatus {
-        // Handle no supported version case
-        if valid_versions.is_empty() {
+        self.check_version_status_with_exceptions(valid_versions, &[])
+    }
+
+    /// Checks version status using floor versions plus optional exact-match exceptions.
+    ///
+    /// Exception versions are valid only on exact equality and are excluded from floor
+    /// computation. Floor versions behave as minimum supported versions: any detected
+    /// version at or above the lowest floor is acceptable.
+    pub fn check_version_status_with_exceptions(
+        &self,
+        floors: &[CrashgenVersion],
+        exceptions: &[CrashgenVersion],
+    ) -> CrashgenVersionStatus {
+        if exceptions.iter().any(|exception| self == exception) {
+            return CrashgenVersionStatus::Valid;
+        }
+
+        if floors.is_empty() && exceptions.is_empty() {
             return CrashgenVersionStatus::NoSupportedVersion;
         }
 
-        // Treat configured versions as floors: any detected version at or above
-        // the lowest supported version is acceptable.
-        match valid_versions.iter().min() {
+        match floors.iter().min() {
             Some(floor) if self >= floor => CrashgenVersionStatus::Valid,
             _ => CrashgenVersionStatus::Outdated,
         }
@@ -321,13 +335,26 @@ pub fn check_crashgen_version_status(
     detected_version: &str,
     valid_versions: &[&str],
 ) -> CrashgenVersionStatus {
+    check_crashgen_version_status_with_exceptions(detected_version, valid_versions, &[])
+}
+
+/// Checks a version string against floor versions and exact-match exception versions.
+pub fn check_crashgen_version_status_with_exceptions(
+    detected_version: &str,
+    floor_versions: &[&str],
+    exception_versions: &[&str],
+) -> CrashgenVersionStatus {
     let detected = crashgen_version_gen(detected_version);
-    let valid: Vec<CrashgenVersion> = valid_versions
+    let floors: Vec<CrashgenVersion> = floor_versions
+        .iter()
+        .filter_map(|v| CrashgenVersion::parse(v))
+        .collect();
+    let exceptions: Vec<CrashgenVersion> = exception_versions
         .iter()
         .filter_map(|v| CrashgenVersion::parse(v))
         .collect();
 
-    detected.check_version_status(&valid)
+    detected.check_version_status_with_exceptions(&floors, &exceptions)
 }
 
 /// Returns whether a crash log is using a fake Buffout 4 version for bot compatibility.

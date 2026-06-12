@@ -22,6 +22,30 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
+    },
+    {
+      "name": "default-clang-cl",
+      "displayName": "Default (vcpkg + Ninja + clang-cl)",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-clang-cl",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_LINKER": "lld-link",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/../vcpkg-triplets",
+        "VCPKG_HOST_TRIPLET": "x64-windows-classic-clang-cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-classic-clang-cl"
+      }
+    },
+    {
+      "name": "debug-clang-cl",
+      "displayName": "Debug (vcpkg + Ninja + clang-cl)",
+      "inherits": "default-clang-cl",
+      "binaryDir": "${sourceDir}/build-debug-clang-cl",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     }
   ]
 }

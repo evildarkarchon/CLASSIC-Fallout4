@@ -47,18 +47,22 @@ Placement guidance:
 
 ### Native C++ builds
 
-Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja.
+Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja. MSVC is the default compiler; pass `-Compiler clang-cl` to use clang-cl against the Visual Studio/MSVC ABI toolchain, including Cargo `cc-rs`/`cxx_build` C++ bridge glue compiled during Corrosion builds.
 
 ```powershell
 # Build CLI
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 
 # Build GUI
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 
 # Build plus tests
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 
 # Build plus selected tests
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
@@ -78,7 +82,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 
 Prerequisites:
 
-- Visual Studio with the C++ Desktop workload.
+- Visual Studio with the C++ Desktop workload; install the optional LLVM clang-cl/lld-link components for clang-cl builds.
 - `VCPKG_ROOT` configured, for example `C:\vcpkg`.
 - Ninja available in the VS developer shell.
 - Qt 6 installed for GUI work; see `classic-gui/CMakePresets.json`.
@@ -91,6 +95,8 @@ Policy: NEVER run C++ tests by invoking test binaries or raw `ctest` directly. A
 ```powershell
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
@@ -374,6 +380,7 @@ Platform notes:
 - `classic-cli` and `classic-gui` are Windows-focused and require MSVC.
 - `node-bindings/classic-node` currently targets `x86_64-pc-windows-msvc`.
 - CLI integration tests need `sample_logs/FO4` checked out from submodules.
+- Regular CLI/GUI clang-cl presets use `x64-windows-classic-clang-cl` for both target and host vcpkg packages, chainloaded through `cmake/toolchains/vcpkg-clang-cl.cmake` so vcpkg uses clang-cl/lld-link too. CLI CI still uses release-only vcpkg triplets. GUI CI installs prebuilt Qt and uses the `ci-system-qt` / `ci-system-qt-clang-cl` presets so the test job does not spend its timeout compiling Qt from source.
 - The CXX parity gate, YAML publish validation helpers, and app-notification publish validation helpers are source-only and do not require MSVC.
 - Some Rust crates depend on DirectX-related tooling via transitive `ba2` paths and may need subset builds on Linux.
 - On Linux or cloud environments, prefer Rust-only crate subsets plus source-only parity gates when the full workspace is not portable.

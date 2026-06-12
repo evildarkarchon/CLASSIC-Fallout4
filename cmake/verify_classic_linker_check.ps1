@@ -36,18 +36,71 @@ if (-not $msvcLink) {
     throw "vswhere did not return an MSVC link.exe path."
 }
 
-$cmakeArgs = @(
-    "-DCLASSIC_LINKER_CHECK_MODULE=$cmakeModule",
-    "-DCLASSIC_EXPECTED_LINKER=$msvcLink",
-    "-DCLASSIC_SHADOW_LINKER_DIR=$(Split-Path $shadowLink -Parent)",
-    "-P",
-    $testScript
-)
+$lldLink = Get-Command lld-link.exe -ErrorAction SilentlyContinue
 
-Write-Host "cmake $($cmakeArgs -join ' ')" -ForegroundColor DarkGray
-& cmake @cmakeArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "ClassicLinkerCheck regression: expected the configured MSVC linker to win over PATH shadowing."
+function Invoke-LinkerCheckFixture {
+    param(
+        [string]$Label,
+        [string]$CompilerId,
+        [string]$SelectedLinker,
+        [string]$CompilerSimulateId = "",
+        [switch]$ExpectFailure
+    )
+
+    $cmakeArgs = @(
+        "-DCLASSIC_LINKER_CHECK_MODULE=$cmakeModule",
+        "-DCLASSIC_EXPECTED_LINKER=$msvcLink",
+        "-DCLASSIC_SELECTED_LINKER=$SelectedLinker",
+        "-DCLASSIC_SHADOW_LINKER_DIR=$(Split-Path $shadowLink -Parent)",
+        "-DCLASSIC_COMPILER_ID=$CompilerId"
+    )
+    if ($CompilerSimulateId) {
+        $cmakeArgs += "-DCLASSIC_COMPILER_SIMULATE_ID=$CompilerSimulateId"
+    }
+    $cmakeArgs += @("-P", $testScript)
+
+    Write-Host "[$Label] cmake $($cmakeArgs -join ' ')" -ForegroundColor DarkGray
+    & cmake @cmakeArgs
+    $exitCode = $LASTEXITCODE
+
+    if ($ExpectFailure) {
+        if ($exitCode -eq 0) {
+            throw "ClassicLinkerCheck regression: expected '$Label' to reject a non-MSVC-compatible linker."
+        }
+        Write-Host "ClassicLinkerCheck rejected non-MSVC-compatible linker for '$Label'." -ForegroundColor Green
+        return
+    }
+
+    if ($exitCode -ne 0) {
+        throw "ClassicLinkerCheck regression: expected '$Label' to accept the configured MSVC-compatible linker."
+    }
+    Write-Host "ClassicLinkerCheck accepted '$Label'." -ForegroundColor Green
 }
 
-Write-Host "ClassicLinkerCheck prefers the configured linker over PATH shadowing." -ForegroundColor Green
+Invoke-LinkerCheckFixture `
+    -Label "MSVC compiler identity" `
+    -CompilerId "MSVC" `
+    -SelectedLinker $msvcLink
+
+Invoke-LinkerCheckFixture `
+    -Label "clang-cl MSVC ABI identity" `
+    -CompilerId "Clang" `
+    -CompilerSimulateId "MSVC" `
+    -SelectedLinker $msvcLink
+
+if ($lldLink) {
+    Invoke-LinkerCheckFixture `
+        -Label "clang-cl LLVM lld-link identity" `
+        -CompilerId "Clang" `
+        -CompilerSimulateId "MSVC" `
+        -SelectedLinker $lldLink.Source
+}
+
+Invoke-LinkerCheckFixture `
+    -Label "clang-cl rejects PATH-shadowed link.exe" `
+    -CompilerId "Clang" `
+    -CompilerSimulateId "MSVC" `
+    -SelectedLinker $shadowLink `
+    -ExpectFailure
+
+Write-Host "ClassicLinkerCheck covers MSVC and clang-cl linker selection." -ForegroundColor Green

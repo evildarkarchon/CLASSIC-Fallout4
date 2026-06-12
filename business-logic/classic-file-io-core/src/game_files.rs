@@ -11,6 +11,7 @@
 //! will match any file whose name contains `"reshade"` (case-insensitive).
 
 use std::fmt;
+use std::future::Future;
 use std::path::{Path, PathBuf};
 
 use tokio::fs;
@@ -143,35 +144,18 @@ impl GameFilesManager {
             label
         );
 
-        let mut files_affected = 0usize;
-        let mut errors = Vec::new();
-
-        // Process in batches using JoinSet for bounded concurrency
-        for chunk in matching.chunks(MAX_CONCURRENT_OPS) {
-            let mut join_set = JoinSet::new();
-
-            for source in chunk {
-                let source = source.clone();
+        let backup_entries: Vec<(PathBuf, PathBuf)> = matching
+            .into_iter()
+            .map(|source| {
                 let dest = backup_dir.join(source.file_name().unwrap_or_default());
-                join_set.spawn(async move { copy_entry(&source, &dest).await });
-            }
-
-            while let Some(result) = join_set.join_next().await {
-                match result {
-                    Ok(Ok(())) => files_affected += 1,
-                    Ok(Err(e)) => {
-                        let msg = format!("{e}");
-                        error!("Backup operation failed: {msg}");
-                        errors.push(msg);
-                    }
-                    Err(e) => {
-                        let msg = format!("Task join error: {e}");
-                        error!("{msg}");
-                        errors.push(msg);
-                    }
-                }
-            }
-        }
+                (source, dest)
+            })
+            .collect();
+        let (files_affected, errors) =
+            process_entries_chunked(&backup_entries, "Backup", |(source, dest)| async move {
+                copy_entry(&source, &dest).await
+            })
+            .await;
 
         Ok(FileOperationResult {
             operation: FileOperation::Backup,
@@ -207,9 +191,6 @@ impl GameFilesManager {
             label
         );
 
-        let mut files_affected = 0usize;
-        let mut errors = Vec::new();
-
         // Only restore files that exist in the backup
         let mut restore_entries = Vec::new();
         for game_entry in &matching {
@@ -223,31 +204,11 @@ impl GameFilesManager {
             }
         }
 
-        for chunk in restore_entries.chunks(MAX_CONCURRENT_OPS) {
-            let mut join_set = JoinSet::new();
-
-            for (source, dest) in chunk {
-                let source = source.clone();
-                let dest = dest.clone();
-                join_set.spawn(async move { copy_entry(&source, &dest).await });
-            }
-
-            while let Some(result) = join_set.join_next().await {
-                match result {
-                    Ok(Ok(())) => files_affected += 1,
-                    Ok(Err(e)) => {
-                        let msg = format!("{e}");
-                        error!("Restore operation failed: {msg}");
-                        errors.push(msg);
-                    }
-                    Err(e) => {
-                        let msg = format!("Task join error: {e}");
-                        error!("{msg}");
-                        errors.push(msg);
-                    }
-                }
-            }
-        }
+        let (files_affected, errors) =
+            process_entries_chunked(&restore_entries, "Restore", |(source, dest)| async move {
+                copy_entry(&source, &dest).await
+            })
+            .await;
 
         Ok(FileOperationResult {
             operation: FileOperation::Restore,
@@ -278,33 +239,11 @@ impl GameFilesManager {
             label
         );
 
-        let mut files_affected = 0usize;
-        let mut errors = Vec::new();
-
-        for chunk in matching.chunks(MAX_CONCURRENT_OPS) {
-            let mut join_set = JoinSet::new();
-
-            for entry in chunk {
-                let entry = entry.clone();
-                join_set.spawn(async move { remove_entry(&entry).await });
-            }
-
-            while let Some(result) = join_set.join_next().await {
-                match result {
-                    Ok(Ok(())) => files_affected += 1,
-                    Ok(Err(e)) => {
-                        let msg = format!("{e}");
-                        error!("Remove operation failed: {msg}");
-                        errors.push(msg);
-                    }
-                    Err(e) => {
-                        let msg = format!("Task join error: {e}");
-                        error!("{msg}");
-                        errors.push(msg);
-                    }
-                }
-            }
-        }
+        let (files_affected, errors) =
+            process_entries_chunked(&matching, "Remove", |entry| async move {
+                remove_entry(&entry).await
+            })
+            .await;
 
         Ok(FileOperationResult {
             operation: FileOperation::Remove,
@@ -345,6 +284,46 @@ impl GameFilesManager {
 
         Ok(matching)
     }
+}
+
+async fn process_entries_chunked<T, F, Fut>(
+    entries: &[T],
+    operation_label: &str,
+    mut task_for: F,
+) -> (usize, Vec<String>)
+where
+    T: Clone + Send + 'static,
+    F: FnMut(T) -> Fut,
+    Fut: Future<Output = Result<(), FileIOError>> + Send + 'static,
+{
+    let mut files_affected = 0usize;
+    let mut errors = Vec::new();
+
+    for chunk in entries.chunks(MAX_CONCURRENT_OPS) {
+        let mut join_set = JoinSet::new();
+
+        for entry in chunk {
+            join_set.spawn(task_for(entry.clone()));
+        }
+
+        while let Some(result) = join_set.join_next().await {
+            match result {
+                Ok(Ok(())) => files_affected += 1,
+                Ok(Err(e)) => {
+                    let msg = format!("{e}");
+                    error!("{operation_label} operation failed: {msg}");
+                    errors.push(msg);
+                }
+                Err(e) => {
+                    let msg = format!("Task join error: {e}");
+                    error!("{msg}");
+                    errors.push(msg);
+                }
+            }
+        }
+    }
+
+    (files_affected, errors)
 }
 
 /// Check if a filename matches any of the given patterns (case-insensitive substring).

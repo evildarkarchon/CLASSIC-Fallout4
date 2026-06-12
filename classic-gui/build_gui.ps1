@@ -10,6 +10,8 @@
     The default presets expect Qt 6 to come from vcpkg via VCPKG_ROOT.
     Use the system-fallback presets only when you intentionally want a
     non-vcpkg Qt install, typically alongside CMAKE_PREFIX_PATH or Qt6_DIR.
+    The ci-system-qt presets are CI-oriented release presets for prebuilt Qt
+    installs and intentionally avoid vcpkg manifest mode.
 
 .PARAMETER Clean
     Remove build directory before building.
@@ -26,6 +28,10 @@
 
 .PARAMETER Debug
     Build using a debug preset (build-debug directory).
+
+.PARAMETER Compiler
+    C++ compiler toolchain to use. Default: msvc. Use clang-cl to build with
+    clang-cl and lld-link against the Visual Studio/MSVC ABI toolchain.
 
 .PARAMETER Install
     Run cmake --install to create a deployable layout with windeployqt.
@@ -48,6 +54,10 @@
     .\build_gui.ps1 -Clean -Package
     .\build_gui.ps1 -Preset system-fallback
     .\build_gui.ps1 -Debug -Preset system-fallback
+    .\build_gui.ps1 -Preset ci-system-qt
+    .\build_gui.ps1 -Compiler clang-cl
+    .\build_gui.ps1 -Debug -Compiler clang-cl
+    .\build_gui.ps1 -Preset system-fallback -Compiler clang-cl
     .\build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
     .\build_gui.ps1 -Test -CTestName classic-gui-test-resultscontroller,classic-gui-test-markdownviewer
     .\build_gui.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
@@ -60,6 +70,8 @@ param(
     [switch]$Install,
     [switch]$Package,
     [string]$Preset = "default",
+    [ValidateSet("msvc", "clang-cl")]
+    [string]$Compiler = "msvc",
     [string[]]$CTestName = @(),
     [string[]]$CTestArgs = @(),
     [int]$TestTimeoutSec = 600
@@ -70,7 +82,7 @@ $ErrorActionPreference = "Stop"
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
 
-    $normalized = @(Normalize-TestNameList -TestNames $TestNames)
+    $normalized = @(ConvertTo-TestNameList -TestNames $TestNames)
     if ($normalized.Count -eq 0) {
         return $null
     }
@@ -83,7 +95,7 @@ function New-ExactTestNameRegex {
 .SYNOPSIS
     Normalizes selected test names from PowerShell arrays or comma-separated strings.
 #>
-function Normalize-TestNameList {
+function ConvertTo-TestNameList {
     param([string[]]$TestNames)
 
     $normalized = @()
@@ -103,10 +115,77 @@ function Normalize-TestNameList {
     return $normalized
 }
 
+<#
+.SYNOPSIS
+    Finds the resource compiler CMake should use for MSVC-style manifest links.
+#>
+function Get-WindowsResourceCompiler {
+    param([string]$ClangClPath)
+
+    $rcCommands = @(Get-Command rc.exe -All -ErrorAction SilentlyContinue | Where-Object { $_.Source })
+    $windowsSdkRc = $rcCommands |
+        Where-Object { $_.Source -match '\\Windows Kits\\10\\bin\\[^\\]+\\x64\\rc\.exe$' } |
+        Select-Object -First 1
+    if ($windowsSdkRc) {
+        return $windowsSdkRc
+    }
+
+    if ($ClangClPath) {
+        $llvmRcPath = Join-Path (Split-Path -Parent $ClangClPath) "llvm-rc.exe"
+        if (Test-Path $llvmRcPath) {
+            return Get-Command $llvmRcPath -ErrorAction SilentlyContinue
+        }
+    }
+
+    return $rcCommands | Select-Object -First 1
+}
+
+<#
+.SYNOPSIS
+    Checks that the Visual Studio environment exposes Windows SDK variables.
+#>
+function Test-WindowsSdkEnvironment {
+    return -not [string]::IsNullOrWhiteSpace($env:WindowsSDKVersion) -and
+        -not [string]::IsNullOrWhiteSpace($env:WindowsSdkDir)
+}
+
+<#
+.SYNOPSIS
+    Configures Cargo cc-rs build scripts to use clang-cl for MSVC-targeted C/C++ glue.
+#>
+function Set-ClangClCargoCcEnvironment {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ClangClPath
+    )
+
+    # cc-rs defaults to cl.exe for -msvc targets unless target-specific
+    # compiler selectors override the built-in tool lookup.
+    foreach ($name in @(
+            "CC_x86_64_pc_windows_msvc",
+            "CC_x86_64-pc-windows-msvc",
+            "CXX_x86_64_pc_windows_msvc",
+            "CXX_x86_64-pc-windows-msvc"
+        )) {
+        [Environment]::SetEnvironmentVariable($name, $ClangClPath, "Process")
+    }
+
+    $exceptionFlag = "/EHsc"
+    foreach ($name in @("CXXFLAGS_x86_64_pc_windows_msvc", "CXXFLAGS_x86_64-pc-windows-msvc")) {
+        $current = [Environment]::GetEnvironmentVariable($name, "Process")
+        if ([string]::IsNullOrWhiteSpace($current)) {
+            [Environment]::SetEnvironmentVariable($name, $exceptionFlag, "Process")
+        }
+        elseif ($current -notmatch '(^|\s)/EH') {
+            [Environment]::SetEnvironmentVariable($name, "$current $exceptionFlag", "Process")
+        }
+    }
+}
+
 # -Package implies -Install (windeployqt must populate the install dir first)
 if ($Package) { $Install = $true }
 
-$CTestName = @(Normalize-TestNameList -TestNames $CTestName)
+$CTestName = @(ConvertTo-TestNameList -TestNames $CTestName)
 $CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if (($CTestName.Count -gt 0 -or $CTestArgs.Count -gt 0) -and -not $Test) {
     Write-Error "-CTestName and -CTestArgs require -Test."
@@ -118,6 +197,21 @@ $ctestRegex = New-ExactTestNameRegex -TestNames $CTestName
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $effectivePreset = $Preset
 
+function Convert-ToClangClPreset {
+    param([string]$PresetName)
+
+    switch ($PresetName) {
+        "default" { return "default-clang-cl" }
+        "debug" { return "debug-clang-cl" }
+        "system-fallback" { return "system-fallback-clang-cl" }
+        "system-fallback-debug" { return "system-fallback-debug-clang-cl" }
+        "ci" { return "ci-clang-cl" }
+        "ci-debug" { return "ci-debug-clang-cl" }
+        "ci-system-qt" { return "ci-system-qt-clang-cl" }
+        default { return $PresetName }
+    }
+}
+
 if ($Debug) {
     switch ($Preset) {
         "default" { $effectivePreset = "debug" }
@@ -126,17 +220,43 @@ if ($Debug) {
         "ci-debug" { $effectivePreset = "ci-debug" }
         "system-fallback" { $effectivePreset = "system-fallback-debug" }
         "system-fallback-debug" { $effectivePreset = "system-fallback-debug" }
+        "default-clang-cl" { $effectivePreset = "debug-clang-cl" }
+        "ci-clang-cl" { $effectivePreset = "ci-debug-clang-cl" }
+        "debug-clang-cl" { $effectivePreset = "debug-clang-cl" }
+        "ci-debug-clang-cl" { $effectivePreset = "ci-debug-clang-cl" }
+        "system-fallback-clang-cl" { $effectivePreset = "system-fallback-debug-clang-cl" }
+        "system-fallback-debug-clang-cl" { $effectivePreset = "system-fallback-debug-clang-cl" }
         default {
-            Write-Error "Debug mode supports -Preset default, ci, debug, ci-debug, system-fallback, or system-fallback-debug. Received: '$Preset'."
+            Write-Error "Debug mode supports -Preset default, ci, debug, ci-debug, system-fallback, system-fallback-debug, and their -clang-cl variants. Received: '$Preset'."
             exit 1
         }
     }
 }
 
-$isDebugPreset = $effectivePreset -in @("debug", "ci-debug", "system-fallback-debug")
+if ($Compiler -eq "clang-cl") {
+    $effectivePreset = Convert-ToClangClPreset -PresetName $effectivePreset
+}
+
+$usesClangCl = $effectivePreset.EndsWith("-clang-cl")
+$isDebugPreset = $effectivePreset -in @(
+    "debug",
+    "ci-debug",
+    "system-fallback-debug",
+    "debug-clang-cl",
+    "ci-debug-clang-cl",
+    "system-fallback-debug-clang-cl"
+)
 $buildDirName = switch ($effectivePreset) {
     "system-fallback" { "build-system-fallback" }
     "system-fallback-debug" { "build-system-fallback-debug" }
+    "default-clang-cl" { "build-clang-cl" }
+    "debug-clang-cl" { "build-debug-clang-cl" }
+    "ci-clang-cl" { "build-clang-cl" }
+    "ci-debug-clang-cl" { "build-debug-clang-cl" }
+    "ci-system-qt" { "build" }
+    "ci-system-qt-clang-cl" { "build-clang-cl" }
+    "system-fallback-clang-cl" { "build-system-fallback-clang-cl" }
+    "system-fallback-debug-clang-cl" { "build-system-fallback-debug-clang-cl" }
     default {
         if ($isDebugPreset) { "build-debug" } else { "build" }
     }
@@ -144,8 +264,10 @@ $buildDirName = switch ($effectivePreset) {
 $buildDir = Join-Path $ScriptDir $buildDirName
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
+# vcpkg Qt pulls SDK-backed ports such as opengl; those portfiles need the
+# Windows SDK env vars, not just cl.exe on PATH.
 $clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
-if (-not $clFound) {
+if (-not $clFound -or -not (Test-WindowsSdkEnvironment)) {
     Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
     $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
         -latest -property installationPath 2>$null
@@ -162,11 +284,45 @@ if (-not $clFound) {
     }
 }
 
-# ── Verify Ninja is available ────────────────────────────────────
+# ── Verify required toolchain components are available ───────────
+$clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
+$clangClFound = Get-Command clang-cl.exe -ErrorAction SilentlyContinue
+$lldLinkFound = Get-Command lld-link.exe -ErrorAction SilentlyContinue
+$dumpbinFound = Get-Command dumpbin.exe -ErrorAction SilentlyContinue
+$rcFound = Get-WindowsResourceCompiler -ClangClPath $clangClFound.Source
 $ninjaFound = Get-Command ninja.exe -ErrorAction SilentlyContinue
-if (-not $ninjaFound) {
-    Write-Error "Ninja not found in PATH. Install Ninja or run from a VS Dev Shell that includes it."
+if (-not $clFound -or -not (Test-WindowsSdkEnvironment) -or ($usesClangCl -and (-not $clangClFound -or -not $lldLinkFound -or -not $dumpbinFound -or -not $rcFound)) -or -not $ninjaFound) {
+    if (-not $clFound) {
+        Write-Host "Missing required tool: cl.exe" -ForegroundColor Red
+    }
+    if (-not (Test-WindowsSdkEnvironment)) {
+        Write-Host "Missing required environment: WindowsSDKVersion and WindowsSdkDir" -ForegroundColor Red
+    }
+    if ($usesClangCl -and -not $clangClFound) {
+        Write-Host "Missing required tool: clang-cl.exe" -ForegroundColor Red
+    }
+    if ($usesClangCl -and -not $lldLinkFound) {
+        Write-Host "Missing required tool: lld-link.exe" -ForegroundColor Red
+    }
+    if ($usesClangCl -and -not $dumpbinFound) {
+        Write-Host "Missing required tool: dumpbin.exe" -ForegroundColor Red
+    }
+    if ($usesClangCl -and -not $rcFound) {
+        Write-Host "Missing required tool: rc.exe or llvm-rc.exe" -ForegroundColor Red
+    }
+    if (-not $ninjaFound) {
+        Write-Host "Missing required tool: ninja" -ForegroundColor Red
+    }
+    Write-Error "Build prerequisites are missing. Run from Developer PowerShell for Visual Studio and ensure Visual Studio C++ workload, optional clang-cl/lld-link components, and Ninja/CMake components are installed."
     exit 1
+}
+
+if ($usesClangCl) {
+    Set-ClangClCargoCcEnvironment -ClangClPath $clangClFound.Source
+    $env:CLASSIC_CLANG_CL = $clangClFound.Source
+    $env:CLASSIC_LLD_LINK = $lldLinkFound.Source
+    $env:CLASSIC_DUMPBIN = $dumpbinFound.Source
+    $env:CLASSIC_RC = $rcFound.Source
 }
 
 # ── Step 1: Clean (optional) ─────────────────────────────────────
@@ -247,7 +403,12 @@ try {
 
     # ── Step 5: Install (optional) ───────────────────────────────
     if ($Install) {
-        $installDirName = if ($isDebugPreset) { "install-debug" } else { "install" }
+        if ($usesClangCl) {
+            $installDirName = if ($isDebugPreset) { "install-debug-clang-cl" } else { "install-clang-cl" }
+        }
+        else {
+            $installDirName = if ($isDebugPreset) { "install-debug" } else { "install" }
+        }
         $installDir = Join-Path $ScriptDir $installDirName
         Write-Host "`n=== Installing to $installDir ===" -ForegroundColor Cyan
         & cmake --install $buildDirName --prefix $installDir

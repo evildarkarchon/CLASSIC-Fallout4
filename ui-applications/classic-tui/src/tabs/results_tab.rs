@@ -252,33 +252,8 @@ pub fn render_results_tab(
         text_area,
     );
 
-    if text_area.width > 0 {
-        for link in data.rendered_links {
-            if link.line_index < data.scroll_offset {
-                continue;
-            }
-            let relative_line = link.line_index - data.scroll_offset;
-            if relative_line >= text_area.height as usize {
-                continue;
-            }
-
-            let start_col = link.start_col.min(text_area.width as usize);
-            let end_col = link.end_col.min(text_area.width as usize);
-            if end_col <= start_col {
-                continue;
-            }
-
-            click_areas.viewer_link_areas.push(ViewerLinkHitArea {
-                link_index: link.index,
-                area: Rect::new(
-                    text_area.x + start_col as u16,
-                    text_area.y + relative_line as u16,
-                    (end_col - start_col) as u16,
-                    1,
-                ),
-            });
-        }
-    }
+    click_areas.viewer_link_areas =
+        collect_visible_link_hit_areas(text_area, data.scroll_offset, data.rendered_links);
 
     if viewer_inner.width > 1 {
         let scrollbar_area = Rect::new(
@@ -300,6 +275,45 @@ pub fn render_results_tab(
     click_areas.viewer_viewport_height = text_area.height as usize;
 
     click_areas
+}
+
+fn collect_visible_link_hit_areas(
+    text_area: Rect,
+    scroll_offset: usize,
+    links: &[MarkdownLink],
+) -> Vec<ViewerLinkHitArea> {
+    if text_area.width == 0 {
+        return Vec::new();
+    }
+
+    links
+        .iter()
+        .filter_map(|link| {
+            if link.line_index < scroll_offset {
+                return None;
+            }
+            let relative_line = link.line_index - scroll_offset;
+            if relative_line >= text_area.height as usize {
+                return None;
+            }
+
+            let start_col = link.start_col.min(text_area.width as usize);
+            let end_col = link.end_col.min(text_area.width as usize);
+            if end_col <= start_col {
+                return None;
+            }
+
+            Some(ViewerLinkHitArea {
+                link_index: link.index,
+                area: Rect::new(
+                    text_area.x + start_col as u16,
+                    text_area.y + relative_line as u16,
+                    (end_col - start_col) as u16,
+                    1,
+                ),
+            })
+        })
+        .collect()
 }
 
 fn render_empty_results(frame: &mut Frame<'_>, area: Rect) -> ResultsClickAreas {
@@ -399,3 +413,7 @@ fn render_scrollbar(
 
     frame.render_widget(Paragraph::new(lines), area);
 }
+
+#[cfg(test)]
+#[path = "results_tab_tests.rs"]
+mod tests;

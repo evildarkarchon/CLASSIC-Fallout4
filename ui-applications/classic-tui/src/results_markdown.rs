@@ -19,249 +19,98 @@ pub struct RenderedMarkdown {
 }
 
 pub fn render_markdown(markdown: &str) -> RenderedMarkdown {
-    let mut lines = Vec::new();
-    let mut links: Vec<MarkdownLink> = Vec::new();
-    let mut current_spans: Vec<Span<'static>> = Vec::new();
-    let mut current_col: usize = 0;
-
-    let mut heading: Option<HeadingLevel> = None;
-    let mut list_stack: Vec<ListContext> = Vec::new();
-    let mut pending_list_prefix: Option<String> = None;
-    let mut blockquote_depth: usize = 0;
-    let mut in_code_block = false;
-    let mut strong = false;
-    let mut emphasis = false;
-    let mut active_link: Option<ActiveLink> = None;
+    let mut state = MarkdownRenderState::default();
 
     let parser = Parser::new_ext(markdown, Options::all());
     for event in parser {
         match event {
             Event::Start(Tag::Heading { level, .. }) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                heading = Some(level);
+                state.flush_line();
+                state.heading = Some(level);
             }
             Event::End(TagEnd::Heading(_)) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                heading = None;
+                state.flush_line();
+                state.heading = None;
             }
             Event::Start(Tag::Paragraph) => {}
             Event::End(TagEnd::Paragraph) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
+                state.flush_line();
             }
             Event::Start(Tag::List(start)) => {
-                list_stack.push(ListContext::new(start.map(|value| value as usize)));
+                state
+                    .list_stack
+                    .push(ListContext::new(start.map(|value| value as usize)));
             }
             Event::End(TagEnd::List(_)) => {
-                list_stack.pop();
+                state.list_stack.pop();
             }
             Event::Start(Tag::Item) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                pending_list_prefix = Some(list_prefix(&mut list_stack));
+                state.flush_line();
+                state.pending_list_prefix = Some(list_prefix(&mut state.list_stack));
             }
             Event::End(TagEnd::Item) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
+                state.flush_line();
             }
             Event::Start(Tag::BlockQuote(_)) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                blockquote_depth = blockquote_depth.saturating_add(1);
+                state.flush_line();
+                state.blockquote_depth = state.blockquote_depth.saturating_add(1);
             }
             Event::End(TagEnd::BlockQuote(_)) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                blockquote_depth = blockquote_depth.saturating_sub(1);
+                state.flush_line();
+                state.blockquote_depth = state.blockquote_depth.saturating_sub(1);
             }
             Event::Start(Tag::CodeBlock(_)) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                in_code_block = true;
+                state.flush_line();
+                state.in_code_block = true;
             }
             Event::End(TagEnd::CodeBlock) => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                in_code_block = false;
+                state.flush_line();
+                state.in_code_block = false;
             }
-            Event::Start(Tag::Strong) => strong = true,
-            Event::End(TagEnd::Strong) => strong = false,
-            Event::Start(Tag::Emphasis) => emphasis = true,
-            Event::End(TagEnd::Emphasis) => emphasis = false,
+            Event::Start(Tag::Strong) => state.strong = true,
+            Event::End(TagEnd::Strong) => state.strong = false,
+            Event::Start(Tag::Emphasis) => state.emphasis = true,
+            Event::End(TagEnd::Emphasis) => state.emphasis = false,
             Event::Start(Tag::Link { dest_url, .. }) => {
-                active_link = Some(ActiveLink::new(dest_url.to_string()));
+                state.active_link = Some(ActiveLink::new(dest_url.to_string()));
             }
             Event::End(TagEnd::Link) => {
-                finalize_link_segment(&mut links, &mut active_link, lines.len(), current_col);
-                active_link = None;
+                state.finalize_link_segment();
+                state.active_link = None;
             }
             Event::Rule => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
-                lines.push(Line::from(Span::styled(
+                state.flush_line();
+                state.lines.push(Line::from(Span::styled(
                     "─".repeat(40),
                     Style::default().fg(Color::DarkGray),
                 )));
             }
             Event::Text(text) => {
-                let base_style = if in_code_block {
+                let base_style = if state.in_code_block {
                     Style::default().bg(Color::Rgb(42, 42, 46))
                 } else {
-                    inline_style(strong, emphasis)
+                    inline_style(state.strong, state.emphasis)
                 };
-                push_text(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &text,
-                    base_style,
-                    &mut pending_list_prefix,
-                    blockquote_depth,
-                    &mut active_link,
-                );
+                state.push_text(&text, base_style);
             }
             Event::Code(code) => {
-                ensure_prefix(
-                    &mut current_spans,
-                    &mut current_col,
-                    &mut pending_list_prefix,
-                    blockquote_depth,
-                );
-                let style = if active_link.is_some() {
-                    link_style(Style::default().bg(Color::Rgb(42, 42, 46)))
-                } else {
-                    Style::default().bg(Color::Rgb(42, 42, 46))
-                };
-                let text = code.to_string();
-                current_col = current_col.saturating_add(text.chars().count());
-                if let Some(link) = active_link.as_mut() {
-                    link.push_label(&text);
-                    if link.segment_start_col.is_none() {
-                        link.segment_start_col =
-                            Some(current_col.saturating_sub(text.chars().count()));
-                    }
-                }
-                current_spans.push(Span::styled(text, style));
+                state.push_code(&code);
             }
             Event::SoftBreak => {
-                if in_code_block {
-                    flush_line(
-                        &mut lines,
-                        &mut links,
-                        &mut current_spans,
-                        &mut current_col,
-                        heading,
-                        &mut active_link,
-                    );
+                if state.in_code_block {
+                    state.flush_line();
                 } else {
-                    ensure_prefix(
-                        &mut current_spans,
-                        &mut current_col,
-                        &mut pending_list_prefix,
-                        blockquote_depth,
-                    );
-                    current_col = current_col.saturating_add(1);
-                    if let Some(link) = active_link.as_mut() {
-                        link.push_label(" ");
-                        if link.segment_start_col.is_none() {
-                            link.segment_start_col = Some(current_col - 1);
-                        }
-                    }
-                    current_spans.push(Span::raw(" "));
+                    state.push_soft_break_space();
                 }
             }
             Event::HardBreak => {
-                flush_line(
-                    &mut lines,
-                    &mut links,
-                    &mut current_spans,
-                    &mut current_col,
-                    heading,
-                    &mut active_link,
-                );
+                state.flush_line();
             }
             _ => {}
         }
     }
 
-    flush_line(
-        &mut lines,
-        &mut links,
-        &mut current_spans,
-        &mut current_col,
-        heading,
-        &mut active_link,
-    );
-
-    if lines.is_empty() {
-        lines.push(Line::from(""));
-    }
-
-    RenderedMarkdown { lines, links }
+    state.into_rendered()
 }
 
 pub fn render_markdown_lines(markdown: &str) -> Vec<Line<'static>> {
@@ -288,6 +137,110 @@ struct ActiveLink {
     url: String,
     label: String,
     segment_start_col: Option<usize>,
+}
+
+#[derive(Default)]
+struct MarkdownRenderState {
+    lines: Vec<Line<'static>>,
+    links: Vec<MarkdownLink>,
+    current_spans: Vec<Span<'static>>,
+    current_col: usize,
+    heading: Option<HeadingLevel>,
+    list_stack: Vec<ListContext>,
+    pending_list_prefix: Option<String>,
+    blockquote_depth: usize,
+    in_code_block: bool,
+    strong: bool,
+    emphasis: bool,
+    active_link: Option<ActiveLink>,
+}
+
+impl MarkdownRenderState {
+    fn flush_line(&mut self) {
+        flush_line(
+            &mut self.lines,
+            &mut self.links,
+            &mut self.current_spans,
+            &mut self.current_col,
+            self.heading,
+            &mut self.active_link,
+        );
+    }
+
+    fn finalize_link_segment(&mut self) {
+        finalize_link_segment(
+            &mut self.links,
+            &mut self.active_link,
+            self.lines.len(),
+            self.current_col,
+        );
+    }
+
+    fn ensure_prefix(&mut self) {
+        ensure_prefix(
+            &mut self.current_spans,
+            &mut self.current_col,
+            &mut self.pending_list_prefix,
+            self.blockquote_depth,
+        );
+    }
+
+    fn push_text(&mut self, text: &str, style: Style) {
+        push_text(
+            &mut self.lines,
+            &mut self.links,
+            &mut self.current_spans,
+            &mut self.current_col,
+            self.heading,
+            text,
+            style,
+            &mut self.pending_list_prefix,
+            self.blockquote_depth,
+            &mut self.active_link,
+        );
+    }
+
+    fn push_code(&mut self, code: &str) {
+        self.ensure_prefix();
+        let style = if self.active_link.is_some() {
+            link_style(Style::default().bg(Color::Rgb(42, 42, 46)))
+        } else {
+            Style::default().bg(Color::Rgb(42, 42, 46))
+        };
+        let text = code.to_string();
+        let text_width = text.chars().count();
+        self.current_col = self.current_col.saturating_add(text_width);
+        if let Some(link) = self.active_link.as_mut() {
+            link.push_label(&text);
+            if link.segment_start_col.is_none() {
+                link.segment_start_col = Some(self.current_col.saturating_sub(text_width));
+            }
+        }
+        self.current_spans.push(Span::styled(text, style));
+    }
+
+    fn push_soft_break_space(&mut self) {
+        self.ensure_prefix();
+        self.current_col = self.current_col.saturating_add(1);
+        if let Some(link) = self.active_link.as_mut() {
+            link.push_label(" ");
+            if link.segment_start_col.is_none() {
+                link.segment_start_col = Some(self.current_col - 1);
+            }
+        }
+        self.current_spans.push(Span::raw(" "));
+    }
+
+    fn into_rendered(mut self) -> RenderedMarkdown {
+        self.flush_line();
+        if self.lines.is_empty() {
+            self.lines.push(Line::from(""));
+        }
+        RenderedMarkdown {
+            lines: self.lines,
+            links: self.links,
+        }
+    }
 }
 
 impl ActiveLink {

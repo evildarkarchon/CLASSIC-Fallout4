@@ -79,6 +79,8 @@
 //!     t.join()
 //! ```
 
+/// Shared PyO3 parsers for crashgen settings rule dictionaries.
+pub mod crashgen_rules;
 mod main_yaml_version;
 
 use classic_config_core::{

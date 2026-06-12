@@ -5,8 +5,8 @@ use classic_config_core::{
 };
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
-    resolve_batch_concurrency,
+    AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions, OrchestratorCore,
+    build_analysis_config_from_yaml,
 };
 use classic_shared::without_gil_block_on;
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -868,87 +868,48 @@ impl PyRustOrchestrator {
         progress_callback: Option<Py<PyAny>>,
         cancellation_token: Option<PyCancellationToken>,
     ) -> PyResult<Vec<PyAnalysisResult>> {
-        use futures::stream::{self, StreamExt};
-        use std::collections::HashMap;
-
         if log_paths.is_empty() {
             return Ok(Vec::new());
         }
 
         let total = log_paths.len();
         let cancellation = cancellation_token.map(|t| t.inner.clone());
-
-        // Wrap the callback in Arc for sharing across async tasks
-        // Clone the Py<PyAny> while we have the GIL (increment refcount)
         let callback: Option<Arc<Py<PyAny>>> =
             progress_callback.map(|cb| Arc::new(cb.clone_ref(py)));
 
-        // Determine concurrency level
-        let concurrency = resolve_batch_concurrency(total, max_concurrent);
-
-        // Clone log_paths for use inside the closure (needed for placeholder generation)
-        let log_paths_clone = log_paths.clone();
-
-        // Release GIL during parallel batch processing
-        let indexed_results: HashMap<usize, AnalysisResult> = without_gil_block_on(py, || async {
-            // Process with index tracking for order preservation
-            stream::iter(log_paths.into_iter().enumerate())
-                .map(|(index, log_path)| {
-                    let cancellation = cancellation.clone();
-                    let callback = callback.clone();
-                    let log_path_clone = log_path.clone();
-                    async move {
-                        // Check cancellation before processing each log
-                        if let Some(ref cancel) = cancellation {
-                            if cancel.load(Ordering::Relaxed) {
-                                return (
-                                    index,
-                                    AnalysisResult::failure(
-                                        log_path_clone,
-                                        "Cancelled by user".to_string(),
-                                    ),
-                                );
-                            }
+        let indexed_results = without_gil_block_on(py, || async {
+            self.inner
+                .process_logs_batch_with_events(
+                    log_paths,
+                    BatchScanOptions {
+                        max_concurrent,
+                        preserve_order: true,
+                        cancellation,
+                    },
+                    |event| {
+                        if !matches!(
+                            event.kind,
+                            BatchScanEventKind::Completed | BatchScanEventKind::Failed
+                        ) {
+                            return;
                         }
-
-                        // Process the log
-                        let result = match self.inner.process_log(log_path.clone()).await {
-                            Ok(r) => r,
-                            Err(e) => {
-                                AnalysisResult::failure(log_path_clone.clone(), e.to_string())
-                            }
-                        };
-
-                        // Report progress after each log completes (with GIL)
                         if let Some(ref cb) = callback {
-                            let current = index + 1;
-                            let filename = log_path_clone.clone();
-                            // Re-acquire GIL to call Python callback
+                            let current = event.input_index + 1;
+                            let filename = event.log_path.clone();
                             Python::attach(|py_inner| {
-                                // Best-effort callback invocation - don't fail batch on callback error
                                 let _ = cb.call1(py_inner, (current, total, filename));
                             });
                         }
-
-                        (index, result)
-                    }
-                })
-                .buffer_unordered(concurrency)
-                .collect()
+                    },
+                )
                 .await
         });
 
-        // Reconstruct results in input order with placeholders for any missing entries
-        let results: Vec<PyAnalysisResult> = (0..total)
-            .map(|i| {
-                indexed_results.get(&i).cloned().unwrap_or_else(|| {
-                    AnalysisResult::failure(
-                        log_paths_clone[i].clone(),
-                        "Processing result missing".to_string(),
-                    )
-                })
+        let results = indexed_results
+            .into_iter()
+            .map(|indexed| PyAnalysisResult {
+                inner: indexed.result,
             })
-            .map(|r| PyAnalysisResult { inner: r })
             .collect();
 
         Ok(results)

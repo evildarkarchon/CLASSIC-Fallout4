@@ -242,6 +242,9 @@ pub struct CrashgenConfig {
     /// Optional game version range this crash generator is compatible with.
     /// If `None`, the crash generator is valid for any game version in the parent `VersionInfo`.
     pub compatible_range: Option<CompatibleRange>,
+    /// When `true`, this version is valid only on exact equality and is excluded from floor
+    /// computation. Use for legacy builds that remain acceptable but must not lower the floor.
+    pub exact_match: bool,
 }
 
 impl CrashgenConfig {
@@ -272,6 +275,7 @@ impl CrashgenConfig {
             description: description.into(),
             download_url: download_url.into(),
             compatible_range: None,
+            exact_match: false,
         }
     }
 
@@ -304,6 +308,7 @@ impl CrashgenConfig {
             description: description.into(),
             download_url: download_url.into(),
             compatible_range: Some(compatible_range),
+            exact_match: false,
         }
     }
 
@@ -325,6 +330,7 @@ impl CrashgenConfig {
             description: String::new(),
             download_url: String::new(),
             compatible_range: None,
+            exact_match: false,
         }
     }
 
@@ -431,14 +437,15 @@ impl VersionInfo {
         }
     }
 
-    /// Get crash generator versions as simple version strings.
+    /// Get floor-eligible crash generator versions as simple version strings.
     ///
-    /// Provides backward-compatible access to just the version strings
-    /// of the crash generators, without the additional metadata.
+    /// Provides access to crash generator version strings that can be used as
+    /// minimum supported floors. Exact-match exception entries are omitted so
+    /// they do not lower floor-based validation.
     ///
     /// # Returns
     ///
-    /// A vector of version strings from `crashgen_versions`.
+    /// A vector of non-exact-match version strings from `crashgen_versions`.
     ///
     /// # Example
     ///
@@ -448,13 +455,14 @@ impl VersionInfo {
     /// let registry = get_version_registry();
     /// if let Some(og) = registry.get_by_id("FO4_OG") {
     ///     let versions = og.get_crashgen_version_strings();
-    ///     // Returns ["1.28.6", "1.38.1", "1.3.0"]
+    ///     // Returns ["1.38.1", "1.3.0"]
     /// }
     /// ```
     #[must_use]
     pub fn get_crashgen_version_strings(&self) -> Vec<&str> {
         self.crashgen_versions
             .iter()
+            .filter(|c| !c.exact_match)
             .map(|c| c.version.as_str())
             .collect()
     }

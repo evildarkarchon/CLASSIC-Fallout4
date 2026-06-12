@@ -38,10 +38,14 @@ jobs:
           retention-days: 7
 
   cli-tests:
-    name: CLI Tests
+    name: CLI Tests (${{ matrix.compiler }})
     needs: [cxx-parity-gate]
     runs-on: windows-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [msvc, clang-cl]
     env:
       RUST_BACKTRACE: full
     steps:
@@ -72,34 +76,33 @@ jobs:
         uses: actions/cache@v5
         with:
           path: target
-          key: ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-
-            ${{ runner.os }}-cargo-cpp-cli-
+            ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-cli-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-cli-
 
       - name: Cache vcpkg root
         uses: actions/cache@v5
         with:
           path: ~\vcpkg
-          key: ${{ runner.os }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-root-
+            ${{ runner.os }}-${{ matrix.compiler }}-vcpkg-root-
 
       - name: Set up vcpkg (resilient)
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
 
       - name: Build and test CLI
-        run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+        run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
 
       - name: Upload CLI diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: cli-test-diagnostics
+          name: cli-test-diagnostics-${{ matrix.compiler }}
           path: |
-            classic-cli/build/Testing/
-            classic-cli/build-debug/Testing/
+            classic-cli/build*/Testing/
             classic-cli/build*/CMakeFiles/CMake*.log
             classic-cli/build*/CMakeFiles/CMakeConfigureLog.yaml
             classic-cli/build*/vcpkg*.log
@@ -108,10 +111,14 @@ jobs:
           retention-days: 7
 
   gui-tests:
-    name: GUI Tests
+    name: GUI Tests (${{ matrix.compiler }})
     needs: [cxx-parity-gate]
     runs-on: windows-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [msvc, clang-cl]
     env:
       RUST_BACKTRACE: full
       QT_QPA_PLATFORM: offscreen
@@ -141,38 +148,33 @@ jobs:
         uses: actions/cache@v5
         with:
           path: target
-          key: ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-
-            ${{ runner.os }}-cargo-cpp-gui-
+            ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-gui-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-${{ matrix.compiler }}-cargo-cpp-gui-
 
-      - name: Cache vcpkg root
-        uses: actions/cache@v5
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
         with:
-          path: ~\vcpkg
-          key: ${{ runner.os }}-vcpkg-root-${{ hashFiles('.github/scripts/setup-vcpkg.ps1', 'classic-cli/vcpkg.json', 'classic-gui/vcpkg.json') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-root-
+          version: "6.10.0"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          archives: qtbase
+          cache: true
+          cache-key-prefix: classic-gui-qt
 
-      - name: Set up vcpkg (resilient)
+      - name: Configure Qt CMake path
         shell: pwsh
-        run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
-
-      - name: Cache GUI vcpkg installed
-        uses: actions/cache@v5
-        with:
-          path: classic-gui/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-installed-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-installed-gui-
-
-      - name: Cache GUI vcpkg archives
-        uses: actions/cache@v5
-        with:
-          path: ~\AppData\Local\vcpkg\archives
-          key: ${{ runner.os }}-vcpkg-archives-gui-${{ hashFiles('classic-gui/vcpkg.json', 'classic-gui/CMakePresets.json', '.github/scripts/setup-vcpkg.ps1') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-archives-gui-
+        run: |
+          if (-not $env:QT_ROOT_DIR) {
+            throw "QT_ROOT_DIR was not set by install-qt-action."
+          }
+          $prefixes = @($env:QT_ROOT_DIR)
+          if ($env:CMAKE_PREFIX_PATH) {
+            $prefixes += $env:CMAKE_PREFIX_PATH
+          }
+          "CMAKE_PREFIX_PATH=$($prefixes -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: GUI test preflight diagnostics
         shell: pwsh
@@ -180,22 +182,24 @@ jobs:
           cmake --version
           ctest --version
           Write-Host "QT_QPA_PLATFORM=$env:QT_QPA_PLATFORM"
+          Write-Host "QT_ROOT_DIR=$env:QT_ROOT_DIR"
+          Write-Host "Qt6_DIR=$env:Qt6_DIR"
+          Write-Host "CMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH"
 
       - name: Verify Qt resolution policy
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/verify_qt_resolution.ps1
 
       - name: Build and test GUI
-        run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci -Test -TestTimeoutSec 600
+        run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
 
       - name: Upload GUI diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: gui-test-diagnostics
+          name: gui-test-diagnostics-${{ matrix.compiler }}
           path: |
-            classic-gui/build/Testing/
-            classic-gui/build-debug/Testing/
+            classic-gui/build*/Testing/
             classic-gui/build-qt-policy-check/
             classic-gui/build*/CMakeFiles/CMake*.log
             classic-gui/build*/CMakeFiles/CMakeConfigureLog.yaml

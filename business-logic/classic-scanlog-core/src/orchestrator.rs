@@ -21,16 +21,18 @@ use crate::mod_detector::{
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
-use crate::report::ReportGenerator;
+use crate::report::{ReportFragment, ReportGenerator};
 use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
-    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
+    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
+    check_crashgen_version_status_with_exceptions, crashgen_version_gen,
     is_fake_bot_compatible_buffout_version,
 };
 use classic_config_core::{
-    CoreModEntry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule, SuspectStackRule,
+    ConfigLayout, CoreModEntry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule,
+    SuspectStackRule,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
@@ -41,6 +43,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock};
 
 /// Coarse-grained scan progress phases emitted at orchestration boundaries.
@@ -56,6 +59,90 @@ pub enum ScanProgressPhase {
     Finalize,
 }
 
+/// Batch lifecycle events emitted by the core batch scan driver.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BatchScanEventKind {
+    /// The log has been accepted into the batch.
+    Queued,
+    /// The log's worker has started.
+    Started,
+    /// The log reported a single-log scan phase transition.
+    Phase,
+    /// The log finished successfully.
+    Completed,
+    /// The log finished with a per-log failure result.
+    Failed,
+}
+
+/// Core batch progress event independent of any binding-specific DTOs.
+#[derive(Clone, Debug)]
+pub struct BatchScanEvent {
+    /// Original index in the input path list.
+    pub input_index: usize,
+    /// Log path associated with this event.
+    pub log_path: String,
+    /// Event kind.
+    pub kind: BatchScanEventKind,
+    /// Current coarse scan phase.
+    pub phase: ScanProgressPhase,
+    /// Number of completed logs at event emit time.
+    pub completed: usize,
+    /// Total number of logs in the batch.
+    pub total: usize,
+    /// Whether the terminal event represents a successful scan.
+    pub success: bool,
+}
+
+/// Options for eventful batch scanning.
+#[derive(Clone, Default)]
+pub struct BatchScanOptions {
+    /// Optional maximum number of concurrent log processing tasks.
+    pub max_concurrent: Option<usize>,
+    /// Return indexed results in input order instead of completion order.
+    pub preserve_order: bool,
+    /// Optional cooperative cancellation flag checked before each log starts.
+    pub cancellation: Option<Arc<AtomicBool>>,
+}
+
+/// A batch result with stable input index metadata.
+#[derive(Clone)]
+pub struct IndexedAnalysisResult {
+    /// Original index in the input path list.
+    pub input_index: usize,
+    /// Completion ordinal for this result.
+    pub completed: usize,
+    /// Total number of logs in the batch.
+    pub total: usize,
+    /// Per-log analysis result.
+    pub result: AnalysisResult,
+}
+
+const READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS: usize = 2;
+
+async fn drain_ready_batch_progress_events(
+    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<BatchScanEvent>,
+) -> Vec<BatchScanEvent> {
+    let mut events = Vec::new();
+    let mut empty_yields_remaining = READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+
+    loop {
+        match progress_rx.try_recv() {
+            Ok(event) => {
+                events.push(event);
+                empty_yields_remaining = READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) if empty_yields_remaining > 0 => {
+                empty_yields_remaining -= 1;
+                tokio::task::yield_now().await;
+            }
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => break,
+            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => break,
+        }
+    }
+
+    events
+}
+
 struct ScanAnalysisContext {
     processed_lines: Vec<String>,
     combined_crash_lines: Vec<String>,
@@ -65,6 +152,28 @@ struct ScanAnalysisContext {
     xse_modules_for_settings: HashSet<String>,
     crashgen_settings: HashMap<String, String>,
     system_segment_lines: Vec<String>,
+}
+
+struct CrashgenScanContext {
+    crashlog_filename: String,
+    crashgen_version_str: String,
+    main_error: String,
+    fake_bot_compatible_mode: bool,
+    effective_crashgen_name: String,
+    crashgen_status: Option<CrashgenVersionStatus>,
+    crashgen_version: Option<(u32, u32, u32)>,
+    config_layout: ConfigLayout,
+}
+
+struct SettingsScanFragments {
+    error_information: Vec<ReportFragment>,
+    settings: Vec<ReportFragment>,
+}
+
+struct SuspectScanFragments {
+    fragments: Vec<ReportFragment>,
+    found_suspect: bool,
+    count: usize,
 }
 
 /// Resolve the effective concurrency for batch log processing.
@@ -788,26 +897,25 @@ impl OrchestratorCore {
             .map(|config| config.name.as_str())
     }
 
-    fn crashgen_version_strings_for_name<'a>(
+    fn crashgen_configs_for_name<'a>(
         version_info: &'a VersionInfo,
         crashgen_name: &str,
-    ) -> Vec<&'a str> {
+    ) -> Vec<&'a CrashgenConfig> {
         let crashgen_name = crashgen_name.trim();
         if crashgen_name.is_empty() {
-            return version_info.get_crashgen_version_strings();
+            return version_info.crashgen_versions.iter().collect();
         }
 
-        let matching_versions: Vec<&str> = version_info
+        let matching_configs: Vec<&CrashgenConfig> = version_info
             .crashgen_versions
             .iter()
             .filter(|config| Self::crashgen_config_matches_name(config, crashgen_name))
-            .map(|config| config.version.as_str())
             .collect();
 
-        if matching_versions.is_empty() {
-            version_info.get_crashgen_version_strings()
+        if matching_configs.is_empty() {
+            version_info.crashgen_versions.iter().collect()
         } else {
-            matching_versions
+            matching_configs
         }
     }
 
@@ -1115,7 +1223,7 @@ impl OrchestratorCore {
     where
         F: FnMut(ScanProgressPhase),
     {
-        use crate::report::{ReportComposer, ReportFragment};
+        use crate::report::ReportComposer;
 
         let start_time = std::time::Instant::now();
         let diagnostics_enabled = std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some();
@@ -1138,223 +1246,40 @@ impl OrchestratorCore {
         };
 
         enter_phase(ScanProgressPhase::Setup);
-
-        // Read log file
-        use std::path::Path;
-        let log_content = self.file_io.read_file(Path::new(&log_path)).await?;
-
-        // Convert to lines and apply preprocessing (matches Python's _reformat_crash_data_inline)
-        // This handles:
-        // 1. Removing lines containing strings from remove_list (if simplify_logs enabled)
-        // 2. Normalizing bracket padding in PLUGINS section (e.g., "[ 1]" -> "[01]")
-        let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
-        let processed_lines = self.reformat_crash_data_inline(&raw_lines);
+        let context = self.prepare_scan_context(&log_path).await?;
 
         enter_phase(ScanProgressPhase::Parse);
-        let context = ScanAnalysisContext::from_processed_lines(&self.parser, processed_lines);
-
-        // Create ReportComposer for proper formatting
+        let crashgen = self.resolve_crashgen_context(&log_path, &context);
+        let report_gen =
+            self.create_report_generator_with_crashgen_name(&crashgen.effective_crashgen_name);
         let mut composer = ReportComposer::new();
-
-        // Statistics
-        let mut formid_count = 0;
-        let mut plugin_count = 0;
-        let mut suspect_count = 0;
-
-        // Extract filename from path for header
-        let crashlog_filename = Path::new(&log_path)
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or(&log_path);
-
-        // Extract header info (crashgen version, main error) from the raw processed lines
-        // We use processed_lines because header is in the first ~20 lines before segmentation
-        let header_info = self
-            .parser
-            .parse_crash_header(&context.processed_lines)
-            .unwrap_or_default();
-
-        // Get crashgen version from header info
-        let crashgen_version_str = header_info
-            .get("crashgen_version")
-            .cloned()
-            .unwrap_or_default();
-
-        let fake_bot_compatible_mode = Self::is_fake_bot_compatible_mode(
-            &crashgen_version_str,
-            &context.xse_modules_for_settings,
-        );
-
-        let effective_crashgen_name = if fake_bot_compatible_mode {
-            self.config.crashgen_name.clone()
-        } else {
-            self.resolve_effective_crashgen_name(
-                &crashgen_version_str,
-                &context.xse_modules_for_settings,
-            )
-        };
-
-        // Create ReportGenerator for this log using effective crashgen name.
-        let report_gen = self.create_report_generator_with_crashgen_name(&effective_crashgen_name);
-
-        // Generate header
-        composer.add(report_gen.generate_header(crashlog_filename));
-
-        // Get detected game version from header info (used for floor-based version validation)
-        let detected_game_version_str =
-            header_info.get("game_version").cloned().unwrap_or_default();
-
-        // Get main error - from header parsing or fallback to first "Unhandled exception" line
-        let main_error = header_info.get("main_error").cloned().unwrap_or_else(|| {
-            // Fallback: search processed_lines for Unhandled exception
-            context
-                .processed_lines
-                .iter()
-                .find(|line| line.starts_with("Unhandled exception"))
-                .cloned()
-                .unwrap_or_default()
-        });
-
-        // Check crashgen version status using floor-based validation for the detected game version
-        let crashgen_status = if crashgen_version_str.trim().is_empty() || fake_bot_compatible_mode
-        {
-            None
-        } else {
-            let (_parsed, status) = self
-                .check_crashgen_version_for_detected_game_with_crashgen_name(
-                    &crashgen_version_str,
-                    &detected_game_version_str,
-                    &effective_crashgen_name,
-                );
-            Some(status)
-        };
-
-        let crashgen_version = {
-            let parsed = crashgen_version_gen(&crashgen_version_str);
-            if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
-                None
-            } else {
-                Some(parsed.to_tuple())
-            }
-        };
-        let config_layout = self.derive_scanlog_config_layout(&detected_game_version_str);
+        composer.add(report_gen.generate_header(&crashgen.crashlog_filename));
 
         enter_phase(ScanProgressPhase::Analyze);
-
-        // Parse crashgen settings once so rule buckets can influence report placement.
-        let settings_validator = if !context.crashgen_settings.is_empty() {
-            if effective_crashgen_name.eq_ignore_ascii_case(&self.config.crashgen_name) {
-                self.settings_validator.clone()
-            } else {
-                Self::settings_validator_for_crashgen(&self.config, &effective_crashgen_name)
-            }
-        } else {
-            self.settings_validator.clone()
-        };
-
-        let mut error_information_fragments: Vec<ReportFragment> = Vec::new();
-        let mut settings_fragments: Vec<ReportFragment> = Vec::new();
-        if !fake_bot_compatible_mode
-            && !context.crashgen_settings.is_empty()
-            && let Ok(bucketed_settings_fragments) = settings_validator.scan_all_settings_bucketed(
-                &context.crashgen_settings,
-                &context.xse_modules_for_settings,
-                crashgen_version,
-                config_layout,
-            )
-        {
-            for bucketed_fragment in bucketed_settings_fragments {
-                match bucketed_fragment.bucket {
-                    classic_config_core::RuleReportBucket::Settings => {
-                        settings_fragments.push(bucketed_fragment.fragment);
-                    }
-                    classic_config_core::RuleReportBucket::ErrorInformation => {
-                        error_information_fragments.push(bucketed_fragment.fragment);
-                    }
-                }
-            }
-        }
+        let settings_fragments = self.collect_settings_fragments(&context, &crashgen);
 
         // Generate error section
         let error_section = report_gen.generate_error_section_with_status_and_fake_mode(
-            &main_error,
-            &crashgen_version_str,
-            crashgen_status,
-            fake_bot_compatible_mode,
+            &crashgen.main_error,
+            &crashgen.crashgen_version_str,
+            crashgen.crashgen_status,
+            crashgen.fake_bot_compatible_mode,
         );
         composer.add(Self::append_error_information_fragments(
             error_section,
-            error_information_fragments,
+            settings_fragments.error_information,
         ));
 
         // Store plugins for mod detection - IndexMap preserves load order for Python parity
-        let mut plugins_map: Option<IndexMap<String, String>> = None;
-
-        // Extract plugins from segments (if plugin analyzer is available)
-        if let Some(ref analyzer) = self.plugin_analyzer {
-            if !context.plugin_lines.is_empty() {
-                // Scan plugins using the analyzer (limit flags unused for now, may need in future)
-                if let Ok((plugins, _limit_triggered, _limit_disabled)) = analyzer
-                    .loadorder_scan_log(
-                        &context.plugin_lines,
-                        Some(self.config.game_version.as_str()),
-                        Some(self.config.crashgen_latest.as_str()),
-                    )
-                {
-                    plugin_count = plugins.len();
-                    // Store plugins for mod detection
-                    plugins_map = Some(plugins);
-                }
-            }
-        }
-
-        // Scan for suspects (if suspect scanner is available)
-        let mut found_suspect = false;
-        let mut suspect_fragments: Vec<ReportFragment> = Vec::new();
-
-        if let Some(ref scanner) = self.suspect_scanner {
-            // Use the main_error extracted from header parsing (not settings segment!)
-            // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP) for suspect scanning
-            let max_warn_length = 50; // Default width for formatting
-
-            // Scan for error suspects (using header-extracted main_error)
-            let (error_fragment, error_found) = scanner
-                .suspect_scan_mainerror(&main_error, max_warn_length)
-                .unwrap_or_else(|_| (ReportFragment::empty(), false));
-
-            // Scan for stack suspects (using header-extracted main_error)
-            let (stack_fragment, stack_found) = scanner
-                .suspect_scan_stack(&main_error, &context.combined_crash_text, max_warn_length)
-                .unwrap_or_else(|_| (ReportFragment::empty(), false));
-
-            // Check for DLL crash pattern (using header-extracted main_error)
-            let dll_fragment = SuspectScanner::check_dll_crash(&main_error)
-                .unwrap_or_else(|_| ReportFragment::empty());
-
-            if error_found {
-                suspect_fragments.push(error_fragment);
-                found_suspect = true;
-            }
-
-            if stack_found {
-                suspect_fragments.push(stack_fragment);
-                found_suspect = true;
-            }
-
-            if !dll_fragment.is_empty() {
-                suspect_fragments.push(dll_fragment);
-                found_suspect = true;
-            }
-
-            suspect_count = suspect_fragments.len();
-        }
+        let (plugins_map, plugin_count) = self.collect_plugins(&context);
+        let suspect_fragments = self.collect_suspect_fragments(&context, &crashgen.main_error);
 
         // Add suspect section
         composer.add(report_gen.generate_suspect_section_header());
-        for fragment in suspect_fragments {
+        for fragment in suspect_fragments.fragments {
             composer.add(fragment);
         }
-        composer.add(report_gen.generate_suspect_found_footer(found_suspect));
+        composer.add(report_gen.generate_suspect_found_footer(suspect_fragments.found_suspect));
 
         // Add FCX mode notice
         let fcx_handler = if self.config.fcx_mode {
@@ -1364,152 +1289,38 @@ impl OrchestratorCore {
         };
         composer.add(fcx_handler.get_fcx_messages());
 
-        if !settings_fragments.is_empty() {
+        if !settings_fragments.settings.is_empty() {
             composer.add(report_gen.generate_settings_section_header());
-            for settings_fragment in settings_fragments {
+            for settings_fragment in settings_fragments.settings {
                 composer.add(settings_fragment);
             }
         }
 
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
-            // Extract GPU vendor from system segment
-            let user_gpu_string: Option<String> = {
-                if context.system_segment_lines.is_empty() {
-                    None
-                } else {
-                    let gpu_info = GpuDetector::get_gpu_info(&context.system_segment_lines);
-                    let mfr = gpu_info.manufacturer.as_str();
-                    if mfr == "Unknown" {
-                        None
-                    } else {
-                        Some(mfr.to_lowercase())
-                    }
-                }
-            };
-            let user_gpu = user_gpu_string.as_deref();
-
-            // Extract XSE modules from combined MODULES+XSE_MODULES (task 4.5)
-            // Check for conflicting mods
-            if !self.config.mods_conf.is_empty() {
-                if let Ok(conflict_lines) =
-                    detect_mods_double(&self.config.mods_conf, plugins.clone())
-                {
-                    if !conflict_lines.is_empty() {
-                        composer.add(
-                            report_gen.generate_mod_check_header("May Conflict With Each Other"),
-                        );
-                        composer.add(ReportFragment::from_lines(conflict_lines));
-                    }
-                }
+            for fragment in self.collect_mod_fragments(&context, plugins, &report_gen) {
+                composer.add(fragment);
             }
-
-            // Check for frequently problematic mods
-            if !self.config.mods_freq.is_empty() {
-                if let Ok(freq_lines) = detect_mods_freq(&self.config.mods_freq, plugins) {
-                    if !freq_lines.is_empty() {
-                        composer.add(
-                            report_gen.generate_mod_check_header("Can Cause Frequent Crashes"),
-                        );
-                        composer.add(ReportFragment::from_lines(freq_lines));
-                    }
-                }
-            }
-
-            // Check for mods with known solutions
-            if !self.config.mods_solu.is_empty() {
-                if let Ok(solu_lines) = detect_mods_solutions(&self.config.mods_solu, plugins) {
-                    if !solu_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header("HAVE SOLUTIONS"));
-                        composer.add(ReportFragment::from_lines(solu_lines));
-                    }
-                }
-            }
-
-            // Check for important core mods with GPU considerations
-            if !self.config.mods_core.is_empty() {
-                if let Ok(important_lines) = detect_mods_important(
-                    &self.config.mods_core,
-                    plugins,
-                    user_gpu,
-                    &context.xse_modules_for_settings,
-                ) {
-                    if !important_lines.is_empty() {
-                        // Use direct header to match Python format exactly
-                        composer.add(ReportFragment::from_lines(vec![
-                            "### Checking for Important Mods\n\n".to_string(),
-                        ]));
-                        composer.add(ReportFragment::from_lines(important_lines));
-                    }
-                }
+            for fragment in self.collect_plugin_match_fragments(
+                &context,
+                plugins,
+                &crashgen.effective_crashgen_name,
+                &report_gen,
+            ) {
+                composer.add(fragment);
             }
         }
 
-        // Add Plugin-related Errors section (only when plugins are detected - matches Python behavior)
-        // This section uses plugin_match to find plugins mentioned in the crash stack
-        if let Some(ref analyzer) = self.plugin_analyzer {
-            if let Some(ref plugins) = plugins_map {
-                // Only show section if we have plugins to check (matches Python behavior)
-                if !plugins.is_empty() {
-                    // Convert plugins to lowercase set for matching
-                    let crashlog_plugins_lower: HashSet<String> =
-                        plugins.keys().map(|k| k.to_lowercase()).collect();
-
-                    // Call plugin_match to find plugins in crash stack
-                    if let Ok(plugin_match_lines) = analyzer
-                        .plugin_match_with_crashgen_name_from_lowered(
-                            &context.combined_crash_lower_lines,
-                            &crashlog_plugins_lower,
-                            &effective_crashgen_name,
-                        )
-                    {
-                        // Add the header and the plugin match results
-                        composer.add(report_gen.generate_plugin_suspect_header());
-                        composer.add(ReportFragment::from_lines(plugin_match_lines));
-                    }
-                }
-            }
-        }
-
-        // Extract FormIDs from callstack segment (task 4.4)
-        // FormIDs are ALWAYS shown regardless of show_formid_values setting.
-        if !context.combined_crash_lines.is_empty() {
-            // Extract FormIDs using FormIDAnalyzerCore
-            let formids = self
-                .formid_analyzer
-                .extract_formids(context.combined_crash_lines.clone());
-            formid_count = formids.len();
-
-            if formid_count > 0 {
-                // Match FormIDs against plugins for proper formatting
-                // Format: plugin_name | FormID (or plugin_name | FormID | db_value)
-                let empty_plugins = IndexMap::new();
-                let plugins_ref = plugins_map.as_ref().unwrap_or(&empty_plugins);
-
-                let formid_report_lines = self
-                    .formid_analyzer
-                    .formid_match_with_crashgen_name(formids, plugins_ref, &effective_crashgen_name)
-                    .await?;
-
-                composer.add(report_gen.generate_formid_section_header());
-                composer.add(ReportFragment::from_lines(formid_report_lines));
-            }
-        }
-
-        // Add Named Records section (scan callstack for named records) (task 4.4)
-        if let Some(ref record_scanner) = self.record_scanner {
-            if !context.combined_crash_lines.is_empty() {
-                let (record_report, _matches) = record_scanner
-                    .try_scan_named_records_with_crashgen_name_and_lowercase(
-                        &context.combined_crash_lines,
-                        &context.combined_crash_lower_lines,
-                        &effective_crashgen_name,
-                    )?;
-                if !record_report.is_empty() {
-                    composer.add(report_gen.generate_record_section_header());
-                    composer.add(ReportFragment::from_lines(record_report));
-                }
-            }
+        let (formid_record_fragments, formid_count) = self
+            .collect_formid_and_record_fragments(
+                &context,
+                plugins_map.as_ref(),
+                &crashgen.effective_crashgen_name,
+                &report_gen,
+            )
+            .await?;
+        for fragment in formid_record_fragments {
+            composer.add(fragment);
         }
 
         enter_phase(ScanProgressPhase::Finalize);
@@ -1535,7 +1346,7 @@ impl OrchestratorCore {
         // Update statistics
         result.formid_count = formid_count;
         result.plugin_count = plugin_count;
-        result.suspect_count = suspect_count;
+        result.suspect_count = suspect_fragments.count;
 
         if let Some(phase_timings_us) = phase_timings_us.as_ref() {
             let phase_summary = phase_timings_us
@@ -1613,28 +1424,169 @@ impl OrchestratorCore {
         log_paths: Vec<String>,
         max_concurrent: Option<usize>,
     ) -> Vec<AnalysisResult> {
-        use futures::stream::{self, StreamExt};
+        self.process_logs_batch_with_events(
+            log_paths,
+            BatchScanOptions {
+                max_concurrent,
+                preserve_order: false,
+                cancellation: None,
+            },
+            |_| {},
+        )
+        .await
+        .into_iter()
+        .map(|indexed| indexed.result)
+        .collect()
+    }
 
-        if log_paths.is_empty() {
+    /// Process multiple logs with indexed results and core lifecycle events.
+    pub async fn process_logs_batch_with_events<F>(
+        &self,
+        log_paths: Vec<String>,
+        options: BatchScanOptions,
+        mut on_event: F,
+    ) -> Vec<IndexedAnalysisResult>
+    where
+        F: FnMut(BatchScanEvent),
+    {
+        use futures::stream::{self, StreamExt};
+        use tokio::sync::mpsc;
+
+        let total = log_paths.len();
+        if total == 0 {
             return Vec::new();
         }
 
-        // Determine concurrency level
-        let concurrency = resolve_batch_concurrency(log_paths.len(), max_concurrent);
+        let concurrency = resolve_batch_concurrency(total, options.max_concurrent);
+        let indexed_paths: Vec<(usize, String)> = log_paths.into_iter().enumerate().collect();
 
-        stream::iter(log_paths)
-            .map(|log_path| {
-                let log_path_clone = log_path.clone();
+        for (input_index, log_path) in &indexed_paths {
+            on_event(BatchScanEvent {
+                input_index: *input_index,
+                log_path: log_path.clone(),
+                kind: BatchScanEventKind::Queued,
+                phase: ScanProgressPhase::Setup,
+                completed: 0,
+                total,
+                success: false,
+            });
+        }
+
+        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel::<BatchScanEvent>();
+        let completed_counter = Arc::new(AtomicUsize::new(0));
+        let cancellation = options.cancellation.clone();
+
+        let mut tasks = stream::iter(indexed_paths)
+            .map(|(input_index, log_path)| {
+                let progress_tx = progress_tx.clone();
+                let completed_counter = Arc::clone(&completed_counter);
+                let cancellation = cancellation.clone();
                 async move {
-                    match self.process_log(log_path.clone()).await {
-                        Ok(result) => result,
-                        Err(e) => AnalysisResult::failure(log_path_clone, e.to_string()),
+                    let _ = progress_tx.send(BatchScanEvent {
+                        input_index,
+                        log_path: log_path.clone(),
+                        kind: BatchScanEventKind::Started,
+                        phase: ScanProgressPhase::Setup,
+                        completed: completed_counter.load(Ordering::Relaxed),
+                        total,
+                        success: false,
+                    });
+
+                    if cancellation
+                        .as_ref()
+                        .is_some_and(|cancel| cancel.load(Ordering::Relaxed))
+                    {
+                        return (
+                            input_index,
+                            log_path.clone(),
+                            ScanProgressPhase::Setup,
+                            AnalysisResult::failure(log_path, "Cancelled by user".to_string()),
+                        );
                     }
+
+                    let mut last_phase = ScanProgressPhase::Setup;
+                    let result = match self
+                        .process_log_with_progress(log_path.clone(), |phase| {
+                            last_phase = phase;
+                            let _ = progress_tx.send(BatchScanEvent {
+                                input_index,
+                                log_path: log_path.clone(),
+                                kind: BatchScanEventKind::Phase,
+                                phase,
+                                completed: completed_counter.load(Ordering::Relaxed),
+                                total,
+                                success: false,
+                            });
+                        })
+                        .await
+                    {
+                        Ok(result) => result,
+                        Err(e) => AnalysisResult::failure(log_path.clone(), e.to_string()),
+                    };
+                    (input_index, log_path, last_phase, result)
                 }
             })
-            .buffer_unordered(concurrency)
-            .collect()
-            .await
+            .buffer_unordered(concurrency);
+
+        let mut completed = 0usize;
+        let mut indexed_results = Vec::with_capacity(total);
+        while completed < total {
+            tokio::select! {
+                biased;
+                maybe_event = progress_rx.recv() => {
+                    if let Some(event) = maybe_event {
+                        on_event(event);
+                    }
+                }
+                maybe_result = tasks.next() => {
+                    let Some((input_index, scanned_path, last_phase, result)) = maybe_result else {
+                        break;
+                    };
+                    for event in drain_ready_batch_progress_events(&mut progress_rx).await {
+                        on_event(event);
+                    }
+                    completed += 1;
+                    completed_counter.store(completed, Ordering::Relaxed);
+                    on_event(BatchScanEvent {
+                        input_index,
+                        log_path: result.log_path.clone(),
+                        kind: if result.success {
+                            BatchScanEventKind::Completed
+                        } else {
+                            BatchScanEventKind::Failed
+                        },
+                        phase: last_phase,
+                        completed,
+                        total,
+                        success: result.success,
+                    });
+                    indexed_results.push(IndexedAnalysisResult {
+                        input_index,
+                        completed,
+                        total,
+                        result: if result.log_path.is_empty() {
+                            AnalysisResult {
+                                log_path: scanned_path,
+                                ..result
+                            }
+                        } else {
+                            result
+                        },
+                    });
+                }
+            }
+        }
+
+        drop(tasks);
+        drop(progress_tx);
+        while let Ok(event) = progress_rx.try_recv() {
+            on_event(event);
+        }
+
+        if options.preserve_order {
+            indexed_results.sort_by_key(|result| result.input_index);
+        }
+        indexed_results
     }
 
     /// Returns a reference to the orchestrator's analysis configuration.
@@ -1823,10 +1775,354 @@ impl OrchestratorCore {
         )
     }
 
+    async fn prepare_scan_context(&self, log_path: &str) -> Result<ScanAnalysisContext> {
+        let log_content = self.file_io.read_file(Path::new(log_path)).await?;
+        let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
+        let processed_lines = self.reformat_crash_data_inline(&raw_lines);
+        Ok(ScanAnalysisContext::from_processed_lines(
+            &self.parser,
+            processed_lines,
+        ))
+    }
+
+    fn resolve_crashgen_context(
+        &self,
+        log_path: &str,
+        context: &ScanAnalysisContext,
+    ) -> CrashgenScanContext {
+        let crashlog_filename = Path::new(log_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(log_path)
+            .to_string();
+
+        let header_info = self
+            .parser
+            .parse_crash_header(&context.processed_lines)
+            .unwrap_or_default();
+        let crashgen_version_str = header_info
+            .get("crashgen_version")
+            .cloned()
+            .unwrap_or_default();
+        let fake_bot_compatible_mode = Self::is_fake_bot_compatible_mode(
+            &crashgen_version_str,
+            &context.xse_modules_for_settings,
+        );
+        let effective_crashgen_name = if fake_bot_compatible_mode {
+            self.config.crashgen_name.clone()
+        } else {
+            self.resolve_effective_crashgen_name(
+                &crashgen_version_str,
+                &context.xse_modules_for_settings,
+            )
+        };
+        let detected_game_version_str =
+            header_info.get("game_version").cloned().unwrap_or_default();
+        let main_error = header_info.get("main_error").cloned().unwrap_or_else(|| {
+            context
+                .processed_lines
+                .iter()
+                .find(|line| line.starts_with("Unhandled exception"))
+                .cloned()
+                .unwrap_or_default()
+        });
+        let crashgen_status = if crashgen_version_str.trim().is_empty() || fake_bot_compatible_mode
+        {
+            None
+        } else {
+            let (_parsed, status) = self
+                .check_crashgen_version_for_detected_game_with_crashgen_name(
+                    &crashgen_version_str,
+                    &detected_game_version_str,
+                    &effective_crashgen_name,
+                );
+            Some(status)
+        };
+        let crashgen_version = {
+            let parsed = crashgen_version_gen(&crashgen_version_str);
+            if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
+                None
+            } else {
+                Some(parsed.to_tuple())
+            }
+        };
+        let config_layout = self.derive_scanlog_config_layout(&detected_game_version_str);
+
+        CrashgenScanContext {
+            crashlog_filename,
+            crashgen_version_str,
+            main_error,
+            fake_bot_compatible_mode,
+            effective_crashgen_name,
+            crashgen_status,
+            crashgen_version,
+            config_layout,
+        }
+    }
+
+    fn collect_settings_fragments(
+        &self,
+        context: &ScanAnalysisContext,
+        crashgen: &CrashgenScanContext,
+    ) -> SettingsScanFragments {
+        let settings_validator = if !context.crashgen_settings.is_empty() {
+            if crashgen
+                .effective_crashgen_name
+                .eq_ignore_ascii_case(&self.config.crashgen_name)
+            {
+                self.settings_validator.clone()
+            } else {
+                Self::settings_validator_for_crashgen(
+                    &self.config,
+                    &crashgen.effective_crashgen_name,
+                )
+            }
+        } else {
+            self.settings_validator.clone()
+        };
+
+        let mut error_information = Vec::new();
+        let mut settings = Vec::new();
+        if !crashgen.fake_bot_compatible_mode
+            && !context.crashgen_settings.is_empty()
+            && let Ok(bucketed_settings_fragments) = settings_validator.scan_all_settings_bucketed(
+                &context.crashgen_settings,
+                &context.xse_modules_for_settings,
+                crashgen.crashgen_version,
+                crashgen.config_layout,
+            )
+        {
+            for bucketed_fragment in bucketed_settings_fragments {
+                match bucketed_fragment.bucket {
+                    classic_config_core::RuleReportBucket::Settings => {
+                        settings.push(bucketed_fragment.fragment);
+                    }
+                    classic_config_core::RuleReportBucket::ErrorInformation => {
+                        error_information.push(bucketed_fragment.fragment);
+                    }
+                }
+            }
+        }
+
+        SettingsScanFragments {
+            error_information,
+            settings,
+        }
+    }
+
+    fn collect_plugins(
+        &self,
+        context: &ScanAnalysisContext,
+    ) -> (Option<IndexMap<String, String>>, usize) {
+        let Some(ref analyzer) = self.plugin_analyzer else {
+            return (None, 0);
+        };
+        if context.plugin_lines.is_empty() {
+            return (None, 0);
+        }
+        analyzer
+            .loadorder_scan_log(
+                &context.plugin_lines,
+                Some(self.config.game_version.as_str()),
+                Some(self.config.crashgen_latest.as_str()),
+            )
+            .map_or((None, 0), |(plugins, _limit_triggered, _limit_disabled)| {
+                let plugin_count = plugins.len();
+                (Some(plugins), plugin_count)
+            })
+    }
+
+    fn collect_suspect_fragments(
+        &self,
+        context: &ScanAnalysisContext,
+        main_error: &str,
+    ) -> SuspectScanFragments {
+        let Some(ref scanner) = self.suspect_scanner else {
+            return SuspectScanFragments {
+                fragments: Vec::new(),
+                found_suspect: false,
+                count: 0,
+            };
+        };
+
+        let max_warn_length = 50;
+        let (error_fragment, error_found) = scanner
+            .suspect_scan_mainerror(main_error, max_warn_length)
+            .unwrap_or_else(|_| (ReportFragment::empty(), false));
+        let (stack_fragment, stack_found) = scanner
+            .suspect_scan_stack(main_error, &context.combined_crash_text, max_warn_length)
+            .unwrap_or_else(|_| (ReportFragment::empty(), false));
+        let dll_fragment =
+            SuspectScanner::check_dll_crash(main_error).unwrap_or_else(|_| ReportFragment::empty());
+
+        let mut fragments = Vec::new();
+        let mut found_suspect = false;
+        if error_found {
+            fragments.push(error_fragment);
+            found_suspect = true;
+        }
+        if stack_found {
+            fragments.push(stack_fragment);
+            found_suspect = true;
+        }
+        if !dll_fragment.is_empty() {
+            fragments.push(dll_fragment);
+            found_suspect = true;
+        }
+
+        let count = fragments.len();
+        SuspectScanFragments {
+            fragments,
+            found_suspect,
+            count,
+        }
+    }
+
+    fn collect_mod_fragments(
+        &self,
+        context: &ScanAnalysisContext,
+        plugins: &IndexMap<String, String>,
+        report_gen: &ReportGenerator,
+    ) -> Vec<ReportFragment> {
+        let mut fragments = Vec::new();
+        let user_gpu_string: Option<String> = if context.system_segment_lines.is_empty() {
+            None
+        } else {
+            let gpu_info = GpuDetector::get_gpu_info(&context.system_segment_lines);
+            let mfr = gpu_info.manufacturer.as_str();
+            if mfr == "Unknown" {
+                None
+            } else {
+                Some(mfr.to_lowercase())
+            }
+        };
+        let user_gpu = user_gpu_string.as_deref();
+
+        if !self.config.mods_conf.is_empty()
+            && let Ok(conflict_lines) = detect_mods_double(&self.config.mods_conf, plugins.clone())
+            && !conflict_lines.is_empty()
+        {
+            fragments.push(report_gen.generate_mod_check_header("May Conflict With Each Other"));
+            fragments.push(ReportFragment::from_lines(conflict_lines));
+        }
+
+        if !self.config.mods_freq.is_empty()
+            && let Ok(freq_lines) = detect_mods_freq(&self.config.mods_freq, plugins)
+            && !freq_lines.is_empty()
+        {
+            fragments.push(report_gen.generate_mod_check_header("Can Cause Frequent Crashes"));
+            fragments.push(ReportFragment::from_lines(freq_lines));
+        }
+
+        if !self.config.mods_solu.is_empty()
+            && let Ok(solu_lines) = detect_mods_solutions(&self.config.mods_solu, plugins)
+            && !solu_lines.is_empty()
+        {
+            fragments.push(report_gen.generate_mod_check_header("HAVE SOLUTIONS"));
+            fragments.push(ReportFragment::from_lines(solu_lines));
+        }
+
+        if !self.config.mods_core.is_empty()
+            && let Ok(important_lines) = detect_mods_important(
+                &self.config.mods_core,
+                plugins,
+                user_gpu,
+                &context.xse_modules_for_settings,
+            )
+            && !important_lines.is_empty()
+        {
+            fragments.push(ReportFragment::from_lines(vec![
+                "### Checking for Important Mods\n\n".to_string(),
+            ]));
+            fragments.push(ReportFragment::from_lines(important_lines));
+        }
+
+        fragments
+    }
+
+    fn collect_plugin_match_fragments(
+        &self,
+        context: &ScanAnalysisContext,
+        plugins: &IndexMap<String, String>,
+        effective_crashgen_name: &str,
+        report_gen: &ReportGenerator,
+    ) -> Vec<ReportFragment> {
+        let Some(ref analyzer) = self.plugin_analyzer else {
+            return Vec::new();
+        };
+        if plugins.is_empty() {
+            return Vec::new();
+        }
+
+        let crashlog_plugins_lower: HashSet<String> =
+            plugins.keys().map(|key| key.to_lowercase()).collect();
+        analyzer
+            .plugin_match_with_crashgen_name_from_lowered(
+                &context.combined_crash_lower_lines,
+                &crashlog_plugins_lower,
+                effective_crashgen_name,
+            )
+            .map_or_else(
+                |_| Vec::new(),
+                |plugin_match_lines| {
+                    vec![
+                        report_gen.generate_plugin_suspect_header(),
+                        ReportFragment::from_lines(plugin_match_lines),
+                    ]
+                },
+            )
+    }
+
+    async fn collect_formid_and_record_fragments(
+        &self,
+        context: &ScanAnalysisContext,
+        plugins_map: Option<&IndexMap<String, String>>,
+        effective_crashgen_name: &str,
+        report_gen: &ReportGenerator,
+    ) -> Result<(Vec<ReportFragment>, usize)> {
+        let mut fragments = Vec::new();
+        let mut formid_count = 0;
+        if !context.combined_crash_lines.is_empty() {
+            let formids = self
+                .formid_analyzer
+                .extract_formids(context.combined_crash_lines.clone());
+            formid_count = formids.len();
+
+            if formid_count > 0 {
+                let empty_plugins = IndexMap::new();
+                let plugins_ref = plugins_map.unwrap_or(&empty_plugins);
+                let formid_report_lines = self
+                    .formid_analyzer
+                    .formid_match_with_crashgen_name(formids, plugins_ref, effective_crashgen_name)
+                    .await?;
+
+                fragments.push(report_gen.generate_formid_section_header());
+                fragments.push(ReportFragment::from_lines(formid_report_lines));
+            }
+        }
+
+        if let Some(ref record_scanner) = self.record_scanner
+            && !context.combined_crash_lines.is_empty()
+        {
+            let (record_report, _matches) = record_scanner
+                .try_scan_named_records_with_crashgen_name_and_lowercase(
+                    &context.combined_crash_lines,
+                    &context.combined_crash_lower_lines,
+                    effective_crashgen_name,
+                )?;
+            if !record_report.is_empty() {
+                fragments.push(report_gen.generate_record_section_header());
+                fragments.push(ReportFragment::from_lines(record_report));
+            }
+        }
+
+        Ok((fragments, formid_count))
+    }
+
     fn append_error_information_fragments(
-        error_section: crate::report::ReportFragment,
-        extra_fragments: Vec<crate::report::ReportFragment>,
-    ) -> crate::report::ReportFragment {
+        error_section: ReportFragment,
+        extra_fragments: Vec<ReportFragment>,
+    ) -> ReportFragment {
         if extra_fragments.is_empty() {
             return error_section;
         }
@@ -1843,7 +2139,7 @@ impl OrchestratorCore {
         }
         lines.push(separator);
 
-        crate::report::ReportFragment::from_lines(lines)
+        ReportFragment::from_lines(lines)
     }
 
     /// Creates a SettingsValidator configured for this orchestrator.
@@ -1950,7 +2246,7 @@ impl OrchestratorCore {
                 .is_some_and(|info| info.is_vr),
         );
 
-        let valid_versions: Vec<&str> = match match_result.version_info {
+        let (floor_versions, exception_versions) = match match_result.version_info {
             Some(ref version_info) => {
                 let effective_crashgen_name = crashgen_name
                     .and_then(Self::trimmed_crashgen_name)
@@ -1959,15 +2255,31 @@ impl OrchestratorCore {
                     })
                     .or_else(|| Self::trimmed_crashgen_name(&self.config.crashgen_name));
 
-                effective_crashgen_name.map_or_else(
-                    || version_info.get_crashgen_version_strings(),
-                    |name| Self::crashgen_version_strings_for_name(version_info, name),
-                )
+                let matching_configs = effective_crashgen_name.map_or_else(
+                    || version_info.crashgen_versions.iter().collect::<Vec<_>>(),
+                    |name| Self::crashgen_configs_for_name(version_info, name),
+                );
+
+                let mut floor_versions = Vec::new();
+                let mut exception_versions = Vec::new();
+                for config in matching_configs {
+                    if config.exact_match {
+                        exception_versions.push(config.version.as_str());
+                    } else {
+                        floor_versions.push(config.version.as_str());
+                    }
+                }
+
+                (floor_versions, exception_versions)
             }
-            None => Vec::new(),
+            None => (Vec::new(), Vec::new()),
         };
 
-        let status = check_crashgen_version_status(crashgen_version_str, &valid_versions);
+        let status = check_crashgen_version_status_with_exceptions(
+            crashgen_version_str,
+            &floor_versions,
+            &exception_versions,
+        );
         (current, status)
     }
 
