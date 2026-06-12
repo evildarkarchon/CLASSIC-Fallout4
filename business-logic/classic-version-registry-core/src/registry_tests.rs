@@ -237,7 +237,7 @@ fn test_get_crashgen_version_strings() {
     let registry = create_test_registry();
 
     let og_versions = registry.get_crashgen_version_strings("FO4_OG");
-    assert_eq!(og_versions, vec!["1.28.6", "1.38.1", "1.3.0"]);
+    assert_eq!(og_versions, vec!["1.38.1", "1.3.0"]);
 
     let ng_versions = registry.get_crashgen_version_strings("FO4_NG");
     assert_eq!(ng_versions, vec!["1.38.1", "1.3.0"]);
@@ -620,6 +620,10 @@ fn test_og_legacy_buffout_exact_match_flag() {
         .get_crashgen_for_version("1.38.1")
         .expect("OG NG Buffout should exist");
     assert!(!ng.exact_match);
+
+    let floor_versions = registry.get_crashgen_version_strings("FO4_OG");
+    assert!(!floor_versions.contains(&legacy.version.as_str()));
+    assert!(floor_versions.contains(&ng.version.as_str()));
 }
 
 #[test]

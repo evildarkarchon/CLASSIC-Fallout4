@@ -140,6 +140,17 @@ fn test_crashgen_config_is_compatible_with_range() {
 fn create_test_version_info_with_crashgens() -> VersionInfo {
     let og_range = CompatibleRange::from_strings("1.10.163.0", "1.10.163.999").unwrap();
 
+    let mut legacy_buffout = CrashgenConfig::with_range(
+        "1.28.6",
+        "Buffout 4",
+        "BO4",
+        "buffout4.dll",
+        "Legacy version for OG",
+        "https://www.nexusmods.com/fallout4/mods/47359",
+        og_range,
+    );
+    legacy_buffout.exact_match = true;
+
     VersionInfo {
         id: "TEST_VERSION".to_string(),
         game: "Fallout4".to_string(),
@@ -157,15 +168,7 @@ fn create_test_version_info_with_crashgens() -> VersionInfo {
         deprecated: false,
         exe_hash: None,
         crashgen_versions: vec![
-            CrashgenConfig::with_range(
-                "1.28.6",
-                "Buffout 4",
-                "BO4",
-                "buffout4.dll",
-                "Legacy version for OG",
-                "https://www.nexusmods.com/fallout4/mods/47359",
-                og_range,
-            ),
+            legacy_buffout,
             CrashgenConfig::new(
                 "1.37.0",
                 "Buffout 4", // Name matches what appears in log output
@@ -184,9 +187,7 @@ fn test_version_info_get_crashgen_version_strings() {
 
     let version_strings = version_info.get_crashgen_version_strings();
 
-    assert_eq!(version_strings.len(), 2);
-    assert_eq!(version_strings[0], "1.28.6");
-    assert_eq!(version_strings[1], "1.37.0");
+    assert_eq!(version_strings, vec!["1.37.0"]);
 }
 
 #[test]

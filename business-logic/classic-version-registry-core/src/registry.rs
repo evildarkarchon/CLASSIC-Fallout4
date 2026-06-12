@@ -614,7 +614,7 @@ impl VersionRegistry {
             .unwrap_or_default()
     }
 
-    /// Get crash generator versions as simple version strings for a version ID.
+    /// Get floor-eligible crash generator versions as simple version strings for a version ID.
     ///
     /// # Arguments
     ///
@@ -622,7 +622,8 @@ impl VersionRegistry {
     ///
     /// # Returns
     ///
-    /// A vector of version strings, or an empty vector if the version ID is not found.
+    /// A vector of non-exact-match version strings, or an empty vector if the version ID is not
+    /// found.
     ///
     /// # Example
     ///
@@ -631,7 +632,7 @@ impl VersionRegistry {
     ///
     /// let registry = get_version_registry();
     /// let versions = registry.get_crashgen_version_strings("FO4_OG");
-    /// // Returns ["1.28.6", "1.38.1", "1.3.0"]
+    /// // Returns ["1.38.1", "1.3.0"]
     /// ```
     #[must_use]
     pub fn get_crashgen_version_strings(&self, id: &str) -> Vec<&str> {

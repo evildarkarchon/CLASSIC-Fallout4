@@ -437,14 +437,15 @@ impl VersionInfo {
         }
     }
 
-    /// Get crash generator versions as simple version strings.
+    /// Get floor-eligible crash generator versions as simple version strings.
     ///
-    /// Provides backward-compatible access to just the version strings
-    /// of the crash generators, without the additional metadata.
+    /// Provides access to crash generator version strings that can be used as
+    /// minimum supported floors. Exact-match exception entries are omitted so
+    /// they do not lower floor-based validation.
     ///
     /// # Returns
     ///
-    /// A vector of version strings from `crashgen_versions`.
+    /// A vector of non-exact-match version strings from `crashgen_versions`.
     ///
     /// # Example
     ///
@@ -454,13 +455,14 @@ impl VersionInfo {
     /// let registry = get_version_registry();
     /// if let Some(og) = registry.get_by_id("FO4_OG") {
     ///     let versions = og.get_crashgen_version_strings();
-    ///     // Returns ["1.28.6", "1.38.1", "1.3.0"]
+    ///     // Returns ["1.38.1", "1.3.0"]
     /// }
     /// ```
     #[must_use]
     pub fn get_crashgen_version_strings(&self) -> Vec<&str> {
         self.crashgen_versions
             .iter()
+            .filter(|c| !c.exact_match)
             .map(|c| c.version.as_str())
             .collect()
     }

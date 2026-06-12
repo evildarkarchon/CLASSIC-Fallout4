@@ -158,7 +158,8 @@ Important methods:
 
 - `version_string() -> String`
 - `is_compatible_with(detected) -> bool`
-- `get_crashgen_version_strings() -> Vec<&str>`
+- `get_crashgen_version_strings() -> Vec<&str>` returns non-`exact_match` crashgen versions
+  suitable for floor-based validation
 - `get_crashgen_for_version(crashgen_version) -> Option<&CrashgenConfig>`
 - `get_compatible_crashgens(game_version) -> Vec<&CrashgenConfig>`
 
@@ -166,6 +167,10 @@ Contributor notes:
 
 - `is_compatible_with()` uses `compatible_range` when present, otherwise exact version equality
 - crashgen compatibility is finer-grained than version compatibility because each `CrashgenConfig` may also carry its own `compatible_range`
+- crashgen entries marked `exact_match` remain available through `VersionInfo.crashgen_versions`,
+  `VersionInfo::get_crashgen_for_version()`, and `VersionRegistry::get_crashgen_versions()`, but
+  are excluded from `get_crashgen_version_strings()` so legacy exception builds do not lower
+  validation floors
 
 ## `VersionRegistry`
 
@@ -194,7 +199,8 @@ Important matching/helpers:
 Crashgen-specific helpers:
 
 - `get_crashgen_versions(id) -> Vec<&CrashgenConfig>`
-- `get_crashgen_version_strings(id) -> Vec<&str>`
+- `get_crashgen_version_strings(id) -> Vec<&str>` returns non-`exact_match` crashgen versions
+  suitable for floor-based validation
 - `get_crashgen_for_version(id, crashgen_version) -> Option<&CrashgenConfig>`
 
 Behavior worth knowing from the source:
@@ -286,7 +292,7 @@ Contributor-relevant keys for each `Version_Registry.versions[]` entry include:
 `crashgen_versions` supports two formats:
 
 - simple strings like `"1.38.1"`
-- structured objects with fields such as `version`, `name`, `acronym`, `dll_file`, `description`, `download_url`, and optional `compatible_range`
+- structured objects with fields such as `version`, `name`, `acronym`, `dll_file`, `description`, `download_url`, optional `compatible_range`, and optional `exact_match`
 
 Fallback rules visible in source:
 
