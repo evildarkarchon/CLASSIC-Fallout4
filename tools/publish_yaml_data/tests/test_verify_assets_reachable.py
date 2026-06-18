@@ -198,11 +198,17 @@ def test_load_manifest_assets_trims_sha256_whitespace(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    expected_manifest_digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
 
     assets = verify_assets_reachable._load_manifest_assets(manifest)
 
     assert assets == [
-        ("CLASSIC Fallout4.yaml", "https://example.test/file.yaml", _STAGED_DIGEST)
+        ("CLASSIC Fallout4.yaml", "https://example.test/file.yaml", _STAGED_DIGEST),
+        (
+            "manifest.json",
+            "https://example.test/manifest.json",
+            expected_manifest_digest,
+        ),
     ]
 
 
@@ -222,9 +228,49 @@ def test_load_manifest_assets_returns_triples(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    expected_manifest_digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
 
     assets = verify_assets_reachable._load_manifest_assets(manifest)
 
     assert assets == [
-        ("CLASSIC Fallout4.yaml", "https://example.test/file.yaml", _STAGED_DIGEST)
+        ("CLASSIC Fallout4.yaml", "https://example.test/file.yaml", _STAGED_DIGEST),
+        (
+            "manifest.json",
+            "https://example.test/manifest.json",
+            expected_manifest_digest,
+        ),
     ]
+
+
+def test_load_manifest_assets_includes_release_manifest_asset(
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "files": [
+                    {
+                        "name": "CLASSIC Fallout4.yaml",
+                        "download_url": (
+                            "https://github.com/example/repo/releases/download/"
+                            "yaml-data-v2026.06.12/CLASSIC%20Fallout4.yaml"
+                        ),
+                        "sha256": _STAGED_DIGEST,
+                    }
+                ]
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    expected_manifest_digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
+
+    assets = verify_assets_reachable._load_manifest_assets(manifest)
+
+    assert (
+        "manifest.json",
+        "https://github.com/example/repo/releases/download/"
+        "yaml-data-v2026.06.12/manifest.json",
+        expected_manifest_digest,
+    ) in assets

@@ -1,4 +1,4 @@
-"""Verify every manifest ``download_url`` serves the advertised bytes anonymously.
+"""Verify release assets serve the staged bytes anonymously.
 
 Runs after the GitHub release is promoted out of draft but before the
 ``manifest-latest.json`` pointer is pushed to ``gh-pages``. Anonymous
@@ -20,14 +20,14 @@ Reachability alone is NOT sufficient. The workflow supports operator
 delete-and-rerun on the same tag; ``releases/download/<tag>/<name>`` URLs
 reuse the same path. If GitHub's CDN happens to serve a stale copy of an
 asset from a previous release recreation, a reachability-only probe would
-pass while clients later download bytes that do not match the manifest's
-``sha256`` — every install fails with a checksum mismatch.
+pass while clients later download stale manifest bytes or file bytes that do
+not match this run's staged hashes.
 
-Each URL is probed with an unauthenticated full GET (no ``Range`` header).
-The response body is streamed through SHA-256 and compared to the manifest
-entry's ``sha256`` field. Any mismatch is treated as "not ready yet" and
-the retry budget keeps ticking until the CDN serves the bytes this run
-staged.
+The staged ``manifest.json`` release asset and every ``files[].download_url``
+are probed with unauthenticated full GETs (no ``Range`` header). Each response
+body is streamed through SHA-256 and compared to the bytes staged by this run.
+Any mismatch is treated as "not ready yet" and the retry budget keeps ticking
+until the CDN serves the bytes this run staged.
 
 The request is deliberately unauthenticated: no ``Authorization`` header
 is attached even when ``$GITHUB_TOKEN`` is present in the environment.
@@ -37,7 +37,7 @@ Exit status
 -----------
 
 - 0 on first attempt where every URL returns HTTP 200 and the body SHA-256
-  matches the manifest entry.
+  matches the staged bytes.
 - Non-zero after the retry budget is exhausted, with a per-URL diagnostic
   printed to stderr so the workflow log names the offending asset.
 """
@@ -121,9 +121,9 @@ def probe_asset_once(
 def _load_manifest_assets(
     manifest_path: Path,
 ) -> list[tuple[str, str, str]]:
-    """Return ``[(name, download_url, expected_sha256), ...]`` from manifest.json."""
-    with manifest_path.open("r", encoding="utf-8") as f:
-        doc = json.load(f)
+    """Return release assets that must serve exact staged bytes."""
+    manifest_bytes = manifest_path.read_bytes()
+    doc = json.loads(manifest_bytes)
     if not isinstance(doc, dict):
         raise SystemExit(f"FAIL: {manifest_path} root is not a JSON object")
     files = doc.get("files")
@@ -147,6 +147,19 @@ def _load_manifest_assets(
                 f"FAIL: manifest entry missing string sha256: {entry!r}"
             )
         assets.append((name, url, _parse_manifest_sha256(digest)))
+    manifest_base_url, separator, _asset_name = assets[0][1].rpartition("/")
+    if not separator or not manifest_base_url:
+        raise SystemExit(
+            "FAIL: cannot derive manifest.json release asset URL from "
+            f"download_url: {assets[0][1]!r}"
+        )
+    assets.append(
+        (
+            "manifest.json",
+            f"{manifest_base_url}/manifest.json",
+            hashlib.sha256(manifest_bytes).hexdigest(),
+        )
+    )
     return assets
 
 

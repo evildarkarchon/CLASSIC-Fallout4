@@ -52,7 +52,7 @@ For every triggered run, the workflow SHALL upload, as release assets, one `<fil
 
 ### Requirement: Client-visible release is gated behind anonymous asset reachability
 
-The publish workflow SHALL NOT expose the release to API-fallback client discovery (`fetch_from_releases_api` in `classic-update-core`) until every `files[].download_url` advertised by the manifest has been confirmed reachable by an unauthenticated HTTP client. The gate SHALL be implemented by promoting the release out of draft WITH the GitHub prerelease flag set, running the anonymous reachability probe, and only then clearing the prerelease flag.
+The publish workflow SHALL NOT expose the release to API-fallback client discovery (`fetch_from_releases_api` in `classic-update-core`) until the release `manifest.json` asset and every `files[].download_url` advertised by the manifest have been confirmed reachable by an unauthenticated HTTP client and serving the staged bytes. The gate SHALL be implemented by promoting the release out of draft WITH the GitHub prerelease flag set, running the anonymous reachability probe, and only then clearing the prerelease flag.
 
 #### Scenario: Prerelease flag is set while reachability is unverified
 
@@ -71,7 +71,7 @@ The publish workflow SHALL NOT expose the release to API-fallback client discove
 
 - **WHEN** the workflow reaches the `gh-pages` deploy step
 - **THEN** the prerelease flag on the release is already cleared
-- **AND** every manifest `download_url` has been confirmed anonymously reachable in a prior step
+- **AND** the release `manifest.json` asset and every manifest `files[].download_url` have been confirmed anonymously reachable in a prior step
 
 ### Requirement: Published release is not marked as "latest"
 

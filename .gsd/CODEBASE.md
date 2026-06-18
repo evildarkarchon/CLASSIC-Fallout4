@@ -540,10 +540,15 @@ Generated: 2026-05-19T02:34:10Z | Files: 1698 | Described: 0/1698
 - `business-logic/classic-config-core/src/crashgen_rules_tests.rs`
 - `business-logic/classic-config-core/src/crashgen_rules.rs`
 - `business-logic/classic-config-core/src/lib.rs`
-- `business-logic/classic-config-core/src/shippable_tests.rs`
 - `business-logic/classic-config-core/src/shippable.rs`
 - `business-logic/classic-config-core/src/yamldata_tests.rs`
 - `business-logic/classic-config-core/src/yamldata.rs`
+
+### business-logic/classic-config-core/src/shippable/
+- `business-logic/classic-config-core/src/shippable/loader_tests.rs`
+- `business-logic/classic-config-core/src/shippable/loader.rs`
+- `business-logic/classic-config-core/src/shippable/main_version_tests.rs`
+- `business-logic/classic-config-core/src/shippable/main_version.rs`
 
 ### business-logic/classic-config-core/tests/
 - `business-logic/classic-config-core/tests/integration_tests.rs`
