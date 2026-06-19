@@ -1,0 +1,495 @@
+{
+  "communities": {
+    "0": [
+      "performance_ffi_optimization_guide",
+      "performance_memory_profiling_guide",
+      "performance_performance_monitoring",
+      "performance_performance_optimization_run_in_executor",
+      "performance_phase1_benchmark_report",
+      "performance_python_bindings_optimization_propagation",
+      "performance_rust_performance_optimization_report",
+      "performance_tui_dirty_tracking_optimization",
+      "prd_complete_cpp_qt_gui",
+      "prd_complete_g17_classicscanlogs_info_migration",
+      "prd_complete_node_bindings_completion",
+      "prd_complete_python_to_rust_migration",
+      "prd_complete_rename_rust_to_classiclib_rs"
+    ],
+    "1": [
+      "classic_cpp_bridge_scan_progress_callback_batchprogresseventkind",
+      "classic_cpp_bridge_scan_progress_callback_batchprogressphase",
+      "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress",
+      "classic_cpp_bridge_scan_progress_callback_orchestratorcore_process_logs_batch_with_events",
+      "classic_gui_scan_progress_consumer_batchprogresscallback",
+      "classic_gui_scan_progress_consumer_batchprogressmodel",
+      "classic_gui_scan_progress_consumer_mainwindow",
+      "classic_gui_scan_progress_consumer_scancontroller",
+      "classic_gui_scan_progress_consumer_scanworker",
+      "classic_gui_scan_result_ordering_resultscontroller",
+      "classic_gui_scan_result_ordering_scanworker"
+    ],
+    "2": [
+      "async_yaml_implementation_summary_asyncbridge",
+      "async_yaml_implementation_summary_asyncyamlsettingscore",
+      "async_yaml_implementation_summary_batch_get_settings",
+      "async_yaml_implementation_summary_get_metrics",
+      "async_yaml_implementation_summary_load_multiple_stores",
+      "async_yaml_implementation_summary_prefetch_all_settings",
+      "async_yaml_implementation_summary_yamlsettingscache"
+    ],
+    "3": [
+      "integration_layer_api_audit_factory_py",
+      "integration_layer_api_audit_fcx_rust",
+      "integration_layer_api_audit_gpu_rust",
+      "phase_1_5_formid_settings_missing_methods_audit_settingsvalidator",
+      "timer_api_audit_report_timer"
+    ],
+    "4": [
+      "config_issue_fcx_handler_api_audit_configissue",
+      "config_issue_fcx_handler_api_audit_fcxmodehandler",
+      "config_issue_fcx_handler_api_audit_rustacceleratedfcxmodehandler",
+      "python_binding_audit_report_configissue"
+    ],
+    "5": [
+      "rust_development_with_rust",
+      "rust_rust_async_pattern",
+      "rust_rust_usage_guide",
+      "rust_troubleshooting_rust"
+    ],
+    "6": [
+      "scangame_rust_acceleration_classic_cpp_bridge",
+      "scangame_rust_acceleration_classic_node",
+      "scangame_rust_acceleration_classic_scangame_core",
+      "scangame_rust_acceleration_classic_scangame_py"
+    ],
+    "7": [
+      "classic_file_io_py_audit_report_crashlogs_get_files",
+      "classic_file_io_py_audit_report_crashlogs_get_files_rust",
+      "classic_file_io_py_audit_report_pylogcollector"
+    ],
+    "8": [
+      "classic_version_core",
+      "classic_version_registry_core",
+      "classic_xse_core"
+    ],
+    "9": [
+      "gpu_pattern_matcher_api_audit_gpudetector",
+      "gpu_pattern_matcher_api_audit_gpuinfo",
+      "gpu_pattern_matcher_api_audit_gpuvendor"
+    ],
+    "10": [
+      "papyrus_api_audit_papyrus_logging",
+      "papyrus_api_audit_papyrusanalyzer",
+      "papyrus_api_audit_papyrusstats"
+    ],
+    "11": [
+      "python_binding_audit_report_papyrus_logging",
+      "python_binding_audit_report_papyrusanalyzer",
+      "python_binding_audit_report_papyrusstats"
+    ],
+    "12": [
+      "rust_bindings_pyclass_method",
+      "rust_bindings_pymoduleerror",
+      "rust_bindings_topyerr"
+    ],
+    "13": [
+      "rust_gil_release_pattern_pyo3_0_27",
+      "rust_pyo3_0_27_migration",
+      "rust_pyo3_quick_reference"
+    ],
+    "14": [
+      "rust_rust_architecture",
+      "rust_rust_modules_detailed",
+      "rust_rust_parser_module"
+    ],
+    "15": [
+      "rust_workspace_architecture_business_logic",
+      "rust_workspace_architecture_classic_config_core",
+      "rust_workspace_architecture_classic_scanlog_core"
+    ],
+    "16": [
+      "rust_workspace_architecture_classic_config_py",
+      "rust_workspace_architecture_classic_scanlog_py",
+      "rust_workspace_architecture_python_bindings"
+    ],
+    "17": [
+      "classic_cpp_bridge_scan_progress_callback_batchprogressevent",
+      "classic_cpp_bridge_scan_progress_callback_scanbatchprogresscallback"
+    ],
+    "18": [
+      "classic_ratatui_tui_prd_classic_tui",
+      "classic_yaml_core"
+    ],
+    "19": [
+      "classic_scangame_api_audit_phase2_1_inivalidator",
+      "classic_scangame_api_audit_phase2_1_scangame_factory"
+    ],
+    "20": [
+      "gpu_pattern_matcher_api_audit_patternmatcher",
+      "python_binding_audit_report_patternmatcher"
+    ],
+    "21": [
+      "phase_1_5_formid_settings_missing_methods_audit_formidanalyzer",
+      "phase_1_5_formid_settings_missing_methods_audit_rustformidanalyzer"
+    ],
+    "22": [
+      "rust_bindings_pyclass_dataresult",
+      "rust_bindings_pylist_direct_construction"
+    ],
+    "23": [
+      "rust_workspace_architecture_classic_shared_core",
+      "rust_workspace_architecture_foundation"
+    ],
+    "24": [
+      "api_app_update_notification_delivery_app_update_notification_delivery"
+    ],
+    "25": [
+      "api_binding_compliance_suite_binding_compliance_suite"
+    ],
+    "26": [
+      "api_binding_contract_refresh_note_binding_contract_refresh_note"
+    ],
+    "27": [
+      "api_binding_parity_overview_binding_parity_overview"
+    ],
+    "28": [
+      "api_binding_parity_policy_binding_parity_policy"
+    ],
+    "29": [
+      "api_classic_config_core_classic_config_core"
+    ],
+    "30": [
+      "api_classic_config_core_yaml_schema_classic_config_core_yaml_schema"
+    ],
+    "31": [
+      "api_classic_cpp_bridge_data_entrypoints_classic_cpp_bridge_data_entrypoints"
+    ],
+    "32": [
+      "api_classic_cpp_bridge_game_entrypoints_classic_cpp_bridge_game_entrypoints"
+    ],
+    "33": [
+      "api_quick_start_quick_start"
+    ],
+    "34": [
+      "api_readme_classic_api_docs"
+    ],
+    "35": [
+      "classic_cpp_bridge_scan_progress_callback_scanner_rs"
+    ],
+    "36": [
+      "classic_python_cli_prd_classic_py_cli"
+    ],
+    "37": [
+      "classic_tui_prd_classic_tui"
+    ],
+    "38": [
+      "classic_web_core"
+    ],
+    "39": [
+      "implementation_summary_max_connections_databasepool"
+    ],
+    "40": [
+      "other_pyinstaller_data_bundling_guide"
+    ],
+    "41": [
+      "performance_rust_db_benchmark_baseline"
+    ],
+    "42": [
+      "pyo3_async_runtimes_usage_guide_async_database"
+    ],
+    "43": [
+      "pyo3_async_runtimes_usage_guide_databasepool"
+    ],
+    "44": [
+      "pyo3_async_runtimes_usage_guide_future_into_py"
+    ],
+    "45": [
+      "pyo3_async_runtimes_usage_guide_into_future"
+    ],
+    "46": [
+      "readme_classic_documentation"
+    ],
+    "47": [
+      "runtime_gil_patterns_block_on_result"
+    ],
+    "48": [
+      "runtime_gil_patterns_future_into_py"
+    ],
+    "49": [
+      "runtime_gil_patterns_spawn_result"
+    ],
+    "50": [
+      "runtime_gil_patterns_without_gil_block_on"
+    ],
+    "51": [
+      "rust_2024_edition_guide_asyncfileprocessor"
+    ],
+    "52": [
+      "rust_2024_edition_guide_asyncprocessor"
+    ],
+    "53": [
+      "rust_bindings_without_gil"
+    ],
+    "54": [
+      "rust_documentation_index_classic_rust_docs"
+    ],
+    "55": [
+      "rust_phase4_utilities_guide"
+    ],
+    "56": [
+      "rust_python_to_rust_migration_guide"
+    ],
+    "57": [
+      "rust_workspace_architecture_cpp_bindings"
+    ],
+    "58": [
+      "rust_workspace_architecture_dependency_direction"
+    ],
+    "59": [
+      "rust_workspace_architecture_node_bindings"
+    ],
+    "60": [
+      "rust_workspace_architecture_ui_applications"
+    ],
+    "61": [
+      "superpowers_specs_2026_03_09_classic_gui_scan_result_ordering_test_design"
+    ],
+    "62": [
+      "testing_async_test_patterns_guide"
+    ],
+    "63": [
+      "testing_fixture_migration_summary"
+    ],
+    "64": [
+      "testing_rust_testing_guide"
+    ],
+    "65": [
+      "testing_test_pollution_guide"
+    ],
+    "66": [
+      "testing_test_pollution_updates"
+    ],
+    "67": [
+      "testing_test_structure"
+    ],
+    "68": [
+      "testing_testing_async_bridge"
+    ],
+    "69": [
+      "testing_testing_database_pools"
+    ],
+    "70": [
+      "testing_testing_fileio_core"
+    ],
+    "71": [
+      "testing_testing_fixture_standards"
+    ],
+    "72": [
+      "testing_testing_global_registry"
+    ],
+    "73": [
+      "testing_testing_guide_index"
+    ],
+    "74": [
+      "testing_testing_message_handler"
+    ],
+    "75": [
+      "testing_testing_yaml_cache"
+    ],
+    "76": [
+      "workspace_migration_matrix_workspace_migration_matrix"
+    ]
+  },
+  "cohesion": {
+    "0": 0.15384615384615385,
+    "1": 0.18181818181818182,
+    "2": 0.3333333333333333,
+    "3": 0.4,
+    "4": 0.5,
+    "5": 0.5,
+    "6": 0.5,
+    "7": 0.6666666666666666,
+    "8": 0.6666666666666666,
+    "9": 0.6666666666666666,
+    "10": 0.6666666666666666,
+    "11": 0.6666666666666666,
+    "12": 0.6666666666666666,
+    "13": 0.6666666666666666,
+    "14": 0.6666666666666666,
+    "15": 0.6666666666666666,
+    "16": 0.6666666666666666,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0,
+    "24": 1.0,
+    "25": 1.0,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0,
+    "38": 1.0,
+    "39": 1.0,
+    "40": 1.0,
+    "41": 1.0,
+    "42": 1.0,
+    "43": 1.0,
+    "44": 1.0,
+    "45": 1.0,
+    "46": 1.0,
+    "47": 1.0,
+    "48": 1.0,
+    "49": 1.0,
+    "50": 1.0,
+    "51": 1.0,
+    "52": 1.0,
+    "53": 1.0,
+    "54": 1.0,
+    "55": 1.0,
+    "56": 1.0,
+    "57": 1.0,
+    "58": 1.0,
+    "59": 1.0,
+    "60": 1.0,
+    "61": 1.0,
+    "62": 1.0,
+    "63": 1.0,
+    "64": 1.0,
+    "65": 1.0,
+    "66": 1.0,
+    "67": 1.0,
+    "68": 1.0,
+    "69": 1.0,
+    "70": 1.0,
+    "71": 1.0,
+    "72": 1.0,
+    "73": 1.0,
+    "74": 1.0,
+    "75": 1.0,
+    "76": 1.0
+  },
+  "gods": [
+    {
+      "id": "async_yaml_implementation_summary_asyncyamlsettingscore",
+      "label": "AsyncYamlSettingsCore class",
+      "degree": 8
+    },
+    {
+      "id": "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress",
+      "label": "orchestrator_process_logs_batch_with_progress",
+      "degree": 5
+    },
+    {
+      "id": "performance_performance_monitoring",
+      "label": "Performance Monitoring Guide for CLASSIC Rust Components",
+      "degree": 4
+    },
+    {
+      "id": "classic_gui_scan_progress_consumer_scanworker",
+      "label": "ScanWorker",
+      "degree": 3
+    },
+    {
+      "id": "performance_phase1_benchmark_report",
+      "label": "Phase 1 Performance Benchmark Report",
+      "degree": 3
+    },
+    {
+      "id": "performance_python_bindings_optimization_propagation",
+      "label": "Python Bindings Optimization Propagation Plan",
+      "degree": 3
+    },
+    {
+      "id": "prd_complete_python_to_rust_migration",
+      "label": "PRD: Python-to-Rust Business Logic Migration",
+      "degree": 3
+    },
+    {
+      "id": "rust_development_with_rust",
+      "label": "Development Guide for CLASSIC Rust Components",
+      "degree": 3
+    },
+    {
+      "id": "classic_gui_scan_progress_consumer_batchprogresscallback",
+      "label": "BatchProgressCallback",
+      "degree": 2
+    },
+    {
+      "id": "classic_gui_scan_progress_consumer_scancontroller",
+      "label": "ScanController",
+      "degree": 2
+    }
+  ],
+  "surprises": [
+    {
+      "source": "orchestrator_process_logs_batch_with_progress",
+      "target": "OrchestratorCore::process_logs_batch_with_events",
+      "source_files": [
+        "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+        "business-logic/classic-scanlog-core/src/orchestrator.rs"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `OrchestratorCore::process_logs_batch_with_events` unexpectedly reaches hub `orchestrator_process_logs_batch_with_progress`"
+    },
+    {
+      "source": "ScanWorker",
+      "target": "orchestrator_process_logs_batch_with_progress",
+      "source_files": [
+        "classic-gui/src/workers/scanworker.cpp",
+        "cpp-bindings/classic-cpp-bridge/src/scanner.rs"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `ScanWorker` unexpectedly reaches hub `orchestrator_process_logs_batch_with_progress`"
+    },
+    {
+      "source": "PRD: Python-to-Rust Business Logic Migration",
+      "target": "Python Bindings Optimization Propagation Plan",
+      "source_files": [
+        "prd/complete/python-to-rust-migration.md",
+        "performance/python_bindings_optimization_propagation.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "PRD: Rename `rust/` Directory to `ClassicLib-rs/`",
+      "target": "Python Bindings Optimization Propagation Plan",
+      "source_files": [
+        "prd/complete/rename-rust-to-classiclib-rs.md",
+        "performance/python_bindings_optimization_propagation.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "ScanWorker",
+      "target": "orchestrator_process_logs_batch_with_progress",
+      "source_files": [
+        "classic-gui/src/workers/scanworker.cpp",
+        "cpp-bindings/classic-cpp-bridge/src/scanner.rs"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "tokens": {
+    "input": 407876,
+    "output": 17051
+  }
+}
