@@ -1050,6 +1050,50 @@ mod orchestrator {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn pages_404_with_fresh_fallback_cache_still_checks_releases_absence() {
+        // A Pages 404 is semantic absence, not an outage. Even if a prior
+        // outage seeded a fresh fallback marker, the orchestrator must
+        // confirm Releases has no app-notification-v* release so a deliberate
+        // unpublish can surface as NotPublished instead of stale cached state.
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let tmp = TempDir::new().unwrap();
+        persist_fallback_manifest_body(
+            Some(tmp.path()),
+            br#"{"manifest_version":"1.0","release_tag":"v9.2.0","latest_version":"9.2.0","published_at":"2026-05-01T12:00:00Z"}"#,
+        );
+        assert!(tmp.path().join(FALLBACK_MARKER_FILENAME).exists());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(404)
+            .create_async()
+            .await;
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body("[]")
+            .create_async()
+            .await;
+
+        let client = tokenless_client(&server.url());
+        let status = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.1.0")
+            .await
+            .expect("absent notification should bypass stale fallback cache");
+
+        assert_eq!(status.classification, Classification::NotPublished);
+        assert!(status.latest_version.is_empty());
+        assert!(status.published_at.is_empty());
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
     async fn pages_500_and_empty_releases_still_returns_fetch_failed() {
         let mut server = mockito::Server::new_async().await;
         let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());

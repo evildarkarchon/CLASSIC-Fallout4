@@ -965,13 +965,13 @@
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/notification.rs": {
-    "mtime": 1781860900.8104284,
-    "ast_hash": "6c127ccadb1f3366cd731f1fc30aa02f",
+    "mtime": 1781866388.5530076,
+    "ast_hash": "8fa0958d794a70b757e703c0453fd52a",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/notification_tests.rs": {
-    "mtime": 1781860983.0536883,
-    "ast_hash": "c115f3f524b059bdfc18c17c86fe67b8",
+    "mtime": 1781866345.6899085,
+    "ast_hash": "32ce0cebe3c374bd8fc87fd976ffa3b5",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/yaml_update.rs": {
@@ -5140,8 +5140,8 @@
     "semantic_hash": ""
   },
   "openspec/specs/app-update-notification/spec.md": {
-    "mtime": 1780012642.198428,
-    "ast_hash": "c85dfa3896738937f8adad7994239a64",
+    "mtime": 1781864211.4736826,
+    "ast_hash": "bef2a6ade173610d6e9df7d51c5d297f",
     "semantic_hash": ""
   },
   "openspec/specs/async-dds-header-read/spec.md": {
@@ -5452,31 +5452,6 @@
   "node-bindings/classic-node/src/update_tests.rs": {
     "mtime": 1781861405.748413,
     "ast_hash": "1b7c581e46cdcf75126694155c91e29a",
-    "semantic_hash": ""
-  },
-  "openspec/changes/update-check-silent-not-published/.openspec.yaml": {
-    "mtime": 1781859805.1844642,
-    "ast_hash": "34b43c55d3ca6875b6faa975762e6c09",
-    "semantic_hash": ""
-  },
-  "openspec/changes/update-check-silent-not-published/design.md": {
-    "mtime": 1781860012.120462,
-    "ast_hash": "4f71b7a3ebd6d88c3bfb57c17035cfa1",
-    "semantic_hash": ""
-  },
-  "openspec/changes/update-check-silent-not-published/proposal.md": {
-    "mtime": 1781859880.9535782,
-    "ast_hash": "26eb380e3f90208f9bf0191cc4bf1f62",
-    "semantic_hash": ""
-  },
-  "openspec/changes/update-check-silent-not-published/specs/app-update-notification/spec.md": {
-    "mtime": 1781859943.1437187,
-    "ast_hash": "1b3c95bde221b04c859153d98eb62f7d",
-    "semantic_hash": ""
-  },
-  "openspec/changes/update-check-silent-not-published/tasks.md": {
-    "mtime": 1781863498.1093378,
-    "ast_hash": "da23586c74faf2b9ffc00837706b14a7",
     "semantic_hash": ""
   }
 }

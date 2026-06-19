@@ -543,14 +543,15 @@ pub async fn check_app_notification_with(
             if let UpdateError::ManifestUnsupportedVersion { .. } = pages_err {
                 return Err(pages_err);
             }
-            // During a prolonged Pages outage, reuse a fallback-seeded
-            // manifest that is still within TTL instead of hammering the
-            // Releases API on every startup. This is the reuse path the
-            // spec requires ("Fallback manifest populates cache" + the
-            // review finding on the cache seed never suppressing repeated
-            // Releases hits).
-            if let Some(cached) = try_fallback_cache(cache_dir) {
-                return Ok(classify(installed_version, &cached));
+            if !matches!(&pages_err, UpdateError::NotFound(_)) {
+                // During a prolonged Pages outage, reuse a fallback-seeded
+                // manifest that is still within TTL instead of hammering the
+                // Releases API on every startup. A Pages 404 is different:
+                // it can mean the notification was deliberately unpublished,
+                // so it must still reach Releases to confirm absence.
+                if let Some(cached) = try_fallback_cache(cache_dir) {
+                    return Ok(classify(installed_version, &cached));
+                }
             }
             match fetch_via_releases_fallback_bytes(client).await {
                 Ok((manifest, bytes)) => {
