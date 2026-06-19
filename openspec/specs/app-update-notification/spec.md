@@ -61,6 +61,8 @@ When the Pages fetch fails with a network or non-304/200 HTTP status, or when th
 
 A Pages `404 Not Found` SHALL be classified as "manifest absent" (carried as `UpdateError::NotFound`) rather than as a generic transport error, so the orchestrator can distinguish an unpublished manifest from a Pages outage (5xx), network error, timeout, or rate-limit. When the Pages leg reports the manifest absent AND the Releases fallback finds no release matching the `app-notification-v*` prefix, the check SHALL be treated as "no notification published yet" and SHALL NOT be reported as a fetch failure. A genuine failure on either channel (network error, timeout, HTTP 5xx, rate-limit, or a structurally invalid manifest body) SHALL still surface as an error.
 
+A Releases fallback that finds a matching `app-notification-v*` release but that release lacks the required `manifest.json` asset SHALL be treated as a broken publish and SHALL surface as a fetch failure, not as `NotPublished`.
+
 #### Scenario: Pages unreachable falls through to Releases
 
 - **WHEN** the Pages fetch returns a network error or an HTTP 5xx
@@ -88,9 +90,15 @@ A Pages `404 Not Found` SHALL be classified as "manifest absent" (carried as `Up
 - **AND** the result SHALL NOT be an `Err`/`NotificationFetchFailed`
 - **AND** the result SHALL NOT be reported as `UpToDate`
 
+#### Scenario: Matching fallback release without manifest asset reports fetch failure
+
+- **WHEN** the Pages fetch returns HTTP `404 Not Found` AND the Releases fallback finds a matching `app-notification-v*` release without a `manifest.json` asset
+- **THEN** the client SHALL return `UpdateError::NotificationFetchFailed` describing the malformed fallback release
+- **AND** the result SHALL NOT report classification `NotPublished`
+
 ### Requirement: Classification of installed build against manifest
 
-The client SHALL compare the caller-provided installed version string against `latest_version` and `min_supported_version` using semantic-version ordering (lowercase `v` prefix stripped, `PartialOrd` on `semver::Version`) and SHALL emit one of five classifications: `UpToDate`, `UpdateAvailable`, `DeprecatedClient`, `Unknown`, or `NotPublished`. The first four are produced by comparing a successfully-fetched manifest against the installed build; `NotPublished` is produced when no manifest exists yet (the manifest is absent on both the Pages and Releases channels) and therefore carries no manifest fields. The classification SHALL NOT perform any string-equality comparison against release asset filenames.
+The client SHALL compare the caller-provided installed version string against `latest_version` and `min_supported_version` using semantic-version ordering (lowercase `v` prefix stripped, `PartialOrd` on `semver::Version`) and SHALL emit one of five classifications: `UpToDate`, `UpdateAvailable`, `DeprecatedClient`, `Unknown`, or `NotPublished`. The first four are produced by comparing a successfully-fetched manifest against the installed build; `NotPublished` is produced when Pages reports `404 Not Found` and no matching `app-notification-v*` release exists, and therefore carries no manifest fields. The classification SHALL NOT perform any string-equality comparison against release asset filenames.
 
 #### Scenario: Installed version equal to latest
 

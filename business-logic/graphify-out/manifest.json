@@ -945,9 +945,9 @@
     "semantic_hash": "33993ecc7125a7107c67694c3bc1135e"
   },
   "classic-update-core/src/error.rs": {
-    "mtime": 1781860900.8109276,
-    "ast_hash": "7b0eefab76cedd468ac8c515dad3feb6",
-    "semantic_hash": "7b0eefab76cedd468ac8c515dad3feb6"
+    "mtime": 1781867710.658141,
+    "ast_hash": "3991fc5b1ab9d6d2f4486285935cffe4",
+    "semantic_hash": "3991fc5b1ab9d6d2f4486285935cffe4"
   },
   "classic-update-core/src/error_tests.rs": {
     "mtime": 1776772155.6396384,
@@ -985,14 +985,14 @@
     "semantic_hash": "a8a8fb8336b30b33580d679e183b11a9"
   },
   "classic-update-core/src/notification.rs": {
-    "mtime": 1781866388.5530076,
-    "ast_hash": "8fa0958d794a70b757e703c0453fd52a",
-    "semantic_hash": "8fa0958d794a70b757e703c0453fd52a"
+    "mtime": 1781867710.653137,
+    "ast_hash": "dabe9605deacb214e330959200c6a7fc",
+    "semantic_hash": "dabe9605deacb214e330959200c6a7fc"
   },
   "classic-update-core/src/notification_tests.rs": {
-    "mtime": 1781866345.6899085,
-    "ast_hash": "32ce0cebe3c374bd8fc87fd976ffa3b5",
-    "semantic_hash": "32ce0cebe3c374bd8fc87fd976ffa3b5"
+    "mtime": 1781867649.730329,
+    "ast_hash": "5a833b4a3def3f5232877077b8c2536e",
+    "semantic_hash": "5a833b4a3def3f5232877077b8c2536e"
   },
   "classic-update-core/src/yaml_update.rs": {
     "mtime": 1780012642.1483686,

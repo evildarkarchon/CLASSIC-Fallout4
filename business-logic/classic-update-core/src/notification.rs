@@ -275,7 +275,7 @@ async fn fetch_via_releases_fallback_bytes(
         .iter()
         .find(|a| a.name == FALLBACK_ASSET_NAME)
         .ok_or_else(|| {
-            UpdateError::NotFound(format!(
+            UpdateError::GithubError(format!(
                 "release `{}` has no `{FALLBACK_ASSET_NAME}` asset",
                 release.tag_name
             ))

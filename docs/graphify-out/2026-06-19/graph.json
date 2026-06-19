@@ -12,9 +12,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_scanbatchprogresscallback",
-      "community": 17,
-      "norm_label": "scanbatchprogresscallback"
+      "community": 25,
+      "norm_label": "scanbatchprogresscallback",
+      "id": "classic_cpp_bridge_scan_progress_callback_scanbatchprogresscallback"
     },
     {
       "label": "BatchProgressEvent",
@@ -25,9 +25,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_batchprogressevent",
-      "community": 17,
-      "norm_label": "batchprogressevent"
+      "community": 25,
+      "norm_label": "batchprogressevent",
+      "id": "classic_cpp_bridge_scan_progress_callback_batchprogressevent"
     },
     {
       "label": "BatchProgressEventKind",
@@ -38,9 +38,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_batchprogresseventkind",
-      "community": 1,
-      "norm_label": "batchprogresseventkind"
+      "community": 2,
+      "norm_label": "batchprogresseventkind",
+      "id": "classic_cpp_bridge_scan_progress_callback_batchprogresseventkind"
     },
     {
       "label": "BatchProgressPhase",
@@ -51,9 +51,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_batchprogressphase",
-      "community": 1,
-      "norm_label": "batchprogressphase"
+      "community": 2,
+      "norm_label": "batchprogressphase",
+      "id": "classic_cpp_bridge_scan_progress_callback_batchprogressphase"
     },
     {
       "label": "orchestrator_process_logs_batch_with_progress",
@@ -64,9 +64,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress",
-      "community": 1,
-      "norm_label": "orchestrator_process_logs_batch_with_progress"
+      "community": 2,
+      "norm_label": "orchestrator_process_logs_batch_with_progress",
+      "id": "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress"
     },
     {
       "label": "OrchestratorCore::process_logs_batch_with_events",
@@ -77,9 +77,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_orchestratorcore_process_logs_batch_with_events",
-      "community": 1,
-      "norm_label": "orchestratorcore::process_logs_batch_with_events"
+      "community": 2,
+      "norm_label": "orchestratorcore::process_logs_batch_with_events",
+      "id": "classic_cpp_bridge_scan_progress_callback_orchestratorcore_process_logs_batch_with_events"
     },
     {
       "label": "scanner.rs",
@@ -90,9 +90,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_scanner_rs",
-      "community": 35,
-      "norm_label": "scanner.rs"
+      "community": 42,
+      "norm_label": "scanner.rs",
+      "id": "classic_cpp_bridge_scan_progress_callback_scanner_rs"
     },
     {
       "label": "BatchProgressCallback",
@@ -103,9 +103,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_progress_consumer_batchprogresscallback",
-      "community": 1,
-      "norm_label": "batchprogresscallback"
+      "community": 2,
+      "norm_label": "batchprogresscallback",
+      "id": "classic_gui_scan_progress_consumer_batchprogresscallback"
     },
     {
       "label": "BatchProgressModel",
@@ -116,9 +116,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_progress_consumer_batchprogressmodel",
-      "community": 1,
-      "norm_label": "batchprogressmodel"
+      "community": 2,
+      "norm_label": "batchprogressmodel",
+      "id": "classic_gui_scan_progress_consumer_batchprogressmodel"
     },
     {
       "label": "ScanWorker",
@@ -129,9 +129,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_progress_consumer_scanworker",
-      "community": 1,
-      "norm_label": "scanworker"
+      "community": 2,
+      "norm_label": "scanworker",
+      "id": "classic_gui_scan_progress_consumer_scanworker"
     },
     {
       "label": "ScanController",
@@ -142,9 +142,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_progress_consumer_scancontroller",
-      "community": 1,
-      "norm_label": "scancontroller"
+      "community": 2,
+      "norm_label": "scancontroller",
+      "id": "classic_gui_scan_progress_consumer_scancontroller"
     },
     {
       "label": "MainWindow",
@@ -155,9 +155,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_progress_consumer_mainwindow",
-      "community": 1,
-      "norm_label": "mainwindow"
+      "community": 2,
+      "norm_label": "mainwindow",
+      "id": "classic_gui_scan_progress_consumer_mainwindow"
     },
     {
       "label": "ScanWorker",
@@ -168,9 +168,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_result_ordering_scanworker",
-      "community": 1,
-      "norm_label": "scanworker"
+      "community": 2,
+      "norm_label": "scanworker",
+      "id": "classic_gui_scan_result_ordering_scanworker"
     },
     {
       "label": "ResultsController",
@@ -181,230 +181,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_result_ordering_resultscontroller",
-      "community": 1,
-      "norm_label": "resultscontroller"
-    },
-    {
-      "label": "CLASSIC Python CLI",
-      "file_type": "document",
-      "source_file": "CLASSIC_Python_CLI_PRD.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "classic_python_cli_prd_classic_py_cli",
-      "community": 36,
-      "norm_label": "classic python cli"
-    },
-    {
-      "label": "CLASSIC Ratatui TUI",
-      "file_type": "document",
-      "source_file": "CLASSIC_Ratatui_TUI_PRD.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "classic_ratatui_tui_prd_classic_tui",
-      "community": 18,
-      "norm_label": "classic ratatui tui"
-    },
-    {
-      "label": "CLASSIC TUI",
-      "file_type": "document",
-      "source_file": "CLASSIC_TUI_PRD.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "classic_tui_prd_classic_tui",
-      "community": 37,
-      "norm_label": "classic tui"
-    },
-    {
-      "label": "CLASSIC Documentation",
-      "file_type": "document",
-      "source_file": "README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "readme_classic_documentation",
-      "community": 46,
-      "norm_label": "classic documentation"
-    },
-    {
-      "label": "CLASSIC Rust Documentation Index",
-      "file_type": "document",
-      "source_file": "RUST_DOCUMENTATION_INDEX.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "rust_documentation_index_classic_rust_docs",
-      "community": 54,
-      "norm_label": "classic rust documentation index"
-    },
-    {
-      "label": "Workspace Migration Matrix",
-      "file_type": "document",
-      "source_file": "workspace-migration-matrix.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "workspace_migration_matrix_workspace_migration_matrix",
-      "community": 76,
-      "norm_label": "workspace migration matrix"
-    },
-    {
-      "label": "CLASSIC Quick Start (Contributor)",
-      "file_type": "document",
-      "source_file": "api/QUICK_START.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_quick_start_quick_start",
-      "community": 33,
-      "norm_label": "classic quick start (contributor)"
-    },
-    {
-      "label": "CLASSIC API Docs",
-      "file_type": "document",
-      "source_file": "api/README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_readme_classic_api_docs",
-      "community": 34,
-      "norm_label": "classic api docs"
-    },
-    {
-      "label": "App Update Notification Delivery",
-      "file_type": "document",
-      "source_file": "api/app-update-notification-delivery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_app_update_notification_delivery_app_update_notification_delivery",
-      "community": 24,
-      "norm_label": "app update notification delivery"
-    },
-    {
-      "label": "Binding Compliance Suite",
-      "file_type": "document",
-      "source_file": "api/binding-compliance-suite.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_binding_compliance_suite_binding_compliance_suite",
-      "community": 25,
-      "norm_label": "binding compliance suite"
-    },
-    {
-      "label": "Binding Contract Refresh Note",
-      "file_type": "document",
-      "source_file": "api/binding-contract-refresh-note.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_binding_contract_refresh_note_binding_contract_refresh_note",
-      "community": 26,
-      "norm_label": "binding contract refresh note"
-    },
-    {
-      "label": "Binding Parity Overview",
-      "file_type": "document",
-      "source_file": "api/binding-parity-overview.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_binding_parity_overview_binding_parity_overview",
-      "community": 27,
-      "norm_label": "binding parity overview"
-    },
-    {
-      "label": "Binding Parity Policy",
-      "file_type": "document",
-      "source_file": "api/binding-parity-policy.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_binding_parity_policy_binding_parity_policy",
-      "community": 28,
-      "norm_label": "binding parity policy"
-    },
-    {
-      "label": "classic-config-core YAML Schema Contract",
-      "file_type": "document",
-      "source_file": "api/classic-config-core-yaml-schema.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_classic_config_core_yaml_schema_classic_config_core_yaml_schema",
-      "community": 30,
-      "norm_label": "classic-config-core yaml schema contract"
-    },
-    {
-      "label": "classic-config-core API Guide",
-      "file_type": "document",
-      "source_file": "api/classic-config-core.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_classic_config_core_classic_config_core",
-      "community": 29,
-      "norm_label": "classic-config-core api guide"
-    },
-    {
-      "label": "classic-cpp-bridge Data Entry Points",
-      "file_type": "document",
-      "source_file": "api/classic-cpp-bridge-data-entrypoints.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_classic_cpp_bridge_data_entrypoints_classic_cpp_bridge_data_entrypoints",
-      "community": 31,
-      "norm_label": "classic-cpp-bridge data entry points"
-    },
-    {
-      "label": "classic-cpp-bridge Game Entry Points",
-      "file_type": "document",
-      "source_file": "api/classic-cpp-bridge-game-entrypoints.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_classic_cpp_bridge_game_entrypoints_classic_cpp_bridge_game_entrypoints",
-      "community": 32,
-      "norm_label": "classic-cpp-bridge game entry points"
+      "community": 2,
+      "norm_label": "resultscontroller",
+      "id": "classic_gui_scan_result_ordering_resultscontroller"
     },
     {
       "label": "classic-version-core",
@@ -415,9 +194,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core",
-      "community": 8,
-      "norm_label": "classic-version-core"
+      "community": 15,
+      "norm_label": "classic-version-core",
+      "id": "classic_version_core"
     },
     {
       "label": "classic-version-registry-core",
@@ -428,9 +207,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core",
-      "community": 8,
-      "norm_label": "classic-version-registry-core"
+      "community": 15,
+      "norm_label": "classic-version-registry-core",
+      "id": "classic_version_registry_core"
     },
     {
       "label": "classic-web-core",
@@ -441,9 +220,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core",
-      "community": 38,
-      "norm_label": "classic-web-core"
+      "community": 59,
+      "norm_label": "classic-web-core",
+      "id": "classic_web_core"
     },
     {
       "label": "classic-xse-core",
@@ -454,9 +233,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_xse_core",
-      "community": 8,
-      "norm_label": "classic-xse-core"
+      "community": 15,
+      "norm_label": "classic-xse-core",
+      "id": "classic_xse_core"
     },
     {
       "label": "classic-yaml-core",
@@ -467,9 +246,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_yaml_core",
-      "community": 18,
-      "norm_label": "classic-yaml-core"
+      "community": 26,
+      "norm_label": "classic-yaml-core",
+      "id": "classic_yaml_core"
     },
     {
       "label": "PyLogCollector",
@@ -480,9 +259,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_file_io_py_audit_report_pylogcollector",
-      "community": 7,
-      "norm_label": "pylogcollector"
+      "community": 3,
+      "norm_label": "pylogcollector",
+      "id": "classic_file_io_py_audit_report_pylogcollector"
     },
     {
       "label": "_crashlogs_get_files_rust()",
@@ -496,9 +275,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_file_io_py_audit_report_crashlogs_get_files_rust",
-      "community": 7,
-      "norm_label": "_crashlogs_get_files_rust()"
+      "community": 3,
+      "norm_label": "_crashlogs_get_files_rust()",
+      "id": "classic_file_io_py_audit_report_crashlogs_get_files_rust"
     },
     {
       "label": "crashlogs_get_files()",
@@ -509,9 +288,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_file_io_py_audit_report_crashlogs_get_files",
-      "community": 7,
-      "norm_label": "crashlogs_get_files()"
+      "community": 3,
+      "norm_label": "crashlogs_get_files()",
+      "id": "classic_file_io_py_audit_report_crashlogs_get_files"
     },
     {
       "label": "scangame_factory.py",
@@ -522,9 +301,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_scangame_api_audit_phase2_1_scangame_factory",
-      "community": 19,
-      "norm_label": "scangame_factory.py"
+      "community": 27,
+      "norm_label": "scangame_factory.py",
+      "id": "classic_scangame_api_audit_phase2_1_scangame_factory"
     },
     {
       "label": "IniValidator",
@@ -535,9 +314,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_scangame_api_audit_phase2_1_inivalidator",
-      "community": 19,
-      "norm_label": "inivalidator"
+      "community": 27,
+      "norm_label": "inivalidator",
+      "id": "classic_scangame_api_audit_phase2_1_inivalidator"
     },
     {
       "label": "ConfigIssue",
@@ -548,9 +327,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "config_issue_fcx_handler_api_audit_configissue",
-      "community": 4,
-      "norm_label": "configissue"
+      "community": 9,
+      "norm_label": "configissue",
+      "id": "config_issue_fcx_handler_api_audit_configissue"
     },
     {
       "label": "FcxModeHandler",
@@ -561,9 +340,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "config_issue_fcx_handler_api_audit_fcxmodehandler",
-      "community": 4,
-      "norm_label": "fcxmodehandler"
+      "community": 9,
+      "norm_label": "fcxmodehandler",
+      "id": "config_issue_fcx_handler_api_audit_fcxmodehandler"
     },
     {
       "label": "RustAcceleratedFcxModeHandler",
@@ -577,9 +356,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "config_issue_fcx_handler_api_audit_rustacceleratedfcxmodehandler",
-      "community": 4,
-      "norm_label": "rustacceleratedfcxmodehandler"
+      "community": 9,
+      "norm_label": "rustacceleratedfcxmodehandler",
+      "id": "config_issue_fcx_handler_api_audit_rustacceleratedfcxmodehandler"
     },
     {
       "label": "GpuDetector",
@@ -590,9 +369,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "gpu_pattern_matcher_api_audit_gpudetector",
-      "community": 9,
-      "norm_label": "gpudetector"
+      "community": 7,
+      "norm_label": "gpudetector",
+      "id": "gpu_pattern_matcher_api_audit_gpudetector"
     },
     {
       "label": "GpuInfo",
@@ -603,9 +382,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "gpu_pattern_matcher_api_audit_gpuinfo",
-      "community": 9,
-      "norm_label": "gpuinfo"
+      "community": 7,
+      "norm_label": "gpuinfo",
+      "id": "gpu_pattern_matcher_api_audit_gpuinfo"
     },
     {
       "label": "GpuVendor",
@@ -616,9 +395,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "gpu_pattern_matcher_api_audit_gpuvendor",
-      "community": 9,
-      "norm_label": "gpuvendor"
+      "community": 7,
+      "norm_label": "gpuvendor",
+      "id": "gpu_pattern_matcher_api_audit_gpuvendor"
     },
     {
       "label": "PatternMatcher",
@@ -629,9 +408,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "gpu_pattern_matcher_api_audit_patternmatcher",
-      "community": 20,
-      "norm_label": "patternmatcher"
+      "community": 7,
+      "norm_label": "patternmatcher",
+      "id": "gpu_pattern_matcher_api_audit_patternmatcher"
     },
     {
       "label": "factory.py",
@@ -642,9 +421,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "integration_layer_api_audit_factory_py",
       "community": 3,
-      "norm_label": "factory.py"
+      "norm_label": "factory.py",
+      "id": "integration_layer_api_audit_factory_py"
     },
     {
       "label": "fcx_rust.py",
@@ -658,9 +437,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "integration_layer_api_audit_fcx_rust",
       "community": 3,
-      "norm_label": "fcx_rust.py"
+      "norm_label": "fcx_rust.py",
+      "id": "integration_layer_api_audit_fcx_rust"
     },
     {
       "label": "gpu_rust.py",
@@ -674,9 +453,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "integration_layer_api_audit_gpu_rust",
       "community": 3,
-      "norm_label": "gpu_rust.py"
+      "norm_label": "gpu_rust.py",
+      "id": "integration_layer_api_audit_gpu_rust"
     },
     {
       "label": "PapyrusAnalyzer",
@@ -687,9 +466,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "papyrus_api_audit_papyrusanalyzer",
-      "community": 10,
-      "norm_label": "papyrusanalyzer"
+      "community": 18,
+      "norm_label": "papyrusanalyzer",
+      "id": "papyrus_api_audit_papyrusanalyzer"
     },
     {
       "label": "PapyrusStats",
@@ -700,9 +479,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "papyrus_api_audit_papyrusstats",
-      "community": 10,
-      "norm_label": "papyrusstats"
+      "community": 18,
+      "norm_label": "papyrusstats",
+      "id": "papyrus_api_audit_papyrusstats"
     },
     {
       "label": "papyrus_logging()",
@@ -713,9 +492,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "papyrus_api_audit_papyrus_logging",
-      "community": 10,
-      "norm_label": "papyrus_logging()"
+      "community": 18,
+      "norm_label": "papyrus_logging()",
+      "id": "papyrus_api_audit_papyrus_logging"
     },
     {
       "label": "FormIDAnalyzer",
@@ -726,9 +505,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "phase_1_5_formid_settings_missing_methods_audit_formidanalyzer",
-      "community": 21,
-      "norm_label": "formidanalyzer"
+      "community": 3,
+      "norm_label": "formidanalyzer",
+      "id": "phase_1_5_formid_settings_missing_methods_audit_formidanalyzer"
     },
     {
       "label": "RustFormIDAnalyzer",
@@ -739,9 +518,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "phase_1_5_formid_settings_missing_methods_audit_rustformidanalyzer",
-      "community": 21,
-      "norm_label": "rustformidanalyzer"
+      "community": 3,
+      "norm_label": "rustformidanalyzer",
+      "id": "phase_1_5_formid_settings_missing_methods_audit_rustformidanalyzer"
     },
     {
       "label": "SettingsValidator",
@@ -752,9 +531,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "phase_1_5_formid_settings_missing_methods_audit_settingsvalidator",
       "community": 3,
-      "norm_label": "settingsvalidator"
+      "norm_label": "settingsvalidator",
+      "id": "phase_1_5_formid_settings_missing_methods_audit_settingsvalidator"
     },
     {
       "label": "PapyrusAnalyzer",
@@ -765,9 +544,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "python_binding_audit_report_papyrusanalyzer",
-      "community": 11,
-      "norm_label": "papyrusanalyzer"
+      "community": 12,
+      "norm_label": "papyrusanalyzer",
+      "id": "python_binding_audit_report_papyrusanalyzer"
     },
     {
       "label": "PapyrusStats",
@@ -778,9 +557,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "python_binding_audit_report_papyrusstats",
-      "community": 11,
-      "norm_label": "papyrusstats"
+      "community": 12,
+      "norm_label": "papyrusstats",
+      "id": "python_binding_audit_report_papyrusstats"
     },
     {
       "label": "papyrus_logging()",
@@ -791,9 +570,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "python_binding_audit_report_papyrus_logging",
-      "community": 11,
-      "norm_label": "papyrus_logging()"
+      "community": 12,
+      "norm_label": "papyrus_logging()",
+      "id": "python_binding_audit_report_papyrus_logging"
     },
     {
       "label": "ConfigIssue",
@@ -804,9 +583,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "python_binding_audit_report_configissue",
-      "community": 4,
-      "norm_label": "configissue"
+      "community": 9,
+      "norm_label": "configissue",
+      "id": "python_binding_audit_report_configissue"
     },
     {
       "label": "PatternMatcher",
@@ -817,9 +596,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "python_binding_audit_report_patternmatcher",
-      "community": 20,
-      "norm_label": "patternmatcher"
+      "community": 7,
+      "norm_label": "patternmatcher",
+      "id": "python_binding_audit_report_patternmatcher"
     },
     {
       "label": "Timer",
@@ -830,9 +609,217 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "timer_api_audit_report_timer",
       "community": 3,
-      "norm_label": "timer"
+      "norm_label": "timer",
+      "id": "timer_api_audit_report_timer"
+    },
+    {
+      "label": "CLASSIC Python CLI",
+      "file_type": "document",
+      "source_file": "CLASSIC_Python_CLI_PRD.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_python_cli_prd_classic_py_cli",
+      "community": 43,
+      "norm_label": "classic python cli"
+    },
+    {
+      "label": "CLASSIC Ratatui TUI",
+      "file_type": "document",
+      "source_file": "CLASSIC_Ratatui_TUI_PRD.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_ratatui_tui_prd_classic_tui",
+      "community": 26,
+      "norm_label": "classic ratatui tui"
+    },
+    {
+      "label": "CLASSIC TUI",
+      "file_type": "document",
+      "source_file": "CLASSIC_TUI_PRD.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_tui_prd_classic_tui",
+      "community": 45,
+      "norm_label": "classic tui"
+    },
+    {
+      "label": "CLASSIC Documentation",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_classic_documentation",
+      "community": 90,
+      "norm_label": "classic documentation"
+    },
+    {
+      "label": "CLASSIC Rust Documentation Index",
+      "file_type": "document",
+      "source_file": "RUST_DOCUMENTATION_INDEX.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "rust_documentation_index_classic_rust_docs",
+      "community": 98,
+      "norm_label": "classic rust documentation index"
+    },
+    {
+      "label": "CLASSIC Quick Start (Contributor)",
+      "file_type": "document",
+      "source_file": "api/QUICK_START.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_quick_start_quick_start",
+      "community": 40,
+      "norm_label": "classic quick start (contributor)"
+    },
+    {
+      "label": "CLASSIC API Docs",
+      "file_type": "document",
+      "source_file": "api/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_readme_classic_api_docs",
+      "community": 41,
+      "norm_label": "classic api docs"
+    },
+    {
+      "label": "App Update Notification Delivery",
+      "file_type": "document",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_app_update_notification_delivery_app_update_notification_delivery",
+      "community": 31,
+      "norm_label": "app update notification delivery"
+    },
+    {
+      "label": "Binding Compliance Suite",
+      "file_type": "document",
+      "source_file": "api/binding-compliance-suite.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_binding_compliance_suite_binding_compliance_suite",
+      "community": 32,
+      "norm_label": "binding compliance suite"
+    },
+    {
+      "label": "Binding Contract Refresh Note",
+      "file_type": "document",
+      "source_file": "api/binding-contract-refresh-note.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_binding_contract_refresh_note_binding_contract_refresh_note",
+      "community": 33,
+      "norm_label": "binding contract refresh note"
+    },
+    {
+      "label": "Binding Parity Overview",
+      "file_type": "document",
+      "source_file": "api/binding-parity-overview.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_binding_parity_overview_binding_parity_overview",
+      "community": 34,
+      "norm_label": "binding parity overview"
+    },
+    {
+      "label": "Binding Parity Policy",
+      "file_type": "document",
+      "source_file": "api/binding-parity-policy.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_binding_parity_policy_binding_parity_policy",
+      "community": 35,
+      "norm_label": "binding parity policy"
+    },
+    {
+      "label": "classic-config-core YAML Schema Contract",
+      "file_type": "document",
+      "source_file": "api/classic-config-core-yaml-schema.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_classic_config_core_yaml_schema_classic_config_core_yaml_schema",
+      "community": 37,
+      "norm_label": "classic-config-core yaml schema contract"
+    },
+    {
+      "label": "classic-config-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-config-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_classic_config_core_classic_config_core",
+      "community": 36,
+      "norm_label": "classic-config-core api guide"
+    },
+    {
+      "label": "classic-cpp-bridge Data Entry Points",
+      "file_type": "document",
+      "source_file": "api/classic-cpp-bridge-data-entrypoints.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_classic_cpp_bridge_data_entrypoints_classic_cpp_bridge_data_entrypoints",
+      "community": 38,
+      "norm_label": "classic-cpp-bridge data entry points"
+    },
+    {
+      "label": "classic-cpp-bridge Game Entry Points",
+      "file_type": "document",
+      "source_file": "api/classic-cpp-bridge-game-entrypoints.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_classic_cpp_bridge_game_entrypoints_classic_cpp_bridge_game_entrypoints",
+      "community": 39,
+      "norm_label": "classic-cpp-bridge game entry points"
     },
     {
       "label": "block_on_result",
@@ -844,7 +831,7 @@
       "author": null,
       "contributor": null,
       "id": "runtime_gil_patterns_block_on_result",
-      "community": 47,
+      "community": 91,
       "norm_label": "block_on_result"
     },
     {
@@ -857,7 +844,7 @@
       "author": null,
       "contributor": null,
       "id": "runtime_gil_patterns_without_gil_block_on",
-      "community": 50,
+      "community": 94,
       "norm_label": "without_gil_block_on"
     },
     {
@@ -870,7 +857,7 @@
       "author": null,
       "contributor": null,
       "id": "runtime_gil_patterns_future_into_py",
-      "community": 48,
+      "community": 92,
       "norm_label": "future_into_py"
     },
     {
@@ -883,7 +870,7 @@
       "author": null,
       "contributor": null,
       "id": "runtime_gil_patterns_spawn_result",
-      "community": 49,
+      "community": 93,
       "norm_label": "spawn_result"
     },
     {
@@ -896,7 +883,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_2024_edition_guide_asyncprocessor",
-      "community": 52,
+      "community": 96,
       "norm_label": "asyncprocessor trait"
     },
     {
@@ -909,7 +896,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_2024_edition_guide_asyncfileprocessor",
-      "community": 51,
+      "community": 95,
       "norm_label": "asyncfileprocessor trait"
     },
     {
@@ -922,7 +909,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_bindings_topyerr",
-      "community": 12,
+      "community": 19,
       "norm_label": "topyerr trait"
     },
     {
@@ -935,7 +922,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_bindings_pymoduleerror",
-      "community": 12,
+      "community": 19,
       "norm_label": "pymoduleerror struct"
     },
     {
@@ -948,7 +935,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_bindings_pyclass_method",
-      "community": 12,
+      "community": 19,
       "norm_label": "pyclass method with error mapping"
     },
     {
@@ -961,7 +948,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_bindings_pylist_direct_construction",
-      "community": 22,
+      "community": 29,
       "norm_label": "pylist direct construction"
     },
     {
@@ -974,7 +961,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_bindings_pyclass_dataresult",
-      "community": 22,
+      "community": 29,
       "norm_label": "dataresult pyclass struct"
     },
     {
@@ -987,7 +974,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_bindings_without_gil",
-      "community": 53,
+      "community": 97,
       "norm_label": "classic_shared::without_gil usage"
     },
     {
@@ -1000,7 +987,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_foundation",
-      "community": 23,
+      "community": 30,
       "norm_label": "foundation layer"
     },
     {
@@ -1013,7 +1000,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_business_logic",
-      "community": 15,
+      "community": 22,
       "norm_label": "business-logic layer"
     },
     {
@@ -1026,7 +1013,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_python_bindings",
-      "community": 16,
+      "community": 23,
       "norm_label": "python-bindings layer"
     },
     {
@@ -1039,7 +1026,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_node_bindings",
-      "community": 59,
+      "community": 103,
       "norm_label": "node-bindings layer"
     },
     {
@@ -1052,7 +1039,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_cpp_bindings",
-      "community": 57,
+      "community": 101,
       "norm_label": "cpp-bindings layer"
     },
     {
@@ -1065,7 +1052,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_ui_applications",
-      "community": 60,
+      "community": 104,
       "norm_label": "ui-applications layer"
     },
     {
@@ -1078,7 +1065,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_classic_shared_core",
-      "community": 23,
+      "community": 30,
       "norm_label": "classic-shared-core crate"
     },
     {
@@ -1091,7 +1078,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_classic_config_core",
-      "community": 15,
+      "community": 22,
       "norm_label": "classic-config-core crate"
     },
     {
@@ -1104,7 +1091,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_classic_scanlog_core",
-      "community": 15,
+      "community": 22,
       "norm_label": "classic-scanlog-core crate"
     },
     {
@@ -1117,7 +1104,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_classic_config_py",
-      "community": 16,
+      "community": 23,
       "norm_label": "classic-config-py crate"
     },
     {
@@ -1130,7 +1117,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_classic_scanlog_py",
-      "community": 16,
+      "community": 23,
       "norm_label": "classic-scanlog-py crate"
     },
     {
@@ -1143,7 +1130,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_workspace_architecture_dependency_direction",
-      "community": 58,
+      "community": 102,
       "norm_label": "dependency direction"
     },
     {
@@ -1156,7 +1143,7 @@
       "author": null,
       "contributor": null,
       "id": "scangame_rust_acceleration_classic_scangame_core",
-      "community": 6,
+      "community": 14,
       "norm_label": "classic-scangame-core crate"
     },
     {
@@ -1169,7 +1156,7 @@
       "author": null,
       "contributor": null,
       "id": "scangame_rust_acceleration_classic_scangame_py",
-      "community": 6,
+      "community": 14,
       "norm_label": "classic-scangame-py crate"
     },
     {
@@ -1182,7 +1169,7 @@
       "author": null,
       "contributor": null,
       "id": "scangame_rust_acceleration_classic_node",
-      "community": 6,
+      "community": 14,
       "norm_label": "classic-node crate"
     },
     {
@@ -1195,7 +1182,7 @@
       "author": null,
       "contributor": null,
       "id": "scangame_rust_acceleration_classic_cpp_bridge",
-      "community": 6,
+      "community": 14,
       "norm_label": "classic-cpp-bridge crate"
     },
     {
@@ -1208,7 +1195,7 @@
       "author": null,
       "contributor": null,
       "id": "pyo3_async_runtimes_usage_guide_future_into_py",
-      "community": 44,
+      "community": 88,
       "norm_label": "future_into_py function"
     },
     {
@@ -1221,7 +1208,7 @@
       "author": null,
       "contributor": null,
       "id": "pyo3_async_runtimes_usage_guide_into_future",
-      "community": 45,
+      "community": 89,
       "norm_label": "into_future function"
     },
     {
@@ -1234,7 +1221,7 @@
       "author": null,
       "contributor": null,
       "id": "pyo3_async_runtimes_usage_guide_async_database",
-      "community": 42,
+      "community": 86,
       "norm_label": "asyncdatabase pyclass"
     },
     {
@@ -1247,7 +1234,7 @@
       "author": null,
       "contributor": null,
       "id": "pyo3_async_runtimes_usage_guide_databasepool",
-      "community": 43,
+      "community": 87,
       "norm_label": "databasepool pyclass"
     },
     {
@@ -1260,7 +1247,7 @@
       "author": null,
       "contributor": null,
       "id": "implementation_summary_max_connections_databasepool",
-      "community": 39,
+      "community": 81,
       "norm_label": "databasepool max_connections behavior"
     },
     {
@@ -1273,7 +1260,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_asyncyamlsettingscore",
-      "community": 2,
+      "community": 6,
       "norm_label": "asyncyamlsettingscore class"
     },
     {
@@ -1286,7 +1273,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_yamlsettingscache",
-      "community": 2,
+      "community": 6,
       "norm_label": "yamlsettingscache class"
     },
     {
@@ -1299,7 +1286,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_asyncbridge",
-      "community": 2,
+      "community": 6,
       "norm_label": "asyncbridge class"
     },
     {
@@ -1312,7 +1299,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_batch_get_settings",
-      "community": 2,
+      "community": 6,
       "norm_label": "batch_get_settings method"
     },
     {
@@ -1325,7 +1312,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_load_multiple_stores",
-      "community": 2,
+      "community": 6,
       "norm_label": "load_multiple_stores method"
     },
     {
@@ -1338,7 +1325,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_prefetch_all_settings",
-      "community": 2,
+      "community": 6,
       "norm_label": "prefetch_all_settings method"
     },
     {
@@ -1351,7 +1338,7 @@
       "author": null,
       "contributor": null,
       "id": "async_yaml_implementation_summary_get_metrics",
-      "community": 2,
+      "community": 6,
       "norm_label": "get_metrics method"
     },
     {
@@ -1364,7 +1351,7 @@
       "author": null,
       "contributor": null,
       "id": "other_pyinstaller_data_bundling_guide",
-      "community": 40,
+      "community": 83,
       "norm_label": "pyinstaller data bundling guide for classic-fallout4"
     },
     {
@@ -1377,7 +1364,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_ffi_optimization_guide",
-      "community": 0,
+      "community": 1,
       "norm_label": "ffi optimization guide for classic rust integration"
     },
     {
@@ -1390,7 +1377,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_memory_profiling_guide",
-      "community": 0,
+      "community": 1,
       "norm_label": "memory profiling guide"
     },
     {
@@ -1403,7 +1390,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_performance_optimization_run_in_executor",
-      "community": 0,
+      "community": 1,
       "norm_label": "performance optimization: run_in_executor analysis and improvements"
     },
     {
@@ -1416,7 +1403,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_performance_monitoring",
-      "community": 0,
+      "community": 1,
       "norm_label": "performance monitoring guide for classic rust components"
     },
     {
@@ -1429,7 +1416,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_phase1_benchmark_report",
-      "community": 0,
+      "community": 1,
       "norm_label": "phase 1 performance benchmark report"
     },
     {
@@ -1442,7 +1429,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_python_bindings_optimization_propagation",
-      "community": 0,
+      "community": 1,
       "norm_label": "python bindings optimization propagation plan"
     },
     {
@@ -1455,7 +1442,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_rust_db_benchmark_baseline",
-      "community": 41,
+      "community": 85,
       "norm_label": "rust db benchmark baseline"
     },
     {
@@ -1468,7 +1455,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_rust_performance_optimization_report",
-      "community": 0,
+      "community": 1,
       "norm_label": "classic rust performance optimization report"
     },
     {
@@ -1481,7 +1468,7 @@
       "author": null,
       "contributor": null,
       "id": "performance_tui_dirty_tracking_optimization",
-      "community": 0,
+      "community": 1,
       "norm_label": "tui dirty tracking optimization"
     },
     {
@@ -1494,7 +1481,7 @@
       "author": null,
       "contributor": null,
       "id": "prd_complete_cpp_qt_gui",
-      "community": 0,
+      "community": 1,
       "norm_label": "prd: c++ qt gui for classic"
     },
     {
@@ -1507,7 +1494,7 @@
       "author": null,
       "contributor": null,
       "id": "prd_complete_g17_classicscanlogs_info_migration",
-      "community": 0,
+      "community": 1,
       "norm_label": "prd: g-17 classicscanlogsinfo \u2192 rust yamldata unification"
     },
     {
@@ -1520,7 +1507,7 @@
       "author": null,
       "contributor": null,
       "id": "prd_complete_node_bindings_completion",
-      "community": 0,
+      "community": 1,
       "norm_label": "prd: node.js/bun bindings completion for classic rust crates"
     },
     {
@@ -1533,7 +1520,7 @@
       "author": null,
       "contributor": null,
       "id": "prd_complete_python_to_rust_migration",
-      "community": 0,
+      "community": 1,
       "norm_label": "prd: python-to-rust business logic migration"
     },
     {
@@ -1546,7 +1533,7 @@
       "author": null,
       "contributor": null,
       "id": "prd_complete_rename_rust_to_classiclib_rs",
-      "community": 0,
+      "community": 1,
       "norm_label": "prd: rename `rust/` directory to `classiclib-rs/`"
     },
     {
@@ -1559,7 +1546,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_pyo3_0_27_migration",
-      "community": 13,
+      "community": 20,
       "norm_label": "pyo3 0.27 migration guide"
     },
     {
@@ -1572,7 +1559,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_development_with_rust",
-      "community": 5,
+      "community": 13,
       "norm_label": "development guide for classic rust components"
     },
     {
@@ -1585,7 +1572,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_gil_release_pattern_pyo3_0_27",
-      "community": 13,
+      "community": 20,
       "norm_label": "gil release pattern for pyo3 0.27"
     },
     {
@@ -1598,7 +1585,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_phase4_utilities_guide",
-      "community": 55,
+      "community": 99,
       "norm_label": "utilities guide"
     },
     {
@@ -1611,7 +1598,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_pyo3_quick_reference",
-      "community": 13,
+      "community": 20,
       "norm_label": "pyo3 0.27 quick reference for classic developers"
     },
     {
@@ -1624,7 +1611,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_python_to_rust_migration_guide",
-      "community": 56,
+      "community": 100,
       "norm_label": "python to rust migration guide"
     },
     {
@@ -1637,7 +1624,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_rust_architecture",
-      "community": 14,
+      "community": 21,
       "norm_label": "classic rust architecture documentation"
     },
     {
@@ -1650,7 +1637,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_rust_async_pattern",
-      "community": 5,
+      "community": 13,
       "norm_label": "native async solution for classic"
     },
     {
@@ -1663,7 +1650,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_rust_modules_detailed",
-      "community": 14,
+      "community": 21,
       "norm_label": "classic rust modules - detailed documentation"
     },
     {
@@ -1676,7 +1663,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_rust_parser_module",
-      "community": 14,
+      "community": 21,
       "norm_label": "rust parser module overview"
     },
     {
@@ -1689,7 +1676,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_rust_usage_guide",
-      "community": 5,
+      "community": 13,
       "norm_label": "classic rust usage guide"
     },
     {
@@ -1702,7 +1689,7 @@
       "author": null,
       "contributor": null,
       "id": "rust_troubleshooting_rust",
-      "community": 5,
+      "community": 13,
       "norm_label": "troubleshooting guide for classic rust components"
     },
     {
@@ -1715,7 +1702,7 @@
       "author": null,
       "contributor": null,
       "id": "superpowers_specs_2026_03_09_classic_gui_scan_result_ordering_test_design",
-      "community": 61,
+      "community": 105,
       "norm_label": "classic-gui scan result ordering test design"
     },
     {
@@ -1728,7 +1715,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_guide_index",
-      "community": 73,
+      "community": 117,
       "norm_label": "classic testing guide index"
     },
     {
@@ -1741,7 +1728,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_test_pollution_updates",
-      "community": 66,
+      "community": 110,
       "norm_label": "test pollution updates summary"
     },
     {
@@ -1754,7 +1741,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_test_structure",
-      "community": 67,
+      "community": 111,
       "norm_label": "test suite organization"
     },
     {
@@ -1767,7 +1754,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_async_test_patterns_guide",
-      "community": 62,
+      "community": 106,
       "norm_label": "async test patterns guide for classic"
     },
     {
@@ -1780,7 +1767,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_fixture_migration_summary",
-      "community": 63,
+      "community": 107,
       "norm_label": "test fixture migration summary"
     },
     {
@@ -1793,7 +1780,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_rust_testing_guide",
-      "community": 64,
+      "community": 108,
       "norm_label": "rust testing guide"
     },
     {
@@ -1806,7 +1793,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_test_pollution_guide",
-      "community": 65,
+      "community": 109,
       "norm_label": "test pollution prevention guide"
     },
     {
@@ -1819,7 +1806,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_async_bridge",
-      "community": 68,
+      "community": 112,
       "norm_label": "testing guide: asyncbridge and async code mocking"
     },
     {
@@ -1832,7 +1819,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_database_pools",
-      "community": 69,
+      "community": 113,
       "norm_label": "testing database pools guide"
     },
     {
@@ -1845,7 +1832,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_fileio_core",
-      "community": 70,
+      "community": 114,
       "norm_label": "testing fileiocore and asyncbridge coupling guide"
     },
     {
@@ -1858,7 +1845,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_fixture_standards",
-      "community": 71,
+      "community": 115,
       "norm_label": "testing fixture standards"
     },
     {
@@ -1871,7 +1858,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_global_registry",
-      "community": 72,
+      "community": 116,
       "norm_label": "testing guide: globalregistry and singleton patterns"
     },
     {
@@ -1884,7 +1871,7 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_message_handler",
-      "community": 74,
+      "community": 118,
       "norm_label": "testing messagehandler guide"
     },
     {
@@ -1897,8 +1884,1256 @@
       "author": null,
       "contributor": null,
       "id": "testing_testing_yaml_cache",
-      "community": 75,
+      "community": 119,
       "norm_label": "testing guide: yamlsettingscache and configuration testing"
+    },
+    {
+      "label": "Workspace Migration Matrix",
+      "file_type": "document",
+      "source_file": "workspace-migration-matrix.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "workspace_migration_matrix_workspace_migration_matrix",
+      "community": 120,
+      "norm_label": "workspace migration matrix"
+    },
+    {
+      "label": "create_yamldata() function",
+      "file_type": "code",
+      "source_file": "audit-reports/classic_config_api_audit.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_config_api_audit_create_yamldata",
+      "community": 24,
+      "norm_label": "create_yamldata() function"
+    },
+    {
+      "label": "YamlData constructor",
+      "file_type": "code",
+      "source_file": "audit-reports/classic_config_api_audit.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_config_api_audit_yamldata_constructor",
+      "community": 24,
+      "norm_label": "yamldata constructor"
+    },
+    {
+      "label": "PyLogCollector class",
+      "file_type": "code",
+      "source_file": "audit-reports/classic_file_io_audit_summary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_file_io_audit_summary_pylogcollector",
+      "community": 3,
+      "norm_label": "pylogcollector class"
+    },
+    {
+      "label": "IniValidator class",
+      "file_type": "code",
+      "source_file": "audit-reports/classic_scangame_api_audit_phase2.1.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_scangame_api_audit_phase21_inivalidator",
+      "community": 44,
+      "norm_label": "inivalidator class"
+    },
+    {
+      "label": "Rust wrapper for FcxModeHandler",
+      "file_type": "code",
+      "source_file": "audit-reports/integration_layer_api_audit_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "integration_layer_api_audit_report_fcx_rust",
+      "community": 9,
+      "norm_label": "rust wrapper for fcxmodehandler"
+    },
+    {
+      "label": "Rust wrapper for GpuDetector",
+      "file_type": "code",
+      "source_file": "audit-reports/integration_layer_api_audit_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "integration_layer_api_audit_report_gpu_rust",
+      "community": 7,
+      "norm_label": "rust wrapper for gpudetector"
+    },
+    {
+      "label": "PapyrusAnalyzer class",
+      "file_type": "code",
+      "source_file": "audit-reports/papyrus_api_audit_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "papyrus_api_audit_report_papyrusanalyzer",
+      "community": 28,
+      "norm_label": "papyrusanalyzer class"
+    },
+    {
+      "label": "PapyrusStats class",
+      "file_type": "code",
+      "source_file": "audit-reports/papyrus_api_audit_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "papyrus_api_audit_report_papyrusstats",
+      "community": 28,
+      "norm_label": "papyrusstats class"
+    },
+    {
+      "label": "papyrus_logging function",
+      "file_type": "code",
+      "source_file": "audit-reports/python_binding_audit_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "python_binding_audit_report_papyruslogging",
+      "community": 12,
+      "norm_label": "papyrus_logging function"
+    },
+    {
+      "label": "CLASSIC Phase 6 Performance Dashboard",
+      "file_type": "code",
+      "source_file": "performance_dashboard.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "performance_dashboard_html",
+      "community": 84,
+      "norm_label": "classic phase 6 performance dashboard"
+    },
+    {
+      "label": "classic::scanner Scan Progress Callback Contract",
+      "file_type": "document",
+      "source_file": "api/classic-cpp-bridge-scan-progress-callback.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_cpp_bridge_scan_progress_callback_md",
+      "community": 0,
+      "norm_label": "classic::scanner scan progress callback contract"
+    },
+    {
+      "label": "classic-database-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-database-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_database_core_md",
+      "community": 0,
+      "norm_label": "classic-database-core api guide"
+    },
+    {
+      "label": "classic-file-io-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-file-io-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_file_io_core_md",
+      "community": 0,
+      "norm_label": "classic-file-io-core api guide"
+    },
+    {
+      "label": "classic-gui Scan Progress Consumer Flow",
+      "file_type": "document",
+      "source_file": "api/classic-gui-scan-progress-consumer.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_gui_scan_progress_consumer_md",
+      "community": 0,
+      "norm_label": "classic-gui scan progress consumer flow"
+    },
+    {
+      "label": "classic-gui Scan Result Ordering And input_index Correlation",
+      "file_type": "document",
+      "source_file": "api/classic-gui-scan-result-ordering.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_gui_scan_result_ordering_md",
+      "community": 0,
+      "norm_label": "classic-gui scan result ordering and input_index correlation"
+    },
+    {
+      "label": "classic-message-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-message-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_message_core_md",
+      "community": 0,
+      "norm_label": "classic-message-core api guide"
+    },
+    {
+      "label": "classic-path-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-path-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_path_core_md",
+      "community": 0,
+      "norm_label": "classic-path-core api guide"
+    },
+    {
+      "label": "classic-perf-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-perf-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_perf_core_md",
+      "community": 0,
+      "norm_label": "classic-perf-core api guide"
+    },
+    {
+      "label": "classic-registry-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_registry_core_md",
+      "community": 0,
+      "norm_label": "classic-registry-core api guide"
+    },
+    {
+      "label": "classic-resource-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-resource-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_resource_core_md",
+      "community": 0,
+      "norm_label": "classic-resource-core api guide"
+    },
+    {
+      "label": "classic-scangame-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-scangame-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_scangame_core_md",
+      "community": 0,
+      "norm_label": "classic-scangame-core api guide"
+    },
+    {
+      "label": "classic-scanlog-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-scanlog-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_scanlog_core_md",
+      "community": 0,
+      "norm_label": "classic-scanlog-core api guide"
+    },
+    {
+      "label": "classic-settings-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-settings-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_settings_core_md",
+      "community": 0,
+      "norm_label": "classic-settings-core api guide"
+    },
+    {
+      "label": "classic-shared-core API Guide",
+      "file_type": "document",
+      "source_file": "api/classic-shared-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_shared_core_md",
+      "community": 0,
+      "norm_label": "classic-shared-core api guide"
+    },
+    {
+      "label": "GithubClient",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_githubclient",
+      "community": 4,
+      "norm_label": "githubclient"
+    },
+    {
+      "label": "GithubRelease",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_githubrelease",
+      "community": 4,
+      "norm_label": "githubrelease"
+    },
+    {
+      "label": "GithubAsset",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_githubasset",
+      "community": 4,
+      "norm_label": "githubasset"
+    },
+    {
+      "label": "UpdateError",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_updateerror",
+      "community": 4,
+      "norm_label": "updateerror"
+    },
+    {
+      "label": "check_app_notification",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_notification_check_app_notification",
+      "community": 4,
+      "norm_label": "check_app_notification"
+    },
+    {
+      "label": "check_app_notification_with",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_notification_check_app_notification_with",
+      "community": 4,
+      "norm_label": "check_app_notification_with"
+    },
+    {
+      "label": "classify",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_notification_classify",
+      "community": 46,
+      "norm_label": "classify"
+    },
+    {
+      "label": "fetch_app_notification_manifest",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_notification_fetch_app_notification_manifest",
+      "community": 4,
+      "norm_label": "fetch_app_notification_manifest"
+    },
+    {
+      "label": "fetch_via_releases_fallback",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_notification_fetch_via_releases_fallback",
+      "community": 4,
+      "norm_label": "fetch_via_releases_fallback"
+    },
+    {
+      "label": "build_app_notification_pages_url",
+      "file_type": "code",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_notification_build_app_notification_pages_url",
+      "community": 4,
+      "norm_label": "build_app_notification_pages_url"
+    },
+    {
+      "label": "parse_version",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_parse_version",
+      "community": 8,
+      "norm_label": "parse_version"
+    },
+    {
+      "label": "try_parse_version",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_try_parse_version",
+      "community": 8,
+      "norm_label": "try_parse_version"
+    },
+    {
+      "label": "compare_versions",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_compare_versions",
+      "community": 47,
+      "norm_label": "compare_versions"
+    },
+    {
+      "label": "is_known_fallout4_version",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_is_known_fallout4_version",
+      "community": 16,
+      "norm_label": "is_known_fallout4_version"
+    },
+    {
+      "label": "is_known_f4se_version",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_is_known_f4se_version",
+      "community": 16,
+      "norm_label": "is_known_f4se_version"
+    },
+    {
+      "label": "extract_version_from_filename",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_extract_version_from_filename",
+      "community": 49,
+      "norm_label": "extract_version_from_filename"
+    },
+    {
+      "label": "extract_version_from_log",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_extract_version_from_log",
+      "community": 50,
+      "norm_label": "extract_version_from_log"
+    },
+    {
+      "label": "extract_all_versions",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_extract_all_versions",
+      "community": 48,
+      "norm_label": "extract_all_versions"
+    },
+    {
+      "label": "format_version",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_format_version",
+      "community": 51,
+      "norm_label": "format_version"
+    },
+    {
+      "label": "is_valid_executable_path",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_pe_version_is_valid_executable_path",
+      "community": 53,
+      "norm_label": "is_valid_executable_path"
+    },
+    {
+      "label": "extract_pe_version",
+      "file_type": "code",
+      "source_file": "api/classic-version-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_core_pe_version_extract_pe_version",
+      "community": 52,
+      "norm_label": "extract_pe_version"
+    },
+    {
+      "label": "get_version_registry",
+      "file_type": "code",
+      "source_file": "api/classic-version-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_registry_core_get_version_registry",
+      "community": 16,
+      "norm_label": "get_version_registry"
+    },
+    {
+      "label": "VersionRegistry",
+      "file_type": "code",
+      "source_file": "api/classic-version-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_registry_core_versionregistry",
+      "community": 58,
+      "norm_label": "versionregistry"
+    },
+    {
+      "label": "Fallout4Version",
+      "file_type": "code",
+      "source_file": "api/classic-version-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_registry_core_fallout4version",
+      "community": 54,
+      "norm_label": "fallout4version"
+    },
+    {
+      "label": "GameVersion",
+      "file_type": "code",
+      "source_file": "api/classic-version-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_registry_core_gameversion",
+      "community": 55,
+      "norm_label": "gameversion"
+    },
+    {
+      "label": "VersionInfo",
+      "file_type": "code",
+      "source_file": "api/classic-version-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_registry_core_versioninfo",
+      "community": 57,
+      "norm_label": "versioninfo"
+    },
+    {
+      "label": "MatchResult",
+      "file_type": "code",
+      "source_file": "api/classic-version-registry-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_version_registry_core_matchresult",
+      "community": 56,
+      "norm_label": "matchresult"
+    },
+    {
+      "label": "ModSite",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_modsite",
+      "community": 66,
+      "norm_label": "modsite"
+    },
+    {
+      "label": "WebError",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_weberror",
+      "community": 68,
+      "norm_label": "weberror"
+    },
+    {
+      "label": "get_user_agent",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_get_user_agent",
+      "community": 62,
+      "norm_label": "get_user_agent"
+    },
+    {
+      "label": "get_user_agent_with_suffix",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_get_user_agent_with_suffix",
+      "community": 63,
+      "norm_label": "get_user_agent_with_suffix"
+    },
+    {
+      "label": "validate_url",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_validate_url",
+      "community": 67,
+      "norm_label": "validate_url"
+    },
+    {
+      "label": "is_valid_url",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_is_valid_url",
+      "community": 64,
+      "norm_label": "is_valid_url"
+    },
+    {
+      "label": "extract_domain",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_extract_domain",
+      "community": 61,
+      "norm_label": "extract_domain"
+    },
+    {
+      "label": "join_url",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_join_url",
+      "community": 65,
+      "norm_label": "join_url"
+    },
+    {
+      "label": "build_url_with_query",
+      "file_type": "code",
+      "source_file": "api/classic-web-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_web_core_build_url_with_query",
+      "community": 60,
+      "norm_label": "build_url_with_query"
+    },
+    {
+      "label": "XseType",
+      "file_type": "code",
+      "source_file": "api/classic-xse-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_xse_core_xsetype",
+      "community": 70,
+      "norm_label": "xsetype"
+    },
+    {
+      "label": "XseInfo",
+      "file_type": "code",
+      "source_file": "api/classic-xse-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_xse_core_xseinfo",
+      "community": 69,
+      "norm_label": "xseinfo"
+    },
+    {
+      "label": "detect_xse_version",
+      "file_type": "code",
+      "source_file": "api/classic-xse-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_xse_core_detect_xse_version",
+      "community": 8,
+      "norm_label": "detect_xse_version"
+    },
+    {
+      "label": "is_xse_installed",
+      "file_type": "code",
+      "source_file": "api/classic-xse-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_xse_core_is_xse_installed",
+      "community": 8,
+      "norm_label": "is_xse_installed"
+    },
+    {
+      "label": "get_xse_info",
+      "file_type": "code",
+      "source_file": "api/classic-xse-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_xse_core_get_xse_info",
+      "community": 8,
+      "norm_label": "get_xse_info"
+    },
+    {
+      "label": "YamlOperations",
+      "file_type": "code",
+      "source_file": "api/classic-yaml-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_yaml_core_yamloperations",
+      "community": 72,
+      "norm_label": "yamloperations"
+    },
+    {
+      "label": "merge_keys",
+      "file_type": "code",
+      "source_file": "api/classic-yaml-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_yaml_core_merge_keys",
+      "community": 71,
+      "norm_label": "merge_keys"
+    },
+    {
+      "label": "Profiling Workflow for CLASSIC",
+      "file_type": "document",
+      "source_file": "development/profiling_workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_profiling_workflow",
+      "community": 5,
+      "norm_label": "profiling workflow for classic"
+    },
+    {
+      "label": "PyO3 Integration Patterns",
+      "file_type": "document",
+      "source_file": "development/pyo3_integration_patterns.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_pyo3_integration_patterns",
+      "community": 5,
+      "norm_label": "pyo3 integration patterns"
+    },
+    {
+      "label": "Rust Acceleration & Troubleshooting Guide",
+      "file_type": "document",
+      "source_file": "development/rust_acceleration_guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_rust_acceleration_guide",
+      "community": 5,
+      "norm_label": "rust acceleration & troubleshooting guide"
+    },
+    {
+      "label": "CLASSIC TUI User Guide",
+      "file_type": "document",
+      "source_file": "guides/tui_user_guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "guides_tui_user_guide",
+      "community": 73,
+      "norm_label": "classic tui user guide"
+    },
+    {
+      "label": "FCX Mode Read-Only Conversion Plan",
+      "file_type": "document",
+      "source_file": "implementation/fcx_read_only_conversion.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_fcx_read_only_conversion",
+      "community": 76,
+      "norm_label": "fcx mode read-only conversion plan"
+    },
+    {
+      "label": "Cross-Language Logging Contract (Phase 1)",
+      "file_type": "document",
+      "source_file": "implementation/logging_contract_phase1.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_logging_contract_phase1",
+      "community": 77,
+      "norm_label": "cross-language logging contract (phase 1)"
+    },
+    {
+      "label": "Python Logging Baseline Inventory (Phase 1)",
+      "file_type": "document",
+      "source_file": "implementation/logging_python_baseline_inventory_phase1.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_logging_python_baseline_inventory_phase1",
+      "community": 78,
+      "norm_label": "python logging baseline inventory (phase 1)"
+    },
+    {
+      "label": "Logging Redaction Policy (Phase 1)",
+      "file_type": "document",
+      "source_file": "implementation/logging_redaction_policy_phase1.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_logging_redaction_policy_phase1",
+      "community": 79,
+      "norm_label": "logging redaction policy (phase 1)"
+    },
+    {
+      "label": "CLASSIC ScanLog Performance Optimization - COMPLETE",
+      "file_type": "document",
+      "source_file": "implementation/performance_optimization_complete.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_performance_optimization_complete",
+      "community": 5,
+      "norm_label": "classic scanlog performance optimization - complete"
+    },
+    {
+      "label": "Rust vs Python Output Verification",
+      "file_type": "document",
+      "source_file": "implementation/rust_python_output_verification.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_rust_python_output_verification",
+      "community": 5,
+      "norm_label": "rust vs python output verification"
+    },
+    {
+      "label": "Rust-Python Test Parity",
+      "file_type": "document",
+      "source_file": "implementation/rust_python_test_parity.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_rust_python_test_parity",
+      "community": 5,
+      "norm_label": "rust-python test parity"
+    },
+    {
+      "label": "Rust Scanlog Implementation Verification",
+      "file_type": "document",
+      "source_file": "implementation/rust_scanlog_verification.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_rust_scanlog_verification",
+      "community": 5,
+      "norm_label": "rust scanlog implementation verification"
+    },
+    {
+      "label": "ScanLog Performance Optimizations",
+      "file_type": "document",
+      "source_file": "implementation/scanlog_performance_optimizations.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_scanlog_performance_optimizations",
+      "community": 5,
+      "norm_label": "scanlog performance optimizations"
+    },
+    {
+      "label": "CXX Parity Diff Report",
+      "file_type": "document",
+      "source_file": "implementation/cxx_api_parity/baseline/cxx_diff_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_cxx_api_parity_baseline_cxx_diff_report",
+      "community": 74,
+      "norm_label": "cxx parity diff report"
+    },
+    {
+      "label": "CXX Parity Gate Report",
+      "file_type": "document",
+      "source_file": "implementation/cxx_api_parity/baseline/cxx_gate_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_cxx_api_parity_baseline_cxx_gate_report",
+      "community": 75,
+      "norm_label": "cxx parity gate report"
+    },
+    {
+      "label": "Phase 1 Engineering Handoff Map",
+      "file_type": "document",
+      "source_file": "implementation/node_api_parity/baseline/handoff_map.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_node_api_parity_baseline_handoff_map",
+      "community": 80,
+      "norm_label": "phase 1 engineering handoff map"
+    },
+    {
+      "label": "Node Bindings Parity Contract",
+      "file_type": "document",
+      "source_file": "implementation/node_api_parity/baseline/parity_contract.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_node_api_parity_baseline_parity_contract",
+      "community": 10,
+      "norm_label": "node bindings parity contract"
+    },
+    {
+      "label": "Rust<->Node Parity Diff Baseline (Phase 1)",
+      "file_type": "document",
+      "source_file": "implementation/node_api_parity/baseline/parity_diff_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_node_api_parity_baseline_parity_diff_report",
+      "community": 10,
+      "norm_label": "rust<->node parity diff baseline (phase 1)"
+    },
+    {
+      "label": "Node Runtime Coverage Summary",
+      "file_type": "document",
+      "source_file": "implementation/node_api_parity/baseline/runtime_coverage_summary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_node_api_parity_baseline_runtime_coverage_summary",
+      "community": 10,
+      "norm_label": "node runtime coverage summary"
+    },
+    {
+      "label": "Gate Contract Baseline",
+      "file_type": "document",
+      "source_file": "implementation/node_api_parity/governance/gate_contract_baseline.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_node_api_parity_governance_gate_contract_baseline",
+      "community": 10,
+      "norm_label": "gate contract baseline"
+    },
+    {
+      "label": "Python API Parity Contract",
+      "file_type": "document",
+      "source_file": "implementation/python_api_parity/baseline/parity_contract.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_python_api_parity_baseline_parity_contract",
+      "community": 17,
+      "norm_label": "python api parity contract"
+    },
+    {
+      "label": "Rust<->Python Parity Diff Baseline",
+      "file_type": "document",
+      "source_file": "implementation/python_api_parity/baseline/parity_diff_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_python_api_parity_baseline_parity_diff_report",
+      "community": 17,
+      "norm_label": "rust<->python parity diff baseline"
+    },
+    {
+      "label": "Python Runtime Coverage Summary",
+      "file_type": "document",
+      "source_file": "implementation/python_api_parity/baseline/runtime_coverage_summary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "implementation_python_api_parity_baseline_runtime_coverage_summary",
+      "community": 17,
+      "norm_label": "python runtime coverage summary"
+    },
+    {
+      "label": "YAML Settings Test API Migration Guide",
+      "file_type": "document",
+      "source_file": "migration/README_API_MIGRATION.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "migration_readme_api_migration",
+      "community": 82,
+      "norm_label": "yaml settings test api migration guide"
+    },
+    {
+      "label": "Advanced Async & Threading Patterns Guide",
+      "file_type": "document",
+      "source_file": "migration/async-threading-patterns-guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "migration_async_threading_patterns_guide",
+      "community": 11,
+      "norm_label": "advanced async & threading patterns guide"
+    },
+    {
+      "label": "AsyncYamlSettingsCore Documentation",
+      "file_type": "document",
+      "source_file": "migration/async-yaml-documentation.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "migration_async_yaml_documentation",
+      "community": 11,
+      "norm_label": "asyncyamlsettingscore documentation"
+    },
+    {
+      "label": "AsyncYamlSettingsCore Migration Examples",
+      "file_type": "document",
+      "source_file": "migration/async-yaml-migration-examples.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "migration_async_yaml_migration_examples",
+      "community": 11,
+      "norm_label": "asyncyamlsettingscore migration examples"
+    },
+    {
+      "label": "AsyncBridge Refactoring Migration Guide",
+      "file_type": "document",
+      "source_file": "migration/asyncbridge-refactoring.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "migration_asyncbridge_refactoring",
+      "community": 11,
+      "norm_label": "asyncbridge refactoring migration guide"
     }
   ],
   "links": [
@@ -2014,16 +3249,6 @@
     },
     {
       "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 1.0,
-      "source_file": "CLASSIC_Ratatui_TUI_PRD.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "classic_ratatui_tui_prd_classic_tui",
-      "target": "classic_yaml_core"
-    },
-    {
-      "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "business-logic/classic-version-core",
@@ -2044,6 +3269,24 @@
     },
     {
       "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 1.0,
+      "source_file": "CLASSIC_Ratatui_TUI_PRD.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_ratatui_tui_prd_classic_tui",
+      "target": "classic_yaml_core"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "audit-reports/classic_file_io_audit_summary.md",
+      "source": "classic_file_io_audit_summary_pylogcollector",
+      "target": "classic_file_io_py_audit_report_pylogcollector"
+    },
+    {
+      "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ClassicLib/ScanLog/Util.py",
@@ -2053,6 +3296,14 @@
       },
       "weight": 1.0,
       "source": "classic_file_io_py_audit_report_crashlogs_get_files_rust",
+      "target": "classic_file_io_py_audit_report_pylogcollector"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.5,
+      "source_file": "audit-reports/timer_api_audit_report.md",
+      "source": "timer_api_audit_report_timer",
       "target": "classic_file_io_py_audit_report_pylogcollector"
     },
     {
@@ -2112,6 +3363,14 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "audit-reports/integration_layer_api_audit_report.md",
+      "source": "integration_layer_api_audit_report_fcx_rust",
+      "target": "config_issue_fcx_handler_api_audit_fcxmodehandler"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "ClassicLib/rust/gpu_rust.py",
       "source_location": null,
       "weight": 1.0,
@@ -2127,6 +3386,22 @@
       "weight": 1.0,
       "source": "gpu_pattern_matcher_api_audit_gpudetector",
       "target": "gpu_pattern_matcher_api_audit_gpuvendor"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "audit-reports/gpu_pattern_matcher_api_audit.md",
+      "source": "gpu_pattern_matcher_api_audit_patternmatcher",
+      "target": "gpu_pattern_matcher_api_audit_gpudetector"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "audit-reports/integration_layer_api_audit_report.md",
+      "source": "integration_layer_api_audit_report_gpu_rust",
+      "target": "gpu_pattern_matcher_api_audit_gpudetector"
     },
     {
       "relation": "semantically_similar_to",
@@ -2211,6 +3486,14 @@
     {
       "relation": "conceptually_related_to",
       "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "audit-reports/phase_1_5_formid_settings_missing_methods_audit.md",
+      "source": "phase_1_5_formid_settings_missing_methods_audit_formidanalyzer",
+      "target": "phase_1_5_formid_settings_missing_methods_audit_settingsvalidator"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
       "confidence_score": 0.9,
       "source_file": "classic_scanlog",
       "source_location": null,
@@ -2222,7 +3505,15 @@
       "relation": "conceptually_related_to",
       "confidence": "INFERRED",
       "confidence_score": 0.9,
-      "source_file": "classic_scanlog",
+      "source_file": "audit-reports/python_binding_audit_report.md",
+      "source": "python_binding_audit_report_papyrusanalyzer",
+      "target": "python_binding_audit_report_papyruslogging"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "audit-reports/python_binding_audit_report.md",
       "source_location": null,
       "weight": 0.5,
       "source": "python_binding_audit_report_papyrusanalyzer",
@@ -2728,8 +4019,566 @@
       "weight": 1.0,
       "source": "rust_rust_parser_module",
       "target": "rust_rust_architecture"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "audit-reports/classic_config_api_audit.md",
+      "source": "classic_config_api_audit_create_yamldata",
+      "target": "classic_config_api_audit_yamldata_constructor"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "audit-reports/papyrus_api_audit_report.md",
+      "source": "papyrus_api_audit_report_papyrusanalyzer",
+      "target": "papyrus_api_audit_report_papyrusstats"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-cpp-bridge-scan-progress-callback.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_cpp_bridge_scan_progress_callback_md",
+      "target": "classic_gui_scan_progress_consumer_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-cpp-bridge-scan-progress-callback.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_cpp_bridge_scan_progress_callback_md",
+      "target": "classic_gui_scan_result_ordering_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-cpp-bridge-scan-progress-callback.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_cpp_bridge_scan_progress_callback_md",
+      "target": "classic_scanlog_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-message-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_message_core_md",
+      "target": "classic_cpp_bridge_scan_progress_callback_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-path-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_path_core_md",
+      "target": "classic_cpp_bridge_scan_progress_callback_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-perf-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_perf_core_md",
+      "target": "classic_cpp_bridge_scan_progress_callback_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-registry-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_registry_core_md",
+      "target": "classic_cpp_bridge_scan_progress_callback_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-database-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_database_core_md",
+      "target": "classic_scanlog_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-file-io-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_file_io_core_md",
+      "target": "classic_scanlog_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scangame-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scangame_core_md",
+      "target": "classic_file_io_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-gui-scan-progress-consumer.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_gui_scan_progress_consumer_md",
+      "target": "classic_scanlog_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-gui-scan-result-ordering.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_gui_scan_result_ordering_md",
+      "target": "classic_gui_scan_progress_consumer_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-resource-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_resource_core_md",
+      "target": "classic_path_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scangame-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scangame_core_md",
+      "target": "classic_path_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scanlog-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scanlog_core_md",
+      "target": "classic_perf_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scanlog-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scanlog_core_md",
+      "target": "classic_registry_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scangame-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scangame_core_md",
+      "target": "classic_resource_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scangame-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scangame_core_md",
+      "target": "classic_scanlog_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-scanlog-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_scanlog_core_md",
+      "target": "classic_shared_core_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-settings-core.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "classic_settings_core_md",
+      "target": "classic_shared_core_md"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_githubclient",
+      "target": "classic_update_core_githubasset"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_githubclient",
+      "target": "classic_update_core_githubrelease"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_githubclient",
+      "target": "classic_update_core_updateerror"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_build_app_notification_pages_url",
+      "target": "classic_update_core_githubclient"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_check_app_notification",
+      "target": "classic_update_core_githubclient"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_check_app_notification_with",
+      "target": "classic_update_core_githubclient"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_fetch_app_notification_manifest",
+      "target": "classic_update_core_githubclient"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_fetch_via_releases_fallback",
+      "target": "classic_update_core_githubclient"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_build_app_notification_pages_url",
+      "target": "classic_update_core_updateerror"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_check_app_notification",
+      "target": "classic_update_core_updateerror"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_check_app_notification_with",
+      "target": "classic_update_core_updateerror"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_fetch_app_notification_manifest",
+      "target": "classic_update_core_updateerror"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-update-core.md",
+      "source": "classic_update_core_notification_fetch_via_releases_fallback",
+      "target": "classic_update_core_updateerror"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-xse-core.md",
+      "source": "classic_xse_core_detect_xse_version",
+      "target": "classic_version_core_parse_version"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-xse-core.md",
+      "source": "classic_xse_core_detect_xse_version",
+      "target": "classic_version_core_try_parse_version"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-version-core.md",
+      "source": "classic_version_core_is_known_fallout4_version",
+      "target": "classic_version_registry_core_get_version_registry"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-version-core.md",
+      "source": "classic_version_core_is_known_f4se_version",
+      "target": "classic_version_registry_core_get_version_registry"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-xse-core.md",
+      "source": "classic_xse_core_get_xse_info",
+      "target": "classic_xse_core_detect_xse_version"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/classic-xse-core.md",
+      "source": "classic_xse_core_get_xse_info",
+      "target": "classic_xse_core_is_xse_installed"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "development/rust_acceleration_guide.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "development_rust_acceleration_guide",
+      "target": "development_profiling_workflow"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/performance_optimization_complete.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_performance_optimization_complete",
+      "target": "development_profiling_workflow"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "development/pyo3_integration_patterns.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "development_pyo3_integration_patterns",
+      "target": "development_rust_acceleration_guide"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/performance_optimization_complete.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_performance_optimization_complete",
+      "target": "development_pyo3_integration_patterns"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/performance_optimization_complete.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_performance_optimization_complete",
+      "target": "development_rust_acceleration_guide"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/rust_python_output_verification.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_rust_python_output_verification",
+      "target": "implementation_performance_optimization_complete"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/rust_python_test_parity.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_rust_python_test_parity",
+      "target": "implementation_performance_optimization_complete"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/rust_scanlog_verification.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_rust_scanlog_verification",
+      "target": "implementation_performance_optimization_complete"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/scanlog_performance_optimizations.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_scanlog_performance_optimizations",
+      "target": "implementation_performance_optimization_complete"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/node_api_parity/baseline/parity_diff_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_node_api_parity_baseline_parity_diff_report",
+      "target": "implementation_node_api_parity_baseline_parity_contract"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/node_api_parity/governance/gate_contract_baseline.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_node_api_parity_governance_gate_contract_baseline",
+      "target": "implementation_node_api_parity_baseline_parity_contract"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/node_api_parity/baseline/parity_diff_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_node_api_parity_baseline_parity_diff_report",
+      "target": "implementation_node_api_parity_baseline_runtime_coverage_summary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/python_api_parity/baseline/parity_contract.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_python_api_parity_baseline_parity_contract",
+      "target": "implementation_python_api_parity_baseline_runtime_coverage_summary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/python_api_parity/baseline/parity_diff_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_python_api_parity_baseline_parity_diff_report",
+      "target": "implementation_python_api_parity_baseline_parity_contract"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "implementation/python_api_parity/baseline/parity_diff_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "implementation_python_api_parity_baseline_parity_diff_report",
+      "target": "implementation_python_api_parity_baseline_runtime_coverage_summary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "migration/async-yaml-documentation.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "migration_async_yaml_documentation",
+      "target": "migration_async_threading_patterns_guide"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "migration/async-yaml-migration-examples.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "migration_async_yaml_migration_examples",
+      "target": "migration_async_threading_patterns_guide"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "migration/asyncbridge-refactoring.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "migration_asyncbridge_refactoring",
+      "target": "migration_async_threading_patterns_guide"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "migration/async-yaml-migration-examples.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "migration_async_yaml_migration_examples",
+      "target": "migration_async_yaml_documentation"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1cfa30426c35338260f9d7e84d89c78204aca073"
+  "built_at_commit": "65a404de898a29827fc42ac0b233b095a3afdfda"
 }

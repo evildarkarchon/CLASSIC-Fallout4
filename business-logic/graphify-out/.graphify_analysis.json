@@ -65,8 +65,6 @@
       "src_cache_tests_test_load_settings_sync",
       "src_cache_tests_test_reload_same_key_updates_value",
       "src_cache_tests_test_special_key_characters",
-      "src_config_tests_test_save_local_yaml_paths_to_creates_missing_file",
-      "src_config_tests_test_save_local_yaml_paths_to_preserves_existing_keys",
       "src_lib_tests_create_test_yaml",
       "src_lib_tests_test_public_reexports_support_async_workflow",
       "src_lib_tests_test_public_reexports_support_sync_workflow",
@@ -120,6 +118,193 @@
       "src_loader_yaml_kind"
     ],
     "1": [
+      "benches_scanlog_benchmarks",
+      "benches_scanlog_benchmarks_bridge_style_detect_crash_pattern_uncached",
+      "benches_scanlog_benchmarks_bridge_style_detect_crash_pattern_with_parser",
+      "benches_scanlog_benchmarks_create_error_patterns",
+      "benches_scanlog_benchmarks_create_phase5_batch_plugins",
+      "benches_scanlog_benchmarks_create_phase5_batch_plugins_variant",
+      "benches_scanlog_benchmarks_create_phase5_cached_regex_yaml",
+      "benches_scanlog_benchmarks_create_phase5_cached_regex_yaml_variant",
+      "benches_scanlog_benchmarks_create_phase5_important_entries",
+      "benches_scanlog_benchmarks_create_phase5_important_xse_modules",
+      "benches_scanlog_benchmarks_create_phase5_synthetic_plugins",
+      "benches_scanlog_benchmarks_create_phase5_synthetic_plugins_variant",
+      "benches_scanlog_benchmarks_create_record_types",
+      "benches_scanlog_benchmarks_detect_mods_important_aho_cached_haystack_count",
+      "benches_scanlog_benchmarks_detect_mods_important_aho_compile_only",
+      "benches_scanlog_benchmarks_detect_mods_important_aho_count",
+      "benches_scanlog_benchmarks_detect_mods_important_aho_uncached_count",
+      "benches_scanlog_benchmarks_detect_mods_important_legacy_regex_count",
+      "benches_scanlog_benchmarks_extract_callstack_lines",
+      "benches_scanlog_benchmarks_extract_fixture_plugins",
+      "benches_scanlog_benchmarks_formid_extraction_benchmarks",
+      "benches_scanlog_benchmarks_formid_resolution_db_benchmarks",
+      "benches_scanlog_benchmarks_full_pipeline_benchmarks",
+      "benches_scanlog_benchmarks_log_to_lines",
+      "benches_scanlog_benchmarks_parser_creation_benchmarks",
+      "benches_scanlog_benchmarks_pattern_matching_benchmarks",
+      "benches_scanlog_benchmarks_phase5_hotspot_benchmarks",
+      "benches_scanlog_benchmarks_phase5_important_combined_text",
+      "benches_scanlog_benchmarks_plugin_detection_benchmarks",
+      "benches_scanlog_benchmarks_record_scanning_benchmarks",
+      "benches_scanlog_benchmarks_segment_parsing_benchmarks",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_arc",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_coremodentry",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_criterion",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_hashset",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_indexmap",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_logparser",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_string",
+      "classic_scanlog_core_benches_scanlog_benchmarks_rs_vec",
+      "classic_scanlog_core_src_plugin_analyzer_rs_hashset",
+      "classic_scanlog_core_src_plugin_analyzer_rs_indexmap",
+      "classic_scanlog_core_src_plugin_analyzer_rs_option",
+      "classic_scanlog_core_src_plugin_analyzer_rs_regex",
+      "classic_scanlog_core_src_plugin_analyzer_rs_result",
+      "classic_scanlog_core_src_plugin_analyzer_rs_self",
+      "classic_scanlog_core_src_plugin_analyzer_rs_string",
+      "classic_scanlog_core_src_plugin_analyzer_rs_vec",
+      "src_mod_detector_important_matcher_compile_count_for_bench",
+      "src_mod_detector_reset_important_matcher_cache_for_bench",
+      "src_plugin_analyzer",
+      "src_plugin_analyzer_classify_plugin_status",
+      "src_plugin_analyzer_compile_static_regex",
+      "src_plugin_analyzer_contains_plugin",
+      "src_plugin_analyzer_detect_plugins_batch",
+      "src_plugin_analyzer_insert_plugin_if_new",
+      "src_plugin_analyzer_normalize_plugin_name",
+      "src_plugin_analyzer_pluginanalyzer",
+      "src_plugin_analyzer_pluginanalyzer_check_plugin_limit",
+      "src_plugin_analyzer_pluginanalyzer_filter_ignored_plugins",
+      "src_plugin_analyzer_pluginanalyzer_loadorder_scan_loadorder_txt",
+      "src_plugin_analyzer_pluginanalyzer_loadorder_scan_log",
+      "src_plugin_analyzer_pluginanalyzer_new",
+      "src_plugin_analyzer_pluginanalyzer_plugin_match",
+      "src_plugin_analyzer_pluginanalyzer_plugin_match_with_crashgen_name",
+      "src_plugin_analyzer_pluginanalyzer_plugin_match_with_crashgen_name_from_lowered",
+      "src_plugin_analyzer_pluginanalyzer_resolve_registry_short_name",
+      "src_plugin_analyzer_tests",
+      "src_plugin_analyzer_tests_test_check_plugin_limit_ae_pre_137_still_triggers_warning",
+      "src_plugin_analyzer_tests_test_check_plugin_limit_ng_pre_137_disables_limit_check",
+      "src_plugin_analyzer_tests_test_check_plugin_limit_no_ff",
+      "src_plugin_analyzer_tests_test_check_plugin_limit_original_game",
+      "src_plugin_analyzer_tests_test_check_plugin_limit_vr_game",
+      "src_plugin_analyzer_tests_test_contains_plugin_case_insensitive",
+      "src_plugin_analyzer_tests_test_contains_plugin_light_plugin_format",
+      "src_plugin_analyzer_tests_test_contains_plugin_negative",
+      "src_plugin_analyzer_tests_test_contains_plugin_standard_format",
+      "src_plugin_analyzer_tests_test_contains_plugin_with_spaces",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_empty",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_light_plugins",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_multiple_logs",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_no_plugins",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_preserves_order",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_single_log",
+      "src_plugin_analyzer_tests_test_detect_plugins_batch_skips_mixed_case_duplicates",
+      "src_plugin_analyzer_tests_test_filter_ignored_plugins_case_insensitive",
+      "src_plugin_analyzer_tests_test_filter_ignored_plugins_empty",
+      "src_plugin_analyzer_tests_test_filter_ignored_plugins_filters",
+      "src_plugin_analyzer_tests_test_filter_ignored_plugins_no_ignore_list",
+      "src_plugin_analyzer_tests_test_loadorder_scan_log_empty",
+      "src_plugin_analyzer_tests_test_loadorder_scan_log_light_plugins",
+      "src_plugin_analyzer_tests_test_loadorder_scan_log_skips_duplicates",
+      "src_plugin_analyzer_tests_test_loadorder_scan_log_skips_mixed_case_duplicates",
+      "src_plugin_analyzer_tests_test_loadorder_scan_log_standard_plugins",
+      "src_plugin_analyzer_tests_test_plugin_analyzer_empty_lists",
+      "src_plugin_analyzer_tests_test_plugin_analyzer_new",
+      "src_plugin_analyzer_tests_test_plugin_match_empty",
+      "src_plugin_analyzer_tests_test_plugin_match_found",
+      "src_plugin_analyzer_tests_test_plugin_match_skips_ignored",
+      "src_plugin_analyzer_tests_test_plugin_match_skips_modified_by",
+      "src_plugin_analyzer_tests_test_plugin_match_with_crashgen_name_override_uses_effective_name"
+    ],
+    "2": [
+      "benches_yaml_benchmarks",
+      "benches_yaml_benchmarks_generate_multi_document_yaml",
+      "benches_yaml_benchmarks_generate_nested_yaml",
+      "benches_yaml_benchmarks_generate_yaml_content",
+      "benches_yaml_benchmarks_yaml_modification_benchmarks",
+      "benches_yaml_benchmarks_yaml_operations_benchmarks",
+      "benches_yaml_benchmarks_yaml_parsing_benchmarks",
+      "benches_yaml_benchmarks_yaml_serialization_benchmarks",
+      "benches_yaml_benchmarks_yaml_traversal_benchmarks",
+      "classic_settings_core_benches_yaml_benchmarks_rs_criterion",
+      "classic_settings_core_benches_yaml_benchmarks_rs_string",
+      "classic_version_core_src_lib_rs_option",
+      "classic_version_core_src_lib_rs_ordering",
+      "classic_version_core_src_lib_rs_src_lib",
+      "classic_version_core_src_lib_rs_string",
+      "classic_version_core_src_lib_rs_vec",
+      "classic_version_core_src_lib_rs_version",
+      "classic_version_core_src_lib_tests_rs_src_lib_tests",
+      "classic_version_registry_core_src_registry_rs_crashgenconfig",
+      "classic_version_registry_core_src_registry_rs_gameversion",
+      "classic_version_registry_core_src_registry_rs_hashmap",
+      "classic_version_registry_core_src_registry_rs_option",
+      "classic_version_registry_core_src_registry_rs_path",
+      "classic_version_registry_core_src_registry_rs_result",
+      "classic_version_registry_core_src_registry_rs_self",
+      "classic_version_registry_core_src_registry_rs_src_registry",
+      "classic_version_registry_core_src_registry_rs_string",
+      "classic_version_registry_core_src_registry_rs_unknownversionhandling",
+      "classic_version_registry_core_src_registry_rs_vec",
+      "classic_version_registry_core_src_registry_rs_versioninfo",
+      "classic_version_registry_core_src_registry_rs_versionregistryerror",
+      "classic_version_registry_core_src_registry_rs_yaml",
+      "matchresult",
+      "src_lib_compare_versions",
+      "src_lib_extract_all_versions",
+      "src_lib_extract_version_from_filename",
+      "src_lib_extract_version_from_log",
+      "src_lib_format_version",
+      "src_lib_is_known_f4se_version",
+      "src_lib_is_known_fallout4_version",
+      "src_lib_parse_version",
+      "src_lib_tests_test_compare_versions",
+      "src_lib_tests_test_extract_all_versions",
+      "src_lib_tests_test_extract_version_from_filename",
+      "src_lib_tests_test_extract_version_from_log",
+      "src_lib_tests_test_format_version",
+      "src_lib_tests_test_is_known_f4se_version",
+      "src_lib_tests_test_is_known_fallout4_version",
+      "src_lib_tests_test_parse_version",
+      "src_lib_tests_test_parse_version_errors",
+      "src_lib_tests_test_try_parse_version",
+      "src_lib_try_parse_version",
+      "src_lib_versionerror",
+      "src_registry_get_version_registry",
+      "src_registry_versionregistry",
+      "src_registry_versionregistry_get_address_library_filename",
+      "src_registry_versionregistry_get_all",
+      "src_registry_versionregistry_get_all_for_game",
+      "src_registry_versionregistry_get_by_id",
+      "src_registry_versionregistry_get_by_short_name",
+      "src_registry_versionregistry_get_by_version",
+      "src_registry_versionregistry_get_correct_versions",
+      "src_registry_versionregistry_get_crashgen_for_version",
+      "src_registry_versionregistry_get_crashgen_version_strings",
+      "src_registry_versionregistry_get_crashgen_versions",
+      "src_registry_versionregistry_get_instance",
+      "src_registry_versionregistry_get_wrong_versions",
+      "src_registry_versionregistry_initialize",
+      "src_registry_versionregistry_into_parts",
+      "src_registry_versionregistry_load_embedded_defaults",
+      "src_registry_versionregistry_load_from_parsed_yaml",
+      "src_registry_versionregistry_load_from_yaml",
+      "src_registry_versionregistry_load_from_yaml_str",
+      "src_registry_versionregistry_match_version",
+      "src_registry_versionregistry_new_for_testing",
+      "src_registry_versionregistry_parse_crashgen_versions_yaml",
+      "src_registry_versionregistry_parse_single_crashgen_yaml",
+      "src_registry_versionregistry_parse_unknown_handling_yaml",
+      "src_registry_versionregistry_parse_version_yaml",
+      "src_registry_versionregistry_try_load_from_yaml",
+      "src_registry_versionregistry_unknown_version_handling",
+      "versionresult",
+      "yamloperations"
+    ],
+    "3": [
       "ba2issues",
       "classic_scangame_core_src_mod_ini_rs_configissue",
       "classic_scangame_core_src_mod_ini_rs_path",
@@ -195,78 +380,7 @@
       "src_orchestrator_tests_test_scan_unpacked_empty_dir",
       "vsyncentry"
     ],
-    "2": [
-      "benches_yaml_benchmarks",
-      "benches_yaml_benchmarks_generate_multi_document_yaml",
-      "benches_yaml_benchmarks_generate_nested_yaml",
-      "benches_yaml_benchmarks_generate_yaml_content",
-      "benches_yaml_benchmarks_yaml_modification_benchmarks",
-      "benches_yaml_benchmarks_yaml_operations_benchmarks",
-      "benches_yaml_benchmarks_yaml_parsing_benchmarks",
-      "benches_yaml_benchmarks_yaml_serialization_benchmarks",
-      "benches_yaml_benchmarks_yaml_traversal_benchmarks",
-      "classic_settings_core_benches_yaml_benchmarks_rs_criterion",
-      "classic_settings_core_benches_yaml_benchmarks_rs_string",
-      "classic_settings_core_src_yaml_merge_rs_result",
-      "classic_settings_core_src_yaml_merge_rs_yaml",
-      "classic_version_registry_core_src_registry_rs_crashgenconfig",
-      "classic_version_registry_core_src_registry_rs_gameversion",
-      "classic_version_registry_core_src_registry_rs_hashmap",
-      "classic_version_registry_core_src_registry_rs_option",
-      "classic_version_registry_core_src_registry_rs_path",
-      "classic_version_registry_core_src_registry_rs_result",
-      "classic_version_registry_core_src_registry_rs_self",
-      "classic_version_registry_core_src_registry_rs_src_registry",
-      "classic_version_registry_core_src_registry_rs_string",
-      "classic_version_registry_core_src_registry_rs_unknownversionhandling",
-      "classic_version_registry_core_src_registry_rs_vec",
-      "classic_version_registry_core_src_registry_rs_versioninfo",
-      "classic_version_registry_core_src_registry_rs_versionregistryerror",
-      "classic_version_registry_core_src_registry_rs_yaml",
-      "matchresult",
-      "src_registry_versionregistry",
-      "src_registry_versionregistry_get_address_library_filename",
-      "src_registry_versionregistry_get_all",
-      "src_registry_versionregistry_get_all_for_game",
-      "src_registry_versionregistry_get_by_id",
-      "src_registry_versionregistry_get_by_short_name",
-      "src_registry_versionregistry_get_by_version",
-      "src_registry_versionregistry_get_correct_versions",
-      "src_registry_versionregistry_get_crashgen_for_version",
-      "src_registry_versionregistry_get_crashgen_version_strings",
-      "src_registry_versionregistry_get_crashgen_versions",
-      "src_registry_versionregistry_get_instance",
-      "src_registry_versionregistry_get_wrong_versions",
-      "src_registry_versionregistry_initialize",
-      "src_registry_versionregistry_into_parts",
-      "src_registry_versionregistry_load_embedded_defaults",
-      "src_registry_versionregistry_load_from_parsed_yaml",
-      "src_registry_versionregistry_load_from_yaml",
-      "src_registry_versionregistry_load_from_yaml_str",
-      "src_registry_versionregistry_match_version",
-      "src_registry_versionregistry_new_for_testing",
-      "src_registry_versionregistry_parse_crashgen_versions_yaml",
-      "src_registry_versionregistry_parse_single_crashgen_yaml",
-      "src_registry_versionregistry_parse_unknown_handling_yaml",
-      "src_registry_versionregistry_parse_version_yaml",
-      "src_registry_versionregistry_try_load_from_yaml",
-      "src_registry_versionregistry_unknown_version_handling",
-      "src_yaml_merge",
-      "src_yaml_merge_merge_keys",
-      "src_yaml_merge_merge_keys_recursive",
-      "src_yaml_merge_tests",
-      "src_yaml_merge_tests_test_merge_keys_in_array",
-      "src_yaml_merge_tests_test_merge_keys_invalid_value",
-      "src_yaml_merge_tests_test_merge_keys_multiple_mappings",
-      "src_yaml_merge_tests_test_merge_keys_nested",
-      "src_yaml_merge_tests_test_merge_keys_no_merge",
-      "src_yaml_merge_tests_test_merge_keys_override",
-      "src_yaml_merge_tests_test_merge_keys_recursive",
-      "src_yaml_merge_tests_test_merge_keys_single_mapping",
-      "yamlerror",
-      "yamloperations"
-    ],
-    "3": [
+    "4": [
       "classic_scanlog_core_src_record_scanner_rs_ahocorasick",
       "classic_scanlog_core_src_record_scanner_rs_hashset",
       "classic_scanlog_core_src_record_scanner_rs_option",
@@ -336,7 +450,7 @@
       "src_record_scanner_tests_test_try_scan_records_batch_single_segment",
       "src_record_scanner_try_scan_records_batch"
     ],
-    "4": [
+    "5": [
       "classic_message_core_src_lib_rs_src_lib",
       "classic_message_core_src_logging_rs_btreemap",
       "classic_message_core_src_logging_rs_default",
@@ -402,7 +516,7 @@
       "src_redaction_tests_test_redact_secret_key",
       "src_redaction_tests_test_redact_secret_marker_in_value"
     ],
-    "5": [
+    "6": [
       "src_yaml_ops_tests",
       "src_yaml_ops_tests_test_cache_enabled_toggle",
       "src_yaml_ops_tests_test_concurrent_cache_reads",
@@ -467,7 +581,7 @@
       "src_yaml_ops_tests_test_yaml_with_anchors_and_aliases",
       "src_yaml_ops_tests_test_yaml_with_special_characters"
     ],
-    "6": [
+    "7": [
       "classic_scanlog_core_src_report_rs_arc",
       "classic_scanlog_core_src_report_rs_crashgenversionstatus",
       "classic_scanlog_core_src_report_rs_dashmap",
@@ -530,7 +644,7 @@
       "src_report_stringpool_intern_batch",
       "src_report_stringpool_new"
     ],
-    "7": [
+    "8": [
       "classic_scanlog_core_src_parser_rs_arc",
       "classic_scanlog_core_src_parser_rs_dashmap",
       "classic_scanlog_core_src_parser_rs_hashmap",
@@ -591,67 +705,6 @@
       "src_parser_streaminglogparser_reset",
       "src_parser_streaminglogparser_set_section_boundaries",
       "src_parser_streaminglogparser_start_section"
-    ],
-    "8": [
-      "classic_scanlog_core_src_plugin_analyzer_rs_hashset",
-      "classic_scanlog_core_src_plugin_analyzer_rs_indexmap",
-      "classic_scanlog_core_src_plugin_analyzer_rs_option",
-      "classic_scanlog_core_src_plugin_analyzer_rs_regex",
-      "classic_scanlog_core_src_plugin_analyzer_rs_result",
-      "classic_scanlog_core_src_plugin_analyzer_rs_self",
-      "classic_scanlog_core_src_plugin_analyzer_rs_string",
-      "classic_scanlog_core_src_plugin_analyzer_rs_vec",
-      "src_plugin_analyzer",
-      "src_plugin_analyzer_classify_plugin_status",
-      "src_plugin_analyzer_compile_static_regex",
-      "src_plugin_analyzer_contains_plugin",
-      "src_plugin_analyzer_detect_plugins_batch",
-      "src_plugin_analyzer_insert_plugin_if_new",
-      "src_plugin_analyzer_normalize_plugin_name",
-      "src_plugin_analyzer_pluginanalyzer",
-      "src_plugin_analyzer_pluginanalyzer_check_plugin_limit",
-      "src_plugin_analyzer_pluginanalyzer_filter_ignored_plugins",
-      "src_plugin_analyzer_pluginanalyzer_loadorder_scan_loadorder_txt",
-      "src_plugin_analyzer_pluginanalyzer_loadorder_scan_log",
-      "src_plugin_analyzer_pluginanalyzer_new",
-      "src_plugin_analyzer_pluginanalyzer_plugin_match",
-      "src_plugin_analyzer_pluginanalyzer_plugin_match_with_crashgen_name",
-      "src_plugin_analyzer_pluginanalyzer_plugin_match_with_crashgen_name_from_lowered",
-      "src_plugin_analyzer_pluginanalyzer_resolve_registry_short_name",
-      "src_plugin_analyzer_tests",
-      "src_plugin_analyzer_tests_test_check_plugin_limit_ae_pre_137_still_triggers_warning",
-      "src_plugin_analyzer_tests_test_check_plugin_limit_ng_pre_137_disables_limit_check",
-      "src_plugin_analyzer_tests_test_check_plugin_limit_no_ff",
-      "src_plugin_analyzer_tests_test_check_plugin_limit_original_game",
-      "src_plugin_analyzer_tests_test_check_plugin_limit_vr_game",
-      "src_plugin_analyzer_tests_test_contains_plugin_case_insensitive",
-      "src_plugin_analyzer_tests_test_contains_plugin_light_plugin_format",
-      "src_plugin_analyzer_tests_test_contains_plugin_negative",
-      "src_plugin_analyzer_tests_test_contains_plugin_standard_format",
-      "src_plugin_analyzer_tests_test_contains_plugin_with_spaces",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_empty",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_light_plugins",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_multiple_logs",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_no_plugins",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_preserves_order",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_single_log",
-      "src_plugin_analyzer_tests_test_detect_plugins_batch_skips_mixed_case_duplicates",
-      "src_plugin_analyzer_tests_test_filter_ignored_plugins_case_insensitive",
-      "src_plugin_analyzer_tests_test_filter_ignored_plugins_empty",
-      "src_plugin_analyzer_tests_test_filter_ignored_plugins_filters",
-      "src_plugin_analyzer_tests_test_filter_ignored_plugins_no_ignore_list",
-      "src_plugin_analyzer_tests_test_loadorder_scan_log_empty",
-      "src_plugin_analyzer_tests_test_loadorder_scan_log_light_plugins",
-      "src_plugin_analyzer_tests_test_loadorder_scan_log_skips_duplicates",
-      "src_plugin_analyzer_tests_test_loadorder_scan_log_skips_mixed_case_duplicates",
-      "src_plugin_analyzer_tests_test_loadorder_scan_log_standard_plugins",
-      "src_plugin_analyzer_tests_test_plugin_analyzer_empty_lists",
-      "src_plugin_analyzer_tests_test_plugin_analyzer_new",
-      "src_plugin_analyzer_tests_test_plugin_match_empty",
-      "src_plugin_analyzer_tests_test_plugin_match_found",
-      "src_plugin_analyzer_tests_test_plugin_match_skips_ignored",
-      "src_plugin_analyzer_tests_test_plugin_match_skips_modified_by",
-      "src_plugin_analyzer_tests_test_plugin_match_with_crashgen_name_override_uses_effective_name"
     ],
     "9": [
       "classic_config_core_src_yamldata_rs_crashgensettingsrules",
@@ -1055,6 +1108,61 @@
       "src_core_tests_test_write_multiple_files_success"
     ],
     "16": [
+      "classic_update_core_src_yaml_update_rs_hashmap",
+      "src_yaml_update_approved_file_sha_map",
+      "src_yaml_update_check_client_schema_bounds",
+      "src_yaml_update_enrich_installed",
+      "src_yaml_update_tests",
+      "src_yaml_update_tests_approved_file_sha_map_accepts_uppercase_hex",
+      "src_yaml_update_tests_approved_file_sha_map_accepts_valid",
+      "src_yaml_update_tests_approved_file_sha_map_rejects_duplicate_names",
+      "src_yaml_update_tests_approved_file_sha_map_rejects_invalid_digest",
+      "src_yaml_update_tests_approved_file_sha_map_rejects_mismatched_lengths",
+      "src_yaml_update_tests_classify_detects_same_schema_content_churn_as_update_available",
+      "src_yaml_update_tests_classify_treats_matching_sha_as_up_to_date_even_when_schema_bumped",
+      "src_yaml_update_tests_client_schema_bounds_accept_when_absent",
+      "src_yaml_update_tests_client_schema_bounds_accept_when_floor_below_min_but_range_overlaps",
+      "src_yaml_update_tests_client_schema_bounds_reject_client_above_max",
+      "src_yaml_update_tests_client_schema_bounds_reject_inverted_interval",
+      "src_yaml_update_tests_client_schema_bounds_reject_when_client_major_below_min_major",
+      "src_yaml_update_tests_client_schema_bounds_reject_when_floor_above_max_minor_in_shared_major",
+      "src_yaml_update_tests_enrich_installed_clean_install_classified_as_up_to_date",
+      "src_yaml_update_tests_enrich_installed_falls_back_to_bundled_when_cache_missing",
+      "src_yaml_update_tests_enrich_installed_fills_from_cache_when_none",
+      "src_yaml_update_tests_enrich_installed_incompatible_cache_does_not_suppress_real_update",
+      "src_yaml_update_tests_enrich_installed_preserves_explicit_value",
+      "src_yaml_update_tests_enrich_installed_skips_incompatible_cache_and_uses_bundled",
+      "src_yaml_update_tests_enrich_installed_without_any_source_leaves_installed_none",
+      "src_yaml_update_tests_enrich_installed_without_cache_reads_bundled_only",
+      "src_yaml_update_tests_ensure_path_in_cache_accepts_same_dir_child",
+      "src_yaml_update_tests_ensure_path_in_cache_rejects_sibling",
+      "src_yaml_update_tests_parse_yaml_data_tag_base_date",
+      "src_yaml_update_tests_parse_yaml_data_tag_rejects_non_numeric_components",
+      "src_yaml_update_tests_parse_yaml_data_tag_rejects_trailing_garbage",
+      "src_yaml_update_tests_parse_yaml_data_tag_rejects_wrong_prefix",
+      "src_yaml_update_tests_parse_yaml_data_tag_single_digit_suffix",
+      "src_yaml_update_tests_parse_yaml_data_tag_ten_beats_nine_numerically",
+      "src_yaml_update_tests_parse_yaml_data_tag_two_digit_suffix",
+      "src_yaml_update_tests_resolve_cache_installed_ignores_prev_when_canonical_present",
+      "src_yaml_update_tests_resolve_cache_installed_reads_prev_when_canonical_missing",
+      "src_yaml_update_tests_resolve_cache_installed_skips_incompatible_prev",
+      "src_yaml_update_tests_resolve_installed_from_path_reads_schema_version",
+      "src_yaml_update_tests_resolve_installed_from_path_returns_none_for_invalid_name",
+      "src_yaml_update_tests_resolve_installed_from_path_returns_none_for_missing",
+      "src_yaml_update_tests_resolve_installed_from_path_returns_none_for_missing_header",
+      "src_yaml_update_tests_validate_cache_name_accepts_plain_basename",
+      "src_yaml_update_tests_validate_cache_name_allows_device_like_stems_with_extra_chars",
+      "src_yaml_update_tests_validate_cache_name_rejects_absolute_and_drive_paths",
+      "src_yaml_update_tests_validate_cache_name_rejects_embedded_nul",
+      "src_yaml_update_tests_validate_cache_name_rejects_empty_or_dot_forms",
+      "src_yaml_update_tests_validate_cache_name_rejects_separators",
+      "src_yaml_update_tests_validate_cache_name_rejects_trailing_dot_or_space",
+      "src_yaml_update_tests_validate_cache_name_rejects_windows_alternate_data_stream_forms",
+      "src_yaml_update_tests_validate_cache_name_rejects_windows_device_basenames",
+      "src_yaml_update_tests_validate_cache_name_rejects_windows_device_names_case_insensitively",
+      "src_yaml_update_tests_validate_cache_name_rejects_windows_device_names_with_extensions"
+    ],
+    "17": [
       "classic_web_core_src_lib_rs_gameid",
       "classic_web_core_src_lib_rs_src_lib",
       "classic_web_core_src_lib_rs_string",
@@ -1109,7 +1217,7 @@
       "url",
       "webresult"
     ],
-    "17": [
+    "18": [
       "classic_registry_core_src_lib_tests_rs_src_lib_tests",
       "classic_registry_core_src_lib_tests_rs_src_lib_tests_test_thread_safety",
       "classic_registry_core_src_registry_rs_option",
@@ -1162,60 +1270,6 @@
       "src_registry_tests_test_unregister_existing",
       "src_registry_tests_test_unregister_nonexistent",
       "src_registry_unregister"
-    ],
-    "18": [
-      "classic_update_core_src_yaml_update_rs_hashmap",
-      "src_yaml_update_approved_file_sha_map",
-      "src_yaml_update_check_client_schema_bounds",
-      "src_yaml_update_enrich_installed",
-      "src_yaml_update_tests",
-      "src_yaml_update_tests_approved_file_sha_map_accepts_uppercase_hex",
-      "src_yaml_update_tests_approved_file_sha_map_accepts_valid",
-      "src_yaml_update_tests_approved_file_sha_map_rejects_duplicate_names",
-      "src_yaml_update_tests_approved_file_sha_map_rejects_invalid_digest",
-      "src_yaml_update_tests_approved_file_sha_map_rejects_mismatched_lengths",
-      "src_yaml_update_tests_classify_detects_same_schema_content_churn_as_update_available",
-      "src_yaml_update_tests_classify_treats_matching_sha_as_up_to_date_even_when_schema_bumped",
-      "src_yaml_update_tests_client_schema_bounds_accept_when_absent",
-      "src_yaml_update_tests_client_schema_bounds_accept_when_floor_below_min_but_range_overlaps",
-      "src_yaml_update_tests_client_schema_bounds_reject_client_above_max",
-      "src_yaml_update_tests_client_schema_bounds_reject_inverted_interval",
-      "src_yaml_update_tests_client_schema_bounds_reject_when_client_major_below_min_major",
-      "src_yaml_update_tests_client_schema_bounds_reject_when_floor_above_max_minor_in_shared_major",
-      "src_yaml_update_tests_enrich_installed_clean_install_classified_as_up_to_date",
-      "src_yaml_update_tests_enrich_installed_falls_back_to_bundled_when_cache_missing",
-      "src_yaml_update_tests_enrich_installed_fills_from_cache_when_none",
-      "src_yaml_update_tests_enrich_installed_incompatible_cache_does_not_suppress_real_update",
-      "src_yaml_update_tests_enrich_installed_preserves_explicit_value",
-      "src_yaml_update_tests_enrich_installed_skips_incompatible_cache_and_uses_bundled",
-      "src_yaml_update_tests_enrich_installed_without_any_source_leaves_installed_none",
-      "src_yaml_update_tests_enrich_installed_without_cache_reads_bundled_only",
-      "src_yaml_update_tests_ensure_path_in_cache_accepts_same_dir_child",
-      "src_yaml_update_tests_ensure_path_in_cache_rejects_sibling",
-      "src_yaml_update_tests_parse_yaml_data_tag_base_date",
-      "src_yaml_update_tests_parse_yaml_data_tag_rejects_non_numeric_components",
-      "src_yaml_update_tests_parse_yaml_data_tag_rejects_trailing_garbage",
-      "src_yaml_update_tests_parse_yaml_data_tag_rejects_wrong_prefix",
-      "src_yaml_update_tests_parse_yaml_data_tag_single_digit_suffix",
-      "src_yaml_update_tests_parse_yaml_data_tag_two_digit_suffix",
-      "src_yaml_update_tests_resolve_cache_installed_ignores_prev_when_canonical_present",
-      "src_yaml_update_tests_resolve_cache_installed_reads_prev_when_canonical_missing",
-      "src_yaml_update_tests_resolve_cache_installed_skips_incompatible_prev",
-      "src_yaml_update_tests_resolve_installed_from_path_reads_schema_version",
-      "src_yaml_update_tests_resolve_installed_from_path_returns_none_for_invalid_name",
-      "src_yaml_update_tests_resolve_installed_from_path_returns_none_for_missing",
-      "src_yaml_update_tests_resolve_installed_from_path_returns_none_for_missing_header",
-      "src_yaml_update_tests_validate_cache_name_accepts_plain_basename",
-      "src_yaml_update_tests_validate_cache_name_allows_device_like_stems_with_extra_chars",
-      "src_yaml_update_tests_validate_cache_name_rejects_absolute_and_drive_paths",
-      "src_yaml_update_tests_validate_cache_name_rejects_embedded_nul",
-      "src_yaml_update_tests_validate_cache_name_rejects_empty_or_dot_forms",
-      "src_yaml_update_tests_validate_cache_name_rejects_separators",
-      "src_yaml_update_tests_validate_cache_name_rejects_trailing_dot_or_space",
-      "src_yaml_update_tests_validate_cache_name_rejects_windows_alternate_data_stream_forms",
-      "src_yaml_update_tests_validate_cache_name_rejects_windows_device_basenames",
-      "src_yaml_update_tests_validate_cache_name_rejects_windows_device_names_case_insensitively",
-      "src_yaml_update_tests_validate_cache_name_rejects_windows_device_names_with_extensions"
     ],
     "19": [
       "bufreader",
@@ -1646,49 +1700,6 @@
       "validationresult"
     ],
     "28": [
-      "benches_scanlog_benchmarks",
-      "benches_scanlog_benchmarks_bridge_style_detect_crash_pattern_uncached",
-      "benches_scanlog_benchmarks_bridge_style_detect_crash_pattern_with_parser",
-      "benches_scanlog_benchmarks_create_error_patterns",
-      "benches_scanlog_benchmarks_create_phase5_batch_plugins",
-      "benches_scanlog_benchmarks_create_phase5_batch_plugins_variant",
-      "benches_scanlog_benchmarks_create_phase5_cached_regex_yaml",
-      "benches_scanlog_benchmarks_create_phase5_cached_regex_yaml_variant",
-      "benches_scanlog_benchmarks_create_phase5_important_entries",
-      "benches_scanlog_benchmarks_create_phase5_important_xse_modules",
-      "benches_scanlog_benchmarks_create_phase5_synthetic_plugins",
-      "benches_scanlog_benchmarks_create_phase5_synthetic_plugins_variant",
-      "benches_scanlog_benchmarks_create_record_types",
-      "benches_scanlog_benchmarks_detect_mods_important_aho_cached_haystack_count",
-      "benches_scanlog_benchmarks_detect_mods_important_aho_compile_only",
-      "benches_scanlog_benchmarks_detect_mods_important_aho_count",
-      "benches_scanlog_benchmarks_detect_mods_important_aho_uncached_count",
-      "benches_scanlog_benchmarks_detect_mods_important_legacy_regex_count",
-      "benches_scanlog_benchmarks_extract_callstack_lines",
-      "benches_scanlog_benchmarks_extract_fixture_plugins",
-      "benches_scanlog_benchmarks_formid_extraction_benchmarks",
-      "benches_scanlog_benchmarks_formid_resolution_db_benchmarks",
-      "benches_scanlog_benchmarks_full_pipeline_benchmarks",
-      "benches_scanlog_benchmarks_log_to_lines",
-      "benches_scanlog_benchmarks_parser_creation_benchmarks",
-      "benches_scanlog_benchmarks_pattern_matching_benchmarks",
-      "benches_scanlog_benchmarks_phase5_hotspot_benchmarks",
-      "benches_scanlog_benchmarks_phase5_important_combined_text",
-      "benches_scanlog_benchmarks_plugin_detection_benchmarks",
-      "benches_scanlog_benchmarks_record_scanning_benchmarks",
-      "benches_scanlog_benchmarks_segment_parsing_benchmarks",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_arc",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_coremodentry",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_criterion",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_hashset",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_indexmap",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_logparser",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_string",
-      "classic_scanlog_core_benches_scanlog_benchmarks_rs_vec",
-      "src_mod_detector_important_matcher_compile_count_for_bench",
-      "src_mod_detector_reset_important_matcher_cache_for_bench"
-    ],
-    "29": [
       "classic_config_core_src_crashgen_rules_rs_hashmap",
       "classic_config_core_src_crashgen_rules_rs_hashset",
       "classic_config_core_src_crashgen_rules_rs_option",
@@ -1731,7 +1742,7 @@
       "src_crashgen_rules_tests_rule_report_bucket_parses_known_values_and_defaults_to_settings",
       "src_crashgen_rules_value_matches"
     ],
-    "30": [
+    "29": [
       "classic_path_core_src_notification_cache_rs_f",
       "classic_path_core_src_notification_cache_rs_option",
       "classic_path_core_src_notification_cache_rs_pathbuf",
@@ -1774,7 +1785,7 @@
       "src_notification_cache_tests_windows_prefers_localappdata_over_appdata",
       "src_notification_cache_validate_segment"
     ],
-    "31": [
+    "30": [
       "classic_scanlog_core_src_orchestrator_rs_f",
       "classic_scanlog_core_src_orchestrator_rs_hashmap",
       "classic_scanlog_core_src_orchestrator_rs_indexmap",
@@ -1817,7 +1828,7 @@
       "src_orchestrator_settingsscanfragments",
       "src_orchestrator_suspectscanfragments"
     ],
-    "32": [
+    "31": [
       "classic_settings_core_src_validators_rs_issueseverity",
       "classic_settings_core_src_validators_rs_option",
       "classic_settings_core_src_validators_rs_result",
@@ -1860,7 +1871,7 @@
       "src_validators_validationissue",
       "src_validators_yaml_type_name"
     ],
-    "33": [
+    "32": [
       "classic_version_registry_core_src_models_rs_err",
       "classic_version_registry_core_src_models_rs_fromstr",
       "classic_version_registry_core_src_models_rs_gameversion",
@@ -1902,6 +1913,48 @@
       "src_models_xseconfig",
       "src_models_xseconfig_new",
       "src_models_xseconfig_with_script_hashes"
+    ],
+    "33": [
+      "atomicusize",
+      "classic_database_core_src_pool_sqlx_rs_arc",
+      "classic_database_core_src_pool_sqlx_rs_atomicu64",
+      "classic_database_core_src_pool_sqlx_rs_rwlock",
+      "duration",
+      "src_pool_sqlx_activegametable",
+      "src_pool_sqlx_activegametable_set",
+      "src_pool_sqlx_cachekey_tie_break_key",
+      "src_pool_sqlx_databasepool_get_cache_cleanup_interval",
+      "src_pool_sqlx_databasepool_get_cache_ttl",
+      "src_pool_sqlx_databasepool_preferred_eviction_target",
+      "src_pool_sqlx_databasepool_query_template_cache_size",
+      "src_pool_sqlx_databasepool_set_cache_capacity",
+      "src_pool_sqlx_databasepool_set_cache_cleanup_interval",
+      "src_pool_sqlx_databasepool_set_cache_cleanup_threshold",
+      "src_pool_sqlx_databasepool_set_cache_ttl",
+      "src_pool_sqlx_poolstats",
+      "src_pool_sqlx_poolstats_record_cleanup_run",
+      "src_pool_sqlx_poolstats_record_connection_created",
+      "src_pool_sqlx_poolstats_record_elapsed_ns",
+      "src_pool_sqlx_poolstats_record_eviction_pass",
+      "src_pool_sqlx_poolstats_record_stable_shape_selection",
+      "src_pool_sqlx_querycache",
+      "src_pool_sqlx_querycache_clamp_capacity",
+      "src_pool_sqlx_querycache_clamp_cleanup_interval",
+      "src_pool_sqlx_querycache_clamp_cleanup_threshold",
+      "src_pool_sqlx_querycache_cleanup_interval",
+      "src_pool_sqlx_querycache_current_ttl",
+      "src_pool_sqlx_querycache_evict_to_capacity",
+      "src_pool_sqlx_querycache_evict_to_target",
+      "src_pool_sqlx_querycache_insert_many_with_eviction",
+      "src_pool_sqlx_querycache_insert_with_eviction",
+      "src_pool_sqlx_querycache_len",
+      "src_pool_sqlx_querycache_maybe_run_proactive_cleanup",
+      "src_pool_sqlx_querycache_preferred_eviction_target",
+      "src_pool_sqlx_querycache_set_capacity",
+      "src_pool_sqlx_querycache_set_cleanup_interval",
+      "src_pool_sqlx_querycache_set_cleanup_threshold",
+      "src_pool_sqlx_querycache_set_ttl",
+      "src_pool_sqlx_querycache_template_count"
     ],
     "34": [
       "classic_file_io_core_src_log_collection_rs_option",
@@ -2031,11 +2084,9 @@
     "37": [
       "classic_config_core_src_config_tests_rs_src_config_tests",
       "classic_config_core_src_config_tests_rs_yaml",
-      "mutex",
       "src_config_choose_settings_write_path",
       "src_config_tests_current_dir_lock",
       "src_config_tests_parse_yaml_document",
-      "src_config_tests_test_application_dir_falls_back_to_current_exe_without_override",
       "src_config_tests_test_application_dir_uses_registry_override_when_set",
       "src_config_tests_test_choose_settings_write_path_ignores_existing_user_dir_file_when_app_has_none",
       "src_config_tests_test_choose_settings_write_path_prefers_existing_app_dir_file",
@@ -2057,11 +2108,12 @@
       "src_config_tests_test_resolve_cache_path_prefers_user_config_dir",
       "src_config_tests_test_resolve_cache_path_uses_relative_compatibility_fallback_without_user_or_app_dir",
       "src_config_tests_test_resolve_settings_path_uses_compatibility_fallback_when_no_dirs_are_available",
-      "src_config_tests_test_resolve_settings_write_path_does_not_use_compatibility_fallback_when_dirs_are_available",
       "src_config_tests_test_resolve_user_config_dir_appends_classic_directory_name",
       "src_config_tests_test_resolve_user_config_dir_returns_none_without_base_dir",
       "src_config_tests_test_save_and_load_yaml",
       "src_config_tests_test_save_creates_parent_directory",
+      "src_config_tests_test_save_local_yaml_paths_to_creates_missing_file",
+      "src_config_tests_test_save_local_yaml_paths_to_preserves_existing_keys",
       "src_config_tests_test_yaml_empty_paths",
       "src_config_tests_test_yaml_round_trip",
       "src_config_tests_test_yaml_source_cache_path_matches_resolved_cache_path",
@@ -2069,45 +2121,6 @@
       "src_config_tests_yamlsource_main_load_routes_through_shippable_loader"
     ],
     "38": [
-      "benches_database_benchmarks",
-      "benches_database_benchmarks_batch_lookup_benchmarks",
-      "benches_database_benchmarks_init_pool",
-      "benches_database_benchmarks_multi_db_budget_benchmarks",
-      "benches_database_benchmarks_multi_db_fallback_benchmarks",
-      "benches_database_benchmarks_repeated_bucket_reuse_benchmarks",
-      "benches_database_benchmarks_single_lookup_benchmarks",
-      "classic_database_core_benches_database_benchmarks_rs_criterion",
-      "classic_database_core_benches_database_benchmarks_rs_databasepool",
-      "classic_database_core_benches_database_benchmarks_rs_pathbuf",
-      "classic_database_core_benches_database_benchmarks_rs_vec",
-      "classic_database_core_tests_integration_tests_rs_databaseerror",
-      "classic_database_core_tests_integration_tests_rs_namedtempfile",
-      "classic_database_core_tests_integration_tests_rs_pathbuf",
-      "classic_database_core_tests_integration_tests_rs_result",
-      "classic_database_core_tests_integration_tests_rs_tests_integration_tests",
-      "tests_integration_tests_create_test_database",
-      "tests_integration_tests_test_batch_lookup_workflow",
-      "tests_integration_tests_test_cache_clear_workflow",
-      "tests_integration_tests_test_cache_hit_miss_workflow",
-      "tests_integration_tests_test_cache_ttl_workflow",
-      "tests_integration_tests_test_complete_formid_lookup_workflow",
-      "tests_integration_tests_test_concurrent_batch_queries",
-      "tests_integration_tests_test_concurrent_queries",
-      "tests_integration_tests_test_database_optimize",
-      "tests_integration_tests_test_game_table_switching_workflow",
-      "tests_integration_tests_test_lookup_parity_with_eviction_enabled",
-      "tests_integration_tests_test_missing_database_handling",
-      "tests_integration_tests_test_multi_database_batch",
-      "tests_integration_tests_test_multi_database_budget_observability",
-      "tests_integration_tests_test_multi_database_fallback",
-      "tests_integration_tests_test_multi_database_partial_batch_chunks",
-      "tests_integration_tests_test_pool_clone_sharing",
-      "tests_integration_tests_test_query_after_close",
-      "tests_integration_tests_test_query_uninitialized_pool",
-      "tests_integration_tests_test_runtime_budget_update_requires_rebalance",
-      "tests_integration_tests_test_single_and_batch_cache_hit_miss_parity"
-    ],
-    "39": [
       "src_yaml_ops_clear_global_yaml_cache",
       "src_yaml_ops_reset_yaml_cache_stats",
       "src_yaml_ops_tests_test_cache_disabled_always_reads",
@@ -2146,7 +2159,7 @@
       "tests_yaml_integration_tests_test_malformed_yaml_handling",
       "tests_yaml_integration_tests_test_settings_update_workflow"
     ],
-    "40": [
+    "39": [
       "addresslibraryconfig",
       "classic_version_registry_core_src_fallout4_version_rs_display",
       "classic_version_registry_core_src_fallout4_version_rs_err",
@@ -2183,7 +2196,7 @@
       "src_fallout4_version_fallout4version_xse_config",
       "xseconfig"
     ],
-    "41": [
+    "40": [
       "checktype",
       "classic_scangame_core_src_integrity_rs_default",
       "classic_scangame_core_src_integrity_rs_option",
@@ -2220,7 +2233,7 @@
       "src_integrity_tests_test_integrity_config_builders",
       "src_integrity_tests_test_integrity_config_creation"
     ],
-    "42": [
+    "41": [
       "classic_scanlog_core_src_settings_validator_rs_configlayout",
       "classic_scanlog_core_src_settings_validator_rs_crashgenentry",
       "classic_scanlog_core_src_settings_validator_rs_hashmap",
@@ -2256,7 +2269,7 @@
       "src_settings_validator_settingsvalidator_validate_memory_config",
       "src_settings_validator_settingsvalidator_validate_xcell_settings"
     ],
-    "43": [
+    "42": [
       "classic_scangame_core_src_toml_rs_configlayout",
       "classic_scangame_core_src_toml_rs_crashgensettingsrules",
       "classic_scangame_core_src_toml_rs_hashmap",
@@ -2291,7 +2304,7 @@
       "src_toml_tomlissueseverity",
       "src_toml_tomlsetting"
     ],
-    "44": [
+    "43": [
       "classic_scanlog_core_src_version_rs_display",
       "classic_scanlog_core_src_version_rs_eq",
       "classic_scanlog_core_src_version_rs_formatter",
@@ -2326,76 +2339,7 @@
       "src_version_tests_test_check_crashgen_version_status_with_crashgen_prefix",
       "src_version_tests_test_check_crashgen_version_status_with_exceptions_convenience"
     ],
-    "45": [
-      "src_notification_is_https_cta_url",
-      "src_notification_is_release_tag",
-      "src_notification_parse_notification_manifest",
-      "src_notification_tests",
-      "src_notification_tests_clear_fallback_marker_is_noop_when_marker_absent",
-      "src_notification_tests_manifest_deserialization_tolerates_unknown_fields",
-      "src_notification_tests_manifest_deserialize_missing_required_field_errors",
-      "src_notification_tests_manifest_deserializes_with_full_display_block",
-      "src_notification_tests_manifest_deserializes_without_display_block",
-      "src_notification_tests_minimal_manifest_json",
-      "src_notification_tests_parse_major_minor_accepts_expected_shapes",
-      "src_notification_tests_parse_major_minor_rejects_malformed",
-      "src_notification_tests_parse_notification_tag_accepts_prerelease_and_build_metadata",
-      "src_notification_tests_parse_notification_tag_rejects_wrong_prefix",
-      "src_notification_tests_try_fallback_cache_returns_none_when_body_fails_validation",
-      "src_notification_tests_try_fallback_cache_returns_none_when_body_missing",
-      "src_notification_tests_try_fallback_cache_returns_none_when_cache_dir_is_none",
-      "src_notification_tests_validate_manifest_accepts_absent_cta_url",
-      "src_notification_tests_validate_manifest_accepts_https_cta_url",
-      "src_notification_tests_validate_manifest_accepts_min_supported_at_or_below_latest",
-      "src_notification_tests_validate_manifest_accepts_rfc3339_variations",
-      "src_notification_tests_validate_manifest_accepts_supported_major_any_minor",
-      "src_notification_tests_validate_manifest_accepts_valid",
-      "src_notification_tests_validate_manifest_rejects_bad_manifest_version_shapes",
-      "src_notification_tests_validate_manifest_rejects_bad_release_tag",
-      "src_notification_tests_validate_manifest_rejects_bad_semver_in_latest_version",
-      "src_notification_tests_validate_manifest_rejects_bad_semver_in_min_supported_version",
-      "src_notification_tests_validate_manifest_rejects_empty_required_fields",
-      "src_notification_tests_validate_manifest_rejects_major_above_client_max",
-      "src_notification_tests_validate_manifest_rejects_min_supported_above_latest",
-      "src_notification_tests_validate_manifest_rejects_non_https_cta_url",
-      "src_notification_tests_validate_manifest_rejects_non_rfc3339_published_at",
-      "src_notification_validate_notification_manifest"
-    ],
-    "46": [
-      "atomicusize",
-      "classic_database_core_src_pool_sqlx_rs_atomicu64",
-      "duration",
-      "src_pool_sqlx_databasepool_get_cache_cleanup_interval",
-      "src_pool_sqlx_databasepool_get_cache_ttl",
-      "src_pool_sqlx_databasepool_preferred_eviction_target",
-      "src_pool_sqlx_databasepool_set_cache_capacity",
-      "src_pool_sqlx_databasepool_set_cache_cleanup_interval",
-      "src_pool_sqlx_databasepool_set_cache_cleanup_threshold",
-      "src_pool_sqlx_databasepool_set_cache_ttl",
-      "src_pool_sqlx_poolstats",
-      "src_pool_sqlx_poolstats_record_cleanup_run",
-      "src_pool_sqlx_poolstats_record_elapsed_ns",
-      "src_pool_sqlx_poolstats_record_eviction_pass",
-      "src_pool_sqlx_poolstats_record_stable_shape_selection",
-      "src_pool_sqlx_querycache",
-      "src_pool_sqlx_querycache_clamp_capacity",
-      "src_pool_sqlx_querycache_clamp_cleanup_interval",
-      "src_pool_sqlx_querycache_clamp_cleanup_threshold",
-      "src_pool_sqlx_querycache_cleanup_interval",
-      "src_pool_sqlx_querycache_current_ttl",
-      "src_pool_sqlx_querycache_evict_to_capacity",
-      "src_pool_sqlx_querycache_evict_to_target",
-      "src_pool_sqlx_querycache_insert_many_with_eviction",
-      "src_pool_sqlx_querycache_insert_with_eviction",
-      "src_pool_sqlx_querycache_len",
-      "src_pool_sqlx_querycache_maybe_run_proactive_cleanup",
-      "src_pool_sqlx_querycache_preferred_eviction_target",
-      "src_pool_sqlx_querycache_set_capacity",
-      "src_pool_sqlx_querycache_set_cleanup_interval",
-      "src_pool_sqlx_querycache_set_cleanup_threshold",
-      "src_pool_sqlx_querycache_set_ttl"
-    ],
-    "47": [
+    "44": [
       "checkrule",
       "classic_config_core_src_crashgen_registry_yaml_rs_crashgenentryraw",
       "classic_config_core_src_crashgen_registry_yaml_rs_crashgensettingsrules",
@@ -2429,41 +2373,41 @@
       "src_crashgen_registry_yaml_tests_test_parse_crashgen_registry_settings_rules_default_version_when_missing",
       "src_crashgen_registry_yaml_tests_test_parse_crashgen_registry_skips_malformed_keys_and_entries"
     ],
-    "48": [
-      "classic_database_core_src_pool_sqlx_rs_dashmap",
-      "classic_database_core_src_pool_sqlx_rs_hash",
-      "classic_database_core_src_pool_sqlx_rs_hashmap",
-      "classic_database_core_src_pool_sqlx_rs_hashset",
-      "classic_database_core_src_pool_sqlx_rs_pathbuf",
-      "classic_database_core_src_pool_sqlx_rs_result",
-      "classic_database_core_src_pool_sqlx_rs_vec",
-      "sqlitepool",
-      "src_pool_sqlx",
-      "src_pool_sqlx_connectionallocationplan",
-      "src_pool_sqlx_connectionallocator",
-      "src_pool_sqlx_connectionallocator_derive_allocation",
-      "src_pool_sqlx_databaseerror",
-      "src_pool_sqlx_databasepool_configured_connection_budget",
-      "src_pool_sqlx_databasepool_execute_parallel_batch_query",
-      "src_pool_sqlx_databasepool_get_stats",
-      "src_pool_sqlx_databasepool_initialize",
-      "src_pool_sqlx_databasepool_merge_batch_rows",
-      "src_pool_sqlx_databasepool_optimize",
-      "src_pool_sqlx_databasepool_rebalance_connections",
-      "src_pool_sqlx_databasepool_rebuild_allocated_pools",
-      "src_pool_sqlx_poolregistry",
-      "src_pool_sqlx_poolregistry_allocations_snapshot",
-      "src_pool_sqlx_poolregistry_configured_connection_budget",
-      "src_pool_sqlx_poolregistry_is_available",
-      "src_pool_sqlx_poolregistry_len",
-      "src_pool_sqlx_poolregistry_pool_snapshots",
-      "src_pool_sqlx_poolregistry_set_max_connections",
-      "src_pool_sqlx_poolregistry_set_tracking",
-      "src_pool_sqlx_poolregistry_tracked_paths",
-      "src_pool_sqlx_poolstatistics",
-      "src_pool_sqlx_poolstats_snapshot"
+    "45": [
+      "classic_update_core_src_notification_rs_githubclient",
+      "classic_update_core_src_notification_rs_option",
+      "path",
+      "src_notification",
+      "src_notification_appnotificationdisplay",
+      "src_notification_appnotificationmanifest",
+      "src_notification_build_app_notification_pages_url",
+      "src_notification_build_pages_url",
+      "src_notification_classification",
+      "src_notification_clear_fallback_marker",
+      "src_notification_fetch_app_notification_manifest",
+      "src_notification_fetch_via_releases_fallback",
+      "src_notification_fetch_via_releases_fallback_bytes",
+      "src_notification_is_https_cta_url",
+      "src_notification_is_release_tag",
+      "src_notification_is_rfc3339",
+      "src_notification_is_semver_with_optional_v",
+      "src_notification_notificationstatus",
+      "src_notification_parse_major_minor",
+      "src_notification_parse_notification_tag",
+      "src_notification_parse_semver_with_optional_v",
+      "src_notification_process_env_lookup",
+      "src_notification_status_from",
+      "src_notification_tests_clear_fallback_marker_is_noop_when_marker_absent",
+      "src_notification_tests_parse_notification_tag_accepts_semver",
+      "src_notification_tests_parse_notification_tag_orders_numerically",
+      "src_notification_try_fallback_cache",
+      "src_notification_try_fallback_cache_at",
+      "string",
+      "systemtime",
+      "vec",
+      "version"
     ],
-    "49": [
+    "46": [
       "classic_file_io_core_src_dds_rs_default",
       "classic_file_io_core_src_dds_rs_display",
       "classic_file_io_core_src_dds_rs_formatter",
@@ -2496,40 +2440,40 @@
       "src_dds_gametarget",
       "src_dds_is_power_of_2"
     ],
-    "50": [
-      "classic_update_core_src_yaml_update_rs_githubclient",
-      "classic_update_core_src_yaml_update_rs_path",
-      "classic_update_core_src_yaml_update_rs_result",
-      "classic_update_core_src_yaml_update_rs_vec",
-      "src_yaml_update",
-      "src_yaml_update_apply_yaml_update",
-      "src_yaml_update_approvedupdate",
-      "src_yaml_update_approvedupdate_from_status",
-      "src_yaml_update_check_yaml_update",
-      "src_yaml_update_clientschemaset_is_empty",
-      "src_yaml_update_download_release_asset",
-      "src_yaml_update_ensure_path_in_cache",
-      "src_yaml_update_fetch_from_releases_api",
-      "src_yaml_update_fileinstalloutcome",
-      "src_yaml_update_install_one",
-      "src_yaml_update_is_canonical_asset_url",
-      "src_yaml_update_is_reserved_windows_device_basename",
-      "src_yaml_update_is_valid_cache_file_name",
-      "src_yaml_update_parse_manifest",
-      "src_yaml_update_parse_yaml_data_tag",
-      "src_yaml_update_rollback_yaml_update",
-      "src_yaml_update_rollbackoutcome",
-      "src_yaml_update_signaturedescriptor",
-      "src_yaml_update_tests_parse_yaml_data_tag_ten_beats_nine_numerically",
-      "src_yaml_update_validate_cache_file_name",
-      "src_yaml_update_validate_release_tag_prefix",
-      "src_yaml_update_yamlmanifest",
-      "src_yaml_update_yamlupdatereport",
-      "src_yaml_update_yamlupdatestatus",
-      "tests_yaml_update_tests_rollback_no_previous_version_is_ok",
-      "tests_yaml_update_tests_rollback_rejects_path_traversal_name"
+    "47": [
+      "classic_scangame_core_src_xse_rs_asref",
+      "classic_scangame_core_src_xse_rs_option",
+      "classic_scangame_core_src_xse_rs_path",
+      "classic_scangame_core_src_xse_rs_pathbuf",
+      "classic_scangame_core_src_xse_rs_result",
+      "classic_scangame_core_src_xse_rs_self",
+      "classic_scangame_core_src_xse_rs_string",
+      "classic_scangame_core_src_xse_rs_vec",
+      "src_xse",
+      "src_xse_addresslibinfo",
+      "src_xse_addresslibinfo_anniversary_edition",
+      "src_xse_addresslibinfo_from_registry_id",
+      "src_xse_addresslibinfo_next_gen",
+      "src_xse_addresslibinfo_original",
+      "src_xse_addresslibinfo_vr",
+      "src_xse_gameversion",
+      "src_xse_gameversion_description",
+      "src_xse_gameversion_is_null",
+      "src_xse_gameversion_registry_id",
+      "src_xse_validationresult",
+      "src_xse_xsechecker",
+      "src_xse_xsechecker_check",
+      "src_xse_xsechecker_correct_version_exists",
+      "src_xse_xsechecker_determine_relevant_versions",
+      "src_xse_xsechecker_file_exists",
+      "src_xse_xsechecker_format_message",
+      "src_xse_xsechecker_get_correct_version_info",
+      "src_xse_xsechecker_new",
+      "src_xse_xsechecker_validate",
+      "src_xse_xsechecker_wrong_version_exists",
+      "src_xse_xseerror"
     ],
-    "51": [
+    "48": [
       "classic_version_registry_core_src_registry_tests_rs_src_registry_tests",
       "classic_version_registry_core_src_registry_tests_rs_versionregistry",
       "src_registry_tests_create_test_registry",
@@ -2562,7 +2506,7 @@
       "src_registry_tests_test_parse_version_yaml_with_crashgen",
       "src_registry_tests_test_parse_version_yaml_without_crashgen"
     ],
-    "52": [
+    "49": [
       "classic_config_core_src_shippable_loader_tests_rs_clone",
       "classic_config_core_src_shippable_loader_tests_rs_f",
       "classic_config_core_src_shippable_loader_tests_rs_fn",
@@ -2594,7 +2538,71 @@
       "shippable_loader_tests_windows_env",
       "shippable_loader_tests_write"
     ],
-    "53": [
+    "50": [
+      "classic_update_core_src_yaml_update_rs_githubclient",
+      "classic_update_core_src_yaml_update_rs_path",
+      "classic_update_core_src_yaml_update_rs_result",
+      "classic_update_core_src_yaml_update_rs_vec",
+      "src_yaml_update",
+      "src_yaml_update_apply_yaml_update",
+      "src_yaml_update_approvedupdate",
+      "src_yaml_update_approvedupdate_from_status",
+      "src_yaml_update_check_yaml_update",
+      "src_yaml_update_clientschemaset_is_empty",
+      "src_yaml_update_download_release_asset",
+      "src_yaml_update_ensure_path_in_cache",
+      "src_yaml_update_fetch_from_releases_api",
+      "src_yaml_update_fileinstalloutcome",
+      "src_yaml_update_install_one",
+      "src_yaml_update_is_canonical_asset_url",
+      "src_yaml_update_is_reserved_windows_device_basename",
+      "src_yaml_update_is_valid_cache_file_name",
+      "src_yaml_update_parse_manifest",
+      "src_yaml_update_parse_yaml_data_tag",
+      "src_yaml_update_rollback_yaml_update",
+      "src_yaml_update_rollbackoutcome",
+      "src_yaml_update_signaturedescriptor",
+      "src_yaml_update_validate_cache_file_name",
+      "src_yaml_update_validate_release_tag_prefix",
+      "src_yaml_update_yamlmanifest",
+      "src_yaml_update_yamlupdatereport",
+      "src_yaml_update_yamlupdatestatus",
+      "tests_yaml_update_tests_rollback_no_previous_version_is_ok",
+      "tests_yaml_update_tests_rollback_rejects_path_traversal_name"
+    ],
+    "51": [
+      "src_notification_parse_notification_manifest",
+      "src_notification_tests",
+      "src_notification_tests_manifest_deserialization_tolerates_unknown_fields",
+      "src_notification_tests_manifest_deserialize_missing_required_field_errors",
+      "src_notification_tests_manifest_deserializes_with_full_display_block",
+      "src_notification_tests_manifest_deserializes_without_display_block",
+      "src_notification_tests_minimal_manifest_json",
+      "src_notification_tests_parse_major_minor_accepts_expected_shapes",
+      "src_notification_tests_parse_major_minor_rejects_malformed",
+      "src_notification_tests_parse_notification_tag_accepts_prerelease_and_build_metadata",
+      "src_notification_tests_parse_notification_tag_rejects_wrong_prefix",
+      "src_notification_tests_try_fallback_cache_returns_none_when_body_fails_validation",
+      "src_notification_tests_try_fallback_cache_returns_none_when_body_missing",
+      "src_notification_tests_try_fallback_cache_returns_none_when_cache_dir_is_none",
+      "src_notification_tests_validate_manifest_accepts_absent_cta_url",
+      "src_notification_tests_validate_manifest_accepts_https_cta_url",
+      "src_notification_tests_validate_manifest_accepts_min_supported_at_or_below_latest",
+      "src_notification_tests_validate_manifest_accepts_rfc3339_variations",
+      "src_notification_tests_validate_manifest_accepts_supported_major_any_minor",
+      "src_notification_tests_validate_manifest_accepts_valid",
+      "src_notification_tests_validate_manifest_rejects_bad_manifest_version_shapes",
+      "src_notification_tests_validate_manifest_rejects_bad_release_tag",
+      "src_notification_tests_validate_manifest_rejects_bad_semver_in_latest_version",
+      "src_notification_tests_validate_manifest_rejects_bad_semver_in_min_supported_version",
+      "src_notification_tests_validate_manifest_rejects_empty_required_fields",
+      "src_notification_tests_validate_manifest_rejects_major_above_client_max",
+      "src_notification_tests_validate_manifest_rejects_min_supported_above_latest",
+      "src_notification_tests_validate_manifest_rejects_non_https_cta_url",
+      "src_notification_tests_validate_manifest_rejects_non_rfc3339_published_at",
+      "src_notification_validate_notification_manifest"
+    ],
+    "52": [
       "classic_config_core_src_shippable_loader_rs_display",
       "classic_config_core_src_shippable_loader_rs_f",
       "classic_config_core_src_shippable_loader_rs_formatter",
@@ -2625,38 +2633,38 @@
       "shippable_loader_try_candidate",
       "shippable_loader_yamlloaderror"
     ],
-    "54": [
-      "classic_update_core_src_notification_rs_githubclient",
-      "classic_update_core_src_notification_rs_option",
-      "path",
-      "src_notification",
-      "src_notification_appnotificationdisplay",
-      "src_notification_appnotificationmanifest",
-      "src_notification_build_app_notification_pages_url",
-      "src_notification_build_pages_url",
-      "src_notification_classification",
-      "src_notification_clear_fallback_marker",
-      "src_notification_fetch_app_notification_manifest",
-      "src_notification_fetch_via_releases_fallback",
-      "src_notification_fetch_via_releases_fallback_bytes",
-      "src_notification_is_rfc3339",
-      "src_notification_is_semver_with_optional_v",
-      "src_notification_notificationstatus",
-      "src_notification_parse_major_minor",
-      "src_notification_parse_notification_tag",
-      "src_notification_parse_semver_with_optional_v",
-      "src_notification_process_env_lookup",
-      "src_notification_status_from",
-      "src_notification_tests_parse_notification_tag_accepts_semver",
-      "src_notification_tests_parse_notification_tag_orders_numerically",
-      "src_notification_try_fallback_cache",
-      "src_notification_try_fallback_cache_at",
-      "string",
-      "systemtime",
-      "vec",
-      "version"
+    "53": [
+      "classic_database_core_src_pool_sqlx_rs_hashmap",
+      "classic_database_core_src_pool_sqlx_rs_pathbuf",
+      "classic_database_core_src_pool_sqlx_rs_result",
+      "classic_database_core_src_pool_sqlx_rs_vec",
+      "sqlitepool",
+      "src_pool_sqlx_connectionallocationplan",
+      "src_pool_sqlx_connectionallocator_derive_allocation",
+      "src_pool_sqlx_databaseerror",
+      "src_pool_sqlx_databasepool_configured_connection_budget",
+      "src_pool_sqlx_databasepool_get_stats",
+      "src_pool_sqlx_databasepool_initialize",
+      "src_pool_sqlx_databasepool_optimize",
+      "src_pool_sqlx_databasepool_rebalance_connections",
+      "src_pool_sqlx_databasepool_rebuild_allocated_pools",
+      "src_pool_sqlx_poolregistry",
+      "src_pool_sqlx_poolregistry_allocations_snapshot",
+      "src_pool_sqlx_poolregistry_close_active_pools",
+      "src_pool_sqlx_poolregistry_configured_connection_budget",
+      "src_pool_sqlx_poolregistry_get_max_connections",
+      "src_pool_sqlx_poolregistry_is_available",
+      "src_pool_sqlx_poolregistry_len",
+      "src_pool_sqlx_poolregistry_pool_snapshots",
+      "src_pool_sqlx_poolregistry_rebuild_allocated_pools",
+      "src_pool_sqlx_poolregistry_set_max_connections",
+      "src_pool_sqlx_poolregistry_set_tracking",
+      "src_pool_sqlx_poolregistry_tracked_paths",
+      "src_pool_sqlx_poolstatistics",
+      "src_pool_sqlx_poolstats_set_active_connections",
+      "src_pool_sqlx_poolstats_snapshot"
     ],
-    "55": [
+    "54": [
       "classic_version_registry_core_src_version_rs_default",
       "classic_version_registry_core_src_version_rs_display",
       "classic_version_registry_core_src_version_rs_eq",
@@ -2687,7 +2695,7 @@
       "src_version_gameversion_same_major",
       "src_version_gameversion_semantic_distance"
     ],
-    "56": [
+    "55": [
       "benches_file_io_benchmarks",
       "benches_file_io_benchmarks_dds_parsing_benchmarks",
       "benches_file_io_benchmarks_decode_mmap_bytes",
@@ -2717,7 +2725,7 @@
       "classic_file_io_core_benches_file_io_benchmarks_rs_string",
       "classic_file_io_core_benches_file_io_benchmarks_rs_vec"
     ],
-    "57": [
+    "56": [
       "classic_file_io_core_src_game_files_rs_display",
       "classic_file_io_core_src_game_files_rs_f",
       "classic_file_io_core_src_game_files_rs_fileioerror",
@@ -2747,7 +2755,7 @@
       "src_game_files_process_entries_chunked",
       "src_game_files_remove_entry"
     ],
-    "58": [
+    "57": [
       "classic_path_core_src_yaml_cache_rs_f",
       "classic_path_core_src_yaml_cache_rs_option",
       "classic_path_core_src_yaml_cache_rs_pathbuf",
@@ -2777,7 +2785,7 @@
       "src_yaml_cache_yaml_cache_dir",
       "src_yaml_cache_yaml_cache_dir_with_env"
     ],
-    "59": [
+    "58": [
       "classic_scanlog_core_src_formid_analyzer_rs_arc",
       "classic_scanlog_core_src_formid_analyzer_rs_coremodentry",
       "classic_scanlog_core_src_formid_analyzer_rs_databasepool",
@@ -2807,7 +2815,7 @@
       "src_formid_analyzer_is_valid_formid",
       "src_formid_analyzer_validate_formids_batch"
     ],
-    "60": [
+    "59": [
       "classic_scanlog_core_src_parser_tests_rs_arc",
       "classic_scanlog_core_src_parser_tests_rs_vec",
       "src_parser_tests",
@@ -2837,7 +2845,7 @@
       "src_parser_tests_test_parser_creation",
       "src_parser_tests_test_section_extraction"
     ],
-    "61": [
+    "60": [
       "src_formid_tests",
       "src_formid_tests_test_analyze_batch_empty",
       "src_formid_tests_test_analyze_batch_invalid_formid",
@@ -2867,7 +2875,7 @@
       "src_formid_tests_test_rust_formid_analyzer_default",
       "src_formid_tests_test_rust_formid_analyzer_new"
     ],
-    "62": [
+    "61": [
       "src_github_tests",
       "src_github_tests_test_client_clone",
       "src_github_tests_test_client_creation",
@@ -2897,7 +2905,7 @@
       "src_github_tests_test_version_with_build_metadata",
       "src_github_tests_test_with_token_string_ownership"
     ],
-    "63": [
+    "62": [
       "src_patterns_tests",
       "src_patterns_tests_test_cache_hit",
       "src_patterns_tests_test_clear_cache",
@@ -2926,6 +2934,35 @@
       "src_patterns_tests_test_replace_all_multiple",
       "src_patterns_tests_test_replace_all_no_match",
       "src_patterns_tests_test_replace_all_single"
+    ],
+    "63": [
+      "classic_scanlog_core_src_fcx_handler_rs_option",
+      "classic_scanlog_core_src_fcx_handler_rs_reportfragment",
+      "classic_scanlog_core_src_fcx_handler_rs_result",
+      "classic_scanlog_core_src_fcx_handler_rs_self",
+      "classic_scanlog_core_src_fcx_handler_rs_string",
+      "classic_scanlog_core_src_fcx_handler_rs_vec",
+      "mutex",
+      "src_fcx_handler",
+      "src_fcx_handler_configissue",
+      "src_fcx_handler_configissue_format_report",
+      "src_fcx_handler_configissue_new",
+      "src_fcx_handler_fcxmodehandler",
+      "src_fcx_handler_fcxmodehandler_add_issue",
+      "src_fcx_handler_fcxmodehandler_disabled",
+      "src_fcx_handler_fcxmodehandler_enabled",
+      "src_fcx_handler_fcxmodehandler_get_detected_issues",
+      "src_fcx_handler_fcxmodehandler_get_fcx_messages",
+      "src_fcx_handler_fcxmodehandler_get_fcx_status_message",
+      "src_fcx_handler_fcxmodehandler_has_results",
+      "src_fcx_handler_fcxmodehandler_needs_reset",
+      "src_fcx_handler_fcxmodehandler_new",
+      "src_fcx_handler_fcxmodehandler_reset",
+      "src_fcx_handler_fcxmodehandler_reset_global_state",
+      "src_fcx_handler_fcxmodehandler_set_detected_issues",
+      "src_fcx_handler_fcxmodehandler_set_game_files_result",
+      "src_fcx_handler_fcxmodehandler_set_main_files_result",
+      "src_fcx_handler_fcxreseterror"
     ],
     "64": [
       "classic_scanlog_core_src_orchestrator_rs_configlayout",
@@ -2986,6 +3023,34 @@
       "src_github_githubrelease"
     ],
     "66": [
+      "classic_database_core_tests_integration_tests_rs_databaseerror",
+      "classic_database_core_tests_integration_tests_rs_namedtempfile",
+      "classic_database_core_tests_integration_tests_rs_pathbuf",
+      "classic_database_core_tests_integration_tests_rs_result",
+      "classic_database_core_tests_integration_tests_rs_tests_integration_tests",
+      "tests_integration_tests_create_test_database",
+      "tests_integration_tests_test_batch_lookup_workflow",
+      "tests_integration_tests_test_cache_clear_workflow",
+      "tests_integration_tests_test_cache_hit_miss_workflow",
+      "tests_integration_tests_test_cache_ttl_workflow",
+      "tests_integration_tests_test_complete_formid_lookup_workflow",
+      "tests_integration_tests_test_concurrent_batch_queries",
+      "tests_integration_tests_test_concurrent_queries",
+      "tests_integration_tests_test_database_optimize",
+      "tests_integration_tests_test_game_table_switching_workflow",
+      "tests_integration_tests_test_lookup_parity_with_eviction_enabled",
+      "tests_integration_tests_test_missing_database_handling",
+      "tests_integration_tests_test_multi_database_batch",
+      "tests_integration_tests_test_multi_database_budget_observability",
+      "tests_integration_tests_test_multi_database_fallback",
+      "tests_integration_tests_test_multi_database_partial_batch_chunks",
+      "tests_integration_tests_test_pool_clone_sharing",
+      "tests_integration_tests_test_query_after_close",
+      "tests_integration_tests_test_query_uninitialized_pool",
+      "tests_integration_tests_test_runtime_budget_update_requires_rebalance",
+      "tests_integration_tests_test_single_and_batch_cache_hit_miss_parity"
+    ],
+    "67": [
       "classic_file_io_core_src_backup_rs_fileioerror",
       "classic_file_io_core_src_backup_rs_option",
       "classic_file_io_core_src_backup_rs_path",
@@ -3013,7 +3078,7 @@
       "src_backup_backuptype_display_name",
       "src_backup_backuptype_file_patterns"
     ],
-    "67": [
+    "68": [
       "classic_scangame_core_src_config_rs_default",
       "classic_scangame_core_src_config_rs_hashmap",
       "classic_scangame_core_src_config_rs_path",
@@ -3040,34 +3105,6 @@
       "src_config_tests_test_detector_creation",
       "src_config_tests_test_hash_calculation",
       "src_config_tests_test_similarity_identical_files"
-    ],
-    "68": [
-      "classic_scanlog_core_src_fcx_handler_rs_option",
-      "classic_scanlog_core_src_fcx_handler_rs_reportfragment",
-      "classic_scanlog_core_src_fcx_handler_rs_result",
-      "classic_scanlog_core_src_fcx_handler_rs_self",
-      "classic_scanlog_core_src_fcx_handler_rs_string",
-      "classic_scanlog_core_src_fcx_handler_rs_vec",
-      "src_fcx_handler",
-      "src_fcx_handler_configissue",
-      "src_fcx_handler_configissue_format_report",
-      "src_fcx_handler_configissue_new",
-      "src_fcx_handler_fcxmodehandler",
-      "src_fcx_handler_fcxmodehandler_add_issue",
-      "src_fcx_handler_fcxmodehandler_disabled",
-      "src_fcx_handler_fcxmodehandler_enabled",
-      "src_fcx_handler_fcxmodehandler_get_detected_issues",
-      "src_fcx_handler_fcxmodehandler_get_fcx_messages",
-      "src_fcx_handler_fcxmodehandler_get_fcx_status_message",
-      "src_fcx_handler_fcxmodehandler_has_results",
-      "src_fcx_handler_fcxmodehandler_needs_reset",
-      "src_fcx_handler_fcxmodehandler_new",
-      "src_fcx_handler_fcxmodehandler_reset",
-      "src_fcx_handler_fcxmodehandler_reset_global_state",
-      "src_fcx_handler_fcxmodehandler_set_detected_issues",
-      "src_fcx_handler_fcxmodehandler_set_game_files_result",
-      "src_fcx_handler_fcxmodehandler_set_main_files_result",
-      "src_fcx_handler_fcxreseterror"
     ],
     "69": [
       "classic_scanlog_core_src_formid_rs_dashmap",
@@ -3208,32 +3245,6 @@
       "src_ini_vsyncsetting"
     ],
     "74": [
-      "classic_database_core_src_pool_sqlx_rs_arc",
-      "classic_database_core_src_pool_sqlx_rs_option",
-      "classic_database_core_src_pool_sqlx_rs_rwlock",
-      "classic_database_core_src_pool_sqlx_rs_string",
-      "src_pool_sqlx_activegametable",
-      "src_pool_sqlx_activegametable_get",
-      "src_pool_sqlx_activegametable_resolve",
-      "src_pool_sqlx_activegametable_set",
-      "src_pool_sqlx_cacheentry_is_expired",
-      "src_pool_sqlx_connectionallocator_calculate_max_connections",
-      "src_pool_sqlx_databasepool_build_union_all_query",
-      "src_pool_sqlx_databasepool_get_entries_batch",
-      "src_pool_sqlx_databasepool_get_entry",
-      "src_pool_sqlx_databasepool_get_game_table",
-      "src_pool_sqlx_databasepool_get_or_build_stable_query_template",
-      "src_pool_sqlx_databasepool_maybe_run_proactive_cleanup",
-      "src_pool_sqlx_databasepool_pad_batch_to_bucket",
-      "src_pool_sqlx_poolregistry_get_max_connections",
-      "src_pool_sqlx_poolstats_increment_cache_hits",
-      "src_pool_sqlx_poolstats_increment_cache_misses",
-      "src_pool_sqlx_poolstats_increment_total_queries",
-      "src_pool_sqlx_querycache_get_entry",
-      "src_pool_sqlx_querycache_get_or_build_template",
-      "src_pool_sqlx_querycache_remove_entry"
-    ],
-    "75": [
       "classic_scangame_core_src_ba2_rs_default",
       "classic_scangame_core_src_ba2_rs_path",
       "classic_scangame_core_src_ba2_rs_pathbuf",
@@ -3259,7 +3270,7 @@
       "src_ba2_ba2scanner_scan_gnrl_file",
       "src_ba2_ba2scanner_with_xse_patterns"
     ],
-    "76": [
+    "75": [
       "classic_scanlog_core_src_gpu_detector_rs_default",
       "classic_scanlog_core_src_gpu_detector_rs_display",
       "classic_scanlog_core_src_gpu_detector_rs_formatter",
@@ -3285,7 +3296,7 @@
       "src_gpu_detector_gpuvendor_as_str",
       "src_gpu_detector_gpuvendor_fmt"
     ],
-    "77": [
+    "76": [
       "classic_scanlog_core_src_mod_detector_tests_rs_ahocorasick",
       "classic_scanlog_core_src_mod_detector_tests_rs_arc",
       "classic_scanlog_core_src_mod_detector_tests_rs_atomicu64",
@@ -3311,7 +3322,7 @@
       "src_mod_detector_tests_test_detect_mods_single_cache_stays_bounded_without_victim_assertions",
       "src_mod_detector_tests_test_detect_mods_single_reuses_cached_matcher_for_same_normalized_input"
     ],
-    "78": [
+    "77": [
       "classic_scanlog_core_src_papyrus_rs_option",
       "classic_scanlog_core_src_papyrus_rs_path",
       "classic_scanlog_core_src_papyrus_rs_pathbuf",
@@ -3337,7 +3348,7 @@
       "src_papyrus_papyrusstats_new",
       "src_papyrus_papyrusstats_process_line"
     ],
-    "79": [
+    "78": [
       "classic_scanlog_core_src_version_tests_rs_src_version_tests",
       "src_version_tests_test_check_version_status_addictol_patch_above_floor_is_valid",
       "src_version_tests_test_check_version_status_between_valid_versions",
@@ -3363,7 +3374,7 @@
       "src_version_tests_test_version_comparison",
       "src_version_tests_test_version_equality_ignores_original_string"
     ],
-    "80": [
+    "79": [
       "classic_version_registry_core_src_matching_rs_gameversion",
       "classic_version_registry_core_src_matching_rs_into",
       "classic_version_registry_core_src_matching_rs_option",
@@ -3389,7 +3400,7 @@
       "src_matching_versionmatcher_a_match_version",
       "src_matching_versionmatcher_a_new"
     ],
-    "81": [
+    "80": [
       "classic_config_core_tests_integration_tests_rs_tests_integration_tests",
       "tests_integration_tests_minimal_game_yaml",
       "tests_integration_tests_minimal_ignore_yaml",
@@ -3414,7 +3425,7 @@
       "tests_integration_tests_test_selected_game_version_does_not_affect_loading_workflow",
       "tests_integration_tests_test_three_directory_api_workflow"
     ],
-    "82": [
+    "81": [
       "classic_file_io_core_src_similarity_rs_error",
       "classic_file_io_core_src_similarity_rs_path",
       "classic_file_io_core_src_similarity_rs_result",
@@ -3439,7 +3450,7 @@
       "src_similarity_tests_test_similarity_ratio_partial",
       "src_similarity_tests_test_similarity_ratio_pure"
     ],
-    "83": [
+    "82": [
       "classic_resource_core_src_lib_rs_err",
       "classic_resource_core_src_lib_rs_fromstr",
       "classic_resource_core_src_lib_rs_option",
@@ -3464,7 +3475,7 @@
       "src_lib_resourcetype_from_str",
       "src_lib_validate_resource"
     ],
-    "84": [
+    "83": [
       "classic_scangame_core_src_unpacked_rs_default",
       "classic_scangame_core_src_unpacked_rs_hashset",
       "classic_scangame_core_src_unpacked_rs_option",
@@ -3489,7 +3500,7 @@
       "src_unpacked_unpackedscanner_process_entry",
       "src_unpacked_unpackedscanner_scan_directory"
     ],
-    "85": [
+    "84": [
       "src_encoding_tests",
       "src_encoding_tests_test_detect_high_ascii",
       "src_encoding_tests_test_detect_large_utf8_content",
@@ -3514,7 +3525,7 @@
       "src_encoding_tests_test_encoding_detector_default",
       "src_encoding_tests_test_encoding_detector_new"
     ],
-    "86": [
+    "85": [
       "classic_file_io_core_src_game_files_tests_rs_path",
       "classic_file_io_core_src_game_files_tests_rs_pathbuf",
       "gamefilesmanager",
@@ -3538,7 +3549,7 @@
       "src_game_files_tests_test_restore_files",
       "src_game_files_tests_test_restore_only_existing_backups"
     ],
-    "87": [
+    "86": [
       "classic_file_io_core_src_hash_rs_fileioerror",
       "classic_file_io_core_src_hash_rs_hashmap",
       "classic_file_io_core_src_hash_rs_option",
@@ -3562,7 +3573,7 @@
       "src_hash_filehasher_reset_cache_stats",
       "src_hash_filehasher_validate_hash_target"
     ],
-    "88": [
+    "87": [
       "classic_message_core_src_message_rs_into",
       "classic_message_core_src_message_rs_messagetype",
       "classic_message_core_src_message_rs_option",
@@ -3586,7 +3597,7 @@
       "src_message_message_with_target",
       "src_message_message_with_title"
     ],
-    "89": [
+    "88": [
       "classic_settings_core_src_schema_version_rs_display",
       "classic_settings_core_src_schema_version_rs_err",
       "classic_settings_core_src_schema_version_rs_formatter",
@@ -3610,7 +3621,7 @@
       "src_schema_version_yamlschemaerror",
       "src_schema_version_yamlschemaerror_with_file"
     ],
-    "90": [
+    "89": [
       "classic_settings_core_src_schema_version_tests_rs_yaml",
       "src_schema_version_extract_schema_version",
       "src_schema_version_tests",
@@ -3634,7 +3645,7 @@
       "src_schema_version_tests_with_file_attaches_label_to_malformed",
       "src_schema_version_tests_with_file_leaves_missing_untouched"
     ],
-    "91": [
+    "90": [
       "src_yaml_update_tests_validate_manifest_rejects_case_only_duplicate_file_names",
       "src_yaml_update_validate_manifest",
       "src_yaml_update_windows_normalized_cache_file_key",
@@ -3658,7 +3669,76 @@
       "tests_yaml_update_tests_validate_rejects_windows_ads_file_name",
       "yamlmanifest"
     ],
+    "91": [
+      "classic_config_core_src_config_rs_default",
+      "classic_config_core_src_config_rs_option",
+      "classic_config_core_src_config_rs_path",
+      "classic_config_core_src_config_rs_pathbuf",
+      "classic_config_core_src_config_rs_src_config",
+      "src_config_can_create_new_settings_file",
+      "src_config_can_update_existing_settings_file",
+      "src_config_classicconfig_get_config_path",
+      "src_config_pathconfig",
+      "src_config_resolve_application_dir",
+      "src_config_resolve_cache_path",
+      "src_config_resolve_existing_settings_path",
+      "src_config_resolve_preferred_settings_path",
+      "src_config_resolve_settings_read_path",
+      "src_config_resolve_settings_write_path",
+      "src_config_resolve_user_config_dir",
+      "src_config_tests_test_resolve_existing_settings_path_ignores_user_dir_file",
+      "src_config_tests_test_resolve_settings_read_path_has_no_directory_creation_side_effects",
+      "src_config_tests_test_resolve_settings_read_path_ignores_existing_user_dir_file",
+      "src_config_tests_test_resolve_settings_write_path_does_not_use_compatibility_fallback_when_dirs_are_available",
+      "src_config_user_config_dir"
+    ],
     "92": [
+      "classic_database_core_src_pool_sqlx_rs_dashmap",
+      "classic_database_core_src_pool_sqlx_rs_h",
+      "classic_database_core_src_pool_sqlx_rs_hash",
+      "classic_database_core_src_pool_sqlx_rs_instant",
+      "src_pool_sqlx",
+      "src_pool_sqlx_cacheentry",
+      "src_pool_sqlx_cacheentry_new",
+      "src_pool_sqlx_cachekey",
+      "src_pool_sqlx_cachekey_build_hash",
+      "src_pool_sqlx_cachekey_from_normalized_plugin",
+      "src_pool_sqlx_cachekey_hash",
+      "src_pool_sqlx_cachekey_new",
+      "src_pool_sqlx_cachekey_normalize_plugin",
+      "src_pool_sqlx_connectionallocator",
+      "src_pool_sqlx_connectionallocator_calculate_max_connections",
+      "src_pool_sqlx_databasepool_cache_contains_key",
+      "src_pool_sqlx_databasepool_insert_cache_entry",
+      "src_pool_sqlx_databasepool_insert_many_with_eviction",
+      "src_pool_sqlx_databasepool_insert_with_eviction",
+      "src_pool_sqlx_querycache_contains_key",
+      "src_pool_sqlx_querycache_insert_entry"
+    ],
+    "93": [
+      "classic_database_core_src_pool_sqlx_rs_hashset",
+      "classic_database_core_src_pool_sqlx_rs_option",
+      "classic_database_core_src_pool_sqlx_rs_string",
+      "src_pool_sqlx_activegametable_get",
+      "src_pool_sqlx_activegametable_resolve",
+      "src_pool_sqlx_cacheentry_is_expired",
+      "src_pool_sqlx_databasepool_build_union_all_query",
+      "src_pool_sqlx_databasepool_execute_parallel_batch_query",
+      "src_pool_sqlx_databasepool_get_entries_batch",
+      "src_pool_sqlx_databasepool_get_entry",
+      "src_pool_sqlx_databasepool_get_game_table",
+      "src_pool_sqlx_databasepool_get_or_build_stable_query_template",
+      "src_pool_sqlx_databasepool_maybe_run_proactive_cleanup",
+      "src_pool_sqlx_databasepool_merge_batch_rows",
+      "src_pool_sqlx_databasepool_pad_batch_to_bucket",
+      "src_pool_sqlx_poolstats_increment_cache_hits",
+      "src_pool_sqlx_poolstats_increment_cache_misses",
+      "src_pool_sqlx_poolstats_increment_total_queries",
+      "src_pool_sqlx_querycache_get_entry",
+      "src_pool_sqlx_querycache_get_or_build_template",
+      "src_pool_sqlx_querycache_remove_entry"
+    ],
+    "94": [
       "classic_message_core_src_formatter_rs_option",
       "classic_message_core_src_formatter_rs_string",
       "classic_message_core_src_lib_tests_rs_src_lib_tests",
@@ -3681,7 +3761,7 @@
       "src_lib_tests_test_integration_message_routing",
       "src_lib_tests_test_integration_message_with_formatting"
     ],
-    "93": [
+    "95": [
       "classic_path_core_src_ini_parser_rs_docspathresult",
       "classic_path_core_src_ini_parser_rs_ini",
       "classic_path_core_src_ini_parser_rs_option",
@@ -3704,7 +3784,7 @@
       "src_ini_parser_inifile_validate_keys",
       "src_ini_parser_inifile_validate_sections"
     ],
-    "94": [
+    "96": [
       "classic_scangame_core_src_crashgen_orchestrator_tests_rs_tempdir",
       "src_crashgen_orchestrator_tests",
       "src_crashgen_orchestrator_tests_setup_plugins_dir",
@@ -3727,7 +3807,7 @@
       "src_crashgen_orchestrator_tests_test_resolve_config_path_og_preferred_over_vr",
       "src_crashgen_orchestrator_tests_test_resolve_config_path_vr"
     ],
-    "95": [
+    "97": [
       "classic_scangame_core_src_logs_rs_ahocorasick",
       "classic_scangame_core_src_logs_rs_hashset",
       "classic_scangame_core_src_logs_rs_option",
@@ -3750,7 +3830,7 @@
       "src_logs_logprocessor_process_single_log",
       "src_logs_logprocessor_should_exclude_file"
     ],
-    "96": [
+    "98": [
       "classic_scanlog_core_src_settings_validator_tests_rs_crashgenentry",
       "src_settings_validator_tests",
       "src_settings_validator_tests_make_addictol_entry",
@@ -3773,7 +3853,7 @@
       "src_settings_validator_tests_test_scan_all_settings_rules_and_fallback_do_not_duplicate_results",
       "src_settings_validator_tests_test_scan_all_settings_rules_fallback_restores_missing_success_lines"
     ],
-    "97": [
+    "99": [
       "classic_update_core_tests_notification_cache_io_integration_rs_fn",
       "classic_update_core_tests_notification_cache_io_integration_rs_option",
       "classic_update_core_tests_notification_cache_io_integration_rs_pathbuf",
@@ -3796,7 +3876,7 @@
       "tests_notification_cache_io_integration_invalid_path_degrades_to_no_cache_and_orchestrator_continues",
       "tests_notification_cache_io_integration_sandbox_env"
     ],
-    "98": [
+    "100": [
       "classic_version_registry_core_src_models_tests_rs_versioninfo",
       "src_models_tests",
       "src_models_tests_create_test_version_info_with_crashgens",
@@ -3819,29 +3899,7 @@
       "src_models_tests_test_version_info_get_crashgen_version_strings",
       "src_models_tests_test_version_info_get_crashgen_version_strings_empty"
     ],
-    "99": [
-      "classic_config_core_src_config_rs_option",
-      "classic_config_core_src_config_rs_path",
-      "classic_config_core_src_config_rs_pathbuf",
-      "classic_config_core_src_config_rs_src_config",
-      "src_config_application_dir",
-      "src_config_can_create_new_settings_file",
-      "src_config_can_update_existing_settings_file",
-      "src_config_classicconfig_get_config_path",
-      "src_config_pathconfig",
-      "src_config_resolve_application_dir",
-      "src_config_resolve_cache_path",
-      "src_config_resolve_existing_settings_path",
-      "src_config_resolve_preferred_settings_path",
-      "src_config_resolve_settings_read_path",
-      "src_config_resolve_settings_write_path",
-      "src_config_resolve_user_config_dir",
-      "src_config_tests_test_resolve_existing_settings_path_ignores_user_dir_file",
-      "src_config_tests_test_resolve_settings_read_path_has_no_directory_creation_side_effects",
-      "src_config_tests_test_resolve_settings_read_path_ignores_existing_user_dir_file",
-      "src_config_user_config_dir"
-    ],
-    "100": [
+    "101": [
       "classic_update_core_src_yaml_update_rs_into",
       "classic_update_core_src_yaml_update_rs_item",
       "classic_update_core_src_yaml_update_rs_iterator",
@@ -3863,7 +3921,7 @@
       "src_yaml_update_resolve_installed_from_path",
       "src_yaml_update_yamlmanifestfile"
     ],
-    "101": [
+    "102": [
       "backupresult",
       "classic_path_core_src_backup_rs_into",
       "classic_path_core_src_backup_rs_path",
@@ -3884,7 +3942,7 @@
       "src_backup_xseversion_new",
       "src_backup_xseversion_sanitized"
     ],
-    "102": [
+    "103": [
       "cachekey",
       "classic_scangame_core_src_game_report_rs_btreemap",
       "classic_scangame_core_src_game_report_rs_btreeset",
@@ -3904,27 +3962,6 @@
       "src_game_report_scanvalidators_default",
       "src_game_report_scanvalidators_get_issue_messages",
       "src_game_report_scanvalidators_new"
-    ],
-    "103": [
-      "classic_config_core_src_config_rs_default",
-      "classic_config_core_src_config_rs_hashmap",
-      "classic_config_core_src_config_rs_result",
-      "classic_config_core_src_config_rs_string",
-      "classic_config_core_src_config_rs_yaml",
-      "pathconfig",
-      "src_config_classicconfig",
-      "src_config_classicconfig_load_local_yaml_paths",
-      "src_config_classicconfig_save_local_yaml_paths",
-      "src_config_classicconfig_save_local_yaml_paths_to",
-      "src_config_classicconfig_save_to_yaml",
-      "src_config_classicconfig_to_yaml",
-      "src_config_classicconfig_validate_paths",
-      "src_config_load_via_shippable",
-      "src_config_yamlsource",
-      "src_config_yamlsource_display_name",
-      "src_config_yamlsource_display_name_with_game",
-      "src_config_yamlsource_load",
-      "src_config_yamlsource_path"
     ],
     "104": [
       "classic_config_core_src_shippable_main_version_rs_f",
@@ -3948,27 +3985,6 @@
       "shippable_main_version_validate_release_semver_shape"
     ],
     "105": [
-      "classic_database_core_src_pool_sqlx_rs_drop",
-      "src_pool_sqlx_databasepool",
-      "src_pool_sqlx_databasepool_cache_size",
-      "src_pool_sqlx_databasepool_calculate_max_connections",
-      "src_pool_sqlx_databasepool_get_cache_capacity",
-      "src_pool_sqlx_databasepool_get_cache_cleanup_threshold",
-      "src_pool_sqlx_databasepool_get_max_connections",
-      "src_pool_sqlx_databasepool_is_available",
-      "src_pool_sqlx_databasepool_pool_registry_strong_count",
-      "src_pool_sqlx_databasepool_query_template_cache_size",
-      "src_pool_sqlx_databasepool_recalculate_max_connections",
-      "src_pool_sqlx_databasepool_record_stable_shape_selection",
-      "src_pool_sqlx_databasepool_select_stable_bucket_len",
-      "src_pool_sqlx_databasepool_set_game_table",
-      "src_pool_sqlx_databasepool_set_max_connections",
-      "src_pool_sqlx_poolregistry_pool_arc_strong_count",
-      "src_pool_sqlx_querycache_capacity",
-      "src_pool_sqlx_querycache_cleanup_threshold",
-      "src_pool_sqlx_querycache_template_count"
-    ],
-    "106": [
       "classic_scangame_core_src_xse_tests_rs_tempdir",
       "src_xse_tests",
       "src_xse_tests_setup_test_plugins_dir",
@@ -3989,7 +4005,7 @@
       "src_xse_tests_test_wrong_version_non_vr_has_vr",
       "src_xse_tests_test_wrong_version_vr_has_og"
     ],
-    "107": [
+    "106": [
       "classic_scanlog_core_src_crashgen_registry_rs_crashgensettingsrules",
       "classic_scanlog_core_src_crashgen_registry_rs_default",
       "classic_scanlog_core_src_crashgen_registry_rs_hashmap",
@@ -4010,7 +4026,7 @@
       "src_crashgen_registry_crashgenregistry_new",
       "src_crashgen_registry_crashgenregistry_normalize"
     ],
-    "108": [
+    "107": [
       "classic_settings_core_src_error_rs_display",
       "classic_settings_core_src_error_rs_error",
       "classic_settings_core_src_error_rs_formatter",
@@ -4031,28 +4047,27 @@
       "src_error_settingssource_label",
       "src_error_settingssource_path"
     ],
-    "109": [
-      "classic_version_core_src_lib_rs_option",
-      "classic_version_core_src_lib_rs_ordering",
-      "classic_version_core_src_lib_rs_src_lib",
-      "classic_version_core_src_lib_rs_string",
-      "classic_version_core_src_lib_rs_vec",
-      "classic_version_core_src_lib_rs_version",
-      "src_lib_compare_versions",
-      "src_lib_extract_all_versions",
-      "src_lib_extract_version_from_filename",
-      "src_lib_extract_version_from_log",
-      "src_lib_format_version",
-      "src_lib_is_known_f4se_version",
-      "src_lib_is_known_fallout4_version",
-      "src_lib_parse_version",
-      "src_lib_tests_test_extract_all_versions",
-      "src_lib_tests_test_extract_version_from_log",
-      "src_lib_try_parse_version",
-      "src_lib_versionerror",
-      "versionresult"
+    "108": [
+      "classic_config_core_src_config_rs_hashmap",
+      "classic_config_core_src_config_rs_result",
+      "classic_config_core_src_config_rs_string",
+      "classic_config_core_src_config_rs_yaml",
+      "pathconfig",
+      "src_config_classicconfig",
+      "src_config_classicconfig_load_local_yaml_paths",
+      "src_config_classicconfig_save_local_yaml_paths",
+      "src_config_classicconfig_save_local_yaml_paths_to",
+      "src_config_classicconfig_save_to_yaml",
+      "src_config_classicconfig_to_yaml",
+      "src_config_classicconfig_validate_paths",
+      "src_config_load_via_shippable",
+      "src_config_yamlsource",
+      "src_config_yamlsource_display_name",
+      "src_config_yamlsource_display_name_with_game",
+      "src_config_yamlsource_load",
+      "src_config_yamlsource_path"
     ],
-    "110": [
+    "109": [
       "classic_file_io_core_src_dds_tests_rs_vec",
       "src_dds_tests",
       "src_dds_tests_create_test_dds",
@@ -4072,7 +4087,7 @@
       "src_dds_tests_test_validate_file_from_disk",
       "src_dds_tests_test_validate_file_nonexistent"
     ],
-    "111": [
+    "110": [
       "classic_scangame_core_src_enb_rs_asref",
       "classic_scangame_core_src_enb_rs_path",
       "classic_scangame_core_src_enb_rs_pathbuf",
@@ -4092,7 +4107,7 @@
       "src_enb_enbvalidationresult_is_fully_configured",
       "src_enb_enbvalidationresult_is_present"
     ],
-    "112": [
+    "111": [
       "classic_scangame_core_src_game_report_tests_rs_btreemap",
       "classic_scangame_core_src_game_report_tests_rs_btreeset",
       "classic_scangame_core_src_game_report_tests_rs_string",
@@ -4112,7 +4127,7 @@
       "src_game_report_tests_test_validators_unpacked_messages",
       "src_game_report_tests_test_validators_xse_acronym_in_messages"
     ],
-    "113": [
+    "112": [
       "classic_scanlog_core_src_formid_analyzer_tests_rs_arc",
       "classic_scanlog_core_src_formid_analyzer_tests_rs_databasepool",
       "classic_scanlog_core_src_formid_analyzer_tests_rs_formidanalyzercore",
@@ -4132,45 +4147,46 @@
       "src_formid_analyzer_tests_formid_match_with_crashgen_name_override_uses_effective_name",
       "src_formid_analyzer_tests_report_rows"
     ],
+    "113": [
+      "classic_update_core_src_notification_tests_rs_githubclient",
+      "self",
+      "src_notification_check_app_notification_with",
+      "src_notification_notificationstatus_not_published",
+      "src_notification_tests_fallback_leg_decode_failure_surfaces_decode_error",
+      "src_notification_tests_fallback_leg_manifest_invalid_surfaces_schema_error",
+      "src_notification_tests_fallback_leg_unsupported_version_surfaces_structural_error",
+      "src_notification_tests_pages_404_and_empty_releases_returns_not_published",
+      "src_notification_tests_pages_404_with_fresh_fallback_cache_still_checks_releases_absence",
+      "src_notification_tests_pages_404_with_matching_release_missing_manifest_asset_returns_fetch_failed",
+      "src_notification_tests_pages_404_with_valid_release_classifies_from_fallback",
+      "src_notification_tests_pages_500_and_empty_releases_still_returns_fetch_failed",
+      "src_notification_tests_pages_outage_with_fresh_fallback_cache_reuses_body_and_skips_releases",
+      "src_notification_tests_pages_returns_unsupported_version_short_circuits_past_fallback",
+      "src_notification_tests_pages_success_clears_stale_fallback_marker",
+      "src_notification_tests_tokenless_client",
+      "src_notification_tests_unparseable_installed_version_surfaces_typed_error_before_network",
+      "src_notification_tests_valid_installed_version_still_reaches_pages_leg"
+    ],
     "114": [
-      "classic_database_core_src_pool_sqlx_rs_h",
-      "classic_database_core_src_pool_sqlx_rs_instant",
-      "src_pool_sqlx_cacheentry",
-      "src_pool_sqlx_cacheentry_new",
-      "src_pool_sqlx_cachekey",
-      "src_pool_sqlx_cachekey_build_hash",
-      "src_pool_sqlx_cachekey_from_normalized_plugin",
-      "src_pool_sqlx_cachekey_hash",
-      "src_pool_sqlx_cachekey_new",
-      "src_pool_sqlx_cachekey_normalize_plugin",
-      "src_pool_sqlx_cachekey_tie_break_key",
-      "src_pool_sqlx_databasepool_cache_contains_key",
-      "src_pool_sqlx_databasepool_insert_cache_entry",
-      "src_pool_sqlx_databasepool_insert_many_with_eviction",
-      "src_pool_sqlx_databasepool_insert_with_eviction",
-      "src_pool_sqlx_querycache_contains_key",
-      "src_pool_sqlx_querycache_insert_entry"
+      "classic_database_core_src_pool_sqlx_rs_drop",
+      "src_pool_sqlx_databasepool",
+      "src_pool_sqlx_databasepool_cache_size",
+      "src_pool_sqlx_databasepool_calculate_max_connections",
+      "src_pool_sqlx_databasepool_get_cache_capacity",
+      "src_pool_sqlx_databasepool_get_cache_cleanup_threshold",
+      "src_pool_sqlx_databasepool_get_max_connections",
+      "src_pool_sqlx_databasepool_is_available",
+      "src_pool_sqlx_databasepool_pool_registry_strong_count",
+      "src_pool_sqlx_databasepool_recalculate_max_connections",
+      "src_pool_sqlx_databasepool_record_stable_shape_selection",
+      "src_pool_sqlx_databasepool_select_stable_bucket_len",
+      "src_pool_sqlx_databasepool_set_game_table",
+      "src_pool_sqlx_databasepool_set_max_connections",
+      "src_pool_sqlx_poolregistry_pool_arc_strong_count",
+      "src_pool_sqlx_querycache_capacity",
+      "src_pool_sqlx_querycache_cleanup_threshold"
     ],
     "115": [
-      "classic_scangame_core_src_xse_rs_asref",
-      "classic_scangame_core_src_xse_rs_option",
-      "classic_scangame_core_src_xse_rs_path",
-      "classic_scangame_core_src_xse_rs_result",
-      "classic_scangame_core_src_xse_rs_self",
-      "src_xse",
-      "src_xse_addresslibinfo",
-      "src_xse_addresslibinfo_anniversary_edition",
-      "src_xse_addresslibinfo_from_registry_id",
-      "src_xse_addresslibinfo_next_gen",
-      "src_xse_addresslibinfo_original",
-      "src_xse_addresslibinfo_vr",
-      "src_xse_gameversion",
-      "src_xse_gameversion_description",
-      "src_xse_gameversion_registry_id",
-      "src_xse_xsechecker_new",
-      "src_xse_xseerror"
-    ],
-    "116": [
       "classic_scanlog_core_src_patterns_rs_ahocorasick",
       "classic_scanlog_core_src_patterns_rs_arc",
       "classic_scanlog_core_src_patterns_rs_dashmap",
@@ -4189,7 +4205,7 @@
       "src_patterns_patternmatcher_new",
       "src_patterns_patternmatcher_replace_all"
     ],
-    "117": [
+    "116": [
       "classic_scanlog_core_src_suspect_scanner_rs_reportfragment",
       "classic_scanlog_core_src_suspect_scanner_rs_result",
       "classic_scanlog_core_src_suspect_scanner_rs_self",
@@ -4208,26 +4224,7 @@
       "src_suspect_scanner_suspectscanner_suspect_scan_mainerror",
       "src_suspect_scanner_suspectscanner_suspect_scan_stack"
     ],
-    "118": [
-      "classic_update_core_src_notification_tests_rs_githubclient",
-      "self",
-      "src_notification_check_app_notification_with",
-      "src_notification_notificationstatus_not_published",
-      "src_notification_tests_fallback_leg_decode_failure_surfaces_decode_error",
-      "src_notification_tests_fallback_leg_manifest_invalid_surfaces_schema_error",
-      "src_notification_tests_fallback_leg_unsupported_version_surfaces_structural_error",
-      "src_notification_tests_pages_404_and_empty_releases_returns_not_published",
-      "src_notification_tests_pages_404_with_fresh_fallback_cache_still_checks_releases_absence",
-      "src_notification_tests_pages_404_with_valid_release_classifies_from_fallback",
-      "src_notification_tests_pages_500_and_empty_releases_still_returns_fetch_failed",
-      "src_notification_tests_pages_outage_with_fresh_fallback_cache_reuses_body_and_skips_releases",
-      "src_notification_tests_pages_returns_unsupported_version_short_circuits_past_fallback",
-      "src_notification_tests_pages_success_clears_stale_fallback_marker",
-      "src_notification_tests_tokenless_client",
-      "src_notification_tests_unparseable_installed_version_surfaces_typed_error_before_network",
-      "src_notification_tests_valid_installed_version_still_reaches_pages_leg"
-    ],
-    "119": [
+    "117": [
       "classic_scangame_core_src_crashgen_orchestrator_rs_crashgensettingsrules",
       "classic_scangame_core_src_crashgen_orchestrator_rs_option",
       "classic_scangame_core_src_crashgen_orchestrator_rs_path",
@@ -4245,7 +4242,7 @@
       "src_crashgen_orchestrator_crashgenreport",
       "tomlconfigissue"
     ],
-    "120": [
+    "118": [
       "classic_scangame_core_src_mod_ini_tests_rs_tempdir",
       "src_mod_ini_tests",
       "src_mod_ini_tests_setup_game_root",
@@ -4263,7 +4260,7 @@
       "src_mod_ini_tests_test_vsync_detection",
       "src_mod_ini_tests_test_vsync_highfps_separate"
     ],
-    "121": [
+    "119": [
       "classic_scangame_core_src_setup_rs_option",
       "classic_scangame_core_src_setup_rs_string",
       "classic_scangame_core_src_setup_rs_vec",
@@ -4281,7 +4278,7 @@
       "src_setup_setupcheckresults_total_checks",
       "src_setup_setuperror"
     ],
-    "122": [
+    "120": [
       "classic_scangame_core_src_wrye_rs_hashmap",
       "classic_scangame_core_src_wrye_rs_option",
       "classic_scangame_core_src_wrye_rs_self",
@@ -4299,7 +4296,7 @@
       "src_wrye_wryeissue",
       "src_wrye_wryeseverity"
     ],
-    "123": [
+    "121": [
       "classic_version_core_src_pe_version_rs_path",
       "peversionresult",
       "src_pe_version",
@@ -4317,7 +4314,7 @@
       "src_pe_version_tests_test_is_valid_executable_path_nonexistent",
       "src_pe_version_tests_test_is_valid_executable_path_wrong_extension"
     ],
-    "124": [
+    "122": [
       "src_fallout4_version_tests",
       "src_fallout4_version_tests_test_fallout4_version_all",
       "src_fallout4_version_tests_test_fallout4_version_as_str",
@@ -4335,7 +4332,7 @@
       "src_fallout4_version_tests_test_fallout4_version_xse_acronym",
       "src_fallout4_version_tests_test_null_version"
     ],
-    "125": [
+    "123": [
       "classic_path_core_src_checker_tests_rs_path",
       "classic_path_core_src_checker_tests_rs_pathbuf",
       "src_checker_tests",
@@ -4352,7 +4349,7 @@
       "src_checker_tests_test_validate_ini_file_exists_valid",
       "src_checker_tests_test_validate_ini_file_missing"
     ],
-    "126": [
+    "124": [
       "classic_path_core_src_ini_parser_tests_rs_path",
       "classic_path_core_src_ini_parser_tests_rs_pathbuf",
       "src_ini_parser_tests",
@@ -4369,7 +4366,7 @@
       "src_ini_parser_tests_test_validate_keys",
       "src_ini_parser_tests_test_validate_sections"
     ],
-    "127": [
+    "125": [
       "classic_scanlog_core_src_mod_detector_rs_hashset",
       "classic_scanlog_core_src_mod_detector_rs_indexmap",
       "classic_scanlog_core_src_mod_detector_rs_option",
@@ -4386,24 +4383,24 @@
       "src_mod_detector_tests_test_detect_mods_important_fixture_entries_keep_gpu_exclude_and_not_installed_quirks",
       "src_mod_detector_tests_test_detect_mods_important_fixture_parity_matches_legacy_and_aho_paths"
     ],
-    "128": [
-      "src_pool_sqlx_databasepool_clear_cache",
-      "src_pool_sqlx_databasepool_close",
-      "src_pool_sqlx_databasepool_close_active_pools",
-      "src_pool_sqlx_databasepool_drop",
-      "src_pool_sqlx_poolregistry_clear_tracking",
-      "src_pool_sqlx_poolregistry_close_active_pools",
-      "src_pool_sqlx_poolregistry_is_last_handle_with_open_pools",
-      "src_pool_sqlx_poolregistry_rebuild_allocated_pools",
-      "src_pool_sqlx_poolstats_active_connections",
-      "src_pool_sqlx_poolstats_maintenance_snapshot",
-      "src_pool_sqlx_poolstats_record_connection_created",
-      "src_pool_sqlx_poolstats_set_active_connections",
-      "src_pool_sqlx_poolstats_total_queries",
-      "src_pool_sqlx_querycache_clear",
-      "src_pool_sqlx_querycache_clear_entries"
+    "126": [
+      "classic_settings_core_src_yaml_merge_rs_result",
+      "classic_settings_core_src_yaml_merge_rs_yaml",
+      "src_yaml_merge",
+      "src_yaml_merge_merge_keys",
+      "src_yaml_merge_merge_keys_recursive",
+      "src_yaml_merge_tests",
+      "src_yaml_merge_tests_test_merge_keys_in_array",
+      "src_yaml_merge_tests_test_merge_keys_invalid_value",
+      "src_yaml_merge_tests_test_merge_keys_multiple_mappings",
+      "src_yaml_merge_tests_test_merge_keys_nested",
+      "src_yaml_merge_tests_test_merge_keys_no_merge",
+      "src_yaml_merge_tests_test_merge_keys_override",
+      "src_yaml_merge_tests_test_merge_keys_recursive",
+      "src_yaml_merge_tests_test_merge_keys_single_mapping",
+      "yamlerror"
     ],
-    "129": [
+    "127": [
       "src_wrye_tests",
       "src_wrye_tests_sample_html",
       "src_wrye_tests_test_bullet_cleanup",
@@ -4420,7 +4417,23 @@
       "src_wrye_tests_test_parse_skips_active_plugins",
       "src_wrye_tests_test_parse_with_warnings"
     ],
-    "130": [
+    "128": [
+      "classic_config_core_src_config_rs_self",
+      "classicconfig",
+      "src_config_application_dir",
+      "src_config_classicconfig_default",
+      "src_config_classicconfig_from_yaml",
+      "src_config_classicconfig_load_from_yaml",
+      "src_config_classicconfig_load_or_default",
+      "src_config_load_or_default_from_dirs",
+      "src_config_pathconfig_default",
+      "src_config_tests_test_application_dir_falls_back_to_current_exe_without_override",
+      "src_config_tests_test_load_or_default_ignores_legacy_underscore_filename_from_app_dir",
+      "src_config_tests_test_load_or_default_ignores_user_dir_when_app_has_no_settings_file",
+      "src_config_tests_test_load_or_default_no_file",
+      "src_config_tests_test_load_or_default_prefers_existing_app_dir_file_when_both_locations_exist"
+    ],
+    "129": [
       "classic_file_io_core_tests_mmap_variant_parity_rs_file",
       "classic_file_io_core_tests_mmap_variant_parity_rs_mmap",
       "classic_file_io_core_tests_mmap_variant_parity_rs_mmapmut",
@@ -4436,23 +4449,7 @@
       "tests_mmap_variant_parity_map_shared",
       "tests_mmap_variant_parity_test_phase6_mmap_variants_preserve_decode_contract_above_threshold"
     ],
-    "131": [
-      "classic_scangame_core_src_xse_rs_pathbuf",
-      "classic_scangame_core_src_xse_rs_string",
-      "classic_scangame_core_src_xse_rs_vec",
-      "src_xse_gameversion_is_null",
-      "src_xse_validationresult",
-      "src_xse_xsechecker",
-      "src_xse_xsechecker_check",
-      "src_xse_xsechecker_correct_version_exists",
-      "src_xse_xsechecker_determine_relevant_versions",
-      "src_xse_xsechecker_file_exists",
-      "src_xse_xsechecker_format_message",
-      "src_xse_xsechecker_get_correct_version_info",
-      "src_xse_xsechecker_validate",
-      "src_xse_xsechecker_wrong_version_exists"
-    ],
-    "132": [
+    "130": [
       "classic_scanlog_core_src_fcx_handler_tests_rs_configissue",
       "src_fcx_handler_tests",
       "src_fcx_handler_tests_fcx_reset_clean_global_state_returns_unnecessary",
@@ -4468,7 +4465,7 @@
       "src_fcx_handler_tests_test_fcx_reset",
       "src_fcx_handler_tests_test_fcx_with_results"
     ],
-    "133": [
+    "131": [
       "src_error_tests",
       "src_error_tests_test_all_error_variants_are_send_sync",
       "src_error_tests_test_error_debug_impl",
@@ -4484,7 +4481,7 @@
       "src_error_tests_test_url_error_from_url",
       "src_error_tests_test_version_error_from_semver"
     ],
-    "134": [
+    "132": [
       "src_setup_tests",
       "src_setup_tests_test_migrate_game_version_setting_legacy_migration",
       "src_setup_tests_test_migrate_game_version_setting_new_takes_precedence",
@@ -4500,7 +4497,7 @@
       "src_setup_tests_test_results_default_empty",
       "src_setup_tests_test_results_with_errors"
     ],
-    "135": [
+    "133": [
       "box",
       "classic_file_io_core_src_hash_tests_rs_error",
       "classic_file_io_core_src_hash_tests_rs_result",
@@ -4515,7 +4512,7 @@
       "src_hash_tests_test_hash_nonexistent_file",
       "src_hash_tests_test_large_file_chunked_reading"
     ],
-    "136": [
+    "134": [
       "classic_path_core_src_backup_tests_rs_src_backup_tests",
       "src_backup_tests_test_backup_manager_new",
       "src_backup_tests_test_create_backup_source_not_found",
@@ -4530,7 +4527,7 @@
       "src_backup_tests_test_xse_version_new",
       "src_backup_tests_test_xse_version_sanitized"
     ],
-    "137": [
+    "135": [
       "classic_scanlog_core_src_crashgen_registry_tests_rs_crashgenentry",
       "classic_scanlog_core_src_crashgen_registry_tests_rs_crashgenregistry",
       "src_crashgen_registry_tests",
@@ -4545,7 +4542,7 @@
       "src_crashgen_registry_tests_test_lookup_matches_pre_normalized_keys",
       "src_crashgen_registry_tests_test_unknown_crashgen_falls_back_to_default"
     ],
-    "138": [
+    "136": [
       "classic_scanlog_core_src_mod_detector_rs_modsolutionentry",
       "classic_scanlog_core_src_mod_detector_rs_vec",
       "src_mod_detector_append_found_entry",
@@ -4560,7 +4557,7 @@
       "src_mod_detector_tests_test_detect_mods_solutions_exception_suppresses_match",
       "src_mod_detector_tests_test_detect_mods_solutions_ignores_exception_identical_to_criterion"
     ],
-    "139": [
+    "137": [
       "appnotificationmanifest",
       "classic_update_core_src_notification_tests_rs_option",
       "src_notification_classify",
@@ -4574,21 +4571,7 @@
       "src_notification_tests_classify_update_available_when_installed_below_latest",
       "src_notification_tests_manifest"
     ],
-    "140": [
-      "classic_config_core_src_config_rs_self",
-      "classicconfig",
-      "src_config_classicconfig_default",
-      "src_config_classicconfig_from_yaml",
-      "src_config_classicconfig_load_from_yaml",
-      "src_config_classicconfig_load_or_default",
-      "src_config_load_or_default_from_dirs",
-      "src_config_pathconfig_default",
-      "src_config_tests_test_load_or_default_ignores_legacy_underscore_filename_from_app_dir",
-      "src_config_tests_test_load_or_default_ignores_user_dir_when_app_has_no_settings_file",
-      "src_config_tests_test_load_or_default_no_file",
-      "src_config_tests_test_load_or_default_prefers_existing_app_dir_file_when_both_locations_exist"
-    ],
-    "141": [
+    "138": [
       "classic_path_core_src_docs_path_tests_rs_path",
       "classic_path_core_src_docs_path_tests_rs_pathbuf",
       "src_docs_path_tests",
@@ -4602,7 +4585,7 @@
       "src_docs_path_tests_test_validate_ini_files_missing",
       "src_docs_path_tests_test_validate_ini_files_success"
     ],
-    "142": [
+    "139": [
       "classic_update_core_src_yaml_update_rs_pathbuf",
       "classic_update_core_src_yaml_update_rs_self",
       "src_yaml_update_clientschemaset_new",
@@ -4616,7 +4599,20 @@
       "src_yaml_update_updatecheckconfig_enabled",
       "src_yaml_update_updatecheckconfig_with_bundled_yaml_dir"
     ],
-    "143": [
+    "140": [
+      "benches_database_benchmarks",
+      "benches_database_benchmarks_batch_lookup_benchmarks",
+      "benches_database_benchmarks_init_pool",
+      "benches_database_benchmarks_multi_db_budget_benchmarks",
+      "benches_database_benchmarks_multi_db_fallback_benchmarks",
+      "benches_database_benchmarks_repeated_bucket_reuse_benchmarks",
+      "benches_database_benchmarks_single_lookup_benchmarks",
+      "classic_database_core_benches_database_benchmarks_rs_criterion",
+      "classic_database_core_benches_database_benchmarks_rs_databasepool",
+      "classic_database_core_benches_database_benchmarks_rs_pathbuf",
+      "classic_database_core_benches_database_benchmarks_rs_vec"
+    ],
+    "141": [
       "classic_path_core_tests_linux_proton_docs_path_rs_path",
       "classic_path_core_tests_linux_proton_docs_path_rs_pathbuf",
       "tests_linux_proton_docs_path",
@@ -4629,7 +4625,7 @@
       "tests_linux_proton_docs_path_proton_path_ignored_when_steam_app_id_unset",
       "tests_linux_proton_docs_path_steam_lookup_failure_proton_falls_back_to_local_share"
     ],
-    "144": [
+    "142": [
       "classic_scangame_core_src_enb_tests_rs_tempdir",
       "src_enb_tests",
       "src_enb_tests_create_test_game_dir",
@@ -4642,7 +4638,7 @@
       "src_enb_tests_test_format_message_partial",
       "src_enb_tests_test_format_message_present"
     ],
-    "145": [
+    "143": [
       "classic_settings_core_src_yaml_file_rs_display",
       "classic_settings_core_src_yaml_file_rs_formatter",
       "classic_settings_core_src_yaml_file_rs_result",
@@ -4655,7 +4651,7 @@
       "src_yaml_file_yamlfile_description",
       "src_yaml_file_yamlfile_fmt"
     ],
-    "146": [
+    "144": [
       "src_notification_persist_fallback_manifest_body",
       "src_notification_tests_body_write_failure_clears_existing_marker_to_prevent_stale_reuse",
       "src_notification_tests_body_write_failure_with_no_prior_marker_stays_marker_free",
@@ -4668,7 +4664,20 @@
       "src_notification_tests_try_fallback_cache_returns_none_when_marker_missing",
       "src_notification_tests_try_fallback_cache_returns_none_when_marker_older_than_ttl"
     ],
-    "147": [
+    "145": [
+      "src_pool_sqlx_databasepool_clear_cache",
+      "src_pool_sqlx_databasepool_close",
+      "src_pool_sqlx_databasepool_close_active_pools",
+      "src_pool_sqlx_databasepool_drop",
+      "src_pool_sqlx_poolregistry_clear_tracking",
+      "src_pool_sqlx_poolregistry_is_last_handle_with_open_pools",
+      "src_pool_sqlx_poolstats_active_connections",
+      "src_pool_sqlx_poolstats_maintenance_snapshot",
+      "src_pool_sqlx_poolstats_total_queries",
+      "src_pool_sqlx_querycache_clear",
+      "src_pool_sqlx_querycache_clear_entries"
+    ],
+    "146": [
       "classic_config_core_src_config_rs_fn",
       "classic_config_core_src_config_rs_vec",
       "src_config_choose_settings_write_path_with_access",
@@ -4680,7 +4689,7 @@
       "src_config_tests_test_resolve_settings_search_paths_uses_app_dir_only_when_user_dir_missing",
       "src_config_tests_test_resolve_settings_search_paths_uses_only_app_dir_modern_filename"
     ],
-    "148": [
+    "147": [
       "classic_file_io_core_src_encoding_rs_default",
       "classic_file_io_core_src_encoding_rs_self",
       "classic_file_io_core_src_encoding_rs_string",
@@ -4692,19 +4701,7 @@
       "src_encoding_encodingdetector_detect_name",
       "src_encoding_encodingdetector_new"
     ],
-    "149": [
-      "classic_version_core_src_lib_tests_rs_src_lib_tests",
-      "src_lib_tests_test_compare_versions",
-      "src_lib_tests_test_extract_version_from_filename",
-      "src_lib_tests_test_format_version",
-      "src_lib_tests_test_is_known_f4se_version",
-      "src_lib_tests_test_is_known_fallout4_version",
-      "src_lib_tests_test_parse_version",
-      "src_lib_tests_test_parse_version_errors",
-      "src_lib_tests_test_try_parse_version",
-      "src_registry_get_version_registry"
-    ],
-    "150": [
+    "148": [
       "classic_version_registry_core_src_matching_tests_rs_versionregistry",
       "src_matching_tests",
       "src_matching_tests_create_test_registry",
@@ -4716,7 +4713,7 @@
       "src_matching_tests_test_nearest_match_prefers_higher_priority",
       "src_matching_tests_test_vr_mode_filtering"
     ],
-    "151": [
+    "149": [
       "src_toml_tests",
       "src_toml_tests_test_addictol_and_buffout_shows_incompatibility_warning",
       "src_toml_tests_test_addictol_skips_all_toml_checks",
@@ -4728,7 +4725,7 @@
       "src_toml_tests_test_xcell_still_triggers_memory_checks_without_addictol",
       "src_toml_tests_test_yaml_rules_path_detects_issue"
     ],
-    "152": [
+    "150": [
       "classic_message_core_src_enums_rs_level",
       "src_enums",
       "src_enums_messagetarget",
@@ -4739,7 +4736,7 @@
       "src_enums_messagetype_name",
       "src_enums_messagetype_to_log_level"
     ],
-    "153": [
+    "151": [
       "classic_resource_core_src_lib_tests_rs_src_lib_tests",
       "src_lib_tests_test_detect_resource_type",
       "src_lib_tests_test_detect_resource_type_case_insensitive",
@@ -4750,7 +4747,7 @@
       "src_lib_tests_test_resource_type_extensions",
       "src_lib_tests_test_resource_type_from_str"
     ],
-    "154": [
+    "152": [
       "classic_update_core_src_lib_tests_rs_src_lib_tests",
       "src_lib_tests_test_module_exports_are_accessible",
       "src_lib_tests_test_re_exports_github_asset",
@@ -4761,7 +4758,7 @@
       "src_lib_tests_test_version_constant",
       "src_lib_tests_test_version_is_semver"
     ],
-    "155": [
+    "153": [
       "classic_xse_core_src_lib_tests_rs_src_lib_tests",
       "src_lib_tests_test_xse_info_loader_path",
       "src_lib_tests_test_xse_info_new",
@@ -4772,7 +4769,7 @@
       "src_lib_tests_test_xse_type_from_str",
       "src_lib_tests_test_xse_type_loader_name"
     ],
-    "156": [
+    "154": [
       "batchscanevent",
       "batchscaneventkind",
       "scanprogressphase",
@@ -4782,7 +4779,7 @@
       "src_orchestrator_tests_drain_ready_batch_progress_events_flushes_phase_scheduled_for_next_tick",
       "unboundedreceiver"
     ],
-    "157": [
+    "155": [
       "classic_database_core_src_pool_sqlx_rs_self",
       "src_pool_sqlx_activegametable_new",
       "src_pool_sqlx_databasepool_new",
@@ -4792,7 +4789,7 @@
       "src_pool_sqlx_poolstats_new",
       "src_pool_sqlx_querycache_new"
     ],
-    "158": [
+    "156": [
       "classic_file_io_core_src_backup_tests_rs_src_backup_tests",
       "src_backup_tests_test_backup_exists_empty",
       "src_backup_tests_test_backup_manager_creation",
@@ -4802,7 +4799,7 @@
       "src_backup_tests_test_pattern_matching",
       "src_backup_tests_test_remove_backup"
     ],
-    "159": [
+    "157": [
       "classic_version_registry_core_src_version_tests_rs_src_version_tests",
       "src_version_tests_test_comparison",
       "src_version_tests_test_display",
@@ -4812,7 +4809,7 @@
       "src_version_tests_test_same_major",
       "src_version_tests_test_semantic_distance"
     ],
-    "160": [
+    "158": [
       "src_message_tests",
       "src_message_tests_test_message_builder_chain",
       "src_message_tests_test_message_clone",
@@ -4822,7 +4819,7 @@
       "src_message_tests_test_message_with_target",
       "src_message_tests_test_message_with_title"
     ],
-    "161": [
+    "159": [
       "src_report_tests",
       "src_report_tests_test_generate_error_section_fake_bot_mode_notice_replaces_version_status",
       "src_report_tests_test_generate_error_section_uses_list_based_valid_message",
@@ -4832,7 +4829,7 @@
       "src_report_tests_test_report_fragment",
       "src_report_tests_test_string_pool"
     ],
-    "162": [
+    "160": [
       "src_yaml_file_tests",
       "src_yaml_file_tests_test_must_not_be_none",
       "src_yaml_file_tests_test_settings_ignore_none",
@@ -4842,7 +4839,7 @@
       "src_yaml_file_tests_test_yaml_file_display",
       "src_yaml_file_tests_test_yaml_file_serialization"
     ],
-    "163": [
+    "161": [
       "classic_scanlog_core_src_mod_detector_tests_rs_coremodentry",
       "classic_scanlog_core_src_mod_detector_tests_rs_modsolutionentry",
       "classic_scanlog_core_src_mod_detector_tests_rs_vec",
@@ -4851,7 +4848,7 @@
       "src_mod_detector_tests_make_solution_entry",
       "src_mod_detector_tests_parity_fixture_entries"
     ],
-    "164": [
+    "162": [
       "classic_version_registry_core_src_defaults_rs_hashmap",
       "classic_version_registry_core_src_defaults_rs_string",
       "classic_version_registry_core_src_defaults_rs_unknownversionhandling",
@@ -4860,7 +4857,7 @@
       "src_defaults_get_default_unknown_handling",
       "src_defaults_get_default_versions"
     ],
-    "165": [
+    "163": [
       "src_enums_tests",
       "src_enums_tests_test_message_target_default",
       "src_enums_tests_test_message_target_should_display",
@@ -4869,7 +4866,7 @@
       "src_enums_tests_test_message_type_name",
       "src_enums_tests_test_message_type_to_log_level"
     ],
-    "166": [
+    "164": [
       "src_gpu_detector_tests",
       "src_gpu_detector_tests_test_amd_gpu_detection",
       "src_gpu_detector_tests_test_batch_processing",
@@ -4878,7 +4875,7 @@
       "src_gpu_detector_tests_test_nvidia_gpu_detection",
       "src_gpu_detector_tests_test_unknown_gpu"
     ],
-    "167": [
+    "165": [
       "src_papyrus_tests",
       "src_papyrus_tests_test_analyze_full",
       "src_papyrus_tests_test_analyze_nonexistent_log",
@@ -4887,7 +4884,7 @@
       "src_papyrus_tests_test_process_line",
       "src_papyrus_tests_test_tail_behavior"
     ],
-    "168": [
+    "166": [
       "classic_path_core_src_error_rs_src_error",
       "src_error_backuperror",
       "src_error_docspatherror",
@@ -4895,7 +4892,7 @@
       "src_error_patherror",
       "src_error_validationerror"
     ],
-    "169": [
+    "167": [
       "src_ini_tests",
       "src_ini_tests_test_console_command_detection",
       "src_ini_tests_test_issue_detection_epo",
@@ -4903,7 +4900,7 @@
       "src_ini_tests_test_validator_creation",
       "src_ini_tests_test_vsync_detection"
     ],
-    "170": [
+    "168": [
       "src_logs_tests",
       "src_logs_tests_test_crash_log_exclusion",
       "src_logs_tests_test_error_detection",
@@ -4911,7 +4908,7 @@
       "src_logs_tests_test_error_truncation",
       "src_logs_tests_test_processor_creation"
     ],
-    "171": [
+    "169": [
       "src_unpacked_tests",
       "src_unpacked_tests_test_bodyslide_exclusion",
       "src_unpacked_tests_test_dds_file_collection",
@@ -4919,124 +4916,124 @@
       "src_unpacked_tests_test_sound_format_detection",
       "src_unpacked_tests_test_texture_format_detection"
     ],
-    "172": [
+    "170": [
       "classic_path_core_src_platform_mod_rs_docspathresult",
       "classic_path_core_src_platform_mod_rs_pathbuf",
       "platform_mod",
       "platform_mod_get_system_documents_path",
       "platform_mod_parse_steam_library"
     ],
-    "173": [
+    "171": [
       "src_ba2_tests",
       "src_ba2_tests_test_ba2_issues_default",
       "src_ba2_tests_test_ba2_issues_merge",
       "src_ba2_tests_test_scan_archive_unsupported_platform",
       "src_ba2_tests_test_scanner_creation"
     ],
-    "174": [
+    "172": [
       "src_suspect_scanner_tests",
       "src_suspect_scanner_tests_test_check_dll_crash",
       "src_suspect_scanner_tests_test_suspect_scan_mainerror",
       "src_suspect_scanner_tests_test_suspect_scan_stack_exclusion_condition",
       "src_suspect_scanner_tests_test_suspect_scan_stack_with_structured_conditions"
     ],
-    "175": [
+    "173": [
       "classic_scangame_core_src_lib_rs_src_lib",
       "classic_scangame_core_src_lib_rs_string",
       "src_lib_encode_hex"
     ],
-    "176": [
+    "174": [
       "src_keys_tests",
       "src_keys_tests_test_key_values",
       "src_keys_tests_test_keys_are_unique"
     ],
-    "177": [
+    "175": [
       "tests_lazylock_static_audit",
       "tests_lazylock_static_audit_assert_uses_std_lazylock",
       "tests_lazylock_static_audit_scanlog_lazy_statics_use_std_lazylock"
     ],
-    "178": [
+    "176": [
       "tests_phase2_dead_code_audit",
       "tests_phase2_dead_code_audit_parser_and_version_dead_symbols_do_not_reappear",
       "tests_phase2_dead_code_audit_plugin_analyzer_and_settings_validator_dead_fallbacks_do_not_reappear"
     ],
-    "179": [
+    "177": [
       "classic_file_io_core_src_error_rs_src_error",
       "src_error_fileioerror"
     ],
-    "180": [
+    "178": [
       "classic_scangame_core_src_error_rs_src_error",
       "src_error_scangameerror"
     ],
-    "181": [
+    "179": [
       "classic_scanlog_core_src_error_rs_src_error",
       "src_error_scanlogerror"
     ],
-    "182": [
+    "180": [
       "classic_update_core_build",
       "classic_update_core_build_main"
     ],
-    "183": [
-      "classic_update_core_src_error_rs_src_error",
-      "src_error_updateerror"
-    ],
-    "184": [
+    "181": [
       "classic_version_registry_core_src_error_rs_src_error",
       "src_error_versionregistryerror"
     ],
-    "185": [
+    "182": [
+      "src_error",
+      "src_error_updateerror"
+    ],
+    "183": [
       "src_keys",
       "src_keys_keys"
     ],
-    "186": [
+    "184": [
       "tests_once_lock_migration_audit",
       "tests_once_lock_migration_audit_record_scanner_and_docs_exit_direct_once_cell_usage"
     ],
-    "187": [
+    "185": [
       "tests_yaml_dead_code_audit",
       "tests_yaml_dead_code_audit_yaml_format_configuration_dead_api_stays_removed"
     ],
-    "188": [
+    "186": [
       "classic_config_core_src_lib_rs_src_lib"
     ],
-    "189": [
+    "187": [
       "classic_database_core_src_lib_rs_src_lib"
     ],
-    "190": [
+    "188": [
       "classic_perf_core_src_lib_rs_src_lib"
     ],
-    "191": [
+    "189": [
       "classic_registry_core_src_lib_rs_src_lib"
     ],
-    "192": [
+    "190": [
       "classic_settings_core_src_lib_rs_src_lib"
     ],
-    "193": [
+    "191": [
       "classic_update_core_src_lib_rs_src_lib"
     ],
-    "194": [
+    "192": [
       "classic_version_registry_core_src_lib_rs_src_lib"
     ],
-    "195": [
+    "193": [
       "src_client_schemas"
     ],
-    "196": [
+    "194": [
       "src_segment_key"
     ],
-    "197": [
+    "195": [
       "src_shippable"
     ]
   },
   "cohesion": {
-    "0": 0.050103153551429414,
-    "1": 0.05627545353572751,
-    "2": 0.07161125319693094,
-    "3": 0.06628621597892889,
-    "4": 0.05357142857142857,
-    "5": 0.031746031746031744,
-    "6": 0.09289617486338798,
-    "7": 0.09548022598870057,
-    "8": 0.06954997077732321,
+    "0": 0.05156369183829138,
+    "1": 0.050101010101010104,
+    "2": 0.05642080517190714,
+    "3": 0.05627545353572751,
+    "4": 0.06628621597892889,
+    "5": 0.05357142857142857,
+    "6": 0.031746031746031744,
+    "7": 0.09289617486338798,
+    "8": 0.09548022598870057,
     "9": 0.12159709618874773,
     "10": 0.05064935064935065,
     "11": 0.07609427609427609,
@@ -5044,9 +5041,9 @@
     "13": 0.10235690235690235,
     "14": 0.06568832983927324,
     "15": 0.037037037037037035,
-    "16": 0.057329462989840346,
-    "17": 0.08597285067873303,
-    "18": 0.05052790346907994,
+    "16": 0.04934687953555878,
+    "17": 0.057329462989840346,
+    "18": 0.08597285067873303,
     "19": 0.12784313725490196,
     "20": 0.12081632653061225,
     "21": 0.06826241134751773,
@@ -5056,157 +5053,157 @@
     "25": 0.1602787456445993,
     "26": 0.14285714285714285,
     "27": 0.11033681765389082,
-    "28": 0.15365853658536585,
-    "29": 0.11829268292682926,
-    "30": 0.11707317073170732,
-    "31": 0.1475609756097561,
-    "32": 0.07439024390243902,
-    "33": 0.13658536585365855,
+    "28": 0.11829268292682926,
+    "29": 0.11707317073170732,
+    "30": 0.1475609756097561,
+    "31": 0.07439024390243902,
+    "32": 0.13658536585365855,
+    "33": 0.09487179487179487,
     "34": 0.1076923076923077,
     "35": 0.11538461538461539,
     "36": 0.14035087719298245,
-    "37": 0.06543385490753911,
-    "38": 0.1006006006006006,
-    "39": 0.09759759759759759,
-    "40": 0.09747899159663866,
-    "41": 0.1226890756302521,
-    "42": 0.2103386809269162,
-    "43": 0.16477272727272727,
-    "44": 0.10227272727272728,
-    "45": 0.0946969696969697,
-    "46": 0.12903225806451613,
-    "47": 0.1431451612903226,
-    "48": 0.13306451612903225,
-    "49": 0.14408602150537633,
-    "50": 0.15483870967741936,
-    "51": 0.0989247311827957,
-    "52": 0.18850574712643678,
-    "53": 0.15517241379310345,
-    "54": 0.17733990147783252,
-    "55": 0.11576354679802955,
-    "56": 0.1746031746031746,
-    "57": 0.19047619047619047,
-    "58": 0.17724867724867724,
-    "59": 0.19576719576719576,
-    "60": 0.12698412698412698,
+    "37": 0.06756756756756757,
+    "38": 0.09759759759759759,
+    "39": 0.09747899159663866,
+    "40": 0.1226890756302521,
+    "41": 0.2103386809269162,
+    "42": 0.16477272727272727,
+    "43": 0.10227272727272728,
+    "44": 0.1431451612903226,
+    "45": 0.15120967741935484,
+    "46": 0.14408602150537633,
+    "47": 0.13763440860215054,
+    "48": 0.0989247311827957,
+    "49": 0.18850574712643678,
+    "50": 0.1632183908045977,
+    "51": 0.10804597701149425,
+    "52": 0.15517241379310345,
+    "53": 0.15763546798029557,
+    "54": 0.11576354679802955,
+    "55": 0.1746031746031746,
+    "56": 0.19047619047619047,
+    "57": 0.17724867724867724,
+    "58": 0.19576719576719576,
+    "59": 0.12698412698412698,
+    "60": 0.07142857142857142,
     "61": 0.07142857142857142,
     "62": 0.07142857142857142,
-    "63": 0.07142857142857142,
+    "63": 0.14245014245014245,
     "64": 0.13105413105413105,
     "65": 0.15954415954415954,
-    "66": 0.19692307692307692,
-    "67": 0.2,
-    "68": 0.15076923076923077,
+    "66": 0.13846153846153847,
+    "67": 0.19692307692307692,
+    "68": 0.2,
     "69": 0.16,
     "70": 0.3076923076923077,
     "71": 0.1753846153846154,
     "72": 0.14666666666666667,
     "73": 0.22333333333333333,
-    "74": 0.15942028985507245,
-    "75": 0.17391304347826086,
-    "76": 0.17028985507246377,
-    "77": 0.1956521739130435,
-    "78": 0.16666666666666666,
-    "79": 0.08333333333333333,
-    "80": 0.2028985507246377,
-    "81": 0.233201581027668,
-    "82": 0.14624505928853754,
-    "83": 0.20948616600790515,
-    "84": 0.1857707509881423,
-    "85": 0.08695652173913043,
-    "86": 0.19047619047619047,
-    "87": 0.22510822510822512,
-    "88": 0.2077922077922078,
+    "74": 0.17391304347826086,
+    "75": 0.17028985507246377,
+    "76": 0.1956521739130435,
+    "77": 0.16666666666666666,
+    "78": 0.08333333333333333,
+    "79": 0.2028985507246377,
+    "80": 0.233201581027668,
+    "81": 0.14624505928853754,
+    "82": 0.20948616600790515,
+    "83": 0.1857707509881423,
+    "84": 0.08695652173913043,
+    "85": 0.19047619047619047,
+    "86": 0.22510822510822512,
+    "87": 0.2077922077922078,
+    "88": 0.13852813852813853,
     "89": 0.13852813852813853,
-    "90": 0.13852813852813853,
-    "91": 0.16017316017316016,
-    "92": 0.14285714285714285,
-    "93": 0.18095238095238095,
-    "94": 0.18095238095238095,
-    "95": 0.24761904761904763,
-    "96": 0.14285714285714285,
-    "97": 0.13333333333333333,
-    "98": 0.1380952380952381,
-    "99": 0.2789473684210526,
-    "100": 0.24210526315789474,
-    "101": 0.2222222222222222,
+    "90": 0.16017316017316016,
+    "91": 0.23809523809523808,
+    "92": 0.13333333333333333,
+    "93": 0.2,
+    "94": 0.14285714285714285,
+    "95": 0.18095238095238095,
+    "96": 0.18095238095238095,
+    "97": 0.24761904761904763,
+    "98": 0.14285714285714285,
+    "99": 0.13333333333333333,
+    "100": 0.1380952380952381,
+    "101": 0.24210526315789474,
     "102": 0.2222222222222222,
-    "103": 0.19883040935672514,
+    "103": 0.2222222222222222,
     "104": 0.30994152046783624,
-    "105": 0.11695906432748537,
-    "106": 0.1871345029239766,
-    "107": 0.21637426900584794,
-    "108": 0.1695906432748538,
-    "109": 0.19883040935672514,
-    "110": 0.16339869281045752,
-    "111": 0.16993464052287582,
-    "112": 0.1437908496732026,
-    "113": 0.2222222222222222,
-    "114": 0.16176470588235295,
-    "115": 0.22058823529411764,
-    "116": 0.18382352941176472,
+    "105": 0.1871345029239766,
+    "106": 0.21637426900584794,
+    "107": 0.1695906432748538,
+    "108": 0.21568627450980393,
+    "109": 0.16339869281045752,
+    "110": 0.16993464052287582,
+    "111": 0.1437908496732026,
+    "112": 0.2222222222222222,
+    "113": 0.1895424836601307,
+    "114": 0.1323529411764706,
+    "115": 0.18382352941176472,
+    "116": 0.25,
     "117": 0.25,
-    "118": 0.19852941176470587,
-    "119": 0.25,
-    "120": 0.225,
-    "121": 0.21666666666666667,
-    "122": 0.26666666666666666,
-    "123": 0.175,
-    "124": 0.125,
+    "118": 0.225,
+    "119": 0.21666666666666667,
+    "120": 0.26666666666666666,
+    "121": 0.175,
+    "122": 0.125,
+    "123": 0.26666666666666666,
+    "124": 0.22857142857142856,
     "125": 0.26666666666666666,
-    "126": 0.22857142857142856,
-    "127": 0.26666666666666666,
-    "128": 0.18095238095238095,
-    "129": 0.17142857142857143,
-    "130": 0.3076923076923077,
-    "131": 0.27472527472527475,
-    "132": 0.17582417582417584,
-    "133": 0.14285714285714285,
-    "134": 0.14285714285714285,
-    "135": 0.4230769230769231,
-    "136": 0.15384615384615385,
-    "137": 0.2692307692307692,
-    "138": 0.21794871794871795,
-    "139": 0.25757575757575757,
-    "140": 0.24242424242424243,
-    "141": 0.2727272727272727,
-    "142": 0.21212121212121213,
-    "143": 0.4727272727272727,
-    "144": 0.34545454545454546,
-    "145": 0.18181818181818182,
-    "146": 0.3090909090909091,
-    "147": 0.2,
-    "148": 0.26666666666666666,
-    "149": 0.2222222222222222,
-    "150": 0.35555555555555557,
-    "151": 0.2,
+    "126": 0.2571428571428571,
+    "127": 0.17142857142857143,
+    "128": 0.1978021978021978,
+    "129": 0.3076923076923077,
+    "130": 0.17582417582417584,
+    "131": 0.14285714285714285,
+    "132": 0.14285714285714285,
+    "133": 0.4230769230769231,
+    "134": 0.15384615384615385,
+    "135": 0.2692307692307692,
+    "136": 0.21794871794871795,
+    "137": 0.25757575757575757,
+    "138": 0.2727272727272727,
+    "139": 0.21212121212121213,
+    "140": 0.4,
+    "141": 0.4727272727272727,
+    "142": 0.34545454545454546,
+    "143": 0.18181818181818182,
+    "144": 0.3090909090909091,
+    "145": 0.2,
+    "146": 0.2,
+    "147": 0.26666666666666666,
+    "148": 0.35555555555555557,
+    "149": 0.2,
+    "150": 0.2222222222222222,
+    "151": 0.2222222222222222,
     "152": 0.2222222222222222,
     "153": 0.2222222222222222,
-    "154": 0.2222222222222222,
-    "155": 0.2222222222222222,
-    "156": 0.2857142857142857,
-    "157": 0.42857142857142855,
+    "154": 0.2857142857142857,
+    "155": 0.42857142857142855,
+    "156": 0.25,
+    "157": 0.25,
     "158": 0.25,
     "159": 0.25,
     "160": 0.25,
-    "161": 0.25,
-    "162": 0.25,
+    "161": 0.2857142857142857,
+    "162": 0.3333333333333333,
     "163": 0.2857142857142857,
-    "164": 0.3333333333333333,
+    "164": 0.2857142857142857,
     "165": 0.2857142857142857,
-    "166": 0.2857142857142857,
-    "167": 0.2857142857142857,
+    "166": 0.3333333333333333,
+    "167": 0.3333333333333333,
     "168": 0.3333333333333333,
     "169": 0.3333333333333333,
-    "170": 0.3333333333333333,
-    "171": 0.3333333333333333,
-    "172": 0.8,
-    "173": 0.4,
-    "174": 0.4,
-    "175": 0.6666666666666666,
+    "170": 0.8,
+    "171": 0.4,
+    "172": 0.4,
+    "173": 0.6666666666666666,
+    "174": 0.6666666666666666,
+    "175": 1.0,
     "176": 0.6666666666666666,
     "177": 1.0,
-    "178": 0.6666666666666666,
+    "178": 1.0,
     "179": 1.0,
     "180": 1.0,
     "181": 1.0,
@@ -5223,9 +5220,7 @@
     "192": 1.0,
     "193": 1.0,
     "194": 1.0,
-    "195": 1.0,
-    "196": 1.0,
-    "197": 1.0
+    "195": 1.0
   },
   "gods": [
     {
@@ -5281,6 +5276,28 @@
   ],
   "surprises": [
     {
+      "source": "test_save_local_yaml_paths_to_creates_missing_file()",
+      "target": "load_yaml_merged_async()",
+      "source_files": [
+        "classic-config-core/src/config_tests.rs",
+        "classic-settings-core/src/loader.rs"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `test_save_local_yaml_paths_to_creates_missing_file()` unexpectedly reaches hub `load_yaml_merged_async()`"
+    },
+    {
+      "source": "test_save_local_yaml_paths_to_preserves_existing_keys()",
+      "target": "load_yaml_merged_async()",
+      "source_files": [
+        "classic-config-core/src/config_tests.rs",
+        "classic-settings-core/src/loader.rs"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `test_save_local_yaml_paths_to_preserves_existing_keys()` unexpectedly reaches hub `load_yaml_merged_async()`"
+    },
+    {
       "source": "parse_yaml_document()",
       "target": "merge_yaml_documents()",
       "source_files": [
@@ -5301,28 +5318,6 @@
       "confidence": "INFERRED",
       "relation": "calls",
       "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
-    },
-    {
-      "source": "test_save_local_yaml_paths_to_creates_missing_file()",
-      "target": "load_yaml_merged_async()",
-      "source_files": [
-        "classic-config-core/src/config_tests.rs",
-        "classic-settings-core/src/loader.rs"
-      ],
-      "confidence": "INFERRED",
-      "relation": "calls",
-      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `test_save_local_yaml_paths_to_creates_missing_file()` unexpectedly reaches hub `load_yaml_merged_async()`"
-    },
-    {
-      "source": "test_save_local_yaml_paths_to_preserves_existing_keys()",
-      "target": "load_yaml_merged_async()",
-      "source_files": [
-        "classic-config-core/src/config_tests.rs",
-        "classic-settings-core/src/loader.rs"
-      ],
-      "confidence": "INFERRED",
-      "relation": "calls",
-      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `test_save_local_yaml_paths_to_preserves_existing_keys()` unexpectedly reaches hub `load_yaml_merged_async()`"
     },
     {
       "source": "parse_yaml_document()",

@@ -1050,6 +1050,58 @@ mod orchestrator {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn pages_404_with_matching_release_missing_manifest_asset_returns_fetch_failed() {
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(404)
+            .create_async()
+            .await;
+        let releases_body = r#"[{
+            "tag_name": "app-notification-v9.2.0",
+            "name": "Notification v9.2.0",
+            "body": "",
+            "prerelease": false,
+            "draft": false,
+            "html_url": "https://example.com/release",
+            "assets": [],
+            "created_at": "2026-05-01T12:00:00Z",
+            "published_at": "2026-05-01T12:00:00Z"
+        }]"#;
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(releases_body)
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let err = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.2.0")
+            .await
+            .expect_err("matching release missing manifest asset is a broken publish");
+
+        match err {
+            UpdateError::NotificationFetchFailed {
+                pages_error,
+                releases_error,
+            } => {
+                assert!(pages_error.contains("Resource not found"));
+                assert!(releases_error.contains("has no `manifest.json` asset"));
+            }
+            other => panic!("expected NotificationFetchFailed, got {other:?}"),
+        }
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
     async fn pages_404_with_fresh_fallback_cache_still_checks_releases_absence() {
         // A Pages 404 is semantic absence, not an outage. Even if a prior
         // outage seeded a fresh fallback marker, the orchestrator must

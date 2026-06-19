@@ -57,7 +57,9 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 │      Pages cache (body + fallback marker, ETag cleared). Typed    │
 │      schema and validation rejections propagate directly.          │
 │   6. If Pages reports NotFound and Releases also finds no         │
-│      app-notification-v* release/asset, returns NotPublished.     │
+│      app-notification-v* release, returns NotPublished.          │
+│      A matching release missing `manifest.json` is a broken       │
+│      publish and remains a fetch failure.                         │
 │   7. Returns NotificationStatus { classification, latest_version, │
 │      published_at, min_supported_version?, display?, parse_error? │
 │      }.                                                           │
@@ -74,7 +76,7 @@ Produced by `classic_update_core::notification::classify(installed, &manifest)`,
 | `UpdateAvailable` | `installed < latest_version` AND not deprecated | Surface display payload if present; optionally open `cta_url`. |
 | `DeprecatedClient` | `installed < min_supported_version` | Warn the user; recommend upgrade to `latest_version`. |
 | `Unknown` | Direct `classify` callers pass an installed version or manifest `latest_version` that fails SemVer parse. Public `check_app_notification()` validates those inputs first and raises typed errors instead of returning `Unknown` for them. | Surface `parse_error`; do NOT silently treat as `UpToDate`. |
-| `NotPublished` | Pages returned `404 Not Found` and the Releases fallback found no matching `app-notification-v*` release or no `manifest.json` asset. Manifest fields and `parse_error` are empty/absent. | Treat as a benign success, not `UpToDate` and not an error; silent/background checks should not interrupt the user. |
+| `NotPublished` | Pages returned `404 Not Found` and the Releases fallback found no matching `app-notification-v*` release. Manifest fields and `parse_error` are empty/absent. A matching notification release missing `manifest.json` is a broken publish and remains an error. | Treat as a benign success, not `UpToDate` and not an error; silent/background checks should not interrupt the user. |
 
 ### Cache layout
 

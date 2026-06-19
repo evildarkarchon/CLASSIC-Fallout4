@@ -925,8 +925,8 @@
     "semantic_hash": "33993ecc7125a7107c67694c3bc1135e"
   },
   "business-logic/classic-update-core/src/error.rs": {
-    "mtime": 1781860900.8109276,
-    "ast_hash": "7b0eefab76cedd468ac8c515dad3feb6",
+    "mtime": 1781867710.658141,
+    "ast_hash": "3991fc5b1ab9d6d2f4486285935cffe4",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/error_tests.rs": {
@@ -965,13 +965,13 @@
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/notification.rs": {
-    "mtime": 1781866388.5530076,
-    "ast_hash": "8fa0958d794a70b757e703c0453fd52a",
+    "mtime": 1781867710.653137,
+    "ast_hash": "dabe9605deacb214e330959200c6a7fc",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/notification_tests.rs": {
-    "mtime": 1781866345.6899085,
-    "ast_hash": "32ce0cebe3c374bd8fc87fd976ffa3b5",
+    "mtime": 1781867649.730329,
+    "ast_hash": "5a833b4a3def3f5232877077b8c2536e",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/yaml_update.rs": {
@@ -4195,8 +4195,8 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1781764978.5688353,
-    "ast_hash": "eecfb12bb46989715a1e9e45209d80b8",
+    "mtime": 1781867159.2337599,
+    "ast_hash": "78e105732767e396a0ba85c43eb4930a",
     "semantic_hash": ""
   },
   "CLASSIC Changelog.md": {
@@ -4425,8 +4425,8 @@
     "semantic_hash": ""
   },
   "docs/api/app-update-notification-delivery.md": {
-    "mtime": 1781861578.7268054,
-    "ast_hash": "3089af10ca3d68183af4ca0b5c91999d",
+    "mtime": 1781867710.659142,
+    "ast_hash": "f11978e0e284c086b3a3fe763b58f9c0",
     "semantic_hash": ""
   },
   "docs/api/binding-compliance-suite.md": {
@@ -4540,8 +4540,8 @@
     "semantic_hash": ""
   },
   "docs/api/classic-update-core.md": {
-    "mtime": 1781861602.333838,
-    "ast_hash": "b44f0744a37d7f2ad2eb2876a472b3cd",
+    "mtime": 1781867710.65964,
+    "ast_hash": "a104ca1fe6782b3b9b712aaa756935b3",
     "semantic_hash": ""
   },
   "docs/api/classic-version-core.md": {
@@ -5140,8 +5140,8 @@
     "semantic_hash": ""
   },
   "openspec/specs/app-update-notification/spec.md": {
-    "mtime": 1781864211.4736826,
-    "ast_hash": "bef2a6ade173610d6e9df7d51c5d297f",
+    "mtime": 1781867710.660642,
+    "ast_hash": "1562a5186e183e11a75874ec2dfed5f0",
     "semantic_hash": ""
   },
   "openspec/specs/async-dds-header-read/spec.md": {
