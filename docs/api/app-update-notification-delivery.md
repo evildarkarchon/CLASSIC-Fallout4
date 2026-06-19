@@ -49,12 +49,16 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 │      (marker present + body valid + within TTL), classify from    │
 │      cache and skip the Releases API — avoids rate-limit thrash   │
 │      during prolonged Pages outages. Otherwise hit Releases.      │
+│      Pages 404 is carried as NotFound so absence can be            │
+│      distinguished from a Pages outage.                           │
 │   5. Releases fallback: list releases filtered by the             │
 │      `app-notification-v*` prefix, newest tag, download           │
 │      `manifest.json`, parse, validate, classify, and seed the     │
 │      Pages cache (body + fallback marker, ETag cleared). Typed    │
 │      schema and validation rejections propagate directly.          │
-│   6. Returns NotificationStatus { classification, latest_version, │
+│   6. If Pages reports NotFound and Releases also finds no         │
+│      app-notification-v* release/asset, returns NotPublished.     │
+│   7. Returns NotificationStatus { classification, latest_version, │
 │      published_at, min_supported_version?, display?, parse_error? │
 │      }.                                                           │
 └───────────────────────────────────────────────────────────────────┘
@@ -62,7 +66,7 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 
 ### Classification outcomes
 
-Produced by `classic_update_core::notification::classify(installed, &manifest)`:
+Produced by `classic_update_core::notification::classify(installed, &manifest)`, except `NotPublished`, which is produced by the Pages/Releases fetch orchestrator when no manifest exists on either channel:
 
 | Classification | When | Caller SHOULD |
 | --- | --- | --- |
@@ -70,6 +74,7 @@ Produced by `classic_update_core::notification::classify(installed, &manifest)`:
 | `UpdateAvailable` | `installed < latest_version` AND not deprecated | Surface display payload if present; optionally open `cta_url`. |
 | `DeprecatedClient` | `installed < min_supported_version` | Warn the user; recommend upgrade to `latest_version`. |
 | `Unknown` | Direct `classify` callers pass an installed version or manifest `latest_version` that fails SemVer parse. Public `check_app_notification()` validates those inputs first and raises typed errors instead of returning `Unknown` for them. | Surface `parse_error`; do NOT silently treat as `UpToDate`. |
+| `NotPublished` | Pages returned `404 Not Found` and the Releases fallback found no matching `app-notification-v*` release or no `manifest.json` asset. Manifest fields and `parse_error` are empty/absent. | Treat as a benign success, not `UpToDate` and not an error; silent/background checks should not interrupt the user. |
 
 ### Cache layout
 
@@ -110,6 +115,8 @@ All three bindings propagate a single unified `UpdateError` family (design decis
 | C++ (CXX) | `NotificationStatusDto { classification = "error", error_message = "<Display>", …empty-string sentinels… }` |
 | Node (NAPI-RS) | Promise rejects with `Error` whose `message` is prefixed with the variant-keyed code: `"FETCH_FAILED: <detail>"` / `"DECODE: <detail>"` / `"INSTALLED_VERSION_PARSE: <detail>"` / `"CACHE_IO: <detail>"` / `"UPDATE_ERROR: <detail>"`. Consumers discriminate with `err.message.startsWith("FETCH_FAILED:")`. The prefix-on-message shape (rather than a custom `err.code`) is a napi-rs 3.x async-macro constraint — `Status` is a fixed C-style enum, so custom variant codes can't round-trip through `execute_tokio_future_with_finalize_callback` as structured `code` values |
 | Python (PyO3) | Raises a `ClassicNotificationError` subclass keyed to the variant, or the `ClassicNotificationError` base for shared notification-channel failures such as `ManifestInvalid` and `ManifestUnsupportedVersion`; subclass of `ClassicUpdateError` so existing catches still work |
+
+Absence is not a failure: Pages `404 Not Found` plus no matching Releases manifest returns `Ok(NotificationStatus { classification: NotPublished, .. })`. Binding success strings differ by existing convention: CXX/GUI/CLI use `"not_published"`; Node/Python expose `"notPublished"`. Both represent the same benign outcome and MUST NOT be surfaced as an exception, rejected promise, stderr line, non-zero exit, or warning dialog.
 
 Full precedent + examples: [`error-contract.md`](error-contract.md).
 

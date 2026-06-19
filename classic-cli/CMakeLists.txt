@@ -178,6 +178,7 @@ if(Catch2_FOUND)
         tests/test_thread_pool.cpp
         tests/test_progress.cpp
         tests/test_cli_args.cpp
+        tests/test_app_update_wiring.cpp
         # Source files under test (bridge-free only)
         src/thread_pool.cpp
         src/progress.cpp

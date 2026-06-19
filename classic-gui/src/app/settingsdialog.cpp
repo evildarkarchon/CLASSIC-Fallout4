@@ -633,6 +633,8 @@ void SettingsDialog::onCheckForUpdates()
             m_lblUpdateStatus->setText(QStringLiteral("Update check inconclusive: ") +
                                        (parseError.empty() ? QStringLiteral("unknown reason")
                                                            : QString::fromUtf8(parseError)));
+        } else if (classification == "not_published") {
+            m_lblUpdateStatus->setText(QStringLiteral("No update information available."));
         } else {
             // "up_to_date" or any unexpected classification.
             m_lblUpdateStatus->setText(QStringLiteral("You are up to date."));

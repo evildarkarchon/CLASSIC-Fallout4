@@ -11,8 +11,9 @@
 /// `docs/api/app-update-notification-delivery.md` for the client contract.
 ///
 /// Returns:
-///   0 = success (classification `up_to_date`, `update_available`, or
-///       `deprecated_client` — the check reached a definite conclusion)
+///   0 = success (classification `up_to_date`, `update_available`,
+///       `deprecated_client`, or `not_published` — the check reached a
+///       definite benign conclusion)
 ///   1 = inconclusive (`unknown` classification with parse error, or the
 ///       notification fetch failed on both Pages and Releases channels)
 ///   2 = fatal (runtime init failed)

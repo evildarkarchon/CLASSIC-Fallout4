@@ -157,6 +157,13 @@ where
         return Ok(manifest);
     }
 
+    if response.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(PagesError::Transport(UpdateError::NotFound(format!(
+            "pages GET returned {} (manifest absent)",
+            response.status()
+        ))));
+    }
+
     if !response.status().is_success() {
         return Err(PagesError::Transport(UpdateError::GithubError(format!(
             "pages GET returned {}",

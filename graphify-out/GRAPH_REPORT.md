@@ -1,16 +1,16 @@
-# Graph Report - CLASSIC-Fallout4  (2026-06-18)
+# Graph Report - CLASSIC-Fallout4  (2026-06-19)
 
 ## Corpus Check
-- 1040 files · ~1,962,604 words
+- 1046 files · ~1,968,295 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 18618 nodes · 30889 edges · 1268 communities (1019 shown, 249 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 1141 edges (avg confidence: 0.78)
+- 18688 nodes · 30969 edges · 1273 communities (1022 shown, 251 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 1148 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7fb03b10`
+- Built from commit: `e8d9e760`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1146,9 +1146,14 @@
 - [[_COMMUNITY_Community 1199|Community 1199]]
 - [[_COMMUNITY_Community 1200|Community 1200]]
 - [[_COMMUNITY_Community 1201|Community 1201]]
+- [[_COMMUNITY_Community 1268|Community 1268]]
+- [[_COMMUNITY_Community 1269|Community 1269]]
+- [[_COMMUNITY_Community 1270|Community 1270]]
+- [[_COMMUNITY_Community 1271|Community 1271]]
+- [[_COMMUNITY_Community 1272|Community 1272]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Codebase Map` - 403 edges
+1. `Codebase Map` - 404 edges
 2. `get_runtime()` - 64 edges
 3. `OrchestratorCore` - 63 edges
 4. `String` - 63 edges
@@ -1156,8 +1161,8 @@
 6. `String` - 51 edges
 7. `String` - 48 edges
 8. `App` - 48 edges
-9. `String` - 47 edges
-10. `ScanSettingsWiringTests` - 44 edges
+9. `ScanSettingsWiringTests` - 47 edges
+10. `String` - 47 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `is_runtime_active()` --calls--> `get_runtime()`  [INFERRED]
@@ -1193,7 +1198,7 @@
 - 1-file cycle: `business-logic/classic-config-core/src/shippable/main_version.rs -> business-logic/classic-config-core/src/shippable/main_version.rs`
 - 1-file cycle: `business-logic/classic-config-core/src/shippable/main_version_tests.rs -> business-logic/classic-config-core/src/shippable/main_version_tests.rs`
 
-## Communities (1268 total, 249 thin omitted)
+## Communities (1273 total, 251 thin omitted)
 
 ### Community 0 - "Settings Loader"
 Cohesion: 0.10
@@ -1253,7 +1258,7 @@ Nodes (23): Arc, AsRef, BufReader, Cache, DashMap, DDSHeader, Default, EncodingD
 
 ### Community 18 - "Update"
 Cohesion: 0.05
-Nodes (26): HashMap, approved_file_sha_map(), check_client_schema_bounds(), enrich_installed(), approved_file_sha_map_accepts_uppercase_hex(), approved_file_sha_map_accepts_valid(), approved_file_sha_map_rejects_duplicate_names(), approved_file_sha_map_rejects_invalid_digest() (+18 more)
+Nodes (23): HashMap, approved_file_sha_map(), check_client_schema_bounds(), enrich_installed(), approved_file_sha_map_accepts_uppercase_hex(), approved_file_sha_map_accepts_valid(), approved_file_sha_map_rejects_duplicate_names(), approved_file_sha_map_rejects_invalid_digest() (+15 more)
 
 ### Community 19 - "Config Yamldata"
 Cohesion: 0.12
@@ -1261,19 +1266,19 @@ Nodes (41): minimal_game_yaml(), minimal_game_yaml_main_root_only(), minimal_gam
 
 ### Community 20 - "Update Manifest Fetch"
 Cohesion: 0.14
-Nodes (20): T, V, GithubClient, Result, String, P, parse_test(), TestManifest (+12 more)
+Nodes (21): T, V, GithubClient, Result, String, P, parse_test(), TestManifest (+13 more)
 
 ### Community 21 - "Scanlog Detector"
 Cohesion: 0.04
-Nodes (13): CoreModEntry, ModSolutionCriteria, ModSolutionEntry, Vec, double_compile_count_for_tests(), important_compile_count_for_tests(), important_fixture_plugins(), make_core_entry() (+5 more)
+Nodes (11): CoreModEntry, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, Vec, make_conflict(), make_core_entry(), make_solution_entry() (+3 more)
 
 ### Community 22 - "File IO Atomic Install"
 Cohesion: 0.14
 Nodes (40): File, FileIOError, Path, PathBuf, Result, String, Path, String (+32 more)
 
 ### Community 23 - "Scanlog Orchestrator"
-Cohesion: 0.07
-Nodes (42): App, BatchScanEvent, BatchScanEventKind, YamlDataCore, OrchestratorCore, ScanProgressPhase, String, TempDir (+34 more)
+Cohesion: 0.05
+Nodes (49): App, BatchScanEvent, BatchScanEventKind, CrashgenEntryRaw, CrashgenRegistry, UnboundedReceiver, YamlDataCore, OrchestratorCore (+41 more)
 
 ### Community 24 - "Config Crashgen Rules"
 Cohesion: 0.07
@@ -1297,7 +1302,7 @@ Nodes (38): Arc, bridge_style_detect_crash_pattern_uncached(), bridge_style_dete
 
 ### Community 29 - "Config Shippable"
 Cohesion: 0.00
-Nodes (403): .agent/skills/classic-project-guide/, .agent/skills/classic-project-guide/references/, .agent/skills/openspec-apply-change/, .agent/skills/openspec-archive-change/, .agent/skills/openspec-bulk-archive-change/, .agent/skills/openspec-continue-change/, .agent/skills/openspec-explore/, .agent/skills/openspec-ff-change/ (+395 more)
+Nodes (404): .agent/skills/classic-project-guide/, .agent/skills/classic-project-guide/references/, .agent/skills/openspec-apply-change/, .agent/skills/openspec-archive-change/, .agent/skills/openspec-bulk-archive-change/, .agent/skills/openspec-continue-change/, .agent/skills/openspec-explore/, .agent/skills/openspec-ff-change/ (+396 more)
 
 ### Community 30 - "File IO Log Collection"
 Cohesion: 0.11
@@ -1305,7 +1310,7 @@ Nodes (22): Option, Path, PathBuf, Result, Self, String, Vec, LogCollector (+14 
 
 ### Community 31 - "Update"
 Cohesion: 0.10
-Nodes (50): ClientSchemaSet, Option, SchemaCompat, SchemaVersion, apply_yaml_update_with_decision(), classify_manifest(), validate_manifest_rejects_case_only_duplicate_file_names(), validate_manifest() (+42 more)
+Nodes (39): ClientSchemaSet, Option, SchemaCompat, SchemaVersion, classify_manifest(), validate_manifest_rejects_case_only_duplicate_file_names(), validate_manifest(), classify_accepts_when_client_point_within_bounds() (+31 more)
 
 ### Community 32 - "Settings Ops"
 Cohesion: 0.18
@@ -1316,16 +1321,16 @@ Cohesion: 0.05
 Nodes (28): ClassicConfig, Mutex, Yaml, load_or_default_from_dirs(), current_dir_lock(), parse_yaml_document(), test_application_dir_falls_back_to_current_exe_without_override(), test_choose_settings_write_path_ignores_user_dir_when_app_dir_target_is_not_writable() (+20 more)
 
 ### Community 34 - "Scanlog Orchestrator"
-Cohesion: 0.13
-Nodes (10): ConfigLayout, CrashgenConfig, CrashgenVersion, CrashgenVersionStatus, Option, RegistryGameVersion, VersionInfo, AnalysisResult (+2 more)
+Cohesion: 0.18
+Nodes (25): F, Option, PathBuf, PathError, Result, String, Fn, Option (+17 more)
 
 ### Community 35 - "Settings Ops"
 Cohesion: 0.10
 Nodes (32): clear_global_yaml_cache(), reset_yaml_cache_stats(), test_cache_disabled_always_reads(), test_cache_hit_on_second_load(), test_cache_invalidation_on_file_modify(), test_cache_size_is_bounded_without_assuming_evicted_key(), test_cache_stats_after_load(), test_cache_stats_after_operations() (+24 more)
 
 ### Community 36 - "Update"
-Cohesion: 0.16
-Nodes (25): GithubClient, Path, String, fetch_yaml_manifest(), check_disabled_short_circuits_without_http(), check_yaml_update_uses_explicit_bundled_dir_for_clean_install(), check_yaml_update_with_bundled_dir_still_reports_update_when_shas_differ(), download_rejects_http_scheme() (+17 more)
+Cohesion: 0.14
+Nodes (36): GithubClient, Path, String, apply_yaml_update_with_decision(), fetch_yaml_manifest(), apply_with_decision_keeps_empty_success_when_approved_file_is_current(), apply_with_decision_refuses_when_check_disabled(), apply_with_decision_rejects_duplicate_approved_names() (+28 more)
 
 ### Community 37 - "Shared"
 Cohesion: 0.11
@@ -1344,8 +1349,8 @@ Cohesion: 0.21
 Nodes (15): ConfigLayout, CrashgenEntry, EvaluationOutcome, HashMap, HashSet, Option, ReportFragment, Result (+7 more)
 
 ### Community 41 - "Update Notification"
-Cohesion: 0.09
-Nodes (31): GithubClient, check_app_notification_with(), is_https_cta_url(), is_release_tag(), is_rfc3339(), clear_fallback_marker_is_noop_when_marker_absent(), fallback_leg_decode_failure_surfaces_decode_error(), fallback_leg_manifest_invalid_surfaces_schema_error() (+23 more)
+Cohesion: 0.11
+Nodes (22): parse_notification_manifest(), manifest_deserialization_tolerates_unknown_fields(), manifest_deserialize_missing_required_field_errors(), manifest_deserializes_with_full_display_block(), manifest_deserializes_without_display_block(), minimal_manifest_json(), validate_manifest_accepts_absent_cta_url(), validate_manifest_accepts_https_cta_url() (+14 more)
 
 ### Community 42 - "Database Pool Sqlx"
 Cohesion: 0.14
@@ -1376,20 +1381,20 @@ Cohesion: 0.14
 Nodes (13): AsRef, Option, Path, PathBuf, Result, Self, String, Vec (+5 more)
 
 ### Community 50 - "Update"
-Cohesion: 0.17
-Nodes (27): GithubClient, Path, Result, apply_yaml_update(), check_yaml_update(), rollback_yaml_update(), Vec, ApprovedUpdate (+19 more)
+Cohesion: 0.14
+Nodes (33): GithubClient, Result, apply_yaml_update(), check_yaml_update(), rollback_yaml_update(), String, Vec, ApprovedUpdate (+25 more)
 
 ### Community 51 - "Version Registry"
 Cohesion: 0.10
 Nodes (18): VersionRegistry, create_test_registry(), test_crashgen_config_download_urls(), test_crashgen_config_metadata_from_embedded_yaml(), test_embedded_yaml_fallback_tracks_main_yaml_versions(), test_embedded_yaml_metadata_fields_are_populated(), test_get_address_library_filename(), test_get_all() (+10 more)
 
 ### Community 52 - "Scanlog Version"
-Cohesion: 0.12
-Nodes (20): Display, Eq, Formatter, Option, Ord, Ordering, PartialEq, PartialOrd (+12 more)
+Cohesion: 0.11
+Nodes (21): Display, Eq, Formatter, Option, Ord, Ordering, PartialEq, PartialOrd (+13 more)
 
 ### Community 54 - "Scanlog Orchestrator"
-Cohesion: 0.14
-Nodes (16): F, HashMap, HashSet, I, IndexMap, PathBuf, ReportFragment, ReportGenerator (+8 more)
+Cohesion: 0.12
+Nodes (18): F, HashMap, HashSet, I, IndexMap, PathBuf, ReportFragment, ReportGenerator (+10 more)
 
 ### Community 55 - "Version Registry"
 Cohesion: 0.12
@@ -1404,8 +1409,8 @@ Cohesion: 0.19
 Nodes (19): Display, F, FileIOError, Formatter, Path, PathBuf, Result, Self (+11 more)
 
 ### Community 58 - "Path Cache"
-Cohesion: 0.09
-Nodes (66): Clone, F, Fn, Option, Path, PathBuf, String, Vec (+58 more)
+Cohesion: 0.16
+Nodes (41): Clone, F, Fn, Option, Path, PathBuf, String, Vec (+33 more)
 
 ### Community 59 - "Perf Metrics"
 Cohesion: 0.10
@@ -1420,8 +1425,8 @@ Cohesion: 0.13
 Nodes (19): Arc, Vec, create_sample_log(), create_sample_log_patches_only(), make_log_no_header(), make_log_with_known_header(), make_log_with_unknown_header(), test_addictol_patches_header_in_settings_segment() (+11 more)
 
 ### Community 63 - "Update Notification"
-Cohesion: 0.19
-Nodes (27): GithubClient, Option, Path, String, SystemTime, Vec, Version, AppNotificationDisplay (+19 more)
+Cohesion: 0.15
+Nodes (31): GithubClient, Option, Path, String, SystemTime, Vec, Version, AppNotificationDisplay (+23 more)
 
 ### Community 64 - "Shared Py"
 Cohesion: 0.15
@@ -1484,8 +1489,8 @@ Cohesion: 0.17
 Nodes (12): Default, Display, Formatter, HashMap, Option, Result, Self, String (+4 more)
 
 ### Community 84 - "Scanlog Detector"
-Cohesion: 0.20
-Nodes (24): AhoCorasick, Arc, AtomicU64, Cache, IndexMap, ModConflictEntry, Regex, Result (+16 more)
+Cohesion: 0.18
+Nodes (26): AhoCorasick, Arc, AtomicU64, Cache, IndexMap, Regex, Result, String (+18 more)
 
 ### Community 85 - "Scanlog Papyrus"
 Cohesion: 0.17
@@ -1536,8 +1541,8 @@ Cohesion: 0.21
 Nodes (7): Into, MessageType, Option, Self, String, MessageTarget, Message
 
 ### Community 99 - "Update"
-Cohesion: 0.25
-Nodes (14): Into, Item, Iterator, Option, SchemaCompat, SchemaVersion, String, ClientSchemaEntry (+6 more)
+Cohesion: 0.21
+Nodes (15): Into, Item, Iterator, Option, Path, SchemaCompat, SchemaVersion, ClientSchemaEntry (+7 more)
 
 ### Community 100 - "Message Formatter"
 Cohesion: 0.14
@@ -1564,8 +1569,8 @@ Cohesion: 0.14
 Nodes (11): VersionInfo, create_test_version_info_with_crashgens(), test_version_info_get_compatible_crashgens_empty(), test_version_info_get_compatible_crashgens_with_future_version(), test_version_info_get_compatible_crashgens_with_ng_version(), test_version_info_get_compatible_crashgens_with_og_version(), test_version_info_get_compatible_crashgens_with_own_version(), test_version_info_get_crashgen_for_version_found() (+3 more)
 
 ### Community 106 - "Scanlog Orchestrator"
-Cohesion: 0.09
-Nodes (21): AnalysisResult, Arc, AtomicBool, DatabasePool, FcxModeHandler, FileIOCore, FormIDAnalyzerCore, LogParser (+13 more)
+Cohesion: 0.06
+Nodes (34): AnalysisResult, Arc, AtomicBool, ConfigLayout, CoreModEntry, CrashgenConfig, CrashgenVersion, CrashgenVersionStatus (+26 more)
 
 ### Community 107 - "Shared Py Game ID"
 Cohesion: 0.13
@@ -1632,8 +1637,8 @@ Cohesion: 0.22
 Nodes (17): Arc, DatabasePool, FormIDAnalyzerCore, NamedTempFile, Option, PathBuf, String, Vec (+9 more)
 
 ### Community 124 - "Scanlog Orchestrator"
-Cohesion: 0.18
-Nodes (10): CoreModEntry, CrashgenEntryRaw, CrashgenRegistry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule, SuspectStackRule, AnalysisConfig (+2 more)
+Cohesion: 0.10
+Nodes (19): ADDED Requirements, MODIFIED Requirements, Requirement: Absent notification surfaces quietly across consumers, Scenario: Absent manifest on both channels reports NotPublished, not an error, Scenario: C++ bridge emits a dedicated benign classification, Scenario: CLI exits successfully without an error message, Scenario: Genuine dual-channel failure surfaces an error, Scenario: GUI does not pop an error dialog when nothing is published (+11 more)
 
 ### Community 125 - "Shared Performance"
 Cohesion: 0.22
@@ -1743,6 +1748,10 @@ Nodes (12): AppNotificationManifest, Option, classify(), classify_deprecated_whe
 Cohesion: 0.09
 Nodes (35): JsDdsBatchResult, BackupType, DDSAnalyzer, FileIOCore, GameTarget, HashMap, LogCollector, Option (+27 more)
 
+### Community 157 - "Database Pool Sqlx"
+Cohesion: 0.24
+Nodes (4): Arc, RwLock, Self, ActiveGameTable
+
 ### Community 158 - "Path Docs"
 Cohesion: 0.27
 Nodes (8): Path, PathBuf, create_test_docs_structure(), create_test_ini(), test_find_docs_path_with_valid_cache(), test_validate_docs_path_success(), test_validate_ini_files_missing(), test_validate_ini_files_success()
@@ -1752,8 +1761,8 @@ Cohesion: 0.29
 Nodes (7): Drop, Instant, Into, Self, String, start_timer(), Timer
 
 ### Community 160 - "Update"
-Cohesion: 0.21
-Nodes (8): PathBuf, Self, resolve_bundled_yaml_dir(), resolve_bundled_yaml_dir_never_returns_a_relative_path(), unique_tmp_name_never_repeats_within_a_process(), unique_tmp_name_stays_a_same_directory_sibling(), unique_tmp_name(), UpdateCheckConfig
+Cohesion: 0.31
+Nodes (5): PathBuf, Self, resolve_bundled_yaml_dir(), resolve_bundled_yaml_dir_never_returns_a_relative_path(), UpdateCheckConfig
 
 ### Community 161 - "Database Benchmarks"
 Cohesion: 0.40
@@ -1777,7 +1786,7 @@ Nodes (5): Display, Formatter, Result, Self, YamlFile
 
 ### Community 166 - "Update Notification"
 Cohesion: 0.05
-Nodes (57): AppNotificationDisplay, Classification, ClientSchemaSet, FileInstallOutcome, NotificationStatus, NotificationStatusDto, check_app_notification(), String (+49 more)
+Nodes (58): AppNotificationDisplay, Classification, ClientSchemaSet, FileInstallOutcome, NotificationStatus, NotificationStatusDto, check_app_notification(), String (+50 more)
 
 ### Community 167 - "Update Notification"
 Cohesion: 0.31
@@ -1799,13 +1808,17 @@ Nodes (8): VersionRegistry, create_test_registry(), test_exact_match(), test_exa
 Cohesion: 0.09
 Nodes (33): IniCheckResult, Display, Error, From, Option, Result, Self, is_restricted_path() (+25 more)
 
+### Community 173 - "Shared Runtime Config"
+Cohesion: 0.21
+Nodes (15): Self, GithubClient, check_app_notification_with(), fallback_leg_decode_failure_surfaces_decode_error(), fallback_leg_manifest_invalid_surfaces_schema_error(), fallback_leg_unsupported_version_surfaces_structural_error(), pages_404_and_empty_releases_returns_not_published(), pages_404_with_valid_release_classifies_from_fallback() (+7 more)
+
 ### Community 175 - "Message Enums"
 Cohesion: 0.22
 Nodes (3): Level, MessageTarget, MessageType
 
 ### Community 177 - "Scanlog Orchestrator"
-Cohesion: 0.09
-Nodes (54): Classification, ClientSchemaSet, Display, E, Error, FileInstallOutcome, GithubAsset, GithubRelease (+46 more)
+Cohesion: 0.10
+Nodes (50): ClientSchemaSet, Display, E, Error, FileInstallOutcome, GithubAsset, GithubRelease, Option (+42 more)
 
 ### Community 186 - "Shared Benchmarks"
 Cohesion: 0.52
@@ -1888,8 +1901,8 @@ Cohesion: 0.07
 Nodes (23): IntegrityCheckResult, IntegrityError, Bound, CheckType, From, GameIntegrityChecker, IntegrityConfig, Option (+15 more)
 
 ### Community 236 - "Community 236"
-Cohesion: 0.08
-Nodes (14): HashMap, JsCrashgenRegistryEntry, ModSolutionEntry, YamlData, String, SuspectErrorRule, SuspectStackRule, Vec (+6 more)
+Cohesion: 0.13
+Nodes (6): HashMap, JsCrashgenRegistryEntry, YamlData, String, Vec, YamlDataCore
 
 ### Community 237 - "Community 237"
 Cohesion: 0.04
@@ -1912,8 +1925,8 @@ Cohesion: 0.04
 Nodes (47): Async And Runtime Notes, `CheckRule`, `classic-config-core` API Guide, `ClassicConfig`, `ClassicConfig` flow, `ClassicConfig` / `YamlSource`, `config`, `ConfigError` (+39 more)
 
 ### Community 242 - "Community 242"
-Cohesion: 0.06
-Nodes (16): CoreClassicConfig, CorePathConfig, Default, From, ModConflictEntry, Option, Result, Self (+8 more)
+Cohesion: 0.09
+Nodes (3): CoreClassicConfig, Default, ClassicConfigJs
 
 ### Community 243 - "Community 243"
 Cohesion: 0.06
@@ -1964,8 +1977,8 @@ Cohesion: 0.05
 Nodes (42): 7.07 | "Everything Everywhere All At Once" Update, 7.10, 7.20, 7.25.10 Unofficial CHANGES, 7.25.11 Unofficial CHANGES, 7.25.12 Unofficial CHANGES, 7.25.1 Unofficial CHANGES, 7.25.2 Unofficial CHANGES (+34 more)
 
 ### Community 255 - "Community 255"
-Cohesion: 0.05
-Nodes (43): Q_OBJECT, ScanSettingsWiringTests, controllers_emit_global_scan_started_signal_on_scan_start, mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops, mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved, mainwindow_blocks_game_files_scan_when_paths_unresolved, mainwindow_deduplicates_report_dirs_before_results_setup, mainwindow_does_not_use_deprecated_vr_mode_setting (+35 more)
+Cohesion: 0.04
+Nodes (46): Q_OBJECT, ScanSettingsWiringTests, controllers_emit_global_scan_started_signal_on_scan_start, mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops, mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved, mainwindow_blocks_game_files_scan_when_paths_unresolved, mainwindow_deduplicates_report_dirs_before_results_setup, mainwindow_does_not_use_deprecated_vr_mode_setting (+38 more)
 
 ### Community 256 - "Community 256"
 Cohesion: 0.08
@@ -2168,8 +2181,8 @@ Cohesion: 0.09
 Nodes (15): Bound, From, Option, PapyrusAnalyzer, PapyrusStats, PathBuf, PyModule, PyResult (+7 more)
 
 ### Community 307 - "Community 307"
-Cohesion: 0.09
-Nodes (24): QMainWindow(), AboutDialog(), QWidget, ErrorDialog(), class, class, PapyrusDialog(), class (+16 more)
+Cohesion: 0.06
+Nodes (34): QMainWindow(), AboutDialog(), QWidget, ErrorDialog(), class, class, PapyrusDialog(), class (+26 more)
 
 ### Community 308 - "Community 308"
 Cohesion: 0.18
@@ -2193,7 +2206,7 @@ Nodes (32): `base_url()`, `build_url_with_query(base: &str, params: &[(&str, &st
 
 ### Community 313 - "Community 313"
 Cohesion: 0.06
-Nodes (32): Purpose, Requirement: Binding parity gates cover the new surface, Requirement: Binding surface exposes notification check on all three bindings, Requirement: Classification of installed build against manifest, Requirement: Consumer migration from GithubClient-based update check, Requirement: Notification manifest schema, Requirement: Pages-first fetch with ETag caching, Requirement: Releases-API fallback (+24 more)
+Nodes (32): Purpose, Requirement: Binding parity gates cover the new surface, Requirement: Binding surface exposes notification check on all three bindings, Requirement: Consumer migration from GithubClient-based update check, Requirement: Notification manifest schema, Requirement: Pages-first fetch with ETag caching, Requirements, Scenario: Baseline-out-of-date fails CXX gate (+24 more)
 
 ### Community 314 - "Community 314"
 Cohesion: 0.06
@@ -2456,8 +2469,8 @@ Cohesion: 0.17
 Nodes (23): Box, PapyrusAnalyzer, PapyrusStats, Result, String, PapyrusStatsDto, CxxPapyrusAnalyzer, papyrus_analyze_full() (+15 more)
 
 ### Community 379 - "Community 379"
-Cohesion: 0.21
-Nodes (19): F, R, Bound, HashSet, IndexMap, Option, PluginAnalyzer, Py (+11 more)
+Cohesion: 0.24
+Nodes (17): Bound, HashSet, IndexMap, Option, PluginAnalyzer, Py, PyDict, PyResult (+9 more)
 
 ### Community 380 - "Community 380"
 Cohesion: 0.08
@@ -2612,8 +2625,8 @@ Cohesion: 0.09
 Nodes (21): Amendment Process, Architecture Standards, CLASSIC Constitution, Compliance Review, Constitution Authority, Core Principles, Creating New Crates, Development Workflow (+13 more)
 
 ### Community 418 - "Community 418"
-Cohesion: 0.17
-Nodes (17): ConfigError, Error, MainYamlVersionError, SettingsError, config_error_status(), config_error_to_napi_err(), create_default_config(), ensure_app_dir_initialized() (+9 more)
+Cohesion: 0.16
+Nodes (13): ConfigError, Error, MainYamlVersionError, Result, Self, SettingsError, config_error_status(), config_error_to_napi_err() (+5 more)
 
 ### Community 419 - "Community 419"
 Cohesion: 0.14
@@ -2636,8 +2649,8 @@ Cohesion: 0.18
 Nodes (15): Arc, Option, Path, Result, cache_keys(), cache_stats(), CacheStats, get_cached() (+7 more)
 
 ### Community 424 - "Community 424"
-Cohesion: 0.11
-Nodes (17): QPaintEvent, QWidget, QPaintEvent, QString, QWidget, ToggleSwitch(), class, ToggleSwitch() (+9 more)
+Cohesion: 0.16
+Nodes (13): QPaintEvent, QWidget, QPaintEvent, QString, QWidget, ToggleSwitch(), QProgressBar, QRect (+5 more)
 
 ### Community 425 - "Community 425"
 Cohesion: 0.10
@@ -2704,8 +2717,8 @@ Cohesion: 0.20
 Nodes (17): Option, PathBuf, String, Vec, find_databases_dir(), find_sample_logs_dir(), FixtureSize, generate_synthetic_lines() (+9 more)
 
 ### Community 441 - "Community 441"
-Cohesion: 0.16
-Nodes (16): class, ResultsController(), QString, QStringList, QWidget, ReportListWidget(), class, ReportListWidget() (+8 more)
+Cohesion: 0.20
+Nodes (14): class, ResultsController(), QString, QStringList, QWidget, ReportListWidget(), QSet, currentReportPath() (+6 more)
 
 ### Community 442 - "Community 442"
 Cohesion: 0.14
@@ -2748,8 +2761,8 @@ Cohesion: 0.21
 Nodes (15): Bound, CrashgenChecker, Option, PathBuf, PyAny, PyModule, PyResult, Self (+7 more)
 
 ### Community 452 - "Community 452"
-Cohesion: 0.16
-Nodes (17): Bound, Classification, F, NotificationStatus, Option, PyModule, PyResult, Python (+9 more)
+Cohesion: 0.11
+Nodes (22): Bound, Classification, F, NotificationStatus, Option, PyErr, PyModule, PyResult (+14 more)
 
 ### Community 453 - "Community 453"
 Cohesion: 0.12
@@ -2792,8 +2805,8 @@ Cohesion: 0.11
 Nodes (18): 1. The shippable-YAML contract, 2. Runtime flow (client side), 2a. Freshness model (content identity, not `schema_version`), 2b. Reviewed-decision contract, 3. Manifest format, 4. Publish flow (maintainer side), 5. Rollback and recovery, 6. Where the code lives (+10 more)
 
 ### Community 463 - "Community 463"
-Cohesion: 0.20
-Nodes (15): acknowledgeTargetedDrop(), dragEnterEvent(), dragMoveEvent(), dropEvent(), eventFilter(), handleTargetedDragEnter(), handleTargetedDragMove(), handleTargetedDrop() (+7 more)
+Cohesion: 0.14
+Nodes (22): connectSignals(), dragEnterEvent(), dragMoveEvent(), eventFilter(), handleTargetedDragEnter(), handleTargetedDragMove(), initializeControllers(), installTargetedDropForwarding() (+14 more)
 
 ### Community 464 - "Community 464"
 Cohesion: 0.16
@@ -2880,8 +2893,8 @@ Cohesion: 0.16
 Nodes (14): JsCrashgenSettingsRules, CrashgenChecker, Option, check_crashgen_config(), check_crashgen_config_with_rules(), check_crashgen_full(), check_crashgen_full_with_rules(), JsCrashgenChecker (+6 more)
 
 ### Community 485 - "Community 485"
-Cohesion: 0.23
-Nodes (9): LogCollector, Option, PyResult, Python, Self, String, Vec, without_gil_block_on() (+1 more)
+Cohesion: 0.18
+Nodes (11): F, R, LogCollector, Option, PyResult, Python, Self, String (+3 more)
 
 ### Community 486 - "Community 486"
 Cohesion: 0.12
@@ -3328,8 +3341,8 @@ Cohesion: 0.20
 Nodes (10): Bound, MainYamlVersionError, Option, PyErr, PyModule, PyResult, String, load_main_yaml_version() (+2 more)
 
 ### Community 600 - "Community 600"
-Cohesion: 0.18
-Nodes (11): Path, hash_file returns the lowercase hex SHA256 of the file contents., file_exists / get_file_size / get_file_info are synchronous helpers., py_walk_directory is synchronous; returns a list of file paths.      R1 NOTE:, PySyncLineStreamer is a real Python iterator obtained via FileIOCore.      Exe, PyLineStreamer is an async iterator — exercises __aiter__ / __anext__., test_file_hasher_hash_file_sha256_roundtrip(), test_file_io_core_file_exists_and_size() (+3 more)
+Cohesion: 0.17
+Nodes (12): MonkeyPatch, Path, hash_file returns the lowercase hex SHA256 of the file contents., file_exists / get_file_size / get_file_info are synchronous helpers., PySyncLineStreamer is a real Python iterator obtained via FileIOCore.      Exe, PyLineStreamer is an async iterator — exercises __aiter__ / __anext__., generate_ignore_file_async and generate_local_yaml_async are callable.      Bo, test_file_hasher_hash_file_sha256_roundtrip() (+4 more)
 
 ### Community 601 - "Community 601"
 Cohesion: 0.36
@@ -3364,12 +3377,12 @@ Cohesion: 0.20
 Nodes (9): Binding Contract Refresh Note, C++ Bridge Contract Refresh, Current Documented Gates, Purpose And Scope, Source-Backed Caveats And Non-Goals, Validation And Artifact Checks That Matter, When Both Should Refresh In The Same Change, When To Refresh Node `index.d.ts` (+1 more)
 
 ### Community 609 - "Community 609"
-Cohesion: 0.20
-Nodes (10): initializeControllers(), installTargetedDropForwarding(), loadStylesheet(), MainWindow(), setupArticlesTab(), setupFileBackupTab(), setupMainOptionsTab(), setupResultsTab() (+2 more)
+Cohesion: 0.22
+Nodes (12): Option, load_main_yaml_version(), CoreYamlSource, create_default_config(), ensure_app_dir_initialized(), get_application_dir(), get_yaml_source_display_name(), get_yaml_source_display_name_with_game() (+4 more)
 
 ### Community 610 - "Community 610"
-Cohesion: 0.27
-Nodes (10): loadValidatedGameAndDocsPaths(), onBrowseStaging(), onExit(), onScanGameFiles(), onTabChanged(), onTogglePapyrusMonitor(), restoreTabGeometry(), saveSettings() (+2 more)
+Cohesion: 0.22
+Nodes (13): loadValidatedGameAndDocsPaths(), onBrowseCustom(), onBrowseStaging(), onCustomFolderEdited(), onExit(), onScanGameFiles(), onTabChanged(), onTogglePapyrusMonitor() (+5 more)
 
 ### Community 611 - "Community 611"
 Cohesion: 0.20
@@ -3448,8 +3461,8 @@ Cohesion: 0.22
 Nodes (5): Arc, AtomicBool, Default, Self, PyCancellationToken
 
 ### Community 632 - "Community 632"
-Cohesion: 0.22
-Nodes (4): HashMap, Self, UnknownVersionHandling, PyUnknownVersionHandling
+Cohesion: 0.25
+Nodes (3): HashMap, UnknownVersionHandling, PyUnknownVersionHandling
 
 ### Community 633 - "Community 633"
 Cohesion: 0.40
@@ -3516,8 +3529,8 @@ Cohesion: 0.22
 Nodes (8): Binding Parity Overview, C++ (CXX), FFI Adaptation By Binding, Gate Coverage, Node (NAPI-RS), Per-Crate Binding Table, Python (PyO3), Source-Backed Caveats
 
 ### Community 651 - "Community 651"
-Cohesion: 0.31
-Nodes (9): connectSignals(), initResultsReportDir(), onBrowseCustom(), onCustomFolderEdited(), onGameFilesScanFinished(), onScanReportDirectoriesResolved(), readCrashLogsDir(), validateCustomScanFolder() (+1 more)
+Cohesion: 0.21
+Nodes (6): CorePathConfig, From, SuspectErrorRule, CorePathConfig, JsPathConfig, JsSuspectErrorRule
 
 ### Community 652 - "Community 652"
 Cohesion: 0.31
@@ -3673,7 +3686,7 @@ Nodes (8): 1. Argument Parsing (`args.rs`), 2. Configuration (`config.rs`), 3. S
 
 ### Community 692 - "Community 692"
 Cohesion: 0.25
-Nodes (7): Architecture Analysis, classic-scangame-py API Compliance Audit - Phase 2.1, Current Architecture: Ideal Separation, Executive Summary, Overall Risk: 🟢 **LOW - No Production Impact**, Python Fallback Quality, Risk Assessment
+Nodes (7): classic-scangame-py API Compliance Audit - Phase 2.1, Conclusion, Executive Summary, Final Risk Assessment, Overall Risk: 🟢 **LOW - No Production Impact**, Risk Assessment, Summary of Findings
 
 ### Community 693 - "Community 693"
 Cohesion: 0.25
@@ -3684,8 +3697,8 @@ Cohesion: 0.25
 Nodes (7): Acceptance Criteria, Contract Source Of Truth, Node Bindings Parity Contract, Owner Modules, Scope, Squad Ownership Model, Tier Definition
 
 ### Community 695 - "Community 695"
-Cohesion: 0.25
-Nodes (8): Q_OBJECT, MarkdownViewerTests, clear_removes_content, copy_all_button_copies_text_emits_signal_and_resets_label, private, setMarkdownContent_renders_markdown_as_html, toolbar_buttons_have_sufficient_width_for_theme_padding, zoom_controls_update_label_and_font_with_bounds
+Cohesion: 0.15
+Nodes (12): Context, D1 — Add `Classification::NotPublished` and return it as `Ok`, rather than swallowing an error in each frontend, D2 — Map a Pages `404` to `UpdateError::NotFound` inside `try_pages`, D3 — Detect absence in the orchestrator by matching `NotFound` on both legs, D4 — `NotificationStatus::not_published()` carries empty fields, D5 — Surface `NotPublished` quietly in every consumer, D6 — Update API contract docs and parity baselines, Decisions (+4 more)
 
 ### Community 697 - "Community 697"
 Cohesion: 0.25
@@ -3728,8 +3741,8 @@ Cohesion: 0.25
 Nodes (7): Bound, Display, PyErr, PyModule, PyResult, to_pyerr(), classic_scangame()
 
 ### Community 707 - "Community 707"
-Cohesion: 0.29
-Nodes (3): AddressLibraryConfig, From, PyAddressLibraryConfig
+Cohesion: 0.25
+Nodes (4): AddressLibraryConfig, From, Self, PyAddressLibraryConfig
 
 ### Community 708 - "Community 708"
 Cohesion: 0.25
@@ -3860,8 +3873,8 @@ Cohesion: 0.29
 Nodes (7): Return validation errors for an app-notification workflow tag., validate_workflow_tag(), test_workflow_tag_requires_notification_prefix(), test_workflow_tag_with_leading_zero_semver_is_rejected(), test_workflow_tag_with_prerelease_and_build_is_accepted(), test_workflow_tag_with_strict_semver_is_accepted(), test_workflow_tag_with_unparseable_suffix_is_rejected()
 
 ### Community 742 - "Community 742"
-Cohesion: 0.33
-Nodes (5): PyErr, UpdateError, manifest_invalid_maps_directly_to_notification_base_with_reason(), manifest_unsupported_version_maps_to_notification_base(), update_error_to_py()
+Cohesion: 0.20
+Nodes (10): acknowledgeTargetedDrop(), dropEvent(), handleTargetedDrop(), onClearTargetedInputs(), updateTargetedInputUi(), class, ToggleSwitch(), QDropEvent (+2 more)
 
 ### Community 743 - "Community 743"
 Cohesion: 0.29
@@ -3904,8 +3917,8 @@ Cohesion: 0.53
 Nodes (4): setupUi(), ErrorDialog(), QString, QWidget
 
 ### Community 753 - "Community 753"
-Cohesion: 0.33
-Nodes (6): checkFirstRunPaths(), checkForUpdates(), localYamlFilePath(), onCheckUpdates(), runStartupWorkflows(), saveLocalYamlPaths()
+Cohesion: 0.25
+Nodes (9): checkFirstRunPaths(), checkForUpdates(), initResultsReportDir(), localYamlFilePath(), onCheckUpdates(), onScanReportDirectoriesResolved(), runStartupWorkflows(), saveLocalYamlPaths() (+1 more)
 
 ### Community 754 - "Community 754"
 Cohesion: 0.33
@@ -4048,8 +4061,8 @@ Cohesion: 0.33
 Nodes (5): Current location, Current rule, Historical note, Rust Parser Module Overview, Validation
 
 ### Community 791 - "Community 791"
-Cohesion: 0.33
-Nodes (6): parse_notification_manifest(), manifest_deserialization_tolerates_unknown_fields(), manifest_deserialize_missing_required_field_errors(), manifest_deserializes_with_full_display_block(), manifest_deserializes_without_display_block(), minimal_manifest_json()
+Cohesion: 0.25
+Nodes (7): 1. Core: distinguish absent manifest (Rust), 2. Core: tests (sibling `*_tests.rs`), 3. C++ bridge (CXX), 4. Frontends, 5. Bindings (Python + Node), 6. Docs + parity gates, 7. Build + verify (repo-approved commands)
 
 ### Community 792 - "Community 792"
 Cohesion: 0.40
@@ -4364,8 +4377,8 @@ Cohesion: 0.50
 Nodes (3): Rust<->Python Parity Diff Baseline, Gap Counts By Owner/Tier, Tier-1 Contract Evaluation
 
 ### Community 872 - "Community 872"
-Cohesion: 0.50
-Nodes (3): Arc, RwLock, ActiveGameTable
+Cohesion: 0.29
+Nodes (6): Capabilities, Impact, Modified Capabilities, New Capabilities, What Changes, Why
 
 ### Community 873 - "Community 873"
 Cohesion: 0.50
@@ -4572,8 +4585,8 @@ Cohesion: 0.67
 Nodes (3): buildYamlSchemaEntries(), Vec, YamlClientSchemaEntryDto
 
 ### Community 930 - "Community 930"
-Cohesion: 0.67
-Nodes (3): Conclusion, Final Risk Assessment, Summary of Findings
+Cohesion: 0.33
+Nodes (5): Classification, NotificationStatus, classification_tag(), core_notification_status_to_js(), not_published_status_maps_to_js_success_classification()
 
 ### Community 931 - "Community 931"
 Cohesion: 0.67
@@ -4699,10 +4712,6 @@ Nodes (3): 9.1 Performance Metrics to Track, 9.2 Continuous Monitoring, 9. Monit
 Cohesion: 0.67
 Nodes (3): A.1 Recommended Tools, A.2 Example Profiling Commands, Appendix A: Profiling Tools
 
-### Community 997 - "Community 997"
-Cohesion: 0.67
-Nodes (3): MonkeyPatch, generate_ignore_file_async and generate_local_yaml_async are callable.      Bo, test_generate_ignore_file_async_and_local_yaml_async()
-
 ### Community 998 - "Community 998"
 Cohesion: 0.67
 Nodes (3): Path, LogParser.parse_complete([]) returns a ScanOutput factory product., test_log_parser_parse_complete_returns_scan_output()
@@ -4723,24 +4732,32 @@ Nodes (3): Feature Comparison, GUI vs CLI vs TUI, Use Case Recommendations
 Cohesion: 0.67
 Nodes (3): Performance Benefits, Real-World Benchmarks, Scalability
 
+### Community 1268 - "Community 1268"
+Cohesion: 0.50
+Nodes (3): SuspectStackRule, JsSuspectStackCountRule, JsSuspectStackRule
+
+### Community 1270 - "Community 1270"
+Cohesion: 0.67
+Nodes (3): Architecture Analysis, Current Architecture: Ideal Separation, Python Fallback Quality
+
 ## Knowledge Gaps
-- **5622 isolated node(s):** `Vec`, `MmapMut`, `LogParser`, `CoreModExclude`, `AtomicU64` (+5617 more)
+- **5664 isolated node(s):** `Vec`, `MmapMut`, `LogParser`, `CoreModExclude`, `AtomicU64` (+5659 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **249 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **251 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `get_runtime()` connect `Scanlog Orchestrator` to `Database Benchmarks`, `Community 485`, `Update Notification`, `Community 236`, `Community 269`, `Community 302`, `Community 271`, `Shared Runtime Config`, `Community 273`, `Community 242`, `Community 499`, `Shared Py`, `Shared Builder Runtime`, `Community 664`, `Config Module`, `Community 247`, `Scanlog Benchmarks`, `Community 478`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+- **Why does `get_runtime()` connect `Scanlog Orchestrator` to `Database Benchmarks`, `Community 418`, `Community 485`, `Update Notification`, `Community 651`, `Community 269`, `Community 302`, `Community 271`, `Community 273`, `Community 499`, `Shared Py`, `Shared Builder Runtime`, `Community 664`, `Config Module`, `Community 247`, `Scanlog Benchmarks`, `Community 478`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `apply_yaml_update_with_decision()` connect `Update` to `Update`, `Scanlog Orchestrator`, `Update`, `Update Notification`, `Update`, `Update`?**
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Why does `yaml_apply_update()` connect `Update Notification` to `Update`, `Scanlog Orchestrator`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `apply_yaml_update_with_decision()` connect `Update` to `Update`, `Update`, `Update Notification`, `Update`, `Update`, `Path Cache`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
 - **Are the 62 inferred relationships involving `get_runtime()` (e.g. with `.refresh_backup_statuses()` and `.run_backup_operation()`) actually correct?**
   _`get_runtime()` has 62 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Generate SHA256 hash file for CLASSIC Fallout4 database.`, `Vec`, `MmapMut` to the rest of the system?**
-  _6268 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _6310 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Settings Loader` be split into smaller, more focused modules?**
   _Cohesion score 0.10405323653962492 - nodes in this community are weakly interconnected._
 - **Should `Config Shippable` be split into smaller, more focused modules?**

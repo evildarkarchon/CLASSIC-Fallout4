@@ -1983,6 +1983,13 @@ void MainWindow::checkForUpdates(bool explicitCheck)
                                 ? QStringLiteral("Update check returned an unknown status.")
                                 : QStringLiteral("Update check inconclusive: ") + parseError);
                     }
+                } else if (classification == QLatin1String(UpdateWorker::kClassificationNotPublished)) {
+                    if (explicitCheck) {
+                        setStatusMessage(QStringLiteral("No update information available"));
+                        QMessageBox::information(
+                            this, QStringLiteral("Update Check"),
+                            QStringLiteral("No update information is currently available."));
+                    }
                 } else if (explicitCheck) {
                     // UpToDate (or any unexpected classification treated as
                     // "nothing to show"). Only surface a dialog on user-initiated

@@ -36,7 +36,9 @@ pub enum UpdateError {
     #[error("Rate limit exceeded. Retry after: {0:?}")]
     RateLimitExceeded(Option<std::time::Duration>),
 
-    /// Resource not found (404)
+    /// Resource not found (404). For app-notification checks, absence on both
+    /// the Pages and Releases channels is folded into `Ok(NotPublished)`
+    /// rather than surfaced as a fetch failure.
     #[error("Resource not found: {0}")]
     NotFound(String),
 
@@ -147,6 +149,9 @@ pub enum UpdateError {
     /// Both the Pages-first fetch and the Releases-API fallback failed
     /// for an app-notification check. Both cause strings are embedded
     /// so diagnostic logs can explain which channel failed how.
+    /// When both channels report absence (`NotFound`), the check returns
+    /// `Ok(NotificationStatus { classification: NotPublished, .. })`
+    /// instead of this variant.
     ///
     /// Produced by [`crate::notification::check_app_notification`].
     #[error("notification fetch failed — pages: {pages_error}; releases: {releases_error}")]

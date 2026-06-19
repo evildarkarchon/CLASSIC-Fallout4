@@ -267,6 +267,29 @@ fn update_result_ok_up_to_date_formats_message() {
 }
 
 #[test]
+fn update_result_ok_not_published_formats_benign_message() {
+    use classic_update_core::{Classification, NotificationStatus};
+
+    let status = NotificationStatus {
+        classification: Classification::NotPublished,
+        latest_version: String::new(),
+        published_at: String::new(),
+        min_supported_version: None,
+        display: None,
+        parse_error: None,
+    };
+
+    let mut app = App::new_for_testing();
+    app.update_checking = true;
+    app.handle_async_message(AsyncMessage::UpdateResult(Ok(status.clone())));
+
+    assert_eq!(app.scan_status, "No update information available");
+    assert!(!app.scan_status.contains("failed"));
+    assert!(!app.update_checking);
+    assert_eq!(app.last_update_notification, Some(status));
+}
+
+#[test]
 fn update_result_err_formats_failure_and_clears_last_notification() {
     let mut app = App::new_for_testing();
     app.handle_async_message(AsyncMessage::UpdateResult(Err(

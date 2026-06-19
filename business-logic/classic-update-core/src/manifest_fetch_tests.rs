@@ -259,6 +259,43 @@ async fn try_pages_5xx_classifies_as_transport_error() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn try_pages_404_classifies_as_transport_not_found() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/test-channel/manifest-latest.json", server.url());
+
+    let mock = server
+        .mock("GET", "/test-channel/manifest-latest.json")
+        .with_status(404)
+        .with_body("missing")
+        .create_async()
+        .await;
+
+    let cache_dir = TempDir::new().unwrap();
+    let client = tokenless_client(&server.url());
+    let err = try_pages(
+        &client,
+        &pages_url,
+        Some(cache_dir.path()),
+        parse_test,
+        validate_test_accept_all,
+    )
+    .await
+    .expect_err("404 must error");
+
+    match err {
+        PagesError::Transport(UpdateError::NotFound(message)) => {
+            assert!(message.contains("pages GET returned 404 Not Found"));
+            assert!(message.contains("manifest absent"));
+        }
+        PagesError::Transport(UpdateError::GithubError(message)) => {
+            panic!("404 must not map to GithubError: {message}");
+        }
+        other => panic!("expected Transport(NotFound), got {other:?}"),
+    }
+    mock.assert_async().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn try_pages_valid_json_failing_validator_returns_invalid_error() {
     let mut server = mockito::Server::new_async().await;
     let pages_url = format!("{}/test-channel/manifest-latest.json", server.url());

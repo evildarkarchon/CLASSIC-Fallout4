@@ -151,6 +151,34 @@ fn notification_dto_unknown_carries_parse_error() {
 }
 
 #[test]
+fn notification_dto_not_published_uses_dedicated_classification_and_no_error() {
+    assert_eq!(
+        classification_label(Classification::NotPublished),
+        "not_published"
+    );
+
+    let status = NotificationStatus {
+        classification: Classification::NotPublished,
+        latest_version: String::new(),
+        published_at: String::new(),
+        min_supported_version: None,
+        display: None,
+        parse_error: None,
+    };
+
+    let dto = notification_status_to_dto(&status);
+    assert_eq!(dto.classification, "not_published");
+    assert!(dto.latest_version.is_empty());
+    assert!(dto.published_at.is_empty());
+    assert!(dto.min_supported_version.is_empty());
+    assert!(dto.display_title.is_empty());
+    assert!(dto.display_body.is_empty());
+    assert!(dto.display_cta_url.is_empty());
+    assert!(dto.parse_error.is_empty());
+    assert!(dto.error_message.is_empty());
+}
+
+#[test]
 fn notification_dto_display_without_cta_url_has_empty_sentinel() {
     // When `display.cta_url` is None, the flattened DTO field is the
     // empty string — not a missing field — so C++ can reason with a

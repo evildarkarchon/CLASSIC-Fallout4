@@ -607,6 +607,78 @@ async fn fetch_pages_5xx_falls_back_to_releases_api() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn fetch_pages_404_still_falls_back_to_releases_api() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let canonical_download =
+        "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml";
+    let manifest_body = valid_manifest_json(
+        "yaml-data-v2026.04.17",
+        &"a".repeat(64),
+        canonical_download,
+        7,
+    );
+
+    let pages_mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(404)
+        .with_body("missing")
+        .create_async()
+        .await;
+
+    let releases_json = format!(
+        r#"[{{
+            "tag_name": "yaml-data-v2026.04.17",
+            "name": "newer",
+            "body": "",
+            "prerelease": false,
+            "draft": false,
+            "html_url": "https://github.com/owner/repo/releases/tag/yaml-data-v2026.04.17",
+            "assets": [{{
+                "name": "manifest.json",
+                "size": {size},
+                "browser_download_url": "{server}/releases/download/yaml-data-v2026.04.17/manifest.json",
+                "content_type": "application/json",
+                "download_count": 0
+            }}],
+            "created_at": "2026-04-17T00:00:00Z",
+            "published_at": "2026-04-17T12:00:00Z"
+        }}]"#,
+        size = manifest_body.len(),
+        server = server.url(),
+    );
+    let api_mock = server
+        .mock("GET", "/repos/owner/repo/releases")
+        .match_query(mockito::Matcher::Any)
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(releases_json)
+        .create_async()
+        .await;
+    let asset_mock = server
+        .mock(
+            "GET",
+            "/releases/download/yaml-data-v2026.04.17/manifest.json",
+        )
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(manifest_body)
+        .create_async()
+        .await;
+
+    let cache_dir = TempDir::new().unwrap();
+    let client = tokenless_client(&server.url());
+    let manifest = fetch_yaml_manifest(&client, &pages_url, "yaml-data-v", Some(cache_dir.path()))
+        .await
+        .unwrap();
+    assert_eq!(manifest.release_tag, "yaml-data-v2026.04.17");
+
+    pages_mock.assert_async().await;
+    api_mock.assert_async().await;
+    asset_mock.assert_async().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn fetch_both_pages_and_api_fail_returns_not_found() {
     let mut server = mockito::Server::new_async().await;
     let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());

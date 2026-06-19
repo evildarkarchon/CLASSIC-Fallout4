@@ -115,7 +115,7 @@ pub struct AppNotificationManifest {
     pub display: Option<AppNotificationDisplay>,
 }
 
-/// Classification outcome produced by [`classify`].
+/// Classification outcome produced by [`classify`] or the fetch orchestrator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Classification {
@@ -130,6 +130,10 @@ pub enum Classification {
     /// cannot be determined. The caller SHOULD surface the companion
     /// [`NotificationStatus::parse_error`] message to the user.
     Unknown,
+    /// No notification manifest exists on either the Pages or Releases
+    /// channel. Produced only when both channels report the manifest absent.
+    #[serde(rename = "not_published")]
+    NotPublished,
 }
 
 /// Full result returned from [`check_app_notification`]. Carries the
@@ -151,6 +155,19 @@ pub struct NotificationStatus {
     /// description of the installed-version parse failure so callers can
     /// surface it instead of silently treating the result as `UpToDate`.
     pub parse_error: Option<String>,
+}
+
+impl NotificationStatus {
+    fn not_published() -> Self {
+        Self {
+            classification: Classification::NotPublished,
+            latest_version: String::new(),
+            published_at: String::new(),
+            min_supported_version: None,
+            display: None,
+            parse_error: None,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -292,7 +309,7 @@ async fn fetch_via_releases_fallback_bytes(
 
 /// Compare the caller-supplied installed version against the manifest's
 /// `latest_version` and optional `min_supported_version`, emitting one of
-/// four [`Classification`] outcomes.
+/// four comparison [`Classification`] outcomes.
 ///
 /// The installed-version string is trimmed of a leading `v` or `V`
 /// before semver parse. When `installed_version` fails semver parsing
@@ -556,6 +573,12 @@ pub async fn check_app_notification_with(
                     | UpdateError::ManifestInvalid { .. }
                     | UpdateError::NotificationDecode { .. }),
                 ) => Err(fallback_err),
+                Err(fallback_err)
+                    if matches!(&pages_err, UpdateError::NotFound(_))
+                        && matches!(&fallback_err, UpdateError::NotFound(_)) =>
+                {
+                    Ok(NotificationStatus::not_published())
+                }
                 Err(fallback_err) => Err(UpdateError::NotificationFetchFailed {
                     pages_error: pages_err.to_string(),
                     releases_error: fallback_err.to_string(),

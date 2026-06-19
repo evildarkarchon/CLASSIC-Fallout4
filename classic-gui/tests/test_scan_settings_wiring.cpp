@@ -17,6 +17,9 @@ private slots:
     void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
+    void update_worker_declares_not_published_classification();
+    void mainwindow_handles_not_published_without_error_dialog();
+    void settings_dialog_handles_not_published_as_benign();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
     void mainwindow_uses_exe_relative_crash_logs_dir();
@@ -221,6 +224,64 @@ void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_mig
              "MainWindow settings bootstrap should use QSaveFile for an atomic publish when rename fails");
     QVERIFY2(!sourceText.contains(QStringLiteral("QFile::copy(legacySettingsPath, settingsPath)")),
              "MainWindow settings bootstrap should not use QFile::copy directly for legacy settings migration");
+}
+
+void ScanSettingsWiringTests::update_worker_declares_not_published_classification()
+{
+    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/updateworker.h");
+    QFile file(headerPath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
+
+    const QString headerText = QString::fromUtf8(file.readAll());
+    QVERIFY2(headerText.contains(QStringLiteral("kClassificationNotPublished")),
+             "UpdateWorker should declare the not_published classification constant");
+    QVERIFY2(headerText.contains(QStringLiteral("\"not_published\"")),
+             "UpdateWorker constant should match the CXX bridge classification label");
+}
+
+void ScanSettingsWiringTests::mainwindow_handles_not_published_without_error_dialog()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype branchStart = sourceText.indexOf(QStringLiteral("kClassificationNotPublished"));
+    QVERIFY2(branchStart >= 0, "MainWindow should branch on the not_published classification");
+
+    const qsizetype nextBranch = sourceText.indexOf(QStringLiteral("} else if (explicitCheck)"), branchStart);
+    QVERIFY2(nextBranch > branchStart, "not_published should be handled before the generic explicit-check branch");
+
+    const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
+    QVERIFY2(branch.contains(QStringLiteral("if (explicitCheck)")),
+             "not_published should stay silent for startup/background checks");
+    QVERIFY2(branch.contains(QStringLiteral("QMessageBox::information")),
+             "explicit not_published checks should show an informational dialog");
+    QVERIFY2(!branch.contains(QStringLiteral("QMessageBox::warning")),
+             "not_published must not reach the warning/error dialog path");
+}
+
+void ScanSettingsWiringTests::settings_dialog_handles_not_published_as_benign()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/settingsdialog.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype branchStart = sourceText.indexOf(QStringLiteral("classification == \"not_published\""));
+    QVERIFY2(branchStart >= 0, "SettingsDialog should handle not_published separately");
+
+    const qsizetype nextBranch = sourceText.indexOf(QStringLiteral("} else {"), branchStart);
+    QVERIFY2(nextBranch > branchStart, "not_published should be handled before the generic fallback branch");
+
+    const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
+    QVERIFY2(branch.contains(QStringLiteral("No update information available.")),
+             "SettingsDialog should show a benign not_published message");
+    QVERIFY2(!branch.contains(QStringLiteral("Error:")),
+             "SettingsDialog must not render not_published as an error");
 }
 
 void ScanSettingsWiringTests::mainwindow_blocks_game_files_scan_when_paths_unresolved()
