@@ -985,14 +985,14 @@
     "semantic_hash": "a8a8fb8336b30b33580d679e183b11a9"
   },
   "classic-update-core/src/notification.rs": {
-    "mtime": 1781867710.653137,
-    "ast_hash": "dabe9605deacb214e330959200c6a7fc",
-    "semantic_hash": "dabe9605deacb214e330959200c6a7fc"
+    "mtime": 1781869775.1611857,
+    "ast_hash": "a0e715674e7ee77180f95a29923b63c4",
+    "semantic_hash": "a0e715674e7ee77180f95a29923b63c4"
   },
   "classic-update-core/src/notification_tests.rs": {
-    "mtime": 1781867649.730329,
-    "ast_hash": "5a833b4a3def3f5232877077b8c2536e",
-    "semantic_hash": "5a833b4a3def3f5232877077b8c2536e"
+    "mtime": 1781869787.5409126,
+    "ast_hash": "52b5b26f96fa4ee00d6c85dee04c367a",
+    "semantic_hash": "52b5b26f96fa4ee00d6c85dee04c367a"
   },
   "classic-update-core/src/yaml_update.rs": {
     "mtime": 1780012642.1483686,

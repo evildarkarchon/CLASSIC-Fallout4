@@ -713,5 +713,95 @@
     "mtime": 1759623953.5113003,
     "ast_hash": "f063a8689c983bccdc0aa8673713c37a",
     "semantic_hash": "f063a8689c983bccdc0aa8673713c37a"
+  },
+  "api/classic-update-core.md": {
+    "mtime": 1781867710.65964,
+    "ast_hash": "a104ca1fe6782b3b9b712aaa756935b3",
+    "semantic_hash": "a104ca1fe6782b3b9b712aaa756935b3"
+  },
+  "api/cxx-parity-gate.md": {
+    "mtime": 1776772155.7051904,
+    "ast_hash": "be6667eb9add5b858ba4ee2e0adbc271",
+    "semantic_hash": "be6667eb9add5b858ba4ee2e0adbc271"
+  },
+  "api/error-contract.md": {
+    "mtime": 1781861591.3743136,
+    "ast_hash": "a02d41e6ef5ae0785de4882c56281e75",
+    "semantic_hash": "a02d41e6ef5ae0785de4882c56281e75"
+  },
+  "api/formid-settings-boundary.md": {
+    "mtime": 1776772155.7051904,
+    "ast_hash": "2b10404bc62f14b1c8e3eb58a5b00a7b",
+    "semantic_hash": "2b10404bc62f14b1c8e3eb58a5b00a7b"
+  },
+  "api/formid-sqlite-conventions.md": {
+    "mtime": 1776772155.7056904,
+    "ast_hash": "e1d5912f949d0379523a28a6fd074197",
+    "semantic_hash": "e1d5912f949d0379523a28a6fd074197"
+  },
+  "api/node-python-contract-map.md": {
+    "mtime": 1776772155.7061925,
+    "ast_hash": "607ca37e572f91659350b80dcdb47b06",
+    "semantic_hash": "607ca37e572f91659350b80dcdb47b06"
+  },
+  "api/yaml-update-delivery.md": {
+    "mtime": 1781315533.1322362,
+    "ast_hash": "ddba7e0faa43a238fd5fef6b9e1cc76b",
+    "semantic_hash": "ddba7e0faa43a238fd5fef6b9e1cc76b"
+  },
+  "architecture/ARCHITECTURE_OVERVIEW.md": {
+    "mtime": 1781236530.785362,
+    "ast_hash": "ded32b67f55e01c0ca4081d251e9d361",
+    "semantic_hash": "ded32b67f55e01c0ca4081d251e9d361"
+  },
+  "architecture/cli_tui_architecture.md": {
+    "mtime": 1771499028.353769,
+    "ast_hash": "dfb51560de83f4ae94043acda1676759",
+    "semantic_hash": "dfb51560de83f4ae94043acda1676759"
+  },
+  "architecture/help_system_schema.md": {
+    "mtime": 1771499028.354269,
+    "ast_hash": "ae8db14ce66e6721d75233ee76619112",
+    "semantic_hash": "ae8db14ce66e6721d75233ee76619112"
+  },
+  "audit-reports/AUDIT_FINAL_SUMMARY.md": {
+    "mtime": 1762251614.906734,
+    "ast_hash": "cecb31d3325ff6e7a89943115e5c2ceb",
+    "semantic_hash": "cecb31d3325ff6e7a89943115e5c2ceb"
+  },
+  "audit-reports/RUST_API_COMPLIANCE_AUDIT_REPORT.md": {
+    "mtime": 1762251574.292971,
+    "ast_hash": "f07d3ec3294a467326edc24ad1ecf8d1",
+    "semantic_hash": "f07d3ec3294a467326edc24ad1ecf8d1"
+  },
+  "development/RUST_INTEGRATION_GUIDE.md": {
+    "mtime": 1774924644.701371,
+    "ast_hash": "75fe5cdb91d17d9aecc851fedc7b71ba",
+    "semantic_hash": "75fe5cdb91d17d9aecc851fedc7b71ba"
+  },
+  "development/async_development_guide.md": {
+    "mtime": 1780012642.1688888,
+    "ast_hash": "42451b52f48e780a8d7aae7680519eb2",
+    "semantic_hash": "42451b52f48e780a8d7aae7680519eb2"
+  },
+  "development/cache_patterns.md": {
+    "mtime": 1776772155.707191,
+    "ast_hash": "43610e20e74ecfd6e967ac61ae6eb1b9",
+    "semantic_hash": "43610e20e74ecfd6e967ac61ae6eb1b9"
+  },
+  "development/ci_cd_guide.md": {
+    "mtime": 1780440635.726369,
+    "ast_hash": "0fb1164ce99d02b6cd9f18390468077a",
+    "semantic_hash": "0fb1164ce99d02b6cd9f18390468077a"
+  },
+  "development/error_schema_definition.md": {
+    "mtime": 1766462803.1835747,
+    "ast_hash": "1ee2de0a8fd1e7b27ceacf774c67263c",
+    "semantic_hash": "1ee2de0a8fd1e7b27ceacf774c67263c"
+  },
+  "development/gil_audit.md": {
+    "mtime": 1780012642.1688888,
+    "ast_hash": "e965f80dfc338b77e273aa099a17553c",
+    "semantic_hash": "e965f80dfc338b77e273aa099a17553c"
   }
 }

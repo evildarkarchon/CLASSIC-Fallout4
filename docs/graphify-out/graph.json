@@ -12,7 +12,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 25,
+      "community": 29,
       "norm_label": "scanbatchprogresscallback",
       "id": "classic_cpp_bridge_scan_progress_callback_scanbatchprogresscallback"
     },
@@ -25,7 +25,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 25,
+      "community": 29,
       "norm_label": "batchprogressevent",
       "id": "classic_cpp_bridge_scan_progress_callback_batchprogressevent"
     },
@@ -38,7 +38,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "batchprogresseventkind",
       "id": "classic_cpp_bridge_scan_progress_callback_batchprogresseventkind"
     },
@@ -51,7 +51,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "batchprogressphase",
       "id": "classic_cpp_bridge_scan_progress_callback_batchprogressphase"
     },
@@ -64,7 +64,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "orchestrator_process_logs_batch_with_progress",
       "id": "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress"
     },
@@ -77,7 +77,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "orchestratorcore::process_logs_batch_with_events",
       "id": "classic_cpp_bridge_scan_progress_callback_orchestratorcore_process_logs_batch_with_events"
     },
@@ -90,7 +90,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 50,
+      "community": 54,
       "norm_label": "scanner.rs",
       "id": "classic_cpp_bridge_scan_progress_callback_scanner_rs"
     },
@@ -103,7 +103,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "batchprogresscallback",
       "id": "classic_gui_scan_progress_consumer_batchprogresscallback"
     },
@@ -116,7 +116,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "batchprogressmodel",
       "id": "classic_gui_scan_progress_consumer_batchprogressmodel"
     },
@@ -129,7 +129,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "scanworker",
       "id": "classic_gui_scan_progress_consumer_scanworker"
     },
@@ -142,7 +142,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "scancontroller",
       "id": "classic_gui_scan_progress_consumer_scancontroller"
     },
@@ -155,7 +155,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "mainwindow",
       "id": "classic_gui_scan_progress_consumer_mainwindow"
     },
@@ -168,7 +168,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "scanworker",
       "id": "classic_gui_scan_result_ordering_scanworker"
     },
@@ -181,7 +181,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "resultscontroller",
       "id": "classic_gui_scan_result_ordering_resultscontroller"
     },
@@ -194,7 +194,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 19,
       "norm_label": "classic-version-core",
       "id": "classic_version_core"
     },
@@ -207,7 +207,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 19,
       "norm_label": "classic-version-registry-core",
       "id": "classic_version_registry_core"
     },
@@ -220,7 +220,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 66,
+      "community": 69,
       "norm_label": "classic-web-core",
       "id": "classic_web_core"
     },
@@ -233,7 +233,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 19,
       "norm_label": "classic-xse-core",
       "id": "classic_xse_core"
     },
@@ -246,7 +246,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 30,
       "norm_label": "classic-yaml-core",
       "id": "classic_yaml_core"
     },
@@ -259,7 +259,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "pylogcollector",
       "id": "classic_file_io_py_audit_report_pylogcollector"
     },
@@ -275,7 +275,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "_crashlogs_get_files_rust()",
       "id": "classic_file_io_py_audit_report_crashlogs_get_files_rust"
     },
@@ -288,7 +288,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "crashlogs_get_files()",
       "id": "classic_file_io_py_audit_report_crashlogs_get_files"
     },
@@ -301,7 +301,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 31,
       "norm_label": "scangame_factory.py",
       "id": "classic_scangame_api_audit_phase2_1_scangame_factory"
     },
@@ -314,7 +314,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 31,
       "norm_label": "inivalidator",
       "id": "classic_scangame_api_audit_phase2_1_inivalidator"
     },
@@ -327,7 +327,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 11,
       "norm_label": "configissue",
       "id": "config_issue_fcx_handler_api_audit_configissue"
     },
@@ -340,7 +340,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 11,
       "norm_label": "fcxmodehandler",
       "id": "config_issue_fcx_handler_api_audit_fcxmodehandler"
     },
@@ -356,7 +356,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 11,
       "norm_label": "rustacceleratedfcxmodehandler",
       "id": "config_issue_fcx_handler_api_audit_rustacceleratedfcxmodehandler"
     },
@@ -369,7 +369,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 9,
       "norm_label": "gpudetector",
       "id": "gpu_pattern_matcher_api_audit_gpudetector"
     },
@@ -382,7 +382,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 9,
       "norm_label": "gpuinfo",
       "id": "gpu_pattern_matcher_api_audit_gpuinfo"
     },
@@ -395,7 +395,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 9,
       "norm_label": "gpuvendor",
       "id": "gpu_pattern_matcher_api_audit_gpuvendor"
     },
@@ -408,7 +408,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 9,
       "norm_label": "patternmatcher",
       "id": "gpu_pattern_matcher_api_audit_patternmatcher"
     },
@@ -421,7 +421,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "factory.py",
       "id": "integration_layer_api_audit_factory_py"
     },
@@ -437,7 +437,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "fcx_rust.py",
       "id": "integration_layer_api_audit_fcx_rust"
     },
@@ -453,7 +453,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "gpu_rust.py",
       "id": "integration_layer_api_audit_gpu_rust"
     },
@@ -466,7 +466,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 22,
       "norm_label": "papyrusanalyzer",
       "id": "papyrus_api_audit_papyrusanalyzer"
     },
@@ -479,7 +479,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 22,
       "norm_label": "papyrusstats",
       "id": "papyrus_api_audit_papyrusstats"
     },
@@ -492,7 +492,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 22,
       "norm_label": "papyrus_logging()",
       "id": "papyrus_api_audit_papyrus_logging"
     },
@@ -505,7 +505,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "formidanalyzer",
       "id": "phase_1_5_formid_settings_missing_methods_audit_formidanalyzer"
     },
@@ -518,7 +518,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "rustformidanalyzer",
       "id": "phase_1_5_formid_settings_missing_methods_audit_rustformidanalyzer"
     },
@@ -531,7 +531,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "settingsvalidator",
       "id": "phase_1_5_formid_settings_missing_methods_audit_settingsvalidator"
     },
@@ -544,7 +544,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "papyrusanalyzer",
       "id": "python_binding_audit_report_papyrusanalyzer"
     },
@@ -557,7 +557,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "papyrusstats",
       "id": "python_binding_audit_report_papyrusstats"
     },
@@ -570,7 +570,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "papyrus_logging()",
       "id": "python_binding_audit_report_papyrus_logging"
     },
@@ -583,7 +583,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 11,
       "norm_label": "configissue",
       "id": "python_binding_audit_report_configissue"
     },
@@ -596,7 +596,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 9,
       "norm_label": "patternmatcher",
       "id": "python_binding_audit_report_patternmatcher"
     },
@@ -609,7 +609,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 5,
       "norm_label": "timer",
       "id": "timer_api_audit_report_timer"
     },
@@ -622,7 +622,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 51,
+      "community": 55,
       "norm_label": "classic python cli",
       "id": "classic_python_cli_prd_classic_py_cli"
     },
@@ -635,22 +635,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 30,
       "norm_label": "classic ratatui tui",
       "id": "classic_ratatui_tui_prd_classic_tui"
-    },
-    {
-      "label": "CLASSIC TUI",
-      "file_type": "document",
-      "source_file": "CLASSIC_TUI_PRD.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 53,
-      "norm_label": "classic tui",
-      "id": "classic_tui_prd_classic_tui"
     },
     {
       "label": "CLASSIC Documentation",
@@ -661,7 +648,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 103,
+      "community": 106,
       "norm_label": "classic documentation",
       "id": "readme_classic_documentation"
     },
@@ -674,7 +661,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 111,
+      "community": 114,
       "norm_label": "classic rust documentation index",
       "id": "rust_documentation_index_classic_rust_docs"
     },
@@ -687,7 +674,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 43,
+      "community": 47,
       "norm_label": "classic quick start (contributor)",
       "id": "api_quick_start_quick_start"
     },
@@ -700,7 +687,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 44,
+      "community": 48,
       "norm_label": "classic api docs",
       "id": "api_readme_classic_api_docs"
     },
@@ -713,7 +700,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 31,
+      "community": 35,
       "norm_label": "binding compliance suite",
       "id": "api_binding_compliance_suite_binding_compliance_suite"
     },
@@ -726,7 +713,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 32,
+      "community": 36,
       "norm_label": "binding contract refresh note",
       "id": "api_binding_contract_refresh_note_binding_contract_refresh_note"
     },
@@ -739,7 +726,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 37,
       "norm_label": "binding parity overview",
       "id": "api_binding_parity_overview_binding_parity_overview"
     },
@@ -752,7 +739,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 38,
       "norm_label": "binding parity policy",
       "id": "api_binding_parity_policy_binding_parity_policy"
     },
@@ -765,7 +752,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 40,
       "norm_label": "classic-config-core yaml schema contract",
       "id": "api_classic_config_core_yaml_schema_classic_config_core_yaml_schema"
     },
@@ -778,7 +765,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 35,
+      "community": 39,
       "norm_label": "classic-config-core api guide",
       "id": "api_classic_config_core_classic_config_core"
     },
@@ -791,7 +778,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 41,
       "norm_label": "classic-cpp-bridge data entry points",
       "id": "api_classic_cpp_bridge_data_entrypoints_classic_cpp_bridge_data_entrypoints"
     },
@@ -804,7 +791,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 38,
+      "community": 42,
       "norm_label": "classic-cpp-bridge game entry points",
       "id": "api_classic_cpp_bridge_game_entrypoints_classic_cpp_bridge_game_entrypoints"
     },
@@ -817,7 +804,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 104,
+      "community": 107,
       "norm_label": "block_on_result",
       "id": "runtime_gil_patterns_block_on_result"
     },
@@ -830,7 +817,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 107,
+      "community": 110,
       "norm_label": "without_gil_block_on",
       "id": "runtime_gil_patterns_without_gil_block_on"
     },
@@ -843,7 +830,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 105,
+      "community": 108,
       "norm_label": "future_into_py",
       "id": "runtime_gil_patterns_future_into_py"
     },
@@ -856,7 +843,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 106,
+      "community": 109,
       "norm_label": "spawn_result",
       "id": "runtime_gil_patterns_spawn_result"
     },
@@ -869,7 +856,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 109,
+      "community": 112,
       "norm_label": "asyncprocessor trait",
       "id": "rust_2024_edition_guide_asyncprocessor"
     },
@@ -882,7 +869,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 108,
+      "community": 111,
       "norm_label": "asyncfileprocessor trait",
       "id": "rust_2024_edition_guide_asyncfileprocessor"
     },
@@ -895,7 +882,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 19,
+      "community": 23,
       "norm_label": "topyerr trait",
       "id": "rust_bindings_topyerr"
     },
@@ -908,7 +895,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 19,
+      "community": 23,
       "norm_label": "pymoduleerror struct",
       "id": "rust_bindings_pymoduleerror"
     },
@@ -921,7 +908,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 19,
+      "community": 23,
       "norm_label": "pyclass method with error mapping",
       "id": "rust_bindings_pyclass_method"
     },
@@ -934,7 +921,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 29,
+      "community": 33,
       "norm_label": "pylist direct construction",
       "id": "rust_bindings_pylist_direct_construction"
     },
@@ -947,7 +934,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 29,
+      "community": 33,
       "norm_label": "dataresult pyclass struct",
       "id": "rust_bindings_pyclass_dataresult"
     },
@@ -960,7 +947,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 110,
+      "community": 113,
       "norm_label": "classic_shared::without_gil usage",
       "id": "rust_bindings_without_gil"
     },
@@ -973,7 +960,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 30,
+      "community": 34,
       "norm_label": "foundation layer",
       "id": "rust_workspace_architecture_foundation"
     },
@@ -986,7 +973,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 22,
+      "community": 26,
       "norm_label": "business-logic layer",
       "id": "rust_workspace_architecture_business_logic"
     },
@@ -999,7 +986,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 23,
+      "community": 27,
       "norm_label": "python-bindings layer",
       "id": "rust_workspace_architecture_python_bindings"
     },
@@ -1012,7 +999,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 116,
+      "community": 119,
       "norm_label": "node-bindings layer",
       "id": "rust_workspace_architecture_node_bindings"
     },
@@ -1025,7 +1012,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 114,
+      "community": 117,
       "norm_label": "cpp-bindings layer",
       "id": "rust_workspace_architecture_cpp_bindings"
     },
@@ -1038,7 +1025,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 117,
+      "community": 120,
       "norm_label": "ui-applications layer",
       "id": "rust_workspace_architecture_ui_applications"
     },
@@ -1051,7 +1038,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 30,
+      "community": 34,
       "norm_label": "classic-shared-core crate",
       "id": "rust_workspace_architecture_classic_shared_core"
     },
@@ -1064,7 +1051,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 22,
+      "community": 26,
       "norm_label": "classic-config-core crate",
       "id": "rust_workspace_architecture_classic_config_core"
     },
@@ -1077,7 +1064,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 22,
+      "community": 26,
       "norm_label": "classic-scanlog-core crate",
       "id": "rust_workspace_architecture_classic_scanlog_core"
     },
@@ -1090,7 +1077,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 23,
+      "community": 27,
       "norm_label": "classic-config-py crate",
       "id": "rust_workspace_architecture_classic_config_py"
     },
@@ -1103,7 +1090,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 23,
+      "community": 27,
       "norm_label": "classic-scanlog-py crate",
       "id": "rust_workspace_architecture_classic_scanlog_py"
     },
@@ -1116,7 +1103,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 115,
+      "community": 118,
       "norm_label": "dependency direction",
       "id": "rust_workspace_architecture_dependency_direction"
     },
@@ -1129,7 +1116,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "classic-scangame-core crate",
       "id": "scangame_rust_acceleration_classic_scangame_core"
     },
@@ -1142,7 +1129,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "classic-scangame-py crate",
       "id": "scangame_rust_acceleration_classic_scangame_py"
     },
@@ -1155,7 +1142,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "classic-node crate",
       "id": "scangame_rust_acceleration_classic_node"
     },
@@ -1168,7 +1155,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "classic-cpp-bridge crate",
       "id": "scangame_rust_acceleration_classic_cpp_bridge"
     },
@@ -1181,7 +1168,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 101,
+      "community": 104,
       "norm_label": "future_into_py function",
       "id": "pyo3_async_runtimes_usage_guide_future_into_py"
     },
@@ -1194,7 +1181,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 102,
+      "community": 105,
       "norm_label": "into_future function",
       "id": "pyo3_async_runtimes_usage_guide_into_future"
     },
@@ -1207,7 +1194,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 99,
+      "community": 102,
       "norm_label": "asyncdatabase pyclass",
       "id": "pyo3_async_runtimes_usage_guide_async_database"
     },
@@ -1220,7 +1207,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 100,
+      "community": 103,
       "norm_label": "databasepool pyclass",
       "id": "pyo3_async_runtimes_usage_guide_databasepool"
     },
@@ -1233,7 +1220,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 94,
+      "community": 97,
       "norm_label": "databasepool max_connections behavior",
       "id": "implementation_summary_max_connections_databasepool"
     },
@@ -1246,7 +1233,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "asyncyamlsettingscore class",
       "id": "async_yaml_implementation_summary_asyncyamlsettingscore"
     },
@@ -1259,7 +1246,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "yamlsettingscache class",
       "id": "async_yaml_implementation_summary_yamlsettingscache"
     },
@@ -1272,7 +1259,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "asyncbridge class",
       "id": "async_yaml_implementation_summary_asyncbridge"
     },
@@ -1285,7 +1272,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "batch_get_settings method",
       "id": "async_yaml_implementation_summary_batch_get_settings"
     },
@@ -1298,7 +1285,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "load_multiple_stores method",
       "id": "async_yaml_implementation_summary_load_multiple_stores"
     },
@@ -1311,7 +1298,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "prefetch_all_settings method",
       "id": "async_yaml_implementation_summary_prefetch_all_settings"
     },
@@ -1324,7 +1311,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 8,
       "norm_label": "get_metrics method",
       "id": "async_yaml_implementation_summary_get_metrics"
     },
@@ -1337,7 +1324,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 96,
+      "community": 99,
       "norm_label": "pyinstaller data bundling guide for classic-fallout4",
       "id": "other_pyinstaller_data_bundling_guide"
     },
@@ -1350,7 +1337,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "ffi optimization guide for classic rust integration",
       "id": "performance_ffi_optimization_guide"
     },
@@ -1363,7 +1350,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "memory profiling guide",
       "id": "performance_memory_profiling_guide"
     },
@@ -1376,7 +1363,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "performance optimization: run_in_executor analysis and improvements",
       "id": "performance_performance_optimization_run_in_executor"
     },
@@ -1389,7 +1376,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "performance monitoring guide for classic rust components",
       "id": "performance_performance_monitoring"
     },
@@ -1402,7 +1389,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "phase 1 performance benchmark report",
       "id": "performance_phase1_benchmark_report"
     },
@@ -1415,7 +1402,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "python bindings optimization propagation plan",
       "id": "performance_python_bindings_optimization_propagation"
     },
@@ -1428,7 +1415,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 98,
+      "community": 101,
       "norm_label": "rust db benchmark baseline",
       "id": "performance_rust_db_benchmark_baseline"
     },
@@ -1441,7 +1428,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "classic rust performance optimization report",
       "id": "performance_rust_performance_optimization_report"
     },
@@ -1454,7 +1441,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "tui dirty tracking optimization",
       "id": "performance_tui_dirty_tracking_optimization"
     },
@@ -1467,7 +1454,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "prd: c++ qt gui for classic",
       "id": "prd_complete_cpp_qt_gui"
     },
@@ -1480,7 +1467,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "prd: g-17 classicscanlogsinfo \u2192 rust yamldata unification",
       "id": "prd_complete_g17_classicscanlogs_info_migration"
     },
@@ -1493,7 +1480,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "prd: node.js/bun bindings completion for classic rust crates",
       "id": "prd_complete_node_bindings_completion"
     },
@@ -1506,7 +1493,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "prd: python-to-rust business logic migration",
       "id": "prd_complete_python_to_rust_migration"
     },
@@ -1519,7 +1506,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 3,
       "norm_label": "prd: rename `rust/` directory to `classiclib-rs/`",
       "id": "prd_complete_rename_rust_to_classiclib_rs"
     },
@@ -1532,7 +1519,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 20,
+      "community": 24,
       "norm_label": "pyo3 0.27 migration guide",
       "id": "rust_pyo3_0_27_migration"
     },
@@ -1545,7 +1532,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "development guide for classic rust components",
       "id": "rust_development_with_rust"
     },
@@ -1558,7 +1545,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 20,
+      "community": 24,
       "norm_label": "gil release pattern for pyo3 0.27",
       "id": "rust_gil_release_pattern_pyo3_0_27"
     },
@@ -1571,7 +1558,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 112,
+      "community": 115,
       "norm_label": "utilities guide",
       "id": "rust_phase4_utilities_guide"
     },
@@ -1584,7 +1571,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 20,
+      "community": 24,
       "norm_label": "pyo3 0.27 quick reference for classic developers",
       "id": "rust_pyo3_quick_reference"
     },
@@ -1597,7 +1584,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 113,
+      "community": 116,
       "norm_label": "python to rust migration guide",
       "id": "rust_python_to_rust_migration_guide"
     },
@@ -1610,7 +1597,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 21,
+      "community": 25,
       "norm_label": "classic rust architecture documentation",
       "id": "rust_rust_architecture"
     },
@@ -1623,7 +1610,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "native async solution for classic",
       "id": "rust_rust_async_pattern"
     },
@@ -1636,7 +1623,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 21,
+      "community": 25,
       "norm_label": "classic rust modules - detailed documentation",
       "id": "rust_rust_modules_detailed"
     },
@@ -1649,7 +1636,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 21,
+      "community": 25,
       "norm_label": "rust parser module overview",
       "id": "rust_rust_parser_module"
     },
@@ -1662,7 +1649,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "classic rust usage guide",
       "id": "rust_rust_usage_guide"
     },
@@ -1675,7 +1662,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "troubleshooting guide for classic rust components",
       "id": "rust_troubleshooting_rust"
     },
@@ -1688,7 +1675,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 118,
+      "community": 121,
       "norm_label": "classic-gui scan result ordering test design",
       "id": "superpowers_specs_2026_03_09_classic_gui_scan_result_ordering_test_design"
     },
@@ -1701,7 +1688,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 130,
+      "community": 133,
       "norm_label": "classic testing guide index",
       "id": "testing_testing_guide_index"
     },
@@ -1714,7 +1701,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 123,
+      "community": 126,
       "norm_label": "test pollution updates summary",
       "id": "testing_test_pollution_updates"
     },
@@ -1727,7 +1714,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 124,
+      "community": 127,
       "norm_label": "test suite organization",
       "id": "testing_test_structure"
     },
@@ -1740,7 +1727,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 119,
+      "community": 122,
       "norm_label": "async test patterns guide for classic",
       "id": "testing_async_test_patterns_guide"
     },
@@ -1753,7 +1740,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 120,
+      "community": 123,
       "norm_label": "test fixture migration summary",
       "id": "testing_fixture_migration_summary"
     },
@@ -1766,7 +1753,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 121,
+      "community": 124,
       "norm_label": "rust testing guide",
       "id": "testing_rust_testing_guide"
     },
@@ -1779,7 +1766,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 122,
+      "community": 125,
       "norm_label": "test pollution prevention guide",
       "id": "testing_test_pollution_guide"
     },
@@ -1792,7 +1779,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 125,
+      "community": 128,
       "norm_label": "testing guide: asyncbridge and async code mocking",
       "id": "testing_testing_async_bridge"
     },
@@ -1805,7 +1792,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 126,
+      "community": 129,
       "norm_label": "testing database pools guide",
       "id": "testing_testing_database_pools"
     },
@@ -1818,7 +1805,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 127,
+      "community": 130,
       "norm_label": "testing fileiocore and asyncbridge coupling guide",
       "id": "testing_testing_fileio_core"
     },
@@ -1831,7 +1818,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 128,
+      "community": 131,
       "norm_label": "testing fixture standards",
       "id": "testing_testing_fixture_standards"
     },
@@ -1844,7 +1831,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 129,
+      "community": 132,
       "norm_label": "testing guide: globalregistry and singleton patterns",
       "id": "testing_testing_global_registry"
     },
@@ -1857,7 +1844,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 131,
+      "community": 134,
       "norm_label": "testing messagehandler guide",
       "id": "testing_testing_message_handler"
     },
@@ -1870,7 +1857,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 132,
+      "community": 135,
       "norm_label": "testing guide: yamlsettingscache and configuration testing",
       "id": "testing_testing_yaml_cache"
     },
@@ -1883,7 +1870,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 133,
+      "community": 136,
       "norm_label": "workspace migration matrix",
       "id": "workspace_migration_matrix_workspace_migration_matrix"
     },
@@ -1896,9 +1883,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_cpp_bridge_scan_progress_callback_md",
-      "community": 0,
-      "norm_label": "classic::scanner scan progress callback contract"
+      "community": 2,
+      "norm_label": "classic::scanner scan progress callback contract",
+      "id": "classic_cpp_bridge_scan_progress_callback_md"
     },
     {
       "label": "classic-database-core API Guide",
@@ -1909,9 +1896,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_database_core_md",
-      "community": 0,
-      "norm_label": "classic-database-core api guide"
+      "community": 2,
+      "norm_label": "classic-database-core api guide",
+      "id": "classic_database_core_md"
     },
     {
       "label": "classic-file-io-core API Guide",
@@ -1922,9 +1909,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_file_io_core_md",
-      "community": 0,
-      "norm_label": "classic-file-io-core api guide"
+      "community": 2,
+      "norm_label": "classic-file-io-core api guide",
+      "id": "classic_file_io_core_md"
     },
     {
       "label": "classic-gui Scan Progress Consumer Flow",
@@ -1935,9 +1922,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_progress_consumer_md",
-      "community": 0,
-      "norm_label": "classic-gui scan progress consumer flow"
+      "community": 2,
+      "norm_label": "classic-gui scan progress consumer flow",
+      "id": "classic_gui_scan_progress_consumer_md"
     },
     {
       "label": "classic-gui Scan Result Ordering And input_index Correlation",
@@ -1948,9 +1935,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_gui_scan_result_ordering_md",
-      "community": 0,
-      "norm_label": "classic-gui scan result ordering and input_index correlation"
+      "community": 2,
+      "norm_label": "classic-gui scan result ordering and input_index correlation",
+      "id": "classic_gui_scan_result_ordering_md"
     },
     {
       "label": "classic-message-core API Guide",
@@ -1961,22 +1948,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_message_core_md",
-      "community": 0,
-      "norm_label": "classic-message-core api guide"
-    },
-    {
-      "label": "classic-path-core API Guide",
-      "file_type": "document",
-      "source_file": "api/classic-path-core.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "classic_path_core_md",
-      "community": 0,
-      "norm_label": "classic-path-core api guide"
+      "community": 2,
+      "norm_label": "classic-message-core api guide",
+      "id": "classic_message_core_md"
     },
     {
       "label": "classic-perf-core API Guide",
@@ -1987,9 +1961,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_perf_core_md",
-      "community": 0,
-      "norm_label": "classic-perf-core api guide"
+      "community": 2,
+      "norm_label": "classic-perf-core api guide",
+      "id": "classic_perf_core_md"
     },
     {
       "label": "classic-registry-core API Guide",
@@ -2000,9 +1974,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_registry_core_md",
-      "community": 0,
-      "norm_label": "classic-registry-core api guide"
+      "community": 2,
+      "norm_label": "classic-registry-core api guide",
+      "id": "classic_registry_core_md"
     },
     {
       "label": "classic-resource-core API Guide",
@@ -2013,9 +1987,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_resource_core_md",
-      "community": 0,
-      "norm_label": "classic-resource-core api guide"
+      "community": 2,
+      "norm_label": "classic-resource-core api guide",
+      "id": "classic_resource_core_md"
     },
     {
       "label": "classic-scangame-core API Guide",
@@ -2026,9 +2000,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_scangame_core_md",
-      "community": 0,
-      "norm_label": "classic-scangame-core api guide"
+      "community": 2,
+      "norm_label": "classic-scangame-core api guide",
+      "id": "classic_scangame_core_md"
     },
     {
       "label": "classic-scanlog-core API Guide",
@@ -2039,9 +2013,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_scanlog_core_md",
-      "community": 0,
-      "norm_label": "classic-scanlog-core api guide"
+      "community": 2,
+      "norm_label": "classic-scanlog-core api guide",
+      "id": "classic_scanlog_core_md"
     },
     {
       "label": "classic-settings-core API Guide",
@@ -2052,9 +2026,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_settings_core_md",
-      "community": 0,
-      "norm_label": "classic-settings-core api guide"
+      "community": 2,
+      "norm_label": "classic-settings-core api guide",
+      "id": "classic_settings_core_md"
     },
     {
       "label": "classic-shared-core API Guide",
@@ -2065,9 +2039,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_shared_core_md",
-      "community": 0,
-      "norm_label": "classic-shared-core api guide"
+      "community": 2,
+      "norm_label": "classic-shared-core api guide",
+      "id": "classic_shared_core_md"
     },
     {
       "label": "parse_version",
@@ -2078,9 +2052,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_parse_version",
-      "community": 7,
-      "norm_label": "parse_version"
+      "community": 10,
+      "norm_label": "parse_version",
+      "id": "classic_version_core_parse_version"
     },
     {
       "label": "try_parse_version",
@@ -2091,9 +2065,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_try_parse_version",
-      "community": 7,
-      "norm_label": "try_parse_version"
+      "community": 10,
+      "norm_label": "try_parse_version",
+      "id": "classic_version_core_try_parse_version"
     },
     {
       "label": "compare_versions",
@@ -2104,9 +2078,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_compare_versions",
-      "community": 54,
-      "norm_label": "compare_versions"
+      "community": 57,
+      "norm_label": "compare_versions",
+      "id": "classic_version_core_compare_versions"
     },
     {
       "label": "is_known_fallout4_version",
@@ -2117,9 +2091,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_is_known_fallout4_version",
-      "community": 16,
-      "norm_label": "is_known_fallout4_version"
+      "community": 20,
+      "norm_label": "is_known_fallout4_version",
+      "id": "classic_version_core_is_known_fallout4_version"
     },
     {
       "label": "is_known_f4se_version",
@@ -2130,9 +2104,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_is_known_f4se_version",
-      "community": 16,
-      "norm_label": "is_known_f4se_version"
+      "community": 20,
+      "norm_label": "is_known_f4se_version",
+      "id": "classic_version_core_is_known_f4se_version"
     },
     {
       "label": "extract_version_from_filename",
@@ -2143,9 +2117,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_extract_version_from_filename",
-      "community": 56,
-      "norm_label": "extract_version_from_filename"
+      "community": 59,
+      "norm_label": "extract_version_from_filename",
+      "id": "classic_version_core_extract_version_from_filename"
     },
     {
       "label": "extract_version_from_log",
@@ -2156,9 +2130,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_extract_version_from_log",
-      "community": 57,
-      "norm_label": "extract_version_from_log"
+      "community": 60,
+      "norm_label": "extract_version_from_log",
+      "id": "classic_version_core_extract_version_from_log"
     },
     {
       "label": "extract_all_versions",
@@ -2169,9 +2143,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_extract_all_versions",
-      "community": 55,
-      "norm_label": "extract_all_versions"
+      "community": 58,
+      "norm_label": "extract_all_versions",
+      "id": "classic_version_core_extract_all_versions"
     },
     {
       "label": "format_version",
@@ -2182,9 +2156,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_format_version",
-      "community": 58,
-      "norm_label": "format_version"
+      "community": 61,
+      "norm_label": "format_version",
+      "id": "classic_version_core_format_version"
     },
     {
       "label": "is_valid_executable_path",
@@ -2195,9 +2169,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_pe_version_is_valid_executable_path",
-      "community": 60,
-      "norm_label": "is_valid_executable_path"
+      "community": 63,
+      "norm_label": "is_valid_executable_path",
+      "id": "classic_version_core_pe_version_is_valid_executable_path"
     },
     {
       "label": "extract_pe_version",
@@ -2208,9 +2182,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_core_pe_version_extract_pe_version",
-      "community": 59,
-      "norm_label": "extract_pe_version"
+      "community": 62,
+      "norm_label": "extract_pe_version",
+      "id": "classic_version_core_pe_version_extract_pe_version"
     },
     {
       "label": "get_version_registry",
@@ -2221,9 +2195,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core_get_version_registry",
-      "community": 16,
-      "norm_label": "get_version_registry"
+      "community": 20,
+      "norm_label": "get_version_registry",
+      "id": "classic_version_registry_core_get_version_registry"
     },
     {
       "label": "VersionRegistry",
@@ -2234,9 +2208,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core_versionregistry",
-      "community": 65,
-      "norm_label": "versionregistry"
+      "community": 68,
+      "norm_label": "versionregistry",
+      "id": "classic_version_registry_core_versionregistry"
     },
     {
       "label": "Fallout4Version",
@@ -2247,9 +2221,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core_fallout4version",
-      "community": 61,
-      "norm_label": "fallout4version"
+      "community": 64,
+      "norm_label": "fallout4version",
+      "id": "classic_version_registry_core_fallout4version"
     },
     {
       "label": "GameVersion",
@@ -2260,9 +2234,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core_gameversion",
-      "community": 62,
-      "norm_label": "gameversion"
+      "community": 65,
+      "norm_label": "gameversion",
+      "id": "classic_version_registry_core_gameversion"
     },
     {
       "label": "VersionInfo",
@@ -2273,9 +2247,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core_versioninfo",
-      "community": 64,
-      "norm_label": "versioninfo"
+      "community": 67,
+      "norm_label": "versioninfo",
+      "id": "classic_version_registry_core_versioninfo"
     },
     {
       "label": "MatchResult",
@@ -2286,9 +2260,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_version_registry_core_matchresult",
-      "community": 63,
-      "norm_label": "matchresult"
+      "community": 66,
+      "norm_label": "matchresult",
+      "id": "classic_version_registry_core_matchresult"
     },
     {
       "label": "ModSite",
@@ -2299,9 +2273,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_modsite",
-      "community": 73,
-      "norm_label": "modsite"
+      "community": 76,
+      "norm_label": "modsite",
+      "id": "classic_web_core_modsite"
     },
     {
       "label": "WebError",
@@ -2312,9 +2286,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_weberror",
-      "community": 75,
-      "norm_label": "weberror"
+      "community": 78,
+      "norm_label": "weberror",
+      "id": "classic_web_core_weberror"
     },
     {
       "label": "get_user_agent",
@@ -2325,9 +2299,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_get_user_agent",
-      "community": 69,
-      "norm_label": "get_user_agent"
+      "community": 72,
+      "norm_label": "get_user_agent",
+      "id": "classic_web_core_get_user_agent"
     },
     {
       "label": "get_user_agent_with_suffix",
@@ -2338,9 +2312,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_get_user_agent_with_suffix",
-      "community": 70,
-      "norm_label": "get_user_agent_with_suffix"
+      "community": 73,
+      "norm_label": "get_user_agent_with_suffix",
+      "id": "classic_web_core_get_user_agent_with_suffix"
     },
     {
       "label": "validate_url",
@@ -2351,9 +2325,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_validate_url",
-      "community": 74,
-      "norm_label": "validate_url"
+      "community": 77,
+      "norm_label": "validate_url",
+      "id": "classic_web_core_validate_url"
     },
     {
       "label": "is_valid_url",
@@ -2364,9 +2338,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_is_valid_url",
-      "community": 71,
-      "norm_label": "is_valid_url"
+      "community": 74,
+      "norm_label": "is_valid_url",
+      "id": "classic_web_core_is_valid_url"
     },
     {
       "label": "extract_domain",
@@ -2377,9 +2351,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_extract_domain",
-      "community": 68,
-      "norm_label": "extract_domain"
+      "community": 71,
+      "norm_label": "extract_domain",
+      "id": "classic_web_core_extract_domain"
     },
     {
       "label": "join_url",
@@ -2390,9 +2364,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_join_url",
-      "community": 72,
-      "norm_label": "join_url"
+      "community": 75,
+      "norm_label": "join_url",
+      "id": "classic_web_core_join_url"
     },
     {
       "label": "build_url_with_query",
@@ -2403,9 +2377,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_web_core_build_url_with_query",
-      "community": 67,
-      "norm_label": "build_url_with_query"
+      "community": 70,
+      "norm_label": "build_url_with_query",
+      "id": "classic_web_core_build_url_with_query"
     },
     {
       "label": "XseType",
@@ -2416,9 +2390,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_xse_core_xsetype",
-      "community": 77,
-      "norm_label": "xsetype"
+      "community": 80,
+      "norm_label": "xsetype",
+      "id": "classic_xse_core_xsetype"
     },
     {
       "label": "XseInfo",
@@ -2429,9 +2403,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_xse_core_xseinfo",
-      "community": 76,
-      "norm_label": "xseinfo"
+      "community": 79,
+      "norm_label": "xseinfo",
+      "id": "classic_xse_core_xseinfo"
     },
     {
       "label": "detect_xse_version",
@@ -2442,9 +2416,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_xse_core_detect_xse_version",
-      "community": 7,
-      "norm_label": "detect_xse_version"
+      "community": 10,
+      "norm_label": "detect_xse_version",
+      "id": "classic_xse_core_detect_xse_version"
     },
     {
       "label": "is_xse_installed",
@@ -2455,9 +2429,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_xse_core_is_xse_installed",
-      "community": 7,
-      "norm_label": "is_xse_installed"
+      "community": 10,
+      "norm_label": "is_xse_installed",
+      "id": "classic_xse_core_is_xse_installed"
     },
     {
       "label": "get_xse_info",
@@ -2468,9 +2442,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_xse_core_get_xse_info",
-      "community": 7,
-      "norm_label": "get_xse_info"
+      "community": 10,
+      "norm_label": "get_xse_info",
+      "id": "classic_xse_core_get_xse_info"
     },
     {
       "label": "YamlOperations",
@@ -2481,9 +2455,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_yaml_core_yamloperations",
-      "community": 79,
-      "norm_label": "yamloperations"
+      "community": 82,
+      "norm_label": "yamloperations",
+      "id": "classic_yaml_core_yamloperations"
     },
     {
       "label": "merge_keys",
@@ -2494,9 +2468,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_yaml_core_merge_keys",
-      "community": 78,
-      "norm_label": "merge_keys"
+      "community": 81,
+      "norm_label": "merge_keys",
+      "id": "classic_yaml_core_merge_keys"
     },
     {
       "label": "create_yamldata() function",
@@ -2507,9 +2481,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_config_api_audit_create_yamldata",
-      "community": 24,
-      "norm_label": "create_yamldata() function"
+      "community": 28,
+      "norm_label": "create_yamldata() function",
+      "id": "classic_config_api_audit_create_yamldata"
     },
     {
       "label": "YamlData constructor",
@@ -2520,9 +2494,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_config_api_audit_yamldata_constructor",
-      "community": 24,
-      "norm_label": "yamldata constructor"
+      "community": 28,
+      "norm_label": "yamldata constructor",
+      "id": "classic_config_api_audit_yamldata_constructor"
     },
     {
       "label": "PyLogCollector class",
@@ -2533,9 +2507,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_file_io_audit_summary_pylogcollector",
-      "community": 3,
-      "norm_label": "pylogcollector class"
+      "community": 5,
+      "norm_label": "pylogcollector class",
+      "id": "classic_file_io_audit_summary_pylogcollector"
     },
     {
       "label": "IniValidator class",
@@ -2546,9 +2520,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "classic_scangame_api_audit_phase21_inivalidator",
-      "community": 52,
-      "norm_label": "inivalidator class"
+      "community": 56,
+      "norm_label": "inivalidator class",
+      "id": "classic_scangame_api_audit_phase21_inivalidator"
     },
     {
       "label": "Rust wrapper for FcxModeHandler",
@@ -2559,9 +2533,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "integration_layer_api_audit_report_fcx_rust",
-      "community": 8,
-      "norm_label": "rust wrapper for fcxmodehandler"
+      "community": 11,
+      "norm_label": "rust wrapper for fcxmodehandler",
+      "id": "integration_layer_api_audit_report_fcx_rust"
     },
     {
       "label": "Rust wrapper for GpuDetector",
@@ -2572,9 +2546,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "integration_layer_api_audit_report_gpu_rust",
-      "community": 6,
-      "norm_label": "rust wrapper for gpudetector"
+      "community": 9,
+      "norm_label": "rust wrapper for gpudetector",
+      "id": "integration_layer_api_audit_report_gpu_rust"
     },
     {
       "label": "PapyrusAnalyzer class",
@@ -2585,9 +2559,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "papyrus_api_audit_report_papyrusanalyzer",
-      "community": 28,
-      "norm_label": "papyrusanalyzer class"
+      "community": 32,
+      "norm_label": "papyrusanalyzer class",
+      "id": "papyrus_api_audit_report_papyrusanalyzer"
     },
     {
       "label": "PapyrusStats class",
@@ -2598,9 +2572,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "papyrus_api_audit_report_papyrusstats",
-      "community": 28,
-      "norm_label": "papyrusstats class"
+      "community": 32,
+      "norm_label": "papyrusstats class",
+      "id": "papyrus_api_audit_report_papyrusstats"
     },
     {
       "label": "papyrus_logging function",
@@ -2611,9 +2585,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "python_binding_audit_report_papyruslogging",
-      "community": 12,
-      "norm_label": "papyrus_logging function"
+      "community": 14,
+      "norm_label": "papyrus_logging function",
+      "id": "python_binding_audit_report_papyruslogging"
     },
     {
       "label": "Profiling Workflow for CLASSIC",
@@ -2624,9 +2598,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "development_profiling_workflow",
-      "community": 4,
-      "norm_label": "profiling workflow for classic"
+      "community": 6,
+      "norm_label": "profiling workflow for classic",
+      "id": "development_profiling_workflow"
     },
     {
       "label": "PyO3 Integration Patterns",
@@ -2637,9 +2611,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "development_pyo3_integration_patterns",
-      "community": 4,
-      "norm_label": "pyo3 integration patterns"
+      "community": 6,
+      "norm_label": "pyo3 integration patterns",
+      "id": "development_pyo3_integration_patterns"
     },
     {
       "label": "Rust Acceleration & Troubleshooting Guide",
@@ -2650,9 +2624,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "development_rust_acceleration_guide",
-      "community": 4,
-      "norm_label": "rust acceleration & troubleshooting guide"
+      "community": 6,
+      "norm_label": "rust acceleration & troubleshooting guide",
+      "id": "development_rust_acceleration_guide"
     },
     {
       "label": "CLASSIC TUI User Guide",
@@ -2663,9 +2637,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "guides_tui_user_guide",
-      "community": 86,
-      "norm_label": "classic tui user guide"
+      "community": 89,
+      "norm_label": "classic tui user guide",
+      "id": "guides_tui_user_guide"
     },
     {
       "label": "CXX Parity Diff Report",
@@ -2676,9 +2650,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_cxx_api_parity_baseline_cxx_diff_report",
-      "community": 87,
-      "norm_label": "cxx parity diff report"
+      "community": 90,
+      "norm_label": "cxx parity diff report",
+      "id": "implementation_cxx_api_parity_baseline_cxx_diff_report"
     },
     {
       "label": "CXX Parity Gate Report",
@@ -2689,9 +2663,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_cxx_api_parity_baseline_cxx_gate_report",
-      "community": 88,
-      "norm_label": "cxx parity gate report"
+      "community": 91,
+      "norm_label": "cxx parity gate report",
+      "id": "implementation_cxx_api_parity_baseline_cxx_gate_report"
     },
     {
       "label": "FCX Mode Read-Only Conversion Plan",
@@ -2702,9 +2676,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_fcx_read_only_conversion",
-      "community": 89,
-      "norm_label": "fcx mode read-only conversion plan"
+      "community": 92,
+      "norm_label": "fcx mode read-only conversion plan",
+      "id": "implementation_fcx_read_only_conversion"
     },
     {
       "label": "Cross-Language Logging Contract (Phase 1)",
@@ -2715,9 +2689,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_logging_contract_phase1",
-      "community": 90,
-      "norm_label": "cross-language logging contract (phase 1)"
+      "community": 93,
+      "norm_label": "cross-language logging contract (phase 1)",
+      "id": "implementation_logging_contract_phase1"
     },
     {
       "label": "Python Logging Baseline Inventory (Phase 1)",
@@ -2728,9 +2702,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_logging_python_baseline_inventory_phase1",
-      "community": 91,
-      "norm_label": "python logging baseline inventory (phase 1)"
+      "community": 94,
+      "norm_label": "python logging baseline inventory (phase 1)",
+      "id": "implementation_logging_python_baseline_inventory_phase1"
     },
     {
       "label": "Logging Redaction Policy (Phase 1)",
@@ -2741,9 +2715,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_logging_redaction_policy_phase1",
-      "community": 92,
-      "norm_label": "logging redaction policy (phase 1)"
+      "community": 95,
+      "norm_label": "logging redaction policy (phase 1)",
+      "id": "implementation_logging_redaction_policy_phase1"
     },
     {
       "label": "Phase 1 Engineering Handoff Map",
@@ -2754,9 +2728,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_node_api_parity_baseline_handoff_map",
-      "community": 93,
-      "norm_label": "phase 1 engineering handoff map"
+      "community": 96,
+      "norm_label": "phase 1 engineering handoff map",
+      "id": "implementation_node_api_parity_baseline_handoff_map"
     },
     {
       "label": "Node Bindings Parity Contract",
@@ -2767,9 +2741,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_node_api_parity_baseline_parity_contract",
-      "community": 10,
-      "norm_label": "node bindings parity contract"
+      "community": 12,
+      "norm_label": "node bindings parity contract",
+      "id": "implementation_node_api_parity_baseline_parity_contract"
     },
     {
       "label": "Rust<->Node Parity Diff Baseline (Phase 1)",
@@ -2780,9 +2754,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_node_api_parity_baseline_parity_diff_report",
-      "community": 10,
-      "norm_label": "rust<->node parity diff baseline (phase 1)"
+      "community": 12,
+      "norm_label": "rust<->node parity diff baseline (phase 1)",
+      "id": "implementation_node_api_parity_baseline_parity_diff_report"
     },
     {
       "label": "Node Runtime Coverage Summary",
@@ -2793,9 +2767,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_node_api_parity_baseline_runtime_coverage_summary",
-      "community": 10,
-      "norm_label": "node runtime coverage summary"
+      "community": 12,
+      "norm_label": "node runtime coverage summary",
+      "id": "implementation_node_api_parity_baseline_runtime_coverage_summary"
     },
     {
       "label": "Gate Contract Baseline",
@@ -2806,9 +2780,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_node_api_parity_governance_gate_contract_baseline",
-      "community": 10,
-      "norm_label": "gate contract baseline"
+      "community": 12,
+      "norm_label": "gate contract baseline",
+      "id": "implementation_node_api_parity_governance_gate_contract_baseline"
     },
     {
       "label": "CLASSIC ScanLog Performance Optimization - COMPLETE",
@@ -2819,9 +2793,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_performance_optimization_complete",
-      "community": 4,
-      "norm_label": "classic scanlog performance optimization - complete"
+      "community": 6,
+      "norm_label": "classic scanlog performance optimization - complete",
+      "id": "implementation_performance_optimization_complete"
     },
     {
       "label": "Python API Parity Contract",
@@ -2832,9 +2806,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_python_api_parity_baseline_parity_contract",
-      "community": 17,
-      "norm_label": "python api parity contract"
+      "community": 21,
+      "norm_label": "python api parity contract",
+      "id": "implementation_python_api_parity_baseline_parity_contract"
     },
     {
       "label": "Rust<->Python Parity Diff Baseline",
@@ -2845,9 +2819,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_python_api_parity_baseline_parity_diff_report",
-      "community": 17,
-      "norm_label": "rust<->python parity diff baseline"
+      "community": 21,
+      "norm_label": "rust<->python parity diff baseline",
+      "id": "implementation_python_api_parity_baseline_parity_diff_report"
     },
     {
       "label": "Python Runtime Coverage Summary",
@@ -2858,9 +2832,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_python_api_parity_baseline_runtime_coverage_summary",
-      "community": 17,
-      "norm_label": "python runtime coverage summary"
+      "community": 21,
+      "norm_label": "python runtime coverage summary",
+      "id": "implementation_python_api_parity_baseline_runtime_coverage_summary"
     },
     {
       "label": "Rust vs Python Output Verification",
@@ -2871,9 +2845,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_rust_python_output_verification",
-      "community": 4,
-      "norm_label": "rust vs python output verification"
+      "community": 6,
+      "norm_label": "rust vs python output verification",
+      "id": "implementation_rust_python_output_verification"
     },
     {
       "label": "Rust-Python Test Parity",
@@ -2884,9 +2858,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_rust_python_test_parity",
-      "community": 4,
-      "norm_label": "rust-python test parity"
+      "community": 6,
+      "norm_label": "rust-python test parity",
+      "id": "implementation_rust_python_test_parity"
     },
     {
       "label": "Rust Scanlog Implementation Verification",
@@ -2897,9 +2871,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_rust_scanlog_verification",
-      "community": 4,
-      "norm_label": "rust scanlog implementation verification"
+      "community": 6,
+      "norm_label": "rust scanlog implementation verification",
+      "id": "implementation_rust_scanlog_verification"
     },
     {
       "label": "ScanLog Performance Optimizations",
@@ -2910,9 +2884,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "implementation_scanlog_performance_optimizations",
-      "community": 4,
-      "norm_label": "scanlog performance optimizations"
+      "community": 6,
+      "norm_label": "scanlog performance optimizations",
+      "id": "implementation_scanlog_performance_optimizations"
     },
     {
       "label": "YAML Settings Test API Migration Guide",
@@ -2923,9 +2897,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "migration_readme_api_migration",
-      "community": 95,
-      "norm_label": "yaml settings test api migration guide"
+      "community": 98,
+      "norm_label": "yaml settings test api migration guide",
+      "id": "migration_readme_api_migration"
     },
     {
       "label": "Advanced Async & Threading Patterns Guide",
@@ -2936,9 +2910,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "migration_async_threading_patterns_guide",
-      "community": 11,
-      "norm_label": "advanced async & threading patterns guide"
+      "community": 13,
+      "norm_label": "advanced async & threading patterns guide",
+      "id": "migration_async_threading_patterns_guide"
     },
     {
       "label": "AsyncYamlSettingsCore Documentation",
@@ -2949,9 +2923,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "migration_async_yaml_documentation",
-      "community": 11,
-      "norm_label": "asyncyamlsettingscore documentation"
+      "community": 13,
+      "norm_label": "asyncyamlsettingscore documentation",
+      "id": "migration_async_yaml_documentation"
     },
     {
       "label": "AsyncYamlSettingsCore Migration Examples",
@@ -2962,9 +2936,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "migration_async_yaml_migration_examples",
-      "community": 11,
-      "norm_label": "asyncyamlsettingscore migration examples"
+      "community": 13,
+      "norm_label": "asyncyamlsettingscore migration examples",
+      "id": "migration_async_yaml_migration_examples"
     },
     {
       "label": "AsyncBridge Refactoring Migration Guide",
@@ -2975,9 +2949,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "migration_asyncbridge_refactoring",
-      "community": 11,
-      "norm_label": "asyncbridge refactoring migration guide"
+      "community": 13,
+      "norm_label": "asyncbridge refactoring migration guide",
+      "id": "migration_asyncbridge_refactoring"
     },
     {
       "label": "CLASSIC Phase 6 Performance Dashboard",
@@ -2988,22 +2962,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "performance_dashboard_html",
-      "community": 97,
-      "norm_label": "classic phase 6 performance dashboard"
-    },
-    {
-      "label": "App Update Notification Delivery",
-      "file_type": "document",
-      "source_file": "api/app-update-notification-delivery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_app_update_notification_delivery",
-      "community": 9,
-      "norm_label": "app update notification delivery"
+      "community": 100,
+      "norm_label": "classic phase 6 performance dashboard",
+      "id": "performance_dashboard_html"
     },
     {
       "label": "classic-update-core API Guide",
@@ -3015,151 +2976,8 @@
       "author": null,
       "contributor": null,
       "id": "api_classic_update_core",
-      "community": 9,
+      "community": 17,
       "norm_label": "classic-update-core api guide"
-    },
-    {
-      "label": "Error Contract Conventions",
-      "file_type": "document",
-      "source_file": "api/error-contract.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_error_contract",
-      "community": 9,
-      "norm_label": "error contract conventions"
-    },
-    {
-      "label": "YAML Update Delivery",
-      "file_type": "document",
-      "source_file": "api/yaml-update-delivery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "api_yaml_update_delivery",
-      "community": 9,
-      "norm_label": "yaml update delivery"
-    },
-    {
-      "label": "CLASSIC Architecture Overview",
-      "file_type": "document",
-      "source_file": "architecture/ARCHITECTURE_OVERVIEW.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_architecture_overview",
-      "community": 45,
-      "norm_label": "classic architecture overview"
-    },
-    {
-      "label": "CLI & TUI Architecture Documentation",
-      "file_type": "document",
-      "source_file": "architecture/cli_tui_architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_cli_tui_architecture",
-      "community": 46,
-      "norm_label": "cli & tui architecture documentation"
-    },
-    {
-      "label": "Context-Sensitive Help System Schema",
-      "file_type": "document",
-      "source_file": "architecture/help_system_schema.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_help_system_schema",
-      "community": 47,
-      "norm_label": "context-sensitive help system schema"
-    },
-    {
-      "label": "Rust Integration Guide",
-      "file_type": "document",
-      "source_file": "development/RUST_INTEGRATION_GUIDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "development_rust_integration_guide",
-      "community": 85,
-      "norm_label": "rust integration guide"
-    },
-    {
-      "label": "Async Development Guide",
-      "file_type": "document",
-      "source_file": "development/async_development_guide.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "development_async_development_guide",
-      "community": 80,
-      "norm_label": "async development guide"
-    },
-    {
-      "label": "Cache Patterns in CLASSIC Rust Codebase",
-      "file_type": "document",
-      "source_file": "development/cache_patterns.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "development_cache_patterns",
-      "community": 81,
-      "norm_label": "cache patterns in classic rust codebase"
-    },
-    {
-      "label": "CI/CD Guide for CLASSIC",
-      "file_type": "document",
-      "source_file": "development/ci_cd_guide.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "development_ci_cd_guide",
-      "community": 82,
-      "norm_label": "ci/cd guide for classic"
-    },
-    {
-      "label": "Shared Error Schema Definition",
-      "file_type": "document",
-      "source_file": "development/error_schema_definition.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "development_error_schema_definition",
-      "community": 83,
-      "norm_label": "shared error schema definition"
-    },
-    {
-      "label": "GIL Release Audit",
-      "file_type": "document",
-      "source_file": "development/gil_audit.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "development_gil_audit",
-      "community": 84,
-      "norm_label": "gil release audit"
     },
     {
       "label": "CXX Parity Gate",
@@ -3171,8 +2989,21 @@
       "author": null,
       "contributor": null,
       "id": "api_cxx_parity_gate",
-      "community": 39,
+      "community": 43,
       "norm_label": "cxx parity gate"
+    },
+    {
+      "label": "Error Contract Conventions",
+      "file_type": "document",
+      "source_file": "api/error-contract.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "api_error_contract",
+      "community": 17,
+      "norm_label": "error contract conventions"
     },
     {
       "label": "FormID Settings Boundary",
@@ -3184,7 +3015,7 @@
       "author": null,
       "contributor": null,
       "id": "api_formid_settings_boundary",
-      "community": 40,
+      "community": 44,
       "norm_label": "formid settings boundary"
     },
     {
@@ -3197,7 +3028,7 @@
       "author": null,
       "contributor": null,
       "id": "api_formid_sqlite_conventions",
-      "community": 41,
+      "community": 45,
       "norm_label": "formid sqlite schema and path conventions"
     },
     {
@@ -3210,21 +3041,60 @@
       "author": null,
       "contributor": null,
       "id": "api_node_python_contract_map",
-      "community": 42,
+      "community": 46,
       "norm_label": "node and python contract map"
     },
     {
-      "label": "CLASSIC-Fallout4: Rust API Compliance Audit Report",
+      "label": "YAML Update Delivery",
       "file_type": "document",
-      "source_file": "audit-reports/RUST_API_COMPLIANCE_AUDIT_REPORT.md",
+      "source_file": "api/yaml-update-delivery.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "audit_reports_rust_api_compliance_audit_report",
+      "id": "api_yaml_update_delivery",
+      "community": 17,
+      "norm_label": "yaml update delivery"
+    },
+    {
+      "label": "CLASSIC Architecture Overview",
+      "file_type": "document",
+      "source_file": "architecture/ARCHITECTURE_OVERVIEW.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "architecture_architecture_overview",
       "community": 49,
-      "norm_label": "classic-fallout4: rust api compliance audit report"
+      "norm_label": "classic architecture overview"
+    },
+    {
+      "label": "CLI & TUI Architecture Documentation",
+      "file_type": "document",
+      "source_file": "architecture/cli_tui_architecture.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "architecture_cli_tui_architecture",
+      "community": 50,
+      "norm_label": "cli & tui architecture documentation"
+    },
+    {
+      "label": "Context-Sensitive Help System Schema",
+      "file_type": "document",
+      "source_file": "architecture/help_system_schema.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "architecture_help_system_schema",
+      "community": 51,
+      "norm_label": "context-sensitive help system schema"
     },
     {
       "label": "Rust API Compliance Audit - Final Summary",
@@ -3236,8 +3106,801 @@
       "author": null,
       "contributor": null,
       "id": "audit_reports_audit_final_summary",
-      "community": 48,
+      "community": 52,
       "norm_label": "rust api compliance audit - final summary"
+    },
+    {
+      "label": "CLASSIC-Fallout4: Rust API Compliance Audit Report",
+      "file_type": "document",
+      "source_file": "audit-reports/RUST_API_COMPLIANCE_AUDIT_REPORT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "audit_reports_rust_api_compliance_audit_report",
+      "community": 53,
+      "norm_label": "classic-fallout4: rust api compliance audit report"
+    },
+    {
+      "label": "Rust Integration Guide",
+      "file_type": "document",
+      "source_file": "development/RUST_INTEGRATION_GUIDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_rust_integration_guide",
+      "community": 88,
+      "norm_label": "rust integration guide"
+    },
+    {
+      "label": "Async Development Guide",
+      "file_type": "document",
+      "source_file": "development/async_development_guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_async_development_guide",
+      "community": 83,
+      "norm_label": "async development guide"
+    },
+    {
+      "label": "Cache Patterns in CLASSIC Rust Codebase",
+      "file_type": "document",
+      "source_file": "development/cache_patterns.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_cache_patterns",
+      "community": 84,
+      "norm_label": "cache patterns in classic rust codebase"
+    },
+    {
+      "label": "CI/CD Guide for CLASSIC",
+      "file_type": "document",
+      "source_file": "development/ci_cd_guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_ci_cd_guide",
+      "community": 85,
+      "norm_label": "ci/cd guide for classic"
+    },
+    {
+      "label": "Shared Error Schema Definition",
+      "file_type": "document",
+      "source_file": "development/error_schema_definition.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_error_schema_definition",
+      "community": 86,
+      "norm_label": "shared error schema definition"
+    },
+    {
+      "label": "GIL Release Audit",
+      "file_type": "document",
+      "source_file": "development/gil_audit.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "development_gil_audit",
+      "community": 87,
+      "norm_label": "gil release audit"
+    },
+    {
+      "label": "App Update Notification Delivery",
+      "file_type": "document",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_doc",
+      "community": 1,
+      "norm_label": "app update notification delivery"
+    },
+    {
+      "label": "classic-update-core API",
+      "file_type": "document",
+      "source_file": "api/classic-update-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_update_core_doc",
+      "community": 1,
+      "norm_label": "classic-update-core api"
+    },
+    {
+      "label": "classic-path-core API",
+      "file_type": "document",
+      "source_file": "api/classic-path-core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "classic_path_core_doc",
+      "community": 1,
+      "norm_label": "classic-path-core api"
+    },
+    {
+      "label": "YAML Update Delivery",
+      "file_type": "document",
+      "source_file": "api/yaml-update-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "yaml_update_delivery_doc",
+      "community": 1,
+      "norm_label": "yaml update delivery"
+    },
+    {
+      "label": "Error Contract",
+      "file_type": "document",
+      "source_file": "api/error-contract.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "error_contract_doc",
+      "community": 1,
+      "norm_label": "error contract"
+    },
+    {
+      "label": "AppNotificationManifest",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_appnotificationmanifest",
+      "community": 1,
+      "norm_label": "appnotificationmanifest"
+    },
+    {
+      "label": "Classification",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_classification",
+      "community": 1,
+      "norm_label": "classification"
+    },
+    {
+      "label": "NotificationStatus",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_notificationstatus",
+      "community": 1,
+      "norm_label": "notificationstatus"
+    },
+    {
+      "label": "check_app_notification",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_check_app_notification",
+      "community": 1,
+      "norm_label": "check_app_notification"
+    },
+    {
+      "label": "notification_cache_dir",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_notification_cache_dir",
+      "community": 1,
+      "norm_label": "notification_cache_dir"
+    },
+    {
+      "label": "ensure_notification_cache_dir",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_ensure_notification_cache_dir",
+      "community": 1,
+      "norm_label": "ensure_notification_cache_dir"
+    },
+    {
+      "label": "classic_update_core::notification::classify",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_classify",
+      "community": 1,
+      "norm_label": "classic_update_core::notification::classify"
+    },
+    {
+      "label": "UpdateError",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_updateerror",
+      "community": 18,
+      "norm_label": "updateerror"
+    },
+    {
+      "label": "publish-app-notification.yml Workflow",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_publish_workflow",
+      "community": 7,
+      "norm_label": "publish-app-notification.yml workflow"
+    },
+    {
+      "label": "tools/publish_app_notification/validate.py",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_validate_py",
+      "community": 7,
+      "norm_label": "tools/publish_app_notification/validate.py"
+    },
+    {
+      "label": "tools/publish_app_notification/generate_manifest.py",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_generate_manifest_py",
+      "community": 7,
+      "norm_label": "tools/publish_app_notification/generate_manifest.py"
+    },
+    {
+      "label": "tools/publish_app_notification/verify_release_asset.py",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_verify_release_asset_py",
+      "community": 7,
+      "norm_label": "tools/publish_app_notification/verify_release_asset.py"
+    },
+    {
+      "label": "tools/publish_yaml_data/smoke_test_pages.py",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_smoke_test_pages_py",
+      "community": 7,
+      "norm_label": "tools/publish_yaml_data/smoke_test_pages.py"
+    },
+    {
+      "label": "tools/publish_app_notification/dry_run.py",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_dry_run_py",
+      "community": 7,
+      "norm_label": "tools/publish_app_notification/dry_run.py"
+    },
+    {
+      "label": "CLASSIC Data/app-notification.yaml",
+      "file_type": "document",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_app_notification_yaml",
+      "community": 7,
+      "norm_label": "classic data/app-notification.yaml"
+    },
+    {
+      "label": "NotificationStatusDto (CXX binding)",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_notificationstatusdto",
+      "community": 1,
+      "norm_label": "notificationstatusdto (cxx binding)"
+    },
+    {
+      "label": "ClassicNotificationError (PyO3 binding)",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_classicnotificationerror",
+      "community": 18,
+      "norm_label": "classicnotificationerror (pyo3 binding)"
+    },
+    {
+      "label": "ClassicUpdateError (PyO3 binding)",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_classicupdateerror",
+      "community": 18,
+      "norm_label": "classicupdateerror (pyo3 binding)"
+    },
+    {
+      "label": "GithubClient (deprecated)",
+      "file_type": "code",
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_update_notification_delivery_githubclient",
+      "community": 1,
+      "norm_label": "githubclient (deprecated)"
+    },
+    {
+      "label": "Game Setup Workflow",
+      "file_type": "document",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_doc",
+      "community": 0,
+      "norm_label": "game setup workflow"
+    },
+    {
+      "label": "classic-path-core crate",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_path_core",
+      "community": 0,
+      "norm_label": "classic-path-core crate"
+    },
+    {
+      "label": "classic-xse-core crate",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_xse_core",
+      "community": 0,
+      "norm_label": "classic-xse-core crate"
+    },
+    {
+      "label": "classic-scangame-core crate",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_scangame_core",
+      "community": 0,
+      "norm_label": "classic-scangame-core crate"
+    },
+    {
+      "label": "classic-version-registry-core crate",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_version_registry_core",
+      "community": 0,
+      "norm_label": "classic-version-registry-core crate"
+    },
+    {
+      "label": "GamePathFinder",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_gamepathfinder",
+      "community": 0,
+      "norm_label": "gamepathfinder"
+    },
+    {
+      "label": "DocsPathFinder",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_docspathfinder",
+      "community": 0,
+      "norm_label": "docspathfinder"
+    },
+    {
+      "label": "validate_settings_paths",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_validate_settings_paths",
+      "community": 0,
+      "norm_label": "validate_settings_paths"
+    },
+    {
+      "label": "DocumentsChecker",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_documentschecker",
+      "community": 0,
+      "norm_label": "documentschecker"
+    },
+    {
+      "label": "XseType",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_xsetype",
+      "community": 0,
+      "norm_label": "xsetype"
+    },
+    {
+      "label": "is_xse_installed",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_is_xse_installed",
+      "community": 0,
+      "norm_label": "is_xse_installed"
+    },
+    {
+      "label": "detect_xse_version",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_detect_xse_version",
+      "community": 0,
+      "norm_label": "detect_xse_version"
+    },
+    {
+      "label": "get_xse_info",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_get_xse_info",
+      "community": 0,
+      "norm_label": "get_xse_info"
+    },
+    {
+      "label": "run_combined_checks",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_run_combined_checks",
+      "community": 0,
+      "norm_label": "run_combined_checks"
+    },
+    {
+      "label": "GameIntegrityChecker",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_gameintegritychecker",
+      "community": 0,
+      "norm_label": "gameintegritychecker"
+    },
+    {
+      "label": "XseChecker",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_xsechecker",
+      "community": 0,
+      "norm_label": "xsechecker"
+    },
+    {
+      "label": "needs_path_detection",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_needs_path_detection",
+      "community": 0,
+      "norm_label": "needs_path_detection"
+    },
+    {
+      "label": "GameScanOrchestrator",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_gamescanorchestrator",
+      "community": 0,
+      "norm_label": "gamescanorchestrator"
+    },
+    {
+      "label": "get_version_registry",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_get_version_registry",
+      "community": 0,
+      "norm_label": "get_version_registry"
+    },
+    {
+      "label": "GameVersion (classic-version-registry-core)",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_gameversion_registry",
+      "community": 0,
+      "norm_label": "gameversion (classic-version-registry-core)"
+    },
+    {
+      "label": "GameVersion (classic-scangame-core)",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_gameversion_scangame",
+      "community": 0,
+      "norm_label": "gameversion (classic-scangame-core)"
+    },
+    {
+      "label": "cpp-bindings/classic-cpp-bridge/src/path.rs",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_cpp_bridge_path",
+      "community": 0,
+      "norm_label": "cpp-bindings/classic-cpp-bridge/src/path.rs"
+    },
+    {
+      "label": "cpp-bindings/classic-cpp-bridge/src/game.rs",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_cpp_bridge_game",
+      "community": 0,
+      "norm_label": "cpp-bindings/classic-cpp-bridge/src/game.rs"
+    },
+    {
+      "label": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_cpp_bridge_scangame",
+      "community": 0,
+      "norm_label": "cpp-bindings/classic-cpp-bridge/src/scangame.rs"
+    },
+    {
+      "label": "classic-path-core.md",
+      "file_type": "document",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_path_core_doc",
+      "community": 0,
+      "norm_label": "classic-path-core.md"
+    },
+    {
+      "label": "classic-xse-core.md",
+      "file_type": "document",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_xse_core_doc",
+      "community": 0,
+      "norm_label": "classic-xse-core.md"
+    },
+    {
+      "label": "classic-scangame-core.md",
+      "file_type": "document",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_scangame_core_doc",
+      "community": 0,
+      "norm_label": "classic-scangame-core.md"
+    },
+    {
+      "label": "classic-version-registry-core.md",
+      "file_type": "document",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_classic_version_registry_core_doc",
+      "community": 0,
+      "norm_label": "classic-version-registry-core.md"
+    },
+    {
+      "label": "AGENTS.md",
+      "file_type": "document",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_agents_md",
+      "community": 0,
+      "norm_label": "agents.md"
+    },
+    {
+      "label": "classic-scangame-core::xse::AddressLibInfo",
+      "file_type": "code",
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "game_setup_workflow_addresslibinfo",
+      "community": 0,
+      "norm_label": "classic-scangame-core::xse::addresslibinfo"
     }
   ],
   "links": [
@@ -4166,16 +4829,6 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "api/classic-path-core.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "classic_path_core_md",
-      "target": "classic_cpp_bridge_scan_progress_callback_md"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "api/classic-perf-core.md",
       "source_location": null,
       "weight": 1.0,
@@ -4241,26 +4894,6 @@
       "weight": 1.0,
       "source": "classic_gui_scan_result_ordering_md",
       "target": "classic_gui_scan_progress_consumer_md"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "api/classic-resource-core.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "classic_resource_core_md",
-      "target": "classic_path_core_md"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "api/classic-scangame-core.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "classic_scangame_core_md",
-      "target": "classic_path_core_md"
     },
     {
       "relation": "references",
@@ -4580,26 +5213,6 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "api/app-update-notification-delivery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "api_app_update_notification_delivery",
-      "target": "api_error_contract"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "api/classic-update-core.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "api_classic_update_core",
-      "target": "api_app_update_notification_delivery"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "api/classic-update-core.md",
       "source_location": null,
       "weight": 1.0,
@@ -4615,8 +5228,818 @@
       "weight": 1.0,
       "source": "api_yaml_update_delivery",
       "target": "api_error_contract"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_appnotificationmanifest"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_check_app_notification"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_classification"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_ensure_notification_cache_dir"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_githubclient"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_notification_cache_dir"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "app_update_notification_delivery_notificationstatus"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "classic_path_core_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "classic_update_core_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "error_contract_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_doc",
+      "target": "yaml_update_delivery_doc"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.8,
+      "source": "app_update_notification_delivery_appnotificationmanifest",
+      "target": "app_update_notification_delivery_classification"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.85,
+      "source": "app_update_notification_delivery_appnotificationmanifest",
+      "target": "app_update_notification_delivery_notificationstatus"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.85,
+      "source": "app_update_notification_delivery_notificationstatusdto",
+      "target": "app_update_notification_delivery_notificationstatus"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.95,
+      "source": "app_update_notification_delivery_check_app_notification",
+      "target": "app_update_notification_delivery_classify"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.75,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.75,
+      "source": "app_update_notification_delivery_check_app_notification",
+      "target": "app_update_notification_delivery_githubclient"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.85,
+      "source": "app_update_notification_delivery_check_app_notification",
+      "target": "app_update_notification_delivery_notification_cache_dir"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.8,
+      "source": "app_update_notification_delivery_notification_cache_dir",
+      "target": "app_update_notification_delivery_ensure_notification_cache_dir"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.8,
+      "source": "app_update_notification_delivery_classicnotificationerror",
+      "target": "app_update_notification_delivery_updateerror"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_publish_workflow",
+      "target": "app_update_notification_delivery_app_notification_yaml"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_publish_workflow",
+      "target": "app_update_notification_delivery_generate_manifest_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_publish_workflow",
+      "target": "app_update_notification_delivery_smoke_test_pages_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_publish_workflow",
+      "target": "app_update_notification_delivery_validate_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_publish_workflow",
+      "target": "app_update_notification_delivery_verify_release_asset_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.95,
+      "source": "app_update_notification_delivery_dry_run_py",
+      "target": "app_update_notification_delivery_validate_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.95,
+      "source": "app_update_notification_delivery_dry_run_py",
+      "target": "app_update_notification_delivery_generate_manifest_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.95,
+      "source": "app_update_notification_delivery_dry_run_py",
+      "target": "app_update_notification_delivery_verify_release_asset_py"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.95,
+      "source": "app_update_notification_delivery_dry_run_py",
+      "target": "app_update_notification_delivery_smoke_test_pages_py"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 0.95,
+      "source": "app_update_notification_delivery_dry_run_py",
+      "target": "app_update_notification_delivery_app_notification_yaml"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/app-update-notification-delivery.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "app_update_notification_delivery_classicnotificationerror",
+      "target": "app_update_notification_delivery_classicupdateerror"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_agents_md"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_classic_path_core_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_classic_scangame_core_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_classic_version_registry_core_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_classic_xse_core_doc"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_cpp_bridge_game"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_cpp_bridge_path"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_cpp_bridge_scangame"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_detect_xse_version"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_docspathfinder"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_documentschecker"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_gameintegritychecker"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_gamepathfinder"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_gamescanorchestrator"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_get_version_registry"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_get_xse_info"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_is_xse_installed"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_needs_path_detection"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_run_combined_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_validate_settings_paths"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_xsechecker"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_doc",
+      "target": "game_setup_workflow_xsetype"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_classic_scangame_core",
+      "target": "game_setup_workflow_classic_path_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.9,
+      "source": "game_setup_workflow_cpp_bridge_path",
+      "target": "game_setup_workflow_classic_path_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_docspathfinder",
+      "target": "game_setup_workflow_classic_path_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_documentschecker",
+      "target": "game_setup_workflow_classic_path_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_gamepathfinder",
+      "target": "game_setup_workflow_classic_path_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_validate_settings_paths",
+      "target": "game_setup_workflow_classic_path_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_detect_xse_version",
+      "target": "game_setup_workflow_classic_xse_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_get_xse_info",
+      "target": "game_setup_workflow_classic_xse_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_is_xse_installed",
+      "target": "game_setup_workflow_classic_xse_core"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.75,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.75,
+      "source": "game_setup_workflow_xsechecker",
+      "target": "game_setup_workflow_classic_xse_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_xsetype",
+      "target": "game_setup_workflow_classic_xse_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_addresslibinfo",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_classic_scangame_core",
+      "target": "game_setup_workflow_classic_version_registry_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.9,
+      "source": "game_setup_workflow_cpp_bridge_scangame",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_gameintegritychecker",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_gameversion_scangame",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_needs_path_detection",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_run_combined_checks",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_xsechecker",
+      "target": "game_setup_workflow_classic_scangame_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.85,
+      "source": "game_setup_workflow_cpp_bridge_game",
+      "target": "game_setup_workflow_classic_version_registry_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_gameversion_registry",
+      "target": "game_setup_workflow_classic_version_registry_core"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_get_version_registry",
+      "target": "game_setup_workflow_classic_version_registry_core"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_run_combined_checks",
+      "target": "game_setup_workflow_documentschecker"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.8,
+      "source": "game_setup_workflow_get_xse_info",
+      "target": "game_setup_workflow_is_xse_installed"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.85,
+      "source": "game_setup_workflow_get_xse_info",
+      "target": "game_setup_workflow_detect_xse_version"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_run_combined_checks",
+      "target": "game_setup_workflow_gameintegritychecker"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_gamescanorchestrator",
+      "target": "game_setup_workflow_xsechecker"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "game_setup_workflow_addresslibinfo",
+      "target": "game_setup_workflow_get_version_registry"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "api/game-setup-workflow.md",
+      "source_location": null,
+      "weight": 0.9,
+      "source": "game_setup_workflow_gameversion_registry",
+      "target": "game_setup_workflow_gameversion_scangame"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "554b2440025e36435406669576b724bcaa581a5a"
+  "built_at_commit": "5fe7ccf5709850463837d75628f820715557232d"
 }

@@ -965,13 +965,13 @@
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/notification.rs": {
-    "mtime": 1781867710.653137,
-    "ast_hash": "dabe9605deacb214e330959200c6a7fc",
+    "mtime": 1781869775.1611857,
+    "ast_hash": "a0e715674e7ee77180f95a29923b63c4",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/notification_tests.rs": {
-    "mtime": 1781867649.730329,
-    "ast_hash": "5a833b4a3def3f5232877077b8c2536e",
+    "mtime": 1781869787.5409126,
+    "ast_hash": "52b5b26f96fa4ee00d6c85dee04c367a",
     "semantic_hash": ""
   },
   "business-logic/classic-update-core/src/yaml_update.rs": {
@@ -4425,8 +4425,8 @@
     "semantic_hash": ""
   },
   "docs/api/app-update-notification-delivery.md": {
-    "mtime": 1781867710.659142,
-    "ast_hash": "f11978e0e284c086b3a3fe763b58f9c0",
+    "mtime": 1781869798.6101763,
+    "ast_hash": "0212127ede8f3ed64494112890b8a316",
     "semantic_hash": ""
   },
   "docs/api/binding-compliance-suite.md": {
@@ -5140,8 +5140,8 @@
     "semantic_hash": ""
   },
   "openspec/specs/app-update-notification/spec.md": {
-    "mtime": 1781867710.660642,
-    "ast_hash": "1562a5186e183e11a75874ec2dfed5f0",
+    "mtime": 1781867868.941271,
+    "ast_hash": "9dcb843faac208370b9a8d413725fb92",
     "semantic_hash": ""
   },
   "openspec/specs/async-dds-header-read/spec.md": {

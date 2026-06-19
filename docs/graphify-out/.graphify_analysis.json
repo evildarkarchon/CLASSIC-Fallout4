@@ -1,13 +1,60 @@
 {
   "communities": {
     "0": [
+      "game_setup_workflow_addresslibinfo",
+      "game_setup_workflow_agents_md",
+      "game_setup_workflow_classic_path_core",
+      "game_setup_workflow_classic_path_core_doc",
+      "game_setup_workflow_classic_scangame_core",
+      "game_setup_workflow_classic_scangame_core_doc",
+      "game_setup_workflow_classic_version_registry_core",
+      "game_setup_workflow_classic_version_registry_core_doc",
+      "game_setup_workflow_classic_xse_core",
+      "game_setup_workflow_classic_xse_core_doc",
+      "game_setup_workflow_cpp_bridge_game",
+      "game_setup_workflow_cpp_bridge_path",
+      "game_setup_workflow_cpp_bridge_scangame",
+      "game_setup_workflow_detect_xse_version",
+      "game_setup_workflow_doc",
+      "game_setup_workflow_docspathfinder",
+      "game_setup_workflow_documentschecker",
+      "game_setup_workflow_gameintegritychecker",
+      "game_setup_workflow_gamepathfinder",
+      "game_setup_workflow_gamescanorchestrator",
+      "game_setup_workflow_gameversion_registry",
+      "game_setup_workflow_gameversion_scangame",
+      "game_setup_workflow_get_version_registry",
+      "game_setup_workflow_get_xse_info",
+      "game_setup_workflow_is_xse_installed",
+      "game_setup_workflow_needs_path_detection",
+      "game_setup_workflow_run_combined_checks",
+      "game_setup_workflow_validate_settings_paths",
+      "game_setup_workflow_xsechecker",
+      "game_setup_workflow_xsetype"
+    ],
+    "1": [
+      "app_update_notification_delivery_appnotificationmanifest",
+      "app_update_notification_delivery_check_app_notification",
+      "app_update_notification_delivery_classification",
+      "app_update_notification_delivery_classify",
+      "app_update_notification_delivery_doc",
+      "app_update_notification_delivery_ensure_notification_cache_dir",
+      "app_update_notification_delivery_githubclient",
+      "app_update_notification_delivery_notification_cache_dir",
+      "app_update_notification_delivery_notificationstatus",
+      "app_update_notification_delivery_notificationstatusdto",
+      "classic_path_core_doc",
+      "classic_update_core_doc",
+      "error_contract_doc",
+      "yaml_update_delivery_doc"
+    ],
+    "2": [
       "classic_cpp_bridge_scan_progress_callback_md",
       "classic_database_core_md",
       "classic_file_io_core_md",
       "classic_gui_scan_progress_consumer_md",
       "classic_gui_scan_result_ordering_md",
       "classic_message_core_md",
-      "classic_path_core_md",
       "classic_perf_core_md",
       "classic_registry_core_md",
       "classic_resource_core_md",
@@ -16,7 +63,7 @@
       "classic_settings_core_md",
       "classic_shared_core_md"
     ],
-    "1": [
+    "3": [
       "performance_ffi_optimization_guide",
       "performance_memory_profiling_guide",
       "performance_performance_monitoring",
@@ -31,7 +78,7 @@
       "prd_complete_python_to_rust_migration",
       "prd_complete_rename_rust_to_classiclib_rs"
     ],
-    "2": [
+    "4": [
       "classic_cpp_bridge_scan_progress_callback_batchprogresseventkind",
       "classic_cpp_bridge_scan_progress_callback_batchprogressphase",
       "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress",
@@ -44,7 +91,7 @@
       "classic_gui_scan_result_ordering_resultscontroller",
       "classic_gui_scan_result_ordering_scanworker"
     ],
-    "3": [
+    "5": [
       "classic_file_io_audit_summary_pylogcollector",
       "classic_file_io_py_audit_report_crashlogs_get_files",
       "classic_file_io_py_audit_report_crashlogs_get_files_rust",
@@ -57,7 +104,7 @@
       "phase_1_5_formid_settings_missing_methods_audit_settingsvalidator",
       "timer_api_audit_report_timer"
     ],
-    "4": [
+    "6": [
       "development_profiling_workflow",
       "development_pyo3_integration_patterns",
       "development_rust_acceleration_guide",
@@ -67,7 +114,16 @@
       "implementation_rust_scanlog_verification",
       "implementation_scanlog_performance_optimizations"
     ],
-    "5": [
+    "7": [
+      "app_update_notification_delivery_app_notification_yaml",
+      "app_update_notification_delivery_dry_run_py",
+      "app_update_notification_delivery_generate_manifest_py",
+      "app_update_notification_delivery_publish_workflow",
+      "app_update_notification_delivery_smoke_test_pages_py",
+      "app_update_notification_delivery_validate_py",
+      "app_update_notification_delivery_verify_release_asset_py"
+    ],
+    "8": [
       "async_yaml_implementation_summary_asyncbridge",
       "async_yaml_implementation_summary_asyncyamlsettingscore",
       "async_yaml_implementation_summary_batch_get_settings",
@@ -76,7 +132,7 @@
       "async_yaml_implementation_summary_prefetch_all_settings",
       "async_yaml_implementation_summary_yamlsettingscache"
     ],
-    "6": [
+    "9": [
       "gpu_pattern_matcher_api_audit_gpudetector",
       "gpu_pattern_matcher_api_audit_gpuinfo",
       "gpu_pattern_matcher_api_audit_gpuvendor",
@@ -84,468 +140,469 @@
       "integration_layer_api_audit_report_gpu_rust",
       "python_binding_audit_report_patternmatcher"
     ],
-    "7": [
+    "10": [
       "classic_version_core_parse_version",
       "classic_version_core_try_parse_version",
       "classic_xse_core_detect_xse_version",
       "classic_xse_core_get_xse_info",
       "classic_xse_core_is_xse_installed"
     ],
-    "8": [
+    "11": [
       "config_issue_fcx_handler_api_audit_configissue",
       "config_issue_fcx_handler_api_audit_fcxmodehandler",
       "config_issue_fcx_handler_api_audit_rustacceleratedfcxmodehandler",
       "integration_layer_api_audit_report_fcx_rust",
       "python_binding_audit_report_configissue"
     ],
-    "9": [
-      "api_app_update_notification_delivery",
-      "api_classic_update_core",
-      "api_error_contract",
-      "api_yaml_update_delivery"
-    ],
-    "10": [
+    "12": [
       "implementation_node_api_parity_baseline_parity_contract",
       "implementation_node_api_parity_baseline_parity_diff_report",
       "implementation_node_api_parity_baseline_runtime_coverage_summary",
       "implementation_node_api_parity_governance_gate_contract_baseline"
     ],
-    "11": [
+    "13": [
       "migration_async_threading_patterns_guide",
       "migration_async_yaml_documentation",
       "migration_async_yaml_migration_examples",
       "migration_asyncbridge_refactoring"
     ],
-    "12": [
+    "14": [
       "python_binding_audit_report_papyrus_logging",
       "python_binding_audit_report_papyrusanalyzer",
       "python_binding_audit_report_papyruslogging",
       "python_binding_audit_report_papyrusstats"
     ],
-    "13": [
+    "15": [
       "rust_development_with_rust",
       "rust_rust_async_pattern",
       "rust_rust_usage_guide",
       "rust_troubleshooting_rust"
     ],
-    "14": [
+    "16": [
       "scangame_rust_acceleration_classic_cpp_bridge",
       "scangame_rust_acceleration_classic_node",
       "scangame_rust_acceleration_classic_scangame_core",
       "scangame_rust_acceleration_classic_scangame_py"
     ],
-    "15": [
+    "17": [
+      "api_classic_update_core",
+      "api_error_contract",
+      "api_yaml_update_delivery"
+    ],
+    "18": [
+      "app_update_notification_delivery_classicnotificationerror",
+      "app_update_notification_delivery_classicupdateerror",
+      "app_update_notification_delivery_updateerror"
+    ],
+    "19": [
       "classic_version_core",
       "classic_version_registry_core",
       "classic_xse_core"
     ],
-    "16": [
+    "20": [
       "classic_version_core_is_known_f4se_version",
       "classic_version_core_is_known_fallout4_version",
       "classic_version_registry_core_get_version_registry"
     ],
-    "17": [
+    "21": [
       "implementation_python_api_parity_baseline_parity_contract",
       "implementation_python_api_parity_baseline_parity_diff_report",
       "implementation_python_api_parity_baseline_runtime_coverage_summary"
     ],
-    "18": [
+    "22": [
       "papyrus_api_audit_papyrus_logging",
       "papyrus_api_audit_papyrusanalyzer",
       "papyrus_api_audit_papyrusstats"
     ],
-    "19": [
+    "23": [
       "rust_bindings_pyclass_method",
       "rust_bindings_pymoduleerror",
       "rust_bindings_topyerr"
     ],
-    "20": [
+    "24": [
       "rust_gil_release_pattern_pyo3_0_27",
       "rust_pyo3_0_27_migration",
       "rust_pyo3_quick_reference"
     ],
-    "21": [
+    "25": [
       "rust_rust_architecture",
       "rust_rust_modules_detailed",
       "rust_rust_parser_module"
     ],
-    "22": [
+    "26": [
       "rust_workspace_architecture_business_logic",
       "rust_workspace_architecture_classic_config_core",
       "rust_workspace_architecture_classic_scanlog_core"
     ],
-    "23": [
+    "27": [
       "rust_workspace_architecture_classic_config_py",
       "rust_workspace_architecture_classic_scanlog_py",
       "rust_workspace_architecture_python_bindings"
     ],
-    "24": [
+    "28": [
       "classic_config_api_audit_create_yamldata",
       "classic_config_api_audit_yamldata_constructor"
     ],
-    "25": [
+    "29": [
       "classic_cpp_bridge_scan_progress_callback_batchprogressevent",
       "classic_cpp_bridge_scan_progress_callback_scanbatchprogresscallback"
     ],
-    "26": [
+    "30": [
       "classic_ratatui_tui_prd_classic_tui",
       "classic_yaml_core"
     ],
-    "27": [
+    "31": [
       "classic_scangame_api_audit_phase2_1_inivalidator",
       "classic_scangame_api_audit_phase2_1_scangame_factory"
     ],
-    "28": [
+    "32": [
       "papyrus_api_audit_report_papyrusanalyzer",
       "papyrus_api_audit_report_papyrusstats"
     ],
-    "29": [
+    "33": [
       "rust_bindings_pyclass_dataresult",
       "rust_bindings_pylist_direct_construction"
     ],
-    "30": [
+    "34": [
       "rust_workspace_architecture_classic_shared_core",
       "rust_workspace_architecture_foundation"
     ],
-    "31": [
+    "35": [
       "api_binding_compliance_suite_binding_compliance_suite"
     ],
-    "32": [
+    "36": [
       "api_binding_contract_refresh_note_binding_contract_refresh_note"
     ],
-    "33": [
+    "37": [
       "api_binding_parity_overview_binding_parity_overview"
     ],
-    "34": [
+    "38": [
       "api_binding_parity_policy_binding_parity_policy"
     ],
-    "35": [
+    "39": [
       "api_classic_config_core_classic_config_core"
     ],
-    "36": [
+    "40": [
       "api_classic_config_core_yaml_schema_classic_config_core_yaml_schema"
     ],
-    "37": [
+    "41": [
       "api_classic_cpp_bridge_data_entrypoints_classic_cpp_bridge_data_entrypoints"
     ],
-    "38": [
+    "42": [
       "api_classic_cpp_bridge_game_entrypoints_classic_cpp_bridge_game_entrypoints"
     ],
-    "39": [
+    "43": [
       "api_cxx_parity_gate"
     ],
-    "40": [
+    "44": [
       "api_formid_settings_boundary"
     ],
-    "41": [
+    "45": [
       "api_formid_sqlite_conventions"
     ],
-    "42": [
+    "46": [
       "api_node_python_contract_map"
     ],
-    "43": [
+    "47": [
       "api_quick_start_quick_start"
     ],
-    "44": [
+    "48": [
       "api_readme_classic_api_docs"
     ],
-    "45": [
+    "49": [
       "architecture_architecture_overview"
     ],
-    "46": [
+    "50": [
       "architecture_cli_tui_architecture"
     ],
-    "47": [
+    "51": [
       "architecture_help_system_schema"
     ],
-    "48": [
+    "52": [
       "audit_reports_audit_final_summary"
     ],
-    "49": [
+    "53": [
       "audit_reports_rust_api_compliance_audit_report"
     ],
-    "50": [
+    "54": [
       "classic_cpp_bridge_scan_progress_callback_scanner_rs"
     ],
-    "51": [
+    "55": [
       "classic_python_cli_prd_classic_py_cli"
     ],
-    "52": [
+    "56": [
       "classic_scangame_api_audit_phase21_inivalidator"
     ],
-    "53": [
-      "classic_tui_prd_classic_tui"
-    ],
-    "54": [
+    "57": [
       "classic_version_core_compare_versions"
     ],
-    "55": [
+    "58": [
       "classic_version_core_extract_all_versions"
     ],
-    "56": [
+    "59": [
       "classic_version_core_extract_version_from_filename"
     ],
-    "57": [
+    "60": [
       "classic_version_core_extract_version_from_log"
     ],
-    "58": [
+    "61": [
       "classic_version_core_format_version"
     ],
-    "59": [
+    "62": [
       "classic_version_core_pe_version_extract_pe_version"
     ],
-    "60": [
+    "63": [
       "classic_version_core_pe_version_is_valid_executable_path"
     ],
-    "61": [
+    "64": [
       "classic_version_registry_core_fallout4version"
     ],
-    "62": [
+    "65": [
       "classic_version_registry_core_gameversion"
     ],
-    "63": [
+    "66": [
       "classic_version_registry_core_matchresult"
     ],
-    "64": [
+    "67": [
       "classic_version_registry_core_versioninfo"
     ],
-    "65": [
+    "68": [
       "classic_version_registry_core_versionregistry"
     ],
-    "66": [
+    "69": [
       "classic_web_core"
     ],
-    "67": [
+    "70": [
       "classic_web_core_build_url_with_query"
     ],
-    "68": [
+    "71": [
       "classic_web_core_extract_domain"
     ],
-    "69": [
+    "72": [
       "classic_web_core_get_user_agent"
     ],
-    "70": [
+    "73": [
       "classic_web_core_get_user_agent_with_suffix"
     ],
-    "71": [
+    "74": [
       "classic_web_core_is_valid_url"
     ],
-    "72": [
+    "75": [
       "classic_web_core_join_url"
     ],
-    "73": [
+    "76": [
       "classic_web_core_modsite"
     ],
-    "74": [
+    "77": [
       "classic_web_core_validate_url"
     ],
-    "75": [
+    "78": [
       "classic_web_core_weberror"
     ],
-    "76": [
+    "79": [
       "classic_xse_core_xseinfo"
     ],
-    "77": [
+    "80": [
       "classic_xse_core_xsetype"
     ],
-    "78": [
+    "81": [
       "classic_yaml_core_merge_keys"
     ],
-    "79": [
+    "82": [
       "classic_yaml_core_yamloperations"
     ],
-    "80": [
+    "83": [
       "development_async_development_guide"
     ],
-    "81": [
+    "84": [
       "development_cache_patterns"
     ],
-    "82": [
+    "85": [
       "development_ci_cd_guide"
     ],
-    "83": [
+    "86": [
       "development_error_schema_definition"
     ],
-    "84": [
+    "87": [
       "development_gil_audit"
     ],
-    "85": [
+    "88": [
       "development_rust_integration_guide"
     ],
-    "86": [
+    "89": [
       "guides_tui_user_guide"
     ],
-    "87": [
+    "90": [
       "implementation_cxx_api_parity_baseline_cxx_diff_report"
     ],
-    "88": [
+    "91": [
       "implementation_cxx_api_parity_baseline_cxx_gate_report"
     ],
-    "89": [
+    "92": [
       "implementation_fcx_read_only_conversion"
     ],
-    "90": [
+    "93": [
       "implementation_logging_contract_phase1"
     ],
-    "91": [
+    "94": [
       "implementation_logging_python_baseline_inventory_phase1"
     ],
-    "92": [
+    "95": [
       "implementation_logging_redaction_policy_phase1"
     ],
-    "93": [
+    "96": [
       "implementation_node_api_parity_baseline_handoff_map"
     ],
-    "94": [
+    "97": [
       "implementation_summary_max_connections_databasepool"
     ],
-    "95": [
+    "98": [
       "migration_readme_api_migration"
     ],
-    "96": [
+    "99": [
       "other_pyinstaller_data_bundling_guide"
     ],
-    "97": [
+    "100": [
       "performance_dashboard_html"
     ],
-    "98": [
+    "101": [
       "performance_rust_db_benchmark_baseline"
     ],
-    "99": [
+    "102": [
       "pyo3_async_runtimes_usage_guide_async_database"
     ],
-    "100": [
+    "103": [
       "pyo3_async_runtimes_usage_guide_databasepool"
     ],
-    "101": [
+    "104": [
       "pyo3_async_runtimes_usage_guide_future_into_py"
     ],
-    "102": [
+    "105": [
       "pyo3_async_runtimes_usage_guide_into_future"
     ],
-    "103": [
+    "106": [
       "readme_classic_documentation"
     ],
-    "104": [
+    "107": [
       "runtime_gil_patterns_block_on_result"
     ],
-    "105": [
+    "108": [
       "runtime_gil_patterns_future_into_py"
     ],
-    "106": [
+    "109": [
       "runtime_gil_patterns_spawn_result"
     ],
-    "107": [
+    "110": [
       "runtime_gil_patterns_without_gil_block_on"
     ],
-    "108": [
+    "111": [
       "rust_2024_edition_guide_asyncfileprocessor"
     ],
-    "109": [
+    "112": [
       "rust_2024_edition_guide_asyncprocessor"
     ],
-    "110": [
+    "113": [
       "rust_bindings_without_gil"
     ],
-    "111": [
+    "114": [
       "rust_documentation_index_classic_rust_docs"
     ],
-    "112": [
+    "115": [
       "rust_phase4_utilities_guide"
     ],
-    "113": [
+    "116": [
       "rust_python_to_rust_migration_guide"
     ],
-    "114": [
+    "117": [
       "rust_workspace_architecture_cpp_bindings"
     ],
-    "115": [
+    "118": [
       "rust_workspace_architecture_dependency_direction"
     ],
-    "116": [
+    "119": [
       "rust_workspace_architecture_node_bindings"
     ],
-    "117": [
+    "120": [
       "rust_workspace_architecture_ui_applications"
     ],
-    "118": [
+    "121": [
       "superpowers_specs_2026_03_09_classic_gui_scan_result_ordering_test_design"
     ],
-    "119": [
+    "122": [
       "testing_async_test_patterns_guide"
     ],
-    "120": [
+    "123": [
       "testing_fixture_migration_summary"
     ],
-    "121": [
+    "124": [
       "testing_rust_testing_guide"
     ],
-    "122": [
+    "125": [
       "testing_test_pollution_guide"
     ],
-    "123": [
+    "126": [
       "testing_test_pollution_updates"
     ],
-    "124": [
+    "127": [
       "testing_test_structure"
     ],
-    "125": [
+    "128": [
       "testing_testing_async_bridge"
     ],
-    "126": [
+    "129": [
       "testing_testing_database_pools"
     ],
-    "127": [
+    "130": [
       "testing_testing_fileio_core"
     ],
-    "128": [
+    "131": [
       "testing_testing_fixture_standards"
     ],
-    "129": [
+    "132": [
       "testing_testing_global_registry"
     ],
-    "130": [
+    "133": [
       "testing_testing_guide_index"
     ],
-    "131": [
+    "134": [
       "testing_testing_message_handler"
     ],
-    "132": [
+    "135": [
       "testing_testing_yaml_cache"
     ],
-    "133": [
+    "136": [
       "workspace_migration_matrix_workspace_migration_matrix"
     ]
   },
   "cohesion": {
-    "0": 0.21978021978021978,
-    "1": 0.15384615384615385,
-    "2": 0.18181818181818182,
-    "3": 0.18181818181818182,
-    "4": 0.32142857142857145,
-    "5": 0.3333333333333333,
-    "6": 0.3333333333333333,
-    "7": 0.4,
-    "8": 0.4,
-    "9": 0.6666666666666666,
-    "10": 0.5,
-    "11": 0.6666666666666666,
+    "0": 0.11724137931034483,
+    "1": 0.1978021978021978,
+    "2": 0.21794871794871795,
+    "3": 0.15384615384615385,
+    "4": 0.18181818181818182,
+    "5": 0.18181818181818182,
+    "6": 0.32142857142857145,
+    "7": 0.47619047619047616,
+    "8": 0.3333333333333333,
+    "9": 0.3333333333333333,
+    "10": 0.4,
+    "11": 0.4,
     "12": 0.5,
-    "13": 0.5,
+    "13": 0.6666666666666666,
     "14": 0.5,
-    "15": 0.6666666666666666,
-    "16": 0.6666666666666666,
-    "17": 1.0,
+    "15": 0.5,
+    "16": 0.5,
+    "17": 0.6666666666666666,
     "18": 0.6666666666666666,
     "19": 0.6666666666666666,
     "20": 0.6666666666666666,
-    "21": 0.6666666666666666,
+    "21": 1.0,
     "22": 0.6666666666666666,
     "23": 0.6666666666666666,
-    "24": 1.0,
-    "25": 1.0,
-    "26": 1.0,
-    "27": 1.0,
+    "24": 0.6666666666666666,
+    "25": 0.6666666666666666,
+    "26": 0.6666666666666666,
+    "27": 0.6666666666666666,
     "28": 1.0,
     "29": 1.0,
     "30": 1.0,
@@ -651,9 +708,27 @@
     "130": 1.0,
     "131": 1.0,
     "132": 1.0,
-    "133": 1.0
+    "133": 1.0,
+    "134": 1.0,
+    "135": 1.0,
+    "136": 1.0
   },
   "gods": [
+    {
+      "id": "game_setup_workflow_doc",
+      "label": "Game Setup Workflow",
+      "degree": 22
+    },
+    {
+      "id": "app_update_notification_delivery_doc",
+      "label": "App Update Notification Delivery",
+      "degree": 11
+    },
+    {
+      "id": "game_setup_workflow_classic_scangame_core",
+      "label": "classic-scangame-core crate",
+      "degree": 9
+    },
     {
       "id": "async_yaml_implementation_summary_asyncyamlsettingscore",
       "label": "AsyncYamlSettingsCore class",
@@ -665,14 +740,19 @@
       "degree": 8
     },
     {
-      "id": "classic_cpp_bridge_scan_progress_callback_md",
-      "label": "classic::scanner Scan Progress Callback Contract",
-      "degree": 7
-    },
-    {
       "id": "implementation_performance_optimization_complete",
       "label": "CLASSIC ScanLog Performance Optimization - COMPLETE",
       "degree": 7
+    },
+    {
+      "id": "classic_cpp_bridge_scan_progress_callback_md",
+      "label": "classic::scanner Scan Progress Callback Contract",
+      "degree": 6
+    },
+    {
+      "id": "game_setup_workflow_classic_path_core",
+      "label": "classic-path-core crate",
+      "degree": 6
     },
     {
       "id": "classic_cpp_bridge_scan_progress_callback_orchestrator_process_logs_batch_with_progress",
@@ -680,29 +760,9 @@
       "degree": 5
     },
     {
-      "id": "gpu_pattern_matcher_api_audit_gpudetector",
-      "label": "GpuDetector",
-      "degree": 4
-    },
-    {
-      "id": "performance_performance_monitoring",
-      "label": "Performance Monitoring Guide for CLASSIC Rust Components",
-      "degree": 4
-    },
-    {
-      "id": "classic_scangame_core_md",
-      "label": "classic-scangame-core API Guide",
-      "degree": 4
-    },
-    {
-      "id": "classic_gui_scan_progress_consumer_scanworker",
-      "label": "ScanWorker",
-      "degree": 3
-    },
-    {
-      "id": "classic_file_io_py_audit_report_pylogcollector",
-      "label": "PyLogCollector",
-      "degree": 3
+      "id": "app_update_notification_delivery_publish_workflow",
+      "label": "publish-app-notification.yml Workflow",
+      "degree": 5
     }
   ],
   "surprises": [
@@ -763,7 +823,7 @@
     }
   ],
   "tokens": {
-    "input": 59980,
-    "output": 1396
+    "input": 9802,
+    "output": 14756
   }
 }
