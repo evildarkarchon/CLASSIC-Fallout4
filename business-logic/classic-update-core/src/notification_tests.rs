@@ -897,6 +897,42 @@ mod fallback_cache {
         clear_fallback_marker(Some(tmp.path()));
         clear_fallback_marker(None);
     }
+
+    #[test]
+    fn clear_fallback_cache_removes_marker_body_and_etag() {
+        let tmp = TempDir::new().unwrap();
+        persist_fallback_manifest_body(Some(tmp.path()), minimal_manifest_bytes());
+        // A stray ETag proves the purge also drops an orphan ETag that could
+        // otherwise be paired with a removed or stale body after unpublish.
+        std::fs::write(tmp.path().join(ETAG_FILENAME), b"\"W/stale\"").unwrap();
+        assert!(tmp.path().join(FALLBACK_MARKER_FILENAME).exists());
+        assert!(tmp.path().join(CACHED_MANIFEST_FILENAME).exists());
+
+        clear_fallback_cache(Some(tmp.path()));
+
+        assert!(
+            !tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "marker purged",
+        );
+        assert!(
+            !tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "body purged",
+        );
+        assert!(
+            !tmp.path().join(ETAG_FILENAME).exists(),
+            "stale ETag purged",
+        );
+        // Reuse window is closed even while still within TTL.
+        assert!(
+            try_fallback_cache_at(Some(tmp.path()), SystemTime::now()).is_none(),
+            "no cache may be reused after a confirmed not-published purge",
+        );
+    }
+
+    #[test]
+    fn clear_fallback_cache_is_noop_when_cache_dir_is_none() {
+        clear_fallback_cache(None);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1141,6 +1177,21 @@ mod orchestrator {
         assert_eq!(status.classification, Classification::NotPublished);
         assert!(status.latest_version.is_empty());
         assert!(status.published_at.is_empty());
+        // The confirmed not-published result MUST purge the fallback cache so a
+        // later non-404 Pages failure within TTL cannot resurrect the stale
+        // manifest via try_fallback_cache.
+        assert!(
+            !tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "not-published must clear the fallback marker",
+        );
+        assert!(
+            !tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "not-published must clear the fallback body",
+        );
+        assert!(
+            try_fallback_cache_at(Some(tmp.path()), SystemTime::now()).is_none(),
+            "purged cache must not be reusable on a later Pages outage",
+        );
         pages_mock.assert_async().await;
         releases_mock.assert_async().await;
     }

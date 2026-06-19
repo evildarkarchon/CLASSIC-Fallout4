@@ -57,9 +57,11 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 │      Pages cache (body + fallback marker, ETag cleared). Typed    │
 │      schema and validation rejections propagate directly.          │
 │   6. If Pages reports NotFound and Releases also finds no         │
-│      app-notification-v* release, returns NotPublished.          │
-│      A matching release missing `manifest.json` is a broken       │
-│      publish and remains a fetch failure.                         │
+│      `app-notification-v*` release, purge the fallback cache      │
+│      (marker + body + ETag) and return NotPublished, so a later   │
+│      Pages outage cannot resurrect the unpublished manifest. A    │
+│      matching release missing `manifest.json` is a broken publish │
+│      and remains a fetch failure.                                 │
 │   7. Returns NotificationStatus { classification, latest_version, │
 │      published_at, min_supported_version?, display?, parse_error? │
 │      }.                                                           │

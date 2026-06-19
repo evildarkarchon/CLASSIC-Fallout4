@@ -578,6 +578,11 @@ pub async fn check_app_notification_with(
                     if matches!(&pages_err, UpdateError::NotFound(_))
                         && matches!(&fallback_err, UpdateError::NotFound(_)) =>
                 {
+                    // Both channels confirm absence. Purge any fallback-seeded cache
+                    // (marker + body + stale ETag) so a later non-404 Pages failure
+                    // within FALLBACK_CACHE_TTL cannot resurrect, via try_fallback_cache,
+                    // the notification we just confirmed unpublished.
+                    clear_fallback_cache(cache_dir);
                     Ok(NotificationStatus::not_published())
                 }
                 Err(fallback_err) => Err(UpdateError::NotificationFetchFailed {
@@ -753,6 +758,45 @@ fn clear_fallback_marker(cache_dir: Option<&Path>) {
                 "failed to clear fallback cache marker at {} after Pages success: {e}",
                 marker_path.display(),
             );
+        }
+    }
+}
+
+/// Purge the entire cached notification triplet - fallback marker,
+/// manifest body, and any stale Pages ETag - when both channels confirm
+/// the notification is unpublished (Pages `404` + no matching
+/// `app-notification-v*` release).
+///
+/// Distinct from [`clear_fallback_marker`], which runs on a Pages
+/// success: there `try_pages` has just rewritten the body with
+/// Pages-authoritative bytes, so only the now-stale marker must go. A
+/// confirmed `NotPublished` leaves no authoritative body anywhere, so the
+/// body and ETag are dropped too. Removing the marker alone already closes
+/// the [`try_fallback_cache`] reuse window, but clearing the body and ETag
+/// as well prevents a later non-404 Pages failure within
+/// [`FALLBACK_CACHE_TTL`] from resurrecting the just-unpublished manifest
+/// and avoids leaving an orphan ETag paired with a removed body.
+///
+/// All I/O errors are logged and swallowed: the `NotPublished` result is
+/// already correct and a best-effort cache cleanup must not demote it.
+fn clear_fallback_cache(cache_dir: Option<&Path>) {
+    let Some(dir) = cache_dir else {
+        return;
+    };
+    for (path, label) in [
+        (dir.join(FALLBACK_MARKER_FILENAME), "fallback cache marker"),
+        (dir.join(CACHED_MANIFEST_FILENAME), "cached manifest body"),
+        (dir.join(ETAG_FILENAME), "stale Pages ETag"),
+    ] {
+        match std::fs::remove_file(&path) {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => {
+                log::warn!(
+                    "failed to clear {label} at {} after confirmed not-published: {e}",
+                    path.display(),
+                );
+            }
         }
     }
 }
