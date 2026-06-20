@@ -47,6 +47,22 @@ def test_every_rust_target_parses_to_nonempty_symbols() -> None:
         )
 
 
+def test_settings_yaml_ops_nested_modules_are_scanned() -> None:
+    """The settings YAML facade stores inherent methods two module levels deep."""
+    manifest = parse_rust_surface(REPO_ROOT, set())
+    symbols = {
+        entry["symbol"]: entry
+        for entry in manifest["symbols"]
+        if entry["crate"] == "classic-settings-core"
+    }
+    assert symbols["parse_yaml"]["source_file"] == (
+        "business-logic/classic-settings-core/src/yaml_ops/operations.rs"
+    )
+    assert symbols["get_setting"]["source_file"] == (
+        "business-logic/classic-settings-core/src/yaml_ops/accessors.rs"
+    )
+
+
 def test_python_target_modules_count_matches_repo_root_inventory() -> None:
     assert len(PYTHON_TARGET_MODULES) == 17
 

@@ -141,3 +141,27 @@ def test_every_target_crate_parses_non_empty_symbols() -> None:
         )
     finally:
         gb.RUST_TARGET_CRATES = original
+
+
+def test_settings_yaml_ops_nested_modules_are_scanned() -> None:
+    """The settings YAML facade stores inherent methods two module levels deep."""
+    original = gb.RUST_TARGET_CRATES
+    try:
+        gb.RUST_TARGET_CRATES = {
+            "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs"
+        }
+        surface = gb.parse_rust_surface(REPO_ROOT, tier1_rust_symbols=set())
+    finally:
+        gb.RUST_TARGET_CRATES = original
+
+    symbols = {
+        entry["symbol"]: entry
+        for entry in surface.get("symbols", [])
+        if entry["crate"] == "classic-settings-core"
+    }
+    assert symbols["parse_yaml"]["source_file"] == (
+        "business-logic/classic-settings-core/src/yaml_ops/operations.rs"
+    )
+    assert symbols["get_setting"]["source_file"] == (
+        "business-logic/classic-settings-core/src/yaml_ops/accessors.rs"
+    )

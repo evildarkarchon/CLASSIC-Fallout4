@@ -147,6 +147,19 @@ fn extract_classic_info_version(yaml_text: &str) -> Result<String, String> {
                      metadata are not allowed under the schema-2.0 contract"
                 ));
             }
+            if part.len() > 1 && part.starts_with('0') {
+                return Err(format!(
+                    "`CLASSIC_Info.version: {value}` component `{part}` has \
+                     a leading zero; strict SemVer numeric identifiers must \
+                     not include leading zeros"
+                ));
+            }
+            if part.parse::<u32>().is_err() {
+                return Err(format!(
+                    "`CLASSIC_Info.version: {value}` component `{part}` does \
+                     not fit in a 32-bit version number"
+                ));
+            }
         }
         return Ok(bare.to_string());
     }
@@ -156,3 +169,7 @@ fn extract_classic_info_version(yaml_text: &str) -> Result<String, String> {
             .into(),
     )
 }
+
+#[cfg(test)]
+#[path = "build_tests.rs"]
+mod tests;
