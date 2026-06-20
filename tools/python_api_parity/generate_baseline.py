@@ -439,7 +439,7 @@ def _collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, 
     return sources
 
 
-def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[str, Any]:
+def parse_rust_surface(repo_root: Path, _tier1_rust_symbols: set[str]) -> dict[str, Any]:
     """Extract Rust symbols from target crate `lib.rs` files.
 
     Post v9.1.0 Phase 1: when a `-core` crate uses nested modules (e.g.,
@@ -468,7 +468,7 @@ def _extract_rust_symbols(
     source_rel: str,
     crate_name: str,
     owner_module: str,
-    crate_lib_rel: str,
+    _crate_lib_rel: str,
 ) -> None:
     for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
         symbol = match.group(1)
@@ -593,7 +593,7 @@ def _is_property_decorator(decorators: list[str]) -> bool:
 
 
 def parse_python_surface(
-    repo_root: Path, tier1_python_exports: set[str]
+    repo_root: Path, _tier1_python_exports: set[str]
 ) -> dict[str, Any]:
     """Extract public classes, top-level functions, and callable methods from `.pyi` files."""
     exports: list[dict[str, Any]] = []
