@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-20T06:42:20.019983+00:00",
+  "generated_at_utc": "2026-06-20T07:05:24.779721+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -11474,16 +11474,6 @@
     },
     {
       "symbol": "merge_yaml_documents",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/merge/documents.rs",
-      "source_decl": "pub fn merge_yaml_documents(source: impl Into<String>, docs: &[Yaml])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "merge_yaml_documents",
       "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
@@ -13174,15 +13164,6 @@
     },
     {
       "symbol": "CACHED_MANIFEST_FILENAME",
-      "kind": "const",
-      "crate": "classic-update-core",
-      "owner_module": "update",
-      "source_file": "business-logic/classic-update-core/src/manifest_fetch.rs",
-      "source_decl": "pub const CACHED_MANIFEST_FILENAME",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CACHED_MANIFEST_FILENAME",
       "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
@@ -13256,15 +13237,6 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub struct ClientSchemaSet",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ETAG_FILENAME",
-      "kind": "const",
-      "crate": "classic-update-core",
-      "owner_module": "update",
-      "source_file": "business-logic/classic-update-core/src/manifest_fetch.rs",
-      "source_decl": "pub const ETAG_FILENAME",
       "tier": "tier1"
     },
     {
