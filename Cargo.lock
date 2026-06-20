@@ -1097,6 +1097,7 @@ dependencies = [
  "indexmap",
  "parking_lot",
  "quick_cache",
+ "rayon",
  "serde",
  "serde_json",
  "serial_test",

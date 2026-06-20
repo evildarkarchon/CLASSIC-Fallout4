@@ -32,6 +32,9 @@ fn test_validate_empty_mapping() {
     // Should have both empty warning and missing root key warning
     assert!(!issues.is_empty());
     assert!(issues.iter().any(|i| i.message.contains("empty")));
+    assert!(issues.iter().any(|i| {
+        i.severity == IssueSeverity::Warning && i.message.contains("CLASSIC_Settings")
+    }));
 }
 
 #[test]

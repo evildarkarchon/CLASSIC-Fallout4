@@ -349,6 +349,21 @@ fn test_set_setting_whitespace_key_path() {
 
 #[test]
 #[serial_test::serial]
+fn test_set_setting_rejects_empty_key_path_segments() {
+    let ops = YamlOperations::new();
+    let yaml = ops.parse_yaml("key: value").expect("Parse should succeed");
+
+    for key_path in [".a", "a..b", "a."] {
+        let result = ops.set_setting(&yaml, key_path, Yaml::Boolean(true));
+        assert!(
+            matches!(result, Err(YamlError::InvalidKeyPath(_))),
+            "expected InvalidKeyPath for {key_path:?}, got {result:?}"
+        );
+    }
+}
+
+#[test]
+#[serial_test::serial]
 fn test_get_setting_missing_key() {
     let ops = YamlOperations::new();
     let yaml_str = "exists: true";

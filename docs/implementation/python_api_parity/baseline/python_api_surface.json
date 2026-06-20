@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-12T23:03:44.754718+00:00",
+  "generated_at_utc": "2026-06-20T06:42:20.034058+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -146,6 +146,66 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def validate_paths(self) -> None:"
+    },
+    {
+      "module": "classic_config",
+      "export": "ClassicMainYamlVersionEmptyError",
+      "export_path": "ClassicMainYamlVersionEmptyError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ClassicMainYamlVersionEmptyError(ClassicMainYamlVersionError):"
+    },
+    {
+      "module": "classic_config",
+      "export": "ClassicMainYamlVersionError",
+      "export_path": "ClassicMainYamlVersionError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ClassicMainYamlVersionError(Exception):"
+    },
+    {
+      "module": "classic_config",
+      "export": "ClassicMainYamlVersionInvalidError",
+      "export_path": "ClassicMainYamlVersionInvalidError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ClassicMainYamlVersionInvalidError(ClassicMainYamlVersionError):"
+    },
+    {
+      "module": "classic_config",
+      "export": "ClassicMainYamlVersionKeyMissingError",
+      "export_path": "ClassicMainYamlVersionKeyMissingError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ClassicMainYamlVersionKeyMissingError(ClassicMainYamlVersionError):"
+    },
+    {
+      "module": "classic_config",
+      "export": "ClassicMainYamlVersionLoadError",
+      "export_path": "ClassicMainYamlVersionLoadError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ClassicMainYamlVersionLoadError(ClassicMainYamlVersionError):"
+    },
+    {
+      "module": "classic_config",
+      "export": "ClassicMainYamlVersionNotStringError",
+      "export_path": "ClassicMainYamlVersionNotStringError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ClassicMainYamlVersionNotStringError(ClassicMainYamlVersionError):"
     },
     {
       "module": "classic_config",
@@ -353,6 +413,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def get_application_dir() -> str | None:"
+    },
+    {
+      "module": "classic_config",
+      "export": "load_main_yaml_version",
+      "export_path": "load_main_yaml_version",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def load_main_yaml_version(bundled_yaml_dir: str | None = None) -> str:"
     },
     {
       "module": "classic_config",
@@ -8034,6 +8105,98 @@
     },
     {
       "module": "classic_update",
+      "export": "AppNotificationDisplay",
+      "export_path": "AppNotificationDisplay",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class AppNotificationDisplay:"
+    },
+    {
+      "module": "classic_update",
+      "export": "ApprovedUpdate",
+      "export_path": "ApprovedUpdate",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ApprovedUpdate:"
+    },
+    {
+      "module": "classic_update",
+      "export": "__init__",
+      "export_path": "ApprovedUpdate.__init__",
+      "parent_class": "ApprovedUpdate",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def __init__( self, release_tag: str, file_names: list[str], file_sha256: list[str], ) -> None: ..."
+    },
+    {
+      "module": "classic_update",
+      "export": "ClassicNotificationCacheIoError",
+      "export_path": "ClassicNotificationCacheIoError",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ClassicNotificationCacheIoError(ClassicNotificationError):"
+    },
+    {
+      "module": "classic_update",
+      "export": "ClassicNotificationDecodeError",
+      "export_path": "ClassicNotificationDecodeError",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ClassicNotificationDecodeError(ClassicNotificationError):"
+    },
+    {
+      "module": "classic_update",
+      "export": "ClassicNotificationError",
+      "export_path": "ClassicNotificationError",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ClassicNotificationError(ClassicUpdateError):"
+    },
+    {
+      "module": "classic_update",
+      "export": "ClassicNotificationFetchFailed",
+      "export_path": "ClassicNotificationFetchFailed",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ClassicNotificationFetchFailed(ClassicNotificationError):"
+    },
+    {
+      "module": "classic_update",
+      "export": "ClassicNotificationInstalledVersionParseError",
+      "export_path": "ClassicNotificationInstalledVersionParseError",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ClassicNotificationInstalledVersionParseError(ClassicNotificationError):"
+    },
+    {
+      "module": "classic_update",
+      "export": "ClassicUpdateError",
+      "export_path": "ClassicUpdateError",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class ClassicUpdateError(Exception):"
+    },
+    {
+      "module": "classic_update",
       "export": "GithubAsset",
       "export_path": "GithubAsset",
       "kind": "class",
@@ -8121,6 +8284,164 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-update-py/classic_update.pyi",
       "signature": "class GithubRelease:"
+    },
+    {
+      "module": "classic_update",
+      "export": "NotificationStatus",
+      "export_path": "NotificationStatus",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class NotificationStatus:"
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlApplyRequest",
+      "export_path": "YamlApplyRequest",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlApplyRequest:"
+    },
+    {
+      "module": "classic_update",
+      "export": "__init__",
+      "export_path": "YamlApplyRequest.__init__",
+      "parent_class": "YamlApplyRequest",
+      "kind": "method",
+      "arity": 6,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def __init__( self, pages_url: str, tag_prefix: str, entries: list[YamlClientSchemaEntry], enabled: bool, approved: ApprovedUpdate, bundled_yaml_dir: str | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlClientSchemaEntry",
+      "export_path": "YamlClientSchemaEntry",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlClientSchemaEntry:"
+    },
+    {
+      "module": "classic_update",
+      "export": "__init__",
+      "export_path": "YamlClientSchemaEntry.__init__",
+      "parent_class": "YamlClientSchemaEntry",
+      "kind": "method",
+      "arity": 6,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def __init__( self, name: str, accepted_major: int, accepted_minimum_minor: int, has_installed: bool = False, installed_major: int = 0, installed_minor: int = 0, ) -> None: ..."
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlRejectedFile",
+      "export_path": "YamlRejectedFile",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlRejectedFile:"
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlRollbackOutcome",
+      "export_path": "YamlRollbackOutcome",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlRollbackOutcome:"
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlUpdateFile",
+      "export_path": "YamlUpdateFile",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlUpdateFile:"
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlUpdateFileOutcome",
+      "export_path": "YamlUpdateFileOutcome",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlUpdateFileOutcome:"
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlUpdateReport",
+      "export_path": "YamlUpdateReport",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlUpdateReport:"
+    },
+    {
+      "module": "classic_update",
+      "export": "YamlUpdateStatus",
+      "export_path": "YamlUpdateStatus",
+      "kind": "class",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "class YamlUpdateStatus:"
+    },
+    {
+      "module": "classic_update",
+      "export": "apply_yaml_update",
+      "export_path": "apply_yaml_update",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def apply_yaml_update(request: YamlApplyRequest) -> YamlUpdateReport:"
+    },
+    {
+      "module": "classic_update",
+      "export": "check_app_notification",
+      "export_path": "check_app_notification",
+      "kind": "function",
+      "arity": 3,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def check_app_notification( owner: str, repo: str, installed_version: str, ) -> NotificationStatus:"
+    },
+    {
+      "module": "classic_update",
+      "export": "check_yaml_update",
+      "export_path": "check_yaml_update",
+      "kind": "function",
+      "arity": 5,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def check_yaml_update( pages_url: str, tag_prefix: str, entries: list[YamlClientSchemaEntry], enabled: bool, bundled_yaml_dir: str | None = None, ) -> YamlUpdateStatus:"
+    },
+    {
+      "module": "classic_update",
+      "export": "rollback_yaml_update",
+      "export_path": "rollback_yaml_update",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def rollback_yaml_update(file_name: str) -> YamlRollbackOutcome:"
     },
     {
       "module": "classic_version",

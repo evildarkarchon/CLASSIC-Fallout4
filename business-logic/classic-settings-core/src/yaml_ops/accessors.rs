@@ -57,6 +57,11 @@ impl YamlOperations {
 
         let mut root_yaml = yaml.clone();
         let keys: Vec<&str> = key_path.split('.').collect();
+        if keys.iter().any(|key| key.is_empty()) {
+            return Err(YamlError::InvalidKeyPath(
+                "Key path contains empty segment".to_string(),
+            ));
+        }
         let last_key = keys
             .last()
             .ok_or_else(|| YamlError::InvalidKeyPath("Empty key path".to_string()))?;

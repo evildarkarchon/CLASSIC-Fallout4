@@ -401,7 +401,7 @@ def _collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, 
         sources.append((rel_path, content))
 
         for match in re.finditer(
-            r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content
+            r"(?m)^\s*(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content
         ):
             child_path = resolve_module_path(source_path, match.group(1))
             if child_path is not None:

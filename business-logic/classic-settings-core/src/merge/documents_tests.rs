@@ -43,7 +43,7 @@ fn test_merge_yaml_documents_empty_stream_is_error() {
         SettingsError::EmptyDocument { source } => {
             assert_eq!(source.label(), Some("memory://settings.yaml"))
         }
-        _ => panic!("Expected EmptyDocument, got {:?}", err),
+        e => panic!("Expected EmptyDocument, got {:?}", e),
     }
 }
 
@@ -63,6 +63,6 @@ fn test_merge_yaml_documents_rejects_non_mapping_documents() {
             assert_eq!(index, 1);
             assert_eq!(found, "sequence");
         }
-        _ => panic!("Expected InvalidYamlStructure, got {:?}", err),
+        e => panic!("Expected InvalidYamlStructure, got {:?}", e),
     }
 }

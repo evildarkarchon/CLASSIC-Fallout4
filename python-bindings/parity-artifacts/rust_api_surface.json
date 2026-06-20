@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-19T09:34:23.979286+00:00",
+  "generated_at_utc": "2026-06-20T06:42:56.607159+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -71,6 +71,15 @@
       "source_file": "business-logic/classic-config-core/src/shippable.rs",
       "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "loader::CandidateRejection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CandidateRejection",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub struct CandidateRejection",
       "tier": "tier1"
     },
     {
@@ -242,6 +251,15 @@
     },
     {
       "symbol": "LoadSource",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub enum LoadSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LoadSource",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
@@ -281,12 +299,30 @@
       "tier": "tier1"
     },
     {
+      "symbol": "LoadedShippable",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub struct LoadedShippable",
+      "tier": "tier1"
+    },
+    {
       "symbol": "MAIN_YAML",
       "kind": "const",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
       "source_decl": "pub const MAIN_YAML",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MainYamlVersionError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/main_version.rs",
+      "source_decl": "pub enum MainYamlVersionError",
       "tier": "tier1"
     },
     {
@@ -487,6 +523,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ShippableFile",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub struct ShippableFile",
+      "tier": "tier1"
+    },
+    {
       "symbol": "SuspectErrorRule",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -569,6 +614,15 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/yamldata.rs",
       "source_decl": "pub struct YamlDataCore",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlLoadError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub enum YamlLoadError",
       "tier": "tier1"
     },
     {
@@ -685,6 +739,16 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::format_registry_game_version",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub fn game(game: &str)",
       "tier": "tier1"
     },
     {
@@ -835,6 +899,16 @@
       "source_file": "business-logic/classic-config-core/src/shippable.rs",
       "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "loader::load_shippable_yaml_with_env",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "main",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
+      "source_decl": "pub fn main()",
       "tier": "tier1"
     },
     {
@@ -3886,6 +3960,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_documents_path",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/platform/windows.rs",
+      "source_decl": "pub fn get_documents_path()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_home_directory",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/platform/linux.rs",
+      "source_decl": "pub fn get_home_directory()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_int",
       "kind": "function",
       "arity": 3,
@@ -4205,6 +4299,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "parse_steam_library_vdf",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/platform/linux.rs",
+      "source_decl": "pub fn parse_steam_library_vdf(game_steam_id: u32)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "parse_xse_log",
       "kind": "function",
       "arity": 1,
@@ -4252,6 +4356,16 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/docs_path.rs",
       "source_decl": "pub fn relative_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/platform/windows.rs",
+      "source_decl": "pub fn remove_readonly(file_path: &Path)",
       "tier": "tier1"
     },
     {
@@ -10326,8 +10440,18 @@
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
       "source_decl": "pub enum CoercedValue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CoercedValue",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use types::{CoercedValue, SettingType};",
+      "source_expr": "types::CoercedValue",
       "tier": "tier1"
     },
     {
@@ -10335,7 +10459,7 @@
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
       "source_decl": "pub enum Compatibility",
       "tier": "tier1"
     },
@@ -10350,12 +10474,32 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Compatibility",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
+      "source_expr": "compat::Compatibility",
+      "tier": "tier1"
+    },
+    {
       "symbol": "IssueSeverity",
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/structure.rs",
       "source_decl": "pub enum IssueSeverity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "IssueSeverity",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use structure::{IssueSeverity, ValidationIssue, validate_settings_structure};",
+      "source_expr": "structure::IssueSeverity",
       "tier": "tier1"
     },
     {
@@ -10382,7 +10526,7 @@
       "kind": "const",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
       "source_decl": "pub const SCHEMA_VERSION_KEY",
       "tier": "tier1"
     },
@@ -10394,6 +10538,16 @@
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
       "source_expr": "schema_version::SCHEMA_VERSION_KEY",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SCHEMA_VERSION_KEY",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
+      "source_expr": "extract::SCHEMA_VERSION_KEY",
       "tier": "tier1"
     },
     {
@@ -10417,10 +10571,20 @@
     },
     {
       "symbol": "SchemaCompat",
-      "kind": "struct",
+      "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
+      "source_expr": "compat::SchemaCompat",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaCompat",
+      "kind": "struct",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
       "source_decl": "pub struct SchemaCompat",
       "tier": "tier1"
     },
@@ -10429,7 +10593,7 @@
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/version.rs",
       "source_decl": "pub enum SchemaParseError",
       "tier": "tier1"
     },
@@ -10444,6 +10608,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "SchemaParseError",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use version::{SchemaParseError, SchemaVersion};",
+      "source_expr": "version::SchemaParseError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "SchemaVersion",
       "kind": "reexport",
       "crate": "classic-settings-core",
@@ -10455,10 +10629,20 @@
     },
     {
       "symbol": "SchemaVersion",
-      "kind": "struct",
+      "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use version::{SchemaParseError, SchemaVersion};",
+      "source_expr": "version::SchemaVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaVersion",
+      "kind": "struct",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/version.rs",
       "source_decl": "pub struct SchemaVersion",
       "tier": "tier1"
     },
@@ -10467,8 +10651,18 @@
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
       "source_decl": "pub enum SettingType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingType",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use types::{CoercedValue, SettingType};",
+      "source_expr": "types::SettingType",
       "tier": "tier1"
     },
     {
@@ -10511,10 +10705,20 @@
     },
     {
       "symbol": "ValidationIssue",
-      "kind": "struct",
+      "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use structure::{IssueSeverity, ValidationIssue, validate_settings_structure};",
+      "source_expr": "structure::ValidationIssue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ValidationIssue",
+      "kind": "struct",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators/structure.rs",
       "source_decl": "pub struct ValidationIssue",
       "tier": "tier1"
     },
@@ -10540,10 +10744,20 @@
     },
     {
       "symbol": "YamlCacheStats",
-      "kind": "struct",
+      "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "cache::YamlCacheStats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlCacheStats",
+      "kind": "struct",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
       "source_decl": "pub struct YamlCacheStats",
       "tier": "tier1"
     },
@@ -10552,7 +10766,7 @@
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/error.rs",
       "source_decl": "pub enum YamlError",
       "tier": "tier1"
     },
@@ -10564,6 +10778,16 @@
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
       "source_expr": "yaml_ops::YamlError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlError",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_decl": "pub use error::YamlError;",
+      "source_expr": "error::YamlError",
       "tier": "tier1"
     },
     {
@@ -10587,10 +10811,20 @@
     },
     {
       "symbol": "YamlOperations",
-      "kind": "struct",
+      "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_decl": "pub use operations::YamlOperations;",
+      "source_expr": "operations::YamlOperations",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlOperations",
+      "kind": "struct",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub struct YamlOperations",
       "tier": "tier1"
     },
@@ -10599,7 +10833,7 @@
       "kind": "enum",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
       "source_decl": "pub enum YamlSchemaError",
       "tier": "tier1"
     },
@@ -10614,12 +10848,22 @@
       "tier": "tier1"
     },
     {
+      "symbol": "YamlSchemaError",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
+      "source_expr": "extract::YamlSchemaError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_bool",
       "kind": "function",
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
       "source_decl": "pub fn as_bool(&self)",
       "tier": "tier1"
     },
@@ -10629,7 +10873,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
       "source_decl": "pub fn as_f64(&self)",
       "tier": "tier1"
     },
@@ -10639,7 +10883,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
       "source_decl": "pub fn as_i64(&self)",
       "tier": "tier1"
     },
@@ -10649,7 +10893,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
       "source_decl": "pub fn as_str(&self)",
       "tier": "tier1"
     },
@@ -10729,7 +10973,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn clear_cache(&self)",
       "tier": "tier1"
     },
@@ -10749,7 +10993,7 @@
       "arity": 0,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
       "source_decl": "pub fn clear_global_yaml_cache()",
       "tier": "tier1"
     },
@@ -10764,13 +11008,33 @@
       "tier": "tier1"
     },
     {
+      "symbol": "clear_global_yaml_cache",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "cache::clear_global_yaml_cache",
+      "tier": "tier1"
+    },
+    {
       "symbol": "coerce_setting_value",
       "kind": "function",
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/coerce.rs",
       "source_decl": "pub fn coerce_setting_value(value: &str, target_type: SettingType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "coerce_setting_value",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
+      "source_expr": "coerce::coerce_setting_value",
       "tier": "tier1"
     },
     {
@@ -10779,7 +11043,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn dump_yaml(&self, yaml: &Yaml)",
       "tier": "tier1"
     },
@@ -10789,7 +11053,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
       "source_decl": "pub fn extract_schema_version(doc: &Yaml)",
       "tier": "tier1"
     },
@@ -10804,11 +11068,21 @@
       "tier": "tier1"
     },
     {
+      "symbol": "extract_schema_version",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
+      "source_expr": "extract::extract_schema_version",
+      "tier": "tier1"
+    },
+    {
       "symbol": "fn",
       "kind": "const",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },
@@ -10817,7 +11091,7 @@
       "kind": "const",
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/version.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },
@@ -10854,7 +11128,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn get_cache_stats(&self)",
       "tier": "tier1"
     },
@@ -10884,7 +11158,7 @@
       "arity": 3,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_hashmap_value(&self, data: &Yaml, key_path: &str)",
       "tier": "tier1"
     },
@@ -10894,7 +11168,7 @@
       "arity": 3,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_indexmap_value(&self, data: &Yaml, key_path: &str)",
       "tier": "tier1"
     },
@@ -10904,7 +11178,7 @@
       "arity": 3,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_setting(&self, yaml: &Yaml, key_path: &str)",
       "tier": "tier1"
     },
@@ -10914,7 +11188,7 @@
       "arity": 3,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_settings_batch(&self, yaml: &Yaml, key_paths: &[&str])",
       "tier": "tier1"
     },
@@ -10924,7 +11198,7 @@
       "arity": 4,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_string_value(&self, data: &Yaml, key_path: &str, default: &str)",
       "tier": "tier1"
     },
@@ -10934,7 +11208,7 @@
       "arity": 3,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_vec_value(&self, data: &Yaml, key_path: &str)",
       "tier": "tier1"
     },
@@ -10964,7 +11238,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn is_cache_enabled(&self)",
       "tier": "tier1"
     },
@@ -11064,7 +11338,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_async",
       "tier": "tier1"
     },
@@ -11074,7 +11348,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_batch_async",
       "tier": "tier1"
     },
@@ -11094,7 +11368,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_batch_sync",
       "tier": "tier1"
     },
@@ -11104,7 +11378,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn load_yaml_file(&self, path: &Path)",
       "tier": "tier1"
     },
@@ -11114,7 +11388,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn load_yaml_files_batch(&self, paths: &[&Path])",
       "tier": "tier1"
     },
@@ -11124,7 +11398,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_merged_async",
       "tier": "tier1"
     },
@@ -11144,7 +11418,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_merged_sync",
       "tier": "tier1"
     },
@@ -11164,7 +11438,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::load_yaml_sync",
       "tier": "tier1"
     },
@@ -11174,7 +11448,7 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_merge.rs",
+      "source_file": "business-logic/classic-settings-core/src/merge/merge_keys.rs",
       "source_decl": "pub fn merge_keys(yaml: Yaml)",
       "tier": "tier1"
     },
@@ -11184,8 +11458,18 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_merge::merge_keys;",
-      "source_expr": "yaml_merge::merge_keys",
+      "source_decl": "pub use merge::merge_keys;",
+      "source_expr": "merge::merge_keys",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_keys",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/merge.rs",
+      "source_decl": "pub use merge_keys::merge_keys;",
+      "source_expr": "merge_keys::merge_keys",
       "tier": "tier1"
     },
     {
@@ -11194,7 +11478,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
+      "source_file": "business-logic/classic-settings-core/src/merge/documents.rs",
       "source_decl": "pub fn merge_yaml_documents(source: impl Into<String>, docs: &[Yaml])",
       "tier": "tier1"
     },
@@ -11204,8 +11488,18 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
-      "source_expr": "loader::merge_yaml_documents",
+      "source_decl": "pub use merge::merge_yaml_documents;",
+      "source_expr": "merge::merge_yaml_documents",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_yaml_documents",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/merge.rs",
+      "source_decl": "pub use documents::merge_yaml_documents;",
+      "source_expr": "documents::merge_yaml_documents",
       "tier": "tier1"
     },
     {
@@ -11224,7 +11518,7 @@
       "arity": 0,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn new()",
       "tier": "tier1"
     },
@@ -11234,7 +11528,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn parse_yaml(&self, content: &str)",
       "tier": "tier1"
     },
@@ -11254,7 +11548,7 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_yaml_documents, parse_yaml_content, };",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
       "source_expr": "loader::parse_yaml_content",
       "tier": "tier1"
     },
@@ -11294,7 +11588,7 @@
       "arity": 0,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
       "source_decl": "pub fn reset_yaml_cache_stats()",
       "tier": "tier1"
     },
@@ -11309,12 +11603,22 @@
       "tier": "tier1"
     },
     {
+      "symbol": "reset_yaml_cache_stats",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "cache::reset_yaml_cache_stats",
+      "tier": "tier1"
+    },
+    {
       "symbol": "save_yaml_file",
       "kind": "function",
       "arity": 3,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn save_yaml_file(&self, path: &Path, yaml: &Yaml)",
       "tier": "tier1"
     },
@@ -11324,7 +11628,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
       "source_decl": "pub fn schema_compat_check(version: &SchemaVersion, compat: &SchemaCompat)",
       "tier": "tier1"
     },
@@ -11339,12 +11643,22 @@
       "tier": "tier1"
     },
     {
+      "symbol": "schema_compat_check",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
+      "source_expr": "compat::schema_compat_check",
+      "tier": "tier1"
+    },
+    {
       "symbol": "set_cache_enabled",
       "kind": "function",
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
       "source_decl": "pub fn set_cache_enabled(&mut self, enabled: bool)",
       "tier": "tier1"
     },
@@ -11354,7 +11668,7 @@
       "arity": 4,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn set_setting(&self, yaml: &Yaml, key_path: &str, value: Yaml)",
       "tier": "tier1"
     },
@@ -11364,8 +11678,18 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/coerce.rs",
       "source_decl": "pub fn validate_setting_value(value: &str, expected_type: SettingType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_setting_value",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
+      "source_expr": "coerce::validate_setting_value",
       "tier": "tier1"
     },
     {
@@ -11374,8 +11698,18 @@
       "arity": 1,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_file": "business-logic/classic-settings-core/src/validators/structure.rs",
       "source_decl": "pub fn validate_settings_structure(yaml: &Yaml)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_settings_structure",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/validators.rs",
+      "source_decl": "pub use structure::{IssueSeverity, ValidationIssue, validate_settings_structure};",
+      "source_expr": "structure::validate_settings_structure",
       "tier": "tier1"
     },
     {
@@ -11393,7 +11727,7 @@
       "arity": 2,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
+      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
       "source_decl": "pub fn with_file(self, file_label: impl Into<String>)",
       "tier": "tier1"
     },
@@ -11403,7 +11737,7 @@
       "arity": 0,
       "crate": "classic-settings-core",
       "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
       "source_decl": "pub fn yaml_cache_stats()",
       "tier": "tier1"
     },
@@ -11415,6 +11749,16 @@
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
       "source_expr": "yaml_ops::yaml_cache_stats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache_stats",
+      "kind": "reexport",
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
+      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "cache::yaml_cache_stats",
       "tier": "tier1"
     },
     {
@@ -12830,6 +13174,15 @@
     },
     {
       "symbol": "CACHED_MANIFEST_FILENAME",
+      "kind": "const",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/manifest_fetch.rs",
+      "source_decl": "pub const CACHED_MANIFEST_FILENAME",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CACHED_MANIFEST_FILENAME",
       "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
@@ -12903,6 +13256,15 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub struct ClientSchemaSet",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ETAG_FILENAME",
+      "kind": "const",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/manifest_fetch.rs",
+      "source_decl": "pub const ETAG_FILENAME",
       "tier": "tier1"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-21T23:39:22.583792+00:00",
+  "generated_at_utc": "2026-06-20T06:42:19.736977+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -2241,6 +2241,15 @@
       "arity": 1
     },
     {
+      "export": "loadMainYamlVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadMainYamlVersion(bundledYamlDir?: string | undefined | null): Promise<string>",
+      "arity": 1
+    },
+    {
       "export": "loadSettingsAsync",
       "kind": "function",
       "owner_module": "config",
@@ -2831,7 +2840,7 @@
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function yamlGetStringValue(content: string, keyPath: string, default: string): string",
+      "signature": "export declare function yamlGetStringValue(content: string, keyPath: string, defaultValue: string): string",
       "arity": 3
     },
     {

@@ -4,6 +4,7 @@ use super::cache::{
     CACHE_HITS, CACHE_MISSES, CachedYaml, YAML_CACHE, total_cached_bytes, yaml_cache_stats,
 };
 use super::error::YamlError;
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -372,15 +373,14 @@ impl YamlOperations {
     /// # }
     /// ```
     pub fn load_yaml_files_batch(&self, paths: &[&Path]) -> HashMap<String, Yaml> {
-        let mut results = HashMap::with_capacity(paths.len());
-
-        for path in paths {
-            if let Ok(yaml) = self.load_yaml_file(path) {
-                results.insert(path.to_string_lossy().to_string(), yaml);
-            }
-        }
-
-        results
+        paths
+            .par_iter()
+            .filter_map(|path| {
+                self.load_yaml_file(path)
+                    .ok()
+                    .map(|yaml| (path.to_string_lossy().into_owned(), yaml))
+            })
+            .collect()
     }
 }
 

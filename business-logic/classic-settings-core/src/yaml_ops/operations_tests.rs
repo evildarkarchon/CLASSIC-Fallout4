@@ -199,6 +199,28 @@ fn test_load_yaml_files_batch() {
 
 #[test]
 #[serial_test::serial]
+fn test_load_yaml_files_batch_larger_batch() {
+    // Clear cache before test
+    clear_global_yaml_cache();
+
+    let mut temp_files = Vec::new();
+    for index in 0..8 {
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+        writeln!(temp_file, "file{}: true", index).expect("Write failed");
+        temp_files.push(temp_file);
+    }
+
+    let ops = YamlOperations::new();
+    let paths: Vec<_> = temp_files.iter().map(NamedTempFile::path).collect();
+    let results = ops.load_yaml_files_batch(&paths);
+
+    assert_eq!(results.len(), 8);
+    assert!(results.contains_key(&paths[0].to_string_lossy().to_string()));
+    assert!(results.contains_key(&paths[7].to_string_lossy().to_string()));
+}
+
+#[test]
+#[serial_test::serial]
 fn test_load_yaml_files_batch_with_missing() {
     // Clear cache before test
     clear_global_yaml_cache();
