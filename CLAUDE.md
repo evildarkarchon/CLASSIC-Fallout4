@@ -35,13 +35,3 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 Skipping step 3 produces `ModuleNotFoundError` at pytest collection time (the test files `import classic_shared`, `import classic_version_registry`, etc., and those wheels have not been installed). Skipping step 1 makes cargo's pyo3-build-config chase `VIRTUAL_ENV` and fail if that path is stale. Skipping `--inexact` in step 2 wipes every `classic-*-py` wheel from the venv on each re-sync.
 
 For deeper context (why `.cargo/config.toml` intentionally omits a global PyO3 pin, which `-py` crates this rebuilds, or how the parity gates fit on top), see rule 9 and the PyO3 Quick Note in `AGENTS.md`, plus `docs/implementation/python_api_parity/`.
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

@@ -358,3 +358,4 @@ opencode.json
 *.pfx
 .kilocode/package-lock.json
 .pi-lens/
+.graphify-python
