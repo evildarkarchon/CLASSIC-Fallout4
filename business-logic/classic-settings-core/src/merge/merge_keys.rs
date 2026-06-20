@@ -201,5 +201,5 @@ fn merge_keys_recursive(yaml: Yaml) -> Result<Yaml, YamlError> {
 }
 
 #[cfg(test)]
-#[path = "yaml_merge_tests.rs"]
+#[path = "merge_keys_tests.rs"]
 mod tests;
