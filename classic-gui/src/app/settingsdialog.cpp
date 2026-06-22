@@ -162,7 +162,8 @@ void SettingsDialog::setupScanningTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
-    m_chkFcxMode = new ToggleSwitch(QStringLiteral("FCX Mode"));
+    m_chkFcxMode = new ToggleSwitch(QStringLiteral("FCX Mode (Deprecated)"));
+    m_chkFcxMode->setToolTip(QStringLiteral("FCX Mode is deprecated and will be removed in a future release."));
     m_chkSimplifyLogs = new ToggleSwitch(QStringLiteral("Simplify Logs"));
     m_chkShowFormIdValues = new ToggleSwitch(QStringLiteral("Show FormID Values"));
     m_chkMoveUnsolvedLogs = new ToggleSwitch(QStringLiteral("Move Unsolved Logs"));

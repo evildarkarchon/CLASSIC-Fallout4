@@ -27,7 +27,7 @@ CLASSIC_Info:
     # Select which game version mode CLASSIC should target. (auto | Original | NextGen | VR)
       Game Version: auto
 
-    # FCX - File Check Xtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
+    # FCX - File Check Xtended (DEPRECATED, will be removed) | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
       FCX Mode: false
 
     # Set to true if you want CLASSIC to remove some unnecessary lines and redundant information from your crash log files.

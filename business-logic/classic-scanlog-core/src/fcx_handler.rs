@@ -240,9 +240,6 @@ impl FcxModeHandler {
                     lines.push(issue.format_report());
                 }
             }
-        } else {
-            lines.push("* NOTICE: FCX MODE IS DISABLED. YOU CAN ENABLE IT TO DETECT PROBLEMS IN YOUR MOD & GAME FILES * \n\n".to_string());
-            lines.push("[ FCX Mode can be enabled in the exe or CLASSIC Settings.yaml located in your CLASSIC folder. ] \n\n".to_string());
         }
 
         ReportFragment::from_lines(lines)
