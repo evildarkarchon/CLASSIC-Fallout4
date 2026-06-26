@@ -57,8 +57,8 @@ resolver = "2"
 
 [workspace.dependencies]
 # PyO3 bindings
-pyo3 = { version = "0.28.3", features = ["abi3-py312"] }
-pyo3-async-runtimes = { version = "0.28.0" }
+pyo3 = { version = "0.29.0", features = ["abi3-py312"] }
+pyo3-async-runtimes = { version = "0.29.0" }
 
 # Async runtime (ONE RUNTIME RULE)
 tokio = { version = "1.52.3", features = ["full"] }
