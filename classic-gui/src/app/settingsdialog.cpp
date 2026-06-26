@@ -11,6 +11,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QMetaType>
+#include <QSet>
 #include <QStringList>
 #include <QThread>
 #include <QVBoxLayout>
@@ -586,10 +587,23 @@ void SettingsDialog::onResetIniFolder()
 
 void SettingsDialog::onAddFormIdDb()
 {
-    QString file = QFileDialog::getOpenFileName(this, QStringLiteral("Select FormID Database"), QString(),
-                                                QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
-    if (!file.isEmpty()) {
+    const QStringList files = QFileDialog::getOpenFileNames(
+        this, QStringLiteral("Select FormID Databases"), QString(),
+        QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
+
+    QSet<QString> seen;
+    for (int i = 0; i < m_listFormIdDbs->count(); ++i) {
+        seen.insert(QDir::cleanPath(m_listFormIdDbs->item(i)->text()).toLower());
+    }
+
+    for (const QString& file : files) {
+        const QString key = QDir::cleanPath(file).toLower();
+        if (seen.contains(key)) {
+            continue;
+        }
+
         m_listFormIdDbs->addItem(file);
+        seen.insert(key);
     }
 }
 

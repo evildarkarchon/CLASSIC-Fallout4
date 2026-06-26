@@ -29,6 +29,7 @@ private slots:
     void scan_controller_treats_blank_xse_paths_as_missing();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
+    void settings_dialog_adds_multiple_formid_databases();
     void mainwindow_enables_drag_and_drop();
     void mainwindow_forwards_drops_through_targeted_child_event_filter();
     void mainwindow_forwards_drag_moves_through_targeted_child_event_filter();
@@ -505,6 +506,43 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
              "SettingsDialog should reset stale game executable paths when the stored executable no longer exists");
     QVERIFY2(body.contains(QStringLiteral("Qt::CaseInsensitive")),
              "SettingsDialog should compare executable parent and selected game folder case-insensitively");
+}
+
+void ScanSettingsWiringTests::settings_dialog_adds_multiple_formid_databases()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/settingsdialog.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const QString marker = QStringLiteral("void SettingsDialog::onAddFormIdDb()");
+    const qsizetype start = sourceText.indexOf(marker);
+    QVERIFY2(start >= 0, "SettingsDialog::onAddFormIdDb() should exist");
+
+    const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid SettingsDialog::"), start + marker.size());
+    const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+    const QString body = sourceText.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("QFileDialog::getOpenFileNames")),
+             "FormID database Add should use a multi-select file dialog");
+    QVERIFY2(body.contains(QStringLiteral("Select FormID Databases")),
+             "FormID database Add dialog title should be plural");
+    QVERIFY2(body.contains(QStringLiteral("const QStringList files")),
+             "FormID database Add should retain the returned QStringList");
+    QVERIFY2(body.contains(QStringLiteral("for (const QString& file : files)")),
+             "FormID database Add should iterate selected files in order");
+    QVERIFY2(body.contains(QStringLiteral("m_listFormIdDbs->addItem(file)")),
+             "FormID database Add should append each selected file to the list widget");
+
+    const qsizetype seenStart = body.indexOf(QStringLiteral("QSet<QString> seen"));
+    const qsizetype guardStart = body.indexOf(QStringLiteral("seen.contains(key)"));
+    const qsizetype addStart = body.indexOf(QStringLiteral("m_listFormIdDbs->addItem(file)"));
+    const qsizetype insertAfterAdd = body.indexOf(QStringLiteral("seen.insert(key)"), addStart);
+    QVERIFY2(seenStart >= 0, "FormID database Add should track normalized paths with QSet<QString>");
+    QVERIFY2(guardStart > seenStart && guardStart < addStart,
+             "FormID database Add should skip duplicate normalized paths before appending");
+    QVERIFY2(insertAfterAdd > addStart, "FormID database Add should remember newly appended paths as seen");
 }
 
 void ScanSettingsWiringTests::mainwindow_enables_drag_and_drop()
