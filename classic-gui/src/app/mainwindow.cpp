@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QVBoxLayout>
 #include <vector>
+#include <string>
 
 #include "app/aboutdialog.h"
 #include "app/papyrusdialog.h"
@@ -47,6 +48,7 @@
 #include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/files.h"
 #include "classic_cxx_bridge/game.h"
+#include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/scangame.h"
@@ -73,6 +75,13 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
 QString settingsFilePath(const QString& dataRoot)
 {
     return dataRoot + QStringLiteral("/CLASSIC Settings.yaml");
+}
+
+void logUpdateCheckFailure(const QString& errorMessage)
+{
+    const QString detail = errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage;
+    const std::string message = (QStringLiteral("Update check failed: ") + detail).toStdString();
+    classic::message::log_warning(message);
 }
 
 QString ignoreFilePath(const QString& dataRoot)
@@ -1926,10 +1935,7 @@ void MainWindow::checkForUpdates(bool explicitCheck)
 
                 if (classification == QLatin1String(UpdateWorker::kClassificationError)) {
                     setStatusMessage(QStringLiteral("Update check failed"));
-                    QMessageBox::warning(
-                        this, QStringLiteral("Update Check"),
-                        QStringLiteral("Error checking for updates:\n") +
-                            (errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage));
+                    logUpdateCheckFailure(errorMessage);
                 } else if (classification == QLatin1String(UpdateWorker::kClassificationUpdateAvailable)) {
                     setStatusMessage(QStringLiteral("Update available: v") + latestVersion);
                     QString body = QStringLiteral("A new version is available: v%1").arg(latestVersion);
