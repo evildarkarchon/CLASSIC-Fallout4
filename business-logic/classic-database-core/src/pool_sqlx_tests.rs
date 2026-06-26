@@ -33,7 +33,7 @@ async fn create_test_database(
         )",
         table_name
     );
-    sqlx::query(&create_table_sql)
+    sqlx::query(sqlx::AssertSqlSafe(create_table_sql.as_str()))
         .execute(&pool)
         .await
         .map_err(|e| DatabaseError::QueryError(e.to_string()))?;
@@ -44,7 +44,7 @@ async fn create_test_database(
             "INSERT OR REPLACE INTO {} (formid, plugin, entry) VALUES (?, ?, ?)",
             table_name
         );
-        sqlx::query(&insert_sql)
+        sqlx::query(sqlx::AssertSqlSafe(insert_sql.as_str()))
             .bind(*formid)
             .bind(*plugin)
             .bind(*entry)
@@ -1082,6 +1082,49 @@ fn test_build_union_all_query() {
         query_multi.contains("COLLATE nocase"),
         "Case-insensitive template should include nocase collation"
     );
+}
+
+/// Game table names must be safe unquoted SQLite identifiers because they are
+/// interpolated into SQL strings. Anything outside `[A-Za-z_][A-Za-z0-9_]*` is
+/// rejected to block SQL injection via the `set_game_table` bindings.
+#[test]
+fn test_validate_table_identifier() {
+    let valid = [
+        "Fallout4",
+        "Skyrim",
+        "FalloutNewVegas",
+        "TestGame",
+        "_underscore_first",
+        "a",
+        "A1_b2_C3",
+    ];
+    for name in valid {
+        assert!(
+            DatabasePool::validate_table_identifier(name).is_ok(),
+            "expected {name:?} to be accepted as a table identifier"
+        );
+    }
+
+    let invalid = [
+        "",
+        " ",
+        "Fallout 4",
+        "Fallout-4",
+        "1starts_with_digit",
+        "has;semicolon",
+        "x; DROP TABLE y--",
+        "quoted\"name",
+        "dot.table",
+        "weird`char",
+        "table(",
+    ];
+    for name in invalid {
+        let err = DatabasePool::validate_table_identifier(name);
+        assert!(
+            matches!(err, Err(DatabaseError::InvalidTableIdentifier(ref got)) if got == name),
+            "expected {name:?} to be rejected with InvalidTableIdentifier, got {err:?}"
+        );
+    }
 }
 
 #[test]

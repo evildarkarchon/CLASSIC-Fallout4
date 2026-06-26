@@ -51,7 +51,7 @@ indexmap = { workspace = true }
 [dev-dependencies]
 serial_test = "3.2"
 tempfile = "3.14"
-criterion = { version = "0.6.0", features = ["html_reports"] }
+criterion = { version = "0.8.2", features = ["html_reports"] }
 
 [[bench]]
 name = "yaml_benchmarks"

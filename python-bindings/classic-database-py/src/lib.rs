@@ -122,6 +122,10 @@ pub fn to_pyerr(err: classic_database_core::DatabaseError) -> PyErr {
         DatabaseError::SqlxError(e) => {
             RustDatabaseQueryError::new_err(format!("Database error: {}", e))
         }
+        DatabaseError::InvalidTableIdentifier(name) => RustDatabaseQueryError::new_err(format!(
+            "Invalid game table identifier (rejected to prevent SQL injection): {:?}",
+            name
+        )),
     }
 }
 
