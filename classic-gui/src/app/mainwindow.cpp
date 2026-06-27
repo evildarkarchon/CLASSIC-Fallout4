@@ -1934,8 +1934,14 @@ void MainWindow::checkForUpdates(bool explicitCheck)
                 const QString errorMessage = result.value(UpdateWorker::kKeyErrorMessage).toString();
 
                 if (classification == QLatin1String(UpdateWorker::kClassificationError)) {
+                    const QString detail =
+                        errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage;
                     setStatusMessage(QStringLiteral("Update check failed"));
                     logUpdateCheckFailure(errorMessage);
+                    if (explicitCheck) {
+                        QMessageBox::warning(this, QStringLiteral("Update Check Failed"),
+                                             QStringLiteral("Update check failed: ") + detail);
+                    }
                 } else if (classification == QLatin1String(UpdateWorker::kClassificationUpdateAvailable)) {
                     setStatusMessage(QStringLiteral("Update available: v") + latestVersion);
                     QString body = QStringLiteral("A new version is available: v%1").arg(latestVersion);

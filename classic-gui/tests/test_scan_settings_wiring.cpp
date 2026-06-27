@@ -19,6 +19,7 @@ private slots:
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
+    void mainwindow_shows_error_details_for_explicit_update_failures();
     void settings_dialog_handles_not_published_as_benign();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
@@ -262,6 +263,33 @@ void ScanSettingsWiringTests::mainwindow_handles_not_published_without_error_dia
              "explicit not_published checks should show an informational dialog");
     QVERIFY2(!branch.contains(QStringLiteral("QMessageBox::warning")),
              "not_published must not reach the warning/error dialog path");
+}
+
+void ScanSettingsWiringTests::mainwindow_shows_error_details_for_explicit_update_failures()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype branchStart = sourceText.indexOf(QStringLiteral("kClassificationError"));
+    QVERIFY2(branchStart >= 0, "MainWindow should branch on the error classification");
+
+    const qsizetype nextBranch = sourceText.indexOf(QStringLiteral("} else if"), branchStart);
+    QVERIFY2(nextBranch > branchStart, "error classification should be handled in its own branch");
+
+    const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
+    QVERIFY2(branch.contains(QStringLiteral("logUpdateCheckFailure(errorMessage)")),
+             "update-check failures should still be logged");
+    QVERIFY2(branch.contains(QStringLiteral("if (explicitCheck)")),
+             "manual update-check failures should be separated from background checks");
+    QVERIFY2(branch.contains(QStringLiteral("QMessageBox::warning")),
+             "manual update-check failures should show a warning dialog");
+    QVERIFY2(branch.contains(QStringLiteral("errorMessage.isEmpty()")),
+             "manual update-check failures should include the detailed error when available");
+    QVERIFY2(branch.contains(QStringLiteral("Update check failed: ")),
+             "manual update-check failures should show the same failure context as the log");
 }
 
 void ScanSettingsWiringTests::settings_dialog_handles_not_published_as_benign()
