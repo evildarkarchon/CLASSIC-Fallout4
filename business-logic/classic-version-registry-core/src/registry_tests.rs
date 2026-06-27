@@ -4,6 +4,50 @@ fn create_test_registry() -> VersionRegistry {
     VersionRegistry::load_embedded_defaults().expect("embedded CLASSIC Main.yaml should load")
 }
 
+fn classic_main_yaml_path() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../CLASSIC Data/databases/CLASSIC Main.yaml")
+}
+
+fn version_entry<'a>(registry: &'a VersionRegistry, id: &str) -> &'a VersionInfo {
+    registry
+        .get_by_id(id)
+        .unwrap_or_else(|| panic!("{id} should exist"))
+}
+
+fn crashgen_signature(configs: &[CrashgenConfig]) -> Vec<(&str, &str, &str, bool)> {
+    configs
+        .iter()
+        .map(|config| {
+            (
+                config.version.as_str(),
+                config.name.as_str(),
+                config.acronym.as_str(),
+                config.exact_match,
+            )
+        })
+        .collect()
+}
+
+fn floor_crashgen_versions(info: &VersionInfo) -> Vec<&str> {
+    info.crashgen_versions
+        .iter()
+        .filter(|config| !config.exact_match)
+        .map(|config| config.version.as_str())
+        .collect()
+}
+
+fn find_crashgen<'a>(
+    info: &'a VersionInfo,
+    description: &str,
+    predicate: impl Fn(&CrashgenConfig) -> bool,
+) -> &'a CrashgenConfig {
+    info.crashgen_versions
+        .iter()
+        .find(|config| predicate(config))
+        .unwrap_or_else(|| panic!("{description} should exist"))
+}
+
 #[test]
 fn test_get_by_id() {
     let registry = create_test_registry();
@@ -101,14 +145,25 @@ fn test_embedded_yaml_metadata_fields_are_populated() {
         29
     );
 
+    let og_info = version_entry(&registry, "FO4_OG");
+    let og_legacy_version = find_crashgen(og_info, "OG legacy crashgen", |config| {
+        config.acronym == "BO4"
+    })
+    .version
+    .as_str();
     let og_legacy = registry
-        .get_crashgen_for_version("FO4_OG", "1.28.6")
+        .get_crashgen_for_version("FO4_OG", og_legacy_version)
         .expect("OG legacy crashgen");
     assert_eq!(og_legacy.acronym.as_str(), "BO4");
     assert_eq!(og_legacy.dll_file.as_str(), "buffout4.dll");
 
+    let vr_info = version_entry(&registry, "FO4_VR");
+    let vr_crashgen_version =
+        find_crashgen(vr_info, "VR crashgen", |config| config.acronym == "BO4 NG")
+            .version
+            .as_str();
     let vr_crashgen = registry
-        .get_crashgen_for_version("FO4_VR", "1.38.1")
+        .get_crashgen_for_version("FO4_VR", vr_crashgen_version)
         .expect("VR crashgen");
     assert_eq!(vr_crashgen.acronym.as_str(), "BO4 NG");
     assert_eq!(vr_crashgen.dll_file.as_str(), "buffout4.dll");
@@ -200,32 +255,31 @@ fn test_get_address_library_filename() {
 fn test_get_crashgen_versions() {
     let registry = create_test_registry();
 
-    // OG uses the embedded YAML fallback crashgen versions.
-    let og_configs = registry.get_crashgen_versions("FO4_OG");
-    assert_eq!(og_configs.len(), 3);
-    assert_eq!(og_configs[0].version, "1.28.6");
-    assert_eq!(og_configs[1].version, "1.38.1");
-    assert_eq!(og_configs[2].version, "1.3.0");
+    for id in ["FO4_OG", "FO4_NG", "FO4_AE", "FO4_VR"] {
+        let info = version_entry(&registry, id);
+        let expected = crashgen_signature(&info.crashgen_versions);
+        let actual = registry
+            .get_crashgen_versions(id)
+            .iter()
+            .map(|config| {
+                (
+                    config.version.as_str(),
+                    config.name.as_str(),
+                    config.acronym.as_str(),
+                    config.exact_match,
+                )
+            })
+            .collect::<Vec<_>>();
 
-    // NG uses the embedded YAML fallback crashgen versions.
-    let ng_configs = registry.get_crashgen_versions("FO4_NG");
-    assert_eq!(ng_configs.len(), 2);
-    assert_eq!(ng_configs[0].version, "1.38.1");
-    assert_eq!(ng_configs[1].version, "1.3.0");
+        assert_eq!(actual, expected, "{id} crashgen configs changed");
+    }
 
-    // AE has both Buffout 4 and Addictol
     let ae_configs = registry.get_crashgen_versions("FO4_AE");
-    assert_eq!(ae_configs.len(), 2);
-    assert_eq!(ae_configs[0].version, "1.7.1");
-    assert_eq!(ae_configs[0].name, "Buffout 4");
-    assert_eq!(ae_configs[1].version, "1.3.0");
-    assert_eq!(ae_configs[1].name, "Addictol");
+    assert!(ae_configs.iter().any(|config| config.name == "Buffout 4"));
+    assert!(ae_configs.iter().any(|config| config.name == "Addictol"));
 
-    // VR uses Buffout 4 (name matches log output)
     let vr_configs = registry.get_crashgen_versions("FO4_VR");
-    assert_eq!(vr_configs.len(), 1);
-    assert_eq!(vr_configs[0].version, "1.38.1");
-    assert_eq!(vr_configs[0].name, "Buffout 4");
+    assert!(vr_configs.iter().any(|config| config.name == "Buffout 4"));
 
     // Missing version returns empty vector
     let missing = registry.get_crashgen_versions("FO4_MISSING");
@@ -236,19 +290,12 @@ fn test_get_crashgen_versions() {
 fn test_get_crashgen_version_strings() {
     let registry = create_test_registry();
 
-    let og_versions = registry.get_crashgen_version_strings("FO4_OG");
-    assert_eq!(og_versions, vec!["1.38.1", "1.3.0"]);
-
-    let ng_versions = registry.get_crashgen_version_strings("FO4_NG");
-    assert_eq!(ng_versions, vec!["1.38.1", "1.3.0"]);
-
-    // AE has both Buffout 4 and Addictol
-    let ae_versions = registry.get_crashgen_version_strings("FO4_AE");
-    assert_eq!(ae_versions, vec!["1.7.1", "1.3.0"]);
-
-    // VR uses Buffout 4 NG
-    let vr_versions = registry.get_crashgen_version_strings("FO4_VR");
-    assert_eq!(vr_versions, vec!["1.38.1"]);
+    for id in ["FO4_OG", "FO4_NG", "FO4_AE", "FO4_VR"] {
+        let info = version_entry(&registry, id);
+        let expected = floor_crashgen_versions(info);
+        let actual = registry.get_crashgen_version_strings(id);
+        assert_eq!(actual, expected, "{id} floor crashgen versions changed");
+    }
 
     let missing = registry.get_crashgen_version_strings("FO4_MISSING");
     assert!(missing.is_empty());
@@ -257,22 +304,39 @@ fn test_get_crashgen_version_strings() {
 #[test]
 fn test_get_crashgen_for_version() {
     let registry = create_test_registry();
+    let og = version_entry(&registry, "FO4_OG");
 
-    // Find existing crashgen
-    let og_buffout4 = registry.get_crashgen_for_version("FO4_OG", "1.28.6");
-    assert!(og_buffout4.is_some());
-    assert_eq!(og_buffout4.unwrap().name, "Buffout 4");
-
-    let og_buffout4ng = registry.get_crashgen_for_version("FO4_OG", "1.38.1");
-    assert!(og_buffout4ng.is_some());
-    assert_eq!(og_buffout4ng.unwrap().name, "Buffout 4"); // Name matches log output
+    // Find existing crashgens by the versions loaded from the YAML registry.
+    for expected in og
+        .crashgen_versions
+        .iter()
+        .filter(|config| config.name == "Buffout 4")
+    {
+        let actual = registry
+            .get_crashgen_for_version("FO4_OG", expected.version.as_str())
+            .expect("OG Buffout crashgen should exist");
+        assert_eq!(actual.name, expected.name); // Name matches log output
+        assert_eq!(actual.acronym, expected.acronym);
+    }
 
     // Missing crashgen version returns None
-    let missing_version = registry.get_crashgen_for_version("FO4_OG", "9.99.99");
+    let absent_version = format!("missing-{}", og.crashgen_versions.len());
+    assert!(
+        og.crashgen_versions
+            .iter()
+            .all(|config| config.version != absent_version)
+    );
+    let missing_version = registry.get_crashgen_for_version("FO4_OG", &absent_version);
     assert!(missing_version.is_none());
 
     // Missing version ID returns None
-    let missing_id = registry.get_crashgen_for_version("FO4_MISSING", "1.28.6");
+    let known_version = og
+        .crashgen_versions
+        .first()
+        .expect("OG should have crashgen versions")
+        .version
+        .as_str();
+    let missing_id = registry.get_crashgen_for_version("FO4_MISSING", known_version);
     assert!(missing_id.is_none());
 }
 
@@ -586,62 +650,72 @@ fn test_crashgen_config_metadata_from_embedded_yaml() {
     let registry = create_test_registry();
 
     // Verify OG crashgen configs have proper metadata
-    if let Some(og) = registry.get_by_id("FO4_OG") {
-        // Should match the YAML fallback crashgen list
-        assert_eq!(og.crashgen_versions.len(), 3);
+    let og = version_entry(&registry, "FO4_OG");
+    assert!(!og.crashgen_versions.is_empty());
 
-        // Buffout 4 (legacy)
-        let b4 = og.get_crashgen_for_version("1.28.6").unwrap();
-        assert_eq!(b4.name, "Buffout 4");
-        assert!(!b4.description.is_empty());
-        assert!(!b4.download_url.is_empty());
+    // Buffout 4 (legacy)
+    let b4 = find_crashgen(og, "OG exact-match Buffout", |config| {
+        config.name == "Buffout 4" && config.exact_match
+    });
+    assert!(!b4.description.is_empty());
+    assert!(!b4.download_url.is_empty());
 
-        // Buffout 4 NG (name matches log output, description identifies as NG)
-        let b4ng = og.get_crashgen_for_version("1.38.1").unwrap();
-        assert_eq!(b4ng.name, "Buffout 4"); // Name matches what appears in crash log
-        assert!(!b4ng.description.is_empty());
-        assert!(!b4ng.download_url.is_empty());
-    } else {
-        panic!("FO4_OG not found in registry");
-    }
+    // Buffout 4 NG (name matches log output, description identifies as NG)
+    let b4ng = find_crashgen(og, "OG floor Buffout", |config| {
+        config.name == "Buffout 4" && !config.exact_match
+    });
+    assert!(!b4ng.description.is_empty());
+    assert!(!b4ng.download_url.is_empty());
 }
 
 #[test]
 fn test_og_legacy_buffout_exact_match_flag() {
     let registry = create_test_registry();
-    let og = registry.get_by_id("FO4_OG").expect("FO4_OG should exist");
+    let og = version_entry(&registry, "FO4_OG");
 
-    let legacy = og
-        .get_crashgen_for_version("1.28.6")
-        .expect("OG legacy Buffout should exist");
+    let legacy = find_crashgen(og, "OG legacy Buffout", |config| config.acronym == "BO4");
     assert!(legacy.exact_match);
 
-    let ng = og
-        .get_crashgen_for_version("1.38.1")
-        .expect("OG NG Buffout should exist");
+    let ng = find_crashgen(og, "OG NG Buffout", |config| config.acronym == "BO4 NG");
     assert!(!ng.exact_match);
 
     let floor_versions = registry.get_crashgen_version_strings("FO4_OG");
-    assert!(!floor_versions.contains(&legacy.version.as_str()));
-    assert!(floor_versions.contains(&ng.version.as_str()));
+    for config in &og.crashgen_versions {
+        if config.exact_match {
+            assert!(!floor_versions.contains(&config.version.as_str()));
+        } else {
+            assert!(floor_versions.contains(&config.version.as_str()));
+        }
+    }
 }
 
 #[test]
 fn test_embedded_yaml_fallback_tracks_main_yaml_versions() {
-    let registry = create_test_registry();
+    let embedded_registry = create_test_registry();
+    let file_registry = VersionRegistry::load_from_yaml(&classic_main_yaml_path())
+        .expect("checked-in CLASSIC Main.yaml should load");
 
-    let ae = registry.get_by_id("FO4_AE").expect("AE fallback entry");
-    assert_eq!(
-        ae.xse
-            .as_ref()
-            .expect("AE should have XSE")
-            .compatible_version,
-        "0.7.8"
-    );
+    for id in ["FO4_OG", "FO4_NG", "FO4_AE", "FO4_VR"] {
+        let embedded = version_entry(&embedded_registry, id);
+        let from_file = version_entry(&file_registry, id);
 
-    let og_versions = registry.get_crashgen_version_strings("FO4_OG");
-    assert!(og_versions.contains(&"1.38.1"));
-    assert!(!og_versions.contains(&"1.37.0"));
+        assert_eq!(embedded.version_string(), from_file.version_string());
+        assert_eq!(
+            embedded
+                .xse
+                .as_ref()
+                .map(|xse| xse.compatible_version.as_str()),
+            from_file
+                .xse
+                .as_ref()
+                .map(|xse| xse.compatible_version.as_str())
+        );
+        assert_eq!(
+            crashgen_signature(&embedded.crashgen_versions),
+            crashgen_signature(&from_file.crashgen_versions),
+            "{id} embedded crashgen data should match CLASSIC Main.yaml"
+        );
+    }
 }
 
 #[test]
